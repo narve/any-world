@@ -5,8 +5,11 @@
 
 ## 1. Pitch
 
-A turn-based roguelike where **no two runs are the same game**. At the start of each run an
-AI invents the world: setting, tone, creatures, items, abilities, goal, and a few special rules.
+A turn-based roguelike where **no two runs are the same game, or even the same genre**. At
+the start of each run an AI invents the world: genre, setting, tone, characters, items,
+abilities, goal, and a few special rules. One run might be a dungeon crawl. The next might
+be a frontier western, a generation-ship mystery, a week of teenage social survival, a
+Viking feud or a noir investigation.
 During play the same AI acts as a **live game master**: it narrates, voices characters and
 introduces events. The engine guarantees the game stays playable and fair.
 
@@ -26,12 +29,45 @@ introduces events. The engine guarantees the game stays playable and fair.
 
 ## 3. Genre and gameplay
 
-- **Turn-based roguelike:** grid-based, permadeath, procedurally generated levels,
+### 3.0 Genre freedom
+- **The genre is chosen at the start of a run**, from the player's prompt or by the AI for
+  *surprise me*. Fantasy dungeons are one option among many: westerns, sci-fi, school or
+  teen drama, Vikings, detective/noir, historical, surreal, cozy, horror, and mash-ups.
+- **Avoid clichés.** The generation prompt pushes for specific, surprising worlds: an
+  unexpected angle on a genre, concrete details, a twist. It discourages generic tropes,
+  like "an evil wizard in a dungeon".
+  - *Surprise me* draws random seeds (genre × era × tone × twist) so the AI doesn't fall
+    back on its favourites.
+  - The game remembers recent worlds, locally, and asks for something different.
+  - The *weirdness* slider sets how far it may stray from the familiar.
+- **The engine is genre-neutral.** Its words are abstract: *areas* instead of dungeon
+  levels, *actors* instead of monsters, and *conflict* instead of only combat. The AI
+  supplies all of the flavour.
+  - *Areas* can be caves, saloons and main streets, starship decks, school corridors,
+    longships and fjords, rain-soaked city blocks, and so on.
+  - **Map generators** to match: rooms and corridors, caves, open terrain with cover,
+    town or street grids, buildings with floors, ships and stations. The AI picks one per
+    area and sets its parameters.
+  - The *descend* action becomes a themed *transition*: stairs, a train, an airlock, the
+    next school day, a hidden door.
+- **Conflict doesn't have to be violent.** A world can rename it and reskin it: HP could
+  be "Composure" and attacks "Put-downs" in a teen drama, or "Nerve" and "Interrogations"
+  in a detective story. Mechanically it's still the same tactical system. In addition,
+  the engine offers *non-combat verbs* the AI can switch on per world:
+  - **Talk / persuade:** stat checks or small exchanges driven by the GM
+  - **Sneak:** noise and detection
+  - **Search / investigate:** clues are items with a *Vague* or *Unknown* knowledge level
+  - **Use on:** an item applied to a target
+- **Win conditions** are just as varied: kill or defeat, reach, escape, collect, survive N
+  turns, solve (combine clues), or protect.
+
+### 3.1 Roguelike core
+- **Turn-based roguelike:** grid-based, permadeath, procedurally generated areas,
   discovery-driven.
 - **Turns** *(proposed)*: the player acts, then every creature acts by speed/energy, then
   timed effects tick.
 - **Core loop:** explore a level → fight or avoid creatures → find items → use abilities →
-  descend → the game master reacts to how the run is going.
+  move on to the next area → the game master reacts to how the run is going.
 - **Run length:** short, about 15 minutes. 3–5 levels plus a final objective the AI defined
   at the start (e.g. a boss, a relic, an escape or a ritual). The point is to taste many
   different worlds, not to master one. Save/resume is still supported.
@@ -116,7 +152,8 @@ reshapes them. The goal is to avoid making the game too geeky.
 The AI produces a **World Spec** containing:
 - Setting, tone, palette, lighting/fog style, and the name of the world
 - The player character (or a choice of a few), with starting stats, abilities and items
-- A bestiary of about 8–15 creatures: stats, behaviours, abilities, and a 3D model description
+- About 8–15 *actors* (creatures, people, robots, rivals and so on): stats, behaviours,
+  abilities, and a 3D model description
 - About 15–25 items, plus abilities, status effects and terrain features
 - A level plan describing each depth's theme, which creatures and items appear there, and
   special features
@@ -179,6 +216,10 @@ The engine offers a vocabulary the AI combines. Examples:
   3D. Smooth follow, rotatable in 90° steps, zoomable.
 - **Rendering:** Three.js. Tiles are low-poly blocks. Walls are cut away or turned
   transparent when they block the view of the player.
+- **Model archetypes:** genres need people as much as monsters, so the AI starts most
+  models from parameterised templates: humanoid (proportions, clothing, hats,
+  accessories), quadruped, flier, blob, vehicle/robot, and prop. It only builds freeform
+  compositions for truly odd things. This keeps cowboys and teenagers readable.
 - **AI-composed models:** each creature and item is described as a small tree of primitives
   (box, sphere, cylinder, cone, capsule, torus) with transforms, colours, emissive/material
   hints, and simple procedural animation (bob, sway, pulse, spin). The engine renders them,
