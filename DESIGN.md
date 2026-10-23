@@ -195,6 +195,19 @@ The engine offers a vocabulary the AI combines. Examples:
 - **What it can do:** narrate text, speak NPC dialogue, choose among player options (e.g.
   bargains), and issue **GM actions** taken from a whitelist using the same building blocks:
   spawn, gift, curse, change terrain, start an event or quest. Budgets keep it balanced.
+- **New rules during play:** the GM can introduce, change or retire *rule variants*
+  mid-run when it fits the story, e.g. "the tide is rising: every 20 turns the lowest
+  tiles flood" or "the dream is souring: healing now costs Sanity". It uses the same
+  building blocks as the rule variants created at world generation. Limits:
+  - **Timing:** only at dramatic moments such as an area transition, a milestone or a
+    major event, and at most one new rule per area.
+  - **Visibility:** each rule is announced in-story *and* shown plainly in the UI (a
+    "Rules" panel listing what's active and since when).
+  - **Difficulty:** limited by the difficulty setting. The engine estimates each rule's
+    power impact (harmful/helpful, magnitude) and refuses rules beyond what the
+    difficulty level allows. On low difficulty, harsh rules must come with a
+    counterweight.
+  - **Cap:** at most 5 active rules in total.
 - **Asynchronous:** requests are prepared ahead of time where possible. When the AI is slow
   or offline, the game continues with fallback text or simply without the event.
 - **Context:** the GM gets a compact summary of the world, the run so far and the current

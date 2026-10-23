@@ -85,3 +85,7 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   surface patterns (`gradient`, `grid`, `noise`, `lines`, `none`); `AreaPlan.backdrop` (void/sky
   style: starfield, gradient, clouds, abyss, colour). The renderer and engine must not assume
   realism. The world-generation prompt should explicitly invite non-realistic worlds.
+- **GM-invented rules** (user, during M1): add GM actions `add_rule {rule: RuleVariant, reason}` /
+  `remove_rule {id}`. Engine keeps `state.activeRules` (world rules + GM rules, max 5), at most one
+  new GM rule per area, power-impact estimate vs difficulty (refuse/require counterweight). Add a UI
+  "Rules" panel. The GM prompt gets the active rules and difficulty.
