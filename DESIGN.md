@@ -1,4 +1,4 @@
-# DESIGN — AI-Defined Roguelike (working title)
+# DESIGN — AnyWorld (working title)
 
 > Status: **draft, being shaped interactively**. Sections marked *(proposed)* are defaults
 > suggested by Claude and not yet confirmed. *Open questions* at the bottom.
