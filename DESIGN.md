@@ -44,8 +44,13 @@ introduces events. The engine guarantees the game stays playable and fair.
   world. Worlds that are unwinnable or trivial get rebalanced automatically, or sent back
   to the AI with feedback.
 - **Character systems (v1):**
-  - **Inventory and equipment:** weapon, armour and trinket slots, plus consumables. The
-    inventory is small.
+  - **Inventory and equipment:**
+    - **8 quick-access slots** (hotbar, keys 1–8) for consumables, throwables and
+      abilities. You can use them without opening the inventory.
+    - **20-slot backpack** for everything else. Opening it is free; using an item from it
+      costs a turn.
+    - **Equipment slots:** weapon, armour and trinket. Equipping costs a turn.
+    - Identical consumables stack.
   - **Growth:** XP or a themed progression the AI defines (e.g. "absorb relics"). Each
     level-up offers 2–3 choices.
   - **NPCs and dialogue:** non-hostile characters voiced by the GM, who can offer trades,
@@ -162,7 +167,7 @@ The engine offers a vocabulary the AI combines. Examples:
 
 ## 6. Controls *(proposed)*
 
-- Keyboard: arrow keys, WASD or vi-keys to move/attack, numbers for abilities, and single
+- Keyboard: arrow keys, WASD or vi-keys to move/attack, 1–8 for the quick-access slots, and single
   keys for inventory, pick-up, inspect, wait and descend.
 - Mouse: click to travel or target, hover to inspect.
 
