@@ -1,0 +1,290 @@
+/**
+ * Engine runtime types — the contract between engine, client (renderer/UI), GM runtime,
+ * save files and bots. The engine is pure TypeScript: no DOM, no network, no Date/Math.random.
+ * All randomness goes through the seeded RNG stored in GameState.
+ *
+ * Public engine API (implemented in src/engine/index.ts):
+ *
+ *   createGame(world: WorldSpec, opts: NewGameOptions): GameState
+ *   step(state: GameState, action: PlayerAction): StepResult        // pure: never mutates input
+ *   applyGmActions(state: GameState, actions: GmAction[]): StepResult
+ *   legalActions(state: GameState): PlayerAction[]                  // for bots & UI hints
+ *   describeItem(state, itemInstanceId): ItemView                   // respects player knowledge
+ *   describeActor(state, actorInstanceId): ActorView
+ *   serialize(state): string / deserialize(world, json): GameState
+ */
+import type { WorldSpec, Effect, Condition, Knowledge } from '../schema/world';
+import type { GmAction } from '../schema/gm';
+
+export type Dir = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
+export interface Pos { x: number; y: number }
+
+// ---------------------------------------------------------------------------
+// Map
+// ---------------------------------------------------------------------------
+
+export type TileKind = 'floor' | 'wall' | 'door' | 'door_open' | 'void' | 'water' | 'transition' | 'start';
+
+export interface Tile {
+  kind: TileKind;
+  /** custom terrain id from the world spec, if any */
+  terrain?: string;
+  /** remaining turns for temporary terrain */
+  terrainTtl?: number;
+  /** room/region index from the generator (for "discovered a room" GM hooks) */
+  region?: number;
+  /** a lamp is placed here (renderer) */
+  lamp?: boolean;
+}
+
+export interface AreaMap {
+  width: number;
+  height: number;
+  /** row-major, index = y * width + x */
+  tiles: Tile[];
+  start: Pos;
+  exit: Pos;
+  /** named regions (rooms, buildings, decks) for discovery events */
+  regions: { id: number; name?: string; centre: Pos; size: number }[];
+}
+
+// ---------------------------------------------------------------------------
+// Entities
+// ---------------------------------------------------------------------------
+
+export type Faction = 'player' | 'hostile' | 'neutral' | 'friendly';
+
+export interface StatusInstance { id: string; turnsLeft: number; sourceId?: string }
+
+export interface ActorInstance {
+  id: string;            // unique instance id, e.g. "a12"
+  defId: string;         // ActorDef id, or "player"
+  pos: Pos;
+  hp: number;
+  maxHp: number;
+  mp: number;
+  maxMp: number;
+  /** base stats (str/dex/int/ac/speed/sight) before modifiers */
+  base: { str: number; dex: number; int: number; ac: number; speed: number; sight: number };
+  faction: Faction;
+  statuses: StatusInstance[];
+  /** energy accumulator for speed-based turn order */
+  energy: number;
+  cooldowns: Record<string, number>;
+  /** AI memory (last seen player pos, alert state, home pos for guardians…) */
+  ai: { alerted: boolean; lastSeen?: Pos; home?: Pos; fleeing?: boolean };
+  /** temporary stat modifiers with durations */
+  tempMods: { stat: string; amount: number; turnsLeft: number }[];
+  /** allied summon / follower of player */
+  allyOf?: string;
+  /** npc has been talked to */
+  talkedTo?: boolean;
+}
+
+export interface ItemInstance {
+  id: string;          // unique instance id, e.g. "i7"
+  defId: string;       // ItemDef id
+  count: number;       // stack size
+  charges?: number;
+  cooldown?: number;
+  durability?: number;
+}
+
+export interface FloorItem { item: ItemInstance; pos: Pos }
+
+/** generic slots: 0..7 quick-access, 8..27 backpack. null = empty. */
+export const QUICK_SLOTS = 8;
+export const BACKPACK_SLOTS = 20;
+export const TOTAL_SLOTS = QUICK_SLOTS + BACKPACK_SLOTS;
+
+export interface PlayerState {
+  actorId: string;           // id of the player's ActorInstance in area.actors
+  slots: (ItemInstance | null)[]; // length TOTAL_SLOTS
+  /** slot indices of equipped items (items stay in their slot) */
+  equipped: { weapon: number | null; armour: number | null; trinket: number | null };
+  level: number;
+  xp: number;
+  perks: string[];
+  /** pending level-up choice (perk ids) — blocks other actions until chosen */
+  pendingPerkChoice: string[] | null;
+  resources: Record<string, number>;   // custom resources
+  currency: number;
+  sneaking: boolean;
+}
+
+/** what the player knows about each ItemDef (by def id) */
+export interface ItemKnowledgeState {
+  level: Knowledge;
+  /** randomised per-run appearance for unknown items */
+  appearance?: { label: string; color: string };
+  /** free-form notes recorded by the engine on use ("You felt dizzy.") */
+  notes: string[];
+  timesUsed: number;
+}
+
+export interface AreaState {
+  index: number;
+  map: AreaMap;
+  actors: ActorInstance[];
+  items: FloorItem[];
+  /** per-tile visibility: 0 unseen, 1 remembered, 2 visible now */
+  seen: Uint8Array | number[];
+  discoveredRegions: number[];
+  /** GM budget remaining for this area */
+  gmBudget: number;
+}
+
+export interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  giverId?: string;
+  complete: Condition;
+  reward: GmAction[];
+  status: 'active' | 'done' | 'failed';
+}
+
+export interface LogMessage {
+  turn: number;
+  text: string;
+  kind: 'info' | 'combat' | 'gm' | 'npc' | 'loot' | 'warning' | 'good' | 'bad' | 'system';
+  speaker?: string;
+}
+
+export interface GameState {
+  version: 1;
+  worldId: string;            // hash/slug of the world spec
+  seed: number;
+  rng: number[];              // PRNG internal state (4 × uint32, sfc32)
+  turn: number;
+  status: 'playing' | 'won' | 'lost';
+  endReason?: string;
+  area: AreaState;
+  /** areas already visited are dropped (no backtracking in v1) */
+  player: PlayerState;
+  knowledge: Record<string, ItemKnowledgeState>;
+  flags: Record<string, boolean>;
+  counters: Record<string, number>;
+  defeated: Record<string, number>; // actor def id -> count
+  quests: Quest[];
+  log: LogMessage[];
+  /** open dialogue/choice the player must resolve */
+  pendingChoice: PendingChoice | null;
+  nextId: number;
+  stats: { kills: number; itemsUsed: number; damageDealt: number; damageTaken: number; areasCleared: number };
+}
+
+export interface PendingChoice {
+  kind: 'gm_offer' | 'dialogue';
+  prompt: string;
+  speakerId?: string;
+  options: { label: string; actions: GmAction[] }[];
+}
+
+// ---------------------------------------------------------------------------
+// Actions & events
+// ---------------------------------------------------------------------------
+
+export type PlayerAction =
+  | { type: 'move'; dir: Dir }                         // bump into hostile = attack, into npc = talk
+  | { type: 'attack'; targetId: string }               // ranged/explicit attack with equipped weapon
+  | { type: 'wait' }
+  | { type: 'use'; slot: number; target?: Pos }        // activate slot item (equip weapon, drink, cast…)
+  | { type: 'equip'; slot: number }
+  | { type: 'unequip'; slot: number }
+  | { type: 'move_item'; from: number; to: number }    // swap/move between slots
+  | { type: 'drop'; slot: number }
+  | { type: 'pickup' }
+  | { type: 'transition' }                             // take the area exit
+  | { type: 'talk'; targetId: string }
+  | { type: 'persuade'; targetId: string }
+  | { type: 'search' }
+  | { type: 'toggle_sneak' }
+  | { type: 'choose_perk'; perkId: string }
+  | { type: 'choose_option'; index: number }           // resolve pendingChoice
+  | { type: 'interact'; pos: Pos };                    // terrain interaction
+
+export type GameEvent =
+  | { type: 'moved'; actorId: string; from: Pos; to: Pos }
+  | { type: 'attacked'; attackerId: string; targetId: string; hit: boolean; damage: number; damageType: string; ranged: boolean }
+  | { type: 'damaged'; actorId: string; amount: number; damageType: string; sourceId?: string }
+  | { type: 'healed'; actorId: string; amount: number }
+  | { type: 'died'; actorId: string; defId: string; killerId?: string }
+  | { type: 'status_applied'; actorId: string; status: string }
+  | { type: 'status_expired'; actorId: string; status: string }
+  | { type: 'effect'; vfx: string; color?: string; from: Pos; to: Pos; radius?: number }
+  | { type: 'item_picked'; itemId: string; defId: string }
+  | { type: 'item_used'; defId: string; consumed: boolean }
+  | { type: 'item_identified'; defId: string; level: Knowledge }
+  | { type: 'equipped'; slot: number }
+  | { type: 'spawned'; actorId: string; defId: string }
+  | { type: 'terrain_changed'; positions: Pos[] }
+  | { type: 'area_entered'; index: number }
+  | { type: 'region_discovered'; regionId: number }
+  | { type: 'level_up'; level: number; choices: string[] }
+  | { type: 'npc_talk'; actorId: string }
+  | { type: 'low_hp' }
+  | { type: 'quest_updated'; questId: string; status: Quest['status'] }
+  | { type: 'game_over'; result: 'won' | 'lost'; reason: string }
+  | { type: 'message'; text: string; kind: LogMessage['kind'] }
+  | { type: 'noise'; pos: Pos; radius: number }
+  | { type: 'invalid'; reason: string };
+
+export interface StepResult {
+  state: GameState;
+  events: GameEvent[];
+  /** true if the action consumed a turn */
+  tookTurn: boolean;
+}
+
+export interface NewGameOptions {
+  seed: number;
+  /** optional pre-generated area map (from tests) */
+  map?: AreaMap;
+}
+
+/** generator contract (src/engine/mapgen) */
+export type MapGenerator = (
+  plan: WorldSpec['areas'][number],
+  world: WorldSpec,
+  rng: Rng,
+) => AreaMap;
+
+export interface Rng {
+  next(): number;              // [0,1)
+  int(min: number, max: number): number; // inclusive
+  pick<T>(arr: readonly T[]): T;
+  chance(p: number): boolean;
+  dice(spec: string): number;  // "2d6"
+  state(): number[];
+}
+
+/** UI-facing descriptions that respect player knowledge */
+export interface ItemView {
+  name: string;
+  kind: string;
+  description: string;
+  knowledge: Knowledge;
+  /** human-readable effect lines, only when known ("Restores 20 Health") */
+  effectLines: string[];
+  vagueText?: string;
+  notes: string[];
+  count: number;
+  charges?: number;
+  equipped: boolean;
+  usable: boolean;
+  color: string;
+}
+
+export interface ActorView {
+  name: string;
+  description: string;
+  hp: number;
+  maxHp: number;
+  faction: Faction;
+  statuses: string[];
+  threat: 'trivial' | 'even' | 'dangerous' | 'deadly';
+  isNpc: boolean;
+}
+
+export type { Effect, Condition, GmAction };
