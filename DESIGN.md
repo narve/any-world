@@ -247,7 +247,7 @@ The engine offers a vocabulary the AI combines. Examples:
 - Simple procedural sound effects (hit, step, pick-up) if time permits.
 - The game must be fully playable with audio off.
 
-## 6. Controls *(proposed)*
+## 6. Controls
 
 - Keyboard: arrow keys, WASD or vi-keys to move/attack, 1–8 for the quick-access slots, and single
   keys for inventory, pick-up, inspect, wait and descend.
@@ -264,7 +264,7 @@ The engine offers a vocabulary the AI combines. Examples:
 - Tests: Vitest for the engine, bot playthroughs over many seeds and world specs, and
   Playwright for visual and end-to-end checks with screenshots.
 
-## 8. Out of scope for v1 *(proposed)*
+## 8. Out of scope for v1
 
 Multiplayer, mobile/touch, progression between runs, and
 AI-generated images/textures.
