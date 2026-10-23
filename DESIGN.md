@@ -70,9 +70,21 @@ introduces events. The engine guarantees the game stays playable and fair.
     level-up offers 2–3 choices.
   - **NPCs and dialogue:** non-hostile characters voiced by the GM, who can offer trades,
     bargains and small quests. Any outcome is limited to GM actions from the whitelist.
-  - **Identification:** unidentified item classes (e.g. potions or scrolls) get randomized
-    themed appearances. You learn what they do by using them, through other items, or
-    from NPCs.
+  - **Item knowledge.** The engine always knows an item's exact effect. What the player
+    sees depends on how well the item is known, which the AI sets per item:
+    - **Clear:** the exact effect is shown ("Restores 20 HP").
+    - **Vague:** you get a flavour description with no numbers ("Deals shadow damage",
+      "Something stirs when you hold it"). The engine checks that the description is
+      consistent with the real effect: the damage type and whether it helps or harms.
+    - **Unknown:** you only see what it looks like ("a murky green flask"). It could be
+      good or bad. Unknown item kinds get random themed appearances in each run, as in
+      classic roguelikes.
+    - **Learning:** using an item usually reveals it. It goes up one or more levels, and
+      every copy of that item kind becomes known. Some items stay obscure even after use,
+      because their effect is subtle, delayed or random. Other ways to learn: identify
+      effects, NPCs, the GM, and possibly INT-based insight.
+    - **What you know is part of the run.** The UI keeps your notes, e.g. "drank it, felt
+      dizzy".
 - **Fog of war and field of view:** you only see what your character can see, and the map
   remembers what you have explored.
 
