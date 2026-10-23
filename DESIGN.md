@@ -191,9 +191,28 @@ The engine offers a vocabulary the AI combines. Examples:
   situation, kept within a token budget.
 
 ### 4.4 Providers
-- A pluggable `LLMProvider` interface: Anthropic Claude by default, OpenAI-compatible APIs
-  (which covers Ollama and other local models), and a **mock provider** that replays
-  recorded responses for tests and for offline play.
+- A pluggable `LLMProvider` interface with three providers:
+  - **Anthropic Claude** (default).
+  - **A generic OpenAI-compatible provider.** This one covers most other models,
+    including ones from outside the US.
+  - **A mock provider** that replays recorded responses for tests and for offline play.
+- **Provider presets** for the generic provider: each one sets the base URL, default
+  model, and quirks such as JSON mode support, structured-output support and context
+  size. Each preset is a small config entry, and a custom preset can also be entered in
+  settings. Presets:
+  - DeepSeek (China)
+  - Mistral (EU/France)
+  - Qwen via Alibaba DashScope's compatible mode (China)
+  - Moonshot Kimi (China)
+  - Zhipu GLM (China)
+  - OpenAI
+  - OpenRouter (gives access to many models)
+  - Ollama and LM Studio (local)
+- Providers differ in what structured output they support: full JSON schema, JSON mode
+  only, or free text. A shared layer always validates responses, repairs them when it can,
+  and retries, so weaker modes still work.
+- Some providers do not allow CORS, so the browser cannot call them directly. Those
+  providers need backend mode; the presets record this and the settings UI explains it.
 - **Two ways to deploy** a single game build, chosen by configuration. Both are always
   played in a web browser:
   - **Browser-only (static):** the game is a set of static files and can be hosted
