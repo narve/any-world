@@ -33,6 +33,16 @@ introduces events. The engine guarantees the game stays playable and fair.
 - **The genre is chosen at the start of a run**, from the player's prompt or by the AI for
   *surprise me*. Fantasy dungeons are one option among many: westerns, sci-fi, school or
   teen drama, Vikings, detective/noir, historical, surreal, cozy, horror, and mash-ups.
+- **Worlds don't have to be realistic or Earth-like.** The game can take place on alien
+  planets, inside a psychedelic dream, in the body of a giant, or in abstract art where
+  you navigate shapes and colours. Anything is possible. To support this:
+  - the engine and renderer must never assume gravity, a sky, people, or a sensible
+    architecture;
+  - map generators include unusual layouts such as floating islands, organic/membrane
+    shapes and geometric patterns;
+  - surfaces can be abstract (gradients, grids, noise, glowing lines), and void tiles get
+    a backdrop instead of always being black;
+  - models can be fully abstract compositions of shapes.
 - **Avoid clichés.** The generation prompt pushes for specific, surprising worlds: an
   unexpected angle on a genre, concrete details, a twist. It discourages generic tropes,
   like "an evil wizard in a dungeon".

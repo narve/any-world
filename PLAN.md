@@ -77,3 +77,11 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
 - The World Spec JSON Schema is large (~110k characters), so the prompts use a condensed TypeScript-style
   schema description, and validation uses zod.
 - No live LLM is available during the build, so the prompts are tuned with agents acting as the provider.
+
+## Backlog added during M1 (scheduled for M2)
+
+- **Non-Earth-like worlds** (user, during M1): add `islands` (floating platforms over a void),
+  `organic` (membranes/blobs), `geometric` (abstract patterns/symmetries) generators; abstract
+  surface patterns (`gradient`, `grid`, `noise`, `lines`, `none`); `AreaPlan.backdrop` (void/sky
+  style: starfield, gradient, clouds, abyss, colour). The renderer and engine must not assume
+  realism. The world-generation prompt should explicitly invite non-realistic worlds.
