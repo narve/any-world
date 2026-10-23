@@ -45,11 +45,15 @@ introduces events. The engine guarantees the game stays playable and fair.
   to the AI with feedback.
 - **Character systems (v1):**
   - **Inventory and equipment:**
-    - **8 quick-access slots** (hotbar, keys 1–8) for consumables, throwables and
-      abilities. You can use them without opening the inventory.
-    - **20-slot backpack** for everything else. Opening it is free; using an item from it
+    - **Slots are generic.** No slot is reserved for a kind of thing: potions, weapons,
+      armour, scrolls, spells, tools and quest items can go in any slot. Spells and
+      abilities are slot items too, so learning a spell puts it in a slot.
+    - **8 quick-access slots** (hotbar, keys 1–8). What activating a slot does depends on
+      the item: drink a potion, cast a spell, throw a dagger, or equip/swap a weapon.
+    - **20-slot backpack** for everything else. Opening it is free; using or moving items
       costs a turn.
-    - **Equipment slots:** weapon, armour and trinket. Equipping costs a turn.
+    - **Equipped gear** (weapon, armour, trinket) is a separate state. You equip an item
+      from any slot, and it gives no extra storage.
     - Identical consumables stack.
   - **Growth:** XP or a themed progression the AI defines (e.g. "absorb relics"). Each
     level-up offers 2–3 choices.
