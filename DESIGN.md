@@ -154,8 +154,22 @@ The engine offers a vocabulary the AI combines. Examples:
 - A pluggable `LLMProvider` interface: Anthropic Claude by default, OpenAI-compatible APIs
   (which covers Ollama and other local models), and a **mock provider** that replays
   recorded responses for tests and for offline play.
-- A small local Node server holds the API keys and talks to the providers. The browser
-  never sees the keys.
+- **Two ways to deploy** a single game build, chosen by configuration. Both are always
+  played in a web browser:
+  - **Browser-only (static):** the game is a set of static files and can be hosted
+    anywhere, including GitHub Pages. The browser calls the LLM directly: Anthropic with
+    its direct-browser-access header, or an OpenAI-compatible endpoint that allows CORS,
+    such as a local Ollama. The player enters an API key or endpoint in settings, and it
+    is stored only in that browser's localStorage. Simple, but the key lives in the
+    browser.
+  - **Node backend:** a small server serves the game and proxies LLM calls. Keys live in
+    the server's environment, and the browser never sees them. This is better for sharing
+    with others.
+- The provider code is shared. It runs in the browser for static mode and on the server
+  for backend mode, behind the same `LLMProvider` interface. On the client, a
+  `transport` choice (`direct` | `backend`) picks the mode.
+- **Demo mode** works in both setups without any LLM: pick one of the recorded worlds.
+  The GM uses canned and templated lines.
 - Structured output is used wherever the provider supports it. Everything is validated
   against JSON schemas, and invalid output is retried with error feedback.
 
@@ -198,9 +212,12 @@ The engine offers a vocabulary the AI combines. Examples:
   keys for inventory, pick-up, inspect, wait and descend.
 - Mouse: click to travel or target, hover to inspect.
 
-## 7. Tech *(proposed)*
+## 7. Tech
 
-- TypeScript throughout, Vite for the client, and a Node server for the AI proxy.
+- **Playable in a web browser.** The two deployment modes are described in §4.4:
+  static browser-only, or with a Node backend.
+- TypeScript throughout. Vite for the client. The optional Node server (plain Node or
+  Fastify) serves the client and proxies LLM calls.
 - Engine core: pure TypeScript with no DOM, shared by the client, tests and simulation bots.
 - Schemas: zod, also used to produce the JSON Schemas sent to the LLM.
 - Tests: Vitest for the engine, bot playthroughs over many seeds and world specs, and
@@ -233,8 +250,9 @@ AI-generated images/textures.
 
 v1 is done when all of these hold. Each one is checked by automated tests or an agent playtest.
 
-1. `npm install && npm run dev` starts the server and client. A new run can be started
-   with a prompt or with *surprise me*.
+1. **Both deployment modes work.** `npm run dev` starts the backend mode, and
+   `npm run build:static` produces a static site that runs browser-only. In both, a new
+   run can be started with a prompt or with *surprise me*, or in demo mode with no LLM.
 2. With the mock provider, at least **10 distinct recorded worlds** load. Each one
    validates against the schema and can be played start to finish in the browser.
 3. **Bot simulation:** across those worlds and 100+ seeds, there are no crashes, no
@@ -248,7 +266,7 @@ v1 is done when all of these hold. Each one is checked by automated tests or an 
 6. **Graceful AI failure:** slow, invalid or missing provider responses never crash or
    freeze the game.
 7. **Providers:** Anthropic and OpenAI-compatible providers implemented and covered by
-   contract tests using mocked HTTP. One config switch selects the provider.
+   contract tests using mocked HTTP. One config switch selects the provider, and one selects the transport (direct or backend).
 8. **Audio:** generative ambience driven by the world's mood. SoundCloud integration is
    optional and can be switched off (best effort).
 9. A README covers setup, API keys and the firewall/allow-list note, plus the experiment
