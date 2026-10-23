@@ -52,9 +52,20 @@ introduces events. The engine guarantees the game stays playable and fair.
       the item: drink a potion, cast a spell, throw a dagger, or equip/swap a weapon.
     - **20-slot backpack** for everything else. Opening it is free; using or moving items
       costs a turn.
-    - **Equipped gear** (weapon, armour, trinket) is a separate state. You equip an item
-      from any slot, and it gives no extra storage.
-    - Identical consumables stack.
+    - **Equipped items stay in their slot** and are marked as equipped. At most one
+      weapon, one armour and one trinket can be equipped at a time. Activating a weapon
+      in the hotbar swaps to it.
+    - **How using an item works.** Each item has a *use mode*, which the AI picks per item:
+      - **Consumed:** used up on use (most potions and scrolls). Identical ones stack in
+        one slot.
+      - **Charges:** N uses, then the item is spent or becomes inert (wands, a lantern
+        with oil). Things can refill the charges.
+      - **Reusable:** never used up. Using it may cost MP or a custom resource, or have a
+        cooldown in turns (spells, a whistle, a weapon's special move).
+      - **Passive/equip:** does nothing when activated, but works while equipped or simply
+        while carried (weapons, armour, charms).
+    - Weapons and armour may have durability as a rule variant the AI chooses for a world,
+      but not by default.
   - **Growth:** XP or a themed progression the AI defines (e.g. "absorb relics"). Each
     level-up offers 2–3 choices.
   - **NPCs and dialogue:** non-hostile characters voiced by the GM, who can offer trades,
