@@ -240,7 +240,7 @@ v1 is done when all of these hold. Each one is checked by automated tests or an 
 3. **Bot simulation:** across those worlds and 100+ seeds, there are no crashes, no
    soft-locks (e.g. an unreachable exit), and runs both win and die at a reasonable rate.
 4. **Every system works in play:** fog of war, combat, abilities and MP, inventory and
-   equipment, levelling choices, identification, NPC dialogue, GM narration and events,
+   equipment, levelling choices, item knowledge (clear/vague/unknown and learning), NPC dialogue, GM narration and events,
    rule variants, save/resume, and the win and death screens.
 5. **Visuals:** the tilted 3D camera, AI-composed models for every creature and item,
    per-level lighting and fog, and wall cut-away. Playwright screenshots of every world
