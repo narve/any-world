@@ -294,7 +294,8 @@ v1 is done when all of these hold. Each one is checked by automated tests or an 
 1. **Both deployment modes work.** `npm run dev` starts the backend mode, and
    `npm run build:static` produces a static site that runs browser-only. In both, a new
    run can be started with a prompt or with *surprise me*, or in demo mode with no LLM.
-2. With the mock provider, at least **10 distinct recorded worlds** load. Each one
+2. With the mock provider, at least **10 distinct recorded worlds** load, spanning at least 7 genres, of which
+   at most 2 are fantasy or dungeon worlds, and at least 2 have mostly non-violent conflict. Each one
    validates against the schema and can be played start to finish in the browser.
 3. **Bot simulation:** across those worlds and 100+ seeds, there are no crashes, no
    soft-locks (e.g. an unreachable exit), and runs both win and die at a reasonable rate.
