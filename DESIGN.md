@@ -73,7 +73,10 @@ introduces events. The engine guarantees the game stays playable and fair.
   different worlds, not to master one. Save/resume is still supported.
 - **Run start:** an optional text prompt from the player ("a drowned cathedral full of
   clockwork saints"), or blank for *surprise me*, plus sliders for difficulty and
-  weirdness. The AI generates the world from that while a loading screen shows its
+  weirdness. The start screen also shows **inspiration prompts** from a curated library
+  (see §9): a few random ones as clickable cards, plus a shuffle button. Picking one fills
+  the text box so the player can tweak it. Prompts that have a recorded world can also be
+  played instantly in demo mode. The AI generates the world from that while a loading screen shows its
   progress (e.g. the world name and tagline as soon as they exist).
 - **Difficulty — fair but deadly:** real permadeath. Before play starts, the engine checks
   the AI's content against power budgets and runs quick bot simulations of the generated
@@ -280,6 +283,13 @@ AI-generated images/textures.
   the provider**: a subagent gets the exact system prompt and schema the game would send
   and produces the response. Those responses are validated, recorded as fixtures, and used
   to tune the prompts. You do the first live run against a real API.
+- **Prompt library:** while building, the agents write and try many player prompts across
+  genres. The ones that work best go into `content/prompts.json`. A prompt works well
+  when its world validates on the first try, passes the bot balance simulations and the
+  screenshot review, and is clearly different from the others. Each entry has the
+  prompt, its genre and tone tags, a one-line teaser, and a link to its recorded world
+  if there is one. The game uses this library as inspiration on the start screen
+  (§3.1). It also feeds into the *surprise me* seeds.
 - **Recorded in the repo:**
   - `BUILD_LOG.md`: a chronological log of decisions, problems and resolutions
   - `STATS.md`: agents run, and time and tokens per phase (best effort)
@@ -311,7 +321,10 @@ v1 is done when all of these hold. Each one is checked by automated tests or an 
    contract tests using mocked HTTP. One config switch selects the provider, and one selects the transport (direct or backend).
 8. **Audio:** generative ambience driven by the world's mood. SoundCloud integration is
    optional and can be switched off (best effort).
-9. A README covers setup, API keys and the firewall/allow-list note, plus the experiment
+9. **Prompt library:** at least 25 curated prompts covering at least 10 genres, shown on
+   the start screen. At least 10 of them come with a recorded world that plays in demo
+   mode.
+10. A README covers setup, API keys and the firewall/allow-list note, plus the experiment
    documents from §9.
 
 ## 11. Open questions
