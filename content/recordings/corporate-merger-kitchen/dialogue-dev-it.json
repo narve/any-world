@@ -1,0 +1,40 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/corporate-merger-kitchen/dev-it",
+      "json": {
+        "reply": "Oh thank god, a face. Nobody's opened tab four since the announcement, it's just me and the macros. Did you bring coffee? Tell me you brought coffee. Sorry. Hi. Mind the circular references, they bite, and the merged cells don't sort.",
+        "options": [
+          "I might have a filter coffee for you.",
+          "What's actually going on in this spreadsheet?",
+          "Where does this place lead?"
+        ],
+        "actions": [
+          {
+            "type": "start_quest",
+            "id": "coffee-for-dev",
+            "title": "Real Coffee for Dev",
+            "description": "Dev from IT has not had a proper coffee since the merger was announced. Carry two Filter Coffees and he'll owe you.",
+            "complete": {
+              "type": "has_item",
+              "who": "player",
+              "item": "filter-coffee",
+              "count": 2
+            },
+            "reward": [
+              {
+                "type": "grant_xp",
+                "amount": 15
+              },
+              {
+                "type": "currency",
+                "amount": 10
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

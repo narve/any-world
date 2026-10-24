@@ -1,0 +1,4005 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Every Clause Binds",
+    "tagline": "Iceland, 1004. Recite the whole law from memory at the Althing, and whatever you say aloud becomes true.",
+    "genre": "viking saga",
+    "tags": [
+      "saga",
+      "courtroom",
+      "iceland",
+      "memory",
+      "politics",
+      "non-violent"
+    ],
+    "tone": "tense, wry, midsummer-bright",
+    "era": "Iceland, Commonwealth, summer of 1004",
+    "premise": "Hallbjorn Grey-Tongue, Lawspeaker of Iceland for thirty summers, choked on a fishbone a week before the Althing. The law was never written down: it lived in his head, and now in yours. Three families want their own version remembered. The Mosfell kin want the boundary-stones moved, the Whalefjord kin want every stranded whale, the Hof kin want the old gods back in public. On the Law Rock every clause you speak becomes binding, and your master, it turns out, had been selling clauses for years.",
+    "prompt": "Iceland, 1004. Your master the lawspeaker is dead, and as his apprentice you must recite the entire law from memory at the Althing — but three powerful families each want a different version remembered, and every clause you speak aloud becomes binding. Win votes, not duels.",
+    "nonViolent": true,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Bearing",
+        "abbr": "BRG",
+        "description": "How much room you take up when you speak. Adds weight to a rebuttal."
+      },
+      "dex": {
+        "name": "Wit",
+        "abbr": "WIT",
+        "description": "Quick retorts. Helps you land a point and dodge a jeer."
+      },
+      "int": {
+        "name": "Memory",
+        "abbr": "MEM",
+        "description": "How much of the law you hold. Powers recited clauses and persuasion."
+      },
+      "hp": {
+        "name": "Standing",
+        "abbr": "STD",
+        "description": "Your good name at the Thing. At zero you are shouted down and the law goes to someone else."
+      },
+      "mp": {
+        "name": "Breath",
+        "abbr": "BRT",
+        "description": "Reciting costs breath. It comes back slowly between speeches."
+      },
+      "ac": {
+        "name": "Composure",
+        "abbr": "CMP",
+        "description": "How hard it is to rattle you."
+      }
+    },
+    "conflict": "Rebut",
+    "defeated": "outvoted",
+    "xp": "Renown",
+    "levelUp": "Your name grows",
+    "currency": "ells of wadmal",
+    "lossTitle": "Shouted Down",
+    "winTitle": "The Law Is Spoken",
+    "area": "Day"
+  },
+  "palette": {
+    "primary": "#7a9a5c",
+    "secondary": "#3b4a5a",
+    "accent": "#e0b04a",
+    "danger": "#c0472f",
+    "ui": "#1c242c",
+    "text": "#efe9dc"
+  },
+  "damageTypes": [
+    {
+      "id": "argument",
+      "name": "Argument",
+      "color": "#e0b04a"
+    },
+    {
+      "id": "scorn",
+      "name": "Scorn",
+      "color": "#c0472f"
+    },
+    {
+      "id": "forgetting",
+      "name": "Forgetting",
+      "color": "#8fa8c8"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "outlawed",
+      "name": "Outlawed",
+      "description": "Declared outside the law. They flinch from everyone and their guard is down.",
+      "harmful": true,
+      "color": "#8b2e2e",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": -2
+        }
+      ],
+      "flags": [
+        "afraid"
+      ]
+    },
+    {
+      "id": "thing-peace",
+      "name": "Thing-Peace",
+      "description": "The peace of the assembly has been called. No one may raise their voice.",
+      "harmful": true,
+      "color": "#d8e6f0",
+      "flags": [
+        "stunned"
+      ]
+    },
+    {
+      "id": "tongue-tied",
+      "name": "Tongue-Tied",
+      "description": "A clause on silence binds you. You cannot recite.",
+      "harmful": true,
+      "color": "#6c6f7a",
+      "flags": [
+        "silenced"
+      ]
+    },
+    {
+      "id": "oath-bound",
+      "name": "Oath-Bound",
+      "description": "You swore to stand your ground. You cannot move, but nothing shakes you.",
+      "harmful": false,
+      "color": "#b08d57",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 3
+        }
+      ],
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "ale-bold",
+      "name": "Ale-Bold",
+      "description": "Midsummer ale. Louder, braver, a little slower on the uptake.",
+      "harmful": false,
+      "color": "#d9a441",
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 2
+        },
+        {
+          "stat": "dex",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "retching",
+      "name": "Retching",
+      "description": "Someone threw rotten shark. Hard to argue while gagging.",
+      "harmful": true,
+      "color": "#9aa24a",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ],
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "word-lost",
+      "name": "Word-Lost",
+      "description": "A raven took a word out of your memory. You will find it again soon.",
+      "harmful": true,
+      "color": "#8fa8c8",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "every-clause-binds",
+      "name": "Every Clause Binds",
+      "description": "Half-remembered clauses are unknown until you speak them, and once spoken they are law, good or bad. Each rival you outvote becomes precedent and gives back 1 Standing.",
+      "playerTriggers": [
+        {
+          "on": "on_kill",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 1
+                }
+              },
+              {
+                "type": "counter",
+                "counter": "precedents",
+                "add": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "family-runners",
+      "name": "Runners of the Three Families",
+      "description": "The families pay boys to run between the booths. Every so often one shouts where you are, and anyone listening comes to argue.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 40,
+          "chance": 0.5,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "noise",
+                "radius": 10
+              },
+              {
+                "type": "message",
+                "text": "A barefoot runner yells your name and points. Heads turn."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Steinunn Hallsdottir",
+    "title": "Apprentice to the Lawspeaker",
+    "description": "Twenty winters old. You followed Hallbjorn from booth to booth for nine summers, mouthing the law behind him. Now his staff is yours, and so is the Rock.",
+    "stats": {
+      "str": 10,
+      "dex": 11,
+      "int": 14,
+      "hp": 28,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 10,
+    "sight": 8,
+    "unarmed": {
+      "name": "Pointed finger",
+      "verb": "jabs a point at",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "argument",
+      "accuracyStat": "int"
+    },
+    "startingItems": [
+      {
+        "item": "speaking-staff",
+        "equipped": true
+      },
+      {
+        "item": "wadmal-cloak",
+        "equipped": true
+      },
+      {
+        "item": "clause-rebuttal"
+      },
+      {
+        "item": "skyr-bowl",
+        "count": 2
+      },
+      {
+        "item": "stockfish",
+        "count": 1
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "long-memory",
+          "name": "Long Memory",
+          "description": "You remember the clause your master skipped in 997. +2 Memory.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "booming-voice",
+          "name": "Booming Voice",
+          "description": "You learn to speak from the belly, like a skipper in a gale. +2 Bearing.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "quick-retort",
+          "name": "Quick Retort",
+          "description": "You answer before they finish. +2 Wit.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "deep-lungs",
+          "name": "Deep Lungs",
+          "description": "Nine summers of reciting in the wind. +4 Breath.",
+          "modifiers": [
+            {
+              "stat": "mp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "good-name",
+          "name": "A Good Name",
+          "description": "People start saying your name before Hallbjorn's. +5 Standing.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 5
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "perk-outlawry",
+          "name": "The Outlawry Clause",
+          "description": "You recall the full wording of lesser outlawry. Grants the Clause of Outlawry.",
+          "grantItems": [
+            "clause-outlawry"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "perk-thing-peace",
+          "name": "The Thing-Peace Clause",
+          "description": "You recall the words that silence a crowd. Grants the Clause of Thing-Peace.",
+          "grantItems": [
+            "clause-thing-peace"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "perk-witnesses",
+          "name": "Calling Witnesses",
+          "description": "You know which old men will swear for you. Grants the Clause of Witnesses.",
+          "grantItems": [
+            "clause-witnesses"
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "crowd-favourite",
+          "name": "The Crowd's Favourite",
+          "description": "When you outvote someone, the crowd sometimes cheers you back up (heal 3).",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "chance": 0.5,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 3
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "unshakable",
+          "name": "Lawspeaker's Calm",
+          "description": "You stand as still as the Rock. +1 Composure.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.85,
+        "build": "slim",
+        "skin": "#f0cfae",
+        "top": "#5f7f9a",
+        "bottom": "#4a3f35",
+        "accent": "#e0b04a",
+        "hair": "#d0823a",
+        "hairStyle": "braids",
+        "headwear": "none",
+        "outfit": "robe",
+        "holding": "staff"
+      },
+      "idle": "bob",
+      "light": {
+        "color": "#ffe2a8",
+        "intensity": 0.4,
+        "radius": 2
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "booth-heckler",
+      "name": "Booth Heckler",
+      "description": "A farmhand paid in ale to shout down anyone who sounds like they know the law.",
+      "stats": {
+        "hp": 7,
+        "ac": 10,
+        "str": 10,
+        "dex": 10,
+        "int": 6
+      },
+      "attack": {
+        "name": "Jeer",
+        "verb": "jeers at",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "scorn"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.15
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "stockfish",
+          "chance": 0.2
+        }
+      ],
+      "xp": 5,
+      "persuadeDifficulty": 10,
+      "tags": [
+        "crowd"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "broad",
+          "skin": "#e6b894",
+          "top": "#8a6a4a",
+          "bottom": "#5a4632",
+          "hair": "#3a2a1a",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "rags",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "boundary-reeve",
+      "name": "Mosfell Boundary-Reeve",
+      "description": "Carries a sack of boundary-stones and knows exactly where each one should have been.",
+      "stats": {
+        "hp": 11,
+        "ac": 12,
+        "str": 12,
+        "dex": 9,
+        "int": 9
+      },
+      "attack": {
+        "name": "Cite a boundary",
+        "verb": "cites a boundary-stone at",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "argument"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "knot-mead-debts",
+          "chance": 0.25
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "mosfell"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "broad",
+          "skin": "#e9c3a0",
+          "top": "#a0522d",
+          "bottom": "#3a2a1a",
+          "accent": "#a7c957",
+          "hair": "#7a5230",
+          "hairStyle": "long",
+          "headwear": "hood",
+          "outfit": "coat",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "hof-satirist",
+      "name": "Hof Kin Satirist",
+      "description": "A skald of the old gods. Composes a mocking verse about you from across the field, in perfect metre.",
+      "stats": {
+        "hp": 7,
+        "ac": 11,
+        "str": 7,
+        "dex": 13,
+        "int": 12
+      },
+      "attack": {
+        "name": "Mocking verse",
+        "verb": "lampoons",
+        "damage": {
+          "dice": "1d4"
+        },
+        "damageType": "scorn",
+        "range": 4,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.1
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "knot-insulting-verse",
+          "chance": 0.3
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "hof"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#f2d6bb",
+          "top": "#7a2e3a",
+          "bottom": "#3b2a2e",
+          "accent": "#e0b04a",
+          "hair": "#e8d9a8",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "robe",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "oath-helper",
+      "name": "Whalefjord Oath-Helper",
+      "description": "One of twelve men who will swear to anything the Whalefjord kin say. They never come alone.",
+      "stats": {
+        "hp": 8,
+        "ac": 11,
+        "str": 11,
+        "dex": 10,
+        "int": 7
+      },
+      "attack": {
+        "name": "Swear against",
+        "verb": "swears against",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "argument"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "skyr-bowl",
+          "chance": 0.15
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "whalefjord"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#dcb08c",
+          "top": "#2f5f8a",
+          "bottom": "#d8d2c0",
+          "accent": "#c0d8e8",
+          "hair": "#1f1f1f",
+          "hairStyle": "short",
+          "headwear": "helmet",
+          "outfit": "uniform",
+          "holding": "shield"
+        }
+      }
+    },
+    {
+      "id": "clause-raven",
+      "name": "Clause-Eating Raven",
+      "description": "Odin's ravens are gone; these are their hungry cousins. They pick words out of your memory like worms from turf.",
+      "stats": {
+        "hp": 6,
+        "ac": 12,
+        "str": 6,
+        "dex": 15,
+        "int": 5
+      },
+      "speed": 130,
+      "attack": {
+        "name": "Peck a word",
+        "verb": "pecks a word from",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "forgetting",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "word-lost",
+                "duration": 6
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "knot-strayed-sheep",
+          "chance": 0.2
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "bird"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#181a20",
+          "secondary": "#3a3f4a",
+          "accent": "#f0e6c8"
+        },
+        "scale": 0.7,
+        "idle": "hover",
+        "light": {
+          "color": "#f0e6c8",
+          "intensity": 0.4,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "rift-echo",
+      "name": "Echo of a Dead Speaker",
+      "description": "A lawspeaker from 930, still reciting in the rift. He repeats everything you say, slightly wrong, and louder.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 9,
+        "dex": 10,
+        "int": 13
+      },
+      "attack": {
+        "name": "Wrong repetition",
+        "verb": "repeats you wrongly at",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "forgetting",
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "loot": [
+        {
+          "item": "knot-hasty-oaths",
+          "chance": 0.25
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "echo"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.45,
+              0.9,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#bcd8f0",
+            "material": "glass",
+            "emissive": "#5f8fbf"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.3,
+              0.3
+            ],
+            "pos": [
+              0,
+              1.15,
+              0
+            ],
+            "color": "#e6f2ff",
+            "material": "glass",
+            "emissive": "#8fb8e0"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.5,
+              0.06,
+              0.5
+            ],
+            "pos": [
+              0,
+              1.15,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "glow",
+            "emissive": "#e0b04a",
+            "group": "ring"
+          }
+        ],
+        "idle": "flicker",
+        "light": {
+          "color": "#8fb8e0",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "blusterer",
+      "name": "Hired Blusterer",
+      "description": "A berserk the families brought to provoke a duel. He is not allowed to hit you, so he shouts very close to your face.",
+      "stats": {
+        "hp": 20,
+        "ac": 12,
+        "str": 15,
+        "dex": 9,
+        "int": 6
+      },
+      "attack": {
+        "name": "Bellow",
+        "verb": "bellows at",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "scorn",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "midsummer-ale",
+          "chance": 0.5
+        }
+      ],
+      "xp": 18,
+      "tags": [
+        "elite"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.1,
+          "build": "broad",
+          "skin": "#e2b48e",
+          "top": "#5a3b2a",
+          "bottom": "#3a2a20",
+          "accent": "#c0472f",
+          "hair": "#b0502a",
+          "hairStyle": "mohawk",
+          "headwear": "horned_helmet",
+          "outfit": "armour",
+          "holding": "axe"
+        },
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "misremembered-clause",
+      "name": "Misremembered Clause",
+      "description": "A standing stone carved with a law that was never passed. It slides toward you insisting it was.",
+      "stats": {
+        "hp": 14,
+        "ac": 13,
+        "str": 12,
+        "dex": 8,
+        "int": 10
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Contradict",
+        "verb": "contradicts",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "argument",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "knot-night-silence",
+          "chance": 0.25
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "memory"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              1.1,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#9a9488",
+            "material": "stone"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.34,
+              0.06,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.85,
+              0.12
+            ],
+            "color": "#ff6a4a",
+            "material": "glow",
+            "emissive": "#ff6a4a"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.06,
+              0.4,
+              0.02
+            ],
+            "pos": [
+              -0.08,
+              0.55,
+              0.12
+            ],
+            "color": "#ff6a4a",
+            "material": "glow",
+            "emissive": "#ff6a4a"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.06,
+              0.02
+            ],
+            "pos": [
+              0.06,
+              0.4,
+              0.12
+            ],
+            "color": "#ff6a4a",
+            "material": "glow",
+            "emissive": "#ff6a4a"
+          }
+        ],
+        "idle": "sway",
+        "light": {
+          "color": "#ff6a4a",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "forgotten-precedent",
+      "name": "Forgotten Precedent",
+      "description": "A ruling from a case nobody remembers, coiled in the dark like a rope of gold runes. It bites whoever steps on it.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 10,
+        "dex": 13,
+        "int": 8
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Old ruling",
+        "verb": "cites an old ruling at",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "forgetting"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "angelica-root",
+          "chance": 0.3
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "memory"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#e0b04a",
+          "secondary": "#6a4a1a",
+          "accent": "#fff2c0"
+        },
+        "idle": "sway",
+        "light": {
+          "color": "#e0b04a",
+          "intensity": 0.5,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "grey-silence",
+      "name": "The Grey Silence",
+      "description": "The part of Hallbjorn's memory the fishbone took. Where it drifts, words simply stop.",
+      "stats": {
+        "hp": 22,
+        "ac": 12,
+        "str": 12,
+        "dex": 10,
+        "int": 14,
+        "mp": 20
+      },
+      "speed": 80,
+      "attack": {
+        "name": "Swallow words",
+        "verb": "swallows the words of",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "forgetting",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "hush",
+          "name": "Hush",
+          "description": "Everything nearby goes quiet. Your next clause dies in your throat.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "tongue-tied",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#9aa0aa"
+            }
+          },
+          "cooldown": 10
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "loot": [
+        {
+          "item": "angelica-root",
+          "chance": 0.5
+        }
+      ],
+      "xp": 24,
+      "tags": [
+        "elite",
+        "memory"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#8c9099",
+          "secondary": "#5a5e66",
+          "accent": "#d8dce4"
+        },
+        "scale": 1.3,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "thorgunna",
+      "name": "Thorgunna Wide-Mouth",
+      "description": "The candidate all three families agreed on, because each of them thinks they own her. Her version of the law has room for every bribe.",
+      "stats": {
+        "hp": 70,
+        "ac": 13,
+        "str": 14,
+        "dex": 11,
+        "int": 15,
+        "mp": 30
+      },
+      "attack": {
+        "name": "Her version",
+        "verb": "recites her version at",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "argument",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "call-oath-helpers",
+          "name": "Call the Oath-Helpers",
+          "description": "She raises a hand and two Whalefjord men swear she is right.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "oath-helper",
+                "count": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#2f5f8a"
+            }
+          },
+          "cooldown": 14,
+          "useWhen": "start_of_fight"
+        },
+        {
+          "id": "wall-of-precedent",
+          "name": "Wall of Precedent",
+          "description": "Thirty years of rulings, all at once, in your face.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "radius": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 1,
+                  "dice": "1d6"
+                },
+                "damageType": "scorn"
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#c0472f"
+            }
+          },
+          "cooldown": 6
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Warm, quick, utterly flexible. Agrees with everyone in the first sentence and with no one by the third. Calls you 'little sister'.",
+        "greeting": "Little sister. You look tired. Let me say the law this year, and you can say it next year, when you've grown into the staff.",
+        "lines": [
+          "Every family gets a clause. Is that not what peace looks like?",
+          "Your master sold clauses too, you know. I only sell them openly.",
+          "Say one wrong word up here and it binds you as tightly as it binds them."
+        ],
+        "secrets": "She has Hallbjorn's ledger of sold clauses memorised and plans to recite all of them as law.",
+        "wants": "To be Lawspeaker for life, owed by all three families.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 19
+      },
+      "tags": [
+        "boss"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.05,
+          "build": "round",
+          "skin": "#f0c9a4",
+          "top": "#8a2a4a",
+          "bottom": "#2f5f8a",
+          "accent": "#a7c957",
+          "hair": "#f2e2b0",
+          "hairStyle": "bun",
+          "headwear": "crown",
+          "outfit": "dress",
+          "holding": "staff"
+        },
+        "scale": 1.2,
+        "light": {
+          "color": "#ffd9a0",
+          "intensity": 0.6,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "gudrun-skyr",
+      "name": "Gudrun Skyr-Wife",
+      "description": "Runs the busiest food booth at the Thing. She hears every deal and sells to all three families.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 14,
+        "ac": 10,
+        "str": 10,
+        "dex": 9,
+        "int": 12
+      },
+      "speed": 60,
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Brisk, nosy, kind in a practical way. Measures people by what they order.",
+        "greeting": "Hallbjorn's girl! Eat something. Nobody listens to a lawspeaker whose stomach is louder than her voice.",
+        "lines": [
+          "The Mosfell men eat standing up. That means they are worried.",
+          "Whalefjord pays in whale meat. I take it, but I complain.",
+          "Your master owed me for three summers of skyr. I'll forget it if you win."
+        ],
+        "stock": [
+          "skyr-bowl",
+          "stockfish",
+          "midsummer-ale",
+          "angelica-root",
+          "rotten-shark",
+          "bearskin-cloak",
+          "tally-stick"
+        ],
+        "secrets": "Hallbjorn met someone from each family at her booth, late, every summer. She thought it was love affairs.",
+        "wants": "A clause that lets women own booths at the Thing outright.",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "trader"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#f2d0b0",
+          "top": "#c9b48a",
+          "bottom": "#6a5a40",
+          "accent": "#ffffff",
+          "hair": "#a05a2a",
+          "hairStyle": "bun",
+          "headwear": "bandana",
+          "outfit": "dress",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "asa-widow",
+      "name": "Asa, Hallbjorn's Widow",
+      "description": "She married the Lawspeaker and spent thirty summers listening to him practise in his sleep.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 12,
+        "ac": 10,
+        "str": 7,
+        "dex": 8,
+        "int": 15
+      },
+      "speed": 60,
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Dry, grieving, unsentimental. Speaks in short sentences and never wastes a word.",
+        "greeting": "You have his staff. Good. Do not let them have his voice too.",
+        "lines": [
+          "He talked in his sleep. Not the law. Prices.",
+          "The Mosfell kin hide their oath-ring where their reeves stand thickest.",
+          "Go into the rift. He always said the law echoes truer there."
+        ],
+        "secrets": "She knows Hallbjorn kept a knotted cord recording every clause he changed and for whom. He said he hid it 'where he kept the law'.",
+        "wants": "For his name to be cleared, or, if it can't be, for the truth to come out anyway.",
+        "persuadeDifficulty": 9
+      },
+      "tags": [
+        "lore"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.8,
+          "build": "slim",
+          "skin": "#efd8c4",
+          "top": "#2a2a30",
+          "bottom": "#2a2a30",
+          "accent": "#c0c0c0",
+          "hair": "#d8d8d8",
+          "hairStyle": "bun",
+          "headwear": "hood",
+          "outfit": "dress",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "brother-kolskegg",
+      "name": "Brother Kolskegg",
+      "description": "An Irish-trained priest who came to Iceland with the new faith four summers ago and stayed in the rift because the acoustics are holy.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 14,
+        "ac": 10,
+        "str": 9,
+        "dex": 9,
+        "int": 13
+      },
+      "speed": 60,
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Gentle, chatty, and delighted by Icelandic law as if it were scripture. Mixes Latin and Norse.",
+        "greeting": "Pax tibi, little lawspeaker. Sit. Let me put some salve on your pride.",
+        "lines": [
+          "The law was spoken here before Christ came, and it will be spoken after. That pleases me.",
+          "The Whalefjord men keep their ring in the deep of the rift, under the ravens.",
+          "A clause half-remembered is a prayer half-said. Be careful which ones you finish."
+        ],
+        "secrets": "He heard Hallbjorn's last confession. The master asked forgiveness for 'the knots'.",
+        "wants": "To hear the full law recited once, honestly, before he dies.",
+        "persuadeDifficulty": 8
+      },
+      "tags": [
+        "healer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "average",
+          "skin": "#f4dcc8",
+          "top": "#6a4a2a",
+          "bottom": "#6a4a2a",
+          "accent": "#f0f0e0",
+          "hair": "#8a6a4a",
+          "hairStyle": "none",
+          "headwear": "hood",
+          "outfit": "robe",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "hallbjorn-memory",
+      "name": "Hallbjorn, As He Remembered Himself",
+      "description": "Your master inside his own memory: younger, taller and more honest than he ever was.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 10,
+        "str": 10,
+        "dex": 10,
+        "int": 18
+      },
+      "speed": 60,
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Grand, rueful, a born performer. Talks to you like a favourite pupil and to himself like a defendant.",
+        "greeting": "Steinunn. You came all the way in here. Then you know the law is not in the stones. It never was.",
+        "lines": [
+          "Every clause I changed, I tied into a cord. A lawspeaker must remember his lies most of all.",
+          "The Hof kin's ring is here somewhere. I was holding it for them. For a fee.",
+          "Say the true law and they are bound by it, all three. Even me."
+        ],
+        "secrets": "The Law-Knot holds the true law and every alteration. Recited on the Law Rock with all three families' oath-rings in hand, it binds them to the honest version.",
+        "wants": "To be forgiven, which he knows he does not deserve.",
+        "persuadeDifficulty": 12
+      },
+      "tags": [
+        "lore",
+        "memory"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.1,
+          "build": "broad",
+          "skin": "#e8d6c0",
+          "top": "#c9d8e8",
+          "bottom": "#7a8a9a",
+          "accent": "#e0b04a",
+          "hair": "#f4f4f4",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "robe",
+          "holding": "staff"
+        },
+        "idle": "hover",
+        "light": {
+          "color": "#e0c88a",
+          "intensity": 0.9,
+          "radius": 3
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "speaking-staff",
+      "name": "Hallbjorn's Speaking-Staff",
+      "kind": "Lawspeaker's staff",
+      "description": "Ash wood worn smooth where your master gripped it for thirty summers. Thumped on the rock, it makes people stop and listen.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Rebuttal",
+        "verb": "rebuts",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "argument",
+        "accuracyStat": "int"
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              1.1,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#b08d57",
+            "material": "wood"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.12,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "metal"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "wadmal-cloak",
+      "name": "Grey Wadmal Cloak",
+      "kind": "Cloak",
+      "description": "Homespun, oily, warm. Insults slide off it a little.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.5,
+              0.6,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#8a8f96",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "bearskin-cloak",
+      "name": "Bearskin of a Bankrupt Godi",
+      "kind": "Fur cloak",
+      "description": "A chieftain lost it at dice last summer. Wearing it, you look like someone who has never lost anything.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 32,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#5a3a22",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.18,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.62,
+              0
+            ],
+            "color": "#3a2414",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "tally-stick",
+      "name": "Tally-Stick of Precedents",
+      "kind": "Notched stick",
+      "description": "Every notch is a ruling. Running a thumb along it, you remember the order of things.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        },
+        {
+          "stat": "mp",
+          "amount": 2
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 28,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.06,
+              0.5,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              15
+            ],
+            "color": "#d8c09a",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "skyr-bowl",
+      "name": "Bowl of Skyr",
+      "kind": "Food",
+      "description": "Thick, sour, cold from the spring. Hard to feel insulted with a full belly.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4f4ec"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.3,
+              0.12,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#7a5a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.26,
+              0.08,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#f4f4ec",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "stockfish",
+      "name": "Dried Stockfish",
+      "kind": "Food",
+      "description": "Wind-dried cod, hard as a board. Chewing it gives you time to think.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8dcc0"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.04,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              0,
+              30,
+              0
+            ],
+            "color": "#d8c8a0",
+            "material": "matte"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.12,
+              0.04,
+              0.14
+            ],
+            "pos": [
+              0.22,
+              0.05,
+              0.1
+            ],
+            "rot": [
+              0,
+              30,
+              0
+            ],
+            "color": "#c8b890",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "midsummer-ale",
+      "name": "Horn of Midsummer Ale",
+      "kind": "Ale",
+      "description": "Brewed for the Thing by a farm that brews for nothing else.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "ale-bold",
+            "duration": 12
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#d9a441"
+        }
+      },
+      "value": 14,
+      "knowledge": "vague",
+      "vagueText": "Strong midsummer ale. It warms you and loosens the tongue, in both directions.",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.14,
+              0.4,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              160
+            ],
+            "color": "#e8dcc0",
+            "material": "matte"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.16,
+              0.03,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#b08d57",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "angelica-root",
+      "name": "Angelica Root",
+      "kind": "Herb",
+      "description": "Chewed by skalds before a long poem. Opens the chest and clears the throat.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#a7c957"
+        }
+      },
+      "value": 14,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.05,
+              0.35,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.17,
+              0
+            ],
+            "color": "#a7c957",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.12,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.36,
+              0
+            ],
+            "color": "#e8f0c0",
+            "material": "matte"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "rotten-shark",
+      "name": "Rotten Shark Morsel",
+      "kind": "Projectile",
+      "description": "Buried for months, hung for months. Thrown at a rival, it ends the argument for a while.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "scorn"
+          },
+          {
+            "type": "apply_status",
+            "status": "retching",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#c8c890"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.14,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#e0dcb0",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "clause-rebuttal",
+      "name": "Clause of Rebuttal",
+      "kind": "Recited clause",
+      "description": "'If a man speaks falsely at the Thing, any man may answer him.' You answer, from up to 5 tiles away.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 3
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.15
+              }
+            },
+            "damageType": "argument"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#e0b04a"
+        }
+      },
+      "value": 0,
+      "rarity": "unique",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.05,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "glow",
+            "emissive": "#e0b04a"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "clause-outlawry",
+      "name": "Clause of Outlawry",
+      "kind": "Recited clause",
+      "description": "You declare a rival outside the law. They lose their nerve and their guard for a while.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "scorn"
+          },
+          {
+            "type": "apply_status",
+            "status": "outlawed",
+            "duration": 6
+          }
+        ],
+        "vfx": {
+          "kind": "beam",
+          "color": "#8b2e2e"
+        }
+      },
+      "value": 0,
+      "rarity": "rare",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.05,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#c0472f",
+            "material": "glow",
+            "emissive": "#c0472f"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "clause-thing-peace",
+      "name": "Clause of Thing-Peace",
+      "kind": "Recited clause",
+      "description": "The ancient peace of the assembly. Everyone within 2 tiles of you falls silent for 2 turns.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 6
+      },
+      "cooldown": 8,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 0,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "thing-peace",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#d8e6f0"
+        }
+      },
+      "value": 0,
+      "rarity": "rare",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.05,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#d8e6f0",
+            "material": "glow",
+            "emissive": "#d8e6f0"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "clause-witnesses",
+      "name": "Clause of Witnesses",
+      "kind": "Recited clause",
+      "description": "You call on old men who saw your master train you. Restores 6-9 Standing and clears harmful effects.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 6
+      },
+      "cooldown": 10,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f0e6c8"
+        }
+      },
+      "value": 0,
+      "rarity": "rare",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.05,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#f0e6c8",
+            "material": "glow",
+            "emissive": "#f0e6c8"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "knot-mead-debts",
+      "name": "Clause on Mead-Debts",
+      "kind": "Knot-cord",
+      "description": "'A debt of mead is paid in mead.' Spoken, it settles you like a full cup (restores Standing).",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e0b04a"
+        }
+      },
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#c0472f",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "knot-strayed-sheep",
+      "name": "Clause on Strayed Sheep",
+      "kind": "Knot-cord",
+      "description": "'Whoever finds a strayed sheep must know where every pen is.' Spoken, the whole day's ground lies open to you.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 99
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#a7c957"
+        }
+      },
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#a7c957",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "knot-insulting-verse",
+      "name": "Clause on Insulting Verse",
+      "kind": "Knot-cord",
+      "description": "'A verse that mocks a man to his face is an offence against him.' Spoken, it turns every jeer in sight back on its maker.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "all_visible",
+          "range": 8,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "1d4"
+            },
+            "damageType": "scorn"
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#c0472f"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#7a2e3a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "knot-night-silence",
+      "name": "Clause on Night Silence",
+      "kind": "Knot-cord",
+      "description": "'No man shall recite after the sun touches the sea.' Spoken, it binds you too: you cannot recite for a while.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "tongue-tied",
+            "duration": 8
+          },
+          {
+            "type": "message",
+            "text": "The clause is law the moment you say it. Your throat closes on the next one."
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#6c6f7a"
+        }
+      },
+      "value": 4,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#2a2a30",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "knot-hasty-oaths",
+      "name": "Clause on Hasty Oaths",
+      "kind": "Knot-cord",
+      "description": "'An oath sworn standing must be kept standing.' Spoken, you cannot move for 4 turns, but nothing rattles you (+3 Composure).",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "oath-bound",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#b08d57"
+        }
+      },
+      "value": 8,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#2f5f8a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "mosfell-ring",
+      "name": "Oath-Ring of the Mosfell Kin",
+      "kind": "Family oath-ring",
+      "description": "A heavy silver ring that every Mosfell man swears on. Whoever holds it at the Rock speaks with their votes. One of three needed for the Law-Knot.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.08,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#d8dce0",
+            "material": "metal",
+            "emissive": "#4a7a3a"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#a7c957",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "whalefjord-ring",
+      "name": "Oath-Ring of the Whalefjord Kin",
+      "kind": "Family oath-ring",
+      "description": "Whale-ivory set in silver, smelling faintly of the sea. Carries the Whalefjord votes. One of three needed for the Law-Knot.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.08,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#f0ead8",
+            "material": "metal",
+            "emissive": "#2f5f8a"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#8fc0e8",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "hof-ring",
+      "name": "Oath-Ring of the Hof Kin",
+      "kind": "Family oath-ring",
+      "description": "The temple ring, once reddened with sacrifice. It carries the Hof votes. One of three needed for the Law-Knot.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.08,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "metal",
+            "emissive": "#7a2e3a"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff9a6a",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "law-knot",
+      "name": "Hallbjorn's Law-Knot",
+      "kind": "Knot-cord",
+      "description": "The true law and every clause your master sold, tied into one cord. On the Law Rock, holding all three oath-rings, recite it in three parts to bind the families.",
+      "category": "quest",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "mosfell-ring"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "whalefjord-ring"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "hof-ring"
+            }
+          ]
+        },
+        "effects": [
+          {
+            "type": "counter",
+            "counter": "thirds-recited",
+            "add": 1
+          },
+          {
+            "type": "noise",
+            "radius": 12
+          },
+          {
+            "type": "message",
+            "text": "You recite a third of the law from the knots, naming every clause that was sold and to whom. The crowd below goes quiet. Thorgunna does not."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e0b04a"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.06,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "cloth",
+            "emissive": "#7a5a1a"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0.18,
+              0.1,
+              0
+            ],
+            "color": "#c0472f",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              -0.18,
+              0.1,
+              0
+            ],
+            "color": "#2f5f8a",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.1,
+              0.18
+            ],
+            "color": "#4a7a3a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#e0b04a",
+          "intensity": 1,
+          "radius": 2
+        }
+      },
+      "cooldown": 12
+    }
+  ],
+  "terrains": [
+    {
+      "id": "rift-water",
+      "name": "Rift Water",
+      "description": "Glacier water so clear you misjudge the depth. Slow and cold to wade.",
+      "moveCost": 2,
+      "color": "#3d8fb6",
+      "emissive": "#123a50"
+    },
+    {
+      "id": "booth-hearth",
+      "name": "Booth Hearth",
+      "description": "A cooking fire in a turf booth. Someone left fish on the stones.",
+      "walkable": false,
+      "color": "#5a3a22",
+      "height": 0.4,
+      "emissive": "#ff8a3a",
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "chance",
+          "p": 0.5
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "stockfish"
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.7,
+              0.15,
+              0.7
+            ],
+            "pos": [
+              0,
+              0.07,
+              0
+            ],
+            "color": "#4a4a4a",
+            "material": "stone"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.35,
+              0.45,
+              0.35
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "color": "#ff8a3a",
+            "material": "glow",
+            "emissive": "#ff8a3a"
+          }
+        ],
+        "idle": "flicker",
+        "light": {
+          "color": "#ff9a4a",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "speaking-stone",
+      "name": "Echoing Stone",
+      "description": "A basalt column where speakers practised. Speak into it and the rift answers with a word you had lost.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#2e3138",
+      "height": 1.6,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 5
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "word-lost"
+          },
+          {
+            "type": "message",
+            "text": "The rift says it back to you, clearer than you said it."
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.6,
+              1.6,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#3a3e46",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.62,
+              0.05,
+              0.62
+            ],
+            "pos": [
+              0,
+              1.2,
+              0
+            ],
+            "color": "#8fb8e0",
+            "material": "glow",
+            "emissive": "#8fb8e0"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "memory-glyph",
+      "name": "Remembered Rune",
+      "description": "A rune your master knew by heart, glowing in the floor of his memory. Standing on it steadies your breath.",
+      "color": "#e0b04a",
+      "emissive": "#a07a20",
+      "onStand": [
+        {
+          "type": "resource",
+          "resource": "mp",
+          "amount": {
+            "base": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "forgotten-gap",
+      "name": "Forgotten Gap",
+      "description": "Nothing. He forgot this part entirely.",
+      "walkable": false,
+      "color": "#0a0a14",
+      "height": 0
+    },
+    {
+      "id": "law-cairn",
+      "name": "Cairn of Old Rulings",
+      "description": "Stones stacked by lawspeakers past. One of them has something tucked behind it.",
+      "walkable": false,
+      "color": "#8a8478",
+      "height": 0.9,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "chance",
+          "p": 0.6
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "skyr-bowl"
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.7,
+              0.4,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#8a8478",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.5,
+              0.3,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#9a948a",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.2,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.72,
+              0
+            ],
+            "color": "#aaa49a",
+            "material": "stone"
+          }
+        ],
+        "idle": "none"
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "knot-cords": [
+      {
+        "label": "Cord with three red knots",
+        "color": "#c0472f"
+      },
+      {
+        "label": "Plaited horsehair cord",
+        "color": "#5a3a22"
+      },
+      {
+        "label": "Cord with a bone bead",
+        "color": "#f0e6c8"
+      },
+      {
+        "label": "Tight blue cord",
+        "color": "#2f5f8a"
+      },
+      {
+        "label": "Cord knotted left-handed",
+        "color": "#a7c957"
+      },
+      {
+        "label": "Frayed grey cord",
+        "color": "#8a8f96"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "First Day: The Booths at Thingvellir",
+      "description": "A green plain under a sun that will not set, crowded with turf booths, cooking smoke and men from every quarter of Iceland arguing about sheep.",
+      "generator": "town",
+      "size": "medium",
+      "params": {
+        "buildings": 14,
+        "streetWidth": 3,
+        "crossStreets": 2
+      },
+      "floor": {
+        "color": "#6f8f45",
+        "color2": "#86a352",
+        "material": "stone",
+        "pattern": "grass"
+      },
+      "wall": {
+        "color": "#7a6548",
+        "color2": "#5d6b3a",
+        "material": "stone",
+        "height": 1,
+        "pattern": "noise"
+      },
+      "lighting": {
+        "ambient": "#d8e2ee",
+        "ambientIntensity": 0.65,
+        "sun": {
+          "color": "#ffd9a0",
+          "intensity": 1.3,
+          "elevation": 14
+        },
+        "lamps": {
+          "color": "#ff9a4a",
+          "intensity": 0.8,
+          "frequency": 0.15,
+          "flicker": true
+        },
+        "playerLight": 3,
+        "sky": "#b8cfe2"
+      },
+      "actors": [
+        {
+          "actor": "booth-heckler",
+          "weight": 10,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "boundary-reeve",
+          "weight": 6,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "hof-satirist",
+          "weight": 5,
+          "max": 2
+        },
+        {
+          "actor": "oath-helper",
+          "weight": 4,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "gudrun-skyr",
+          "where": "near_start"
+        },
+        {
+          "actor": "asa-widow",
+          "where": "anywhere"
+        }
+      ],
+      "items": [
+        {
+          "item": "skyr-bowl",
+          "weight": 10
+        },
+        {
+          "item": "stockfish",
+          "weight": 10
+        },
+        {
+          "item": "midsummer-ale",
+          "weight": 4
+        },
+        {
+          "item": "angelica-root",
+          "weight": 5
+        },
+        {
+          "item": "rotten-shark",
+          "weight": 5
+        },
+        {
+          "item": "knot-mead-debts",
+          "weight": 4
+        },
+        {
+          "item": "knot-strayed-sheep",
+          "weight": 3
+        },
+        {
+          "item": "knot-hasty-oaths",
+          "weight": 3
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "mosfell-ring",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "booth-hearth",
+          "density": 0.01
+        },
+        {
+          "terrain": "rift-water",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Show the Mosfell ring and go down into the Rift",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.1,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#2e3138",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              1.4,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#b08d57",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.3,
+              0.04
+            ],
+            "pos": [
+              0,
+              1.2,
+              0
+            ],
+            "color": "#c0472f",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffd9a0",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Midsummer, the first day of the Thing. Crowds, smoke, gossip. Hecklers are paid by all three families. Asa knows about the Law-Knot. The Mosfell oath-ring is guarded by boundary-reeves; the Mosfell men block the rift path until the player holds it. Keep it bright and loud.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#b8cfe2",
+        "color2": "#f2d6a8",
+        "intensity": 0.6
+      },
+      "music": "explore",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "mosfell-ring"
+      }
+    },
+    {
+      "name": "Second Day: Almannagja, the All-Men's Rift",
+      "description": "A crack in the world where two continents pull apart. Black basalt walls, mist off the glacier water, and ravens that have learned to eat words.",
+      "generator": "caves",
+      "size": "medium",
+      "params": {
+        "openness": 0.5,
+        "smoothing": 5,
+        "pools": 0.5
+      },
+      "floor": {
+        "color": "#5a6068",
+        "color2": "#6f7f52",
+        "material": "stone",
+        "pattern": "cobble"
+      },
+      "wall": {
+        "color": "#2a2d34",
+        "color2": "#3a3f48",
+        "material": "stone",
+        "height": 2.4,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#a8b8cc",
+        "ambientIntensity": 0.55,
+        "sun": {
+          "color": "#e8eef8",
+          "intensity": 0.7,
+          "elevation": 30
+        },
+        "fog": {
+          "color": "#aab8c8",
+          "density": 0.04
+        },
+        "lamps": {
+          "color": "#8fb8e0",
+          "intensity": 0.6,
+          "frequency": 0.08
+        },
+        "playerLight": 4,
+        "sky": "#c8d4e0"
+      },
+      "actors": [
+        {
+          "actor": "clause-raven",
+          "weight": 9,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "rift-echo",
+          "weight": 6,
+          "max": 3
+        },
+        {
+          "actor": "oath-helper",
+          "weight": 6,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "booth-heckler",
+          "weight": 4,
+          "max": 2
+        },
+        {
+          "actor": "blusterer",
+          "weight": 3,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "brother-kolskegg",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "skyr-bowl",
+          "weight": 9
+        },
+        {
+          "item": "stockfish",
+          "weight": 8
+        },
+        {
+          "item": "angelica-root",
+          "weight": 6
+        },
+        {
+          "item": "midsummer-ale",
+          "weight": 4
+        },
+        {
+          "item": "rotten-shark",
+          "weight": 4
+        },
+        {
+          "item": "knot-insulting-verse",
+          "weight": 4
+        },
+        {
+          "item": "knot-night-silence",
+          "weight": 3
+        },
+        {
+          "item": "knot-strayed-sheep",
+          "weight": 3
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "whalefjord-ring",
+          "where": "guarded"
+        },
+        {
+          "item": "tally-stick",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "rift-water",
+          "density": 0.04
+        },
+        {
+          "terrain": "speaking-stone",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Show the Whalefjord ring and walk into his memory",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.9,
+              0.08,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "glow",
+            "emissive": "#e0b04a"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.4,
+              0.4,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#c9d8e8",
+            "material": "glass",
+            "emissive": "#8fb8e0"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#e0b04a",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      },
+      "gmNotes": "The rift where the law echoes. Ravens steal words (Word-Lost). Echoes of old lawspeakers misquote the player. Brother Kolskegg heard Hallbjorn's last confession about 'the knots'. Whalefjord oath-helpers guard their ring deep in the rift. The exit opens only with the Whalefjord ring.",
+      "backdrop": {
+        "style": "clouds",
+        "color": "#c8d4e0",
+        "color2": "#8a9aaa",
+        "intensity": 0.5
+      },
+      "music": "tense",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "whalefjord-ring"
+      }
+    },
+    {
+      "name": "Third Day: Inside Hallbjorn's Memory",
+      "description": "No ground, no sky. The law as your master held it: rings of carved stone floating in the dark, gold runes in the floor, and gaps where he chose to forget.",
+      "generator": "geometric",
+      "size": "medium",
+      "params": {
+        "variant": 0,
+        "symmetry": 3,
+        "rings": 5,
+        "spokes": 6,
+        "cellSize": 7,
+        "loops": 0.4,
+        "pillars": 0.3,
+        "doors": 0.3
+      },
+      "floor": {
+        "color": "#2a2440",
+        "color2": "#3a3258",
+        "material": "stone",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#9a9488",
+        "color2": "#c8c0b0",
+        "material": "stone",
+        "height": 1.8,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#8a7ac8",
+        "ambientIntensity": 0.6,
+        "fog": {
+          "color": "#1a1430",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#e0b04a",
+          "intensity": 1.1,
+          "frequency": 0.12
+        },
+        "playerLight": 5
+      },
+      "actors": [
+        {
+          "actor": "misremembered-clause",
+          "weight": 9,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "forgotten-precedent",
+          "weight": 7,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "rift-echo",
+          "weight": 4,
+          "max": 2
+        },
+        {
+          "actor": "grey-silence",
+          "weight": 3,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "hallbjorn-memory",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "skyr-bowl",
+          "weight": 8
+        },
+        {
+          "item": "knot-mead-debts",
+          "weight": 6
+        },
+        {
+          "item": "angelica-root",
+          "weight": 6
+        },
+        {
+          "item": "stockfish",
+          "weight": 5
+        },
+        {
+          "item": "knot-insulting-verse",
+          "weight": 4
+        },
+        {
+          "item": "knot-hasty-oaths",
+          "weight": 3
+        },
+        {
+          "item": "knot-night-silence",
+          "weight": 3
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "hof-ring",
+          "where": "guarded"
+        },
+        {
+          "item": "law-knot",
+          "where": "far"
+        },
+        {
+          "item": "bearskin-cloak",
+          "where": "anywhere"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "memory-glyph",
+          "density": 0.03
+        },
+        {
+          "terrain": "forgotten-gap",
+          "density": 0.03
+        }
+      ],
+      "transitionName": "Take the knot and the Hof ring up to the Law Rock",
+      "transitionRequires": {
+        "type": "all",
+        "of": [
+          {
+            "type": "has_item",
+            "who": "player",
+            "item": "law-knot"
+          },
+          {
+            "type": "has_item",
+            "who": "player",
+            "item": "hof-ring"
+          }
+        ]
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.8,
+              1.2,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#ffe2a8",
+            "material": "glow",
+            "emissive": "#e0b04a"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ffe2a8",
+          "intensity": 1.5,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Non-realistic: the inside of a dead man's memory. Misremembered clauses are laws he invented for bribes. Hallbjorn's memory-self confesses. The Law-Knot is far from the start; the Hof ring is guarded. The exit opens only with the Law-Knot and the Hof ring. Eerie, quiet, gold on violet.",
+      "backdrop": {
+        "style": "abyss",
+        "color": "#120c24",
+        "color2": "#3a2a6a",
+        "intensity": 0.7
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "Last Day: The Law Rock",
+      "description": "A ledge of lava rock above the plain, the whole Thing gathered below. The wind carries every word to every ear. Thorgunna is already speaking.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.25,
+        "sideRooms": 0.3
+      },
+      "floor": {
+        "color": "#4a4440",
+        "color2": "#6a7a4a",
+        "material": "stone",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#2a2622",
+        "color2": "#4a4440",
+        "material": "stone",
+        "height": 1.4,
+        "pattern": "noise"
+      },
+      "lighting": {
+        "ambient": "#e8dcc8",
+        "ambientIntensity": 0.7,
+        "sun": {
+          "color": "#ffcf8a",
+          "intensity": 1.5,
+          "elevation": 10
+        },
+        "lamps": {
+          "color": "#ff9a4a",
+          "intensity": 0.6,
+          "frequency": 0.06,
+          "flicker": true
+        },
+        "playerLight": 3,
+        "sky": "#f2c890"
+      },
+      "actors": [
+        {
+          "actor": "booth-heckler",
+          "weight": 6,
+          "max": 3
+        },
+        {
+          "actor": "oath-helper",
+          "weight": 4,
+          "max": 3
+        },
+        {
+          "actor": "hof-satirist",
+          "weight": 4,
+          "max": 2
+        },
+        {
+          "actor": "boundary-reeve",
+          "weight": 3,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "thorgunna",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "skyr-bowl",
+          "weight": 10
+        },
+        {
+          "item": "midsummer-ale",
+          "weight": 5
+        },
+        {
+          "item": "angelica-root",
+          "weight": 5
+        },
+        {
+          "item": "stockfish",
+          "weight": 5
+        }
+      ],
+      "itemCount": 4,
+      "terrain": [
+        {
+          "terrain": "law-cairn",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Step down from the Rock",
+      "gmNotes": "The finale. Thorgunna is backed by all three families. Two routes: outvote her, or carry the Law-Knot and all three oath-rings and recite the true law (use the Law-Knot). Wind, crowd noise, the midnight sun low on the horizon.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#f2c890",
+        "color2": "#5a7aa8",
+        "intensity": 0.7
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Reach the Law Rock and win the law: outvote Thorgunna Wide-Mouth, or hold all three oath-rings and recite Hallbjorn's Law-Knot there in three parts.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "counter",
+          "counter": "thirds-recited",
+          "cmp": "gte",
+          "value": 3
+        },
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "actor_defeated",
+              "actor": "thorgunna"
+            }
+          ]
+        }
+      ]
+    },
+    "winText": "The last clause leaves your mouth and the plain goes quiet. Then someone in the Mosfell booths starts to laugh, and someone in Whalefjord curses, and the old men nod. It is said. It binds. For the next three summers, the law of Iceland will sound like you.",
+    "lossText": "Your voice cracks on the Rock. The crowd turns away mid-clause and Thorgunna picks up where you stopped, in her version. By evening it is law, and nobody remembers that it was ever otherwise.",
+    "labels": {
+      "thirds-recited": "Thirds of the Law-Knot recited"
+    }
+  },
+  "gm": {
+    "persona": "The Law itself: every clause ever spoken at the Rock since 930, unwritten, remembered, a little vain, now speaking through the only person who still holds all of it.",
+    "voice": "Measured and dry, like a recitation. Begins sentences with 'It is said in law that...' and ends with a wry fact. Short lines. Never shouts.",
+    "threads": [
+      "Hallbjorn sold clauses to all three families and tied each sale into a knotted cord.",
+      "Anything spoken aloud becomes binding, even by accident.",
+      "The ravens of the rift eat words and the memory has gaps.",
+      "The new Christian faith and the old gods share the Thing uneasily since the year 1000.",
+      "The midnight sun never quite sets during the Thing."
+    ],
+    "fallback": {
+      "intro": "It is said in law that the Lawspeaker recites a third of the law each summer from the Rock. Hallbjorn Grey-Tongue choked on a fishbone eight days ago, with two-thirds unsaid. You are his apprentice, and you hold the rest. The Mosfell kin, the Whalefjord kin and the Hof kin each have their own idea of what you remember. Up here, whatever you say aloud is law.",
+      "areaEnter": [
+        "It is said in law that the Thing lasts two weeks. The booths are full, the sun is low, and every family has sent someone to shout.",
+        "It is said in law that the All-Men's Rift belongs to no man. The ravens disagree. Mind your words: they are hungry.",
+        "There is no law here, only a man remembering it. Gold runes, grey gaps. Somewhere in the dark he tied his lies into a cord.",
+        "It is said in law that the Lawspeaker speaks from the Rock and all must listen. Thorgunna has not heard that one."
+      ],
+      "lowHp": [
+        "Your Standing is slipping. People are starting to talk over you.",
+        "Breathe. Eat something. A lawspeaker who faints is remembered for the fainting.",
+        "It is said in law that a speaker may rest. Nobody said they would wait."
+      ],
+      "events": [
+        "A runner shouts your name across the booths.",
+        "Somewhere a family elder laughs at your master's memory.",
+        "The midnight sun touches the hills and does not set.",
+        "A raven lands nearby with half a word in its beak."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Cold wind over a crowded plain, a low drone like a held recitation, and plucked strings that sound like a lyre tuned by a lawyer.",
+    "synth": {
+      "key": "D",
+      "scale": "dorian",
+      "tempo": 66,
+      "timbre": "string",
+      "drone": true,
+      "percussion": "soft",
+      "brightness": 0.45
+    },
+    "searchTerms": [
+      "icelandic folk drone",
+      "nordic lyre",
+      "viking ambient",
+      "rimur chant"
+    ],
+    "suggestions": [
+      "Rimur-style chanting over a cello drone",
+      "Hardanger fiddle, slow"
+    ]
+  }
+}

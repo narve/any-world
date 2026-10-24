@@ -1,0 +1,35 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/detective-sugar-hotel/kaspar",
+      "json": {
+        "reply": "You're the police? Real police? She didn't run off, she'd never leave the model half-iced, never. She said the fourth floor was one room too fat and she measured it three times, and then the east wing broke off and someone carried it away into the cold rooms.",
+        "options": [
+          "Where are the cold rooms?",
+          "Who else was down here that night?",
+          "What do you mean, too fat?"
+        ],
+        "actions": [
+          {
+            "type": "start_quest",
+            "id": "find-east-wing",
+            "title": "The Missing East Wing",
+            "description": "Kaspar swears the broken fourth-floor wing of Odile's sugar model was carried off somewhere in the kitchens. Find it.",
+            "complete": {
+              "type": "has_item",
+              "who": "player",
+              "item": "sugar-wing"
+            },
+            "reward": [
+              {
+                "type": "grant_xp",
+                "amount": 15
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

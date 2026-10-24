@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/deep-sea-whale-fall/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Log. 16:40. Coring has stopped. The marrow has gone still for the first time in thirty-four days, and the newest ribs are softening. Dr Brandvold asks for a pen. Entry ends: we stopped cutting, and she stopped growing."
+          }
+        ]
+      }
+    }
+  ]
+}

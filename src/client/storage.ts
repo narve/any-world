@@ -9,7 +9,7 @@ import type { HookTracker } from './gm-director';
 
 const SAVE_KEY = 'anyworld.save.v1';
 const SETTINGS_KEY = 'anyworld.settings.v1';
-const HINTS_KEY = 'anyworld.hints-seen.v1';
+const ONBOARDED_KEY = 'anyworld.onboarded.v1';
 
 export interface SavedRun {
   v: 1;
@@ -111,19 +111,72 @@ export function saveSettings(s: Settings): void {
   }
 }
 
-/** the first-run hint card has been seen (shown once per browser) */
-export function hintsSeen(): boolean {
+/** world ids whose onboarding card the player asked not to see again */
+export function onboardedWorlds(): string[] {
   try {
-    return store()?.getItem(HINTS_KEY) === '1';
+    const v = JSON.parse(store()?.getItem(ONBOARDED_KEY) ?? '[]') as unknown;
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
   } catch {
-    return false;
+    return [];
   }
 }
 
-export function markHintsSeen(): void {
+/** has the onboarding card for this world been dismissed with "don't show again"? */
+export function onboardingSeen(worldId: string): boolean {
+  return onboardedWorlds().includes(worldId);
+}
+
+export function markOnboardingSeen(worldId: string): void {
   try {
-    store()?.setItem(HINTS_KEY, '1');
+    const list = onboardedWorlds().filter((w) => w !== worldId);
+    // newest last; keep the list small (generated worlds have fresh ids)
+    list.push(worldId);
+    store()?.setItem(ONBOARDED_KEY, JSON.stringify(list.slice(-200)));
   } catch {
     /* ignore */
   }
+}
+
+// ---------------------------------------------------------------------------
+// Generated worlds (M3): kept so a saved run of an AI-made world can be resumed and the prompt can
+// steer away from recent worlds. Newest last; only the last few are kept (a spec is ~50–100 kB).
+// ---------------------------------------------------------------------------
+
+const WORLDS_KEY = 'anyworld.worlds.v1';
+export const MAX_GENERATED_WORLDS = 6;
+
+export interface StoredWorld {
+  id: string;
+  /** the WorldSpec JSON as generated (validated again with parseWorld when read) */
+  world: unknown;
+  savedAt: number;
+}
+
+export function loadGeneratedWorlds(): StoredWorld[] {
+  try {
+    const v = JSON.parse(store()?.getItem(WORLDS_KEY) ?? '[]') as unknown;
+    if (!Array.isArray(v)) return [];
+    return v.filter((w): w is StoredWorld => !!w && typeof w === 'object' && typeof (w as StoredWorld).id === 'string' && !!(w as StoredWorld).world);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Stores a generated world (replacing one with the same id). When storage is full the oldest worlds
+ * are dropped until it fits; returns false when even the world alone does not fit.
+ */
+export function saveGeneratedWorld(id: string, world: unknown, now = Date.now()): boolean {
+  const s = store();
+  if (!s) return false;
+  let list = [...loadGeneratedWorlds().filter((w) => w.id !== id), { id, world, savedAt: now }].slice(-MAX_GENERATED_WORLDS);
+  while (list.length) {
+    try {
+      s.setItem(WORLDS_KEY, JSON.stringify(list));
+      return true;
+    } catch {
+      list = list.slice(1);
+    }
+  }
+  return false;
 }

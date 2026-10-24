@@ -16,6 +16,7 @@ import type {
 import type { ActorInstance, GameEvent, GameState, LogMessage, MapGenerator, Pos, Tile } from './types';
 import type { SeededRng } from './rng';
 import { inBounds, tileAt } from './util';
+import { type LogKey, type LogParams, LOG_KEYS, renderTemplate } from './log-keys';
 
 export interface Switches {
   durability: boolean;
@@ -97,16 +98,94 @@ export interface Ctx {
    * removes a rule. Contexts built without it compute it on first use.
    */
   sw?: Switches;
+  /**
+   * Copy-on-write bookkeeping for the map tiles (index.ts cloneState shares the input state's tile
+   * array). Absent = the context owns every tile (in-place stepping, a freshly generated area).
+   */
+  cow?: TileCow;
+  /**
+   * What is hurting the player right now besides an attacker (a status ticking, terrain underfoot);
+   * set around those effects so the loss reason can name it (GameState.lastHarm).
+   */
+  harmCause?: { status?: string; terrain?: string };
+  /** count of tile writes in this call (mutTile), the invalidation stamp of fovCache */
+  tileWrites?: number;
+  /** the player's last field of view (vision.ts playerFov) */
+  fovCache?: { tiles: Tile[]; writes: number; x: number; y: number; r: number; vis: Set<number> };
 }
 
-export const MAX_LOG = 300;
+/** the shared tile array of the input state, its private copy (once made) and the tiles cloned so far */
+export interface TileCow {
+  src: Tile[];
+  copy?: Tile[];
+  owned: Set<number>;
+}
 
+/**
+ * The tile at index `i`, safe to mutate: under copy-on-write the tile array and the tile object
+ * are copied first (once per call), so the input state's map is never touched. Every engine write
+ * to a tile goes through here.
+ */
+export function mutTile(ctx: Ctx, i: number): Tile {
+  const map = ctx.s.area.map;
+  const cow = ctx.cow;
+  ctx.tileWrites = (ctx.tileWrites ?? 0) + 1;
+  if (cow) {
+    if (map.tiles === cow.src) {
+      cow.copy = map.tiles.slice();
+      map.tiles = cow.copy;
+    }
+    if (map.tiles === cow.copy && !cow.owned.has(i)) {
+      const t = map.tiles[i];
+      if (t) {
+        const c: Tile = { ...t };
+        if (t.terrainUnder) c.terrainUnder = { ...t.terrainUnder };
+        map.tiles[i] = c;
+      }
+      cow.owned.add(i);
+    }
+  }
+  return map.tiles[i];
+}
+
+/** mutTile by position (undefined out of bounds) */
+export function mutTileAt(ctx: Ctx, x: number, y: number): Tile | undefined {
+  const map = ctx.s.area.map;
+  return inBounds(map, x, y) ? mutTile(ctx, y * map.width + x) : undefined;
+}
+
+/** the log keeps the latest MAX_LOG lines (the GM context and the UI only ever show the tail) */
+export const MAX_LOG = 200;
+
+/**
+ * Appends a line the world, the GM or an NPC wrote (already in the world's language, so no
+ * catalog key). Engine sentences go through logKey.
+ */
 export function log(ctx: Ctx, text: string, kind: LogMessage['kind'] = 'info', speaker?: string): void {
   const msg: LogMessage = { turn: ctx.s.turn, text, kind };
   if (speaker) msg.speaker = speaker;
+  pushLog(ctx, msg);
+  ctx.events.push({ type: 'message', text, kind });
+}
+
+/**
+ * Appends an engine sentence: a catalog key (log-keys.ts) + params, with `text` rendered from the
+ * English template as the fallback.
+ */
+export function logKey(ctx: Ctx, key: LogKey, params: LogParams, kind: LogMessage['kind'] = 'info'): void {
+  const text = renderTemplate(LOG_KEYS[key], params);
+  const msg: LogMessage = { turn: ctx.s.turn, text, kind, key, params: { ...params } };
+  pushLog(ctx, msg);
+  ctx.events.push({ type: 'message', text, kind, key, params: { ...params } });
+}
+
+/**
+ * Log entries are immutable once written (cloneState shares them between states), so the log is
+ * only ever appended to and trimmed from the front.
+ */
+function pushLog(ctx: Ctx, msg: LogMessage): void {
   ctx.s.log.push(msg);
   if (ctx.s.log.length > MAX_LOG) ctx.s.log.splice(0, ctx.s.log.length - MAX_LOG);
-  ctx.events.push({ type: 'message', text, kind });
 }
 
 export function emit(ctx: Ctx, ev: GameEvent): void {
@@ -114,10 +193,14 @@ export function emit(ctx: Ctx, ev: GameEvent): void {
 }
 
 /** ends the run (idempotent): status, reason, title + goal text in the log, game_over event */
-export function endGame(ctx: Ctx, result: 'won' | 'lost', reason: string): void {
+export function endGame(ctx: Ctx, result: 'won' | 'lost', reason: string, reasonKey?: { key: string; params: LogParams }): void {
   if (ctx.s.status !== 'playing') return;
   ctx.s.status = result;
   ctx.s.endReason = reason;
+  if (reasonKey) {
+    ctx.s.endReasonKey = reasonKey.key;
+    ctx.s.endReasonParams = { ...reasonKey.params };
+  }
   const v = ctx.world.vocabulary;
   log(ctx, result === 'won' ? v.winTitle : v.lossTitle, result === 'won' ? 'good' : 'bad');
   log(ctx, result === 'won' ? ctx.world.goal.winText : ctx.world.goal.lossText, 'gm');

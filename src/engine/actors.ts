@@ -1,6 +1,6 @@
 /** Actor creation, movement, transformation and noise. */
 import type { ActorInstance, Pos } from './types';
-import { type Ctx, actorAt, actorName, emit, isPlayer, log, nextId } from './ctx';
+import { type Ctx, actorAt, actorName, emit, isPlayer, logKey, nextId } from './ctx';
 import { side } from './stats';
 import { fireTriggers } from './triggers';
 import { cheb } from './util';
@@ -104,7 +104,7 @@ export function transformActor(ctx: Ctx, a: ActorInstance, into: string): boolea
   a.ai.lowHp = false;
   if (!a.allyOf) a.faction = def.faction;
   emit(ctx, { type: 'spawned', actorId: a.id, defId: into });
-  log(ctx, `${oldName} becomes ${def.name}.`, 'combat');
+  logKey(ctx, 'log.transform', { actor: oldName, into: def.name }, 'combat');
   return true;
 }
 

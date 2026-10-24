@@ -1,0 +1,35 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/microscopic-root-nodule/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The root hair curls shut behind you with a soft wet click. Ahead, hexagonal halls of cellulose glow green; somewhere a receptor is stamping forms, and somewhere an enzyme is sharpening its active site."
+          },
+          {
+            "type": "mood",
+            "music": "tense",
+            "tint": "#cfe6b8"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          },
+          {
+            "type": "spawn",
+            "actor": "chitinase-patrol",
+            "count": 1,
+            "near": "exit"
+          },
+          {
+            "type": "place_item",
+            "item": "malate-droplet",
+            "near": "random"
+          }
+        ]
+      }
+    }
+  ]
+}

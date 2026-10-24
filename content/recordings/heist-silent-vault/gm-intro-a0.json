@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/heist-silent-vault/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Act One, pianissimo. A service door off the Burgring clicks shut behind Ottilie Graf; gaslight ticks, the parquet smells of beeswax, and three floors up a string quartet is tuning to an A she could hum in her sleep. Somewhere above those strings, in a room lined with felt, a bird that has not sung since 1899 waits in brown wax. Mirela is already at the cloakroom, tapping her watch."
+          },
+          {
+            "type": "mood",
+            "music": "tense"
+          }
+        ]
+      }
+    }
+  ]
+}

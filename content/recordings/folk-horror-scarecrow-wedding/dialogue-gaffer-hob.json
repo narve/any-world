@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/folk-horror-scarecrow-wedding/gaffer-hob",
+      "json": {
+        "reply": "Forty-one times they've walked a body up this aisle to me, and not one of them ever asked what I was looking at. You've a better grip on that hook than most. Will you take my arm, or will you tell me why not?",
+        "options": [
+          "What are you looking at, Gaffer?",
+          "I'm not marrying you.",
+          "Somebody else was named first."
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

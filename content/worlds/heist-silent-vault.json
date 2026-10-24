@@ -1,0 +1,3854 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Pianissimo",
+    "tagline": "Vienna, 1928. One wax cylinder holds the last glass-lark call. The floors alarm above a whisper. The quartet starts at eight.",
+    "genre": "silent heist",
+    "tags": [
+      "heist",
+      "non-violent",
+      "vienna",
+      "music",
+      "stealth",
+      "surreal"
+    ],
+    "tone": "hushed, wry, tender, tense as a held breath",
+    "era": "Vienna, November 1928, Schubert centenary week",
+    "premise": "The Museum of Vanished Sound keeps the only recording of the Carniolan glass-lark, a bird that sang in two notes at once and has not been heard alive since 1899. Director Adelheid Stillhart keeps it in a felt-lined vault under parquet floors that ring an alarm at any sound above a whisper. Tonight a string quartet plays the centenary gala in the rotunda. Ottilie Graf, a piano tuner with perfect pitch, has her crew: Mirela the deaf locksmith, Haberl the retired opera prompter, and Herr Kapellmeister, a very calm cat. Under the music, they go in.",
+    "prompt": "A Viennese museum holds the only recording of an extinct bird's call, locked behind floors that alarm at any sound above a whisper. Assemble a crew — a deaf locksmith, a retired opera prompter and a very calm cat — and lift it during a live string quartet.",
+    "nonViolent": true,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Bearing",
+        "abbr": "BRG",
+        "description": "Looking like you belong here. Tailcoat posture, a nod to the usher."
+      },
+      "dex": {
+        "name": "Light Feet",
+        "abbr": "LFT",
+        "description": "Moving between creaks. Fingers that do not rattle keys."
+      },
+      "int": {
+        "name": "Perfect Pitch",
+        "abbr": "PCH",
+        "description": "Hearing the room. Fuels whispered tricks and cues."
+      },
+      "hp": {
+        "name": "Composure",
+        "abbr": "CMP",
+        "description": "How long you keep your nerve. At zero you gasp, and the whole museum hears it."
+      },
+      "mp": {
+        "name": "Breath",
+        "abbr": "BRT",
+        "description": "Air held in reserve for whispers, cues and long silences."
+      },
+      "ac": {
+        "name": "Cover Story",
+        "abbr": "CVR",
+        "description": "How convincingly you are a guest who took a wrong turn."
+      }
+    },
+    "conflict": "Misdirect",
+    "defeated": "outfoxed",
+    "xp": "Bravura",
+    "levelUp": "New movement",
+    "currency": "Kreuzer",
+    "lossTitle": "The floor sings your name",
+    "winTitle": "Bravissima",
+    "area": "Movement"
+  },
+  "palette": {
+    "primary": "#c9a45c",
+    "secondary": "#3e6b5a",
+    "accent": "#e7d7b0",
+    "danger": "#c2413b",
+    "ui": "#1e1a24",
+    "text": "#f4ecdc"
+  },
+  "damageTypes": [
+    {
+      "id": "physical",
+      "name": "Jostle",
+      "color": "#cfc6b8"
+    },
+    {
+      "id": "shush",
+      "name": "Reproach",
+      "color": "#b48cd8"
+    },
+    {
+      "id": "feedback",
+      "name": "Feedback",
+      "color": "#e0a040"
+    },
+    {
+      "id": "suspicion",
+      "name": "Suspicion",
+      "color": "#c2413b"
+    },
+    {
+      "id": "misdirection",
+      "name": "Misdirection",
+      "color": "#7fc8b0"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "flustered",
+      "name": "Flustered",
+      "description": "Your ears ring and your feet forget where the quiet boards are.",
+      "harmful": true,
+      "color": "#e07a6a",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "slipping",
+      "name": "Slipping on Marbles",
+      "description": "Feet skating on rolling glass. Cannot move.",
+      "harmful": true,
+      "color": "#8fd0e8",
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "enraptured",
+      "name": "Enraptured",
+      "description": "Listening to the music with eyes closed, forgetting why they came.",
+      "harmful": true,
+      "color": "#f2c96b",
+      "flags": [
+        "stunned"
+      ]
+    },
+    {
+      "id": "hushed",
+      "name": "Hushed",
+      "description": "The Director's silence presses on your throat. No whispers, no cues.",
+      "harmful": true,
+      "color": "#6d6a8a",
+      "flags": [
+        "silenced"
+      ]
+    },
+    {
+      "id": "lost-in-smoke",
+      "name": "Lost in Stage Smoke",
+      "description": "A puff of theatre smoke. Nobody can find you in it.",
+      "harmful": false,
+      "color": "#c8c8d0",
+      "flags": [
+        "invisible"
+      ]
+    },
+    {
+      "id": "fed-a-line",
+      "name": "Fed a Line",
+      "description": "Mouthing a prompted line, they believe they are meant to be somewhere else.",
+      "harmful": true,
+      "color": "#7fc8b0",
+      "flags": [
+        "charmed"
+      ]
+    },
+    {
+      "id": "quickstep",
+      "name": "Csárdás Feet",
+      "description": "The tempo got into your legs. Everything goes at double speed.",
+      "harmful": false,
+      "color": "#e8a33c",
+      "flags": [
+        "hasted"
+      ]
+    },
+    {
+      "id": "purring",
+      "name": "Purr-warmed",
+      "description": "A calm cat purred against your shins. Composure returns, slowly.",
+      "harmful": false,
+      "color": "#e08a3c",
+      "perTurn": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "flags": [
+        "regenerating"
+      ]
+    },
+    {
+      "id": "on-cue",
+      "name": "On Cue",
+      "description": "Haberl's whisper in your ear: every step lands exactly between the beats.",
+      "harmful": false,
+      "color": "#ffd27a",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 2
+        },
+        {
+          "stat": "ac",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "hush",
+      "name": "Hush",
+      "description": "How quiet you have been. Every time you are rattled the floor hears it. At zero the parquet sings and the watch comes running.",
+      "color": "#9fb4ff",
+      "max": 10,
+      "start": 10,
+      "perTurn": 0,
+      "onEmpty": [
+        {
+          "type": "message",
+          "text": "The parquet sings: a long, bright chord from wall to wall. Lanterns swing in the stairwell."
+        },
+        {
+          "type": "summon",
+          "actor": "night-watchman",
+          "count": 1
+        },
+        {
+          "type": "resource",
+          "resource": "hush",
+          "amount": {
+            "base": 5
+          }
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "whisper-floors",
+      "name": "Whisper Floors",
+      "description": "Every time you lose Composure you also lose 1 Hush. At 0 Hush the floor sings: a Night Watchman comes running and your Hush resets to 5.",
+      "playerTriggers": [
+        {
+          "on": "on_hurt",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "hush",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "none"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "quartet-plays-on",
+      "name": "The Quartet Plays On",
+      "description": "Every 25 turns the quartet swells into a forte. Under the noise you regain 1 Hush and 2 Breath.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 25,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "hush",
+                "amount": {
+                  "base": 1
+                }
+              },
+              {
+                "type": "resource",
+                "resource": "mp",
+                "amount": {
+                  "base": 2
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#ffd27a"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": true,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Ottilie Graf",
+    "title": "Piano Tuner, Crew Lead",
+    "description": "Forty years of tuning the pianos of Vienna's best salons. She can hear a loose floorboard three rooms away and knows exactly which ones the Director never fixed.",
+    "stats": {
+      "str": 9,
+      "dex": 14,
+      "int": 12,
+      "hp": 28,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 8,
+    "sight": 7,
+    "unarmed": {
+      "name": "Polite Cough",
+      "verb": "coughs politely at",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "misdirection"
+    },
+    "startingItems": [
+      {
+        "item": "tuning-fork",
+        "equipped": true
+      },
+      {
+        "item": "rented-tailcoat",
+        "equipped": true
+      },
+      {
+        "item": "sacher-slice",
+        "count": 2
+      },
+      {
+        "item": "hush-pastille",
+        "count": 1
+      },
+      {
+        "item": "stage-smoke",
+        "count": 1
+      }
+    ],
+    "startCurrency": 20,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "steady-hands",
+          "name": "Steady Hands",
+          "description": "Your fingers stop shaking. +1 Light Feet.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "singers-lungs",
+          "name": "Singer's Lungs",
+          "description": "Haberl taught you to breathe like a mezzo. +4 Breath.",
+          "modifiers": [
+            {
+              "stat": "mp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "prompters-trick",
+          "name": "The Prompter's Trick",
+          "description": "Learn Feed a Line: whisper a cue and someone wanders off to deliver it.",
+          "grantItems": [
+            "feed-a-line"
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "airtight-story",
+          "name": "Airtight Cover Story",
+          "description": "You really are the Director's niece. +1 Cover Story, +1 Bearing.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            },
+            {
+              "stat": "str",
+              "amount": 1
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "wolf-tone-whisper",
+          "name": "Sing It Back",
+          "description": "Learn Sing It Back: hum a note so exact that everything nearby rings and reels.",
+          "grantItems": [
+            "sing-it-back"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "soft-soles",
+          "name": "Soft Soles",
+          "description": "Half the time you are rattled, the floor does not notice: regain the Hush you would lose.",
+          "triggers": [
+            {
+              "on": "on_hurt",
+              "chance": 0.5,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "hush",
+                    "amount": {
+                      "base": 1
+                    }
+                  }
+                ],
+                "vfx": {
+                  "kind": "none"
+                }
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "interval-bar",
+          "name": "Interval Bar",
+          "description": "When Composure runs low, you remember the champagne at the interval and recover 8.",
+          "triggers": [
+            {
+              "on": "on_low_hp",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 8
+                    }
+                  }
+                ],
+                "vfx": {
+                  "kind": "sparkle",
+                  "color": "#f4ecdc"
+                }
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "applause",
+          "name": "Inner Applause",
+          "description": "Each time you outfox someone, a little applause in your head steadies you: recover 3 Composure.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 3
+                    }
+                  }
+                ],
+                "vfx": {
+                  "kind": "none"
+                }
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "absolute-ear",
+          "name": "Absolute Ear",
+          "description": "You hear guards before they see you. +2 Perfect Pitch, +1 sight.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "sight",
+              "amount": 1
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.88,
+        "build": "slim",
+        "skin": "#e9c9a8",
+        "top": "#2b2b36",
+        "bottom": "#2b2b36",
+        "accent": "#c9a45c",
+        "hair": "#c8c0b8",
+        "hairStyle": "bun",
+        "headwear": "none",
+        "outfit": "suit",
+        "holding": "tool"
+      },
+      "idle": "bob"
+    }
+  },
+  "actors": [
+    {
+      "id": "night-docent",
+      "name": "Night Docent",
+      "description": "A volunteer in lavender wool who has shushed three emperors' grandchildren and fears nothing but crumbs.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 8,
+        "ac": 10,
+        "str": 9,
+        "dex": 11,
+        "int": 12
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Withering Shush",
+        "verb": "shushes",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "shush"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "sacher-slice",
+          "chance": 0.15
+        },
+        {
+          "item": "hush-pastille",
+          "chance": 0.1
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 5,
+      "persuadeDifficulty": 11,
+      "tags": [
+        "staff"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.82,
+          "build": "slim",
+          "skin": "#f1d6c0",
+          "top": "#8a62b0",
+          "bottom": "#5b3f7a",
+          "accent": "#e7d7b0",
+          "hair": "#d0d0d0",
+          "hairStyle": "bun",
+          "outfit": "dress",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "loose-parquet",
+      "name": "Loose Parquet",
+      "description": "A herringbone board that has been waiting decades to creak at exactly the wrong moment.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 6,
+        "ac": 9,
+        "str": 8,
+        "dex": 8,
+        "int": 2
+      },
+      "speed": 75,
+      "attack": {
+        "name": "Creak",
+        "verb": "creaks under",
+        "damage": {
+          "dice": "1d4"
+        },
+        "damageType": "feedback"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "xp": 4,
+      "tags": [
+        "floor"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.85,
+              0.08,
+              0.28
+            ],
+            "pos": [
+              0,
+              0.05,
+              -0.15
+            ],
+            "rot": [
+              0,
+              35,
+              0
+            ],
+            "color": "#c08a52",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.85,
+              0.08,
+              0.28
+            ],
+            "pos": [
+              0,
+              0.12,
+              0.15
+            ],
+            "rot": [
+              8,
+              -35,
+              0
+            ],
+            "color": "#d9a066",
+            "material": "wood",
+            "group": "board"
+          }
+        ],
+        "idle": "flicker"
+      }
+    },
+    {
+      "id": "listening-horn",
+      "name": "Listening Horn",
+      "description": "A brass ear-trumpet on a stand, wired to the Director's office. It swivels toward breathing.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 7,
+        "ac": 12,
+        "str": 6,
+        "dex": 10,
+        "int": 12
+      },
+      "speed": 100,
+      "sight": 8,
+      "attack": {
+        "name": "Amplify",
+        "verb": "amplifies the rustle of",
+        "damage": {
+          "dice": "1d4"
+        },
+        "damageType": "feedback",
+        "range": 3,
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "resistances": [
+        {
+          "damageType": "misdirection",
+          "multiplier": 1.5
+        }
+      ],
+      "loot": [
+        {
+          "item": "spare-rosin",
+          "chance": 0.2
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "device"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.6,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#3a3a3a",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.4,
+              0.5,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.75,
+              0.1
+            ],
+            "rot": [
+              100,
+              0,
+              0
+            ],
+            "color": "#e0b050",
+            "material": "metal",
+            "group": "horn"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "night-watchman",
+      "name": "Night Watchman",
+      "description": "Brass buttons, a hooded lantern and orders to bring anyone who whispers to the Director.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 12,
+        "dex": 10,
+        "int": 9
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Lantern in the Face",
+        "verb": "shines a lantern at",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "suspicion"
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "loot": [
+        {
+          "item": "sacher-slice",
+          "chance": 0.2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "persuadeDifficulty": 13,
+      "tags": [
+        "staff",
+        "guard"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "broad",
+          "skin": "#e0b896",
+          "top": "#3a5490",
+          "bottom": "#1d2840",
+          "accent": "#e2bf4a",
+          "hair": "#3a2a1a",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "lantern"
+        },
+        "light": {
+          "color": "#ffcc77",
+          "intensity": 1,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "echo-moth",
+      "name": "Echo Moth",
+      "description": "Pale moths bred in the sound archive. They eat silence and repeat your footsteps, louder.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 5,
+        "ac": 12,
+        "str": 5,
+        "dex": 14,
+        "int": 4
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Repeat",
+        "verb": "repeats the footsteps of",
+        "damage": {
+          "dice": "1d3"
+        },
+        "damageType": "feedback"
+      },
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.15
+      },
+      "loot": [],
+      "xp": 4,
+      "tags": [
+        "archive"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#e4dcf8",
+          "secondary": "#7f6fb0",
+          "accent": "#ffffff"
+        },
+        "scale": 0.5,
+        "idle": "hover",
+        "light": {
+          "color": "#c8b8ff",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "restless-specimen",
+      "name": "Restless Specimen",
+      "description": "A stuffed capercaillie on a walnut plinth. Its glass eyes follow you; when you get close, it hops down to look closer.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 11,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 6
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Glass-Eyed Stare",
+        "verb": "stares unblinking at",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "suspicion"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 3
+      },
+      "loot": [
+        {
+          "item": "valerian-drops",
+          "chance": 0.15
+        }
+      ],
+      "xp": 7,
+      "persuadeDifficulty": 12,
+      "tags": [
+        "exhibit"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#3c3028",
+          "secondary": "#d23b22",
+          "accent": "#f0e6c8"
+        },
+        "scale": 0.75,
+        "idle": "flicker"
+      }
+    },
+    {
+      "id": "stray-semiquaver",
+      "name": "Stray Semiquaver",
+      "description": "A sixteenth note that fell out of the second violin's part and now hunts for anything to land on.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 7,
+        "ac": 12,
+        "str": 7,
+        "dex": 14,
+        "int": 5
+      },
+      "speed": 140,
+      "attack": {
+        "name": "Off-Beat",
+        "verb": "trips the rhythm of",
+        "damage": {
+          "dice": "1d4"
+        },
+        "damageType": "feedback"
+      },
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.2
+      },
+      "loot": [
+        {
+          "item": "hush-pastille",
+          "chance": 0.1
+        }
+      ],
+      "xp": 5,
+      "persuadeDifficulty": 12,
+      "tags": [
+        "music"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              -20
+            ],
+            "color": "#141414",
+            "material": "glow"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.05,
+              0.6,
+              0.05
+            ],
+            "pos": [
+              0.13,
+              0.55,
+              0
+            ],
+            "color": "#141414"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.05,
+              0.05
+            ],
+            "pos": [
+              0.23,
+              0.82,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              -25
+            ],
+            "color": "#141414",
+            "group": "flag"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.05,
+              0.05
+            ],
+            "pos": [
+              0.23,
+              0.72,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              -25
+            ],
+            "color": "#141414",
+            "group": "flag"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "wolf-tone",
+      "name": "The Wolf Tone",
+      "description": "Every cello has one note that howls. Tonight the cellist's escaped into the music and it is hungry.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 22,
+        "ac": 12,
+        "str": 14,
+        "dex": 10,
+        "int": 8
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Howl",
+        "verb": "howls through",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "feedback"
+      },
+      "abilities": [
+        {
+          "id": "sympathetic-howl",
+          "name": "Sympathetic Howl",
+          "description": "Everything nearby rings in sympathy.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 0,
+              "radius": 2,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "feedback"
+              },
+              {
+                "type": "apply_status",
+                "status": "flustered",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#ff5a3a"
+            }
+          },
+          "cooldown": 6,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "conductors-baton",
+          "chance": 0.3
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 25,
+      "persuadeDifficulty": 15,
+      "tags": [
+        "music",
+        "elite"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#6a2236",
+          "secondary": "#c0482e",
+          "accent": "#ffcc66"
+        },
+        "scale": 1.3,
+        "idle": "pulse",
+        "light": {
+          "color": "#ff5a3a",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "metronome-sentry",
+      "name": "Metronome Sentry",
+      "description": "A walnut metronome the height of a child, ticking at exactly 60. It stops only to listen.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 14,
+        "ac": 13,
+        "str": 11,
+        "dex": 9,
+        "int": 10
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Tick",
+        "verb": "ticks accusingly at",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "feedback"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "loot": [
+        {
+          "item": "valerian-drops",
+          "chance": 0.2
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "device"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.6,
+              0.95,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.48,
+              0
+            ],
+            "color": "#a8703a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.05,
+              0.8,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.75,
+              0.32
+            ],
+            "color": "#f0d080",
+            "material": "metal",
+            "group": "arm"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.14,
+              0.1,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.95,
+              0.32
+            ],
+            "color": "#f0d080",
+            "material": "metal",
+            "group": "arm"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "director-stillhart",
+      "name": "Hofrätin Adelheid Stillhart",
+      "description": "Director of the Museum of Vanished Sound. She has not raised her voice since 1899, and she has never needed to.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 80,
+        "ac": 13,
+        "str": 12,
+        "dex": 11,
+        "int": 15,
+        "mp": 20
+      },
+      "speed": 100,
+      "sight": 8,
+      "attack": {
+        "name": "Withering Silence",
+        "verb": "lets a silence fall on",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "suspicion"
+      },
+      "abilities": [
+        {
+          "id": "call-the-watch",
+          "name": "Call the Watch",
+          "description": "She lifts one gloved finger. Lantern light in the corridor.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "night-watchman",
+                "count": 1
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#ffcc77"
+            }
+          },
+          "cooldown": 14,
+          "useWhen": "start_of_fight"
+        },
+        {
+          "id": "absolute-quiet",
+          "name": "Absolute Quiet",
+          "description": "A look that takes the breath out of your throat.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 5,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "shush"
+              },
+              {
+                "type": "apply_status",
+                "status": "hushed",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#bcd0ff"
+            }
+          },
+          "cooldown": 5,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "xp": 120,
+      "unique": true,
+      "tags": [
+        "boss",
+        "staff"
+      ],
+      "npc": {
+        "role": "rival",
+        "personality": "Precise, dry, wounded. Speaks in a near-whisper and expects the room to lean in. Loves the glass-lark more than any living person.",
+        "greeting": "Frau Graf. You tuned my mother's Bösendorfer. You were the only one who never let the A drift. Why are you standing on my floor?",
+        "lines": [
+          "Sound is a thing that ends. I make it stop ending.",
+          "If it is played, it is spent. I will not spend the last of anything.",
+          "The quartet is very good tonight. Nobody will hear you scream politely."
+        ],
+        "secrets": "She was on the 1899 expedition that recorded the lark. She sold the location of the last nesting cliff to a collector for the funds to build this vault. She has never played the cylinder.",
+        "wants": "To be forgiven without ever being asked. To keep the cylinder silent forever.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 18
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1,
+          "build": "slim",
+          "skin": "#efe0d0",
+          "top": "#d6cfe6",
+          "bottom": "#9088aa",
+          "accent": "#bcd0ff",
+          "hair": "#f0f0f6",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "dress",
+          "holding": "tool"
+        },
+        "light": {
+          "color": "#bcd0ff",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "mirela",
+      "name": "Mirela Kovač",
+      "description": "Deaf since childhood, she feels tumblers through her fingertips and reads lips across a ballroom. She thinks this job is funny.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "tags": [
+        "crew"
+      ],
+      "npc": {
+        "role": "trader",
+        "personality": "Dry, quick, signs faster than anyone can talk. Unbothered by alarms she cannot hear; deeply bothered by bad locks.",
+        "greeting": "(She signs, then mouths slowly) You're late. I brought the good picks. Kreuzer first, sentiment later.",
+        "lines": [
+          "The vault lock is a Kromer with a felt-damped bolt. Beautiful. I'm almost sorry.",
+          "Watch the floor, not the guards. Guards blink. The floor never does.",
+          "If the cat sits down, stop. The cat knows."
+        ],
+        "stock": [
+          "sacher-slice",
+          "valerian-drops",
+          "hush-pastille",
+          "bag-of-marbles",
+          "stage-smoke",
+          "felt-overshoes",
+          "opera-glasses"
+        ],
+        "secrets": "She cut a copy of the Director's office key in 1925 for a different job that fell through. She has no idea it still works.",
+        "wants": "To open the Kromer vault lock once, just to know she can. Payment in cash, not in feelings."
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#d8b08c",
+          "top": "#3f7f8a",
+          "bottom": "#3a3a3a",
+          "accent": "#c9a45c",
+          "hair": "#2a1c14",
+          "hairStyle": "braids",
+          "outfit": "coat",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "haberl",
+      "name": "Ferdinand Haberl",
+      "description": "Forty-one seasons in the prompter's box of the Court Opera. He has been hiding in a display case labelled 'Viennese Gentleman, c. 1880' since noon.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 18,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "tags": [
+        "crew"
+      ],
+      "npc": {
+        "role": "informant",
+        "personality": "Theatrical, kind, whispers everything as if from under a stage. Knows the quartet's score by heart and times the heist by it.",
+        "greeting": "Psst. Up here. No, here. Second movement begins in four minutes; the fortissimo is bar ninety. Did you bring my cue sheet? I dropped it near the grouse.",
+        "lines": [
+          "When in doubt, wait for the forte. Every footstep is free under a forte.",
+          "The cellist is ours. Zsófia. Her grandfather recorded the lark.",
+          "Never step on a board with a knot like an eye. I have opinions about that board."
+        ],
+        "secrets": "The quartet's encore is the glass-lark's call transcribed for strings by the cellist. When it plays, every ear in the building turns to the rotunda, including the Director's.",
+        "wants": "One last perfect cue. To hear the lark, once, before he goes properly deaf himself."
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.8,
+          "build": "round",
+          "skin": "#f0d2b8",
+          "top": "#8a2236",
+          "bottom": "#222226",
+          "accent": "#e7d7b0",
+          "hair": "#f2f2f2",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "coat",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "zsofia",
+      "name": "Zsófia Erdős",
+      "description": "The quartet's cellist, somehow also standing here inside her own second movement, bow in hand, perfectly unsurprised to see you.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 18,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "tags": [
+        "crew",
+        "music"
+      ],
+      "npc": {
+        "role": "lore",
+        "personality": "Calm, wry, intensely focused; talks in tempo markings. Her grandfather recorded the lark and she wants it to sing again.",
+        "greeting": "Keep to the held notes; they hold your weight. The rests do not. And mind my wolf tone, it bites.",
+        "lines": [
+          "My grandfather wrote the lark's call down in two staves. Two notes at once. I spent nine years learning to bow it.",
+          "The encore is the lark. When Haberl gives the cue, I play it, and the whole museum forgets to breathe.",
+          "Stillhart was on that expedition too. Ask her who bought the cliff."
+        ],
+        "secrets": "Her grandfather and the Director were engaged in 1899. The Director sold the nesting cliff; he never spoke to her again.",
+        "wants": "For the recording to be played aloud, once, in a full hall."
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "slim",
+          "skin": "#c99b78",
+          "top": "#1e1a24",
+          "bottom": "#1e1a24",
+          "accent": "#e7d7b0",
+          "hair": "#a8341e",
+          "hairStyle": "long",
+          "outfit": "dress",
+          "holding": "none"
+        },
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.28,
+              0.62,
+              0.16
+            ],
+            "pos": [
+              0.32,
+              0.38,
+              0.12
+            ],
+            "color": "#8a4a1e",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.02,
+              0.7,
+              0.02
+            ],
+            "pos": [
+              -0.25,
+              0.5,
+              0.2
+            ],
+            "rot": [
+              0,
+              0,
+              40
+            ],
+            "color": "#f0e6c8",
+            "group": "bow"
+          }
+        ]
+      }
+    },
+    {
+      "id": "herr-kapellmeister",
+      "name": "Herr Kapellmeister",
+      "description": "A very calm ginger cat. He weighs exactly enough not to trip the pressure plates and he has never once been in a hurry.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 15,
+        "ac": 14
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "tags": [
+        "crew",
+        "cat"
+      ],
+      "npc": {
+        "role": "healer",
+        "personality": "Utterly calm. Blinks slowly. Purrs at the pitch of a well-tuned A. Responds to nothing and everything.",
+        "greeting": "(Herr Kapellmeister looks at you. He blinks, very slowly. Somehow, everything is fine.)",
+        "lines": [
+          "(He settles onto the pressure plate beside the plinth. It does not make a sound.)",
+          "(A purr, at exactly 440 hertz. Your heartbeat slows to match it.)",
+          "(He looks at the Director, then at you, then washes one paw.)"
+        ],
+        "secrets": "The cat has been sitting in this vault every night for a week. The Director feeds him sardines and talks to him about 1899.",
+        "wants": "Sardines. A warm lap. For nobody to run."
+      },
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#e08a3c",
+          "secondary": "#f5e6cf",
+          "accent": "#6fbf5a"
+        },
+        "scale": 0.55,
+        "idle": "none"
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "tuning-fork",
+      "name": "A-440 Tuning Fork",
+      "kind": "Tuning fork",
+      "description": "Steel, warm from your pocket. Struck against a knee, it hums a note so pure that people turn to find it.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Strike the A",
+        "verb": "hums a pure A at",
+        "damage": {
+          "dice": "1d6"
+        },
+        "damageType": "misdirection",
+        "accuracyStat": "dex"
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.2,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#d8d8e0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.03,
+              0.3,
+              0.03
+            ],
+            "pos": [
+              -0.04,
+              0.35,
+              0
+            ],
+            "color": "#e8e8f0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.03,
+              0.3,
+              0.03
+            ],
+            "pos": [
+              0.04,
+              0.35,
+              0
+            ],
+            "color": "#e8e8f0",
+            "material": "metal"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "conductors-baton",
+      "name": "Conductor's Baton",
+      "kind": "Baton",
+      "description": "White birch with a cork grip, dropped by someone who conducted this very movement once.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Downbeat",
+        "verb": "conducts a downbeat at",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "misdirection",
+        "accuracyStat": "dex"
+      },
+      "rarity": "rare",
+      "value": 35,
+      "knowledge": "vague",
+      "vagueText": "It seems to want to be pointed at someone. People tend to obey where it points.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.5,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              70
+            ],
+            "color": "#f8f6ee",
+            "material": "wood"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              -0.22,
+              0.22,
+              0
+            ],
+            "color": "#b8865a"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#fff2c0",
+          "intensity": 0.4,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "rented-tailcoat",
+      "name": "Rented Tailcoat",
+      "kind": "Disguise",
+      "description": "From Lanner and Sons, Mariahilfer Straße. A gala guest's armour: nobody questions a tailcoat.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.08,
+              0.35
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#22222a",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.09,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#f4ecdc",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "felt-overshoes",
+      "name": "Felt Overshoes",
+      "kind": "Footwear",
+      "description": "Grey felt galoshes from a church sexton. They make a person very hard to hear and slightly hard to take seriously.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 30,
+      "knowledge": "vague",
+      "vagueText": "Soft, thick, silent. Worn over shoes, they seem to make you harder to catch.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.14,
+              0.3,
+              0.12
+            ],
+            "pos": [
+              -0.1,
+              0.07,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#8a8a98",
+            "material": "cloth"
+          },
+          {
+            "shape": "capsule",
+            "size": [
+              0.14,
+              0.3,
+              0.12
+            ],
+            "pos": [
+              0.1,
+              0.07,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#8a8a98",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "opera-glasses",
+      "name": "Mother-of-Pearl Opera Glasses",
+      "kind": "Lorgnette",
+      "description": "For spotting rivals across a dress circle. Equally good for spotting watchmen across a gallery.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "sight",
+          "amount": 2
+        },
+        {
+          "stat": "dex",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              0.16,
+              0.1
+            ],
+            "pos": [
+              -0.07,
+              0.12,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e8dcc8",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              0.16,
+              0.1
+            ],
+            "pos": [
+              0.07,
+              0.12,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e8dcc8",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "violin-mute",
+      "name": "Brass Violin Mute",
+      "kind": "Mute",
+      "description": "A little comb of brass that clips onto a bridge to soften a violin.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 1
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_hurt",
+          "chance": 0.5,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "hush",
+                "amount": {
+                  "base": 1
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "none"
+            }
+          }
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 25,
+      "knowledge": "vague",
+      "vagueText": "Clipped to anything, it makes it quieter. Perhaps that includes you.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.08,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#d4a64a",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "sacher-slice",
+      "name": "Slice of Sachertorte",
+      "kind": "Cake",
+      "description": "Wrapped in wax paper, apricot under the chocolate. One bite and the world is briefly reasonable.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4ecdc"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.14,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.07,
+              0
+            ],
+            "color": "#4a2418",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.08,
+              0.12
+            ],
+            "pos": [
+              0.05,
+              0.17,
+              0
+            ],
+            "color": "#fff6e8"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "valerian-drops",
+      "name": "Valerian Drops",
+      "kind": "Tincture",
+      "description": "A brown bottle from the Engel-Apotheke. Twelve drops on the tongue and the shakes go away.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d6"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#b48cd8"
+        }
+      },
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.24,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#8a5a2a",
+            "material": "glass"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.05,
+              0.08,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.28,
+              0
+            ],
+            "color": "#202020"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "hush-pastille",
+      "name": "Hush Pastille",
+      "kind": "Lozenge",
+      "description": "Throat lozenges in a mint-green tin. Suck one and you stop rustling, sniffing and swallowing for a while.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "hush",
+            "amount": {
+              "base": 4
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#9fb4ff"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.22,
+              0.06,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.04,
+              0
+            ],
+            "color": "#7fc8b0",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "spare-rosin",
+      "name": "Cake of Rosin",
+      "kind": "Rosin",
+      "description": "Amber violin rosin. You hold it under your nose: pine, dust, concert halls. You breathe deeper.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 6
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8a33c"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.08,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#e09a3a",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "bag-of-marbles",
+      "name": "Bag of Marbles",
+      "kind": "Distraction",
+      "description": "Glass marbles in a velvet pouch. Scattered under feet they stop pursuit cold, though not quietly.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "slipping",
+            "duration": 3
+          },
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "misdirection"
+          },
+          {
+            "type": "noise",
+            "radius": 6
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#8fd0e8"
+        }
+      },
+      "value": 14,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.2,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#7a2a4a",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.07,
+              0.07,
+              0.07
+            ],
+            "pos": [
+              0.15,
+              0.04,
+              0.05
+            ],
+            "color": "#8fd0e8",
+            "material": "glass"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "stage-smoke",
+      "name": "Stage Smoke Pellet",
+      "kind": "Theatre trick",
+      "description": "Haberl's own recipe from Die Zauberflöte, 1902. Crush it and vanish in a soft grey puff.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "lost-in-smoke",
+            "duration": 6
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#c8c8d0"
+        }
+      },
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.16,
+              0.16,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#c8c8d0",
+            "material": "glass"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "expedition-notes",
+      "name": "Field Notes, Carniola 1899",
+      "kind": "Notebook",
+      "description": "A water-stained notebook with a floor plan sketched on the back. Two sets of initials: J.E. and A.S.",
+      "category": "clue",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 30
+          },
+          {
+            "type": "message",
+            "text": "'A.S. insists the cliff must stay secret. I agree. We are engaged; I trust her.' Underneath, in other ink: the vault plan, and a note on which boards are loose."
+          },
+          {
+            "type": "grant_xp",
+            "amount": 6
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e7d7b0"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.06,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.04,
+              0
+            ],
+            "color": "#8a6a3a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffe0a0",
+          "intensity": 0.4,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "cue-sheet",
+      "name": "Haberl's Cue Sheet",
+      "kind": "Score annotations",
+      "description": "Bar numbers, pencilled in Haberl's tiny hand: every forte of the second movement, and the exact bar where you can step into the music.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.34,
+              0.02,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#f4ecd0",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.04,
+              0.03,
+              0.26
+            ],
+            "pos": [
+              -0.1,
+              0.04,
+              0
+            ],
+            "color": "#c2413b",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffe7a0",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "prompters-last-cue",
+      "name": "The Prompter's Last Cue",
+      "kind": "Cue card",
+      "description": "A rolled card with one word in red: 'ENCORE'. Read it aloud at the right moment and the quartet plays the lark.",
+      "category": "quest",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "encore-called"
+          },
+          {
+            "type": "message",
+            "text": "You whisper the cue. Far above, a cello begins two notes at once. Every ear in the building turns toward the rotunda."
+          },
+          {
+            "type": "apply_status",
+            "status": "on-cue",
+            "duration": 30
+          },
+          {
+            "type": "resource",
+            "resource": "hush",
+            "amount": {
+              "base": 5
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd27a"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.4,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#f5efd8",
+            "material": "cloth",
+            "emissive": "#5a4010"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.1,
+              0.1,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "rot": [
+              0,
+              90,
+              0
+            ],
+            "color": "#c2413b"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd27a",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "glass-lark-cylinder",
+      "name": "Cylinder No. 7: The Glass-Lark",
+      "kind": "Wax cylinder",
+      "description": "Brown wax in a felt-lined brass case, 1899. The only recording of the Carniolan glass-lark. It is lighter than you expected.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.24,
+              0.4,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#c9a45c",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.2,
+              0.42,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.26,
+              0
+            ],
+            "color": "#6a3a1a",
+            "material": "glow",
+            "emissive": "#8a5020"
+          }
+        ],
+        "scale": 1.2,
+        "idle": "spin",
+        "light": {
+          "color": "#ffd27a",
+          "intensity": 1.6,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "cyl-lullaby",
+      "name": "Cylinder: Carinthian Lullaby",
+      "kind": "Wax cylinder",
+      "description": "A grandmother singing, close to the horn. You play it against your ear and remember being small.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 8,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4ecdc"
+        }
+      },
+      "knowledge": "unknown",
+      "appearanceGroup": "cylinders",
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.28,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#7a5030",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "cyl-brass-band",
+      "name": "Cylinder: Deutschmeister Band March",
+      "kind": "Wax cylinder",
+      "description": "A military band at full blast, captured in 1904. Precisely the wrong thing to play here.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "noise",
+            "radius": 12
+          },
+          {
+            "type": "resource",
+            "resource": "hush",
+            "amount": {
+              "base": -3
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "flustered",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e0a040"
+        }
+      },
+      "knowledge": "unknown",
+      "appearanceGroup": "cylinders",
+      "value": 5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.28,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#7a5030",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "cyl-lecture",
+      "name": "Cylinder: Lecture on Ventilation",
+      "kind": "Wax cylinder",
+      "description": "The museum architect, droning through every duct, door and stair of the building in 1911.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 30
+          },
+          {
+            "type": "grant_xp",
+            "amount": 5
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#9fb4ff"
+        }
+      },
+      "knowledge": "unknown",
+      "appearanceGroup": "cylinders",
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.28,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#7a5030",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "cyl-csardas",
+      "name": "Cylinder: Csárdás at Double Speed",
+      "kind": "Wax cylinder",
+      "description": "Somebody wound the phonograph too tight. The fiddle sprints, and your feet sprint after it.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "quickstep",
+            "duration": 10
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#e8a33c"
+        }
+      },
+      "knowledge": "unknown",
+      "appearanceGroup": "cylinders",
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.28,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#7a5030",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "feed-a-line",
+      "name": "Feed a Line",
+      "kind": "Prompter's whisper",
+      "description": "Whisper someone their next line, the way Haberl did for forty seasons. They wander off to deliver it.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "cooldown": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "fed-a-line",
+            "duration": 4
+          },
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "scale": {
+                "stat": "int",
+                "factor": 0.25
+              }
+            },
+            "damageType": "misdirection"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#7fc8b0"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#7fc8b0",
+            "material": "glow"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "sing-it-back",
+      "name": "Sing It Back",
+      "kind": "Perfect pitch",
+      "description": "Hum a note exactly in tune with the room. Everything nearby rings like a struck glass and forgets what it was doing.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 6
+      },
+      "cooldown": 4,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 4,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "2d4",
+              "scale": {
+                "stat": "int",
+                "factor": 0.5
+              }
+            },
+            "damageType": "misdirection"
+          },
+          {
+            "type": "apply_status",
+            "status": "enraptured",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd27a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.25,
+              0.25,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#ffd27a",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin"
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "singing-parquet",
+      "name": "Singing Parquet",
+      "description": "Boards tuned by the Director herself. Stand on them and they hum a soft, accusing chord.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "resource",
+          "resource": "hush",
+          "amount": {
+            "base": -1
+          }
+        },
+        {
+          "type": "noise",
+          "radius": 5
+        }
+      ],
+      "color": "#d09a50",
+      "emissive": "#3a2408"
+    },
+    {
+      "id": "display-case",
+      "name": "Display Case",
+      "description": "Glass and walnut. Inside: a songbird nobody will hear again, and a label in copperplate.",
+      "walkable": false,
+      "blocksSight": false,
+      "color": "#bfe3e6",
+      "height": 1.1,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "hush-pastille"
+          },
+          {
+            "type": "message",
+            "text": "Behind the specimen, somebody tucked a tin of lozenges and a note: 'For the crew. H.'"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#bfe3e6"
+        }
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              0.4,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#5a3a22",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.76,
+              0.6,
+              0.76
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#bfe3e6",
+            "material": "glass"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "velvet-rope",
+      "name": "Velvet Rope",
+      "description": "Brass stanchions and crimson velvet. Stepping over it is slow and undignified.",
+      "walkable": true,
+      "moveCost": 2,
+      "color": "#8a1c2b",
+      "height": 0.5
+    },
+    {
+      "id": "held-note",
+      "name": "Held Note",
+      "description": "A sustained viola tone, solid as a plank and warm underfoot. Standing on it, you breathe easier.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "color": "#ffd27a",
+      "emissive": "#7a5a10"
+    },
+    {
+      "id": "foam-wedge",
+      "name": "Felt Wedges",
+      "description": "Pyramids of grey felt, floor to ceiling, swallowing every sound in the vault.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#5a5668",
+      "height": 0.9,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.45,
+              0.8,
+              0.45
+            ],
+            "pos": [
+              -0.22,
+              0.4,
+              -0.22
+            ],
+            "color": "#5a5668",
+            "material": "cloth"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.45,
+              0.8,
+              0.45
+            ],
+            "pos": [
+              0.22,
+              0.4,
+              0.22
+            ],
+            "color": "#6a6678",
+            "material": "cloth"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.45,
+              0.6,
+              0.45
+            ],
+            "pos": [
+              0.22,
+              0.3,
+              -0.22
+            ],
+            "color": "#4a4658",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "cylinders": [
+      {
+        "label": "Cylinder labelled 'Polka, 1903'",
+        "color": "#9a6a3a"
+      },
+      {
+        "label": "Cylinder with a cracked label",
+        "color": "#6a4a2a"
+      },
+      {
+        "label": "Cylinder in a green tin",
+        "color": "#4a7a5a"
+      },
+      {
+        "label": "Cylinder that smells of cloves",
+        "color": "#8a3a2a"
+      },
+      {
+        "label": "Cylinder marked only 'Nr. 12'",
+        "color": "#5a5a6a"
+      },
+      {
+        "label": "Cylinder wrapped in a love letter",
+        "color": "#d8b8a8"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "The Staff Entrance",
+      "description": "Back corridors under the museum: cloakrooms, crates of unlabelled cylinders, a porter's lodge with a dead telephone. Gaslight, herringbone parquet, and somewhere above, a quartet tuning.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 2,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#5a3b26",
+        "color2": "#6e4a30",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#d9cdb4",
+        "color2": "#b8aa8c",
+        "material": "stone",
+        "height": 1.4,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#ffdcaa",
+        "ambientIntensity": 0.55,
+        "lamps": {
+          "color": "#ffc070",
+          "intensity": 1.6,
+          "frequency": 0.25,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#2a1e16",
+          "density": 0.02
+        }
+      },
+      "actors": [
+        {
+          "actor": "night-docent",
+          "weight": 10,
+          "max": 3
+        },
+        {
+          "actor": "loose-parquet",
+          "weight": 8,
+          "max": 3
+        },
+        {
+          "actor": "listening-horn",
+          "weight": 6,
+          "max": 2
+        },
+        {
+          "actor": "night-watchman",
+          "weight": 4,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "mirela",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "sacher-slice",
+          "weight": 10
+        },
+        {
+          "item": "hush-pastille",
+          "weight": 5
+        },
+        {
+          "item": "bag-of-marbles",
+          "weight": 5
+        },
+        {
+          "item": "stage-smoke",
+          "weight": 3
+        },
+        {
+          "item": "spare-rosin",
+          "weight": 5
+        },
+        {
+          "item": "cyl-lullaby",
+          "weight": 3
+        },
+        {
+          "item": "cyl-brass-band",
+          "weight": 3
+        },
+        {
+          "item": "cyl-lecture",
+          "weight": 3
+        },
+        {
+          "item": "cyl-csardas",
+          "weight": 3
+        },
+        {
+          "item": "opera-glasses",
+          "weight": 2
+        }
+      ],
+      "itemCount": 7,
+      "terrain": [
+        {
+          "terrain": "singing-parquet",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Ride the dumbwaiter up to the galleries",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              1.1,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#7a5a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.7,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.6,
+              0.41
+            ],
+            "color": "#d4a64a",
+            "material": "metal"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffc070",
+          "intensity": 1,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Introduce the crew via Mirela. Upstairs the quartet tunes; the player should feel the floor listening. Watchmen are bored, docents are not.",
+      "music": "tense"
+    },
+    {
+      "name": "Gallery of Extinct Song",
+      "description": "Marble halls of glass cases: stuffed songbirds, phonographs, a wall of silent wax cylinders. Every specimen faces the door you came through.",
+      "generator": "rooms",
+      "size": "medium",
+      "params": {
+        "roomCount": 9,
+        "roomMin": 4,
+        "roomMax": 8,
+        "loops": 0.4
+      },
+      "floor": {
+        "color": "#d8d0c0",
+        "color2": "#3a3640",
+        "material": "stone",
+        "pattern": "tiles"
+      },
+      "wall": {
+        "color": "#2f4a3a",
+        "color2": "#3e6b5a",
+        "material": "stone",
+        "height": 1.6,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#c8d8e8",
+        "ambientIntensity": 0.5,
+        "lamps": {
+          "color": "#e8f0ff",
+          "intensity": 1.3,
+          "frequency": 0.18,
+          "flicker": false
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#1a2420",
+          "density": 0.02
+        }
+      },
+      "actors": [
+        {
+          "actor": "echo-moth",
+          "weight": 10,
+          "max": 5
+        },
+        {
+          "actor": "restless-specimen",
+          "weight": 8,
+          "max": 3
+        },
+        {
+          "actor": "night-docent",
+          "weight": 6,
+          "max": 2
+        },
+        {
+          "actor": "listening-horn",
+          "weight": 6,
+          "max": 2
+        },
+        {
+          "actor": "night-watchman",
+          "weight": 5,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "haberl",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "sacher-slice",
+          "weight": 10
+        },
+        {
+          "item": "valerian-drops",
+          "weight": 5
+        },
+        {
+          "item": "hush-pastille",
+          "weight": 4
+        },
+        {
+          "item": "spare-rosin",
+          "weight": 5
+        },
+        {
+          "item": "bag-of-marbles",
+          "weight": 4
+        },
+        {
+          "item": "cyl-lullaby",
+          "weight": 3
+        },
+        {
+          "item": "cyl-brass-band",
+          "weight": 3
+        },
+        {
+          "item": "cyl-lecture",
+          "weight": 2
+        },
+        {
+          "item": "cyl-csardas",
+          "weight": 3
+        },
+        {
+          "item": "violin-mute",
+          "weight": 2
+        },
+        {
+          "item": "felt-overshoes",
+          "weight": 2
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "cue-sheet",
+          "where": "guarded"
+        },
+        {
+          "item": "expedition-notes",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "display-case",
+          "density": 0.03
+        },
+        {
+          "terrain": "velvet-rope",
+          "density": 0.02
+        },
+        {
+          "terrain": "singing-parquet",
+          "density": 0.015
+        }
+      ],
+      "transitionName": "Step into the music on Haberl's cue",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "cue-sheet"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.9,
+              0.9,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#ffd27a",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ffd27a",
+          "intensity": 1.4,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Haberl hides in a display case labelled 'Viennese Gentleman'. The cue sheet lies near a guarded specimen. The field notes hint that the Director and the cellist's grandfather were engaged.",
+      "music": "eerie"
+    },
+    {
+      "name": "Inside the Second Movement",
+      "description": "Step through the music and you are standing on it: held notes as golden platforms over a violet dark, bow strokes as bridges, the four instruments booming somewhere below like weather.",
+      "generator": "islands",
+      "size": "medium",
+      "params": {
+        "islandCount": 9,
+        "islandSize": 0.55,
+        "bridgeLength": 5,
+        "loops": 0.3,
+        "pockets": 0.3,
+        "outcrops": 0.4,
+        "rims": 1
+      },
+      "floor": {
+        "color": "#f3ead2",
+        "color2": "#ddd0b0",
+        "material": "stone",
+        "pattern": "lines"
+      },
+      "wall": {
+        "color": "#2a2240",
+        "color2": "#4a3a70",
+        "material": "glass",
+        "height": 0.6,
+        "pattern": "none"
+      },
+      "lighting": {
+        "ambient": "#b8a8ff",
+        "ambientIntensity": 0.7,
+        "lamps": {
+          "color": "#ffd27a",
+          "intensity": 1.5,
+          "frequency": 0.2,
+          "flicker": false
+        },
+        "playerLight": 3,
+        "fog": {
+          "color": "#1a1033",
+          "density": 0.025
+        }
+      },
+      "actors": [
+        {
+          "actor": "stray-semiquaver",
+          "weight": 10,
+          "max": 5
+        },
+        {
+          "actor": "echo-moth",
+          "weight": 6,
+          "max": 3
+        },
+        {
+          "actor": "wolf-tone",
+          "weight": 3,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "zsofia",
+          "where": "centre"
+        },
+        {
+          "actor": "wolf-tone",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "sacher-slice",
+          "weight": 10
+        },
+        {
+          "item": "valerian-drops",
+          "weight": 6
+        },
+        {
+          "item": "hush-pastille",
+          "weight": 3
+        },
+        {
+          "item": "spare-rosin",
+          "weight": 6
+        },
+        {
+          "item": "stage-smoke",
+          "weight": 3
+        },
+        {
+          "item": "cyl-lullaby",
+          "weight": 3
+        },
+        {
+          "item": "cyl-csardas",
+          "weight": 3
+        },
+        {
+          "item": "bag-of-marbles",
+          "weight": 3
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "prompters-last-cue",
+          "where": "far"
+        },
+        {
+          "item": "conductors-baton",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "held-note",
+          "density": 0.03
+        }
+      ],
+      "transitionName": "Fall through the final rest into the vault",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.18,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "color": "#141414",
+            "material": "glow"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#9fb4ff",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      },
+      "backdrop": {
+        "style": "aurora",
+        "color": "#1a1033",
+        "color2": "#c79a3a",
+        "intensity": 0.7
+      },
+      "gmNotes": "Non-realistic space: the music made physical. Footsteps make no noise here except on silence. Zsófia reveals the encore is the lark's call; the Prompter's Last Cue lies far off. The Wolf Tone howls.",
+      "music": "calm"
+    },
+    {
+      "name": "The Room of Absolute Quiet",
+      "description": "A round vault lined with felt wedges, so silent you hear your own blood. In the centre, under a glass bell on a plinth, a brass case glows faintly. The Director is already here.",
+      "generator": "geometric",
+      "size": "small",
+      "params": {
+        "variant": 0,
+        "symmetry": 2,
+        "rings": 3,
+        "spokes": 4,
+        "cellSize": 6,
+        "pillars": 0.3,
+        "doors": 0.6
+      },
+      "floor": {
+        "color": "#363046",
+        "color2": "#4b4560",
+        "material": "cloth",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#5a5668",
+        "color2": "#3a3648",
+        "material": "cloth",
+        "height": 1.5,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#8c93b8",
+        "ambientIntensity": 0.65,
+        "lamps": {
+          "color": "#9fb4ff",
+          "intensity": 1.2,
+          "frequency": 0.12,
+          "flicker": false
+        },
+        "playerLight": 5
+      },
+      "actors": [
+        {
+          "actor": "metronome-sentry",
+          "weight": 8,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "listening-horn",
+          "weight": 6,
+          "max": 3
+        },
+        {
+          "actor": "night-watchman",
+          "weight": 5,
+          "min": 1,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "director-stillhart",
+          "where": "centre"
+        },
+        {
+          "actor": "herr-kapellmeister",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "sacher-slice",
+          "weight": 10
+        },
+        {
+          "item": "valerian-drops",
+          "weight": 6
+        },
+        {
+          "item": "hush-pastille",
+          "weight": 2
+        }
+      ],
+      "itemCount": 5,
+      "placedItems": [
+        {
+          "item": "glass-lark-cylinder",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "foam-wedge",
+          "density": 0.05
+        }
+      ],
+      "transitionName": "Walk out through the gala, cylinder under your coat",
+      "backdrop": {
+        "style": "abyss",
+        "color": "#0c0a14",
+        "color2": "#2a2240",
+        "intensity": 0.6
+      },
+      "gmNotes": "The finale. The Director guards the plinth and will talk first. Two routes: outfox her, or use the Prompter's Last Cue so the encore draws every ear away, then take the cylinder. The cat sits on a pressure plate, perfectly calm.",
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Lift Cylinder No. 7 from the Room of Absolute Quiet: outfox Director Stillhart, or call Haberl's encore so every ear turns to the stage.",
+    "win": {
+      "type": "all",
+      "of": [
+        {
+          "type": "has_item",
+          "who": "player",
+          "item": "glass-lark-cylinder"
+        },
+        {
+          "type": "any",
+          "of": [
+            {
+              "type": "actor_defeated",
+              "actor": "director-stillhart"
+            },
+            {
+              "type": "flag",
+              "flag": "encore-called"
+            }
+          ]
+        }
+      ]
+    },
+    "winText": "You walk out through the rotunda as the encore begins: a cello and a viola playing two notes at once, the glass-lark's call, the first time anyone has heard it in twenty-nine years. In your coat the cylinder is warm. Behind you, very quietly, the Director is weeping. Herr Kapellmeister follows you out, in no hurry at all.",
+    "lossText": "You gasp. In the Room of Absolute Quiet a gasp is a thunderclap. The parquet sings, the lanterns come, and the glass-lark stays silent for another hundred years.",
+    "labels": {
+      "encore-called": "Haberl's encore is called"
+    }
+  },
+  "gm": {
+    "persona": "Haberl's annotated prompt book: the heist written as an opera libretto, the stage directions narrating themselves from the prompter's box.",
+    "voice": "Short stage directions in the present tense, with tempo markings (pianissimo, attacca, fermata). Warm, wry, never loud.",
+    "threads": [
+      "The floor listens: every creak is a chord the Director tuned herself.",
+      "The quartet's encore is the lark's call, transcribed by the cellist.",
+      "The Director and the cellist's grandfather were engaged on the 1899 expedition.",
+      "Herr Kapellmeister is suspiciously at home in the vault.",
+      "Haberl is going deaf and wants to hear the lark once."
+    ],
+    "fallback": {
+      "intro": "Act One. A service door in the Burgring, eight o'clock. Upstairs a string quartet tunes for the Schubert gala; down here the gaslight ticks. Ottilie Graf, piano tuner, buttons a rented tailcoat. Somewhere above the floors are listening, and somewhere below them, a bird that has been silent since 1899 waits in wax. Pianissimo, please.",
+      "areaEnter": [
+        "Scene one: the staff entrance. Mirela is waiting by the cloakroom, already signing that you are late. Mind the parquet. It was tuned.",
+        "Scene two: the gallery. Glass cases, glass eyes. A stuffed grouse turns its head a fraction. One display case labelled 'Viennese Gentleman' winks.",
+        "Scene three, attacca: you step into the second movement. The floor is a held note. Below you, a cello breathes.",
+        "Finale: the Room of Absolute Quiet. Felt swallows your footsteps. A ginger cat blinks at you from beside the plinth. The Director does not turn around."
+      ],
+      "lowHp": [
+        "Your hands are shaking. The floor can hear your hands shaking.",
+        "Breathe in four counts, out four. Haberl's voice, from somewhere: 'Not yet. Not yet.'",
+        "Fermata. Hold. Do not gasp."
+      ],
+      "events": [
+        "Above, the quartet swells into a forte. For eight bars, nothing you do can be heard.",
+        "A lantern swings past a doorway and keeps going.",
+        "A moth lands on your sleeve and repeats your heartbeat back to you, louder.",
+        "Far off, Haberl coughs exactly on the downbeat, and a guard turns the wrong way."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "A string quartet heard through floorboards: hushed pizzicato, long held notes, a metronome ticking somewhere.",
+    "synth": {
+      "key": "G",
+      "scale": "dorian",
+      "tempo": 66,
+      "timbre": "string",
+      "drone": true,
+      "percussion": "clockwork",
+      "brightness": 0.4
+    },
+    "searchTerms": [
+      "Schubert string quartet pianissimo",
+      "Death and the Maiden second movement",
+      "quiet heist pizzicato"
+    ],
+    "suggestions": [
+      "Schubert: String Quartet No. 14, II. Andante con moto",
+      "Haydn: The Lark quartet, I. Allegro moderato"
+    ]
+  }
+}

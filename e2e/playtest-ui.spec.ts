@@ -52,7 +52,7 @@ async function startWorld(page: Page, world: string, seed: number) {
   await waitReady(page);
   await page.waitForTimeout(600);
   await skipNarration(page);
-  await page.locator('.aw-hints button').first().click().catch(() => {});
+  await page.locator('.aw-onboard-ok').click({ timeout: 2000 }).catch(() => {});
 }
 /** clears hostiles and puts the player on a free floor tile next to an actor with defId */
 async function standNextTo(page: Page, defId: string) {

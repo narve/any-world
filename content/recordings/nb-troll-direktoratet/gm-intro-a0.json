@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/nb-troll-direktoratet/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Nummer 000001. Ekkoet ruller gjennom granitten, og lysrørene blunker som om de ikke helt tror det. De er det første mennesket som har søkt om hytte på trollgrunn, og klokka over skranken har allerede begynt å tikke mot morgenen. Tre skjemaer, ett stempel, og en kø som har stått stille siden svartedauden. Vær så god."
+          },
+          {
+            "type": "mood",
+            "music": "calm"
+          }
+        ]
+      }
+    }
+  ]
+}

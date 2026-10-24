@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/heist-silent-vault/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Fermata. You drop through the last rest into felt and silence so deep you can hear your own pulse keeping time. A ginger cat blinks at you from beside the plinth. In the centre, a woman in pale grey has her back to you, one gloved hand resting on a glass bell."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#9fb4ff"
+          },
+          {
+            "type": "say",
+            "actorId": "director-stillhart",
+            "text": "Frau Graf. You were always so careful with the A. Do be careful now."
+          }
+        ]
+      }
+    }
+  ]
+}

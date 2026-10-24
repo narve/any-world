@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/abstract-yellow-triangle/palette-knife",
+      "json": {
+        "reply": "A customer! And a yellow one, no less; I haven't scraped one of those in a while. Fresh scrapings, barely mixed, dabs only. Turpentine for the varnish, cadmium for the chips, and a very sharp deal on outlines if you're the edgy type.",
+        "options": [
+          "Show me what you have.",
+          "Where is the way out of the Grid?",
+          "What did you scrape off the other yellows?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

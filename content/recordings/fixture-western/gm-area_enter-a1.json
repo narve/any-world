@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-western/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Out on the flats the horizon wobbles like a bad coin. The creek bed is a long crack full of nothing. Somewhere out there, Sabine Lark is waiting with the rifle she says she does not need."
+          },
+          {
+            "type": "mood",
+            "music": "tense"
+          }
+        ]
+      }
+    }
+  ]
+}

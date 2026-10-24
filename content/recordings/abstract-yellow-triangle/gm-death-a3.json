@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/abstract-yellow-triangle/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "So close to the corner. The gloss settles, smooth and certain, and you go still beneath it, bright as ever and going nowhere. The signature stays half written."
+          }
+        ]
+      }
+    }
+  ]
+}

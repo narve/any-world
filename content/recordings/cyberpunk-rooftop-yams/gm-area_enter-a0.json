@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/cyberpunk-rooftop-yams/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Red soil, warm under your feet, and every yam leaf in the bed stamped with a tiny blue Nimbus logo. Somewhere past the solar racks a drone hums, waiting for the metered rain to fall on schedule."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat",
+            "tint": "#f7a26b"
+          }
+        ]
+      }
+    }
+  ]
+}

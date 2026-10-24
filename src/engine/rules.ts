@@ -16,6 +16,7 @@ import { type Ctx, type Switches, computeSwitches } from './ctx';
 import { difficultyOf, profileOf } from './difficulty';
 import { DEFAULT_DURABILITY } from './inventory';
 import { POSITIONAL_SHAPES, isActorEffect } from './effects';
+import { hideConsumablesForRule, unhideConsumablesForRule } from './knowledge';
 
 // ---------------------------------------------------------------------------
 // Rules in force
@@ -563,10 +564,14 @@ export function removeActiveRule(ctx: Ctx, id: string): ActiveRuleEntry | null {
  *  - durability on: gear the player holds or that lies in the area starts wearing out;
  *    off: durability counters are dropped (nothing wears or shows a count any more)
  * Darkness, noLoot, noNaturalHpRegen, permadeathMercy and violenceCounter are read live and need
- * nothing here. allConsumablesUnknown only decides knowledge at run start (a mid-run rule does not
- * make known items unknown, and lifting it does not identify anything).
+ * nothing here.
+ *  - allConsumablesUnknown on: consumables the player knows only from the world (never used, not
+ *    carried) become unknown with fresh appearances from their groups' pools
+ *    (knowledge.ts hideConsumablesForRule); off: those go back to their own knowledge level.
  */
 function applySwitchChange(ctx: Ctx, before: Switches, after: Switches): void {
+  if (!before.allConsumablesUnknown && after.allConsumablesUnknown) hideConsumablesForRule(ctx);
+  else if (before.allConsumablesUnknown && !after.allConsumablesUnknown) unhideConsumablesForRule(ctx);
   if (before.durability === after.durability) return;
   const items = [...ctx.s.player.slots, ...ctx.s.area.items.map((f) => f.item)];
   for (const it of items) {

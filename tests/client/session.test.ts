@@ -434,18 +434,36 @@ describe('start options', () => {
   });
 });
 
-describe('first-run hints', () => {
-  it('show until three turns are taken or they are dismissed', () => {
-    const s = new GameSession({ world: western, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10), hints: true });
-    expect(s.viewModel().game!.hints?.length).toBeGreaterThan(0);
+describe('onboarding card (replaces the M1 first-run hints)', () => {
+  it('waits for the prologue, then shows until dismissed', () => {
+    const s = new GameSession({ world: western, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10), onboarding: true });
+    // the prologue card is up first: onboarding comes after it
+    expect(s.narration).not.toBeNull();
+    expect(s.viewModel().game!.onboarding).toBeNull();
+    s.dismissNarration(s.narration!.id);
+    const ob = s.viewModel().game!.onboarding!;
+    expect(ob.worldId).toBe('fixture-test');
+    expect(ob.goal).toBe(western.goal.summary);
+    expect(ob.conflict.join(' ')).toContain(western.vocabulary.conflict);
+    s.intent({ type: 'dismiss_onboarding', forever: true });
+    expect(s.viewModel().game!.onboarding).toBeNull();
+    s.intent({ type: 'show_onboarding' });
+    expect(s.viewModel().game!.onboarding).not.toBeNull();
+  });
+
+  it('gets out of the way after a dozen turns nobody closed it', () => {
+    const s = new GameSession({ world: western, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10), onboarding: true });
+    s.dismissNarration(s.narration!.id);
+    for (let i = 0; i < 11; i++) s.act({ type: 'wait' });
+    expect(s.viewModel().game!.onboarding).not.toBeNull();
     s.act({ type: 'wait' });
-    s.act({ type: 'wait' });
-    expect(s.viewModel().game!.hints).not.toBeNull();
-    s.act({ type: 'wait' });
-    expect(s.viewModel().game!.hints).toBeNull();
-    const t = new GameSession({ world: western, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10), hints: true });
-    t.intent({ type: 'dismiss_hints' });
-    expect(t.viewModel().game!.hints).toBeNull();
+    expect(s.viewModel().game!.onboarding).toBeNull();
+  });
+
+  it('is off without the flag', () => {
+    const s = session();
+    s.narration = null;
+    expect(s.viewModel().game!.onboarding).toBeNull();
   });
 
   it('show an objective line', () => {

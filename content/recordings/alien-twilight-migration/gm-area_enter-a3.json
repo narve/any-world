@@ -1,0 +1,57 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/alien-twilight-migration/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The canyon opens in facets of amber and violet, and from its throat comes a hum we know, the low warm call of a lead mossback. Half of us lift our heads toward it. It is not Hollowhill's voice."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#ffb070"
+          },
+          {
+            "type": "add_rule",
+            "rule": {
+              "id": "the-gleam-sings",
+              "name": "The Gleam Sings",
+              "description": "Every 25 turns in the canyon the Gleam's amber song pulls at you and you are Sunstruck (Footing -2) for 3 turns.",
+              "playerTriggers": [
+                {
+                  "on": "on_turn",
+                  "every": 25,
+                  "action": {
+                    "targeting": {
+                      "shape": "self",
+                      "affects": "self_only",
+                      "range": 0
+                    },
+                    "effects": [
+                      {
+                        "type": "apply_status",
+                        "status": "sunstruck",
+                        "duration": 3
+                      },
+                      {
+                        "type": "message",
+                        "text": "The amber song swells. For a moment you want to walk east."
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "reason": "The Gleam has noticed a courier that smells of the herd, and it sings louder."
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_3"
+          }
+        ]
+      }
+    }
+  ]
+}

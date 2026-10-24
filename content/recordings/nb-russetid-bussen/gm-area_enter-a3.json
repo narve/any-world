@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-russetid-bussen/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Port 7 glir opp på koden 1705. Midt i hallen står tolv basselementer som en svart katedral, og Kasper sitter foran dem med fjernkontrollen i fanget. «Eli,» sier han, og trykker på play."
+          },
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

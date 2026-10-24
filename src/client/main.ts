@@ -5,12 +5,21 @@
  * The address bar always names the run on screen (see boot.ts), so a reload continues it.
  */
 import { createUi, type GameUi, type Settings, type StartView, type UiCallbacks, type UiViewModel, type InspirationPrompt, type DemoWorldView, type SettingsView, type StartOptions, type Difficulty } from './ui/index';
-import { DEFAULT_PALETTE, DEFAULT_VOCABULARY } from './ui/index';
-import { Renderer } from './render/index';
+import { DEFAULT_PALETTE } from './ui/index';
+import { defaultVocabulary } from './ui/format';
+import type { Renderer } from './render/index';
+import { loadRenderer, preloadRenderer } from './render/lazy';
 import { listPresets } from '../llm/presets';
-import { bundledWorlds, findWorld, type WorldEntry } from './worlds';
-import { clearRun, hintsSeen, loadRun, loadSettings, saveSettings } from './storage';
+import { fetchServerPresets } from '../llm/transport';
+import type { LLMProvider } from '../llm/types';
+import { workerBalancer } from '../llm/balance-worker';
+import { loadBundledRecordings, recordedWorldKeys } from '../llm/recordings-bundle';
+import { bundledWorlds, findWorld, generatedWorlds, rememberWorld, type WorldEntry } from './worlds';
+import { providerFromSettings, providerLabel, runAi, WorldGeneration } from './ai';
+import { clearRun, loadRun, loadSettings, onboardingSeen, saveSettings } from './storage';
+import { availableLanguages, getLanguage, setLanguage, t } from './i18n/index';
 import { GameSession } from './session';
+import { inspirationPrompts, promptLibrary } from './prompts';
 import { GameController } from './game-controller';
 import { bootRoute, runUrl } from './boot';
 
@@ -31,13 +40,17 @@ function randomSeed(): number {
 }
 
 export class App {
-  readonly ui: GameUi;
+  ui: GameUi;
   /** created with the first run (WebGL is not needed for the start screen) */
   renderer: Renderer | null = null;
   controller: GameController | null = null;
   private settings: Settings;
   private settingsOpen = false;
-  private screen: 'start' | 'game' = 'start';
+  private screen: 'start' | 'loading' | 'game' = 'start';
+  /** presets the backend says it can serve (null until asked, or when it cannot be reached) */
+  private serverConfigured: Set<string> | null = null;
+  private generation: WorldGeneration | null = null;
+  private lastStart: StartOptions | null = null;
   private startError: string | null = null;
   /** the start screen's last difficulty/weirdness (used for demo runs and "same world again") */
   private runOptions: { difficulty: Difficulty; weirdness: number } = { difficulty: 'normal', weirdness: 0.4 };
@@ -47,7 +60,40 @@ export class App {
     private canvasHost: HTMLElement,
   ) {
     this.settings = loadSettings(DEFAULT_TRANSPORT);
+    document.documentElement.lang = getLanguage();
     this.ui = createUi(uiRoot, this.callbacks());
+    void this.refreshServerPresets();
+    preloadRenderer();
+  }
+
+  /** asks the backend which presets it holds keys for (backend transport only) */
+  private async refreshServerPresets(): Promise<void> {
+    if (this.settings.provider.transport !== 'backend') return;
+    try {
+      const list = await fetchServerPresets();
+      this.serverConfigured = new Set(list.filter((p) => p.configured).map((p) => p.id));
+    } catch {
+      this.serverConfigured = null;
+    }
+    if (this.screen === 'start') this.render();
+  }
+
+  /** the LLM the settings give, or null (demo worlds only) */
+  provider(): LLMProvider | null {
+    return providerFromSettings(this.settings.provider, this.serverConfigured);
+  }
+
+  /** the UI language picker (start screen, settings) */
+  private languageView(): UiViewModel['language'] {
+    return { current: getLanguage(), options: availableLanguages() };
+  }
+
+  /** switch the UI language: the overlay is rebuilt in the new language, the run goes on */
+  setLanguage(code: string): void {
+    setLanguage(code);
+    this.ui.destroy();
+    this.ui = createUi(this.uiRoot, this.callbacks());
+    this.render();
   }
 
   // ---------------------------------------------------------------------------
@@ -75,23 +121,16 @@ export class App {
       tagline: w.world.meta.tagline,
       genre: w.world.meta.genre,
       color: w.world.palette.primary,
+      language: w.world.meta.language || 'en',
     }));
-    const prompts: InspirationPrompt[] = worlds.map((w) => ({
-      prompt: w.world.meta.prompt || w.world.meta.tagline,
-      genre: w.world.meta.genre,
-      tags: w.world.meta.tags,
-      teaser: w.world.meta.title,
-      worldId: w.id,
-    }));
+    const prompts: InspirationPrompt[] = inspirationPrompts(promptLibrary(), new Set(worlds.map((w) => w.id)));
     const saved = loadRun();
     return {
       prompts,
       demos,
       savedRun: saved && findWorld(saved.worldId) ? { worldTitle: saved.worldTitle, playerName: saved.playerName, areaName: saved.areaName, turn: saved.turn } : null,
-      // live world generation needs the generation pipeline (milestone M3); until then the
-      // start screen offers the recorded worlds
-      canGenerate: false,
-      providerLabel: null,
+      canGenerate: !!this.provider(),
+      providerLabel: this.provider() ? providerLabel(this.settings.provider) : null,
       defaults: { difficulty: this.runOptions.difficulty, weirdness: this.runOptions.weirdness },
     };
   }
@@ -101,12 +140,24 @@ export class App {
       this.controller.render();
       return;
     }
+    if (this.screen === 'loading' && this.generation) {
+      this.ui.render({
+        screen: 'loading',
+        theme: { palette: DEFAULT_PALETTE, vocabulary: defaultVocabulary() },
+        loading: this.generation.view(),
+        settings: this.settingsView(),
+        prefs: this.prefs(),
+        language: this.languageView(),
+      });
+      return;
+    }
     const vm: UiViewModel = {
       screen: 'start',
-      theme: { palette: DEFAULT_PALETTE, vocabulary: DEFAULT_VOCABULARY },
+      theme: { palette: DEFAULT_PALETTE, vocabulary: defaultVocabulary() },
       start: this.startView(),
       settings: this.settingsView(),
       prefs: this.prefs(),
+      language: this.languageView(),
     };
     this.ui.render(vm);
     if (this.startError) {
@@ -119,21 +170,37 @@ export class App {
   // runs
   // ---------------------------------------------------------------------------
 
-  private ensureRenderer(): Renderer {
-    if (!this.renderer) this.renderer = new Renderer(this.canvasHost);
+  /** three.js lives in its own chunk (render/lazy.ts): fetched while the start screen is up */
+  private async ensureRenderer(): Promise<Renderer> {
+    if (!this.renderer) {
+      const { Renderer } = await loadRenderer();
+      this.renderer ??= new Renderer(this.canvasHost);
+    }
     return this.renderer;
   }
 
   private async launch(session: GameSession): Promise<void> {
     this.controller?.dispose();
-    const renderer = this.ensureRenderer();
+    const renderer = await this.ensureRenderer();
     this.canvasHost.hidden = false;
     this.screen = 'game';
+    const app = this;
+    const ai = await runAi({
+      provider: this.provider(),
+      worldId: session.worldId,
+      loadRecordings: async (id) => (recordedWorldKeys().includes(id) ? loadBundledRecordings(id) : []),
+    });
     this.controller = new GameController(session, {
-      ui: this.ui,
+      ...(ai.director ? { director: ai.director } : {}),
+      dialogue: ai.dialogue,
+      gmTimeoutMs: ai.gmTimeoutMs,
+      // the UI is rebuilt when the language changes: always use the current one
+      get ui() {
+        return app.ui;
+      },
       renderer,
       canvasHost: this.canvasHost,
-      extraVm: () => ({ settings: this.settingsView() }),
+      extraVm: () => ({ settings: this.settingsView(), language: this.languageView() }),
     });
     // keep the address bar on this run: reloading resumes it (boot.ts) instead of starting over
     setAddress(runUrl(session.worldId, session.state.seed));
@@ -145,7 +212,7 @@ export class App {
     if (opts) this.runOptions = { difficulty: opts.difficulty, weirdness: opts.weirdness };
     const entry = findWorld(id);
     if (!entry) {
-      this.showStart(`No recorded world called "${id}".`);
+      this.showStart(t('app.noWorld', { id }));
       return false;
     }
     clearRun();
@@ -161,7 +228,7 @@ export class App {
       prefs: this.prefs(),
       difficulty: this.runOptions.difficulty,
       weirdness: this.runOptions.weirdness,
-      hints: !hintsSeen(),
+      onboarding: !onboardingSeen(entry.id),
     });
   }
 
@@ -170,7 +237,7 @@ export class App {
     const entry = run ? findWorld(run.worldId) : undefined;
     if (!run || !entry) {
       clearRun();
-      this.showStart('The saved run could not be found.');
+      this.showStart(t('app.savedMissing'));
       return false;
     }
     let session: GameSession;
@@ -186,19 +253,78 @@ export class App {
         ...(run.weirdness !== undefined ? { weirdness: run.weirdness } : {}),
         ...(run.rules ? { rules: run.rules } : {}),
         ...(run.hooks ? { hooks: run.hooks } : {}),
+        onboarding: !onboardingSeen(run.worldId),
       });
       this.runOptions = { difficulty: session.difficulty, weirdness: session.weirdness };
     } catch (e) {
       console.warn('[anyworld] saved run is unreadable:', e);
       clearRun();
-      this.showStart('The saved run could not be loaded.');
+      this.showStart(t('app.savedBroken'));
       return false;
     }
     await this.launch(session);
     return true;
   }
 
+  /**
+   * Creates a world with the configured LLM (loading screen with progress; the bot play-test runs in
+   * a Web Worker), keeps it in this browser and starts a run in it. Failures stay on the loading
+   * screen with Try again / Back.
+   */
+  async createWorld(opts: StartOptions): Promise<boolean> {
+    const provider = this.provider();
+    if (!provider) {
+      this.settingsOpen = true;
+      this.render();
+      return false;
+    }
+    this.lastStart = opts;
+    this.runOptions = { difficulty: opts.difficulty, weirdness: opts.weirdness };
+    this.generation?.cancel();
+    this.controller?.dispose();
+    this.controller = null;
+    const gen = new WorldGeneration(
+      provider,
+      {
+        prompt: opts.prompt,
+        surprise: opts.surprise || !opts.prompt.trim(),
+        difficulty: opts.difficulty,
+        weirdness: opts.weirdness,
+        language: opts.language ?? getLanguage(),
+        recentWorlds: generatedWorlds()
+          .slice(-5)
+          .map((w) => w.world.meta.title),
+        surpriseSeed: randomSeed(),
+      },
+      {
+        balancer: workerBalancer(() => new Worker(new URL('../llm/balance-worker.ts', import.meta.url), { type: 'module' })),
+        onChange: () => {
+          if (this.generation === gen && this.screen === 'loading') this.render();
+        },
+      },
+    );
+    this.generation = gen;
+    this.screen = 'loading';
+    this.canvasHost.hidden = true;
+    this.render();
+    let world;
+    try {
+      world = await gen.run();
+    } catch (e) {
+      console.warn('[anyworld] world generation failed:', e);
+      return false;
+    }
+    if (this.generation !== gen || gen.signal.aborted) return false;
+    this.generation = null;
+    const entry = rememberWorld(world, randomSeed());
+    clearRun();
+    await this.launch(this.newSession(entry, randomSeed()));
+    return true;
+  }
+
   showStart(error?: string): void {
+    this.generation?.cancel();
+    this.generation = null;
     setAddress(location.pathname);
     this.controller?.dispose();
     this.controller = null;
@@ -224,10 +350,9 @@ export class App {
       onDismissNarration: (id) => ctl()?.onDismissNarration(id),
       onPlayDemo: (id, opts) => void this.playWorld(id, undefined, opts),
       onContinue: () => void this.continueRun(),
-      onStart: () => {
-        // canGenerate is false, so the UI opens settings instead of calling this; keep a safe
-        // answer for any other caller
-        this.ui.toast('Creating new worlds needs the AI world builder; pick a demo world for now.', 'info');
+      onStart: (opts) => {
+        if (this.provider()) void this.createWorld(opts);
+        else this.ui.toast(t('app.noGenerator'), 'info');
       },
       onOpenSettings: (open) => {
         this.settingsOpen = open;
@@ -239,6 +364,7 @@ export class App {
         if (this.controller) this.controller.session.prefs = this.prefs();
         this.settingsOpen = false;
         this.render();
+        void this.refreshServerPresets();
       },
       onEnd: (choice) => {
         const s = this.controller?.session;
@@ -246,7 +372,8 @@ export class App {
         else this.showStart();
       },
       onCancelLoading: () => this.showStart(),
-      onRetryLoading: () => this.showStart(),
+      onRetryLoading: () => (this.lastStart ? void this.createWorld(this.lastStart) : this.showStart()),
+      onLanguage: (code) => this.setLanguage(code),
     };
   }
 }
@@ -278,5 +405,5 @@ function setAddress(url: string): void {
 boot().catch((e) => {
   console.error('[anyworld] failed to start:', e);
   const root = document.getElementById('ui-root');
-  if (root) root.textContent = `AnyWorld failed to start: ${e instanceof Error ? e.message : String(e)}`;
+  if (root) root.textContent = t('app.failed', { error: e instanceof Error ? e.message : String(e) });
 });

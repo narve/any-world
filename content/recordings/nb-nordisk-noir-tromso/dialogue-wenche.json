@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-nordisk-noir-tromso/wenche",
+      "json": {
+        "reply": "Du er hun fra Oslo, ja. Kaffen er fersk, og prisen er den samme for politiet som for alle andre. Russerne kjøpte bare sjokolade og telefonkort her. Og frostvæske. Mye frostvæske, Oslo.",
+        "options": [
+          "Hvorfor trenger en tråler så mye frostvæske?",
+          "Hvem andre har vært på kaia om natta?",
+          "Jeg tar en kaffe."
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

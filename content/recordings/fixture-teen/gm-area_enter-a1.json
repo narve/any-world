@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-teen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Wednesday night. The Achterbergs left on Sunday and Rosalind found the spare key. Bass shakes dust off the empty picture hooks. Half of Year Eleven is here, saying goodbye to a house that is already gone."
+          },
+          {
+            "type": "mood",
+            "music": "tense"
+          }
+        ]
+      }
+    }
+  ]
+}

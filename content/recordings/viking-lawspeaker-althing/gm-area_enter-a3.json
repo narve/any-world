@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/viking-lawspeaker-althing/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You open your eyes on the Law Rock. Wind, and the whole Thing below you like a field of upturned faces. Thorgunna Wide-Mouth is already speaking, warmly, and every family is nodding at a different sentence. It is said in law that whoever stands on the Rock must be heard. It does not say for how long."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#ffcf8a"
+          }
+        ]
+      }
+    }
+  ]
+}

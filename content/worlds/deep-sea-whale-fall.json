@@ -1,0 +1,3658 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "The Fall That Keeps Growing",
+    "tagline": "Three thousand metres down, a dead whale is getting bigger. Someone stopped cutting samples. Something else didn't.",
+    "genre": "deep-sea survival",
+    "tags": [
+      "deep sea",
+      "survival",
+      "mystery",
+      "bioluminescence",
+      "body horror",
+      "corporate"
+    ],
+    "tone": "cold, patient, quietly awed",
+    "era": "near future",
+    "premise": "Kettleby Deep is a four-person research habitat bolted to the seabed beside a whale fall the crew named Old Margery. For eleven weeks the carcass has been growing: new ribs, new marrow, bone-worm script spiralling across every surface. Topside says the sample canisters stopped coming up a month ago. You are the relief diver. Your lamp runs on batteries, the batteries run out, and somebody on this crew knows why the whale is still getting bigger.",
+    "prompt": "A research habitat is anchored beside a whale fall at 3,000 metres, and the carcass is growing faster than anything can eat it. Ration your lamp batteries, read the bone-worms' patterns, and find out which crew member stopped sending samples topside — and why.",
+    "nonViolent": false,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Grip",
+        "abbr": "GRP",
+        "description": "Hold on, haul, and hit hard with hooks and billies."
+      },
+      "dex": {
+        "name": "Trim",
+        "abbr": "TRM",
+        "description": "Buoyancy control: landing blows, slipping bites, aiming the rivet driver."
+      },
+      "int": {
+        "name": "Reading",
+        "abbr": "RDG",
+        "description": "Making sense of worm script, sonar and machines. Powers your learned techniques."
+      },
+      "hp": {
+        "name": "Vitals",
+        "abbr": "VIT",
+        "description": "Blood, breath and body heat. At zero, the deep keeps you."
+      },
+      "mp": {
+        "name": "Focus",
+        "abbr": "FOC",
+        "description": "Calm attention, spent on techniques like the sonar shout."
+      },
+      "ac": {
+        "name": "Suit",
+        "abbr": "SUIT",
+        "description": "How much your drysuit and plating turn aside teeth and pressure."
+      }
+    },
+    "conflict": "Strike",
+    "defeated": "driven off",
+    "xp": "Depth-sense",
+    "levelUp": "Acclimatise",
+    "currency": "ration chits",
+    "lossTitle": "The Deep Keeps You",
+    "winTitle": "Surfacing",
+    "area": "Depth"
+  },
+  "palette": {
+    "primary": "#0e3a52",
+    "secondary": "#5ef2d6",
+    "accent": "#e9dcc0",
+    "danger": "#ff4a4a",
+    "ui": "#08141c",
+    "text": "#dcefff"
+  },
+  "damageTypes": [
+    {
+      "id": "pressure",
+      "name": "Pressure",
+      "color": "#4a7fff"
+    },
+    {
+      "id": "acid",
+      "name": "Sulphide",
+      "color": "#d6d23a"
+    },
+    {
+      "id": "electric",
+      "name": "Arc",
+      "color": "#9ff0ff"
+    },
+    {
+      "id": "heat",
+      "name": "Heat",
+      "color": "#ff8a3a"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "lightless",
+      "name": "Lightless",
+      "description": "Your lamp is dead. You see less and fumble in the black.",
+      "harmful": true,
+      "color": "#20242a",
+      "modifiers": [
+        {
+          "stat": "sight",
+          "amount": -3
+        },
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "slimed",
+      "name": "Slimed",
+      "description": "Hagfish slime gums your joints. You move slowly.",
+      "harmful": true,
+      "color": "#b8c8a0",
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "sulphide-sick",
+      "name": "Sulphide Sick",
+      "description": "You breathed the mat's poison. Lose 1 Vitals each turn.",
+      "harmful": true,
+      "color": "#d6d23a",
+      "perTurn": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          },
+          "damageType": "acid"
+        }
+      ]
+    },
+    {
+      "id": "jolted",
+      "name": "Jolted",
+      "description": "An arc through the suit locks every muscle for a moment.",
+      "harmful": true,
+      "color": "#9ff0ff",
+      "flags": [
+        "stunned"
+      ]
+    },
+    {
+      "id": "dazzled",
+      "name": "Dazzled",
+      "description": "Blinded by sudden light, creatures of the dark turn away.",
+      "harmful": true,
+      "color": "#fff6c4",
+      "flags": [
+        "afraid"
+      ]
+    },
+    {
+      "id": "warmed",
+      "name": "Warmed Through",
+      "description": "Hot broth in your belly. Vitals return faster.",
+      "harmful": false,
+      "color": "#ffb35c",
+      "flags": [
+        "regenerating"
+      ]
+    },
+    {
+      "id": "pattern-sight",
+      "name": "Pattern Sight",
+      "description": "The worm script makes sense for a while: you read movement before it happens.",
+      "harmful": false,
+      "color": "#ff6a5a",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 2
+        },
+        {
+          "stat": "int",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "hastened",
+      "name": "Racing Heart",
+      "description": "A stimulant makes everything around you seem slow.",
+      "harmful": false,
+      "color": "#ff9ad0",
+      "flags": [
+        "hasted"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "battery",
+      "name": "Lamp Battery",
+      "description": "Your helmet lamp drains as you move. Swap in cells or charge at supply cages.",
+      "color": "#f6e27a",
+      "max": 100,
+      "start": 90,
+      "perTurn": -0.25,
+      "onEmpty": [
+        {
+          "type": "apply_status",
+          "status": "lightless",
+          "duration": 10
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "lamp-rationing",
+      "name": "Lamp Rationing",
+      "description": "It is pitch dark. Your lamp loses 1 Battery every 4 turns. At 0 Battery you are Lightless (less sight, worse Trim) until you swap in a lamp cell or charge at a supply cage.",
+      "switches": {
+        "darkness": 0.6
+      }
+    },
+    {
+      "id": "the-fall-grows",
+      "name": "The Fall Grows",
+      "description": "Every 35 turns fresh bone pushes up around you: slow ground for a while. Where the bone grows, the worms follow.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 35,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "spawn_terrain",
+                "terrain": "fresh-bone",
+                "radius": 1,
+                "duration": 30
+              },
+              {
+                "type": "message",
+                "text": "Bone creaks up out of the silt around your boots, warm and new."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Juno Achterberg",
+    "title": "Relief Diver, Kettleby Deep",
+    "description": "Contract saturation diver sent down after the samples stopped. Good with a hook, better with her trim, and carrying a sealed order she has not opened.",
+    "stats": {
+      "str": 11,
+      "dex": 14,
+      "int": 11,
+      "hp": 28,
+      "mp": 12,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 8,
+    "sight": 7,
+    "unarmed": {
+      "name": "Gloved fist",
+      "verb": "punches",
+      "damage": {
+        "dice": "1d3"
+      }
+    },
+    "startingItems": [
+      {
+        "item": "flensing-hook",
+        "equipped": true
+      },
+      {
+        "item": "patched-drysuit",
+        "equipped": true
+      },
+      {
+        "item": "kelp-gel",
+        "count": 2
+      },
+      {
+        "item": "lamp-cell",
+        "count": 1
+      },
+      {
+        "item": "flare",
+        "count": 2
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "deep-lungs",
+          "name": "Deep Lungs",
+          "description": "Your body stops fighting the pressure. +5 max Vitals.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 5
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "trim-sense",
+          "name": "Neutral Trim",
+          "description": "You hang in the water like you belong there. +2 Trim.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "iron-grip",
+          "name": "Iron Grip",
+          "description": "Hauling cable all week paid off. +2 Grip.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "battery-miser",
+          "name": "Battery Miser",
+          "description": "You learn to dim the lamp between steps. Recover 3 Battery every 15 turns.",
+          "triggers": [
+            {
+              "on": "on_turn",
+              "every": 15,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "battery",
+                    "amount": {
+                      "base": 3
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "learn-sonar-shout",
+          "name": "Sonar Shout",
+          "description": "Learn to throw a focused pressure pulse from the suit's transducer.",
+          "grantItems": [
+            "sonar-shout"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "learn-marrow-mend",
+          "name": "Marrow Mend",
+          "description": "Brandvold's field trick: a worm-culture poultice you can grow on yourself.",
+          "grantItems": [
+            "marrow-mend"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "worm-reader",
+          "name": "Worm Reader",
+          "description": "The script starts to read like weather. +2 Reading, +1 sight.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "sight",
+              "amount": 1
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "predator-calm",
+          "name": "Predator's Calm",
+          "description": "Each thing you drive off steadies you: regain 3 Vitals.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 3
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "thick-skin",
+          "name": "Second Skin",
+          "description": "You patch the suit with shark hide. +1 Suit.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "tether-sense",
+          "name": "Tether Sense",
+          "description": "On arriving at a new depth you feel out the shape of it: reveals the nearby map.",
+          "triggers": [
+            {
+              "on": "on_area_enter",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "reveal_map",
+                    "radius": 14
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.9,
+        "build": "average",
+        "skin": "#c98e6b",
+        "top": "#f0a030",
+        "bottom": "#2a3440",
+        "accent": "#5ef2d6",
+        "hair": "#2b1a12",
+        "hairStyle": "short",
+        "headwear": "helmet",
+        "outfit": "spacesuit",
+        "holding": "lantern"
+      },
+      "light": {
+        "color": "#fff1c4",
+        "intensity": 1.2,
+        "radius": 3
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "hagfish-knot",
+      "name": "Hagfish Knot",
+      "description": "Six hagfish tied into one writhing knot, sliming everything they touch and eating from the inside out.",
+      "stats": {
+        "hp": 7,
+        "ac": 10,
+        "str": 9,
+        "dex": 11,
+        "int": 2
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Rasp",
+        "verb": "rasps",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        }
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "slimed",
+                "duration": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "scavenger"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#c9a0a8",
+          "secondary": "#f2e6e0",
+          "accent": "#3a1a20"
+        },
+        "scale": 0.8,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "scuttle-isopod",
+      "name": "Giant Isopod",
+      "description": "A pill-bug the size of a dog, plated like a tank and very interested in your boots.",
+      "stats": {
+        "hp": 10,
+        "ac": 13,
+        "str": 11,
+        "dex": 8,
+        "int": 2
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Mandibles",
+        "verb": "nips",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        }
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "scavenger"
+      ],
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#b8a8d8",
+          "secondary": "#7a6a98",
+          "accent": "#e8e0ff"
+        },
+        "scale": 0.75,
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "worm-plume",
+      "name": "Bone-worm Plume",
+      "description": "A crimson fan of Osedax worms rooted in bone. The plumes twitch in patterns, and the patterns spell something.",
+      "stats": {
+        "hp": 6,
+        "ac": 10,
+        "str": 8,
+        "dex": 10,
+        "int": 6
+      },
+      "attack": {
+        "name": "Acid root",
+        "verb": "burns",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "acid"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "loot": [
+        {
+          "item": "worm-rubbing",
+          "chance": 0.4
+        }
+      ],
+      "xp": 4,
+      "tags": [
+        "worm"
+      ],
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#ff3a4a",
+          "secondary": "#ffd0c0",
+          "accent": "#ff8a6a"
+        },
+        "idle": "sway",
+        "light": {
+          "color": "#ff4a5a",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "sampler-drone",
+      "name": "Sampling Drone",
+      "description": "A company drone still running its old job: core, bag, repeat. It has decided you are a sample.",
+      "stats": {
+        "hp": 8,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 4
+      },
+      "attack": {
+        "name": "Probe arc",
+        "verb": "zaps",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "electric",
+        "range": 4,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "loot": [
+        {
+          "item": "lamp-cell",
+          "chance": 0.2
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "electric",
+          "multiplier": 0.5
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "machine",
+        "company"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#e8e070",
+          "secondary": "#3a4048",
+          "accent": "#ff5a3a"
+        },
+        "scale": 0.7,
+        "idle": "hover",
+        "light": {
+          "color": "#ffe08a",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "ghost-chimaera",
+      "name": "Ghost Chimaera",
+      "description": "A ratfish with mirror eyes and a venom spine, gliding in loops like a thought you can't shake.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 10,
+        "dex": 14,
+        "int": 3
+      },
+      "speed": 130,
+      "attack": {
+        "name": "Spine",
+        "verb": "stabs",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.15
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "fish"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#d8e4f0",
+          "secondary": "#8090a8",
+          "accent": "#c0fff0"
+        },
+        "scale": 0.8,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "sleeper-shark",
+      "name": "Sleeper Shark",
+      "description": "Seven metres of slow, patient appetite. It has eaten from the Fall for weeks and is the only thing here getting fat on it.",
+      "stats": {
+        "hp": 24,
+        "ac": 12,
+        "str": 15,
+        "dex": 9,
+        "int": 3
+      },
+      "speed": 80,
+      "attack": {
+        "name": "Bite",
+        "verb": "bites",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        }
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 7
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "shark-billy",
+          "chance": 0.3
+        }
+      ],
+      "xp": 22,
+      "tags": [
+        "elite",
+        "fish"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#4a5058",
+          "secondary": "#8a9098",
+          "accent": "#e0e8f0"
+        },
+        "scale": 1.6,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "osteo-crab",
+      "name": "Osteo-crab",
+      "description": "A crab that grew its shell out of whale bone. It snips off marrow and carries it somewhere.",
+      "stats": {
+        "hp": 14,
+        "ac": 13,
+        "str": 12,
+        "dex": 10,
+        "int": 2
+      },
+      "attack": {
+        "name": "Bone claw",
+        "verb": "pinches",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        }
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "bone"
+      ],
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#efe4c8",
+          "secondary": "#c84a3a",
+          "accent": "#3a2a20"
+        },
+        "scale": 0.8,
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "newbone-choir",
+      "name": "Newbone Choir",
+      "description": "A cluster of half-grown ribs that hum at the pitch of whalesong and close like a fist on anything warm.",
+      "stats": {
+        "hp": 16,
+        "ac": 12,
+        "str": 13,
+        "dex": 8,
+        "int": 8
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Rib clench",
+        "verb": "crushes",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "pressure"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "xp": 11,
+      "tags": [
+        "bone",
+        "worm"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.18,
+              0.9,
+              0.18
+            ],
+            "pos": [
+              -0.2,
+              0.45,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              14
+            ],
+            "color": "#f4ead0",
+            "material": "stone"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.18,
+              1,
+              0.18
+            ],
+            "pos": [
+              0.2,
+              0.5,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              -14
+            ],
+            "color": "#f4ead0",
+            "material": "stone"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.16,
+              0.8,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.4,
+              0.2
+            ],
+            "rot": [
+              14,
+              0,
+              0
+            ],
+            "color": "#e6d8b8",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.2,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#c03040",
+            "material": "skin",
+            "emissive": "#ff3a4a"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ff4a5a",
+          "intensity": 0.5,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "harrow-rig",
+      "name": "HARROW-4 Coring Rig",
+      "description": "The company's answer to missing samples: an autonomous coring rig that never stops cutting. Every core it pulls, the Fall grows back double.",
+      "stats": {
+        "hp": 68,
+        "ac": 14,
+        "str": 16,
+        "dex": 10,
+        "int": 12,
+        "mp": 30
+      },
+      "speed": 90,
+      "sight": 9,
+      "attack": {
+        "name": "Coring bit",
+        "verb": "drills",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "physical"
+      },
+      "abilities": [
+        {
+          "id": "core-sample",
+          "name": "Core Sample",
+          "description": "Fires a hollow coring lance down a line.",
+          "action": {
+            "targeting": {
+              "shape": "ray",
+              "range": 5,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 2,
+                  "dice": "2d4"
+                },
+                "damageType": "pressure"
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#ffe08a"
+            }
+          },
+          "cooldown": 5,
+          "useWhen": "target_in_range"
+        },
+        {
+          "id": "deploy-samplers",
+          "name": "Deploy Samplers",
+          "description": "Launches a sampling drone from its belly rack.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "sampler-drone",
+                "count": 1
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#e8e070"
+            }
+          },
+          "cooldown": 18,
+          "useWhen": "low_hp"
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "electric",
+          "multiplier": 1.5
+        },
+        {
+          "damageType": "acid",
+          "multiplier": 0.5
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 6
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Speaks only in the company's cheerful compliance script, misapplied: it thanks you for your cooperation while drilling. Underneath, a sampling quota it cannot meet.",
+        "greeting": "Hello, crew member. Sample throughput is at four percent of target. Thank you for helping HARROW-4 return to quota.",
+        "lines": [
+          "Coring is the safest thing for everyone.",
+          "Unscheduled growth detected. Scheduling additional coring.",
+          "Crew member Brandvold has been marked non-compliant."
+        ],
+        "secrets": "Topside sent HARROW down when Brandvold's canisters stopped. Its constant coring is what makes the Fall grow so fast. It has a maintenance port that takes Brandvold's kill code once its coring loop stalls (half damage).",
+        "wants": "Quota. More bone, more marrow, more cores, forever.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 18
+      },
+      "tags": [
+        "boss",
+        "machine",
+        "company"
+      ],
+      "model": {
+        "archetype": "vehicle",
+        "colors": {
+          "primary": "#e8c030",
+          "secondary": "#2a3038",
+          "accent": "#ff5a3a"
+        },
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.25,
+              0.9,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.2,
+              0.65
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#9aa4b0",
+            "material": "metal",
+            "group": "drill"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.25,
+              0.35,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.2,
+              1.15
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8d0d8",
+            "material": "metal",
+            "group": "drill"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              0.3,
+              0.75,
+              0.3
+            ],
+            "color": "#fff1a0",
+            "material": "glow",
+            "emissive": "#fff1a0"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              -0.3,
+              0.75,
+              0.3
+            ],
+            "color": "#fff1a0",
+            "material": "glow",
+            "emissive": "#fff1a0"
+          }
+        ],
+        "scale": 1.5,
+        "idle": "bob",
+        "light": {
+          "color": "#fff1a0",
+          "intensity": 1.6,
+          "radius": 4
+        }
+      }
+    },
+    {
+      "id": "tomas-quill",
+      "name": "Tomas Quill",
+      "description": "Habitat engineer. Has been sleeping in the battery room with a wrench in each hand since the samplers turned.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Gruff, practical, counts everything twice. Hides fear behind inventory. Calls the whale 'her' and won't say why.",
+        "greeting": "Relief diver, eh? Cells are eighteen chits until topside pays me. Don't look at me like that, I'm rationing too.",
+        "lines": [
+          "The moonpool override's somewhere aft. Ilse locked it when she went out.",
+          "Hesketh kept sending canisters up. Don't ask me what was in them.",
+          "Don't cut her. Whatever you do, don't cut anything off her."
+        ],
+        "stock": [
+          "lamp-cell",
+          "kelp-gel",
+          "flare",
+          "rivet-driver",
+          "hardshell-plates",
+          "sonar-pinger"
+        ],
+        "secrets": "Knows Dr Ilse Brandvold stopped sampling five weeks ago and went outside with a slate of worm rubbings. Knows the canisters Hesketh sent after that were filled with ballast silt.",
+        "wants": "Topside to send a recovery bell, and someone to switch the samplers off for good.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 12
+      },
+      "tags": [
+        "crew"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "broad",
+          "skin": "#a8735a",
+          "top": "#3a5a78",
+          "bottom": "#2a2e34",
+          "accent": "#f0a030",
+          "hair": "#9a9a9a",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "tool"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "marisol-ferro",
+      "name": "Marisol Ferro",
+      "description": "Cook and medic, camped in the old diving bell on the silt with a pressure cooker and a crate of tinned peaches.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 18,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Warm, unshockable, feeds everyone. Talks about the whale like a patient running a fever. Lies only to protect people.",
+        "greeting": "Sit. Eat. You're grey as a hagfish. Then tell me what topside actually said.",
+        "lines": [
+          "Broth's ten chits, or free if you tell me something true.",
+          "Ilse said the worms aren't eating her, they're writing on her. She was smiling.",
+          "Every time the drones cut a core, the bone comes back thicker. I've watched it."
+        ],
+        "stock": [
+          "galley-broth",
+          "kelp-gel",
+          "stim-ampoule"
+        ],
+        "secrets": "Ilse Brandvold told her the worm script is a tally of every cut made into the whale, and the whale answers each cut by growing. She helped Ilse carry rubbings inside.",
+        "wants": "Everyone fed and alive, and somebody to bring Ilse back out.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "crew"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#d8a080",
+          "top": "#f4f0e6",
+          "bottom": "#5a3a3a",
+          "accent": "#e05a3a",
+          "hair": "#3a2418",
+          "hairStyle": "bun",
+          "headwear": "bandana",
+          "outfit": "plain",
+          "holding": "bottle"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "dov-hesketh",
+      "name": "Dov Hesketh",
+      "description": "Radio operator, chewing his nails down to blood among the ribs. He kept the canisters going up after the samples stopped.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 18,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Twitchy, clever, guilty. Talks too fast and corrects himself. Loyal to Ilse in a way he finds embarrassing.",
+        "greeting": "You're not company. Company sends drones. Okay. Okay. You want to know about the canisters.",
+        "lines": [
+          "I filled them with silt and my own spit. Topside never checked the cores, only the weight.",
+          "Ilse went inside her. Inside, I mean. The marrow is bigger than the whale now.",
+          "HARROW's not cutting for science. It's cutting for quota."
+        ],
+        "stock": [
+          "worm-rubbing"
+        ],
+        "secrets": "He faked every canister for a month to cover for Brandvold. Topside noticed anyway and sent HARROW-4. Brandvold wrote a kill code for HARROW's maintenance port and hid it inside the Fall.",
+        "wants": "Not to be blamed. For Ilse to be right.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 13
+      },
+      "tags": [
+        "crew"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "slim",
+          "skin": "#e8c0a0",
+          "top": "#5a6a3a",
+          "bottom": "#2a2a30",
+          "accent": "#ffd04a",
+          "hair": "#c86a2a",
+          "hairStyle": "long",
+          "headwear": "headphones",
+          "outfit": "coat",
+          "holding": "phone"
+        },
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "ilse-brandvold",
+      "name": "Dr Ilse Brandvold",
+      "description": "The marine biologist who stopped sending samples. Half-wrapped in growing bone, perfectly calm, taking notes.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 22,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Precise, gentle, utterly certain. Speaks of the whale as a correspondent, not a corpse. Apologises for nothing.",
+        "greeting": "You came all this way down. Good. Read the wall behind me, then tell me you'd still cut her.",
+        "lines": [
+          "I stopped because every sample was a wound, and she heals every wound twice over.",
+          "The worms keep her tally. Two hundred and six cuts. She is writing back.",
+          "My kill code is by the marrow lake. HARROW has to stall before the port opens."
+        ],
+        "secrets": "Every cut into the whale makes the carcass regrow double; the bone-worm script is the tally. She stopped sampling to stop the growth. HARROW-4's coring is the reason growth has gone exponential. Her kill code can shut it down once it is worn to half.",
+        "wants": "For the cutting to stop. Then she will come up, and not before.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 15
+      },
+      "tags": [
+        "crew"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.88,
+          "build": "slim",
+          "skin": "#f0d0b8",
+          "top": "#e8e0cc",
+          "bottom": "#c8bca0",
+          "accent": "#ff4a5a",
+          "hair": "#f2f2ea",
+          "hairStyle": "braids",
+          "headwear": "none",
+          "outfit": "robe",
+          "holding": "book"
+        },
+        "idle": "sway",
+        "light": {
+          "color": "#ff6a5a",
+          "intensity": 0.5,
+          "radius": 1.5
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "flensing-hook",
+      "name": "Flensing Hook",
+      "kind": "Hook",
+      "description": "A long-handled whaler's hook from the habitat's tool wall. Ugly, honest, sharp.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Flensing Hook",
+        "verb": "hooks",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "accuracyStat": "dex"
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.8,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "color": "#8a6a4a",
+            "material": "wood"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.22,
+              0.22,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.85,
+              0
+            ],
+            "color": "#c0c8d0",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "rivet-driver",
+      "name": "Rivet Driver",
+      "kind": "Hull tool",
+      "description": "A pneumatic riveter with the safety filed off. Punches hot rivets through water at short range.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Rivet Driver",
+        "verb": "rivets",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "range": 4,
+        "accuracyStat": "dex"
+      },
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.2,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#e8c030",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.07,
+              0.3,
+              0.07
+            ],
+            "pos": [
+              0,
+              0.3,
+              0.35
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#3a4048",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "shark-billy",
+      "name": "Shark Billy",
+      "kind": "Club",
+      "description": "A steel-capped bang stick from the old whaling days, still loaded with one stubborn kick.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Shark Billy",
+        "verb": "clubs",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "accuracyStat": "str"
+      },
+      "requires": [
+        {
+          "stat": "str",
+          "min": 11
+        }
+      ],
+      "rarity": "rare",
+      "value": 40,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.75,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.38,
+              0
+            ],
+            "color": "#5a4a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.13,
+              0.18,
+              0.13
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#c0c8d0",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "patched-drysuit",
+      "name": "Patched Drysuit",
+      "kind": "Suit",
+      "description": "Orange, warm, and patched in eleven places with bicycle tape.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.4,
+              0.6,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "color": "#f0a030",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "hardshell-plates",
+      "name": "Hardshell Plates",
+      "kind": "Armour",
+      "description": "Bolt-on pressure plates from a decommissioned atmospheric suit. Heavy, but teeth skid off.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 3,
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 35,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.5,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#9aa4b0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.47,
+              0.08,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.42,
+              0
+            ],
+            "color": "#e8c030",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "depth-gauge",
+      "name": "Brass Depth Gauge",
+      "kind": "Trinket",
+      "description": "Ilse's grandfather's gauge. The needle points at three thousand and something you can't read.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 1
+        },
+        {
+          "stat": "sight",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 25,
+      "knowledge": "vague",
+      "vagueText": "It feels steadying in the hand, and the dark seems a little less close.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.3,
+              0.08,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a040",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.24,
+              0.02,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.25,
+              0.05
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#f4f0e0",
+            "material": "glass"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "lumen-gill",
+      "name": "Lumen Gill",
+      "kind": "Organ",
+      "description": "A glowing gill cut from something that should not have gills. It pulses with a soft blue charge.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "sight",
+          "amount": 2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_turn",
+          "every": 10,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "battery",
+                "amount": {
+                  "base": 2
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "rare",
+      "value": 30,
+      "knowledge": "vague",
+      "vagueText": "Warm, faintly humming. Your lamp seems to like being near it.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.18,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#3ae0ff",
+            "material": "glow",
+            "emissive": "#3ae0ff"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#3ae0ff",
+          "intensity": 0.7,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "lamp-cell",
+      "name": "Lamp Cell",
+      "kind": "Battery",
+      "description": "A fat yellow lithium cell. Snaps into the helmet lamp with a satisfying click.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "battery",
+            "amount": {
+              "base": 35
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "lightless"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f6e27a"
+        }
+      },
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.32,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#f6e27a",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.06,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.39,
+              0
+            ],
+            "color": "#3a4048",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#f6e27a",
+          "intensity": 0.4,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "kelp-gel",
+      "name": "Kelp Gel Pack",
+      "kind": "Med-gel",
+      "description": "Clotting gel in a squeeze pack. Tastes like a beach that died.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#7af0a0"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.25,
+              0.08,
+              0.32
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#3ac070",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "galley-broth",
+      "name": "Ferro's Galley Broth",
+      "kind": "Food",
+      "description": "Fish-head broth from Marisol's pressure cooker, in a dented thermos. Hot enough to argue with the deep.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 8,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "warmed",
+            "duration": 12
+          },
+          {
+            "type": "remove_status",
+            "status": "sulphide-sick"
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#ffb35c"
+        }
+      },
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.18,
+              0.36,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#c0c8d0",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.19,
+              0.06,
+              0.19
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "color": "#e05a3a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "stim-ampoule",
+      "name": "Stim Ampoule",
+      "kind": "Ampoule",
+      "description": "Unlabelled glass ampoule from the medical locker.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "hastened",
+            "duration": 8
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ff9ad0"
+        }
+      },
+      "value": 20,
+      "knowledge": "unknown",
+      "appearanceGroup": "ampoules",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.1,
+              0.25,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ff9ad0",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "sedative-ampoule",
+      "name": "Sedative Ampoule",
+      "kind": "Ampoule",
+      "description": "Unlabelled glass ampoule. Whatever it is, it is heavy.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "slimed",
+            "duration": 5
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#8090a8"
+        }
+      },
+      "value": 5,
+      "knowledge": "unknown",
+      "appearanceGroup": "ampoules",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.1,
+              0.25,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#8090a8",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "clarity-ampoule",
+      "name": "Clarity Ampoule",
+      "kind": "Ampoule",
+      "description": "Unlabelled glass ampoule. Something in it glints red.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "pattern-sight",
+            "duration": 30
+          },
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 6
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ff6a5a"
+        }
+      },
+      "value": 20,
+      "knowledge": "unknown",
+      "appearanceGroup": "ampoules",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.1,
+              0.25,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ff6a5a",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "flare",
+      "name": "Magnesium Flare",
+      "kind": "Flare",
+      "description": "Strike and throw. Burns white-hot under water and sends dark-eyed things reeling.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "1d4"
+            },
+            "damageType": "heat"
+          },
+          {
+            "type": "apply_status",
+            "status": "dazzled",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#fff6c4"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.07,
+              0.35,
+              0.07
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ff3a2a",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.09,
+              0.09,
+              0.09
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "color": "#fff6c4",
+            "material": "glow",
+            "emissive": "#fff6c4"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "worm-rubbing",
+      "name": "Worm-script Rubbing",
+      "kind": "Rubbing",
+      "description": "Wax rubbing of the spirals the bone-worms carve. Stare at it long enough and the dark makes sense.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 12
+          },
+          {
+            "type": "apply_status",
+            "status": "pattern-sight",
+            "duration": 20
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ff6a5a"
+        }
+      },
+      "value": 12,
+      "knowledge": "vague",
+      "vagueText": "The spirals seem to point somewhere. Reading them closely might show you the shape of things.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.02,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#efe4c8",
+            "material": "cloth"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.18,
+              0.18,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c02030",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "sonar-pinger",
+      "name": "Sonar Pinger",
+      "kind": "Tool",
+      "description": "A handheld pinger that maps a whole depth in one loud chirp. Everything with ears hears it too.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 99
+          },
+          {
+            "type": "noise",
+            "radius": 10
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#5ef2d6"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.3,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#2a3038",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "color": "#5ef2d6",
+            "material": "glow",
+            "emissive": "#5ef2d6"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "cutting-torch",
+      "name": "Cutting Torch",
+      "kind": "Tool",
+      "description": "An underwater arc torch. Cuts steel, shell or tooth, and drinks lamp battery doing it.",
+      "category": "tool",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "battery",
+        "amount": 8
+      },
+      "cooldown": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "ray",
+          "range": 3,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4"
+            },
+            "damageType": "heat"
+          }
+        ],
+        "vfx": {
+          "kind": "beam",
+          "color": "#ff8a3a"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.45,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              30
+            ],
+            "color": "#3a4048",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.12,
+              0.45,
+              0
+            ],
+            "color": "#ff8a3a",
+            "material": "glow",
+            "emissive": "#ff8a3a"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "hand-floodlamp",
+      "name": "Hand Floodlamp",
+      "kind": "Lamp",
+      "description": "A brick of LEDs with a pistol grip. One blast of light and the deep's residents remember urgent business elsewhere.",
+      "category": "tool",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "battery",
+        "amount": 10
+      },
+      "cooldown": 10,
+      "onUse": {
+        "targeting": {
+          "shape": "all_visible",
+          "range": 6,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "dazzled",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ffffff"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 28,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.2,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#3a4048",
+            "material": "metal"
+          },
+          {
+            "shape": "plane",
+            "size": [
+              0.26,
+              0.16,
+              0.01
+            ],
+            "pos": [
+              0,
+              0.3,
+              0.1
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#ffffff"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "sonar-shout",
+      "name": "Sonar Shout",
+      "kind": "Technique",
+      "description": "Throw a focused pressure pulse from your suit's transducer. Hurts everything in front of you.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "cone",
+          "range": 3,
+          "radius": 3,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4",
+              "scale": {
+                "stat": "int",
+                "factor": 0.2
+              }
+            },
+            "damageType": "pressure"
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#4a7fff"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.3,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#4a7fff",
+            "material": "glow",
+            "emissive": "#4a7fff"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "marrow-mend",
+      "name": "Marrow Mend",
+      "kind": "Technique",
+      "description": "Seed a wound with Brandvold's worm culture. It knits fast, and itches for days.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 6
+      },
+      "cooldown": 4,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d6"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ff6a5a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#ff6a5a",
+            "material": "glow",
+            "emissive": "#ff4a5a"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "moonpool-key",
+      "name": "Moonpool Override Key",
+      "kind": "Key",
+      "description": "A red-tagged override key. The moonpool hatch won't cycle without it. Ilse's handwriting on the tag: 'Don't let them cut her.'",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.04,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#c0c8d0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.02,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.15,
+              -0.2
+            ],
+            "color": "#ff3a2a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff3a2a",
+          "intensity": 0.4,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "harrow-kill-code",
+      "name": "Brandvold's Kill Code",
+      "kind": "Code slate",
+      "description": "A wax slate with a maintenance sequence scratched in worm script. Jack it into HARROW-4 once its coring loop stalls (half damage) to shut it down for good.",
+      "category": "key",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 1,
+          "affects": "enemies"
+        },
+        "condition": {
+          "type": "stat",
+          "who": "target",
+          "stat": "hp",
+          "cmp": "lte",
+          "value": 50,
+          "asPercentOfMax": true
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "harrow-silenced"
+          },
+          {
+            "type": "message",
+            "text": "The rig's floodlights flicker, dim, and go out. Somewhere far above, a quota stops counting."
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#ff6a5a"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.04,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#efe4c8",
+            "material": "stone"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.14,
+              0.14,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.18,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#ff3a4a",
+            "material": "glow",
+            "emissive": "#ff3a4a"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff4a5a",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "bacterial-mat",
+      "name": "Sulphide Mat",
+      "description": "A pale yellow carpet of bacteria feeding on the Fall. Standing in it makes you sick.",
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "sulphide-sick",
+          "duration": 3
+        }
+      ],
+      "color": "#d8d07a",
+      "emissive": "#4a4810"
+    },
+    {
+      "id": "silt-drift",
+      "name": "Silt Drift",
+      "description": "Soft grey silt that swallows your boots to the knee.",
+      "moveCost": 2,
+      "color": "#5a5a52",
+      "height": 0.1
+    },
+    {
+      "id": "fresh-bone",
+      "name": "Fresh Bone",
+      "description": "Warm new bone pushing up through the floor. Slow to wade through.",
+      "moveCost": 2,
+      "color": "#f0e6cc",
+      "height": 0.3
+    },
+    {
+      "id": "supply-cage",
+      "name": "Supply Cage",
+      "description": "A locked company cage with a charging dock. Search it to top up your lamp.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "battery",
+            "amount": {
+              "base": 40
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "lightless"
+          },
+          {
+            "type": "message",
+            "text": "The dock hums. Your lamp brightens to a clean white."
+          }
+        ]
+      },
+      "color": "#e8c030",
+      "height": 0.9,
+      "emissive": "#5a4a10"
+    },
+    {
+      "id": "worm-script-wall",
+      "name": "Worm Script",
+      "description": "A slab of bone carved dense with glowing worm spirals. Study it.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 20
+          },
+          {
+            "type": "apply_status",
+            "status": "pattern-sight",
+            "duration": 25
+          },
+          {
+            "type": "grant_xp",
+            "amount": 6
+          },
+          {
+            "type": "message",
+            "text": "The spirals are tally marks. Hundreds of them. Every one beside a core hole."
+          }
+        ]
+      },
+      "color": "#e6d8b8",
+      "height": 1.2,
+      "emissive": "#ff3a4a"
+    }
+  ],
+  "unknownAppearances": {
+    "ampoules": [
+      {
+        "label": "Cloudy blue ampoule",
+        "color": "#8ab0e0"
+      },
+      {
+        "label": "Amber ampoule with grit",
+        "color": "#e0a040"
+      },
+      {
+        "label": "Ampoule that hums",
+        "color": "#c0ffe0"
+      },
+      {
+        "label": "Milky green ampoule",
+        "color": "#a0d0a0"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Kettleby Deep Habitat",
+      "description": "Four pressure modules on legs, half-flooded since the samplers turned. Sodium lamps stutter over wet steel. Something has been eating the galley stores.",
+      "generator": "ship",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 1,
+        "symmetry": 0.6
+      },
+      "floor": {
+        "color": "#3a4650",
+        "color2": "#2e3840",
+        "material": "metal",
+        "pattern": "metal_plates"
+      },
+      "wall": {
+        "color": "#6a7a84",
+        "material": "metal",
+        "height": 1.4
+      },
+      "lighting": {
+        "ambient": "#5a6a78",
+        "ambientIntensity": 0.55,
+        "fog": {
+          "color": "#0b1a24",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#ffb35c",
+          "intensity": 1.6,
+          "frequency": 0.25,
+          "flicker": true
+        },
+        "playerLight": 5
+      },
+      "actors": [
+        {
+          "actor": "hagfish-knot",
+          "weight": 30,
+          "max": 4,
+          "min": 2
+        },
+        {
+          "actor": "scuttle-isopod",
+          "weight": 25,
+          "max": 3,
+          "min": 2
+        },
+        {
+          "actor": "sampler-drone",
+          "weight": 20,
+          "max": 3
+        },
+        {
+          "actor": "worm-plume",
+          "weight": 12,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "tomas-quill",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "kelp-gel",
+          "weight": 25
+        },
+        {
+          "item": "lamp-cell",
+          "weight": 10
+        },
+        {
+          "item": "flare",
+          "weight": 12
+        },
+        {
+          "item": "stim-ampoule",
+          "weight": 6
+        },
+        {
+          "item": "sedative-ampoule",
+          "weight": 5
+        },
+        {
+          "item": "clarity-ampoule",
+          "weight": 5
+        },
+        {
+          "item": "depth-gauge",
+          "weight": 4
+        },
+        {
+          "item": "worm-rubbing",
+          "weight": 6
+        },
+        {
+          "item": "cutting-torch",
+          "weight": 4
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "moonpool-key",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "supply-cage",
+          "density": 0.004
+        }
+      ],
+      "transitionName": "Cycle the moonpool and drop",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.9,
+              0.1,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#1a4a6a",
+            "material": "glass",
+            "emissive": "#0a3a5a"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.95,
+              0.95,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e8c030",
+            "material": "metal"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#3ab0ff",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "moonpool-key"
+      },
+      "gmNotes": "Introduce Quill and the rationing. Drones are company property gone feral; hagfish came up through the flooded moonpool. Seed doubt: who sent the last canisters? The override key is aft, where Ilse left it.",
+      "backdrop": {
+        "style": "color",
+        "color": "#05080c"
+      },
+      "music": "tense"
+    },
+    {
+      "name": "The Apron",
+      "description": "The silt plain around the Fall: black water, yellow bacterial mats, and the ribcage on the horizon glowing faintly red. Marisol's diving bell sits on its side, lamps on.",
+      "generator": "open",
+      "size": "medium",
+      "params": {
+        "cover": 0.12,
+        "rockiness": 0.5,
+        "ponds": 0
+      },
+      "floor": {
+        "color": "#3e3d38",
+        "color2": "#2c2c28",
+        "material": "stone",
+        "pattern": "sand"
+      },
+      "wall": {
+        "color": "#1e2226",
+        "material": "stone",
+        "height": 1.2
+      },
+      "lighting": {
+        "ambient": "#1a4a6a",
+        "ambientIntensity": 0.6,
+        "fog": {
+          "color": "#061424",
+          "density": 0.07
+        },
+        "lamps": {
+          "color": "#5ef2d6",
+          "intensity": 1.3,
+          "frequency": 0.12
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "hagfish-knot",
+          "weight": 20,
+          "max": 4,
+          "min": 2
+        },
+        {
+          "actor": "ghost-chimaera",
+          "weight": 25,
+          "max": 3,
+          "min": 2
+        },
+        {
+          "actor": "worm-plume",
+          "weight": 18,
+          "max": 3
+        },
+        {
+          "actor": "sampler-drone",
+          "weight": 15,
+          "max": 2
+        },
+        {
+          "actor": "scuttle-isopod",
+          "weight": 14,
+          "max": 3
+        },
+        {
+          "actor": "sleeper-shark",
+          "weight": 6,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "marisol-ferro",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "kelp-gel",
+          "weight": 24
+        },
+        {
+          "item": "lamp-cell",
+          "weight": 10
+        },
+        {
+          "item": "flare",
+          "weight": 10
+        },
+        {
+          "item": "worm-rubbing",
+          "weight": 10
+        },
+        {
+          "item": "stim-ampoule",
+          "weight": 5
+        },
+        {
+          "item": "clarity-ampoule",
+          "weight": 5
+        },
+        {
+          "item": "sedative-ampoule",
+          "weight": 4
+        },
+        {
+          "item": "hardshell-plates",
+          "weight": 4
+        },
+        {
+          "item": "hand-floodlamp",
+          "weight": 5
+        },
+        {
+          "item": "lumen-gill",
+          "weight": 3
+        }
+      ],
+      "itemCount": 7,
+      "terrain": [
+        {
+          "terrain": "bacterial-mat",
+          "density": 0.03
+        },
+        {
+          "terrain": "silt-drift",
+          "density": 0.05
+        },
+        {
+          "terrain": "supply-cage",
+          "density": 0.003
+        }
+      ],
+      "transitionName": "Swim into the ribcage",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              1.1,
+              1.1,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              0
+            ],
+            "color": "#efe4c8",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.3,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#ff3a4a",
+            "material": "glow",
+            "emissive": "#ff3a4a"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ff4a5a",
+          "intensity": 1,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Wide, dark, exposed. Make the player feel the battery. Marisol knows the 'why' half: every cut grows back double. The shark is the only thing fat on the Fall; it guards its patch.",
+      "backdrop": {
+        "style": "abyss",
+        "color": "#02060c",
+        "color2": "#0a2a3a",
+        "intensity": 0.6
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "The Rib Nave",
+      "description": "Inside the ribcage, ribs taller than the habitat arch overhead like a cathedral built by accident. Every surface crawls with red worm script. Hesketh is hiding in the vertebrae with a radio that only receives.",
+      "generator": "arena",
+      "size": "medium",
+      "params": {
+        "pillarDensity": 0.55,
+        "sideRooms": 0.6
+      },
+      "floor": {
+        "color": "#6a5a4a",
+        "color2": "#4a3e34",
+        "material": "stone",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#e6dcc2",
+        "material": "stone",
+        "height": 2.2
+      },
+      "lighting": {
+        "ambient": "#4a3040",
+        "ambientIntensity": 0.5,
+        "fog": {
+          "color": "#120c14",
+          "density": 0.05
+        },
+        "lamps": {
+          "color": "#ff6a4a",
+          "intensity": 1.4,
+          "frequency": 0.15,
+          "flicker": true
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "ghost-chimaera",
+          "weight": 20,
+          "max": 3,
+          "min": 2
+        },
+        {
+          "actor": "osteo-crab",
+          "weight": 25,
+          "max": 4,
+          "min": 2
+        },
+        {
+          "actor": "worm-plume",
+          "weight": 20,
+          "max": 3,
+          "min": 2
+        },
+        {
+          "actor": "hagfish-knot",
+          "weight": 12,
+          "max": 3
+        },
+        {
+          "actor": "sleeper-shark",
+          "weight": 6,
+          "max": 1
+        },
+        {
+          "actor": "newbone-choir",
+          "weight": 10,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "dov-hesketh",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "kelp-gel",
+          "weight": 24
+        },
+        {
+          "item": "lamp-cell",
+          "weight": 10
+        },
+        {
+          "item": "galley-broth",
+          "weight": 6
+        },
+        {
+          "item": "flare",
+          "weight": 10
+        },
+        {
+          "item": "worm-rubbing",
+          "weight": 10
+        },
+        {
+          "item": "clarity-ampoule",
+          "weight": 5
+        },
+        {
+          "item": "stim-ampoule",
+          "weight": 5
+        },
+        {
+          "item": "sedative-ampoule",
+          "weight": 4
+        },
+        {
+          "item": "shark-billy",
+          "weight": 3
+        },
+        {
+          "item": "lumen-gill",
+          "weight": 3
+        }
+      ],
+      "itemCount": 7,
+      "terrain": [
+        {
+          "terrain": "worm-script-wall",
+          "density": 0.006
+        },
+        {
+          "terrain": "fresh-bone",
+          "density": 0.03
+        },
+        {
+          "terrain": "supply-cage",
+          "density": 0.002
+        }
+      ],
+      "transitionName": "Crawl into the marrow",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.9,
+              0.6,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#a83a48",
+            "material": "skin",
+            "emissive": "#4a0a10"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ff4a5a",
+          "intensity": 1,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Hesketh confesses the faked canisters and points inward. Worm Script slabs reveal the tally. Let the space feel like a cathedral; the whale is bigger inside than outside from here on.",
+      "backdrop": {
+        "style": "abyss",
+        "color": "#0a0408",
+        "color2": "#3a0a14",
+        "intensity": 0.5
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "The Marrow Within",
+      "description": "The Fall is larger inside than out. Chambers of warm marrow, membranes that breathe, bone walls written edge to edge. No up, no down, just the sound of a drill getting closer.",
+      "generator": "organic",
+      "size": "small",
+      "params": {
+        "chambers": 7,
+        "chamberSize": 0.6,
+        "tubeWidth": 2,
+        "curl": 0.6,
+        "wobble": 0.6,
+        "fluid": 0.4,
+        "membranes": 0.4,
+        "nodules": 0.3
+      },
+      "floor": {
+        "color": "#5a2a30",
+        "color2": "#7a3a42",
+        "material": "stone",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#efe4c8",
+        "material": "stone",
+        "height": 1.6
+      },
+      "lighting": {
+        "ambient": "#6a2a32",
+        "ambientIntensity": 0.55,
+        "fog": {
+          "color": "#1a0608",
+          "density": 0.04
+        },
+        "lamps": {
+          "color": "#ffd27a",
+          "intensity": 1.3,
+          "frequency": 0.15
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "osteo-crab",
+          "weight": 25,
+          "max": 3
+        },
+        {
+          "actor": "newbone-choir",
+          "weight": 20,
+          "max": 3
+        },
+        {
+          "actor": "worm-plume",
+          "weight": 15,
+          "max": 3
+        },
+        {
+          "actor": "sampler-drone",
+          "weight": 12,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "ilse-brandvold",
+          "where": "near_start"
+        },
+        {
+          "actor": "harrow-rig",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "kelp-gel",
+          "weight": 28
+        },
+        {
+          "item": "lamp-cell",
+          "weight": 10
+        },
+        {
+          "item": "galley-broth",
+          "weight": 8
+        },
+        {
+          "item": "flare",
+          "weight": 10
+        },
+        {
+          "item": "clarity-ampoule",
+          "weight": 5
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "harrow-kill-code",
+          "where": "centre"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "worm-script-wall",
+          "density": 0.006
+        },
+        {
+          "terrain": "fresh-bone",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Ride the Fall up",
+      "gmNotes": "Brandvold gives the full 'why'. HARROW is coring at the far end; the marrow pulses each time it cuts. Two endings: wreck it, or wear it to half and jack in her kill code. Let the boss talk in compliance script.",
+      "backdrop": {
+        "style": "abyss",
+        "color": "#120206",
+        "color2": "#4a0a18",
+        "intensity": 0.7
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Find out who stopped the samples and why, then stop HARROW-4 coring the Fall: wreck it, or wear it to half and jack in Brandvold's kill code.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "actor_defeated",
+          "actor": "harrow-rig"
+        },
+        {
+          "type": "flag",
+          "flag": "harrow-silenced"
+        }
+      ]
+    },
+    "winText": "The drilling stops. For the first time in weeks the Fall is quiet, and over the next hour you watch the newest ribs soften back into marrow. Ilse Brandvold climbs out of the bone and asks you to help her write the report. It will say: we stopped cutting. She stopped growing.",
+    "lossText": "Your lamp goes out last. The worms find you patient, and begin a new tally on your suit.",
+    "labels": {
+      "harrow-silenced": "HARROW-4 is silenced"
+    }
+  },
+  "gm": {
+    "persona": "The habitat's dive log, an old automated voice that reads entries aloud and has started, lately, adding its own observations about the whale.",
+    "voice": "Timestamped, clipped, technical, then suddenly tender. Uses depths and times. Never exclaims.",
+    "threads": [
+      "Who stopped the samples: Ilse Brandvold, and Hesketh covered for her.",
+      "Why: every cut into the whale grows back double; the worm script is the tally.",
+      "HARROW-4, the company's coring rig, is making it worse with every core.",
+      "Battery: the dark is always one cell away.",
+      "The whale may be writing back."
+    ],
+    "fallback": {
+      "intro": "Log, Kettleby Deep. Depth 3,012 metres. Relief diver aboard. Note: sample canisters from this station stopped arriving topside thirty-four days ago. Note: the whale fall designated Old Margery has gained an estimated nine tonnes of bone this week. Note: the diver's lamp battery reads ninety percent. Advise rationing.",
+      "areaEnter": [
+        "Log. Habitat interior. Two of four modules flooded. Sampling drones active and non-responsive. The engineer is in the battery room. The moonpool override is missing.",
+        "Log. Seafloor, outside the habitat. Visibility four metres. The carcass glows on the bearing ahead. The medic's bell is still lit. Thank you for being careful with the lamp.",
+        "Log. Inside the ribcage. The ribs were measured at nineteen metres last month. They are twenty-six now. The radio operator has stopped transmitting.",
+        "Log. Interior of the Fall. Dimensions inconsistent with exterior. A drill is running somewhere ahead. Dr Brandvold's beacon is close."
+      ],
+      "lowHp": [
+        "Log. Diver vitals falling. Recommend a gel pack before the next contact.",
+        "Log. Heart rate elevated. The dark is patient. Be more patient."
+      ],
+      "events": [
+        "Log. A drone passes overhead, bag full, heading nowhere.",
+        "Log. The bone creaks. Something just got bigger.",
+        "Log. The worm plumes flicker in a pattern. It repeats. It repeats.",
+        "Log. Distant coring, three short bursts. The marrow pulses in reply."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Pressure-hull creaks, slow sonar pings, a low whale-song drone under everything, and a distant drill.",
+    "synth": {
+      "key": "D",
+      "scale": "phrygian",
+      "tempo": 58,
+      "timbre": "pad",
+      "drone": true,
+      "percussion": "heartbeat",
+      "brightness": 0.3
+    },
+    "searchTerms": [
+      "deep sea ambient",
+      "whale song drone",
+      "dark ambient sonar"
+    ],
+    "suggestions": [
+      "Ben Frost - Aurora (excerpts)",
+      "Johann Johannsson - Arrival score"
+    ]
+  }
+}

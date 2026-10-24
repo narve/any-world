@@ -1,0 +1,32 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/cyberpunk-rooftop-yams/chidi-static",
+      "json": {
+        "reply": "Whoa, whoa, deck down, I'm not Nimbus! You're the yam lady's grandkid, yeah? Look, the Matriarch is two pipes over and she is in a mood, and maybe that's... partly my firmware. Partly. I've got a debug override chip that opens the lofts hatch. Twenty cowries and you never saw me. Or go fight her and find out how loud signal noise makes her scream.",
+        "options": [
+          "You wrote her firmware?",
+          "Twenty cowries? Done.",
+          "What's her weak spot?"
+        ],
+        "actions": [
+          {
+            "type": "trade",
+            "actorId": "chidi-static",
+            "items": [
+              {
+                "item": "override-chip",
+                "price": 20
+              },
+              {
+                "item": "glitter-chaff",
+                "price": 10
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

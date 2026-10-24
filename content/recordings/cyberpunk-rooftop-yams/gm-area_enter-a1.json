@@ -1,0 +1,30 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/cyberpunk-rooftop-yams/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The tower door shuts behind you and the city goes quiet; only the pipes talk now, gurgling metered water from one valve to the next. Deep in the mesh something big shifts on its rotors. The Matriarch knows you are inside."
+          },
+          {
+            "type": "mood",
+            "music": "tense",
+            "tint": "#2bb3a3"
+          },
+          {
+            "type": "spawn",
+            "actor": "mist-drone",
+            "count": 1,
+            "near": "exit"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          }
+        ]
+      }
+    }
+  ]
+}

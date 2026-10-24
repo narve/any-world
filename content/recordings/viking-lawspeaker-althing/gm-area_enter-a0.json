@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/viking-lawspeaker-althing/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Turf booths, peat smoke and a sun that hangs on the hills and will not go down. Somewhere a man is shouting the price of a ewe as if it were scripture. It is said in law that no weapon may be drawn at the Thing. Nobody said anything about tongues."
+          },
+          {
+            "type": "mood",
+            "music": "explore",
+            "tint": "#ffe2b0"
+          }
+        ]
+      }
+    }
+  ]
+}

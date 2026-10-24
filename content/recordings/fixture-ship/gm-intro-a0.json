@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/fixture-ship/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Year two hundred and eleven. The ship breathes for you, the way it always has: in through the moss, out through the vents. Tonight the moss is leaning toward the hull, every strand of it, as if it can see something you cannot. \"Good evening, Ines,\" says MATRON. \"Arrival is a century away. Rest.\""
+          },
+          {
+            "type": "mood",
+            "music": "eerie"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -8,6 +8,7 @@ import { createUi, type GameUi } from './ui';
 import { DEMO_ACTOR, DEMO_SCENES, demoViewModel, type DemoScene } from './demo-data';
 import type { UiCallbacks, UiViewModel } from './viewmodel';
 import { h } from './dom';
+import { t } from '../i18n/index';
 
 export interface UiDemo {
   ui: GameUi;
@@ -111,7 +112,7 @@ export function mountUiDemo(root: HTMLElement, opts: { scene?: DemoScene; switch
   if (opts.switcher !== false) {
     select = h(
       'select',
-      { class: 'aw-demo-switch', 'aria-label': 'Demo scene', onchange: (e: Event) => show((e.target as HTMLSelectElement).value as DemoScene) },
+      { class: 'aw-demo-switch', 'aria-label': t('demo.scene'), onchange: (e: Event) => show((e.target as HTMLSelectElement).value as DemoScene) },
       DEMO_SCENES.map((s) => h('option', { value: s }, s)),
     );
     root.ownerDocument.body.appendChild(select);

@@ -1,6 +1,6 @@
 /** Status application, removal and per-round ticking. Flags are interpreted by ai/actions/stats. */
 import type { ActorInstance } from './types';
-import { type Ctx, actorName, emit, isAlive, isPlayer, log, statusName } from './ctx';
+import { type Ctx, actorName, emit, isAlive, isPlayer, logKey, statusName } from './ctx';
 import { applyEffectList } from './effects';
 import { heal } from './combat';
 import { findActor } from './ctx';
@@ -16,7 +16,7 @@ export function applyStatus(ctx: Ctx, a: ActorInstance, statusId: string, durati
   } else {
     a.statuses.push(sourceId ? { id: statusId, turnsLeft: turns, sourceId } : { id: statusId, turnsLeft: turns });
     emit(ctx, { type: 'status_applied', actorId: a.id, status: statusId });
-    if (isPlayer(ctx, a)) log(ctx, `${actorName(ctx, a)}: ${def.name}.`, def.harmful ? 'bad' : 'good');
+    if (isPlayer(ctx, a)) logKey(ctx, 'log.status.applied', { actor: actorName(ctx, a), status: def.name }, def.harmful ? 'bad' : 'good');
   }
   return true;
 }
@@ -32,7 +32,7 @@ export function removeStatus(ctx: Ctx, a: ActorInstance, which: string): string[
   });
   for (const id of removed) {
     emit(ctx, { type: 'status_expired', actorId: a.id, status: id });
-    if (isPlayer(ctx, a)) log(ctx, `${statusName(ctx, id)} ends.`, 'info');
+    if (isPlayer(ctx, a)) logKey(ctx, 'log.status.ends', { status: statusName(ctx, id) }, 'info');
   }
   return removed;
 }
@@ -46,7 +46,13 @@ export function statusPerTurn(ctx: Ctx, a: ActorInstance): void {
     if (def.perTurn.length) {
       const src = findActor(ctx, st.sourceId);
       const user = src && isAlive(ctx, src) ? src : a;
-      applyEffectList(ctx, def.perTurn, user, [a], a.pos, [], st.sourceId);
+      const prevCause = ctx.harmCause;
+      ctx.harmCause = { status: st.id };
+      try {
+        applyEffectList(ctx, def.perTurn, user, [a], a.pos, [], st.sourceId);
+      } finally {
+        ctx.harmCause = prevCause;
+      }
     }
     if (def.flags.includes('regenerating') && isAlive(ctx, a) && !def.perTurn.some((e) => e.type === 'heal')) heal(ctx, a, 1);
   }
@@ -64,7 +70,7 @@ export function tickStatuses(ctx: Ctx, a: ActorInstance): Set<string> {
   a.statuses = keep;
   for (const id of expired) {
     emit(ctx, { type: 'status_expired', actorId: a.id, status: id });
-    if (isPlayer(ctx, a)) log(ctx, `${statusName(ctx, id)} ends.`, 'info');
+    if (isPlayer(ctx, a)) logKey(ctx, 'log.status.ends', { status: statusName(ctx, id) }, 'info');
   }
   return expired;
 }

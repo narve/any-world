@@ -1,0 +1,40 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/fixture-western/widow-oquendo",
+      "json": {
+        "reply": "Cartridges, tonic, a coat that belonged to a better man than either of us. Cash only. Vane's people pay in promises, and I can't drink those.",
+        "options": [
+          "Show me what you've got.",
+          "What do you know about Vane?",
+          "Good day, ma'am."
+        ],
+        "actions": [
+          {
+            "type": "trade",
+            "actorId": "widow-oquendo",
+            "items": [
+              {
+                "item": "cartridges",
+                "price": 8
+              },
+              {
+                "item": "sarsaparilla",
+                "price": 4
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "purpose": "dialogue/fixture-western/widow-oquendo",
+      "json": {
+        "reply": "He came in with the dust and he'll leave with the rain, if somebody makes him. Mind the flats. Sabine Lark shoots at anything that moves faster than she likes.",
+        "options": [],
+        "actions": [],
+        "end": true
+      }
+    }
+  ]
+}

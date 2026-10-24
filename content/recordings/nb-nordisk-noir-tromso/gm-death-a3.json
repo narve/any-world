@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/nb-nordisk-noir-tromso/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Isen lukker seg rundt deg like rolig som den lukket seg rundt mannskapet. Havnefogden retter på mappa og går ut av natta alene. I Oslo står det en tom pult i en uke, så får noen andre den."
+          }
+        ]
+      }
+    }
+  ]
+}

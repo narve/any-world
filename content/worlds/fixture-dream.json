@@ -5663,7 +5663,11 @@
       "value": 30
     },
     "winText": "The horizon closes. Red bleeds into yellow bleeds into blue, and where they meet, a hue nobody has a name for: yours. The grey retreats to the very edge and becomes a frame. Somewhere far outside, in a light that is not the moon, a hand picks up a brush, looks at the canvas for a long time, and signs it.",
-    "lossText": "You thin, and thin, and are a glaze, and are a stain, and are primer. The Erasure smooths you flat with something like kindness. The canvas is very clean now. It is waiting for someone to begin again."
+    "lossText": "You thin, and thin, and are a glaze, and are a stain, and are primer. The Erasure smooths you flat with something like kindness. The canvas is very clean now. It is waiting for someone to begin again.",
+    "labels": {
+      "horizon-finished": "The horizon is finished",
+      "colours-spilled": "Colours unmade"
+    }
   },
   "gm": {
     "persona": "The painting itself, half-awake and dreaming: synaesthetic, tender, a little feverish. It does not know what a person is and never assumes one.",

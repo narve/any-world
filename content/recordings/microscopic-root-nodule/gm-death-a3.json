@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/microscopic-root-nodule/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "RL-7 burst within sight of the exchange, close enough to smell the malate. Kappa signs for another week of sugar, and the ledger stays blank."
+          }
+        ]
+      }
+    }
+  ]
+}

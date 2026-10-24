@@ -25,7 +25,7 @@ async function startWorld(page: Page, world: string, seed: number) {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(150);
   }
-  await page.locator('.aw-hints button').first().click().catch(() => {});
+  await page.locator('.aw-onboard-ok').click({ timeout: 2000 }).catch(() => {});
 }
 
 test('ship: full O2 warns before spending a canister; Arc Weld aims by direction', async ({ page }) => {
@@ -65,9 +65,10 @@ test('ship: full O2 warns before spending a canister; Arc Weld aims by direction
 
 test('teen: p persuades inside a conversation; objective hint on its own line; queued levels badge', async ({ page }) => {
   await startWorld(page, 'fixture-teen', 33);
-  await expect(page.locator('.aw-objective-hint')).toBeVisible();
+  // M3: the goal tracker's step line (never truncated) replaced the objective hint
+  await expect(page.locator('.aw-goal-step')).toBeVisible();
   await shot(page, 'objective');
-  const hint = page.locator('.aw-objective-hint');
+  const hint = page.locator('.aw-goal-step');
   const clipped = await hint.evaluate((el) => el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1);
   expect(clipped).toBe(false);
 
@@ -120,8 +121,9 @@ test('teen: p persuades inside a conversation; objective hint on its own line; q
   await shot(page, 'xp-pending');
 });
 
-// issues/M2-sell-column-dead-ui.md: no trader buys anything, so the trade window has no dead Sell column
-test('ship: trade window shows only the Buy column when the trader buys nothing', async ({ page }) => {
+// issues/M2-sell-column-dead-ui.md: no dead Sell column. Since M3 the engine's traders buy (tag
+// 'sell' offers), so the Sell column shows exactly when they want something — and selling pays.
+test('ship: trade window shows a Sell column only for what the trader buys, and selling pays', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await startWorld(page, 'fixture-ship', 21);
@@ -155,11 +157,20 @@ test('ship: trade window shows only the Buy column when the trader buys nothing'
   await page.keyboard.press('t'); // trade from the conversation
   await page.waitForTimeout(500);
   expect(await layer(page)).toBe('trade');
+  const sellable = await page.evaluate(() => window.__anyworld!.controller!.session.viewModel().game!.trade!.sellable.length);
   const heads = await page.locator('.aw-trade-cols h3').allTextContents();
-  expect(heads.map((x) => x.trim().toLowerCase())).toEqual(['buy']);
+  expect(heads.map((x) => x.trim().toLowerCase())).toEqual(sellable ? ['buy', 'sell'] : ['buy']);
   await expect(page.locator('.aw-trade')).not.toContainText('Nothing they want');
-  await expect(page.locator('.aw-trade-cols')).toHaveClass(/aw-trade-cols-single/);
+  if (!sellable) await expect(page.locator('.aw-trade-cols')).toHaveClass(/aw-trade-cols-single/);
   expect(await page.locator('.aw-trade-row').count()).toBeGreaterThan(0);
   await shot(page, 'trade-buy-only');
+  if (sellable) {
+    const before = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
+    await page.locator('.aw-trade-cols section').nth(1).locator('.aw-trade-row').first().click();
+    await page.waitForTimeout(400);
+    const after = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
+    expect(after).toBeGreaterThan(before);
+    expect(await layer(page)).toBe('trade');
+  }
   expect(errors).toEqual([]);
 });

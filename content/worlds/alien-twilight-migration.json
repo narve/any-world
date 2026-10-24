@@ -1,0 +1,3936 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "The Long Drove",
+    "tagline": "Ride the twilight west on a herd of walking lichen hills, and learn which fangs keep the herd alive.",
+    "genre": "alien ecology",
+    "tags": [
+      "alien",
+      "migration",
+      "ecology",
+      "twilight",
+      "symbiosis"
+    ],
+    "tone": "vast, slow, warm-cold and watchful",
+    "era": "the forty-year turning of Velun",
+    "premise": "Velun shows one face to its sun. The planet is turning, slowly, so the twilight band where anything can live creeps west a few paces every hour, and the whole biosphere walks with it. You are a pollen-courier riding the Long Drove: house-sized mossbacks, lichen hills on legs, that carry seed and spore between the grazing shelves. Old Hollowhill, the beast that leads the Drove, has stopped walking. Ahead lies the Glass Canyon, where every generation half the herd turns sunward and bakes. The herders say the canyon's predators do it. The herders are wrong about which ones.",
+    "prompt": "On a tidally locked world the whole biosphere walks slowly westward to stay inside the twilight band. You're a pollen-courier riding a herd of house-sized lichen grazers — learn which 'predators' are really symbionts, and keep the migration from splitting apart at the glass canyon.",
+    "nonViolent": false,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Haul",
+        "abbr": "HAU",
+        "description": "Grip, lift and the weight behind a blow."
+      },
+      "dex": {
+        "name": "Footing",
+        "abbr": "FTG",
+        "description": "Balance on a moving hill: to-hit, dodging and slings."
+      },
+      "int": {
+        "name": "Scentcraft",
+        "abbr": "SCN",
+        "description": "Reading and mixing pollen and musk; powers your pollen-work."
+      },
+      "hp": {
+        "name": "Sap",
+        "abbr": "SAP",
+        "description": "How much life is left in you. At zero you fall from the Drove."
+      },
+      "mp": {
+        "name": "Pollen",
+        "abbr": "POL",
+        "description": "Courier pollen in your satchel, spent on pollen-work."
+      },
+      "ac": {
+        "name": "Rind",
+        "abbr": "RND",
+        "description": "How hard you are to bite through."
+      }
+    },
+    "conflict": "Fend off",
+    "defeated": "brought down",
+    "xp": "Trail-lore",
+    "levelUp": "The trail teaches",
+    "currency": "spore-beads",
+    "lossTitle": "The Drove walks on without you",
+    "winTitle": "The Drove holds",
+    "area": "Leg"
+  },
+  "palette": {
+    "primary": "#f2a65a",
+    "secondary": "#5b3f8c",
+    "accent": "#9effc2",
+    "danger": "#ff5a5a",
+    "ui": "#1c1630",
+    "text": "#f4ead8"
+  },
+  "damageTypes": [
+    {
+      "id": "glare",
+      "name": "Glare",
+      "color": "#ffd27a"
+    },
+    {
+      "id": "frost",
+      "name": "Nightfrost",
+      "color": "#9fd8ff"
+    },
+    {
+      "id": "acid",
+      "name": "Gut-acid",
+      "color": "#b5e04a"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "sunstruck",
+      "name": "Sunstruck",
+      "description": "Dazzled by the open sun. Footing -2.",
+      "harmful": true,
+      "color": "#ffb347",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "chilled",
+      "name": "Chilled",
+      "description": "Nightfrost in the joints. You move slowly.",
+      "harmful": true,
+      "color": "#9fd8ff",
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "spore-dazed",
+      "name": "Spore-dazed",
+      "description": "Pollen up the nose. Movements go astray.",
+      "harmful": true,
+      "color": "#e6d36a",
+      "flags": [
+        "confused"
+      ]
+    },
+    {
+      "id": "acid-burn",
+      "name": "Gut-acid Burn",
+      "description": "Digestive juice eats at you: 1 Gut-acid damage each turn.",
+      "harmful": true,
+      "color": "#b5e04a",
+      "perTurn": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          },
+          "damageType": "acid"
+        }
+      ]
+    },
+    {
+      "id": "lichen-mend",
+      "name": "Lichen-mend",
+      "description": "A lichen graft knits you: regain 1 Sap each turn.",
+      "harmful": false,
+      "color": "#9effc2",
+      "flags": [
+        "regenerating"
+      ]
+    },
+    {
+      "id": "herd-scent",
+      "name": "Herd-scent",
+      "description": "You smell like a mossback. Things that respect the herd hesitate. Rind +2.",
+      "harmful": false,
+      "color": "#c88a4a",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "scent-masked",
+      "name": "Scent-masked",
+      "description": "You smell of nothing at all. Hunters lose you.",
+      "harmful": false,
+      "color": "#8a7ab0",
+      "flags": [
+        "invisible"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "twilight",
+      "name": "Twilight",
+      "description": "How far inside the living band you are. It ebbs one point a turn; catching up with the herd on each new Leg restores it. At zero the sun or the night bites.",
+      "color": "#f2a65a",
+      "max": 200,
+      "start": 200,
+      "perTurn": -1,
+      "onEmpty": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 2
+          },
+          "damageType": "glare"
+        },
+        {
+          "type": "message",
+          "text": "You have fallen behind the twilight. The light here is wrong and it hurts."
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "the-band-moves",
+      "name": "The Band Moves West",
+      "description": "Twilight drops by 1 every turn. Each new Leg you reach restores 120. Dusk-dew and the lichen of grazing mossbacks top it up. At 0 you take 2 Glare damage every 5 turns.",
+      "playerTriggers": [
+        {
+          "on": "on_area_enter",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "twilight",
+                "amount": {
+                  "base": 120
+                }
+              },
+              {
+                "type": "message",
+                "text": "You catch up with the Drove. The light is right again."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "not-every-fang",
+      "name": "Not Every Fang Is a Foe",
+      "description": "Some creatures that look like predators are the herd's symbionts. They leave you alone unless you strike them. If three symbionts are brought down, the Drove splits and the run is lost.",
+      "playerTriggers": []
+    },
+    {
+      "id": "herd-catches-you",
+      "name": "The Herd Catches You Once",
+      "description": "The first time your Sap would hit zero, a mossback scoops you up instead and you wake with half your Sap. Only once.",
+      "switches": {
+        "permadeathMercy": true
+      }
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Senna Odrue",
+    "title": "Pollen-Courier of the Long Drove",
+    "description": "Nineteen seasons in the saddle-moss, satchel full of other herds' pollen, goad-hook in hand. You can tell forty lichens by smell and you still don't know which of the canyon's hunters to trust.",
+    "stats": {
+      "str": 10,
+      "dex": 13,
+      "int": 12,
+      "hp": 28,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 12,
+    "sight": 8,
+    "unarmed": {
+      "name": "Elbow",
+      "verb": "elbows",
+      "damage": {
+        "dice": "1d3"
+      }
+    },
+    "startingItems": [
+      {
+        "item": "courier-goad",
+        "equipped": true
+      },
+      {
+        "item": "rindfelt-wrap",
+        "equipped": true
+      },
+      {
+        "item": "lichen-curd",
+        "count": 2
+      },
+      {
+        "item": "dusk-dew",
+        "count": 1
+      },
+      {
+        "item": "scatter-pollen"
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "saddle-legs",
+          "name": "Saddle Legs",
+          "description": "You stopped noticing the ground moves. Footing +1, Rind +1.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 1
+            },
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "thick-rind",
+          "name": "Thick Rind",
+          "description": "Lichen has started growing on you, too. Sap +6.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 6
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "pollen-lungs",
+          "name": "Pollen Lungs",
+          "description": "You breathe spore like air. Pollen +4, Scentcraft +1.",
+          "modifiers": [
+            {
+              "stat": "mp",
+              "amount": 4
+            },
+            {
+              "stat": "int",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "lichen-graft-perk",
+          "name": "Graft-Hand",
+          "description": "Orrel's trick: press living lichen into a wound. Learn Lichen Graft.",
+          "grantItems": [
+            "lichen-graft"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "sapdrinker",
+          "name": "Sapdrinker",
+          "description": "Whatever you bring down, you take a little of its sap. Regain 2 Sap on each kill.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 2
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "shrike-friend",
+          "name": "Shrike-Friend",
+          "description": "The glasswings know your whistle now. Learn Call the Shrikes.",
+          "grantItems": [
+            "call-the-shrikes"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "old-hauler",
+          "name": "Old Hauler",
+          "description": "Seasons of lifting satchels onto moving hills. Haul +2.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "refraction-eye",
+          "name": "Refraction Eye",
+          "description": "You learn to bend glare instead of flinching. Learn Refraction Lance, Sight +1.",
+          "grantItems": [
+            "refraction-lance"
+          ],
+          "modifiers": [
+            {
+              "stat": "sight",
+              "amount": 1
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "shade-born",
+          "name": "Shade-Born",
+          "description": "You always know where the band is. Each new Leg also heals 6 Sap and gives 40 more Twilight.",
+          "triggers": [
+            {
+              "on": "on_area_enter",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 6
+                    }
+                  },
+                  {
+                    "type": "resource",
+                    "resource": "twilight",
+                    "amount": {
+                      "base": 40
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.9,
+        "build": "slim",
+        "skin": "#c9a27e",
+        "top": "#3f6f5a",
+        "bottom": "#5b4636",
+        "accent": "#f2c94c",
+        "hair": "#e8e0d0",
+        "hairStyle": "braids",
+        "headwear": "hood",
+        "outfit": "coat",
+        "holding": "staff"
+      },
+      "idle": "bob"
+    }
+  },
+  "actors": [
+    {
+      "id": "rind-tick",
+      "name": "Rind-Tick",
+      "description": "A fist-sized tick that burrows into mossback lichen and drinks the beast from underneath. Bold in groups.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 8,
+        "ac": 11,
+        "str": 9,
+        "dex": 12,
+        "int": 2
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Burrowing bite",
+        "verb": "bores into",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        }
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "lichen-curd",
+          "chance": 0.2
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "parasite"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#6b2d2d",
+          "secondary": "#d9a066",
+          "accent": "#2a0f0f"
+        },
+        "scale": 0.45,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "lamplighter-moth",
+      "name": "Lamplighter Moth",
+      "description": "Pretty as a lantern and just as welcome, the herders say. It is not: it lays its larvae in lichen and flashes glare at anything that notices.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 7,
+        "ac": 12,
+        "str": 6,
+        "dex": 14,
+        "int": 6
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Glare-flash",
+        "verb": "flashes at",
+        "damage": {
+          "dice": "1d4"
+        },
+        "damageType": "glare",
+        "range": 3
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "sunstruck",
+                "duration": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "parasite",
+        "flier"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#f7e08a",
+          "secondary": "#5a3b1a",
+          "accent": "#ffffff"
+        },
+        "scale": 0.55,
+        "idle": "hover",
+        "light": {
+          "color": "#ffe08a",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "rot-mite",
+      "name": "Rot-mite Clot",
+      "description": "A seething knot of mites eating Hollowhill's gut-lichen from the inside. It splashes digestive acid when it bursts.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 12,
+        "ac": 10,
+        "str": 10,
+        "dex": 8,
+        "int": 2
+      },
+      "speed": 85,
+      "attack": {
+        "name": "Acid smear",
+        "verb": "smears acid on",
+        "damage": {
+          "base": 3,
+          "dice": "1d4"
+        },
+        "damageType": "acid"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "acid-burn",
+                "duration": 3
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "parasite"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#b8e04a",
+          "secondary": "#4a5a1a",
+          "accent": "#f0ff9a"
+        },
+        "scale": 0.6,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "lamina-fluke",
+      "name": "Lamina Fluke",
+      "description": "A pale ribbon-worm that lies flat against the gut wall until something warm walks by.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 14,
+        "ac": 11,
+        "str": 12,
+        "dex": 11,
+        "int": 3
+      },
+      "attack": {
+        "name": "Sucker-lash",
+        "verb": "lashes",
+        "damage": {
+          "base": 3,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "xp": 8,
+      "tags": [
+        "parasite"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#f5f0e0",
+          "secondary": "#3a1020",
+          "accent": "#ffd0d8"
+        },
+        "scale": 0.8,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "coldmouth",
+      "name": "Coldmouth",
+      "description": "A pale, long-jawed nightside hunter that trails the Drove's western edge and drags down whatever lags into the dark. A real predator.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 20,
+        "ac": 12,
+        "str": 13,
+        "dex": 13,
+        "int": 4
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Frost bite",
+        "verb": "bites",
+        "damage": {
+          "base": 3,
+          "dice": "1d6"
+        },
+        "damageType": "frost"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "resistances": [
+        {
+          "damageType": "frost",
+          "multiplier": 0
+        },
+        {
+          "damageType": "glare",
+          "multiplier": 1.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "chilled",
+                "duration": 3
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "lichen-curd",
+          "chance": 0.25
+        }
+      ],
+      "xp": 10,
+      "tags": [
+        "predator",
+        "nightside"
+      ],
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#cfe0f0",
+          "secondary": "#203048",
+          "accent": "#7fd0ff"
+        },
+        "scale": 0.9,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "shard-skitter",
+      "name": "Shard Skitter",
+      "description": "A crawler made of canyon glass, grown by the Gleam to cut stragglers off from the herd.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 14,
+        "ac": 13,
+        "str": 11,
+        "dex": 12,
+        "int": 2
+      },
+      "speed": 115,
+      "attack": {
+        "name": "Glass-edge",
+        "verb": "slices",
+        "damage": {
+          "base": 3,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "resistances": [
+        {
+          "damageType": "glare",
+          "multiplier": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "glass"
+      ],
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#bfefff",
+          "secondary": "#4a90c0",
+          "accent": "#ffffff"
+        },
+        "scale": 0.55,
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "sun-echo",
+      "name": "Sun-Echo",
+      "description": "A mossback made of refracted light, walking east toward the sun with the Matriarch's Musk caught inside it. It burns whatever stands in its way.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 36,
+        "ac": 12,
+        "str": 14,
+        "dex": 10,
+        "int": 8
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Searing tread",
+        "verb": "sears",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "glare"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "resistances": [
+        {
+          "damageType": "glare",
+          "multiplier": 0.25
+        }
+      ],
+      "loot": [
+        {
+          "item": "matriarch-musk",
+          "chance": 1
+        },
+        {
+          "item": "glass-sickle",
+          "chance": 0.4
+        },
+        {
+          "item": "sap-blister",
+          "chance": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 24,
+      "tags": [
+        "glass",
+        "elite"
+      ],
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#ffe0b0",
+          "secondary": "#ff9a4d",
+          "accent": "#ffffff"
+        },
+        "scale": 1.4,
+        "idle": "sway",
+        "light": {
+          "color": "#ffb060",
+          "intensity": 1.6,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "the-gleam",
+      "name": "The Gleam",
+      "description": "A colony of mirror-coral fanned across the canyon's throat. It glows the exact amber of a lead mossback and calls half the Drove sunward every generation, to bake and feed it.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 78,
+        "ac": 13,
+        "str": 14,
+        "dex": 12,
+        "int": 16,
+        "mp": 20
+      },
+      "speed": 100,
+      "sight": 10,
+      "attack": {
+        "name": "Focused glare",
+        "verb": "focuses glare on",
+        "damage": {
+          "base": 4,
+          "dice": "1d8"
+        },
+        "damageType": "glare",
+        "range": 5,
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "sunward-flash",
+          "name": "Sunward Flash",
+          "description": "The whole fan tilts and throws the sun at you.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "radius": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 1,
+                  "dice": "2d4"
+                },
+                "damageType": "glare"
+              },
+              {
+                "type": "apply_status",
+                "status": "sunstruck",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#ffd27a"
+            }
+          },
+          "cooldown": 6
+        },
+        {
+          "id": "mirror-brood",
+          "name": "Mirror Brood",
+          "description": "Shards drop from the fan and stand up as skitters.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "shard-skitter",
+                "count": 3
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#bfefff"
+            }
+          },
+          "cooldown": 16,
+          "useWhen": "start_of_fight"
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "glare",
+          "multiplier": 0.5
+        },
+        {
+          "damageType": "frost",
+          "multiplier": 1.5
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 6
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "set_flag",
+                "flag": "gleam-shattered"
+              },
+              {
+                "type": "message",
+                "text": "The Gleam cracks from edge to edge. The amber goes out of it, and the whole herd turns its heads west."
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Speaks only in reflections: echoes your words back warmer and sweeter, like a lead mossback's hum. Patient, hungry, utterly sure the herd is food.",
+        "greeting": "Come east, little courier. Come into the light. The herd always comes, in the end.",
+        "lines": [
+          "Every generation half of them turn to me. I have never had to chase.",
+          "You smell of Hollowhill. Old. Slow. I can lead better.",
+          "Why walk forever when you can stand still and shine?"
+        ],
+        "secrets": "It is not a predator in the herders' sense: it never hunts, it only lures. Cold harms it; the Matriarch's Musk on a scent-cairn drowns out its glow.",
+        "wants": "Half the Drove baking on the sunward rim.",
+        "persuadeDifficulty": 22
+      },
+      "tags": [
+        "boss",
+        "glass"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              1.2,
+              1.6,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#ffd9a0",
+            "material": "glass",
+            "emissive": "#ff9a3d"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.7,
+              1.2,
+              0.25
+            ],
+            "pos": [
+              -0.55,
+              0.6,
+              0.1
+            ],
+            "rot": [
+              0,
+              0,
+              25
+            ],
+            "color": "#bfefff",
+            "material": "glass",
+            "emissive": "#5ab0ff"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.7,
+              1.2,
+              0.25
+            ],
+            "pos": [
+              0.55,
+              0.6,
+              0.1
+            ],
+            "rot": [
+              0,
+              0,
+              -25
+            ],
+            "color": "#bfefff",
+            "material": "glass",
+            "emissive": "#5ab0ff"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.45,
+              0.45,
+              0.45
+            ],
+            "pos": [
+              0,
+              1,
+              0.2
+            ],
+            "color": "#fff4d0",
+            "material": "glow",
+            "emissive": "#ffcc66",
+            "group": "head"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.9,
+              0.2,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#6a5a8a",
+            "material": "stone"
+          }
+        ],
+        "scale": 1.5,
+        "idle": "pulse",
+        "light": {
+          "color": "#ffb050",
+          "intensity": 2.5,
+          "radius": 5
+        }
+      }
+    },
+    {
+      "id": "heelbiter",
+      "name": "Heelbiter",
+      "description": "A low, toothy runner that snaps at mossback ankles. Herders throw stones at them. They are steering the herd west.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 11,
+        "dex": 14,
+        "int": 5
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Ankle-snap",
+        "verb": "snaps at",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "counter",
+                "counter": "symbionts-lost",
+                "add": 1
+              },
+              {
+                "type": "message",
+                "text": "A low groan rolls through the herd. Something it trusted is gone."
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 0,
+      "tags": [
+        "symbiont"
+      ],
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#7a4a2a",
+          "secondary": "#e8c87a",
+          "accent": "#ffffff"
+        },
+        "scale": 0.7,
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "glasswing-shrike",
+      "name": "Glasswing Shrike",
+      "description": "A knife-beaked flier as long as a courier, diving at mossback backs. It is plucking rind-ticks out of the lichen.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 14,
+        "ac": 12,
+        "str": 12,
+        "dex": 15,
+        "int": 6
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Beak-dive",
+        "verb": "stabs",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "counter",
+                "counter": "symbionts-lost",
+                "add": 1
+              },
+              {
+                "type": "message",
+                "text": "A low groan rolls through the herd. Something it trusted is gone."
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 0,
+      "tags": [
+        "symbiont",
+        "flier"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#e6f2ff",
+          "secondary": "#2b2140",
+          "accent": "#ff6a3d"
+        },
+        "scale": 0.85,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "canyon-wyrm",
+      "name": "Canyon Wyrm",
+      "description": "A violet serpent thick as a mossback's leg that swallows stragglers whole. It carries them, alive, through the canyon in its gut-sac and coughs them up on the far side.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "str": 15,
+        "dex": 9,
+        "int": 6
+      },
+      "speed": 80,
+      "attack": {
+        "name": "Crushing coil",
+        "verb": "coils around",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        }
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "counter",
+                "counter": "symbionts-lost",
+                "add": 1
+              },
+              {
+                "type": "message",
+                "text": "The herd bellows. The canyon's ferry is gone."
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 0,
+      "tags": [
+        "symbiont"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#4a3a6a",
+          "secondary": "#c8a0ff",
+          "accent": "#ffe0ff"
+        },
+        "scale": 1.8,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "called-shrike",
+      "name": "Called Glasswing",
+      "description": "A glasswing that came to your whistle. It dives at whatever is hurting you.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 12,
+        "dex": 15,
+        "int": 6
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Beak-dive",
+        "verb": "stabs",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "follower"
+      },
+      "xp": 0,
+      "tags": [
+        "symbiont",
+        "ally"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#e6f2ff",
+          "secondary": "#2b2140",
+          "accent": "#f2c94c"
+        },
+        "scale": 0.75,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "orrel",
+      "name": "Orrel the Herd-Singer",
+      "description": "An old woman who has walked the band for sixty years, humming the Drove's low song through a reed. She knows every beast's name.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "healer",
+        "personality": "Slow, dry and fond. Calls the mossbacks by name and the player 'pollen-child'. Never answers a question directly the first time.",
+        "greeting": "Pollen-child. Hollowhill has stopped. If the old one stops, the herd stops, and the night catches us. Go in and see why.",
+        "lines": [
+          "Watch who the shrikes are diving at, child. It's never us.",
+          "Heelbiters bite heels. That's how you steer something the size of a hill.",
+          "The canyon wyrm swallowed me once, when I was small. Best ride of my life.",
+          "Twice I've seen the canyon split the herd. Both times the amber light came first."
+        ],
+        "secrets": "Knows heelbiters, glasswings and the canyon wyrm are symbionts. Suspects the 'lead-glow' in the canyon is not a mossback.",
+        "wants": "The herd to reach the far shelves whole, and someone younger to learn the song.",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "herder"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.8,
+          "build": "round",
+          "skin": "#8a6a5a",
+          "top": "#6a3f8c",
+          "bottom": "#4a3a2a",
+          "accent": "#9effc2",
+          "hair": "#f0f0f0",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "robe",
+          "holding": "lantern"
+        },
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "brother-pith",
+      "name": "Brother Pith",
+      "description": "A hermit who lives inside Hollowhill and trades in whatever the old mossback has swallowed in a hundred years of grazing.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 18,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "trader",
+        "personality": "Pale, cheerful and damp. Talks to Hollowhill as 'the landlord'. Haggles out of habit, then forgets the price.",
+        "greeting": "A visitor! The landlord doesn't get many. Everything here was swallowed honestly. Spore-beads, please.",
+        "lines": [
+          "The landlord swallowed a stone the size of a courier. It's lodged deep, past the fluke-folds.",
+          "Rot-mites came in with the stone. Bring it out and the landlord walks again.",
+          "Don't stand in the yellow pools. That's the landlord's breakfast, and so would you be."
+        ],
+        "stock": [
+          "lichen-curd",
+          "dusk-dew",
+          "burst-pod",
+          "sap-blister",
+          "shed-scale-coat",
+          "seedpod-sling",
+          "bone-whistle",
+          "drift-compass"
+        ],
+        "secrets": "The stone is a lodestone bezoar: Hollowhill swallowed it to steer, and it went wrong. Pith has lived in the gut for twenty years and is a little bit lichen now.",
+        "wants": "Company, gossip from outside, and for the landlord to keep walking."
+      },
+      "tags": [
+        "hermit"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#e8d0c0",
+          "top": "#4a7a5a",
+          "bottom": "#3a2a2a",
+          "accent": "#f2c94c",
+          "hair": "#9effc2",
+          "hairStyle": "long",
+          "headwear": "bandana",
+          "outfit": "rags",
+          "holding": "bottle"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "ysolde-kett",
+      "name": "Ysolde Kett",
+      "description": "A rival courier from the eastern herds, frost on her eyelashes, who has crossed the canyon twice and will not say what she saw.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 22,
+        "ac": 12,
+        "str": 12,
+        "dex": 14,
+        "int": 11
+      },
+      "attack": {
+        "name": "Sling-stone",
+        "verb": "slings a stone at",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "range": 4
+      },
+      "behaviour": {
+        "type": "follower"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "ally",
+        "personality": "Clipped, competitive, secretly kind. Keeps score of everything. Refuses thanks.",
+        "greeting": "You're Hollowhill's courier? Then you're late. The Matriarch's Musk is out on the glass, caught inside a Sun-Echo.",
+        "lines": [
+          "Coldmouths are the real thing. Hit them with light, they hate it.",
+          "The Gleam isn't a beast. It's a lure. Don't fight it near the glare pools.",
+          "Lay the Matriarch's Musk on a scent-cairn in the canyon and the herd will follow the smell, not the shine."
+        ],
+        "secrets": "Lost her own herd's west half to the Gleam two crossings ago. Knows the musk on a cairn beats the lure.",
+        "wants": "To see the Gleam go dark, and to beat you to the far side."
+      },
+      "tags": [
+        "courier"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#5a3a2a",
+          "top": "#2f5f7a",
+          "bottom": "#3a3a4a",
+          "accent": "#bfefff",
+          "hair": "#1a1a1a",
+          "hairStyle": "mohawk",
+          "headwear": "cap",
+          "outfit": "coat",
+          "holding": "tool"
+        },
+        "idle": "bob"
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "courier-goad",
+      "name": "Courier's Goad",
+      "kind": "Goad-hook",
+      "description": "A hooked pole for steering mossbacks and pulling yourself up their flanks. It also hurts.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Goad-hook",
+        "verb": "hooks",
+        "damage": {
+          "dice": "1d6"
+        },
+        "accuracyStat": "dex"
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.9,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#8a6a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.05,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "glass-sickle",
+      "name": "Canyon-Glass Sickle",
+      "kind": "Glass blade",
+      "description": "A curve of canyon glass that holds the sun in its edge. Cuts deep, burns the cold things worse.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Glass sickle",
+        "verb": "carves",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "glare",
+        "accuracyStat": "dex"
+      },
+      "rarity": "rare",
+      "value": 40,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.06,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#ffe0b0",
+            "material": "glass",
+            "emissive": "#ff9a3d"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.05,
+              0.35,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#5a3a2a",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffb060",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "seedpod-sling",
+      "name": "Seedpod Sling",
+      "kind": "Sling",
+      "description": "A sling woven from mossback hair, loaded with hard seedpods. Hits things that keep their distance.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Seedpod",
+        "verb": "slings a pod at",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "range": 5,
+        "accuracyStat": "dex"
+      },
+      "rarity": "uncommon",
+      "value": 22,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.04,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#5a7a2a",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "rindfelt-wrap",
+      "name": "Rind-Felt Wrap",
+      "kind": "Felted cloak",
+      "description": "Shed mossback lichen pressed into felt. Smells like the herd, turns a small bite.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.15,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#7a8a4a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "shed-scale-coat",
+      "name": "Shed-Scale Coat",
+      "kind": "Scale coat",
+      "description": "Overlapping knee-plates moulted by old mossbacks, stitched onto hide. Heavy and very hard to bite.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 3,
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.2,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#6a5a3a",
+            "material": "stone"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.08,
+              0.35
+            ],
+            "pos": [
+              0,
+              0.26,
+              0
+            ],
+            "color": "#a08a5a",
+            "material": "stone"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "glasswing-pinion",
+      "name": "Glasswing Pinion",
+      "kind": "Feather charm",
+      "description": "A long translucent feather, given or found, never taken.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 1
+        },
+        {
+          "stat": "ac",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 20,
+      "knowledge": "vague",
+      "vagueText": "It makes you feel lighter on a moving back, and harder to catch.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.12,
+              0.6,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              20
+            ],
+            "color": "#e6f2ff",
+            "material": "glass"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "drift-compass",
+      "name": "Drift-Compass",
+      "kind": "Terminator compass",
+      "description": "A dish of oil with a sun-sensitive seed floating in it. On each new Leg it swings to show the lay of the land.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "triggers": [
+        {
+          "on": "on_area_enter",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "reveal_map",
+                "radius": 14
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.35,
+              0.08,
+              0.35
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#8a6a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#f2c94c",
+            "material": "glow",
+            "emissive": "#f2a65a"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "lichen-curd",
+      "name": "Lichen Curd",
+      "kind": "Ration",
+      "description": "A wedge of fermented mossback lichen. Sour, chewy, puts the sap back in you.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#9effc2"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.15,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#c8d86a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "dusk-dew",
+      "name": "Dusk-Dew",
+      "kind": "Dew vial",
+      "description": "Dew collected at the exact edge of twilight. One sip and your body forgets it has fallen behind.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "twilight",
+            "amount": {
+              "base": 70
+            }
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 3
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f2a65a"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.14,
+              0.3,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#f7c08a",
+            "material": "glass",
+            "emissive": "#a05a20"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "sap-blister",
+      "name": "Sap Blister",
+      "kind": "Mossback sap",
+      "description": "A blister of amber sap cut from a mossback's flank, warm as a hand.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 8,
+              "dice": "1d6"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "lichen-mend",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffc070"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 18,
+      "knowledge": "vague",
+      "vagueText": "Thick and warm. It feels like it would close a deep bite and keep closing it.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.25,
+              0.22,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ffb050",
+            "material": "glass",
+            "emissive": "#a05010"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "calm-musk",
+      "name": "Calm Musk",
+      "kind": "Musk gourd",
+      "description": "Musk from a sleeping mossback. Daubed on, you smell like the herd.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "herd-scent",
+            "duration": 25
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#c88a4a"
+        }
+      },
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "musk",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.28,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#a07040",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "rut-musk",
+      "name": "Rut Musk",
+      "kind": "Musk gourd",
+      "description": "Musk from a mossback in season. Everything for a long way around now knows exactly where you are.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "noise",
+            "radius": 14
+          },
+          {
+            "type": "apply_status",
+            "status": "spore-dazed",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#ff7a5a"
+        }
+      },
+      "value": 2,
+      "knowledge": "unknown",
+      "appearanceGroup": "musk",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.28,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#a07040",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "sweet-musk",
+      "name": "Sweet Musk",
+      "kind": "Musk gourd",
+      "description": "Calf-musk, sweet and milky. Mossbacks feed it to their young.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 8,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "resource",
+            "resource": "twilight",
+            "amount": {
+              "base": 30
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffe0b0"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "musk",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.28,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#a07040",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "null-musk",
+      "name": "Null Musk",
+      "kind": "Musk gourd",
+      "description": "Musk from a dead mossback, scrubbed of everything. You smell of nothing; hunters' noses slide off you.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "scent-masked",
+            "duration": 10
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#8a7ab0"
+        }
+      },
+      "value": 16,
+      "knowledge": "unknown",
+      "appearanceGroup": "musk",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.28,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#a07040",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "burst-pod",
+      "name": "Burst Pod",
+      "kind": "Spore pod",
+      "description": "A ripe puffball packed with stinging pollen. Thrown, it bursts in a choking cloud.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "2d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "spore-dazed",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#e6d36a"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.25,
+              0.25,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#e6d36a",
+            "material": "matte"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "bone-whistle",
+      "name": "Bone Whistle",
+      "kind": "Shrike whistle",
+      "description": "A whistle carved from a glasswing's hollow wing-bone. Its note carries a long way.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 2,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "summon",
+            "actor": "called-shrike",
+            "count": 1,
+            "allied": true
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e6f2ff"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 25,
+      "knowledge": "vague",
+      "vagueText": "Something with wings would answer this, if it trusted you.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.05,
+              0.35,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              80
+            ],
+            "color": "#f0ead8",
+            "material": "stone"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "scatter-pollen",
+      "name": "Scatter Pollen",
+      "kind": "Pollen-work",
+      "description": "A practised flick of the satchel: a cone of stinging courier pollen that sets eyes watering and feet stumbling.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "cone",
+          "range": 2,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4",
+              "scale": {
+                "stat": "int",
+                "factor": 0.25
+              }
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "spore-dazed",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#f2c94c"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#f2c94c",
+            "material": "glow",
+            "emissive": "#f2a65a"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "lichen-graft",
+      "name": "Lichen Graft",
+      "kind": "Pollen-work",
+      "description": "Press a pinch of pollen into living lichen and the lichen into a wound. It knits for a while.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 6
+      },
+      "cooldown": 6,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2,
+              "dice": "2d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "lichen-mend",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#9effc2"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#9effc2",
+            "material": "glow",
+            "emissive": "#3aff9a"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "call-the-shrikes",
+      "name": "Call the Shrikes",
+      "kind": "Herd-whistle",
+      "description": "Two fingers, one long note. A glasswing drops out of the sky and fights beside you.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 8
+      },
+      "cooldown": 25,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "summon",
+            "actor": "called-shrike",
+            "count": 1,
+            "allied": true
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e6f2ff"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.2,
+              0.3,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#e6f2ff",
+            "material": "glass"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "refraction-lance",
+      "name": "Refraction Lance",
+      "kind": "Glare-work",
+      "description": "Catch the low sun in a shard of glass and throw it in a line. Nightside things hate it.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "ray",
+          "range": 6,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4"
+            },
+            "damageType": "glare"
+          }
+        ],
+        "vfx": {
+          "kind": "beam",
+          "color": "#ffd27a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.15,
+              0.35,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ffe0b0",
+            "material": "glass",
+            "emissive": "#ff9a3d"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "herd-song-knots",
+      "name": "Herd-Song Knots",
+      "kind": "Knot-cord",
+      "description": "A cord knotted by generations of herd-singers. Each knot is a beast, and whether it keeps the herd or eats it.",
+      "category": "clue",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "message",
+            "text": "The knots say: heelbiters steer, glasswings pick ticks, the canyon wyrm ferries. Ticks, lamplighters, coldmouths and anything made of glass take."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c88a4a"
+        }
+      },
+      "value": 5,
+      "knowledge": "vague",
+      "vagueText": "Knots in a pattern you almost understand. Reading them would take a moment.",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.05,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#c88a4a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "hollowhill-bezoar",
+      "name": "Hollowhill's Bezoar",
+      "kind": "Lodestone",
+      "description": "A smooth lodestone the size of a head, coated in a century of gut-lichen. Hollowhill swallowed it to find west, and it lodged.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.4,
+              0.35,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.18,
+              0
+            ],
+            "color": "#4a4a5a",
+            "material": "stone",
+            "emissive": "#2a3a6a"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#7a9aff",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "matriarch-musk",
+      "name": "Matriarch's Musk",
+      "kind": "Lead-musk",
+      "description": "A sealed horn of musk from the Drove's first matriarch. Laid on a scent-cairn, the whole herd follows its smell instead of any light.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.18,
+              0.5,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              30
+            ],
+            "color": "#e8d0a0",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0.1,
+              0.45,
+              0
+            ],
+            "color": "#c88a4a",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffc070",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "grazing-mossback",
+      "name": "Grazing Mossback",
+      "description": "A mossback the size of a house, grazing as it walks. You can scratch fresh lichen from its flank.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#6a7a3a",
+      "height": 1.6,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "twilight",
+            "amount": {
+              "base": 30
+            }
+          },
+          {
+            "type": "message",
+            "text": "You scratch fresh lichen from the flank and chew. It tastes of where the herd has been."
+          }
+        ]
+      },
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              1.3,
+              1,
+              1.2
+            ],
+            "pos": [
+              0,
+              0.95,
+              0
+            ],
+            "color": "#7a8a3a",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.6,
+              0.35,
+              0.55
+            ],
+            "pos": [
+              0.15,
+              1.4,
+              -0.1
+            ],
+            "color": "#c8a040",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.35,
+              0.25,
+              0.35
+            ],
+            "pos": [
+              -0.35,
+              1.25,
+              0.25
+            ],
+            "color": "#9effc2",
+            "material": "glow",
+            "emissive": "#2a8a5a"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.42,
+              0.36,
+              0.42
+            ],
+            "pos": [
+              0,
+              0.75,
+              0.62
+            ],
+            "color": "#4a3a2a",
+            "material": "skin",
+            "group": "head"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.24,
+              0.6,
+              0.24
+            ],
+            "pos": [
+              -0.4,
+              0.3,
+              -0.35
+            ],
+            "color": "#4a3a2a",
+            "material": "skin"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.24,
+              0.6,
+              0.24
+            ],
+            "pos": [
+              0.4,
+              0.3,
+              -0.35
+            ],
+            "color": "#4a3a2a",
+            "material": "skin"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.24,
+              0.6,
+              0.24
+            ],
+            "pos": [
+              -0.4,
+              0.3,
+              0.35
+            ],
+            "color": "#4a3a2a",
+            "material": "skin"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.24,
+              0.6,
+              0.24
+            ],
+            "pos": [
+              0.4,
+              0.3,
+              0.35
+            ],
+            "color": "#4a3a2a",
+            "material": "skin"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "dew-lichen",
+      "name": "Dew-Lichen",
+      "description": "A mat of glowing lichen beaded with twilight dew. Lap it up once.",
+      "walkable": true,
+      "color": "#9effc2",
+      "emissive": "#2a8a5a",
+      "height": 0.03,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "twilight",
+            "amount": {
+              "base": 40
+            }
+          },
+          {
+            "type": "message",
+            "text": "Cold dew, tasting faintly of sunset."
+          }
+        ]
+      }
+    },
+    {
+      "id": "digestive-pool",
+      "name": "Digestive Pool",
+      "description": "A yellow pool of Hollowhill's gut-juice. Slow to wade through and it stings: 1 Gut-acid damage per turn.",
+      "walkable": true,
+      "moveCost": 2,
+      "onStand": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          },
+          "damageType": "acid"
+        }
+      ],
+      "color": "#c8e04a",
+      "emissive": "#4a6a10",
+      "height": 0.02
+    },
+    {
+      "id": "rime-glass",
+      "name": "Rime-Glass",
+      "description": "Glass furred with nightfrost. Slow underfoot, and it chills you.",
+      "walkable": true,
+      "moveCost": 2,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "chilled",
+          "duration": 2
+        }
+      ],
+      "color": "#dff4ff",
+      "emissive": "#3a6a9a",
+      "height": 0.04
+    },
+    {
+      "id": "glare-pool",
+      "name": "Glare Pool",
+      "description": "A mirror-flat glass basin that focuses the low sun. Standing in it burns: 2 Glare damage per turn.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 2
+          },
+          "damageType": "glare"
+        }
+      ],
+      "color": "#fff0b0",
+      "emissive": "#ffb040",
+      "height": 0.02
+    },
+    {
+      "id": "scent-cairn",
+      "name": "Scent-Cairn",
+      "description": "A cairn of mossback dung-stones that herders mark with musk so the Drove knows the way. It is unmarked.",
+      "walkable": false,
+      "color": "#a07040",
+      "height": 1,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "has_item",
+          "who": "player",
+          "item": "matriarch-musk"
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "herd-rejoined"
+          },
+          {
+            "type": "message",
+            "text": "You break the horn over the cairn. The smell rolls down the canyon, older than the light, and the whole Drove turns to follow it."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#c88a4a"
+        }
+      },
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.7,
+              0.4,
+              0.7
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#7a5a3a",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.5,
+              0.35,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#8a6a4a",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.25,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.75,
+              0
+            ],
+            "color": "#a07a50",
+            "material": "stone"
+          }
+        ],
+        "idle": "none"
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "musk": [
+      {
+        "label": "Amber-stoppered gourd",
+        "color": "#d08a3a"
+      },
+      {
+        "label": "Gourd smelling of rain",
+        "color": "#6a9ab0"
+      },
+      {
+        "label": "Sticky green gourd",
+        "color": "#6aa04a"
+      },
+      {
+        "label": "Gourd that hums when shaken",
+        "color": "#a070c0"
+      },
+      {
+        "label": "Black-waxed gourd",
+        "color": "#3a3a3a"
+      },
+      {
+        "label": "Warm red gourd",
+        "color": "#c04a3a"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "The Grazing Shelf",
+      "description": "A tilted plain of amber lichen under a sun that never finishes setting. Mossbacks graze westward in a slow, groaning line; behind them the sky is fire, ahead it is ink.",
+      "generator": "open",
+      "size": "medium",
+      "params": {
+        "cover": 0.1,
+        "rockiness": 0.4,
+        "ponds": 1
+      },
+      "floor": {
+        "color": "#9a6a3a",
+        "color2": "#5f7040",
+        "material": "matte",
+        "pattern": "grass"
+      },
+      "wall": {
+        "color": "#3b2f4a",
+        "color2": "#5a4a6a",
+        "material": "stone",
+        "height": 1.2
+      },
+      "lighting": {
+        "ambient": "#7a6aa8",
+        "ambientIntensity": 0.6,
+        "sun": {
+          "color": "#ff9a4d",
+          "intensity": 1,
+          "elevation": 10
+        },
+        "fog": {
+          "color": "#4a3060",
+          "density": 0.012
+        },
+        "lamps": {
+          "color": "#9effc2",
+          "intensity": 0.8,
+          "frequency": 0.02
+        },
+        "playerLight": 3,
+        "sky": "#2d2050"
+      },
+      "backdrop": {
+        "style": "gradient",
+        "color": "#ff8a3d",
+        "color2": "#1a1440",
+        "intensity": 0.7
+      },
+      "actors": [
+        {
+          "actor": "rind-tick",
+          "weight": 35,
+          "min": 3,
+          "max": 5
+        },
+        {
+          "actor": "lamplighter-moth",
+          "weight": 25,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "heelbiter",
+          "weight": 15,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "glasswing-shrike",
+          "weight": 12,
+          "min": 1,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "orrel",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "lichen-curd",
+          "weight": 22
+        },
+        {
+          "item": "dusk-dew",
+          "weight": 10
+        },
+        {
+          "item": "burst-pod",
+          "weight": 15
+        },
+        {
+          "item": "calm-musk",
+          "weight": 8
+        },
+        {
+          "item": "rut-musk",
+          "weight": 8
+        },
+        {
+          "item": "sweet-musk",
+          "weight": 8
+        },
+        {
+          "item": "glasswing-pinion",
+          "weight": 6
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "herd-song-knots",
+          "where": "near_start"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "grazing-mossback",
+          "density": 0.015
+        },
+        {
+          "terrain": "dew-lichen",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Climb into Hollowhill's feeding-flue",
+      "transitionModel": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              1.2,
+              1,
+              1.2
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#5a6a2a",
+            "material": "cloth"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.6,
+              0.12,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.6,
+              0.55
+            ],
+            "color": "#3a1020",
+            "material": "skin",
+            "emissive": "#ff6a8a"
+          }
+        ],
+        "idle": "sway",
+        "light": {
+          "color": "#ff8aa0",
+          "intensity": 1,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Teach the twilight drain and the symbiont twist. Heelbiters and glasswings are neutral symbionts: let the player see shrikes dive at ticks. Orrel heals once and hints. Hollowhill, the old lead mossback, has stopped; the flue into it is the exit.",
+      "music": "calm"
+    },
+    {
+      "name": "Inside Hollowhill",
+      "description": "The gut of the oldest mossback: warm pink folds, lichen growing inward, membranes that breathe. Something heavy is lodged deep in here and the rot-mites came with it.",
+      "generator": "organic",
+      "size": "medium",
+      "params": {
+        "chambers": 7,
+        "chamberSize": 0.6,
+        "tubeWidth": 2,
+        "curl": 0.5,
+        "loops": 0.3,
+        "wobble": 0.6,
+        "nodules": 0.4,
+        "fluid": 0.3,
+        "membranes": 0.4
+      },
+      "floor": {
+        "color": "#c46a7a",
+        "color2": "#8a3a50",
+        "material": "skin",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#5a1f35",
+        "color2": "#8a3a5a",
+        "material": "skin",
+        "height": 1.3
+      },
+      "lighting": {
+        "ambient": "#ff9fb0",
+        "ambientIntensity": 0.45,
+        "fog": {
+          "color": "#3a0f20",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#7dffb5",
+          "intensity": 1.5,
+          "frequency": 0.05
+        },
+        "playerLight": 4
+      },
+      "backdrop": {
+        "style": "abyss",
+        "color": "#200810",
+        "color2": "#5a1f35",
+        "intensity": 0.5
+      },
+      "actors": [
+        {
+          "actor": "rot-mite",
+          "weight": 35,
+          "min": 2,
+          "max": 6
+        },
+        {
+          "actor": "lamina-fluke",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "rind-tick",
+          "weight": 15,
+          "min": 0,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "brother-pith",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "lichen-curd",
+          "weight": 21
+        },
+        {
+          "item": "sap-blister",
+          "weight": 8
+        },
+        {
+          "item": "dusk-dew",
+          "weight": 9
+        },
+        {
+          "item": "burst-pod",
+          "weight": 12
+        },
+        {
+          "item": "null-musk",
+          "weight": 8
+        },
+        {
+          "item": "sweet-musk",
+          "weight": 8
+        },
+        {
+          "item": "rut-musk",
+          "weight": 6
+        },
+        {
+          "item": "shed-scale-coat",
+          "weight": 4
+        }
+      ],
+      "itemCount": 5,
+      "placedItems": [
+        {
+          "item": "hollowhill-bezoar",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "digestive-pool",
+          "density": 0.03
+        }
+      ],
+      "transitionName": "Ride the gut-current out",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "hollowhill-bezoar"
+      },
+      "transitionModel": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.8,
+              0.15,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#8a3a5a",
+            "material": "skin",
+            "emissive": "#ff6a8a"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.4,
+              0.1,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#ffd0d8",
+            "material": "glow",
+            "emissive": "#ffa0b0"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ff8aa0",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      },
+      "gmNotes": "Non-realistic, organic area inside a living beast. The exit stays closed until the player carries Hollowhill's Bezoar out (placed far). Brother Pith trades and gossips. Flukes ambush from the folds. Hollowhill feels everything: it can shudder.",
+      "music": "eerie"
+    },
+    {
+      "name": "The Shatter-Flats",
+      "description": "The western edge of the band, where night leans in: a cracked field of old glass furred with frost, aurora overhead, coldmouths pacing just out of the light.",
+      "generator": "caves",
+      "size": "medium",
+      "params": {
+        "openness": 0.55,
+        "smoothing": 4,
+        "pools": 0.2
+      },
+      "floor": {
+        "color": "#3a4560",
+        "color2": "#5a6a9a",
+        "material": "stone",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#9fd8ff",
+        "color2": "#4a6aa0",
+        "material": "glass",
+        "height": 1.4
+      },
+      "lighting": {
+        "ambient": "#5a6aa8",
+        "ambientIntensity": 0.5,
+        "sun": {
+          "color": "#9ab8ff",
+          "intensity": 0.5,
+          "elevation": 12
+        },
+        "fog": {
+          "color": "#101830",
+          "density": 0.02
+        },
+        "lamps": {
+          "color": "#c8f0ff",
+          "intensity": 1.2,
+          "frequency": 0.04
+        },
+        "playerLight": 4,
+        "sky": "#0a1030"
+      },
+      "backdrop": {
+        "style": "aurora",
+        "color": "#3a8aff",
+        "color2": "#a040ff",
+        "intensity": 0.6
+      },
+      "actors": [
+        {
+          "actor": "coldmouth",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "shard-skitter",
+          "weight": 25,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "actor": "lamplighter-moth",
+          "weight": 12,
+          "min": 0,
+          "max": 2
+        },
+        {
+          "actor": "glasswing-shrike",
+          "weight": 10,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "heelbiter",
+          "weight": 8,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "ysolde-kett",
+          "where": "near_start"
+        },
+        {
+          "actor": "sun-echo",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "lichen-curd",
+          "weight": 19
+        },
+        {
+          "item": "sap-blister",
+          "weight": 9
+        },
+        {
+          "item": "dusk-dew",
+          "weight": 9
+        },
+        {
+          "item": "burst-pod",
+          "weight": 12
+        },
+        {
+          "item": "calm-musk",
+          "weight": 8
+        },
+        {
+          "item": "null-musk",
+          "weight": 6
+        },
+        {
+          "item": "seedpod-sling",
+          "weight": 5
+        },
+        {
+          "item": "drift-compass",
+          "weight": 4
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [],
+      "terrain": [
+        {
+          "terrain": "rime-glass",
+          "density": 0.03
+        },
+        {
+          "terrain": "dew-lichen",
+          "density": 0.006
+        }
+      ],
+      "transitionName": "Follow the herd into the Glass Canyon",
+      "transitionModel": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.6,
+              1.4,
+              0.6
+            ],
+            "pos": [
+              -0.35,
+              0.7,
+              0
+            ],
+            "color": "#bfefff",
+            "material": "glass",
+            "emissive": "#3a6aaa"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.6,
+              1.4,
+              0.6
+            ],
+            "pos": [
+              0.35,
+              0.7,
+              0
+            ],
+            "color": "#bfefff",
+            "material": "glass",
+            "emissive": "#3a6aaa"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#bfefff",
+          "intensity": 1,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Coldmouths are the true predators here; glare hurts them. Ysolde Kett can join the player and knows about the musk. The Matriarch's Musk is caught inside the Sun-Echo (a refracted false leader) far out on the glass: bring it down to free the musk.",
+      "music": "tense"
+    },
+    {
+      "name": "The Glass Canyon",
+      "description": "A canyon of faceted glass split by the low sun into a lattice of amber and violet. Somewhere in its throat a light the colour of a lead mossback is singing the herd sunward.",
+      "generator": "geometric",
+      "size": "small",
+      "params": {
+        "variant": 3,
+        "symmetry": 2,
+        "cellSize": 6,
+        "facets": 8,
+        "loops": 0.5,
+        "pillars": 0.4,
+        "doors": 0.3
+      },
+      "floor": {
+        "color": "#4a3a6a",
+        "color2": "#c890d8",
+        "material": "stone",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#7a5ac8",
+        "color2": "#ffb070",
+        "material": "glass",
+        "height": 2,
+        "pattern": "gradient"
+      },
+      "lighting": {
+        "ambient": "#a090c0",
+        "ambientIntensity": 0.5,
+        "sun": {
+          "color": "#ffb070",
+          "intensity": 1.4,
+          "elevation": 6
+        },
+        "fog": {
+          "color": "#301850",
+          "density": 0.015
+        },
+        "lamps": {
+          "color": "#ffd27a",
+          "intensity": 1.4,
+          "frequency": 0.03
+        },
+        "playerLight": 3,
+        "sky": "#301850"
+      },
+      "backdrop": {
+        "style": "gradient",
+        "color": "#ff9050",
+        "color2": "#301850",
+        "intensity": 0.7
+      },
+      "actors": [
+        {
+          "actor": "shard-skitter",
+          "weight": 30,
+          "min": 3,
+          "max": 5
+        },
+        {
+          "actor": "coldmouth",
+          "weight": 15,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "lamplighter-moth",
+          "weight": 15,
+          "min": 1,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "the-gleam",
+          "where": "far"
+        },
+        {
+          "actor": "canyon-wyrm",
+          "where": "anywhere"
+        }
+      ],
+      "items": [
+        {
+          "item": "lichen-curd",
+          "weight": 22
+        },
+        {
+          "item": "sap-blister",
+          "weight": 11
+        },
+        {
+          "item": "dusk-dew",
+          "weight": 8
+        },
+        {
+          "item": "burst-pod",
+          "weight": 14
+        },
+        {
+          "item": "glass-sickle",
+          "weight": 4
+        }
+      ],
+      "itemCount": 4,
+      "terrain": [
+        {
+          "terrain": "glare-pool",
+          "density": 0.02
+        },
+        {
+          "terrain": "scent-cairn",
+          "density": 0.006
+        }
+      ],
+      "transitionName": "Walk out onto the far shelves",
+      "transitionModel": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.8,
+              0.05,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#9effc2",
+            "material": "glow",
+            "emissive": "#3aff9a"
+          }
+        ],
+        "idle": "pulse"
+      },
+      "gmNotes": "Finale. The Gleam lures; it never chases (guardian). The Canyon Wyrm is a symbiont: provoking it is a mistake. Two ways out: shatter the Gleam, or lay the Matriarch's Musk on a scent-cairn. Glare pools burn.",
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Bring the Drove through the Glass Canyon whole: shatter the Gleam, or lay the Matriarch's Musk on a scent-cairn. Lose three symbionts and the herd splits.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "actor_defeated",
+              "actor": "the-gleam"
+            }
+          ]
+        },
+        {
+          "type": "flag",
+          "flag": "herd-rejoined"
+        }
+      ]
+    },
+    "lose": {
+      "type": "counter",
+      "counter": "symbionts-lost",
+      "cmp": "gte",
+      "value": 3
+    },
+    "winText": "The Drove pours through the Glass Canyon in one long, groaning line, Hollowhill at its head with a lodestone back where it belongs. Heelbiters snap at stragglers; glasswings ride the lichen picking ticks; the wyrm coughs up a calf on the far side, unharmed and furious. Nobody turns east. Behind you the canyon is only glass.",
+    "lossText": "The herd breaks at the canyon. Half of it turns toward a beautiful amber light and walks into the sun, and the other half walks on west, thinner, without you. The band moves on. It always does.",
+    "labels": {
+      "herd-rejoined": "The Drove is whole again",
+      "symbionts-lost": "Symbionts lost"
+    }
+  },
+  "gm": {
+    "persona": "The Drove itself: a slow chorus of mossbacks humming through the ground, remembering every courier who ever rode it. It speaks of the herd as 'we' and of the player as 'the small one with pollen'.",
+    "voice": "Low, plural and unhurried. Measures time in steps and light, never hours. Notices smells first, then movement, then sound.",
+    "threads": [
+      "Which fangs feed the herd and which feed on it: let the player learn by watching.",
+      "The light always moves west; lingering costs Twilight.",
+      "Hollowhill is old; the herd wonders who leads after it.",
+      "Something in the canyon glows like a leader and isn't one.",
+      "Ysolde Kett lost half her herd to the canyon once."
+    ],
+    "fallback": {
+      "intro": "We are walking. We have always been walking. The sun sits on the eastern rim and will not set, and the night waits on the western one and will not rise, and between them is the band, and in the band are we: the Long Drove, two hundred hills of lichen on legs. You ride us, small one with pollen. But Hollowhill, the oldest, has stopped, and if the oldest stops we all stop, and the light moves on without us. Go and see why. And look carefully at what bites us. Not all of it is hunger.",
+      "areaEnter": [
+        "Lichen underfoot, amber overhead. Our long line groans westward around you. Something with glass wings drops out of the sky onto a mossback's back, and comes up with a tick in its beak.",
+        "Warm, dark, wet. You are inside Hollowhill now. Its heartbeat is slower than your breath. Somewhere deep in the folds, something heavy grinds.",
+        "Cold. The glass here remembers the night. Pale shapes pace at the edge of the light, and they are not ours.",
+        "The canyon. Amber light pours out of its throat, warm as a lead mossback's hum. Half of us lift our heads toward it. Hurry."
+      ],
+      "lowHp": [
+        "The herd smells your sap on the wind and slows, a little.",
+        "You are bleeding into the lichen. It drinks politely.",
+        "Your hands shake on the goad. Breathe. Walk."
+      ],
+      "events": [
+        "A heelbiter nips a calf back into line and trots off, pleased with itself.",
+        "Far east the sun flares on the rim. The band has moved another step.",
+        "Somewhere ahead a glasswing screams, and a tick goes quiet.",
+        "A mossback leans its whole weight against the next, and the ground shivers."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Slow, vast and warm-cold: a herd's hum under a sky that never finishes setting.",
+    "synth": {
+      "key": "D",
+      "scale": "dorian",
+      "tempo": 64,
+      "timbre": "pad",
+      "drone": true,
+      "percussion": "heartbeat",
+      "brightness": 0.45
+    },
+    "searchTerms": [
+      "ambient drone migration",
+      "slow cosmic folk",
+      "whale song ambient"
+    ],
+    "suggestions": [
+      "Low cello drones with distant horn calls",
+      "Breathy pads over a slow heartbeat"
+    ]
+  }
+}

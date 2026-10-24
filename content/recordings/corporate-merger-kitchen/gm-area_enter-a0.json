@@ -1,0 +1,29 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/corporate-merger-kitchen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The kettle clicks off and nobody moves to claim it. Two grey gilets hover by the sink, pretending to read the dishwasher rota. On the fridge door, a fresh notice: ALL ITEMS MUST BE LABELLED BY FRIDAY."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat",
+            "tint": "#eef3ff"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_0"
+          },
+          {
+            "type": "place_item",
+            "item": "yoghurt-expired",
+            "near": "random"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -15,9 +15,11 @@ import type { Renderer } from './render/index';
 import type { GameUi, TradeIntent, UiIntent, UiViewModel } from './ui/index';
 import { attachPointer } from './ui/index';
 import type { GameSession, Outcome } from './session';
-import { clearRun, markHintsSeen, saveRun } from './storage';
+import { clearRun, markOnboardingSeen, saveRun } from './storage';
 import { GmRunner, OfflineGmDirector, type GmDirector, type GmResult } from './gm-director';
 import { MapOverlay } from './map-overlay';
+import type { LlmDialogue } from '../llm/gm-runtime';
+import { voiceTurn } from './ai';
 
 const TRAVEL_STEP_MS = 70;
 /** GM answers waiting for the player to finish a choice are kept at most this long (turns) */
@@ -36,6 +38,8 @@ export interface ControllerHost {
   director?: GmDirector;
   /** per-request GM time limit (ms) */
   gmTimeoutMs?: number;
+  /** NPC voice (ai.ts): each conversation turn is voiced by the LLM; absent = the engine's lines */
+  dialogue?: LlmDialogue | null;
 }
 
 /** renderer methods newer renderers may offer (feature-detected) */
@@ -54,6 +58,7 @@ export class GameController {
   private overlay: MapOverlay | null = null;
   private raf = 0;
   private thumbCache = new Map<string, string | null>();
+  private voiceAbort: AbortController | null = null;
 
   constructor(
     readonly session: GameSession,
@@ -110,6 +115,7 @@ export class GameController {
 
   dispose(): void {
     this.disposed = true;
+    this.voiceAbort?.abort();
     this.stopTravel();
     cancelAnimationFrame(this.raf);
     this.gm.dispose();
@@ -148,7 +154,7 @@ export class GameController {
       this.session.acknowledgeRules();
       queueMicrotask(() => this.render());
     }
-    if (i.type === 'dismiss_hints') markHintsSeen();
+    if (i.type === 'dismiss_onboarding' && i.forever) markOnboardingSeen(this.session.worldId);
     this.apply(this.session.intent(i));
   }
 
@@ -182,7 +188,6 @@ export class GameController {
     }
     if (out.camera?.zoom) renderer.zoom(out.camera.zoom);
     for (const t of out.toasts) ui.toast(t.text, t.tone);
-    const hintsWere = this.session.hintsOn;
     this.render();
     if (out.describe === null) ui.hideTooltip();
     else if (out.describe) this.showDescribe(out.describe);
@@ -193,8 +198,25 @@ export class GameController {
       this.autosave();
       this.afterTurn();
     }
-    if (hintsWere && !this.session.hintsOn) markHintsSeen();
     if (out.travel) void this.runTravel();
+    this.pumpVoice();
+  }
+
+  /** asks the NPC voice for the conversation turn the session is waiting on (never blocks play) */
+  private pumpVoice(): void {
+    const req = this.session.takeVoiceRequest();
+    const dialogue = this.host.dialogue;
+    if (!req || !dialogue) return;
+    this.voiceAbort?.abort();
+    const ac = new AbortController();
+    this.voiceAbort = ac;
+    const s = this.session;
+    void voiceTurn(dialogue, req, { world: s.world, state: s.state, difficulty: s.difficulty, signal: ac.signal }).then((r) => {
+      if (!r || this.disposed || ac.signal.aborted) return;
+      const out = s.setVoice(req.token, r.response);
+      if (s.voiceLine() === null && !out.changed) return;
+      this.apply(out, { quiet: true });
+    });
   }
 
   private showDescribe(d: NonNullable<Outcome['describe']>): void {

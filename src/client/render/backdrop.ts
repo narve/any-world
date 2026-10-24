@@ -95,6 +95,7 @@ uniform float uIntensity;
 uniform float uTime;
 uniform vec3 uCam;
 uniform float uPlane;
+uniform int uOctaves;
 
 float hash31(vec3 p) {
   p = fract(p * vec3(0.1031, 0.1030, 0.0973));
@@ -116,7 +117,12 @@ float vnoise(vec3 p) {
 }
 float fbm(vec3 p) {
   float a = 0.5, s = 0.0;
-  for (int i = 0; i < 5; i++) { s += a * vnoise(p); p = p * 2.03 + vec3(1.7, 9.2, 3.1); a *= 0.5; }
+  for (int i = 0; i < 5; i++) {
+    if (i >= uOctaves) break;
+    s += a * vnoise(p); p = p * 2.03 + vec3(1.7, 9.2, 3.1); a *= 0.5;
+  }
+  // fewer octaves (low quality): keep the same mean brightness
+  s += 0.5 * max(0.0, 2.0 * a - 0.03125);
   return s;
 }
 // stars in one layer of 3D cells on the unit sphere
@@ -257,6 +263,7 @@ export class Backdrop {
         uTime: { value: 0 },
         uCam: { value: new THREE.Vector3() },
         uPlane: { value: -14 },
+        uOctaves: { value: 5 },
       },
       side: THREE.BackSide,
       depthWrite: false,
@@ -290,6 +297,23 @@ export class Backdrop {
     u.uIntensity.value = p.intensity;
     this.mesh.visible = true;
     return p.color;
+  }
+
+  /**
+   * Detail level (render quality): noise octaves 1..5 of the shader and dome segments. Low detail
+   * keeps the same look with less fragment work, which matters on phones (full-screen shader).
+   */
+  setDetail(octaves: number, segments: number): void {
+    this.material.uniforms.uOctaves.value = Math.max(1, Math.min(5, Math.round(octaves)));
+    const seg = Math.max(8, Math.round(segments));
+    const g = this.mesh.geometry as THREE.SphereGeometry;
+    if (g.parameters?.widthSegments === seg) return;
+    g.dispose();
+    this.mesh.geometry = new THREE.SphereGeometry(100, seg, Math.max(6, seg >> 1));
+  }
+
+  get octaves(): number {
+    return this.material.uniforms.uOctaves.value as number;
   }
 
   /** Follow the camera and advance the animation. */

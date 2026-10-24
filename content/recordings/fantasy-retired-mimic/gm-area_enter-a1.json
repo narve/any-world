@@ -1,0 +1,35 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fantasy-retired-mimic/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Pastel paint, still tacky. Every spike in the hall wears a foam bonnet, and a cheerful arrow on the wall reads: GIFT SHOP, THIS WAY! (NO MIMICS). Somewhere ahead, a tour guide's bell rings and a dozen rental shortswords are drawn in unison."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat",
+            "tint": "#ffd8e8"
+          },
+          {
+            "type": "spawn",
+            "actor": "tour-group-adventurer",
+            "count": 1,
+            "near": "exit"
+          },
+          {
+            "type": "place_item",
+            "item": "glitter-bomb",
+            "near": "random"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          }
+        ]
+      }
+    }
+  ]
+}

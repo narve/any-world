@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/fixture-teen/janitor",
+      "json": {
+        "reply": "Ah. Okafor-Pryce. You'll want the lost-and-found. Everybody wants the lost-and-found this week. I don't take money. I take favours.",
+        "options": [
+          "What kind of favours?",
+          "Have you seen a green notebook?",
+          "See you, Mr. A."
+        ],
+        "actions": []
+      }
+    },
+    {
+      "purpose": "dialogue/fixture-teen/janitor",
+      "json": {
+        "reply": "The trophy case. Someone should photograph it before the water does. Do that, and the lost-and-found is yours to browse. Nobody else is going to remember the 1987 netball team.",
+        "options": [],
+        "actions": [],
+        "end": true
+      }
+    }
+  ]
+}

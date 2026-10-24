@@ -1,6 +1,6 @@
 /** XP, level-ups and perks. */
 import type { Perk } from '../schema/world';
-import { type Ctx, emit, log, playerActor } from './ctx';
+import { type Ctx, emit, logKey, playerActor } from './ctx';
 import { modifyStat } from './effects';
 import { giveItem } from './inventory';
 
@@ -13,7 +13,7 @@ export function xpToNext(ctx: Ctx, level: number): number {
 export function grantXp(ctx: Ctx, amount: number): void {
   if (amount <= 0) return;
   ctx.s.player.xp += Math.round(amount);
-  log(ctx, `+${Math.round(amount)} ${ctx.world.vocabulary.xp}`, 'good');
+  logKey(ctx, 'log.xp', { amount: Math.round(amount), xp: ctx.world.vocabulary.xp }, 'good');
   checkLevelUp(ctx);
 }
 
@@ -40,7 +40,7 @@ export function checkLevelUp(ctx: Ctx): void {
   const choices = pool.slice(0, g.choices);
   p.pendingPerkChoice = choices.length ? choices : null;
   emit(ctx, { type: 'level_up', level: p.level, choices });
-  log(ctx, `${ctx.world.vocabulary.levelUp}! (${p.level})`, 'good');
+  logKey(ctx, 'log.levelup', { levelUp: ctx.world.vocabulary.levelUp, level: p.level }, 'good');
   if (!p.pendingPerkChoice) checkLevelUp(ctx);
 }
 
@@ -49,7 +49,7 @@ export function applyPerk(ctx: Ctx, perk: Perk): void {
   ctx.s.player.perks.push(perk.id);
   for (const m of perk.modifiers) modifyStat(ctx, pa, m.stat, m.amount);
   for (const item of perk.grantItems) giveItem(ctx, item, 1);
-  log(ctx, `${perk.name}: ${perk.description}`, 'good');
+  logKey(ctx, 'log.perk', { perk: perk.name, description: perk.description }, 'good');
 }
 
 /** resolves a pending perk choice; returns an error reason or null */

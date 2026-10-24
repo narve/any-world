@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fantasy-retired-mimic/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You fall for longer than any chute should allow, and land on a suitcase that sighs. Velvet dark in every direction; odd socks drift past like jellyfish. Somewhere below, something with brass latches clicks open and shut, open and shut."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#b8a0e0"
+          }
+        ]
+      }
+    }
+  ]
+}

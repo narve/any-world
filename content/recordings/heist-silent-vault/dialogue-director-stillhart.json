@@ -1,0 +1,23 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/heist-silent-vault/director-stillhart",
+      "json": {
+        "reply": "Frau Graf. You tuned my mother's Bösendorfer every spring for eleven years and you never once let the A drift. So you will understand me: if it is played, it is spent. I will not spend the last of anything. Step off my floor and I will forget you were here.",
+        "options": [
+          "You were on the expedition in 1899.",
+          "The quartet is playing it upstairs right now.",
+          "I am not leaving without the cylinder."
+        ],
+        "actions": [
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#bcd0ff"
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

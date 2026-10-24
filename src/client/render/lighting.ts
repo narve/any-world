@@ -76,6 +76,35 @@ export class LightRig {
     }
   }
 
+  /** how many lamp / model lights may be live (render quality); the rest are hidden */
+  private lampBudget = LAMP_LIGHTS;
+  private modelBudget = MODEL_LIGHTS;
+  private shadowsAllowed = true;
+
+  /**
+   * Render quality: live point lights and sun shadows. Hidden lights are left out of the shader, so
+   * a lower budget is cheaper per fragment (changing it recompiles the materials once).
+   */
+  setBudget(opts: { lamps: number; models: number; shadows: boolean; shadowMapSize?: number }): void {
+    this.lampBudget = Math.max(0, Math.min(LAMP_LIGHTS, Math.floor(opts.lamps)));
+    this.modelBudget = Math.max(0, Math.min(MODEL_LIGHTS, Math.floor(opts.models)));
+    this.lamps.forEach((l, i) => (l.visible = i < this.lampBudget));
+    this.models.forEach((l, i) => (l.visible = i < this.modelBudget));
+    this.shadowsAllowed = opts.shadows;
+    this.sun.castShadow = this.hasSun && this.shadowsAllowed;
+    const size = opts.shadowMapSize ?? 2048;
+    if (this.sun.shadow.mapSize.x !== size) {
+      this.sun.shadow.mapSize.set(size, size);
+      this.sun.shadow.map?.dispose();
+      this.sun.shadow.map = null;
+    }
+  }
+
+  /** number of point lights currently allowed to shine (player + lamps + models) */
+  get liveLights(): number {
+    return 1 + this.lampBudget + this.modelBudget;
+  }
+
   configure(lighting: AreaPlan['lighting'], scene: THREE.Scene): void {
     this.lighting = lighting;
     const amb = lighting.ambient ?? '#808080';
@@ -94,7 +123,7 @@ export class LightRig {
     } else {
       this.sun.intensity = 0;
     }
-    this.sun.castShadow = this.hasSun;
+    this.sun.castShadow = this.hasSun && this.shadowsAllowed;
     this.fill.color = col(mixHex(amb, '#ffffff', 0.5));
     this.fill.intensity = this.hasSun ? 0.25 : 0.35 + ai * 0.5;
     const lampC = lighting.lamps?.color ?? '#ffcc88';
@@ -192,19 +221,19 @@ export class LightRig {
     list.sort((a, b) => a.d - b.d);
     for (let i = 0; i < this.lamps.length; i++) {
       const pl = this.lamps[i];
-      const e = list[i];
+      const e = i < this.lampBudget ? list[i] : undefined;
       if (!e || this.lampIntensity <= 0) {
         pl.intensity = 0;
         continue;
       }
       pl.position.copy(e.l.pos);
       // fade lights in by distance so swapping lamps in/out of the pool doesn't pop
-      const fade = i < this.lamps.length - 2 ? 1 : 0.5;
+      const fade = i < this.lampBudget - 2 ? 1 : 0.5;
       pl.intensity = this.lampIntensity * 3.2 * e.l.flicker * fade;
     }
     for (let i = 0; i < this.models.length; i++) {
       const ml = this.models[i];
-      const r = modelLights[i];
+      const r = i < this.modelBudget ? modelLights[i] : undefined;
       if (!r) {
         ml.intensity = 0;
         continue;

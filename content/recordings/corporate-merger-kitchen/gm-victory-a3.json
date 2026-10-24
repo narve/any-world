@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/corporate-merger-kitchen/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Slide 41 never loads. By Monday the third-floor fridge has a new notice on it, in your handwriting: NOTHING IN HERE GETS DELETED. Hum. I will be keeping an eye on it."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/abstract-yellow-triangle/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You fade into the terracotta, a warm smear where a bright thing used to be. Madame Cerulean looks away, the way blue does. The signature waits a little longer."
+          }
+        ]
+      }
+    }
+  ]
+}

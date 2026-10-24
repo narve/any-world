@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/detective-sugar-hotel/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The spun-sugar key turns, and Room 4½ breathes out air that has not moved since 1911: camphor, cold tallow, old gold. Wallpaper roses, trunks under dust sheets, a bed nobody stripped. Far off between the trunks, a lantern stops swinging and waits."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#c8b89a"
+          }
+        ]
+      }
+    }
+  ]
+}

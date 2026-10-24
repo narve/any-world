@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/viking-lawspeaker-althing/asa-widow",
+      "json": {
+        "reply": "You have his staff. Good. Do not let them have his voice too. He talked in his sleep, Steinunn. Not the law. Prices.",
+        "options": [
+          "Prices for what?",
+          "Where would he hide something he didn't want found?",
+          "I'm sorry. I should go and practise."
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

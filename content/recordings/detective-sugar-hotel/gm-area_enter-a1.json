@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/detective-sugar-hotel/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Below stairs the air smells of cold butter and scorched sugar. On the marble slab my little twin stands iced to the third floor, its fourth snapped clean away, and it hums one low note like a held breath. Something small and pink scurries behind the copper pans."
+          },
+          {
+            "type": "mood",
+            "music": "tense",
+            "tint": "#f0f4ff"
+          }
+        ]
+      }
+    }
+  ]
+}

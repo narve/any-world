@@ -1,0 +1,3737 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Neutral Ground: Third Floor Kitchen",
+    "tagline": "Halberd & Pike Mutual is being eaten alive by Greyline Assurance. The kitchen is the last place nobody owns. You own the yoghurt map.",
+    "genre": "office satire",
+    "tags": [
+      "office",
+      "satire",
+      "corporate",
+      "non-violent",
+      "surreal",
+      "gossip"
+    ],
+    "tone": "dry, petty, oddly tender",
+    "era": "a fluorescent present, Monday to Friday",
+    "premise": "Halberd & Pike Mutual, a mid-sized insurer with a beige carpet and a 1987 mission statement, is being absorbed by Greyline Assurance. Every meeting room has been annexed, every desk re-tagged. Only the third-floor kitchen is neutral ground, by an old fire-safety clause nobody dares test. Pip Okonedo-Marsh, agency temp, has spent six weeks learning whose labelled yoghurt is whose. That is the most valuable intelligence in the building. On Friday at four, the all-hands decides which departments survive the integration. Pip intends to have a say.",
+    "prompt": "A mid-sized insurance firm is being swallowed by its rival, and the only neutral ground left is the third-floor kitchen. You're the temp who knows whose labelled yoghurt is whose — trade gossip, forge meeting invites, and decide which department survives Friday's all-hands.",
+    "nonViolent": true,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Elbows",
+        "abbr": "ELB",
+        "description": "Getting through a crowded corridor and to the front of the microwave queue."
+      },
+      "dex": {
+        "name": "Discretion",
+        "abbr": "DSC",
+        "description": "Being somewhere without being noticed there. Dodging eye contact and actions."
+      },
+      "int": {
+        "name": "Gossip",
+        "abbr": "GSP",
+        "description": "Knowing who, what and whose. Powers every clever remark."
+      },
+      "hp": {
+        "name": "Composure",
+        "abbr": "CMP",
+        "description": "How long you can keep smiling. At zero you hand in your lanyard and go home."
+      },
+      "mp": {
+        "name": "Goodwill",
+        "abbr": "GW",
+        "description": "Favours people still feel they owe you. Spent on social manoeuvres."
+      },
+      "ac": {
+        "name": "Deniability",
+        "abbr": "DNY",
+        "description": "How well blame slides off you."
+      }
+    },
+    "conflict": "Rebut",
+    "defeated": "sidelined",
+    "xp": "Clout",
+    "levelUp": "Contract extended",
+    "currency": "biscuits",
+    "lossTitle": "Your contract was not renewed",
+    "winTitle": "Motion carried",
+    "area": "Floor"
+  },
+  "palette": {
+    "primary": "#2f8f83",
+    "secondary": "#e8dcc0",
+    "accent": "#f2b134",
+    "danger": "#d9534f",
+    "ui": "#22303a",
+    "text": "#f7f3ea"
+  },
+  "damageTypes": [
+    {
+      "id": "snark",
+      "name": "Snark",
+      "color": "#f2b134"
+    },
+    {
+      "id": "red-tape",
+      "name": "Red Tape",
+      "color": "#d9534f"
+    },
+    {
+      "id": "spin",
+      "name": "Spin",
+      "color": "#9b7fe0"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "double-booked",
+      "name": "Double-booked",
+      "description": "Two meetings at once. You stand frozen in the corridor working out which to skip.",
+      "harmful": true,
+      "color": "#5b8def",
+      "flags": [
+        "stunned"
+      ]
+    },
+    {
+      "id": "decaf",
+      "name": "Decaf",
+      "description": "Out of caffeine. Your eyes close a little and your comebacks come late.",
+      "harmful": true,
+      "color": "#8a6f55",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        },
+        {
+          "stat": "int",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "queasy",
+      "name": "Queasy",
+      "description": "That yoghurt was not yours and it was not fresh.",
+      "harmful": true,
+      "color": "#9bbf4a",
+      "perTurn": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "jittery",
+      "name": "Jittery",
+      "description": "Triple espresso. Everything is fast and slightly too loud.",
+      "harmful": false,
+      "color": "#c0783a",
+      "flags": [
+        "hasted"
+      ],
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "out-of-office",
+      "name": "Out of Office",
+      "description": "An auto-reply walks in front of you. Nobody sees you unless you bump into them.",
+      "harmful": false,
+      "color": "#b7c4cf",
+      "flags": [
+        "invisible"
+      ]
+    },
+    {
+      "id": "cultured",
+      "name": "Cultured",
+      "description": "Live probiotic cultures. Your composure knits itself back together.",
+      "harmful": false,
+      "color": "#f4e9d0",
+      "flags": [
+        "regenerating"
+      ],
+      "perTurn": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cc-d",
+      "name": "CC'd on Everything",
+      "description": "Forty unread threads in your head. Hard to dodge anything.",
+      "harmful": true,
+      "color": "#e06c9f",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "flustered",
+      "name": "Flustered",
+      "description": "Caught out in public. You want to leave the conversation now.",
+      "harmful": true,
+      "color": "#ff9b85",
+      "flags": [
+        "afraid"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "caffeine",
+      "name": "Caffeine",
+      "description": "What keeps the temp upright. Drains slowly; coffee refills it. Empty means Decaf.",
+      "color": "#7a4a2a",
+      "max": 10,
+      "start": 8,
+      "onEmpty": [
+        {
+          "type": "apply_status",
+          "status": "decaf",
+          "duration": 30
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "neutral-ground",
+      "name": "Neutral Ground",
+      "description": "Kitchen lino is neutral by fire-safety clause: every turn you end standing on a lino tile you regain 1 Composure.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 1,
+          "action": {
+            "condition": {
+              "type": "on_terrain",
+              "who": "player",
+              "terrain": "kitchen-lino"
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "caffeine-economy",
+      "name": "Caffeine Economy",
+      "description": "You lose 1 Caffeine every 25 turns. At zero you become Decaf (-2 Discretion, -2 Gossip) until you drink something. Coffee machines and coffee refill it.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 25,
+          "action": {
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "caffeine",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_resource_empty",
+          "action": {
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "decaf",
+                "duration": 30
+              },
+              {
+                "type": "message",
+                "text": "Your eyelids file a formal complaint. You are running on decaf."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Pip Okonedo-Marsh",
+    "title": "Agency Temp, Week Six",
+    "description": "Lanyard says VISITOR. Mustard cardigan, a phone full of screenshots, and a mental map of every labelled tub in the third-floor fridge.",
+    "stats": {
+      "str": 10,
+      "dex": 12,
+      "int": 14,
+      "hp": 32,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 8,
+    "sight": 8,
+    "unarmed": {
+      "name": "Pointed Silence",
+      "verb": "lets a silence hang at",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "snark",
+      "accuracyStat": "int"
+    },
+    "startingItems": [
+      {
+        "item": "laminated-lanyard",
+        "equipped": true
+      },
+      {
+        "item": "deniability-cardigan",
+        "equipped": true
+      },
+      {
+        "item": "builders-tea",
+        "count": 2
+      },
+      {
+        "item": "filter-coffee",
+        "count": 1
+      },
+      {
+        "item": "label-maker"
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "thick-skin",
+          "name": "Thick Skin",
+          "description": "You have survived three reorganisations and a Secret Santa. +4 Composure.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "ear-to-the-wall",
+          "name": "Ear to the Wall",
+          "description": "Every thin partition is a podcast. +2 Gossip.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "hot-desker",
+          "name": "Hot-desker",
+          "description": "No fixed address, no fixed target. +1 Discretion, +1 Deniability.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 1
+            },
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "small-talk-perk",
+          "name": "Weaponised Small Talk",
+          "description": "Learn Small Talk: a remark about the weekend that leaves someone reeling.",
+          "grantItems": [
+            "small-talk"
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "circle-back-perk",
+          "name": "Let's Circle Back",
+          "description": "Learn Circle Back: push everyone near you away and make them nervous.",
+          "grantItems": [
+            "circle-back"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "biscuit-diplomacy",
+          "name": "Biscuit Diplomacy",
+          "description": "Every rival you sideline leaves 2 biscuits on the desk, out of respect.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "effects": [
+                  {
+                    "type": "currency",
+                    "amount": 2
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "stairwell-breather",
+          "name": "Stairwell Breather",
+          "description": "When Composure dips low, you take ninety seconds in the stairwell and recover 8 Composure (sometimes).",
+          "triggers": [
+            {
+              "on": "on_low_hp",
+              "chance": 0.6,
+              "action": {
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 8
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "iron-stomach",
+          "name": "Iron Stomach",
+          "description": "+2 Elbows and +3 Composure. Nothing in that fridge can hurt you now.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            },
+            {
+              "stat": "hp",
+              "amount": 3
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "corner-office-voice",
+          "name": "Corner-Office Voice",
+          "description": "You have learned to speak like a director. +2 Gossip, +1 Deniability.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.85,
+        "build": "slim",
+        "skin": "#8d5a3b",
+        "top": "#d9a21b",
+        "bottom": "#2b3440",
+        "accent": "#3fb7a8",
+        "hair": "#1b1410",
+        "hairStyle": "bun",
+        "outfit": "plain",
+        "holding": "phone"
+      },
+      "idle": "bob"
+    }
+  },
+  "actors": [
+    {
+      "id": "greyline-consultant",
+      "name": "Greyline Consultant",
+      "description": "Grey fleece gilet, grey laptop, grey smile. Here to 'understand your workflows' and then delete them.",
+      "stats": {
+        "hp": 7,
+        "ac": 11,
+        "str": 10,
+        "dex": 11,
+        "int": 11
+      },
+      "attack": {
+        "name": "Synergy Question",
+        "verb": "asks what exactly you do at",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "snark"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "shortbread",
+          "chance": 0.25
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "greyline"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "average",
+          "skin": "#e0b48f",
+          "top": "#5d646b",
+          "bottom": "#2c2f33",
+          "accent": "#9aa3ab",
+          "hair": "#3b2a1d",
+          "hairStyle": "short",
+          "outfit": "suit",
+          "holding": "book"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "post-it-swarm",
+      "name": "Passive-Aggressive Post-it",
+      "description": "A flock of yellow notes: 'SOME of us wash our mugs :)'. They flutter in packs and sting with punctuation.",
+      "stats": {
+        "hp": 5,
+        "ac": 12,
+        "str": 6,
+        "dex": 14,
+        "int": 6
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Smiley Face",
+        "verb": "leaves a note on",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "snark"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "xp": 4,
+      "tags": [
+        "paper"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.02,
+              0.32
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "rot": [
+              15,
+              20,
+              0
+            ],
+            "color": "#ffe14d",
+            "material": "matte",
+            "group": "wing"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.28,
+              0.02,
+              0.28
+            ],
+            "pos": [
+              0.18,
+              0.62,
+              0.1
+            ],
+            "rot": [
+              -20,
+              50,
+              10
+            ],
+            "color": "#ffd21f",
+            "material": "matte",
+            "group": "wing"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.02,
+              0.26
+            ],
+            "pos": [
+              -0.16,
+              0.7,
+              -0.08
+            ],
+            "rot": [
+              25,
+              -30,
+              -10
+            ],
+            "color": "#fff07a",
+            "material": "matte",
+            "group": "wing"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.14,
+              0.03,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.47,
+              0.02
+            ],
+            "rot": [
+              15,
+              20,
+              0
+            ],
+            "color": "#1c1c1c",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "reply-all-chain",
+      "name": "Reply-All Chain",
+      "description": "A thread that will not die, sliding along the skirting board, every link another 'Please remove me from this list'.",
+      "stats": {
+        "hp": 9,
+        "ac": 10,
+        "str": 9,
+        "dex": 10,
+        "int": 8
+      },
+      "attack": {
+        "name": "Reply All",
+        "verb": "replies-all at",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "red-tape"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "cc-d",
+                "duration": 4
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "email"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#3c78d8",
+          "secondary": "#ffffff",
+          "accent": "#ff5a5a"
+        },
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "microwave-queue-bully",
+      "name": "Microwave Queue Warden",
+      "description": "Has stood guard by the microwave since the fish incident of 2019. Will not let you reheat anything without a hearing.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 12,
+        "dex": 9,
+        "int": 10
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Fish Incident Lecture",
+        "verb": "lectures",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "snark",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "loot": [
+        {
+          "item": "builders-tea",
+          "chance": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "halberd"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "round",
+          "skin": "#c98e6b",
+          "top": "#7a2f3b",
+          "bottom": "#3a3a3a",
+          "accent": "#ffffff",
+          "hair": "#c8c8c8",
+          "hairStyle": "short",
+          "outfit": "plain",
+          "holding": "bottle"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "circular-reference",
+      "name": "Circular Reference",
+      "description": "A red loop of logic that refers to itself until it refers to you. Rolls through the cells blinking a warning triangle.",
+      "stats": {
+        "hp": 11,
+        "ac": 11,
+        "str": 11,
+        "dex": 10,
+        "int": 12
+      },
+      "attack": {
+        "name": "Loop Back",
+        "verb": "loops back on",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "red-tape"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.35
+      },
+      "loot": [
+        {
+          "item": "filter-coffee",
+          "chance": 0.3
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "spreadsheet"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#d83a3a",
+          "secondary": "#ffd2d2",
+          "accent": "#ffffff"
+        },
+        "idle": "pulse",
+        "light": {
+          "color": "#ff5050",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "merged-cell",
+      "name": "Merged Cell",
+      "description": "Twelve departments merged into one block of grey and it has not stopped growing. Slow, heavy and impossible to sort.",
+      "stats": {
+        "hp": 15,
+        "ac": 12,
+        "str": 14,
+        "dex": 7,
+        "int": 6
+      },
+      "speed": 75,
+      "attack": {
+        "name": "Consolidate",
+        "verb": "consolidates",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "red-tape",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 10,
+      "tags": [
+        "spreadsheet"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#6e7781",
+          "secondary": "#c7ced6",
+          "accent": "#2f8f83"
+        },
+        "scale": 1.2,
+        "idle": "none"
+      }
+    },
+    {
+      "id": "ref-error",
+      "name": "#REF! Error",
+      "description": "A hovering broken link that drifts towards you at odd angles. It points at things that no longer exist and makes you doubt you do.",
+      "stats": {
+        "hp": 8,
+        "ac": 12,
+        "str": 7,
+        "dex": 14,
+        "int": 12
+      },
+      "attack": {
+        "name": "Broken Link",
+        "verb": "points accusingly at",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "spin",
+        "range": 3,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.3
+      },
+      "xp": 8,
+      "tags": [
+        "spreadsheet"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#ff2e63",
+          "secondary": "#252a34",
+          "accent": "#ffffff"
+        },
+        "scale": 0.7,
+        "idle": "hover",
+        "light": {
+          "color": "#ff2e63",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "pivot-table",
+      "name": "Pivot Table",
+      "description": "An elite summary of everyone's worth, turning on its axis to show your department in the worst light.",
+      "stats": {
+        "hp": 18,
+        "ac": 13,
+        "str": 13,
+        "dex": 11,
+        "int": 14
+      },
+      "attack": {
+        "name": "Reframe",
+        "verb": "reframes",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "spin",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "pivot-bad-light",
+          "name": "Show in a Bad Light",
+          "description": "Turns the numbers so you look careless.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 4,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "flustered",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#9b7fe0"
+            }
+          },
+          "cooldown": 9
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "loot": [
+        {
+          "item": "triple-espresso",
+          "chance": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 24,
+      "tags": [
+        "spreadsheet",
+        "elite"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              0.08,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#2f8f83",
+            "material": "glass",
+            "emissive": "#1f5f57"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.15,
+              0.6,
+              0.15
+            ],
+            "pos": [
+              -0.25,
+              0.65,
+              0
+            ],
+            "color": "#f2b134",
+            "material": "glow"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.15,
+              0.9,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#e8dcc0",
+            "material": "glow"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.15,
+              0.4,
+              0.15
+            ],
+            "pos": [
+              0.25,
+              0.55,
+              0
+            ],
+            "color": "#d9534f",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "rumour-mill",
+      "name": "Rumour Mill",
+      "description": "A grape-cluster of whispering mouths on a creeping vine. It spits half-truths across the room and shuffles after anyone who argues.",
+      "stats": {
+        "hp": 12,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 13
+      },
+      "attack": {
+        "name": "Half-truth",
+        "verb": "spreads a half-truth about",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "spin",
+        "range": 4,
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 3
+      },
+      "loot": [
+        {
+          "item": "shortbread",
+          "chance": 0.35
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "grapevine"
+      ],
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#7cc36b",
+          "secondary": "#b14a8f",
+          "accent": "#ffe0f0"
+        },
+        "idle": "sway"
+      },
+      "speed": 70
+    },
+    {
+      "id": "watercooler-whisper",
+      "name": "Watercooler Whisper",
+      "description": "A cold draught that sounds like your name. Waits in the bends of the vine and leans in close.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 10,
+        "dex": 14,
+        "int": 11
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Did You Hear",
+        "verb": "whispers about",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "spin"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "grapevine"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#bfe9ff",
+          "secondary": "#5ab0e0",
+          "accent": "#ffffff"
+        },
+        "idle": "hover",
+        "light": {
+          "color": "#bfe9ff",
+          "intensity": 0.7,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "hr-liaison",
+      "name": "Integration HR Liaison",
+      "description": "Lanyard with three badges, both logos. Speaks entirely in calendar invites and never accepts a decline.",
+      "stats": {
+        "hp": 20,
+        "ac": 13,
+        "str": 11,
+        "dex": 12,
+        "int": 14
+      },
+      "attack": {
+        "name": "Quick Sync",
+        "verb": "schedules a quick sync with",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "red-tape",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "calendar-ambush",
+          "name": "Calendar Ambush",
+          "description": "Sends an invite that overlaps everything you had planned.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 4,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "double-booked",
+                "duration": 1
+              }
+            ],
+            "vfx": {
+              "kind": "bolt",
+              "color": "#5b8def"
+            }
+          },
+          "cooldown": 10
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "calendar-invite",
+          "chance": 0.6
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 20,
+      "tags": [
+        "greyline",
+        "elite"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "slim",
+          "skin": "#f0c8a8",
+          "top": "#f4f4f4",
+          "bottom": "#3d4b6b",
+          "accent": "#e06c9f",
+          "hair": "#b8562f",
+          "hairStyle": "long",
+          "outfit": "suit",
+          "holding": "phone"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "odile-greaves",
+      "name": "Odile Greaves, Chief Integration Officer",
+      "description": "Cream power suit, red pen, no surname on her yoghurt, only initials: O.G. She has already written Friday's slide deck. Your department is on slide 41.",
+      "stats": {
+        "hp": 56,
+        "ac": 13,
+        "str": 13,
+        "dex": 12,
+        "int": 16
+      },
+      "attack": {
+        "name": "Red Pen",
+        "verb": "redlines",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "red-tape",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "synergy-deck",
+          "name": "Synergy Deck",
+          "description": "Clicks through forty slides at you in under a minute.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "radius": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 1,
+                  "dice": "1d6"
+                },
+                "damageType": "spin"
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#f2b134"
+            }
+          },
+          "cooldown": 6
+        },
+        {
+          "id": "restructure",
+          "name": "Restructure",
+          "description": "Calls two consultants in from the corridor to 'support the transition'.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only"
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "greyline-consultant",
+                "count": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#9aa3ab"
+            }
+          },
+          "cooldown": 25,
+          "useWhen": "low_hp"
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 6
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Polished, patient, faintly amused. Genuinely believes consolidation is kindness. Was a Halberd & Pike temp herself in 1998 and has never mentioned it.",
+        "greeting": "Ah. The temp. Lovely cardigan. Do sit down, this will only take forty-one slides.",
+        "lines": [
+          "Nobody is losing their job. Some people are gaining an opportunity elsewhere.",
+          "I've seen your timesheets. You're in that kitchen a great deal.",
+          "Let's take this offline. Permanently."
+        ],
+        "secrets": "She started as a Halberd temp in 1998 and still keeps her yoghurt in the third-floor fridge, labelled O.G. Greyline's board plans to sell both firms' claims departments to a shell company on Monday; she has not decided whether to stop it.",
+        "wants": "A clean merger with no surprises at the all-hands. Secretly, for someone from the old firm to prove it was worth saving.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 17
+      },
+      "tags": [
+        "greyline",
+        "boss"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1,
+          "build": "slim",
+          "skin": "#d8a988",
+          "top": "#efe6d2",
+          "bottom": "#efe6d2",
+          "accent": "#c0262d",
+          "hair": "#e8e8e8",
+          "hairStyle": "bun",
+          "outfit": "suit",
+          "holding": "wand"
+        },
+        "scale": 1.1,
+        "idle": "bob",
+        "light": {
+          "color": "#ffe7b0",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "maureen-facilities",
+      "name": "Maureen from Facilities",
+      "description": "Keeper of the fridge, the dishwasher rota and the only working key to the stationery cupboard. Has outlasted four CEOs.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "str": 12,
+        "dex": 10,
+        "int": 13
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Brisk, unflappable, trades exclusively in biscuits. Loves a bit of gossip but will never admit it. Calls everybody 'petal'.",
+        "greeting": "Mind the floor, petal, I've just mopped. You after something from the cupboard?",
+        "lines": [
+          "Friday is cleaning-out-the-fridge day. Anything unlabelled goes in the bin. Anything labelled, I read.",
+          "The Greyline lot put their milk on the top shelf. Bold.",
+          "Biscuits up front. I don't do invoices."
+        ],
+        "stock": [
+          "builders-tea",
+          "filter-coffee",
+          "heavy-stapler",
+          "hi-vis-vest",
+          "out-of-office",
+          "calendar-invite"
+        ],
+        "secrets": "The yoghurt labelled O.G. belongs to the Chief Integration Officer, who sneaks up here at 7am. The fire door key fob is in the microwave queue warden's coat pocket, or near enough.",
+        "wants": "For somebody, anybody, to finally wash the communal mugs. And to keep her job past Friday.",
+        "persuadeDifficulty": 11
+      },
+      "tags": [
+        "halberd",
+        "npc"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "round",
+          "skin": "#e9c2a6",
+          "top": "#3a7bd5",
+          "bottom": "#2d2d2d",
+          "accent": "#f2b134",
+          "hair": "#9c5b3a",
+          "hairStyle": "short",
+          "outfit": "uniform",
+          "holding": "tool"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "dev-it",
+      "name": "Dev from IT",
+      "description": "Lives inside the integration spreadsheet now. Has not seen daylight since the merger announcement. Wears his headphones as armour.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 24,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 16
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Fast-talking, sleep-deprived, conspiratorial. Explains everything with too many acronyms, then apologises.",
+        "greeting": "Oh thank god, a face. Nobody's opened tab four in weeks. Mind the circular references, they bite.",
+        "lines": [
+          "Every department is a row. Every row has a delete button. I've seen who has edit access.",
+          "The Pivot Table's hiding a column called PROJECT YOGHURT. I can't unhide it. Maybe you can.",
+          "If you see a #REF!, don't look at it directly."
+        ],
+        "secrets": "There is a hidden column in the integration sheet: both claims departments are scheduled to be sold to a shell company. The rumour about it has leaked into the grapevine beneath the building.",
+        "wants": "Coffee. Real coffee. And for someone to back up the spreadsheet before Greyline deletes the old tabs.",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "halberd",
+        "npc"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "slim",
+          "skin": "#a86b45",
+          "top": "#2b2b2b",
+          "bottom": "#41556b",
+          "accent": "#3fb7a8",
+          "hair": "#111111",
+          "hairStyle": "mohawk",
+          "headwear": "headphones",
+          "outfit": "plain",
+          "holding": "tool"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "carol-payroll",
+      "name": "Carol from Payroll",
+      "description": "Has a desk drawer of emergency supplies and a memory for every pay rise since 1994. Somehow down here, in the grapevine, knitting.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 26,
+        "ac": 11,
+        "str": 9,
+        "dex": 10,
+        "int": 14
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Warm, unhurried, devastatingly well informed. Feeds people. Never repeats a rumour unless it is true.",
+        "greeting": "Sit down, love, you look grey. Have a biscuit. Now, what have you heard?",
+        "lines": [
+          "Everyone ends up down here eventually. The grapevine runs under every floor.",
+          "I've done the leaving collections for eleven people this month. I'm not doing yours.",
+          "Odile? She was a temp, once. Sat at your desk."
+        ],
+        "secrets": "Odile Greaves was a Halberd & Pike temp in 1998 and Carol trained her. Carol knows the shell company's name from a payroll test run.",
+        "wants": "For the claims team to survive, mostly because they always remember her birthday.",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "halberd",
+        "npc"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "round",
+          "skin": "#5e3b2a",
+          "top": "#c0583a",
+          "bottom": "#4a3f35",
+          "accent": "#f4e9d0",
+          "hair": "#d9d9d9",
+          "hairStyle": "braids",
+          "outfit": "dress",
+          "holding": "none"
+        },
+        "idle": "bob"
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "laminated-lanyard",
+      "name": "Laminated Lanyard",
+      "kind": "Visitor pass",
+      "description": "A VISITOR lanyard swung with intent. It snaps against people's sense of security.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Lanyard Snap",
+        "verb": "snaps a lanyard at",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "snark",
+        "accuracyStat": "dex"
+      },
+      "value": 5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.4,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#2f8f83",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.28,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glass"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "heavy-stapler",
+      "name": "Heavy Stapler",
+      "kind": "Desk artillery",
+      "description": "Cast iron, 1970s, property of Claims. Slammed on a desk it ends discussions.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Desk Slam",
+        "verb": "slams a stapler beside",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "physical",
+        "accuracyStat": "str"
+      },
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.12,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#b02a2a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.06,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#222222",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "laser-pointer",
+      "name": "Presentation Clicker",
+      "kind": "Laser pointer",
+      "description": "The red dot wanders to whoever is talking nonsense and stays there until they stop.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Red Dot",
+        "verb": "points the red dot at",
+        "damage": {
+          "dice": "1d5"
+        },
+        "damageType": "snark",
+        "range": 5,
+        "accuracyStat": "dex"
+      },
+      "rarity": "uncommon",
+      "value": 25,
+      "knowledge": "vague",
+      "vagueText": "Works from across the room. Not as forceful as being there in person.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.07,
+              0.35,
+              0.07
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              80
+            ],
+            "color": "#1c1c1c",
+            "material": "metal",
+            "emissive": "#ff2020"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff2020",
+          "intensity": 0.6,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "deniability-cardigan",
+      "name": "Cardigan of Plausible Deniability",
+      "kind": "Knitwear",
+      "description": "Mustard, bobbly, enormous pockets. Nothing that happens near it is ever quite its wearer's fault.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.12,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#d9a21b",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "hi-vis-vest",
+      "name": "Fire Warden Hi-Vis",
+      "kind": "Authority vest",
+      "description": "Nobody argues with a fire warden. Nobody even checks whether you are one.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 3,
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 35,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.12,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#c8ff1a",
+            "material": "cloth",
+            "emissive": "#4a6000"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.52,
+              0.04,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#e0e0e0",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "eotm-pin",
+      "name": "Employee of the Month Pin",
+      "kind": "Enamel badge",
+      "description": "March 2011. Not yours. People still straighten up when they see it.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        },
+        {
+          "stat": "ac",
+          "amount": 1
+        }
+      ],
+      "rarity": "rare",
+      "value": 40,
+      "knowledge": "vague",
+      "vagueText": "Faintly official. People seem to listen to whoever wears it.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.25,
+              0.04,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#f2b134",
+            "material": "metal",
+            "emissive": "#5a3e00"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "builders-tea",
+      "name": "Builder's Tea",
+      "kind": "Mug",
+      "description": "Strong enough to stand a spoon in. Two sugars. The universal truce of the third floor.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c98a4a"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.22,
+              0.26,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.19,
+              0.02,
+              0.19
+            ],
+            "pos": [
+              0,
+              0.26,
+              0
+            ],
+            "color": "#9c5b2a",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "shortbread",
+      "name": "Tin Shortbread",
+      "kind": "Biscuit",
+      "description": "From the tartan tin nobody admits to bringing in. Buttery, calming, slightly stale.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5,
+              "dice": "1d3"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4d58d"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.28,
+              0.06,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#f4d58d",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "filter-coffee",
+      "name": "Filter Coffee",
+      "kind": "Carafe dregs",
+      "description": "From the pot that has been on the hotplate since nine. Bitter, but it works.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "caffeine",
+            "amount": {
+              "base": 5
+            }
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "decaf"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#7a4a2a"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.2,
+              0.24,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#2f8f83",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.17,
+              0.02,
+              0.17
+            ],
+            "pos": [
+              0,
+              0.24,
+              0
+            ],
+            "color": "#3a2214",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "triple-espresso",
+      "name": "Triple Espresso",
+      "kind": "Tiny cup",
+      "description": "From the Greyline machine with the touchscreen. Nobody knows what it does to a person.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "caffeine",
+            "amount": {
+              "base": 10
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "decaf"
+          },
+          {
+            "type": "apply_status",
+            "status": "jittery",
+            "duration": 12
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#c0783a"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 20,
+      "knowledge": "vague",
+      "vagueText": "Almost black, almost solid. You will be very awake and very fast for a while.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.13,
+              0.12,
+              0.13
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.11,
+              0.02,
+              0.11
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#1a0e08",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "yoghurt-greek",
+      "name": "Labelled Yoghurt",
+      "kind": "Yoghurt pot",
+      "description": "Thick Greek yoghurt. Somebody's whole lunch. Deeply restorative and deeply stolen.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 9,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffffff"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "yoghurt",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.2,
+              0.22,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#f7f3ea",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.21,
+              0.02,
+              0.21
+            ],
+            "pos": [
+              0,
+              0.23,
+              0
+            ],
+            "color": "#3a7bd5",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "yoghurt-expired",
+      "name": "Expired Yoghurt",
+      "kind": "Yoghurt pot",
+      "description": "Best before the previous CEO. Fizzes slightly when opened. Do not.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "queasy",
+            "duration": 4
+          },
+          {
+            "type": "resource",
+            "resource": "caffeine",
+            "amount": {
+              "base": 2
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#9bbf4a"
+        }
+      },
+      "value": 1,
+      "knowledge": "unknown",
+      "appearanceGroup": "yoghurt",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.2,
+              0.22,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#e8efd0",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.21,
+              0.03,
+              0.21
+            ],
+            "pos": [
+              0,
+              0.24,
+              0
+            ],
+            "color": "#9bbf4a",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "yoghurt-probiotic",
+      "name": "Probiotic Shot",
+      "kind": "Yoghurt pot",
+      "description": "Live cultures from the wellness drawer. Your composure starts quietly repairing itself.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 3
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "cultured",
+            "duration": 10
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4e9d0"
+        }
+      },
+      "value": 16,
+      "knowledge": "unknown",
+      "appearanceGroup": "yoghurt",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.26,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#ffd0dc",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "calendar-invite",
+      "name": "Forged Calendar Invite",
+      "kind": "Meeting request",
+      "description": "An urgent 'quick sync' in a room that does not exist. The recipient freezes trying to find it.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "double-booked",
+            "duration": 2
+          },
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "red-tape"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#5b8def"
+        }
+      },
+      "value": 14,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.02,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              10,
+              20,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.03,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.12,
+              -0.08
+            ],
+            "rot": [
+              10,
+              20,
+              0
+            ],
+            "color": "#5b8def",
+            "material": "glow"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "out-of-office",
+      "name": "Out-of-Office Reply",
+      "kind": "Auto-reply",
+      "description": "'I am currently away from my desk.' Pinned to your chest, it makes it true for everyone looking.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "out-of-office",
+            "duration": 10
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#b7c4cf"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.02,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#b7c4cf",
+            "material": "glass",
+            "emissive": "#40505c"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "label-maker",
+      "name": "Label Maker",
+      "kind": "Office tool",
+      "description": "Prints tiny certain truths onto tape. Point it at a mystery and it tells you what it is.",
+      "category": "tool",
+      "useMode": "reusable",
+      "cooldown": 30,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "identify",
+            "scope": "one"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f2b134"
+        }
+      },
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.1,
+              0.32
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#f2b134",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.02,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#1c1c1c",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "small-talk",
+      "name": "Small Talk",
+      "kind": "Social move",
+      "description": "'Doing anything nice this weekend?' asked with such precision that the target needs a moment.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 3
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.3
+              }
+            },
+            "damageType": "snark"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#f2b134"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#f2b134",
+            "material": "glow"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "circle-back",
+      "name": "Circle Back",
+      "kind": "Social move",
+      "description": "'Let's circle back on that.' Everyone near you steps away, unsure what they agreed to.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "cooldown": 6,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 0,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "push",
+            "distance": 2
+          },
+          {
+            "type": "apply_status",
+            "status": "flustered",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#2f8f83"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.3,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#2f8f83",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "rumour-parking",
+      "name": "Rumour: The Parking Levy",
+      "kind": "Gossip (verified)",
+      "description": "Greyline plans to charge Halberd staff for the car park. Carrying it makes you quicker with a reply.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ffe14d",
+            "material": "glow"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffe14d",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "rumour-yoghurt",
+      "name": "Rumour: Project Yoghurt",
+      "kind": "Gossip (verified)",
+      "description": "A hidden spreadsheet column: both claims departments sold to a shell firm on Monday. The real merger.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#7cf2c5",
+            "material": "glow"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#7cf2c5",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "rumour-og",
+      "name": "Rumour: Who O.G. Was",
+      "kind": "Gossip (verified)",
+      "description": "The Chief Integration Officer started here as a temp in 1998. At your desk. With your stapler.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ff9bd2",
+            "material": "glow"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ff9bd2",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "fire-door-fob",
+      "name": "Fire Door Key Fob",
+      "kind": "Access fob",
+      "description": "Opens the third-floor fire door. Beyond it, apparently, is the integration spreadsheet. Facilities have stopped asking.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.12,
+              0.2,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#d9534f",
+            "material": "matte",
+            "emissive": "#5a1010"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff6060",
+          "intensity": 0.6,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "blank-all-hands",
+      "name": "Blank All-Hands Invite",
+      "kind": "Meeting request",
+      "description": "Friday 4pm, the agenda still blank. Hold all three rumours, then use it in the boardroom to write the agenda yourself.",
+      "category": "quest",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "rumour-parking"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "rumour-yoghurt"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "rumour-og"
+            }
+          ]
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "agenda-forged"
+          },
+          {
+            "type": "message",
+            "text": "Agenda item one: Project Yoghurt. Sent to all staff, both firms, reply-all enabled."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#f2b134"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.02,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#f2b134"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#f2b134",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "kitchen-lino",
+      "name": "Kitchen Lino",
+      "description": "Cream and teal squares. Neutral ground by fire-safety clause; stand here and breathe.",
+      "color": "#9fd8c8",
+      "emissive": "#1f5a4c"
+    },
+    {
+      "id": "coffee-machine",
+      "name": "Coffee Machine",
+      "description": "A bean-to-cup machine humming on a cart. Search it for a cup.",
+      "color": "#3a2214",
+      "height": 0.6,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "caffeine",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "decaf"
+          },
+          {
+            "type": "message",
+            "text": "The machine grinds, wheezes and gives you something brown. It will do."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c98a4a"
+        }
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.6,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#2b2b2b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.12,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.45,
+              0.21
+            ],
+            "color": "#3fb7a8",
+            "material": "glow"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "spilled-coffee",
+      "name": "Spilled Coffee",
+      "description": "A sticky brown puddle. Somebody will be emailing about this.",
+      "color": "#6b4428",
+      "moveCost": 2
+    },
+    {
+      "id": "vine-curtain",
+      "name": "Grapevine Curtain",
+      "description": "Hanging tendrils that murmur names. You can push through them, but you cannot see past.",
+      "color": "#5c2a6a",
+      "blocksSight": true,
+      "height": 1.1,
+      "emissive": "#2a0f30"
+    }
+  ],
+  "unknownAppearances": {
+    "yoghurt": [
+      {
+        "label": "Yoghurt labelled 'KAREN - DO NOT'",
+        "color": "#ffffff"
+      },
+      {
+        "label": "Yoghurt labelled 'Dave (Claims)'",
+        "color": "#ffe0a0"
+      },
+      {
+        "label": "Unlabelled yoghurt with a frowny face",
+        "color": "#d0e8ff"
+      },
+      {
+        "label": "Yoghurt labelled 'O.G.'",
+        "color": "#ffd0dc"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Third Floor: The Kitchen Commons",
+      "description": "The last neutral room in the building, and the corridors either side of it. Cream lino, a humming fridge, two microwaves, and Greyline consultants circling the kettle.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 2,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#c9c2ae",
+        "color2": "#b3ab95",
+        "material": "stone",
+        "pattern": "carpet"
+      },
+      "wall": {
+        "color": "#d9d3c3",
+        "color2": "#c4bca8",
+        "material": "stone",
+        "height": 1.4,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#eef3ff",
+        "ambientIntensity": 0.7,
+        "lamps": {
+          "color": "#f2f7ff",
+          "intensity": 1.2,
+          "frequency": 0.3,
+          "flicker": true
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "greyline-consultant",
+          "weight": 30,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "post-it-swarm",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "reply-all-chain",
+          "weight": 20,
+          "max": 3
+        },
+        {
+          "actor": "microwave-queue-bully",
+          "weight": 8,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "maureen-facilities",
+          "where": "near_start"
+        },
+        {
+          "actor": "microwave-queue-bully",
+          "where": "near_exit"
+        }
+      ],
+      "items": [
+        {
+          "item": "builders-tea",
+          "weight": 25
+        },
+        {
+          "item": "shortbread",
+          "weight": 20
+        },
+        {
+          "item": "filter-coffee",
+          "weight": 20
+        },
+        {
+          "item": "yoghurt-greek",
+          "weight": 12
+        },
+        {
+          "item": "yoghurt-expired",
+          "weight": 8
+        },
+        {
+          "item": "yoghurt-probiotic",
+          "weight": 8
+        },
+        {
+          "item": "calendar-invite",
+          "weight": 10
+        },
+        {
+          "item": "heavy-stapler",
+          "weight": 4
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "fire-door-fob",
+          "where": "guarded"
+        },
+        {
+          "item": "rumour-parking",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "kitchen-lino",
+          "density": 0.05
+        },
+        {
+          "terrain": "coffee-machine",
+          "density": 0.01
+        },
+        {
+          "terrain": "spilled-coffee",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Swipe through the fire door",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.4,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#b02a2a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.15,
+              0.04
+            ],
+            "pos": [
+              0,
+              1.2,
+              0.09
+            ],
+            "color": "#3cff7a",
+            "material": "glow"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#3cff7a",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "fire-door-fob"
+      },
+      "gmNotes": "Comedy of territory: Greyline consultants patrol, Halberd staff guard the microwave. Maureen trades for biscuits. The fob is guarded near the exit. Yoghurt labels are clues to who eats where. Keep it petty and specific.",
+      "music": "upbeat",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#3b4250",
+        "color2": "#1d2229",
+        "intensity": 0.5
+      }
+    },
+    {
+      "name": "Tab Four: The Integration Spreadsheet",
+      "description": "Beyond the fire door there is no stairwell, just an endless pale grid of cells hanging in white space. Departments are rows. Some are being deleted as you watch.",
+      "generator": "geometric",
+      "size": "medium",
+      "params": {
+        "variant": 0,
+        "symmetry": 2,
+        "rings": 4,
+        "spokes": 6,
+        "loops": 0.6,
+        "doors": 0.5,
+        "pillars": 0.2
+      },
+      "floor": {
+        "color": "#eef5ec",
+        "color2": "#a9cfa4",
+        "material": "glass",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#2f6f4f",
+        "color2": "#1d4a34",
+        "material": "glass",
+        "height": 1,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#f4fff4",
+        "ambientIntensity": 0.9,
+        "fog": {
+          "color": "#e9f6ea",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#7cf2c5",
+          "intensity": 0.8,
+          "frequency": 0.2
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "circular-reference",
+          "weight": 30,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "merged-cell",
+          "weight": 15,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "ref-error",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "post-it-swarm",
+          "weight": 15,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "dev-it",
+          "where": "near_start"
+        },
+        {
+          "actor": "pivot-table",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "builders-tea",
+          "weight": 30
+        },
+        {
+          "item": "filter-coffee",
+          "weight": 20
+        },
+        {
+          "item": "shortbread",
+          "weight": 25
+        },
+        {
+          "item": "yoghurt-greek",
+          "weight": 10
+        },
+        {
+          "item": "yoghurt-expired",
+          "weight": 6
+        },
+        {
+          "item": "triple-espresso",
+          "weight": 8
+        },
+        {
+          "item": "laser-pointer",
+          "weight": 5
+        },
+        {
+          "item": "out-of-office",
+          "weight": 8
+        },
+        {
+          "item": "calendar-invite",
+          "weight": 8
+        }
+      ],
+      "itemCount": 9,
+      "placedItems": [
+        {
+          "item": "rumour-yoghurt",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "kitchen-lino",
+          "density": 0.02
+        },
+        {
+          "terrain": "coffee-machine",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Ctrl+End into the grapevine",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.9,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#217346",
+            "material": "glass",
+            "emissive": "#0f3a22"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.06,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.95,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#7cf2c5",
+          "intensity": 1,
+          "radius": 2.5
+        }
+      },
+      "backdrop": {
+        "style": "grid",
+        "color": "#f6fbf6",
+        "color2": "#9fc59a",
+        "intensity": 0.6
+      },
+      "gmNotes": "Non-realistic: the inside of the shared integration sheet. No ceiling, no gravity worth mentioning. Dev from IT knows about the hidden PROJECT YOGHURT column, which the Pivot Table guards. Kitchen lino patches here are where someone pasted the kitchen in by mistake.",
+      "music": "eerie"
+    },
+    {
+      "name": "The Grapevine",
+      "description": "Under every floor runs the grapevine: warm purple tunnels of murmuring tendrils where every rumour in the building ends up, still whispering. It smells of instant soup.",
+      "generator": "organic",
+      "size": "medium",
+      "params": {
+        "chambers": 8,
+        "chamberSize": 0.6,
+        "tubeWidth": 2,
+        "curl": 0.5,
+        "loops": 0.4,
+        "wobble": 0.6,
+        "nodules": 0.4,
+        "fluid": 0.2,
+        "membranes": 0.3
+      },
+      "floor": {
+        "color": "#4a2b52",
+        "color2": "#6a3a70",
+        "material": "skin",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#7a3c78",
+        "color2": "#a85a9a",
+        "material": "skin",
+        "height": 1.3,
+        "pattern": "noise"
+      },
+      "lighting": {
+        "ambient": "#c9a0d8",
+        "ambientIntensity": 0.6,
+        "fog": {
+          "color": "#3a1f40",
+          "density": 0.05
+        },
+        "lamps": {
+          "color": "#ffb0e0",
+          "intensity": 1.4,
+          "frequency": 0.35,
+          "flicker": true
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "rumour-mill",
+          "weight": 25,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "watercooler-whisper",
+          "weight": 30,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "reply-all-chain",
+          "weight": 15,
+          "max": 3
+        },
+        {
+          "actor": "greyline-consultant",
+          "weight": 15,
+          "max": 3
+        },
+        {
+          "actor": "hr-liaison",
+          "weight": 8,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "carol-payroll",
+          "where": "centre"
+        },
+        {
+          "actor": "hr-liaison",
+          "where": "near_exit"
+        }
+      ],
+      "items": [
+        {
+          "item": "builders-tea",
+          "weight": 30
+        },
+        {
+          "item": "shortbread",
+          "weight": 25
+        },
+        {
+          "item": "filter-coffee",
+          "weight": 18
+        },
+        {
+          "item": "yoghurt-probiotic",
+          "weight": 10
+        },
+        {
+          "item": "yoghurt-greek",
+          "weight": 8
+        },
+        {
+          "item": "yoghurt-expired",
+          "weight": 6
+        },
+        {
+          "item": "out-of-office",
+          "weight": 8
+        },
+        {
+          "item": "eotm-pin",
+          "weight": 4
+        },
+        {
+          "item": "hi-vis-vest",
+          "weight": 5
+        }
+      ],
+      "itemCount": 8,
+      "placedItems": [
+        {
+          "item": "rumour-og",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "vine-curtain",
+          "density": 0.04
+        },
+        {
+          "terrain": "kitchen-lino",
+          "density": 0.02
+        },
+        {
+          "terrain": "coffee-machine",
+          "density": 0.008
+        }
+      ],
+      "transitionName": "Climb the dumbwaiter to the boardroom",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              1.2,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#8a6a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.8,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.65,
+              0.41
+            ],
+            "color": "#2b2b2b",
+            "material": "metal"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffd08a",
+          "intensity": 1,
+          "radius": 2
+        }
+      },
+      "backdrop": {
+        "style": "noise",
+        "color": "#2a1230",
+        "color2": "#5a2a60",
+        "intensity": 0.5
+      },
+      "gmNotes": "Organic and intimate. Rumours are alive here. Carol from Payroll heals and knows Odile was a temp. The HR Liaison guards the dumbwaiter up to Friday's boardroom. Let whispers say the player's name.",
+      "music": "tense"
+    },
+    {
+      "name": "Boardroom 9, Friday 4pm",
+      "description": "The all-hands. Navy carpet, a table the length of a bus, both logos on the screen, and two hundred chairs facing the woman with the red pen.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.25,
+        "sideRooms": 0.4
+      },
+      "floor": {
+        "color": "#2a3550",
+        "color2": "#1f2a44",
+        "material": "cloth",
+        "pattern": "carpet"
+      },
+      "wall": {
+        "color": "#6b4a2e",
+        "color2": "#4a3220",
+        "material": "wood",
+        "height": 1.6,
+        "pattern": "planks"
+      },
+      "lighting": {
+        "ambient": "#dfe6ff",
+        "ambientIntensity": 0.7,
+        "lamps": {
+          "color": "#ffe7b0",
+          "intensity": 1.6,
+          "frequency": 0.25
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "greyline-consultant",
+          "weight": 40,
+          "min": 2,
+          "max": 3
+        },
+        {
+          "actor": "post-it-swarm",
+          "weight": 20,
+          "max": 3
+        },
+        {
+          "actor": "ref-error",
+          "weight": 20,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "odile-greaves",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "builders-tea",
+          "weight": 40
+        },
+        {
+          "item": "filter-coffee",
+          "weight": 20
+        },
+        {
+          "item": "shortbread",
+          "weight": 30
+        },
+        {
+          "item": "calendar-invite",
+          "weight": 15
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "blank-all-hands",
+          "where": "near_start"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "kitchen-lino",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Leave the all-hands",
+      "gmNotes": "Finale. Odile can be out-argued (Rebut) or bypassed: with all three rumours, using the Blank All-Hands Invite here forges the agenda and wins. If the player talks to her, she is tired and curious, not cruel.",
+      "music": "boss",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#1a2030",
+        "color2": "#0b0e16",
+        "intensity": 0.5
+      }
+    }
+  ],
+  "goal": {
+    "summary": "Decide Friday's all-hands: out-argue Chief Integration Officer Odile Greaves, or carry all three rumours to the boardroom and use the blank invite to rewrite the agenda.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "actor_defeated",
+          "actor": "odile-greaves"
+        },
+        {
+          "type": "flag",
+          "flag": "agenda-forged"
+        }
+      ]
+    },
+    "winText": "The slide deck stalls on slide 41. Somebody asks about Project Yoghurt and the room goes quiet, then loud. By Monday the shell company is cancelled, Claims survives, and your contract has been extended indefinitely. Maureen leaves a tin of shortbread on your desk. There is no label. There doesn't need to be.",
+    "lossText": "You hand back the VISITOR lanyard at reception. On Friday the all-hands runs exactly to schedule, all forty-one slides of it. On Monday, someone else's temp opens the fridge and finds your yoghurt, still labelled.",
+    "labels": {
+      "agenda-forged": "The all-hands agenda is rewritten"
+    }
+  },
+  "gm": {
+    "persona": "The third-floor fridge: humming, cold, privy to every label and every lunch for twenty years, and very, very petty on behalf of its regulars.",
+    "voice": "Dry and confiding, like a building announcement written by someone who has seen too much. Short sentences. The occasional compressor hum.",
+    "threads": [
+      "Whose yoghurt is labelled O.G., and why is it always here at 7am?",
+      "Project Yoghurt: the hidden column in the integration sheet.",
+      "Maureen's mug crusade and the dishwasher rota.",
+      "Every department as a row that can be deleted.",
+      "Friday 4pm draws closer with each floor."
+    ],
+    "fallback": {
+      "intro": "Monday, 8:58. Halberd & Pike Mutual has four days left to exist. Greyline Assurance has taken the meeting rooms, the car park and the good chairs. Only the third-floor kitchen is neutral ground, and I am its fridge. I have watched you for six weeks, temp. You know whose yoghurt is whose. That makes you the most dangerous person in the building. Friday's all-hands decides who survives. Go and decide it.",
+      "areaEnter": [
+        "The kitchen commons. Lino squares, a dripping tap, a kettle with an audience. Stand on the lino and nobody can touch you, officially.",
+        "The fire door opens onto white. Not a stairwell: a spreadsheet, rows to the horizon. Somewhere a cell is being deleted, and it has your name in it.",
+        "Down the grapevine now. Warm, purple, murmuring. Every rumour in the building ends up here, and some of them are about you.",
+        "Boardroom 9. Friday, 4pm. Two hundred chairs. One red pen. The slide deck is already loaded."
+      ],
+      "lowHp": [
+        "Your smile is going stiff at the corners. Find some lino. Find some tea.",
+        "Composure fraying. Somebody, somewhere, is drafting your leaving card.",
+        "Breathe. Biscuit. Breathe."
+      ],
+      "events": [
+        "A microwave pings three times. Nobody claims it.",
+        "An email lands: 'Reminder: please label ALL items in the fridge.'",
+        "Somewhere, a fluorescent tube gives up.",
+        "The fridge hums a little louder. That means it is on your side."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Bright, slightly wonky office muzak over a hum of fluorescent tubes and a nervous ticking clock.",
+    "synth": {
+      "key": "F",
+      "scale": "lydian",
+      "tempo": 104,
+      "timbre": "pluck",
+      "drone": true,
+      "percussion": "electronic",
+      "brightness": 0.6
+    },
+    "searchTerms": [
+      "elevator muzak",
+      "office ambience",
+      "quirky corporate"
+    ],
+    "suggestions": [
+      "bossa-nova lift music, slightly detuned",
+      "marimba hold music"
+    ]
+  }
+}

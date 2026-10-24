@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/alien-twilight-migration/ysolde-kett",
+      "json": {
+        "reply": "Hollowhill's courier. Late. I'm Ysolde Kett, eastern herds, two crossings. Here's what the herders won't tell you: the coldmouths are the only honest hunters out here. The thing in the canyon isn't hunting at all. It's calling. The Matriarch's Musk is out on the glass, caught in a Sun-Echo. Bring that down and you have something louder than the call.",
+        "options": [
+          "Come with me to the canyon.",
+          "What happened on your crossings?",
+          "How do I fight a Sun-Echo?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

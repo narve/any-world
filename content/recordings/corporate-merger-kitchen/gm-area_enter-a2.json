@@ -1,0 +1,29 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/corporate-merger-kitchen/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Warm air, purple light, and a smell of chicken instant soup. The walls lean in and murmur, very softly, the word temp. Somewhere further in, someone is knitting."
+          },
+          {
+            "type": "mood",
+            "music": "tense",
+            "tint": "#c9a0d8"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_2"
+          },
+          {
+            "type": "place_item",
+            "item": "filter-coffee",
+            "near": "random"
+          }
+        ]
+      }
+    }
+  ]
+}

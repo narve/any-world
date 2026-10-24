@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/detective-sugar-hotel/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Nine days of snow. The Kandelhorn has drawn its dust sheets up to its chin and pretends to sleep, but every radiator is listening. Down in the pastry kitchen a sugar copy of me waits on its marble slab, half iced, one room too honest. Somewhere in this lobby is the book that remembers the room I have tried so hard to forget. Do wipe your boots, Inspector."
+          },
+          {
+            "type": "mood",
+            "music": "calm",
+            "tint": "#ffe6c4"
+          }
+        ]
+      }
+    }
+  ]
+}

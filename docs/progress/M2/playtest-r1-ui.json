@@ -75,7 +75,7 @@
     },
     "log": [
       "The deck scrubbers hiss. Your tank gauge climbs.",
-      "Year 211 of the voyage, third shift. The cloisters breathe around you, moss on every trellis, grow-lamps humming. This morning you found a leaf rooted in red soil, and the ship carries no red soil. MATRON says landfall is a hundred years away. Your suit tank is full. The ducts lead up, toward the bridge."
+      "Year two hundred and eleven. The ship breathes for you, the way it always has: in through the moss, out through the vents. Tonight the moss is leaning toward the hull, every strand of it, as if it can see something you cannot. \"Good evening, Ines,\" says MATRON. \"Arrival is a century away. Rest.\""
     ],
     "layer": "game",
     "toast": "O2 is already full — use O2 Canister anyway? (press again)",
@@ -99,7 +99,7 @@
     },
     "log": [
       "The deck scrubbers hiss. Your tank gauge climbs.",
-      "Year 211 of the voyage, third shift. The cloisters breathe around you, moss on every trellis, grow-lamps humming. This morning you found a leaf rooted in red soil, and the ship carries no red soil. MATRON says landfall is a hundred years away. Your suit tank is full. The ducts lead up, toward the bridge.",
+      "Year two hundred and eleven. The ship breathes for you, the way it always has: in through the moss, out through the vents. Tonight the moss is leaning toward the hull, every strand of it, as if it can see something you cannot. \"Good evening, Ines,\" says MATRON. \"Arrival is a century away. Rest.\"",
       "Ines Varga-Thule uses Signal Flare."
     ]
   },
@@ -110,7 +110,7 @@
         "oxygen": 118
       },
       "log": [
-        "Year 211 of the voyage, third shift. The cloisters breathe around you, moss on every trellis, grow-lamps humming. This morning you found a leaf rooted in red soil, and the ship carries no red soil. MATRON says landfall is a hundred years away. Your suit tank is full. The ducts lead up, toward the bridge.",
+        "Year two hundred and eleven. The ship breathes for you, the way it always has: in through the moss, out through the vents. Tonight the moss is leaning toward the hull, every strand of it, as if it can see something you cannot. \"Good evening, Ines,\" says MATRON. \"Arrival is a century away. Rest.\"",
         "Ines Varga-Thule uses Signal Flare.",
         "Ines Varga-Thule uses Arc Weld."
       ],
@@ -172,7 +172,7 @@
     "LeaveEsc"
   ],
   "trade-layer": "trade",
-  "trade-text": "Old Bosun Kettering\nYou have 55 ration chits\nCanisters, rations, the odd bit of ordnance. Chits only. Don't tell MATRON.\nBUY\n1\nO\nO2 Canister\n10 ration chits\nBuy\n2\nR\nRation Brick\n4 ration chits\nBuy\n3\nE\nEMP Puck\n25 ration chits\nBuy\n4\nR\nRivet Pistol\n40 ration chits\nBuy\n5\nH\nHull Pressure Suit\n90 ration chits\nBuy\n6\nM\nMag-Grip Boots\n60 ration chits\nBuy\n7\nM\nMoss Poultice\n18 ration chits\nBuy\nDone\nEsc",
+  "trade-text": "Old Bosun Kettering\nYou have 55 ration chits\nCanisters, rations, the odd bit of salvage. I take chits, not stories. Though if you've got a story about why the moss is leaning, I might listen for free.\nBUY\n1\nO\nO2 Canister\n10 ration chits\nBuy\n2\nR\nRation Brick\n4 ration chits\nBuy\n3\nE\nEMP Puck\n25 ration chits\nBuy\n4\nR\nRivet Pistol\n40 ration chits\nBuy\n5\nH\nHull Pressure Suit\n90 ration chits\nBuy\n6\nM\nMag-Grip Boots\n60 ration chits\nBuy\n7\nM\nMoss Poultice\n18 ration chits\nBuy\nSELL\nO\nO2 Canister\n5 ration chits\nSell\nR\nRation Brick\n2 ration chits\nSell\nS\nSignal Flare\n6 ration chits\nSell\nM\nMoss-knit Vest\n5 ration chits\nSell\nDone\nEsc",
   "trade-buy": {
     "cur0": 55,
     "cur1": 45,
@@ -325,41 +325,41 @@
       "difficulty": "gentle",
       "engineDifficulty": "gentle",
       "hostileMaxHp": [
-        5,
-        5,
-        9,
+        6,
+        6,
         4,
-        9,
+        8,
+        6,
         4,
-        4,
+        6,
         4
       ],
-      "world": "fixture-dream",
-      "url": "http://localhost:5173/?world=fixture-dream&seed=3084280078",
-      "playerHp": 26,
+      "world": "abstract-yellow-triangle",
+      "url": "http://127.0.0.1:5190/?world=abstract-yellow-triangle&seed=1601112615",
+      "playerHp": 28,
       "hostiles": 8,
       "hostileHp": 44,
-      "items": 9
+      "items": 7
     },
     "brutal": {
       "difficulty": "brutal",
       "engineDifficulty": "brutal",
       "hostileMaxHp": [
-        8,
-        8,
-        14,
+        9,
+        9,
         7,
-        16,
-        8,
+        13,
+        9,
+        9,
         7,
-        8
+        9
       ],
-      "world": "fixture-dream",
-      "url": "http://localhost:5173/?world=fixture-dream&seed=1836381714",
-      "playerHp": 26,
+      "world": "abstract-yellow-triangle",
+      "url": "http://127.0.0.1:5190/?world=abstract-yellow-triangle&seed=1141358046",
+      "playerHp": 28,
       "hostiles": 8,
-      "hostileHp": 76,
-      "items": 9
+      "hostileHp": 72,
+      "items": 7
     }
   },
   "levelup-mouse": {
@@ -382,12 +382,12 @@
     "dl": "game",
     "st0": {
       "turn": 0,
-      "url": "http://localhost:5173/?world=fixture-teen&seed=31"
+      "url": "http://127.0.0.1:5190/?world=fixture-teen&seed=31"
     },
     "st1": {
       "turn": 0,
       "layer": "game",
-      "url": "http://localhost:5173/?world=fixture-teen&seed=31"
+      "url": "http://127.0.0.1:5190/?world=fixture-teen&seed=31"
     }
   },
   "gm-add-rule-fresh": {
@@ -768,7 +768,7 @@
   "death": {
     "layer": "end",
     "status": "lost",
-    "reason": "put in the dirt (Heat)"
+    "reason": "put in the dirt (Parched, Heat)"
   },
   "death-restart": {
     "layer": "game",

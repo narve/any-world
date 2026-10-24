@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/abstract-yellow-triangle/madame-cerulean",
+      "json": {
+        "reply": "Oh! A yellow. I was sure the Painter had covered the last of you. Come here, little one, into the blue a moment; your corners are chipped. Four of you came through before, you know. Bright, clever, and every one of them stopped to argue in the corner.",
+        "options": [
+          "What happened to the others?",
+          "How do I get to the corner?",
+          "What do the colours do?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

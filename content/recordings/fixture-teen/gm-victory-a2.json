@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/fixture-teen/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You read every name. The families, the shops, the swimming hole, the goose. Somebody starts clapping before you finish, and then nobody can stop. On Saturday the water comes, and Lowmoor goes under remembered."
+          }
+        ]
+      }
+    }
+  ]
+}

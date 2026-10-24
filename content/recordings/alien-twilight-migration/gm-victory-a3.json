@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/alien-twilight-migration/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "We walk out onto the far shelves in one long line, Hollowhill at the head with west back inside it. Behind us the canyon is only glass again, and the small one with pollen rides on, smelling of all of us."
+          }
+        ]
+      }
+    }
+  ]
+}

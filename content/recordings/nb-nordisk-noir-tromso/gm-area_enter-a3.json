@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-nordisk-noir-tromso/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Kulda slipper taket i det øyeblikket isen lukker seg bak deg. Lyset kommer nedenfra, blått og rolig, og et sted langt inne hører du en stemme du kjenner fra rapportene: høflig, presis, uten hastverk. Havnefogden er her inne også."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#2f5f86"
+          }
+        ]
+      }
+    }
+  ]
+}

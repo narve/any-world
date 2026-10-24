@@ -1,0 +1,24 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:idle/fixture-teen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The PA crackles. \"Would whoever left a goose in the chemistry lab please collect your goose.\" Down the corridor, a locker bangs open on its own, and a lunchbox you have never seen slides out."
+          },
+          {
+            "type": "place_item",
+            "item": "cafeteria-cookie",
+            "near": "player"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_0"
+          }
+        ]
+      }
+    }
+  ]
+}

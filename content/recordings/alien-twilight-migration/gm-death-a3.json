@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/alien-twilight-migration/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The amber light takes the small one with pollen, and half of us turn to follow. The other half walks on west, thinner, humming a name until the hum is all that is left of it."
+          }
+        ]
+      }
+    }
+  ]
+}

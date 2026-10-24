@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fantasy-retired-mimic/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The fridge hums its one note. Two auditors in lanyards are measuring the dent you left in the avocado carpet, and one of them has written BEANBAG? in the margin."
+          },
+          {
+            "type": "mood",
+            "music": "calm"
+          }
+        ]
+      }
+    }
+  ]
+}

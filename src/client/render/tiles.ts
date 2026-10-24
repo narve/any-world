@@ -77,6 +77,7 @@ class InstLayer {
   private readonly pos: Float32Array;
   private readonly sy: Float32Array;
   private readonly state: Uint8Array;
+  private readonly drawn: Uint8Array;
   private readonly m = new THREE.Matrix4();
   private readonly c = new THREE.Color();
   private readonly q = new THREE.Quaternion();
@@ -109,6 +110,7 @@ class InstLayer {
     this.rotY = new Float32Array(n);
     this.sxz = new Float32Array(n).fill(1);
     this.state = new Uint8Array(n).fill(255);
+    this.drawn = new Uint8Array(n);
     this.prof = new Float32Array(n).fill(1);
     this.profT = new Float32Array(n).fill(1);
     entries.forEach((e, i) => {
@@ -123,11 +125,26 @@ class InstLayer {
     });
     this.mesh.instanceMatrix.needsUpdate = true;
     if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
+    this.mesh.visible = false;
+  }
+
+  /** instances currently drawn (seen state 1 or 2); the mesh is skipped entirely while none are */
+  private live = 0;
+
+  get liveCount(): number {
+    return this.live;
   }
 
   private write(i: number): void {
     const st = this.state[i];
-    if (st === 0 || st === 255) {
+    const on = !(st === 0 || st === 255);
+    if (on !== (this.drawn[i] === 1)) {
+      this.drawn[i] = on ? 1 : 0;
+      this.live += on ? 1 : -1;
+      // no wasted vertex work on layers with nothing to show (wall ghosts, unexplored terrain kinds)
+      this.mesh.visible = this.live > 0;
+    }
+    if (!on) {
       this.mesh.setMatrixAt(i, ZERO);
     } else {
       this.v.set(this.pos[i * 3], this.pos[i * 3 + 1], this.pos[i * 3 + 2]);

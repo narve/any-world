@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/alien-twilight-migration/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The glass drinks your sap and shines brighter for it. Somewhere in the throat of the canyon, something hums with pleasure."
+          }
+        ]
+      }
+    }
+  ]
+}

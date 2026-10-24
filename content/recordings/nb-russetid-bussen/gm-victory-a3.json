@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/nb-russetid-bussen/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Kunngjøring: anlegget er slått av. I stillheten etterpå hører du gruppechatten plinge, én gang for hver i gjengen. Gullkalven ruller 17. mai, og eksamen er på tirsdag."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

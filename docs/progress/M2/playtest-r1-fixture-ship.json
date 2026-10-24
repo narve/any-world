@@ -1,32 +1,35 @@
 {
   "world": "fixture-ship",
   "seed": 11,
-  "steps": 764,
-  "result": "won Reach the bridge, shut down MATRON's Proxy and take the Arrival Log, so the crew can finally vote on landfall.",
-  "turn": 952,
+  "steps": 857,
+  "result": "lost shut down by Custodian Unit (Ion)",
+  "turn": 1078,
   "area": 2,
   "level": 5,
   "keyMismatch": [],
   "refused": [
-    "step 753 {\"type\":\"use\",\"slot\":1,\"target\":{\"x\":4,\"y\":12}} log=[\"MATRON's Proxy takes 13 Ion.\"]"
+    "step 613 {\"type\":\"talk\",\"targetId\":\"a40\"} log=[\"Canisters, rations, the odd bit of ordnance. Chits only. Don't tell MATRON.\"]",
+    "step 662 {\"type\":\"use\",\"slot\":2} log=[\"Ines Varga-Thule uses O2 Canister.\"]",
+    "step 666 {\"type\":\"attack\",\"targetId\":\"a46\"} log=[\"Ines Varga-Thule hooks Vent Eel but misses.\"]",
+    "step 668 {\"type\":\"attack\",\"targetId\":\"a46\"} log=[\"Ines Varga-Thule hooks Vent Eel but misses.\"]"
   ],
   "layers": {
-    "narration": 9,
-    "game": 996,
+    "narration": 10,
+    "game": 1086,
     "dialogue": 5,
+    "choice": 2,
     "levelup": 4,
     "end": 1
   },
   "actions": {
     "talk": 5,
-    "move": 756,
-    "interact": 7,
-    "use": 49,
-    "pickup": 33,
-    "attack": 32,
-    "wait": 111,
-    "transition": 2,
-    "equip": 1
+    "move": 852,
+    "interact": 8,
+    "use": 51,
+    "pickup": 25,
+    "attack": 42,
+    "wait": 101,
+    "transition": 2
   },
   "errors": [],
   "notes": [

@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-russetid-bussen/kantine-kari",
+      "json": {
+        "reply": "Bolle, vennen? Du ser ut som du trenger to. Kasper skylder meg forresten for femti stykker fra i fjor, så hvis du finner pengene hans, vet du hvor jeg står.",
+        "options": [
+          "Hva vet du om Ida?",
+          "Hva koster en bolle?",
+          "Jeg må videre."
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

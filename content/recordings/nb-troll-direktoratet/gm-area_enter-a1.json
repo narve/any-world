@@ -1,0 +1,29 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-troll-direktoratet/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Paternosterheisen slipper Dem av med et sukk. Hyllene forsvinner opp i mørket, og et sted mellom dem raser det i papir, som om noe langt og sultent snur seg i søvne. Noen har glemt en sammenrullet gardin innerst i en blindgang."
+          },
+          {
+            "type": "place_item",
+            "item": "morkleggingsgardin",
+            "near": "random"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#ffcf80"
+          }
+        ]
+      }
+    }
+  ]
+}

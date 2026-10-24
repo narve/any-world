@@ -1,0 +1,40 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-troll-direktoratet/kaffetroll-bruse",
+      "json": {
+        "reply": "Nei, se! Et ekte menneske, med lusekofte og alt! Kaffe? Kokekaffen min står av seg selv, og køen har ikke rikket seg siden svartedauden, så De har god tid. Eller, nei – De har jo ikke det. Sola, vet De.",
+        "options": [
+          "Hva koster kaffen?",
+          "Hvor finner jeg skjema DT-1?",
+          "Har du sett en soloppgang, Bruse?"
+        ],
+        "actions": [
+          {
+            "type": "trade",
+            "actorId": "a7",
+            "items": [
+              {
+                "item": "termos-kaffe",
+                "price": 12
+              },
+              {
+                "item": "brunost-skive",
+                "price": 10
+              },
+              {
+                "item": "morkleggingsgardin",
+                "price": 14
+              },
+              {
+                "item": "lommekirkeklokke",
+                "price": 25
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

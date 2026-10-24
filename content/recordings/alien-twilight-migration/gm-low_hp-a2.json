@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/alien-twilight-migration/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Your sap is on the frost now, and the coldmouths can smell it. We slow our steps, a little. Not enough."
+          }
+        ]
+      }
+    }
+  ]
+}

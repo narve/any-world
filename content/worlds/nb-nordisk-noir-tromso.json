@@ -1,0 +1,3270 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Mørketidsis",
+    "tagline": "En tråler full av is, et mannskap som er borte, og en by som tier. Natta varer i to måneder til.",
+    "genre": "nordisk noir",
+    "tags": [
+      "noir",
+      "mørketid",
+      "etterforskning",
+      "is",
+      "tromsø",
+      "ikke-voldelig"
+    ],
+    "tone": "kald, lavmælt og underlig",
+    "era": "nåtid, desember",
+    "premise": "Tromsø i mørketida. Den russiske tråleren «Kapitan Sjirokov» ligger ved Prostneset med lasterommet fullt av is, men mannskapet på elleve er borte. Isen er skåret fra en fjord på Novaja Semlja der natta aldri sluttet, og den som legger bare hender på den, blir dratt inn i mørket den har lagret. Den pensjonerte losen Halvdan Moe visste det. Nå ligger han på UNN med åpne øyne og sier ingenting, og du, den nye fra Kripos, er den eneste som ikke vet hvem i byen som tjener penger på isen.",
+    "prompt": "Tromsø i mørketida. En russisk tråler ligger til kai med lasterommet fullt av is, men mannskapet er sporløst borte – og den eneste som ville snakke med deg, en pensjonert los, ble funnet i snøen ved Ishavskatedralen i morges. Du er den nye etterforskeren fra Oslo, og ingen her stoler på deg.",
+    "nonViolent": true,
+    "language": "nb"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Tyngde",
+        "abbr": "TYN",
+        "description": "Hvor hardt du kan presse et avhør. Gir kraft til spørsmålene dine."
+      },
+      "dex": {
+        "name": "Teft",
+        "abbr": "TEF",
+        "description": "Å lese folk og rom. Hjelper deg å treffe ømme punkter og unngå stikk."
+      },
+      "int": {
+        "name": "Logikk",
+        "abbr": "LOG",
+        "description": "Evnen til å se sammenhenger. Styrker metodene dine og gir mer overskudd."
+      },
+      "hp": {
+        "name": "Fatning",
+        "abbr": "FAT",
+        "description": "Hvor mye mistro, kulde og løgn du tåler før du gir opp og tar flyet hjem."
+      },
+      "mp": {
+        "name": "Overskudd",
+        "abbr": "OVS",
+        "description": "Mental energi til metoder som krever konsentrasjon."
+      },
+      "ac": {
+        "name": "Tykk hud",
+        "abbr": "HUD",
+        "description": "Hvor lite spydigheter og trusler biter på deg."
+      }
+    },
+    "conflict": "Avhør",
+    "defeated": "knekt",
+    "xp": "Innsikt",
+    "levelUp": "Nytt spor",
+    "currency": "kroner",
+    "lossTitle": "Du er tatt av saken",
+    "winTitle": "Saken er oppklart",
+    "area": "Kapittel"
+  },
+  "palette": {
+    "primary": "#1b2a44",
+    "secondary": "#39d98a",
+    "accent": "#ffb054",
+    "danger": "#e0485a",
+    "ui": "#0d1626",
+    "text": "#e8eef5"
+  },
+  "damageTypes": [
+    {
+      "id": "press",
+      "name": "Press",
+      "color": "#ffb054"
+    },
+    {
+      "id": "kulde",
+      "name": "Kulde",
+      "color": "#9fe3ff"
+    },
+    {
+      "id": "ekko",
+      "name": "Ekko",
+      "color": "#b48cff"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "nedkjolt",
+      "name": "Nedkjølt",
+      "description": "Fingrene stivner og tankene går tregt. Lavere teft, og du beveger deg langsommere.",
+      "harmful": true,
+      "color": "#9fe3ff",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ],
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "rystet",
+      "name": "Rystet",
+      "description": "Noe har skremt deg mer enn du vil innrømme. Du trekker deg unna.",
+      "harmful": true,
+      "color": "#b48cff",
+      "flags": [
+        "afraid"
+      ]
+    },
+    {
+      "id": "blendet",
+      "name": "Blendet",
+      "description": "Et blitslys midt i mørketida. Ser ingenting på en stund.",
+      "harmful": true,
+      "color": "#ffffff",
+      "flags": [
+        "blinded"
+      ]
+    },
+    {
+      "id": "avvaepnet",
+      "name": "Avvæpnet",
+      "description": "En kopp kaffe og et ærlig blikk. For en stund står de på din side.",
+      "harmful": false,
+      "color": "#ffb054",
+      "flags": [
+        "charmed"
+      ]
+    },
+    {
+      "id": "pa-sporet",
+      "name": "På sporet",
+      "description": "Du ser mønsteret. Høyere teft og logikk.",
+      "harmful": false,
+      "color": "#39d98a",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 2
+        },
+        {
+          "stat": "int",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "varmet",
+      "name": "Varm i kroppen",
+      "description": "Varmen sprer seg fra magen og ut. Fatningen kommer sakte tilbake.",
+      "harmful": false,
+      "color": "#ff8a3d",
+      "flags": [
+        "regenerating"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "varme",
+      "name": "Varme",
+      "description": "Kroppsvarmen din. Kulda tærer på den. Når den er tom, blir du nedkjølt.",
+      "color": "#ff8a3d",
+      "max": 20,
+      "start": 20,
+      "onEmpty": [
+        {
+          "type": "apply_status",
+          "status": "nedkjolt",
+          "duration": 8
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "morketid",
+      "name": "Mørketid",
+      "description": "Sola kommer ikke over horisonten før i januar. Det er mørkt overalt, og du ser bare det gatelysene, lykta di eller nordlyset viser deg.",
+      "switches": {
+        "darkness": 0.55
+      }
+    },
+    {
+      "id": "kulda-biter",
+      "name": "Kulda biter",
+      "description": "Hver tolvte runde mister du 1 Varme. Når Varmen er tom, blir du nedkjølt. Varmeovner, kaffe og pepper gir varmen tilbake.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 12,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "varme",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Siri Aune",
+    "title": "Etterforsker fra Kripos, ny i byen",
+    "description": "Trettiåtte, fra Grünerløkka, med en dunjakke som var varm nok i Oslo. Hun har vært i Tromsø i fire dager og har allerede lært at «ja vel» betyr nei.",
+    "stats": {
+      "str": 10,
+      "dex": 11,
+      "int": 14,
+      "hp": 28,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 10,
+    "sight": 8,
+    "unarmed": {
+      "name": "Langt blikk",
+      "verb": "stirrer på",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "press"
+    },
+    "startingItems": [
+      {
+        "item": "notisblokk",
+        "equipped": true
+      },
+      {
+        "item": "dunjakke",
+        "equipped": true
+      },
+      {
+        "item": "termoskaffe",
+        "count": 2
+      },
+      {
+        "item": "skolebolle",
+        "count": 1
+      },
+      {
+        "item": "pressende-sporsmal"
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 35,
+      "curve": 1.6,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "skarpt-blikk",
+          "name": "Skarpt blikk",
+          "description": "Du ser når noen lyver. +2 Teft.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "oslo-sta",
+          "name": "Sta som en Oslo-jente",
+          "description": "Du gir deg ikke. +2 Tyngde.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "les-rommet-perk",
+          "name": "Les rommet",
+          "description": "Du lærer metoden Les rommet: se planløsningen og hvem som står hvor.",
+          "grantItems": [
+            "les-rommet"
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "kombinator",
+          "name": "Kombinator",
+          "description": "Brikkene faller på plass. +2 Logikk og +3 Overskudd.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "mp",
+              "amount": 3
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "tykk-hud-perk",
+          "name": "Nordnorsk humor",
+          "description": "Du har lært å le av det. +1 Tykk hud.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "god-politi",
+          "name": "Snill politi",
+          "description": "Du lærer metoden Kaffe og forståelse: én motpart blir på din side en stund.",
+          "grantItems": [
+            "kaffe-og-forstaelse"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "vinterbein",
+          "name": "Vinterbein",
+          "description": "Kroppen venner seg til kulda. +6 Varme hver gang du kommer til et nytt kapittel, og +4 Fatning.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 4
+            }
+          ],
+          "triggers": [
+            {
+              "on": "on_area_enter",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "varme",
+                    "amount": {
+                      "base": 6
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "andre-vind",
+          "name": "Andre vind",
+          "description": "Når Fatningen nesten er borte, tar du deg sammen: få tilbake 8 Fatning.",
+          "triggers": [
+            {
+              "on": "on_low_hp",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 8
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "siste-brikke",
+          "name": "Den siste brikken",
+          "description": "Hver gang du knekker noen, får du 2 Overskudd tilbake.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "mp",
+                    "amount": {
+                      "base": 2
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.9,
+        "build": "slim",
+        "skin": "#e9c9b0",
+        "top": "#2f6fb5",
+        "bottom": "#1c1f26",
+        "accent": "#ffd166",
+        "hair": "#3a2a20",
+        "hairStyle": "bun",
+        "headwear": "none",
+        "outfit": "coat",
+        "holding": "phone"
+      },
+      "light": {
+        "color": "#ffe6b0",
+        "intensity": 1.2,
+        "radius": 3
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "gramake",
+      "name": "Gråmåke",
+      "description": "Tromsøs egentlige havnevakt. Stjeler skolebollen ut av hånda di og skriker om det etterpå.",
+      "stats": {
+        "hp": 5,
+        "ac": 10,
+        "str": 6,
+        "dex": 13,
+        "int": 3
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Hakk",
+        "verb": "hakker etter",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "range": 1
+      },
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.3
+      },
+      "xp": 4,
+      "tags": [
+        "dyr"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#f4f4f4",
+          "secondary": "#7d8a99",
+          "accent": "#f2c230"
+        },
+        "scale": 0.6,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "journalist",
+      "name": "Journalist fra Nordlys",
+      "description": "Har allerede skrevet saken, trenger bare et sitat fra «Oslo-politiet». Holder mobilen opp foran ansiktet ditt.",
+      "stats": {
+        "hp": 8,
+        "ac": 10,
+        "str": 7,
+        "dex": 12,
+        "int": 12
+      },
+      "attack": {
+        "name": "Nærgående spørsmål",
+        "verb": "spør",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "press",
+        "range": 3,
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "presse"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "slim",
+          "skin": "#f0d2bd",
+          "top": "#c0392b",
+          "bottom": "#2b2b33",
+          "hair": "#b0773c",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "coat",
+          "holding": "phone"
+        }
+      }
+    },
+    {
+      "id": "havnevakt",
+      "name": "Havnevakt",
+      "description": "Refleksvest over dress. Sier at kaia er stengt, og at det står i forskriften, og at du ikke har lest forskriften.",
+      "stats": {
+        "hp": 11,
+        "ac": 12,
+        "str": 12,
+        "dex": 9,
+        "int": 9
+      },
+      "attack": {
+        "name": "Forskriften",
+        "verb": "siterer forskriften for",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "press"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "xp": 7,
+      "tags": [
+        "havn"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "broad",
+          "skin": "#e2b99a",
+          "top": "#e8ff3a",
+          "bottom": "#23262e",
+          "accent": "#c0c0c0",
+          "hairStyle": "short",
+          "hair": "#5a4a3a",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "lantern"
+        }
+      }
+    },
+    {
+      "id": "wenche",
+      "name": "Wenche i Polarkiosken",
+      "description": "Har drevet kiosken på kaia i trettien år og vet hvem som kjøper hva klokka fire om natta.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 15,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Tørrvittig, varm under skallet, mistenksom mot alle sørfra. Kaller deg «Oslo» til du har kjøpt noe.",
+        "greeting": "Kaffen er fersk, svelen er fra i går. Du er hun fra Oslo, ja? Det står ikke noe i Nordlys om at du er snill.",
+        "lines": [
+          "Russerne kjøpte bare sjokolade og telefonkort. Og frostvæske. Mye frostvæske.",
+          "Havnefogden har vært her nede hver natt i to uker. Hun pleier ikke å gå ut etter Dagsrevyen.",
+          "Halvdan drakk kaffen svart og snakket om is som om den var levende. Vi trodde han ble rar.",
+          "Kjøp brodder. Jeg sier det til alle sørlendinger, og ingen hører."
+        ],
+        "stock": [
+          "termoskaffe",
+          "skolebolle",
+          "isbrodder",
+          "mobilkamera",
+          "tyrkisk-pepper"
+        ],
+        "secrets": "Hun så havnefogd Ragnhild Strand følge losen opp mot Tromsøbrua i går kveld. Hun har ikke sagt det til noen, for Strand eier halve kaia.",
+        "wants": "At noen endelig tar Strand. Og at du kjøper noe.",
+        "persuadeStat": "dex",
+        "persuadeDifficulty": 11
+      },
+      "tags": [
+        "kai",
+        "handel"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "round",
+          "skin": "#f1cfb4",
+          "top": "#7a2e5c",
+          "bottom": "#3a3a44",
+          "accent": "#ffffff",
+          "hair": "#c9c9c9",
+          "hairStyle": "short",
+          "outfit": "plain",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "rederivakt",
+      "name": "Vakt fra rederiet",
+      "description": "Leid inn fra et firma i Murmansk via et firma i Kirkenes. Forstår norsk når det passer ham.",
+      "stats": {
+        "hp": 14,
+        "ac": 12,
+        "str": 13,
+        "dex": 10,
+        "int": 8
+      },
+      "attack": {
+        "name": "Tung taushet",
+        "verb": "stirrer ned",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "press",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "rederiet"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "broad",
+          "skin": "#e6c3a6",
+          "top": "#20242c",
+          "bottom": "#20242c",
+          "accent": "#8a1c1c",
+          "hairStyle": "none",
+          "headwear": "bandana",
+          "outfit": "coat",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "isekko",
+      "name": "Isekko",
+      "description": "En stemme som har sluppet ut av isen og ikke vet at den er alene. Den gjentar en setning på russisk og blir kald når du svarer.",
+      "stats": {
+        "hp": 10,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 10
+      },
+      "attack": {
+        "name": "Frossen setning",
+        "verb": "hvisker kaldt til",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "kulde"
+      },
+      "resistances": [
+        {
+          "damageType": "kulde",
+          "multiplier": 0
+        },
+        {
+          "damageType": "press",
+          "multiplier": 1.5
+        }
+      ],
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.25
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "nedkjolt",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#9fe3ff"
+            }
+          }
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "is",
+        "ekko"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#e8fbff",
+          "secondary": "#7fd4ff",
+          "accent": "#2a8fd0"
+        },
+        "scale": 0.7,
+        "idle": "pulse",
+        "light": {
+          "color": "#9fe3ff",
+          "intensity": 1.4,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "tolk",
+      "name": "Rederiets tolk",
+      "description": "Oversetter alt du sier til noe annet. Har et visittkort fra et advokatfirma i Oslo, og hun vet at du har sett det.",
+      "stats": {
+        "hp": 12,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 13
+      },
+      "attack": {
+        "name": "Fordreid oversettelse",
+        "verb": "vrir ordene til",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "press",
+        "range": 3,
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "rederiet"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "slim",
+          "skin": "#f3d6c2",
+          "top": "#3b3f6b",
+          "bottom": "#3b3f6b",
+          "accent": "#d8d8d8",
+          "hair": "#111111",
+          "hairStyle": "bun",
+          "outfit": "suit",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "natalja",
+      "name": "Natalja Orlova",
+      "description": "Kokk om bord på «Kapitan Sjirokov». Var på land for å kjøpe dill da mannskapet forsvant, og har sittet i byssa siden.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 14,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Rolig, sliten, nekter å gråte foran politiet. Snakker godt norsk etter tolv sesonger i Tromsø, men bytter til russisk når hun lyver.",
+        "greeting": "Du er ikke fra rederiet. De har ikke så dårlige sko. Sett deg. Det er suppe.",
+        "lines": [
+          "Kapteinen sa at vi ikke skulle ta på isen uten hansker. Han sa det som om han visste noe.",
+          "De gikk ikke i land. Det er snø på landgangen, og ingen spor.",
+          "Om natta kan jeg høre Misja synge i lasterommet. Han kunne aldri synge.",
+          "Lastelista ligger på broa. Den viser ikke det vi faktisk hadde om bord."
+        ],
+        "secrets": "Mannskapet gikk inn i isen frivillig for å slippe unna rederiets folk etter at de nektet å seile isen videre til Oslo. Losen Halvdan Moe viste dem hvordan.",
+        "wants": "Å få mannskapet ut av isen levende, og at rederiet ikke får vite at hun snakket.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "mannskap"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "average",
+          "skin": "#efd0b8",
+          "top": "#f2efe6",
+          "bottom": "#3a4a5a",
+          "accent": "#c0392b",
+          "hair": "#d9b36a",
+          "hairStyle": "braids",
+          "headwear": "bandana",
+          "outfit": "plain",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "kirkevert",
+      "name": "Kirkevert",
+      "description": "Står i døra til Ishavskatedralen med en kurv med salmebøker. Synes du har for mange spørsmål for en tirsdag.",
+      "stats": {
+        "hp": 13,
+        "ac": 12,
+        "str": 10,
+        "dex": 10,
+        "int": 11
+      },
+      "attack": {
+        "name": "Formaning",
+        "verb": "formaner",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "press"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "xp": 8,
+      "tags": [
+        "kirke"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "average",
+          "skin": "#ead0bd",
+          "top": "#41325a",
+          "bottom": "#2a2a2a",
+          "accent": "#e9e2c8",
+          "hair": "#8c8c8c",
+          "hairStyle": "short",
+          "outfit": "robe",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "korist",
+      "name": "Korist fra isens kor",
+      "description": "Et menneske som en gang sang i kirkekoret og nå synger det isen husker. Øynene er hvite som rim.",
+      "stats": {
+        "hp": 12,
+        "ac": 11,
+        "str": 9,
+        "dex": 11,
+        "int": 10
+      },
+      "attack": {
+        "name": "Russisk salme",
+        "verb": "synger mot",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "ekko"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "xp": 8,
+      "tags": [
+        "kirke",
+        "ekko"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "slim",
+          "skin": "#dbe9f2",
+          "top": "#f2f6fa",
+          "bottom": "#f2f6fa",
+          "accent": "#9fe3ff",
+          "hair": "#e8f4ff",
+          "hairStyle": "long",
+          "outfit": "robe",
+          "holding": "book"
+        },
+        "light": {
+          "color": "#9fe3ff",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "organisten",
+      "name": "Organisten Elias Brox",
+      "description": "Har spilt det store orgelet i førti år. Nå spiller han tonene han hører i isen, og orgelpipene dugger av rim.",
+      "stats": {
+        "hp": 22,
+        "ac": 12,
+        "str": 10,
+        "dex": 12,
+        "int": 14
+      },
+      "attack": {
+        "name": "Basstone fra isen",
+        "verb": "lar orgelet rope på",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "ekko",
+        "range": 4,
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "fortissimo",
+          "name": "Fortissimo",
+          "description": "Alle registre på en gang. Lyden rister alt i nærheten.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 4,
+              "radius": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 1,
+                  "dice": "1d6"
+                },
+                "damageType": "ekko"
+              },
+              {
+                "type": "apply_status",
+                "status": "rystet",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#b48cff"
+            }
+          },
+          "cooldown": 7
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "xp": 25,
+      "unique": true,
+      "tags": [
+        "kirke",
+        "eliten"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "slim",
+          "skin": "#e2cdbd",
+          "top": "#1a1a22",
+          "bottom": "#1a1a22",
+          "accent": "#9fe3ff",
+          "hair": "#f0f0f0",
+          "hairStyle": "long",
+          "outfit": "suit",
+          "holding": "staff"
+        },
+        "scale": 1.1,
+        "light": {
+          "color": "#b48cff",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "aslak",
+      "name": "Sokneprest Aslak Nilsen",
+      "description": "Fant losen i snøen ved kirketrappa i morges. Har ikke sovet siden, og har kokt kaffe på sakristiet hele natta.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 15,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Mild og pratsom, en tidligere fisker som fortsatt sier «kar» om alle. Redd for det han hører fra orgelet, men vil ikke vise det.",
+        "greeting": "Kom inn fra kulda, kar. Du ser ut som du trenger noe varmt og noen som ikke spør om noe.",
+        "lines": [
+          "Halvdan lå med ansiktet mot kirka. Han holdt en pakke med is i hendene. Bare hendene var varme.",
+          "Elias har ikke gått hjem på tre døgn. Han sier orgelet stemmer seg selv.",
+          "Det står noe på russisk i rimet på glassmosaikken. Det var ikke der i søndags.",
+          "Gud er nok her. Men noen andre er også det."
+        ],
+        "secrets": "Losens loggbok ligger gjemt bak orgelet; Halvdan ga den til Elias før han gikk ut i snøen. Bak alteret har isen begynt å vokse ut av veggen.",
+        "wants": "At noen tar ansvar for det som skjer i kirka hans, og at Elias får hvile.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "kirke"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "round",
+          "skin": "#e9c6ab",
+          "top": "#111118",
+          "bottom": "#111118",
+          "accent": "#ffffff",
+          "hair": "#d6d6d6",
+          "hairStyle": "short",
+          "outfit": "robe",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "frossen-sjomann",
+      "name": "Frossen sjømann",
+      "description": "En av de elleve, halvveis inne i natta. Han beveger seg tungt, som gjennom vann, og tror du er fra rederiet.",
+      "stats": {
+        "hp": 16,
+        "ac": 12,
+        "str": 12,
+        "dex": 9,
+        "int": 9
+      },
+      "attack": {
+        "name": "Iskald hånd",
+        "verb": "griper etter",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "kulde",
+        "accuracyStat": "str"
+      },
+      "resistances": [
+        {
+          "damageType": "kulde",
+          "multiplier": 0
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 9,
+      "tags": [
+        "mannskap",
+        "is"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "broad",
+          "skin": "#cfe6f5",
+          "top": "#e0a52a",
+          "bottom": "#2c3a4a",
+          "accent": "#e8fbff",
+          "hair": "#e8fbff",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "coat",
+          "holding": "none"
+        },
+        "light": {
+          "color": "#9fe3ff",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      },
+      "speed": 80
+    },
+    {
+      "id": "halvdan",
+      "name": "Losen Halvdan Moe",
+      "description": "Kroppen hans ligger på UNN. Det som snakker med deg her inne, er resten av ham: pipa, losluen og en stemme som kjenner hver grunne fra Lyngen til Senja.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Lun, langsom, snakker i farvann og fyrlykter. Skammer seg over at han ikke ventet på deg i går.",
+        "greeting": "Nei, der kom du jo. Jeg skulle ha ventet ved kirka, men Ragnhild kom først. Hold deg til de lyse rennene, så går du ikke på grunn.",
+        "lines": [
+          "Isen tar ikke folk. Den holder dem. Det er forskjell, og det er derfor de gikk inn.",
+          "Ragnhild har solgt isen til barer i Oslo. Tjue kroner kuben. Hun trenger at ingen kommer ut og forteller hvor den kom fra.",
+          "Kapteinen la et brev et sted her inne. Med lastelista og loggboka mi er det nok til å ta henne i retten.",
+          "Det finnes ingen vei ut av natta. Men det finnes en vei gjennom den."
+        ],
+        "secrets": "Ragnhild Strand prøvde å få ham til å si hvor mannskapet var, og lot ham ligge i snøen. Kapteinens brev beskriver hele avtalen med rederiet.",
+        "wants": "At mannskapet får komme ut uten at rederiet venter på kaia.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 8
+      },
+      "tags": [
+        "los"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "average",
+          "skin": "#dfe9f0",
+          "top": "#1f3b5c",
+          "bottom": "#1f2a36",
+          "accent": "#ffd166",
+          "hair": "#ffffff",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "coat",
+          "holding": "lantern"
+        },
+        "light": {
+          "color": "#ffd166",
+          "intensity": 1.5,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "ragnhild",
+      "name": "Havnefogd Ragnhild Strand",
+      "description": "Tromsøs havnefogd, med gullknapper og en mappe med tillatelser. Hun har fulgt mannskapet inn i isen for å sørge for at ingen av dem kommer ut og forteller.",
+      "stats": {
+        "hp": 72,
+        "ac": 13,
+        "str": 14,
+        "dex": 12,
+        "int": 15,
+        "mp": 20
+      },
+      "attack": {
+        "name": "Tjenestevei",
+        "verb": "stenger døra for",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "press",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "byrakratisk-kulde",
+          "name": "Byråkratisk kulde",
+          "description": "Hun åpner mappa, og temperaturen faller. Alt rundt henne fryser til.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 3,
+              "radius": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 1,
+                  "dice": "1d6"
+                },
+                "damageType": "kulde"
+              },
+              {
+                "type": "apply_status",
+                "status": "nedkjolt",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#9fe3ff"
+            }
+          },
+          "cooldown": 6
+        },
+        {
+          "id": "kaller-pa-isen",
+          "name": "Kaller på isen",
+          "description": "Hun banker på isveggen, og ekkoene kommer.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "isekko",
+                "count": 2
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#e8fbff"
+            }
+          },
+          "cooldown": 14,
+          "useWhen": "start_of_fight"
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Høflig, presis og iskald. Mener selv at hun redder byen fra et skandaleoppslag. Har aldri tapt en sak i bystyret.",
+        "greeting": "Aune. Du har brukt mye tid på en russisk båt og en gammel mann som drikker. Gå hjem, så skriver jeg en fin rapport om deg.",
+        "lines": [
+          "Isen er lovlig importert. Jeg har papirene her.",
+          "Elleve sjøfolk som vil bli savnet? Av hvem?",
+          "Halvdan frøs fordi han var full. Det står i rapporten min."
+        ],
+        "secrets": "Hun solgte mørketidsisen til restauranter i Oslo med rederiet som mellommann, og forsøkte å presse losen for å finne mannskapet.",
+        "wants": "At mannskapet blir i isen for alltid, og at du reiser tilbake til Oslo.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 17
+      },
+      "tags": [
+        "sjef",
+        "havn"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1,
+          "build": "broad",
+          "skin": "#efd3c0",
+          "top": "#16233d",
+          "bottom": "#16233d",
+          "accent": "#e2b23a",
+          "hair": "#c8c8c8",
+          "hairStyle": "bun",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "book"
+        },
+        "scale": 1.15,
+        "light": {
+          "color": "#e2b23a",
+          "intensity": 1.2,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "notisblokk",
+      "name": "Notisblokk og kulepenn",
+      "kind": "Arbeidsverktøy",
+      "description": "Spiralblokk fra Kripos med kaffeflekker. Folk blir nervøse når du skriver ned det de sier.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Notere",
+        "verb": "noterer hvert ord fra",
+        "damage": {
+          "dice": "1d6"
+        },
+        "damageType": "press",
+        "accuracyStat": "int"
+      },
+      "value": 5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.04,
+              0.4
+            ],
+            "color": "#f2e6b8",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.3,
+              0.03
+            ],
+            "pos": [
+              0.18,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#2f6fb5",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tjenestelykt",
+      "name": "Tjenestelykt",
+      "kind": "Lommelykt",
+      "description": "Tung Maglite som har lyst opp mange ansikter. Ingen liker å bli spurt med en lyskjegle i øynene.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Lyse i ansiktet",
+        "verb": "lyser rett på",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "press",
+        "accuracyStat": "dex"
+      },
+      "modifiers": [
+        {
+          "stat": "sight",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              0.45,
+              0.1
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#2b2b2b",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.08,
+              0.14
+            ],
+            "pos": [
+              0.25,
+              0,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#fff3c4",
+            "material": "glow",
+            "emissive": "#fff3c4"
+          }
+        ],
+        "light": {
+          "color": "#fff3c4",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "beslagsmappe",
+      "name": "Beslagsmappe",
+      "kind": "Bevismappe",
+      "description": "Tykk mappe med kopier av alt rederiet har skrevet under på. Den lander tungt på bordet.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Legge fram bevis",
+        "verb": "legger bevisene foran",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "press",
+        "accuracyStat": "int"
+      },
+      "requires": [
+        {
+          "stat": "int",
+          "min": 13
+        }
+      ],
+      "rarity": "rare",
+      "value": 40,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.12,
+              0.5
+            ],
+            "color": "#8a5a2b",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.42,
+              0.02,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.07,
+              0
+            ],
+            "color": "#e0485a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dunjakke",
+      "name": "Dunjakke fra Oslo",
+      "kind": "Yttertøy",
+      "description": "Kjøpt på Bogstadveien, ment for trikkeholdeplasser. Bedre enn ingenting.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.45,
+              0.5,
+              0.3
+            ],
+            "color": "#2f6fb5",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "flytedress",
+      "name": "Flytedress",
+      "kind": "Yttertøy",
+      "description": "Oransje arbeidsdress fra tråleren, stiv av salt. Kulda og spydighetene preller av.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 3,
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.5,
+              0.6,
+              0.32
+            ],
+            "color": "#ff7a1a",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.52,
+              0.06,
+              0.34
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#d8e0e8",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "isbrodder",
+      "name": "Isbrodder",
+      "kind": "Pigger",
+      "description": "Gummistropper med stålpigger til skoene. Wenche sier det til alle sørlendinger.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 1
+        },
+        {
+          "stat": "ac",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.3,
+              0.08
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#2b2b2b",
+            "material": "matte"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.06,
+              0.1,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#c8d0d8",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "termoskaffe",
+      "name": "Termoskaffe",
+      "kind": "Kaffe",
+      "description": "Svart, kokt, brennhet. Gir deg 7 Fatning og 5 Varme.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 7
+            }
+          },
+          {
+            "type": "resource",
+            "resource": "varme",
+            "amount": {
+              "base": 5
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffb054"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.4,
+              0.16
+            ],
+            "color": "#3c7a4a",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.17,
+              0.08,
+              0.17
+            ],
+            "pos": [
+              0,
+              0.24,
+              0
+            ],
+            "color": "#222222"
+          }
+        ]
+      }
+    },
+    {
+      "id": "skolebolle",
+      "name": "Skolebolle",
+      "kind": "Bakst",
+      "description": "Vaniljekrem og kokos. Den eneste sørlandske tradisjonen nord for polarsirkelen. Gir 6 Fatning.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#fff3c4"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.18,
+              0.3
+            ],
+            "color": "#d99a4e",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.06,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#ffe27a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hjertedraper",
+      "name": "Hjertedråper",
+      "kind": "Medisinglass",
+      "description": "Et lite brunt glass med russisk etikett. Kan hjelpe. Kan også ikke.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 10
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "varmet",
+            "duration": 6
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ff8a3d"
+        }
+      },
+      "value": 18,
+      "knowledge": "unknown",
+      "appearanceGroup": "medisinglass",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.22,
+              0.12
+            ],
+            "color": "#7a4a1e",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "smeltevann",
+      "name": "Smeltevann fra lasterommet",
+      "kind": "Medisinglass",
+      "description": "Vann fra mørketidsisen, tappet på et glass. Den som drikker det, ser en stund det mannskapet så.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "kulde"
+          },
+          {
+            "type": "reveal_map",
+            "radius": 14
+          },
+          {
+            "type": "apply_status",
+            "status": "pa-sporet",
+            "duration": 20
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#9fe3ff"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "medisinglass",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.22,
+              0.12
+            ],
+            "color": "#bfe8ff",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tyrkisk-pepper",
+      "name": "Tyrkisk pepper",
+      "kind": "Medisinglass",
+      "description": "Saltlakris så sterk at det svir i ørene. Fjerner nedkjøling og gir 8 Varme.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "remove_status",
+            "status": "nedkjolt"
+          },
+          {
+            "type": "resource",
+            "resource": "varme",
+            "amount": {
+              "base": 8
+            }
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 3
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#e0485a"
+        }
+      },
+      "value": 10,
+      "knowledge": "unknown",
+      "appearanceGroup": "medisinglass",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.08,
+              0.14
+            ],
+            "color": "#1c1c1c",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.21,
+              0.03,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#e0485a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nordlysglass",
+      "name": "Nordlysglass",
+      "kind": "Isflis",
+      "description": "En flis av isen som fortsatt har litt nordlys i seg.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "light",
+            "radius": 5,
+            "duration": 60
+          },
+          {
+            "type": "reveal_map",
+            "radius": 10
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#39d98a"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 22,
+      "knowledge": "vague",
+      "vagueText": "Holder du den opp, lyser den grønt, og rommene rundt deg virker nærmere enn før.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.2,
+              0.35,
+              0.2
+            ],
+            "color": "#bff5dc",
+            "material": "glass",
+            "emissive": "#39d98a"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#39d98a",
+          "intensity": 1.2,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "stemmeis",
+      "name": "Isbit med en stemme",
+      "kind": "Isbit",
+      "description": "En isbit som snakker lavt når du holder den mot øret. Kastet hardt nok, slipper den ut alt den har hørt.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4"
+            },
+            "damageType": "ekko"
+          },
+          {
+            "type": "apply_status",
+            "status": "rystet",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#b48cff"
+        }
+      },
+      "value": 12,
+      "knowledge": "vague",
+      "vagueText": "Stemmen i isen vil ut. Den som står nær når den slipper, vil ikke like det de hører.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "rot": [
+              20,
+              30,
+              10
+            ],
+            "color": "#d8f4ff",
+            "material": "glass",
+            "emissive": "#7f6bff"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "mobilkamera",
+      "name": "Mobil med blits",
+      "kind": "Telefon",
+      "description": "Telefonen din, satt på blits og video. Ingen vil bli filmet i mørketida.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 4,
+      "onUse": {
+        "targeting": {
+          "shape": "cone",
+          "range": 3,
+          "radius": 3,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "blendet",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ffffff"
+        }
+      },
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.03,
+              0.32
+            ],
+            "color": "#1a1a1a",
+            "material": "glass"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.05,
+              0.05,
+              0.05
+            ],
+            "pos": [
+              0.05,
+              0.03,
+              0.12
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#ffffff"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pressende-sporsmal",
+      "name": "Pressende spørsmål",
+      "kind": "Metode",
+      "description": "Ett spørsmål, stilt rolig og presist, som treffer et motstridende punkt i forklaringen. Koster 3 Overskudd.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 3
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.2
+              }
+            },
+            "damageType": "press"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#ffb054"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "color": "#ffb054",
+            "material": "glow",
+            "emissive": "#ffb054"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "les-rommet",
+      "name": "Les rommet",
+      "kind": "Metode",
+      "description": "Du står stille og lar blikket vandre. Viser kartet rundt deg og gjør deg skarpere en stund. Koster 4 Overskudd.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "cooldown": 10,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 12
+          },
+          {
+            "type": "apply_status",
+            "status": "pa-sporet",
+            "duration": 10
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#39d98a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.3,
+              0.05
+            ],
+            "color": "#39d98a",
+            "material": "glow",
+            "emissive": "#39d98a"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "kaffe-og-forstaelse",
+      "name": "Kaffe og forståelse",
+      "kind": "Metode",
+      "description": "Du tilbyr en kopp og et ærlig blikk. En motpart innen to ruter blir avvæpnet en stund. Koster 5 Overskudd.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "cooldown": 12,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "avvaepnet",
+            "duration": 8
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffb054"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.14,
+              0.14
+            ],
+            "color": "#f2efe6",
+            "material": "matte"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.08,
+              0.08,
+              0.03
+            ],
+            "pos": [
+              0.09,
+              0,
+              0
+            ],
+            "color": "#f2efe6"
+          }
+        ]
+      }
+    },
+    {
+      "id": "lasteliste",
+      "name": "Lastelista",
+      "kind": "Bevis",
+      "description": "Den offisielle lastelista til «Kapitan Sjirokov», med havnefogdens stempel. Den sier «frossen torsk». Det er ingen torsk om bord.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.02,
+              0.4
+            ],
+            "color": "#f5f5f0",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              0.02,
+              0.1
+            ],
+            "pos": [
+              0.08,
+              0.02,
+              -0.1
+            ],
+            "color": "#c0392b"
+          }
+        ],
+        "light": {
+          "color": "#ffb054",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "losens-logg",
+      "name": "Losens loggbok",
+      "kind": "Bevis",
+      "description": "Halvdan Moes loggbok, med rutene han loste «Kapitan Sjirokov» og et kart over hvor isen ble lastet. Den siste siden viser hvordan man går inn i isen.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.08,
+              0.4
+            ],
+            "color": "#1f3b5c",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.31,
+              0.02,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.05,
+              0.12
+            ],
+            "color": "#ffd166"
+          }
+        ],
+        "light": {
+          "color": "#ffd166",
+          "intensity": 1,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "kapteinens-brev",
+      "name": "Kapteinens brev",
+      "kind": "Bevis",
+      "description": "Et brev fra kaptein Sjirokov, skrevet med frosne fingre: hvem som kjøpte isen, hvem som tjente på den, og hvorfor mannskapet valgte natta.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.28,
+              0.02,
+              0.36
+            ],
+            "color": "#e8fbff",
+            "material": "glass",
+            "emissive": "#7fd4ff"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#7fd4ff",
+          "intensity": 1.2,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "varmeovn",
+      "name": "Varmeovn",
+      "description": "En gammel parafinovn eller en varmepumpe som surrer. Står du her, får du Varme tilbake.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "resource",
+          "resource": "varme",
+          "amount": {
+            "base": 2
+          }
+        }
+      ],
+      "color": "#5a2a14",
+      "height": 0.3,
+      "emissive": "#ff7a1a",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.5,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#3a3a3a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.25,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.3,
+              0.16
+            ],
+            "color": "#ff7a1a",
+            "material": "glow",
+            "emissive": "#ff7a1a"
+          }
+        ],
+        "light": {
+          "color": "#ff8a3d",
+          "intensity": 1.5,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "glattis",
+      "name": "Blank is",
+      "description": "Speilblank is under et tynt lag nysnø. Du går sakte her.",
+      "moveCost": 2,
+      "color": "#a9c9de"
+    },
+    {
+      "id": "snofonn",
+      "name": "Snøfonn",
+      "description": "Brøytekant og snøfonn, høyere enn deg. Ingen ser gjennom den.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#eef4fa",
+      "height": 1.1
+    },
+    {
+      "id": "frossen-stemme",
+      "name": "Frossen stemme",
+      "description": "En søyle av is med et ansikt i. Legger du øret inntil, forteller den noe du kan bruke.",
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "grant_xp",
+            "amount": 6
+          },
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 4
+            }
+          },
+          {
+            "type": "message",
+            "text": "Stemmen i isen sier et navn, så et tall, så ordet «Strand». Du skriver det ned."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#9fe3ff"
+        }
+      },
+      "color": "#7fd4ff",
+      "height": 0.9,
+      "emissive": "#2a8fd0"
+    }
+  ],
+  "unknownAppearances": {
+    "medisinglass": [
+      {
+        "label": "Brunt glass med kyrillisk etikett",
+        "color": "#7a4a1e"
+      },
+      {
+        "label": "Blått glass uten etikett",
+        "color": "#3a6ea8"
+      },
+      {
+        "label": "Matt glass med rim på",
+        "color": "#cfe6f5"
+      },
+      {
+        "label": "Lite rødt glass med gummikork",
+        "color": "#a8323e"
+      },
+      {
+        "label": "Grønn flaske fra apoteket",
+        "color": "#3c7a4a"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Prostneset kai",
+      "description": "Kaia midt i byen, klokka elleve om formiddagen og bekmørkt. Hurtigruten har gått, gatelysene surrer, og et grønt nordlys henger over Tromsdalstinden. Ved enden av kaia ligger den rustrøde tråleren.",
+      "generator": "town",
+      "size": "medium",
+      "params": {
+        "buildings": 10,
+        "streetWidth": 3,
+        "crossStreets": 2
+      },
+      "floor": {
+        "color": "#d9e3ec",
+        "color2": "#b9c9d8",
+        "material": "stone",
+        "pattern": "snow"
+      },
+      "wall": {
+        "color": "#8a2f2b",
+        "color2": "#e8d9b0",
+        "material": "wood",
+        "height": 1.6,
+        "pattern": "planks"
+      },
+      "lighting": {
+        "ambient": "#2a3a5c",
+        "ambientIntensity": 0.45,
+        "fog": {
+          "color": "#0d1626",
+          "density": 0.025
+        },
+        "lamps": {
+          "color": "#ffb054",
+          "intensity": 2.4,
+          "frequency": 0.25,
+          "flicker": false
+        },
+        "playerLight": 5,
+        "sky": "#050a18"
+      },
+      "actors": [
+        {
+          "actor": "gramake",
+          "weight": 30,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "journalist",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "havnevakt",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "wenche",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "termoskaffe",
+          "weight": 30
+        },
+        {
+          "item": "skolebolle",
+          "weight": 20
+        },
+        {
+          "item": "tyrkisk-pepper",
+          "weight": 12
+        },
+        {
+          "item": "hjertedraper",
+          "weight": 10
+        },
+        {
+          "item": "mobilkamera",
+          "weight": 10
+        },
+        {
+          "item": "isbrodder",
+          "weight": 5
+        },
+        {
+          "item": "tjenestelykt",
+          "weight": 5
+        }
+      ],
+      "itemCount": 6,
+      "terrain": [
+        {
+          "terrain": "snofonn",
+          "density": 0.04
+        },
+        {
+          "terrain": "glattis",
+          "density": 0.04
+        },
+        {
+          "terrain": "varmeovn",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Gå om bord i «Kapitan Sjirokov»",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              0.1,
+              1.2
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "rot": [
+              15,
+              0,
+              0
+            ],
+            "color": "#6b6b6b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.05,
+              0.4,
+              1.2
+            ],
+            "pos": [
+              0.4,
+              0.5,
+              0
+            ],
+            "color": "#c8c8c8",
+            "material": "metal"
+          }
+        ],
+        "light": {
+          "color": "#ffb054",
+          "intensity": 1.2,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Byen tester etterforskeren. Journalistene vil ha sitater, havnevaktene viser til forskrifter, måkene stjeler. Wenche vet mer enn hun sier. Nevn havnefogden i forbifarten, aldri direkte.",
+      "backdrop": {
+        "style": "aurora",
+        "color": "#040812",
+        "color2": "#39d98a",
+        "intensity": 0.55
+      },
+      "music": "explore"
+    },
+    {
+      "name": "«Kapitan Sjirokov»",
+      "description": "Tråleren er stille som en kirke. Det står fortsatt kopper på bordet i messa, og fra lasterommet kommer et svakt blått lys og lyden av noen som nynner.",
+      "generator": "ship",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 1,
+        "symmetry": 0.7
+      },
+      "floor": {
+        "color": "#4a5560",
+        "color2": "#3a434c",
+        "material": "metal",
+        "pattern": "metal_plates"
+      },
+      "wall": {
+        "color": "#a33a2c",
+        "color2": "#5a2a22",
+        "material": "metal",
+        "height": 1.4,
+        "pattern": "metal_plates"
+      },
+      "lighting": {
+        "ambient": "#33465a",
+        "ambientIntensity": 0.6,
+        "fog": {
+          "color": "#0a121c",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#d8e8ff",
+          "intensity": 1.8,
+          "frequency": 0.2,
+          "flicker": true
+        },
+        "playerLight": 5
+      },
+      "actors": [
+        {
+          "actor": "rederivakt",
+          "weight": 30,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "isekko",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "tolk",
+          "weight": 20,
+          "min": 2,
+          "max": 3
+        },
+        {
+          "actor": "gramake",
+          "weight": 10,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "natalja",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "termoskaffe",
+          "weight": 25
+        },
+        {
+          "item": "hjertedraper",
+          "weight": 12
+        },
+        {
+          "item": "smeltevann",
+          "weight": 12
+        },
+        {
+          "item": "stemmeis",
+          "weight": 10
+        },
+        {
+          "item": "flytedress",
+          "weight": 6
+        },
+        {
+          "item": "tjenestelykt",
+          "weight": 8
+        },
+        {
+          "item": "nordlysglass",
+          "weight": 8
+        },
+        {
+          "item": "skolebolle",
+          "weight": 10
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "lasteliste",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "glattis",
+          "density": 0.04
+        },
+        {
+          "terrain": "varmeovn",
+          "density": 0.012
+        }
+      ],
+      "transitionName": "Følg isporet over Tromsøbrua",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.7,
+              0.05,
+              0.7
+            ],
+            "color": "#bfe8ff",
+            "material": "glass",
+            "emissive": "#2a8fd0"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.2,
+              0.5,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#e8fbff",
+            "material": "glass",
+            "emissive": "#7fd4ff"
+          }
+        ],
+        "light": {
+          "color": "#7fd4ff",
+          "intensity": 1.5,
+          "radius": 2.5
+        }
+      },
+      "gmNotes": "Rederiets vakter leter etter noe i lasterommet. Natalja i byssa er den første som snakker ærlig. Isekkoene er mannskapets stemmer; de er redde, ikke onde. Lastelista ligger på broa.",
+      "backdrop": {
+        "style": "color",
+        "color": "#050a14"
+      },
+      "music": "tense"
+    },
+    {
+      "name": "Ishavskatedralen",
+      "description": "Den hvite trekanten på andre siden av brua. Inne er det varmt og stille, men orgelet spiller av seg selv, og glassmosaikken over alteret er dekket av rim som skriver på russisk.",
+      "generator": "arena",
+      "size": "medium",
+      "params": {
+        "pillarDensity": 0.3,
+        "sideRooms": 0.7
+      },
+      "floor": {
+        "color": "#6b4a32",
+        "color2": "#4f3524",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#eef2f5",
+        "color2": "#c9d6e0",
+        "material": "stone",
+        "height": 2.4,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#4a4466",
+        "ambientIntensity": 0.7,
+        "fog": {
+          "color": "#1a1530",
+          "density": 0.02
+        },
+        "lamps": {
+          "color": "#ffd9a0",
+          "intensity": 2,
+          "frequency": 0.3,
+          "flicker": true
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "kirkevert",
+          "weight": 25,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "korist",
+          "weight": 25,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "isekko",
+          "weight": 20,
+          "max": 3
+        },
+        {
+          "actor": "journalist",
+          "weight": 10,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "aslak",
+          "where": "near_start"
+        },
+        {
+          "actor": "organisten",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "termoskaffe",
+          "weight": 25
+        },
+        {
+          "item": "skolebolle",
+          "weight": 15
+        },
+        {
+          "item": "tyrkisk-pepper",
+          "weight": 10
+        },
+        {
+          "item": "smeltevann",
+          "weight": 10
+        },
+        {
+          "item": "stemmeis",
+          "weight": 10
+        },
+        {
+          "item": "hjertedraper",
+          "weight": 8
+        },
+        {
+          "item": "nordlysglass",
+          "weight": 8
+        },
+        {
+          "item": "beslagsmappe",
+          "weight": 5
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "losens-logg",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "frossen-stemme",
+          "density": 0.01
+        },
+        {
+          "terrain": "varmeovn",
+          "density": 0.008
+        }
+      ],
+      "transitionName": "Gå inn i isen bak alteret",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "losens-logg"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.9,
+              1.6,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#bfe8ff",
+            "material": "glass",
+            "emissive": "#2a8fd0"
+          }
+        ],
+        "light": {
+          "color": "#7fd4ff",
+          "intensity": 2,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Organisten spiller isens toner og har losens loggbok gjemt bak orgelet. Presten Aslak er snill og redd. Loggboka åpner veien inn i isen bak alteret; uten den er det bare en vegg.",
+      "backdrop": {
+        "style": "aurora",
+        "color": "#07061a",
+        "color2": "#8a6cff",
+        "intensity": 0.5
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "Inni mørketidsisen",
+      "description": "Det er ikke kaldt her inne. Lyset kommer nedenfra, gjennom blå korridorer av is som brekker seg i rette vinkler, og langt borte står elleve skikkelser stille, som om de venter på en buss.",
+      "generator": "geometric",
+      "size": "small",
+      "params": {
+        "variant": 3,
+        "symmetry": 2,
+        "cellSize": 7,
+        "loops": 0.4,
+        "pillars": 0.3
+      },
+      "floor": {
+        "color": "#2f5f86",
+        "color2": "#4f8fbf",
+        "material": "glass",
+        "pattern": "gradient"
+      },
+      "wall": {
+        "color": "#bfe8ff",
+        "color2": "#e8fbff",
+        "material": "glass",
+        "height": 1.6,
+        "pattern": "noise"
+      },
+      "lighting": {
+        "ambient": "#8fc8ff",
+        "ambientIntensity": 0.7,
+        "fog": {
+          "color": "#0b1a30",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#b4fff0",
+          "intensity": 2,
+          "frequency": 0.2,
+          "flicker": false
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "isekko",
+          "weight": 30,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "frossen-sjomann",
+          "weight": 30,
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "halvdan",
+          "where": "near_start"
+        },
+        {
+          "actor": "ragnhild",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "termoskaffe",
+          "weight": 20
+        },
+        {
+          "item": "hjertedraper",
+          "weight": 15
+        },
+        {
+          "item": "stemmeis",
+          "weight": 15
+        },
+        {
+          "item": "tyrkisk-pepper",
+          "weight": 10
+        }
+      ],
+      "itemCount": 4,
+      "placedItems": [
+        {
+          "item": "kapteinens-brev",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "frossen-stemme",
+          "density": 0.015
+        },
+        {
+          "terrain": "glattis",
+          "density": 0.04
+        }
+      ],
+      "transitionName": "Det finnes ingen vei ut av natta",
+      "gmNotes": "Ikke-realistisk rom: isens indre, uten tyngde i lyset, uten himmel. Halvdans bevissthet er her. Ragnhild prøver å holde mannskapet inne. To veier til seier: knekk Ragnhild, eller finn kapteinens brev med lastelista og loggboka i lomma.",
+      "backdrop": {
+        "style": "abyss",
+        "color": "#02040a",
+        "color2": "#1b3a66",
+        "intensity": 0.8
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Finn ut hva som skjedde med mannskapet. Knekk havnefogd Strand inne i isen, eller samle lastelista, losens loggbok og kapteinens brev.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "actor_defeated",
+          "actor": "ragnhild"
+        },
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "lasteliste"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "losens-logg"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "kapteinens-brev"
+            }
+          ]
+        }
+      ]
+    },
+    "winText": "Når du legger bevisene fram, sprekker isen som et vindu om våren. Elleve sjøfolk går ut på kaia ved Prostneset med snø i håret, og Wenche har kaffe klar. Havnefogden blir hentet samme kveld. Halvdan Moe våkner på UNN og spør om noen har sett pipa hans. Sola kommer tilbake 15. januar, som vanlig.",
+    "lossText": "Du sitter på flyet sørover med en dunjakke som aldri var varm nok. Saken blir henlagt. I et lasterom ved Prostneset nynner elleve stemmer en sang som ingen i byen vil høre."
+  },
+  "gm": {
+    "persona": "Mørketida selv: to måneder uten sol som har sett alt som har skjedd i denne byen, og som har god tid.",
+    "voice": "Lavmælt, kort, presis. Nåtid, andre person. Snakker om kulde, lys og stillhet, aldri om følelser direkte.",
+    "threads": [
+      "Hvem i byen tjener på isen, og hvem later som de ikke vet det?",
+      "Mannskapet er ikke døde, de venter inne i natta.",
+      "Halvdan Moe ligger på UNN med åpne øyne og varme hender.",
+      "Byen stoler ikke på deg før du har vist at du blir."
+    ],
+    "fallback": {
+      "intro": "Flyet landet i går i blått mørke, og det er fortsatt blått mørke. Ved Prostneset ligger «Kapitan Sjirokov» med lasterommet fullt av is og ingen om bord. Losen som skulle møte deg ved Ishavskatedralen ble funnet i snøen i morges, levende, men taus. Du har en notisblokk, en dunjakke fra Oslo og en by som ser bort når du spør.",
+      "areaEnter": [
+        "Kaia ved Prostneset. Gatelysene surrer. Et nordlys beveger seg over fjellet som om det leter etter noe, og en måke sitter på en pullert og ser rett på deg.",
+        "Landgangen er dekket av urørt snø. Inne i tråleren står kaffekoppene der de ble satt fra seg, og fra lasterommet nynner noen en melodi du ikke kjenner.",
+        "Kirka er varm og full av levende lys. Orgelet spiller uten at noen sitter ved det, og rimet på mosaikken over alteret skriver ord du ikke kan lese.",
+        "Du går inn i isen, og kulda slipper taket. Her er det stille som i en snøhule. Langt inne står elleve skikkelser og venter."
+      ],
+      "lowHp": [
+        "Fingrene dine nekter å holde pennen. Kanskje Oslo ikke var så ille.",
+        "Du kjenner pulsen i ørene. Mørket har tålmodighet. Har du?",
+        "Pust. Tell til ti. Ikke la dem se at du er sliten."
+      ],
+      "events": [
+        "Telefonen vibrerer. En ukjent avsender skriver bare: «Spør om frostvæsken.»",
+        "En bil med Murmansk-skilter kjører sakte forbi og slukker lysene.",
+        "Nordlyset blir rødt et øyeblikk, og så grønt igjen.",
+        "Noen har tråkket spor i snøen foran deg. De går baklengs.",
+        "Fra et sted under føttene dine nynner noen den samme melodien som i lasterommet."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Langsom, kald og vakker: en lav drone som et skipsmaskineri i hvile, klokketoner som rim, et hjerteslag langt borte.",
+    "synth": {
+      "key": "D",
+      "scale": "dorian",
+      "tempo": 58,
+      "timbre": "bell",
+      "drone": true,
+      "percussion": "heartbeat",
+      "brightness": 0.3
+    },
+    "searchTerms": [
+      "nordic noir ambient",
+      "arctic drone",
+      "polar night ambient"
+    ],
+    "suggestions": [
+      "Jóhann Jóhannsson – Arctic",
+      "Biosphere – Substrata",
+      "Mari Boine – Vuoi Vuoi Me"
+    ]
+  }
+}

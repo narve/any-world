@@ -1,0 +1,556 @@
+{
+  "version": 1,
+  "prompts": [
+    {
+      "id": "corporate-merger-kitchen",
+      "prompt": "A mid-sized insurance firm is being swallowed by its rival, and the only neutral ground left is the third-floor kitchen. You're the temp who knows whose labelled yoghurt is whose — trade gossip, forge meeting invites, and decide which department survives Friday's all-hands.",
+      "language": "en",
+      "genre": "office satire",
+      "tags": [
+        "corporate",
+        "satire",
+        "social",
+        "persuasion"
+      ],
+      "teaser": "A merger, a shared fridge, and one temp who knows everyone's yoghurt.",
+      "nonViolent": true,
+      "worldId": "corporate-merger-kitchen"
+    },
+    {
+      "id": "deep-sea-whale-fall",
+      "prompt": "A research habitat is anchored beside a whale fall at 3,000 metres, and the carcass is growing faster than anything can eat it. Ration your lamp batteries, read the bone-worms' patterns, and find out which crew member stopped sending samples topside — and why.",
+      "language": "en",
+      "genre": "deep-sea survival",
+      "tags": [
+        "deep-sea",
+        "survival",
+        "mystery",
+        "isolation"
+      ],
+      "teaser": "A whale carcass at 3,000 metres that is growing, not shrinking.",
+      "nonViolent": false,
+      "worldId": "deep-sea-whale-fall"
+    },
+    {
+      "id": "viking-lawspeaker-althing",
+      "prompt": "Iceland, 1004. Your master the lawspeaker is dead, and as his apprentice you must recite the entire law from memory at the Althing — but three powerful families each want a different version remembered, and every clause you speak aloud becomes binding. Win votes, not duels.",
+      "language": "en",
+      "genre": "viking saga",
+      "tags": [
+        "viking",
+        "historical",
+        "politics",
+        "persuasion",
+        "memory"
+      ],
+      "teaser": "Recite the whole law from memory; every clause you speak becomes binding.",
+      "nonViolent": true,
+      "worldId": "viking-lawspeaker-althing"
+    },
+    {
+      "id": "detective-sugar-hotel",
+      "prompt": "In a grand Alpine hotel snowed in for the off-season, the pastry chef has vanished, leaving behind a half-finished sugar model of the building — accurate down to a room nobody admits exists. Interview the skeleton staff, compare the model to the real corridors, and name the culprit before the thaw.",
+      "language": "en",
+      "genre": "detective",
+      "tags": [
+        "investigation",
+        "mystery",
+        "snowed-in",
+        "interviews"
+      ],
+      "teaser": "A missing pastry chef left a sugar model of the hotel with one extra room.",
+      "nonViolent": true,
+      "worldId": "detective-sugar-hotel"
+    },
+    {
+      "id": "abstract-yellow-triangle",
+      "prompt": "You are a small yellow triangle loose inside an unfinished abstract painting. Colours are moods, lines are corridors, and the painter keeps returning to paint over whole regions. Reach the signature in the lower corner before you're varnished in place.",
+      "language": "en",
+      "genre": "abstract art navigation",
+      "tags": [
+        "abstract",
+        "non-earth",
+        "puzzle",
+        "colour",
+        "surreal"
+      ],
+      "teaser": "A small yellow triangle racing the painter's brush to the signature.",
+      "nonViolent": true,
+      "worldId": "abstract-yellow-triangle"
+    },
+    {
+      "id": "alien-twilight-migration",
+      "prompt": "On a tidally locked world the whole biosphere walks slowly westward to stay inside the twilight band. You're a pollen-courier riding a herd of house-sized lichen grazers — learn which 'predators' are really symbionts, and keep the migration from splitting apart at the glass canyon.",
+      "language": "en",
+      "genre": "alien ecology",
+      "tags": [
+        "alien",
+        "ecology",
+        "non-earth",
+        "migration",
+        "symbiosis"
+      ],
+      "teaser": "An entire biosphere walking west to stay in the twilight.",
+      "nonViolent": false,
+      "worldId": "alien-twilight-migration"
+    },
+    {
+      "id": "cyberpunk-rooftop-yams",
+      "prompt": "Lagos, 2071: megacorps own the weather, but the rooftop allotment co-op still grows real yams. Overnight, someone patented your grandmother's seed strain. Hack the irrigation drones, bargain with the pigeon-fancier syndicate, and get the seeds back before the rain contract expires.",
+      "language": "en",
+      "genre": "cyberpunk (solar, communal)",
+      "tags": [
+        "cyberpunk",
+        "hacking",
+        "community",
+        "heist-lite",
+        "afrofuturism"
+      ],
+      "teaser": "Megacorps own the weather; the rooftop co-op still grows real yams.",
+      "nonViolent": true,
+      "worldId": "cyberpunk-rooftop-yams"
+    },
+    {
+      "id": "folk-horror-scarecrow-wedding",
+      "prompt": "Every seventh summer the parish of Hollin Moss marries its oldest scarecrow to a living villager, and this year the banns name you. The vicar is kind, the cakes are excellent, and the barley is already leaning toward the church. Find a way out of the wedding — or a better match for the scarecrow.",
+      "language": "en",
+      "genre": "folk horror",
+      "tags": [
+        "folk-horror",
+        "rural",
+        "ritual",
+        "dread",
+        "village"
+      ],
+      "teaser": "This year the banns name you as the scarecrow's bride.",
+      "nonViolent": false,
+      "worldId": "folk-horror-scarecrow-wedding"
+    },
+    {
+      "id": "heist-silent-vault",
+      "prompt": "A Viennese museum holds the only recording of an extinct bird's call, locked behind floors that alarm at any sound above a whisper. Assemble a crew — a deaf locksmith, a retired opera prompter and a very calm cat — and lift it during a live string quartet.",
+      "language": "en",
+      "genre": "heist",
+      "tags": [
+        "heist",
+        "stealth",
+        "crew",
+        "sound",
+        "museum"
+      ],
+      "teaser": "Steal the last recording of an extinct bird during a live string quartet.",
+      "nonViolent": true,
+      "worldId": "heist-silent-vault"
+    },
+    {
+      "id": "microscopic-root-nodule",
+      "prompt": "You are a single nitrogen-fixing bacterium negotiating entry into a pea plant's root. Immune cells check your molecular passport, a rival strain is lying about its credentials, and inside the nodule waits a whole economy trading sugar for nitrogen.",
+      "language": "en",
+      "genre": "microscopic",
+      "tags": [
+        "microscopic",
+        "biology",
+        "non-earth",
+        "negotiation",
+        "diplomacy"
+      ],
+      "teaser": "A bacterium with a molecular passport, bargaining its way into a pea root.",
+      "nonViolent": true,
+      "worldId": "microscopic-root-nodule"
+    },
+    {
+      "id": "fantasy-retired-mimic",
+      "prompt": "You're a mimic who has spent forty comfortable years as the armchair in a dungeon's break room. New management wants the place 'adventurer-friendly', and you're the first furniture on the redundancy list. Prove your worth to the goblin union — or slip out disguised as luggage.",
+      "language": "en",
+      "genre": "fantasy (dungeon satire)",
+      "tags": [
+        "fantasy",
+        "dungeon",
+        "comedy",
+        "workplace",
+        "disguise"
+      ],
+      "teaser": "Forty years as the break-room armchair, now first on the redundancy list.",
+      "nonViolent": false,
+      "worldId": "fantasy-retired-mimic"
+    },
+    {
+      "id": "western-assayer-scales",
+      "prompt": "Dry Fork, Nevada, 1878. The assay office swears the new strike is pure silver, but the assayer's scales were bought on credit from the man who owns the claim. You're the bank's quiet clerk with a jeweller's loupe and two weeks before the stagecoach brings the investors.",
+      "language": "en",
+      "genre": "western noir",
+      "tags": [
+        "western",
+        "noir",
+        "investigation",
+        "fraud",
+        "frontier"
+      ],
+      "teaser": "Pure silver, says the assay — weighed on scales the claim-owner paid for.",
+      "nonViolent": true
+    },
+    {
+      "id": "teen-debate-ferry",
+      "prompt": "Summer debate camp on a converted car ferry: twelve teenagers, one trophy, and a motion nobody wants to argue — 'This house would delete the group chat.' Build alliances, survive talent night, and find out who keeps leaking everyone's practice speeches.",
+      "language": "en",
+      "genre": "teen drama",
+      "tags": [
+        "teen",
+        "school",
+        "debate",
+        "social",
+        "betrayal"
+      ],
+      "teaser": "Twelve teens, one trophy, and the motion: delete the group chat.",
+      "nonViolent": true
+    },
+    {
+      "id": "psychedelic-unfelt-museum",
+      "prompt": "You wake inside a fever-dream museum where every exhibit is a feeling someone forgot to have. The galleries rearrange each time you blink, the guards are made of déjà vu, and your own missing memory has been lent out to somebody else's dream.",
+      "language": "en",
+      "genre": "psychedelic dream",
+      "tags": [
+        "dream",
+        "surreal",
+        "non-earth",
+        "memory",
+        "shifting"
+      ],
+      "teaser": "A museum of feelings nobody got around to having.",
+      "nonViolent": true
+    },
+    {
+      "id": "cosy-lighthouse-bakery",
+      "prompt": "You've inherited your aunt's bakery inside a crooked lighthouse on an island the ferry visits twice a week. Every islander has a standing order, a secret, and an opinion about your century-old sourdough starter, which may be slightly sentient.",
+      "language": "en",
+      "genre": "cosy domestic",
+      "tags": [
+        "cosy",
+        "island",
+        "baking",
+        "community",
+        "slice-of-life"
+      ],
+      "teaser": "An inherited bakery, a crooked lighthouse, a slightly sentient sourdough.",
+      "nonViolent": true
+    },
+    {
+      "id": "kafka-grauwinkel-permit",
+      "prompt": "You need a permit to leave the city of Grauwinkel, but the permit office only accepts applicants who already hold one. The clerks are unfailingly polite, the queue numbers are in base seven, and somewhere in the sub-basement archive is the original form that started it all.",
+      "language": "en",
+      "genre": "bureaucracy / kafkaesque",
+      "tags": [
+        "kafka",
+        "bureaucracy",
+        "surreal",
+        "puzzle",
+        "satire"
+      ],
+      "teaser": "To get the exit permit, you must already hold the exit permit.",
+      "nonViolent": true
+    },
+    {
+      "id": "sports-prairie-curling",
+      "prompt": "A rural curling club in Manitoba is one bonspiel away from bankruptcy, and its skip just broke her wrist. You're the ice-resurfacer driver who knows the sheet better than anyone — read the pebble, coach a team of stubborn retirees, and outplay the city club's sponsored ringers.",
+      "language": "en",
+      "genre": "sports",
+      "tags": [
+        "sports",
+        "curling",
+        "underdog",
+        "coaching",
+        "small-town"
+      ],
+      "teaser": "Save a bankrupt curling club with retirees and perfect ice.",
+      "nonViolent": true
+    },
+    {
+      "id": "mythic-river-advocate",
+      "prompt": "The river god of the Yamuna has sued the city for trespass, and as the only human who can hear the water speak, you've been appointed his advocate. Gather testimony from turtles, bathing ghats and drowned temple bells before the monsoon hearing.",
+      "language": "en",
+      "genre": "mythic",
+      "tags": [
+        "mythic",
+        "legal",
+        "river",
+        "spirits",
+        "india"
+      ],
+      "teaser": "The river god is suing the city, and you're his lawyer.",
+      "nonViolent": true
+    },
+    {
+      "id": "music-missing-bass-line",
+      "prompt": "The world is a fugue in four voices, and the bass line has gone missing. Walk the staves as a lone grace note, climb key changes like cliffs, and coax the dissonant chords — they bite — back into resolution before the final cadence closes the piece for good.",
+      "language": "en",
+      "genre": "music-as-world",
+      "tags": [
+        "music",
+        "abstract",
+        "non-earth",
+        "harmony",
+        "puzzle"
+      ],
+      "teaser": "A lone grace note searching a fugue for its missing bass line.",
+      "nonViolent": true
+    },
+    {
+      "id": "giant-shoulder-pilgrimage",
+      "prompt": "Your village lives on the shoulder of a sleeping giant who has started to dream. Make the pilgrimage down the arm to the open palm, where the giant's fever is turning into weather, and decide whether the giant should be woken.",
+      "language": "en",
+      "genre": "mythic / body world",
+      "tags": [
+        "giant",
+        "body",
+        "non-earth",
+        "pilgrimage",
+        "weather"
+      ],
+      "teaser": "Your village lives on a sleeping giant who has started to dream.",
+      "nonViolent": true
+    },
+    {
+      "id": "fantasy-lich-tax-audit",
+      "prompt": "The lich of Ombervault hasn't paid property tax in six hundred years, and you're the junior royal auditor sent in with a ledger and a lantern. The undead staff keep meticulous records; the trouble is that the lich's accountant has been dead the whole time too.",
+      "language": "en",
+      "genre": "fantasy (bureaucratic comedy)",
+      "tags": [
+        "fantasy",
+        "undead",
+        "audit",
+        "comedy",
+        "investigation"
+      ],
+      "teaser": "Six hundred years of unpaid property tax, and one junior auditor.",
+      "nonViolent": true
+    },
+    {
+      "id": "polar-ice-core-radio",
+      "prompt": "Antarctic winter-over: nine people, no flights until August. The ice core you drilled last week held an air bubble 800,000 years old, and since it was opened the radio picks up only one station — your own, broadcasting tomorrow.",
+      "language": "en",
+      "genre": "polar thriller",
+      "tags": [
+        "antarctica",
+        "isolation",
+        "sci-fi",
+        "time",
+        "mystery"
+      ],
+      "teaser": "An 800,000-year-old air bubble, and a radio that only plays tomorrow.",
+      "nonViolent": true
+    },
+    {
+      "id": "historical-quarantine-apothecary",
+      "prompt": "Florence, 1630, under quarantine. As the apothecary's daughter you pass medicines through a hatch in each door, which makes you the only person who sees inside every sealed house. Someone is using your deliveries to smuggle messages, and the health board wants a name.",
+      "language": "en",
+      "genre": "historical investigation",
+      "tags": [
+        "historical",
+        "plague",
+        "italy",
+        "investigation",
+        "secrets"
+      ],
+      "teaser": "The only person who sees inside every sealed house.",
+      "nonViolent": true
+    },
+    {
+      "id": "cartoon-inkwell-noir",
+      "prompt": "Inkwell City is a black-and-white rubber-hose cartoon town where gravity only works when someone looks down. You're a three-fingered private eye hired to find out who has been erasing the background characters — one smudge at a time.",
+      "language": "en",
+      "genre": "cartoon noir",
+      "tags": [
+        "noir",
+        "cartoon",
+        "non-earth",
+        "detective",
+        "surreal"
+      ],
+      "teaser": "Someone is erasing the background characters of a rubber-hose city.",
+      "nonViolent": true
+    },
+    {
+      "id": "first-contact-by-scent",
+      "prompt": "You're the interpreter at humanity's first contact, but the visitors speak entirely in scent — and the negotiating room's ventilation is failing. Mix phrases from a kit of perfumes, keep the delegates from mistaking lunch for a declaration of war, and get a treaty signed.",
+      "language": "en",
+      "genre": "diplomatic sci-fi",
+      "tags": [
+        "first-contact",
+        "diplomacy",
+        "translation",
+        "sci-fi",
+        "persuasion"
+      ],
+      "teaser": "The aliens speak in smells, and the ventilation is failing.",
+      "nonViolent": true
+    },
+    {
+      "id": "night-train-1961",
+      "prompt": "The last sleeper from Bucharest to Vienna, 1961. Somewhere aboard is a microfilm sewn into a child's teddy bear, and three agencies have each booked a compartment. You're the dining-car steward who sees everyone at breakfast — get the film across the border without anyone noticing you've chosen a side.",
+      "language": "en",
+      "genre": "cold-war espionage",
+      "tags": [
+        "spy",
+        "train",
+        "stealth",
+        "cold-war",
+        "social"
+      ],
+      "teaser": "A sleeper train, a microfilm, and a border at dawn.",
+      "nonViolent": true
+    },
+    {
+      "id": "nb-nordisk-noir-tromso",
+      "prompt": "Tromsø i mørketida. En russisk tråler ligger til kai med lasterommet fullt av is, men mannskapet er sporløst borte – og den eneste som ville snakke med deg, en pensjonert los, ble funnet i snøen ved Ishavskatedralen i morges. Du er den nye etterforskeren fra Oslo, og ingen her stoler på deg.",
+      "language": "nb",
+      "genre": "nordic noir",
+      "tags": [
+        "noir",
+        "norway",
+        "arctic",
+        "investigation",
+        "polar-night"
+      ],
+      "teaser": "Mørketid i Tromsø: en tråler uten mannskap og en død los i snøen.",
+      "nonViolent": true,
+      "worldId": "nb-nordisk-noir-tromso"
+    },
+    {
+      "id": "nb-russetid-bussen",
+      "prompt": "Det er tre uker igjen til 17. mai, og russebussen dere har spart til i to år henger i en tynn tråd: bussjefen har brukt pengene på et lydanlegg ingen har sett, og kjæresten din er den eneste som vet hvor det står. Hold gjengen samlet, ikke dump eksamen, og bestem deg for hvem du egentlig er lojal mot.",
+      "language": "nb",
+      "genre": "teen drama",
+      "tags": [
+        "teen",
+        "russ",
+        "norway",
+        "loyalty",
+        "social"
+      ],
+      "teaser": "Tre uker til 17. mai, og russebusspengene er borte.",
+      "nonViolent": true,
+      "worldId": "nb-russetid-bussen"
+    },
+    {
+      "id": "nb-troll-direktoratet",
+      "prompt": "Trollene under Dovre har fått sitt eget direktorat, og du er det første mennesket som har søkt om å bygge hytte på trollgrunn. Skjemaene må være ferdig utfylt før sola står opp, saksbehandleren har tre hoder som er hjertens uenige, og klagefristen er hundre år.",
+      "language": "nb",
+      "genre": "folklore bureaucracy",
+      "tags": [
+        "troll",
+        "folklore",
+        "bureaucracy",
+        "non-earth",
+        "satire"
+      ],
+      "teaser": "Byggesøknad hos Trolldirektoratet – før sola står opp.",
+      "nonViolent": true,
+      "worldId": "nb-troll-direktoratet"
+    },
+    {
+      "id": "nb-fjordbygda-fjellet",
+      "prompt": "I en liten fjordbygd på Vestlandet har fergen sluttet å gå etter at fjellet begynte å sige. Bygda må velge: flytte alle sammen, eller bli og satse. Du er den nye læreren, og hver eneste familie vil ha deg på sin side før bygdemøtet på torsdag.",
+      "language": "nb",
+      "genre": "village drama",
+      "tags": [
+        "norway",
+        "fjord",
+        "community",
+        "persuasion",
+        "nature"
+      ],
+      "teaser": "Fjellet siger, fergen har stoppet, og bygdemøtet er på torsdag.",
+      "nonViolent": true
+    },
+    {
+      "id": "nb-hurtigruten-dagboka",
+      "prompt": "Hurtigruten nordover fra Bergen, midt i januar. Ved hvert anløp kommer det om bord én passasjer som ikke står på listen, og i lugar 313 ligger en dagbok som beskriver neste havn før dere har kommet fram. Finn ut hvem som skriver i den før dere når Kirkenes.",
+      "language": "nb",
+      "genre": "mystery",
+      "tags": [
+        "hurtigruten",
+        "norway",
+        "mystery",
+        "surreal",
+        "coast"
+      ],
+      "teaser": "En dagbok i lugar 313 beskriver neste anløp før dere er der.",
+      "nonViolent": true
+    },
+    {
+      "id": "nb-paaskekrim-vidda",
+      "prompt": "Påskeferie på en hytte på Hardangervidda, uten strøm og med seks søskenbarn som ikke har snakket sammen siden arveoppgjøret. Bestemors nye testament er gjemt et sted i hytta, og uværet har stengt løypene. Kvikk Lunsj, appelsiner og mistanker – en skikkelig påskekrim.",
+      "language": "nb",
+      "genre": "cosy mystery (påskekrim)",
+      "tags": [
+        "påskekrim",
+        "cabin",
+        "norway",
+        "family",
+        "investigation"
+      ],
+      "teaser": "Uvær på vidda, seks søskenbarn og et forsvunnet testament.",
+      "nonViolent": true
+    },
+    {
+      "id": "fixture-western",
+      "prompt": "A drought town on the frontier where somebody has stolen the rain itself — and is selling it back by the barrel. Track the rain broker through the dry gulches before the last well runs out.",
+      "language": "en",
+      "genre": "weird western",
+      "tags": [
+        "western",
+        "drought",
+        "frontier",
+        "weird"
+      ],
+      "teaser": "The rain was stolen, and someone is selling it back by the barrel.",
+      "nonViolent": false,
+      "worldId": "fixture-western"
+    },
+    {
+      "id": "fixture-ship",
+      "prompt": "A generation ship two centuries into its voyage, where something is being hidden from the crew. Walk the decks nobody visits any more and find out what the ship has been keeping quiet.",
+      "language": "en",
+      "genre": "generation-ship mystery",
+      "tags": [
+        "sci-fi",
+        "ship",
+        "mystery",
+        "isolation"
+      ],
+      "teaser": "Two hundred years out, and the ship is keeping a secret.",
+      "nonViolent": false,
+      "worldId": "fixture-ship"
+    },
+    {
+      "id": "fixture-teen",
+      "prompt": "The last week of school before the town floods for a new reservoir. Everyone is leaving, nobody is saying what they mean, and someone has taken your speech notebook.",
+      "language": "en",
+      "genre": "teen social drama",
+      "tags": [
+        "teen",
+        "school",
+        "social",
+        "farewell"
+      ],
+      "teaser": "The last week of school before the whole town goes under.",
+      "nonViolent": true,
+      "worldId": "fixture-teen"
+    },
+    {
+      "id": "fixture-dream",
+      "prompt": "Navigate an abstract painting that is alive, where colour and geometry are the terrain and a missing fourth primary colour is the only way out.",
+      "language": "en",
+      "genre": "abstract dream",
+      "tags": [
+        "abstract",
+        "dream",
+        "non-earth",
+        "colour"
+      ],
+      "teaser": "A living painting short one primary colour.",
+      "nonViolent": false,
+      "worldId": "fixture-dream"
+    }
+  ]
+}

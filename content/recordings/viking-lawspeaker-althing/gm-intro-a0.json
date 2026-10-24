@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/viking-lawspeaker-althing/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "It is said in law that the Lawspeaker recites a third of the law each summer from the Rock. Hallbjorn Grey-Tongue choked on a fishbone eight days ago with two thirds still unsaid, and now they live only in you. Across the booths the Mosfell, Whalefjord and Hof kin are already agreeing on what you remember. Gudrun is waving a bowl of skyr at you from her booth. It is said in law that a hungry speaker is a short speaker."
+          }
+        ]
+      }
+    }
+  ]
+}

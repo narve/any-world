@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/nb-russetid-bussen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Kunngjøring: fatningen din er nesten borte. Ingen har dødd av å være flau. Nesten ingen."
+          }
+        ]
+      }
+    }
+  ]
+}

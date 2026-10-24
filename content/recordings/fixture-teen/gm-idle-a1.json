@@ -1,0 +1,44 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:idle/fixture-teen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Someone has started a group photo on the stairs and is yelling names. Yours is not one of them, until it is."
+          },
+          {
+            "type": "offer_choice",
+            "prompt": "Squeeze into the photo, or use the distraction to slip upstairs?",
+            "options": [
+              {
+                "label": "Get in the photo",
+                "actions": [
+                  {
+                    "type": "give_item",
+                    "item": "polaroid",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "label": "Slip upstairs",
+                "actions": [
+                  {
+                    "type": "grant_xp",
+                    "amount": 10
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          }
+        ]
+      }
+    }
+  ]
+}

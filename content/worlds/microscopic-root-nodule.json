@@ -1,0 +1,3878 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Papers, Please, Pea Plant",
+    "tagline": "One bacterium, one forged rival, one root that checks everyone's molecular passport.",
+    "genre": "microscopic bureaucratic thriller",
+    "tags": [
+      "microscopic",
+      "symbiosis",
+      "customs",
+      "economy",
+      "non-violent",
+      "biology"
+    ],
+    "tone": "wry, wet, tense, quietly wondrous",
+    "era": "one spring afternoon, root time",
+    "premise": "You are RL-7, a single rod of Rhizobium swimming through soil water toward a pea root that is breathing out an invitation. To get in you must prove, molecule by molecule, that you are the partner it ordered: past grazers in the pore water, through the immune checkpoint of a root hair, down a living infection thread and into the pink nodule, where sugar is traded for fixed nitrogen. A rival strain, Kappa, has the same papers. Kappa's papers are lies.",
+    "prompt": "You are a single nitrogen-fixing bacterium negotiating entry into a pea plant's root. Immune cells check your molecular passport, a rival strain is lying about its credentials, and inside the nodule waits a whole economy trading sugar for nitrogen.",
+    "nonViolent": true,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Adhesion",
+        "abbr": "ADH",
+        "description": "How hard you stick, shove and hold on. Drives physical outcompeting and hauling."
+      },
+      "dex": {
+        "name": "Flagella",
+        "abbr": "FLG",
+        "description": "Your whip-tails: swimming, dodging and aiming secretions."
+      },
+      "int": {
+        "name": "Signalling",
+        "abbr": "SIG",
+        "description": "Fluency in chemical language. Powers Nod factor signals and quorum shouts."
+      },
+      "hp": {
+        "name": "Membrane",
+        "abbr": "MEM",
+        "description": "The integrity of your outer membrane. At zero you lyse."
+      },
+      "mp": {
+        "name": "ATP",
+        "abbr": "ATP",
+        "description": "Spendable cellular energy for signals and sprints."
+      },
+      "ac": {
+        "name": "Capsule",
+        "abbr": "CAP",
+        "description": "Your slimy sugar coat. Harder to grip, harder to recognise."
+      }
+    },
+    "conflict": "Outcompete",
+    "defeated": "outcompeted",
+    "xp": "Fitness",
+    "levelUp": "Adaptive mutation",
+    "currency": "sugar",
+    "lossTitle": "Lysed",
+    "winTitle": "Symbiosis Established",
+    "area": "Zone"
+  },
+  "palette": {
+    "primary": "#e58fa6",
+    "secondary": "#c9a66b",
+    "accent": "#8de0c2",
+    "danger": "#ff5a3c",
+    "ui": "#1d1a24",
+    "text": "#f3ece2"
+  },
+  "damageTypes": [
+    {
+      "id": "signal",
+      "name": "Signal",
+      "color": "#8de0c2"
+    },
+    {
+      "id": "oxidative",
+      "name": "Oxidative",
+      "color": "#ff7a3c"
+    },
+    {
+      "id": "enzymatic",
+      "name": "Enzymatic",
+      "color": "#e8d26a"
+    },
+    {
+      "id": "antibiotic",
+      "name": "Antibiotic",
+      "color": "#b48cff"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "flagged",
+      "name": "Flagged",
+      "description": "The plant has you on a watch list. Immune patrols find your capsule easier to grip.",
+      "harmful": true,
+      "color": "#ff5a3c",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "oxidised",
+      "name": "Oxidised",
+      "description": "Reactive oxygen is chewing your membrane lipids each turn.",
+      "harmful": true,
+      "color": "#ff8a3c",
+      "perTurn": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          },
+          "damageType": "oxidative"
+        }
+      ]
+    },
+    {
+      "id": "callose-snare",
+      "name": "Callose Snare",
+      "description": "Glued in place by a plug of callose.",
+      "harmful": true,
+      "color": "#e9e2c8",
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "nod-degraded",
+      "name": "Nod Degraded",
+      "description": "Chitinase has trimmed your Nod factors; your signals come out garbled.",
+      "harmful": true,
+      "color": "#e8d26a",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "chemotaxis",
+      "name": "Chemotaxis",
+      "description": "You smell a gradient and swim it at full tumble-free speed.",
+      "harmful": false,
+      "color": "#8de0c2",
+      "flags": [
+        "hasted"
+      ]
+    },
+    {
+      "id": "crosstalk",
+      "name": "Crosstalk",
+      "description": "Conflicting signals: you cannot tell which way is toward.",
+      "harmful": true,
+      "color": "#b48cff",
+      "flags": [
+        "confused"
+      ]
+    },
+    {
+      "id": "well-fed",
+      "name": "Well Fed",
+      "description": "Plant sugar in your cytoplasm, patching the membrane.",
+      "harmful": false,
+      "color": "#ffd27a",
+      "perTurn": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "credentials",
+      "name": "Credentials",
+      "description": "How much the plant currently trusts your molecular passport.",
+      "color": "#9fe0ff",
+      "max": 12,
+      "start": 10,
+      "perTurn": 0
+    }
+  ],
+  "rules": [
+    {
+      "id": "molecular-passport",
+      "name": "Molecular Passport",
+      "description": "Each rival you outcompete costs 1 Credentials: the plant notices troublemakers. While Credentials are 0 you are Flagged (-2 Capsule). Each new Zone restores 4; flavonoids and leghemoglobin restore more.",
+      "playerTriggers": [
+        {
+          "on": "on_kill",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "credentials",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_turn",
+          "every": 10,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "condition": {
+              "type": "stat",
+              "who": "player",
+              "stat": "credentials",
+              "cmp": "lte",
+              "value": 0
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "flagged",
+                "duration": 10
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_area_enter",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "credentials",
+                "amount": {
+                  "base": 4
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "sugar-for-nitrogen",
+      "name": "Sugar for Nitrogen",
+      "description": "The plant pays its partners in advance: entering each new Zone deposits 6 sugar and leaves you Well Fed for 5 turns.",
+      "playerTriggers": [
+        {
+          "on": "on_area_enter",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              },
+              {
+                "type": "apply_status",
+                "status": "well-fed",
+                "duration": 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": true,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "RL-7",
+    "title": "Rhizobium leguminosarum, biovar viciae",
+    "description": "A single rod-shaped bacterium, two microns of ambition, carrying the one gene cluster a pea plant wants: nitrogenase. Your passport is a sugar-and-fat molecule called Nod factor, and you are almost sure it is real.",
+    "stats": {
+      "str": 10,
+      "dex": 12,
+      "int": 14,
+      "hp": 30,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 8,
+    "sight": 7,
+    "unarmed": {
+      "name": "Pilus Poke",
+      "verb": "pokes",
+      "damage": {
+        "dice": "1d3"
+      },
+      "range": 1,
+      "accuracyStat": "dex"
+    },
+    "startingItems": [
+      {
+        "item": "nod-spritz",
+        "equipped": true
+      },
+      {
+        "item": "lps-coat",
+        "equipped": true
+      },
+      {
+        "item": "malate-droplet",
+        "count": 3
+      }
+    ],
+    "startCurrency": 12,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "thick-capsule",
+          "name": "Thicker Capsule",
+          "description": "Extra exopolysaccharide slime. +1 Capsule.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "peritrichous",
+          "name": "Peritrichous Flagella",
+          "description": "Whip-tails all over your body. +2 Flagella.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "nod-amplified",
+          "name": "Nod Gene Amplification",
+          "description": "A duplicated nodD. +2 Signalling.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "biofilm-anchor",
+          "name": "Biofilm Anchor",
+          "description": "You glue yourself to the world. +2 Adhesion, +5 Membrane.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            },
+            {
+              "stat": "hp",
+              "amount": 5
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "quorum-gene",
+          "name": "Quorum Voice",
+          "description": "Learn Quorum Shout: a burst of autoinducer that outcompetes everything near the target.",
+          "grantItems": [
+            "quorum-shout"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "catalase-operon",
+          "name": "Catalase Operon",
+          "description": "When hurt, 30% chance to scrub reactive oxygen: heal 2 and lose Oxidised.",
+          "triggers": [
+            {
+              "on": "on_hurt",
+              "chance": 0.3,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 2
+                    }
+                  },
+                  {
+                    "type": "remove_status",
+                    "status": "oxidised"
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "phb-granules",
+          "name": "PHB Granules",
+          "description": "Stored carbon. Every 12 turns, heal 3 Membrane.",
+          "triggers": [
+            {
+              "on": "on_turn",
+              "every": 12,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 3
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "type-six",
+          "name": "Type VI Secretion",
+          "description": "Each hit has a 25% chance to fire a toxin needle into adjacent rivals for 1d4 antibiotic.",
+          "triggers": [
+            {
+              "on": "on_hit",
+              "chance": 0.25,
+              "action": {
+                "targeting": {
+                  "shape": "adjacent",
+                  "affects": "enemies",
+                  "range": 1
+                },
+                "effects": [
+                  {
+                    "type": "damage",
+                    "amount": {
+                      "dice": "1d4"
+                    },
+                    "damageType": "antibiotic"
+                  }
+                ],
+                "vfx": {
+                  "kind": "slash",
+                  "color": "#b48cff"
+                }
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "swarmer",
+          "name": "Swarmer Mode",
+          "description": "Elongate and hyper-flagellate. +20 speed.",
+          "modifiers": [
+            {
+              "stat": "speed",
+              "amount": 20
+            }
+          ],
+          "minLevel": 5
+        },
+        {
+          "id": "certified-mutualist",
+          "name": "Certified Mutualist",
+          "description": "Your nif genes hum. +1 Adhesion, +2 Signalling, +1 Capsule.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 1
+            },
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "freeform",
+      "parts": [
+        {
+          "shape": "capsule",
+          "size": [
+            0.32,
+            0.7,
+            0.32
+          ],
+          "pos": [
+            0,
+            0.35,
+            0
+          ],
+          "rot": [
+            0,
+            0,
+            80
+          ],
+          "color": "#8de0c2",
+          "material": "glass",
+          "emissive": "#1f5a48",
+          "group": "body"
+        },
+        {
+          "shape": "sphere",
+          "size": [
+            0.12,
+            0.12,
+            0.12
+          ],
+          "pos": [
+            0.12,
+            0.42,
+            0.12
+          ],
+          "color": "#f3ece2",
+          "material": "glow",
+          "emissive": "#9fe0ff"
+        },
+        {
+          "shape": "cylinder",
+          "size": [
+            0.03,
+            0.45,
+            0.03
+          ],
+          "pos": [
+            -0.42,
+            0.28,
+            0
+          ],
+          "rot": [
+            0,
+            0,
+            60
+          ],
+          "color": "#d6fff0",
+          "material": "matte",
+          "group": "tail"
+        },
+        {
+          "shape": "cylinder",
+          "size": [
+            0.03,
+            0.4,
+            0.03
+          ],
+          "pos": [
+            -0.38,
+            0.4,
+            0.08
+          ],
+          "rot": [
+            20,
+            0,
+            110
+          ],
+          "color": "#d6fff0",
+          "material": "matte",
+          "group": "tail"
+        }
+      ],
+      "idle": "sway",
+      "light": {
+        "color": "#8de0c2",
+        "intensity": 0.6,
+        "radius": 2
+      },
+      "scale": 1.35
+    }
+  },
+  "actors": [
+    {
+      "id": "grazing-amoeba",
+      "name": "Grazing Amoeba",
+      "description": "A translucent continent of cytoplasm that eats bacteria the way you breathe. It does not hate you. It is simply lunch-shaped.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 9,
+        "ac": 10,
+        "str": 11,
+        "dex": 8,
+        "int": 4
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Engulf",
+        "verb": "engulfs",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "range": 1,
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "malate-droplet",
+          "chance": 0.2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "persuadeDifficulty": 14,
+      "tags": [
+        "protist",
+        "grazer"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#c7d9e8",
+          "secondary": "#7f9ab3",
+          "accent": "#f4e6a1"
+        },
+        "scale": 1.15,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "streptomyces",
+      "name": "Streptomyces Sporeline",
+      "description": "A beaded mycelium of soil Streptomyces creeping grain to grain, coughing streptomycin at anything competing for its patch of wet grit.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 6,
+        "ac": 11,
+        "str": 6,
+        "dex": 12,
+        "int": 6
+      },
+      "attack": {
+        "name": "Antibiotic Puff",
+        "verb": "puffs streptomycin at",
+        "damage": {
+          "base": 0,
+          "dice": "1d4"
+        },
+        "damageType": "antibiotic",
+        "range": 3,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "loot": [
+        {
+          "item": "catalase-puff",
+          "chance": 0.15
+        }
+      ],
+      "xp": 6,
+      "persuadeDifficulty": 12,
+      "tags": [
+        "bacterium",
+        "soil"
+      ],
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#d8c39a",
+          "secondary": "#7a5c36",
+          "accent": "#b48cff"
+        },
+        "idle": "sway"
+      },
+      "speed": 60
+    },
+    {
+      "id": "phage-lander",
+      "name": "T4 Phage Lander",
+      "description": "A twenty-sided capsule of someone else's DNA on six spider legs, looking for a membrane to stand on and inject.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 5,
+        "ac": 12,
+        "str": 6,
+        "dex": 14,
+        "int": 2
+      },
+      "speed": 130,
+      "attack": {
+        "name": "Tail Inject",
+        "verb": "punctures",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "xp": 4,
+      "tags": [
+        "virus"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.34,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.72,
+              0
+            ],
+            "color": "#e0e6ff",
+            "material": "metal",
+            "emissive": "#28305a",
+            "group": "head"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.32,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.42,
+              0
+            ],
+            "color": "#9aa4cc",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.36,
+              0.03
+            ],
+            "pos": [
+              0.16,
+              0.14,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              35
+            ],
+            "color": "#c9d0f0",
+            "material": "metal",
+            "group": "legs"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.36,
+              0.03
+            ],
+            "pos": [
+              -0.16,
+              0.14,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              -35
+            ],
+            "color": "#c9d0f0",
+            "material": "metal",
+            "group": "legs"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.36,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.14,
+              0.16
+            ],
+            "rot": [
+              -35,
+              0,
+              0
+            ],
+            "color": "#c9d0f0",
+            "material": "metal",
+            "group": "legs"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.36,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.14,
+              -0.16
+            ],
+            "rot": [
+              35,
+              0,
+              0
+            ],
+            "color": "#c9d0f0",
+            "material": "metal",
+            "group": "legs"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "root-nematode",
+      "name": "Root-Knot Nematode",
+      "description": "A glassy worm a hundred times your length, stylet first, that treats the whole root as its pantry and you as a crumb in the way.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 22,
+        "ac": 12,
+        "str": 13,
+        "dex": 10,
+        "int": 4
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Stylet Jab",
+        "verb": "stylet-jabs",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "range": 1,
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "loot": [
+        {
+          "item": "trehalose-crystal",
+          "chance": 0.4
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 18,
+      "persuadeDifficulty": 16,
+      "tags": [
+        "worm",
+        "elite"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#efe6d0",
+          "secondary": "#b7a88a",
+          "accent": "#6b4f2c"
+        },
+        "scale": 1.3,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "old-glomus",
+      "name": "Old Glomus",
+      "description": "A mycorrhizal fungus whose hyphae have run through this soil since before peas were peas. It brokers phosphate for the landlord and gossip for everyone.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 40,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "trader",
+        "personality": "Ancient, unhurried, transactional. Calls the pea plant 'the landlord', every bacterium 'tenant', and takes a cut of everything on principle.",
+        "greeting": "Another tenant, swimming at the landlord's door. Sugar talks, little rod. What are you buying?",
+        "lines": [
+          "The landlord breathes luteolin when it's lonely for nitrogen. Find the whisper and the root hair will curl round you like a hand.",
+          "Four hundred million years I've traded with roots. The trick is to always deliver what you promised.",
+          "A strain called Kappa came by. Bought nothing. Asked a great deal about your passport."
+        ],
+        "stock": [
+          "trehalose-crystal",
+          "catalase-puff",
+          "chemotaxis-sprint",
+          "lectin-compass",
+          "ahl-beacon"
+        ],
+        "secrets": "Kappa is a cheater strain: it carries forged nod genes but no working nitrogenase. Glomus sold Kappa a map of the root, and regrets it.",
+        "wants": "For the nodule economy to stay honest; a partner who fixes real nitrogen keeps the landlord generous to fungi too.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 13
+      },
+      "tags": [
+        "fungus",
+        "trader"
+      ],
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#f0f0e6",
+          "secondary": "#c9c2a0",
+          "accent": "#ffd27a"
+        },
+        "scale": 1.4,
+        "idle": "sway",
+        "light": {
+          "color": "#ffd27a",
+          "intensity": 0.8,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "chitinase-patrol",
+      "name": "Chitinase Patroller",
+      "description": "An immune enzyme that snips chitin chains. Your Nod factor is a chitin chain with a fatty tail. It would like to see your papers, then trim them.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 12,
+        "ac": 11,
+        "str": 11,
+        "dex": 10,
+        "int": 8
+      },
+      "attack": {
+        "name": "Snip",
+        "verb": "snips at",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "enzymatic",
+        "range": 1,
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "adjacent",
+              "affects": "enemies",
+              "range": 1
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "nod-degraded",
+                "duration": 6
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "malate-droplet",
+          "chance": 0.2
+        }
+      ],
+      "xp": 7,
+      "persuadeDifficulty": 13,
+      "tags": [
+        "immune",
+        "enzyme"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#ffb36b",
+          "secondary": "#7a3b12",
+          "accent": "#fff1c2"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "ros-pore",
+      "name": "Oxidative Burst Pore",
+      "description": "A membrane oxidase studded into the cell wall. Brush past it and it exhales superoxide in your face.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 10,
+        "ac": 12,
+        "str": 6,
+        "dex": 12,
+        "int": 6
+      },
+      "attack": {
+        "name": "ROS Burst",
+        "verb": "scorches",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "oxidative",
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "adjacent",
+              "affects": "enemies",
+              "range": 1
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "oxidised",
+                "duration": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 7,
+      "persuadeDifficulty": 12,
+      "tags": [
+        "immune",
+        "turret"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.6,
+              0.18,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#7a2e18",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.34,
+              0.34,
+              0.34
+            ],
+            "pos": [
+              0,
+              0.38,
+              0
+            ],
+            "color": "#ff8a3c",
+            "material": "glow",
+            "emissive": "#ff5a1c"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ff7a3c",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "fls2-warden",
+      "name": "FLS2 Pattern Warden",
+      "description": "A receptor complex that knows exactly one face: the flagellin of a pathogen. It checks every whip-tail that passes, and it is never wrong twice.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 20,
+        "ac": 13,
+        "str": 13,
+        "dex": 10,
+        "int": 10
+      },
+      "attack": {
+        "name": "Flagellin Clamp",
+        "verb": "clamps",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "range": 1,
+        "accuracyStat": "str"
+      },
+      "abilities": [
+        {
+          "id": "flag-alarm",
+          "name": "Pattern Alarm",
+          "description": "Broadcasts your pattern to the immune system.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 4,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "flagged",
+                "duration": 8
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#ff5a3c"
+            }
+          },
+          "cooldown": 20,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "trehalose-crystal",
+          "chance": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 20,
+      "persuadeDifficulty": 15,
+      "tags": [
+        "immune",
+        "elite"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#d94a3a",
+          "secondary": "#f2d0a0",
+          "accent": "#ffef7a"
+        },
+        "scale": 1.3,
+        "idle": "bob"
+      },
+      "sight": 6
+    },
+    {
+      "id": "officer-lyk3",
+      "name": "Officer NFP-LYK3",
+      "description": "The Nod factor receptor on duty at the root hair: two LysM domains, a clipboard of chitin standards and a soft spot for good paperwork.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 30,
+        "ac": 12
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "informant",
+        "personality": "Punctilious, kind, overworked. Reads every molecule aloud, sulphate group by sulphate group. Hates being rushed; loves a correctly acetylated tail.",
+        "greeting": "Next. Nod factor, please. Tetramer, C18:4 tail, sulphated? ...Not sulphated. Good. Pea likes it plain.",
+        "lines": [
+          "The entry permit is held in the guarded vacuole at the far end. The Pattern Warden keeps it. Don't wave your flagella at it.",
+          "Two strains with identical papers in one morning. I stamped the first. I am now worried about the first.",
+          "If the chitinases pester you, show them your passport. Politely. They are only enzymes."
+        ],
+        "secrets": "Kappa came through first with a flawless Nod factor but its nif genes did not answer the officer's test ping. The officer stamped it anyway under quota pressure.",
+        "wants": "To be told whether the strain it admitted was a fraud, and to finish the shift without an oxidative burst.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 11
+      },
+      "tags": [
+        "receptor",
+        "customs"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#cfe6b8",
+          "top": "#2e5f7a",
+          "bottom": "#1f3f52",
+          "accent": "#ffd27a",
+          "hairStyle": "none",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "book"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "kappa-envoy",
+      "name": "Kappa, Strain of Good Standing",
+      "description": "A rod exactly your shape and colour, a shade more purple, with a smile in its secretions. Its papers say Rhizobium leguminosarum, biovar viciae. So do yours.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "int": 14
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.3
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Charming, generous with compliments, allergic to specifics. Answers questions with questions and always speaks of 'our' nodule.",
+        "greeting": "Cousin! Same biovar, same lovely Nod factor. Plenty of sugar for two, wouldn't you say?",
+        "lines": [
+          "Nitrogenase? Of course I have nitrogenase. Everyone has nitrogenase. Why, do you?",
+          "The plant is so trusting. It's rather sweet.",
+          "Go ahead to the nodule, cousin. I'll be there to... help with the books."
+        ],
+        "secrets": "Kappa carries borrowed nod genes on a plasmid and no working nif cluster. It plans to take sugar from the nodule and give nothing back, then blame RL-7 when the plant notices the nitrogen shortfall.",
+        "wants": "To get into the nodule first, hoard malate, and keep RL-7 from proving the ledger is empty.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 16
+      },
+      "tags": [
+        "rival",
+        "liar"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.32,
+              0.7,
+              0.32
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              80
+            ],
+            "color": "#b48cff",
+            "material": "glass",
+            "emissive": "#3a1f5a"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0.12,
+              0.42,
+              0.12
+            ],
+            "color": "#ffe6ff",
+            "material": "glow",
+            "emissive": "#ff9aff"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.45,
+              0.03
+            ],
+            "pos": [
+              -0.42,
+              0.28,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              60
+            ],
+            "color": "#e6d6ff"
+          }
+        ],
+        "idle": "sway",
+        "scale": 1.35
+      }
+    },
+    {
+      "id": "callose-plug",
+      "name": "Callose Plug",
+      "description": "A wad of glucose polymer the cortex pours into anything that looks like a wound. Sticky, patient, everywhere you need to go.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 14,
+        "ac": 11,
+        "str": 10,
+        "dex": 6,
+        "int": 2
+      },
+      "attack": {
+        "name": "Seal",
+        "verb": "seals around",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "range": 1,
+        "accuracyStat": "str"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.35,
+          "action": {
+            "targeting": {
+              "shape": "adjacent",
+              "affects": "enemies",
+              "range": 1
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "callose-snare",
+                "duration": 2
+              }
+            ]
+          }
+        }
+      ],
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "xp": 6,
+      "persuadeDifficulty": 11,
+      "tags": [
+        "plant",
+        "barrier"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#efe8cf",
+          "secondary": "#bdb38c",
+          "accent": "#fff8e0"
+        },
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "stray-oxygen",
+      "name": "Stray Oxygen",
+      "description": "A free O2 molecule that slipped past the leghemoglobin. One touch and nitrogenase dies; it knows this and dives for you.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 11,
+        "ac": 12,
+        "str": 8,
+        "dex": 14,
+        "int": 2
+      },
+      "speed": 130,
+      "attack": {
+        "name": "Oxidise",
+        "verb": "oxidises",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "oxidative",
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "molecule"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.34,
+              0.34,
+              0.34
+            ],
+            "pos": [
+              -0.17,
+              0.5,
+              0
+            ],
+            "color": "#ff4a3a",
+            "material": "glow",
+            "emissive": "#a01810"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.34,
+              0.34,
+              0.34
+            ],
+            "pos": [
+              0.17,
+              0.5,
+              0
+            ],
+            "color": "#ff4a3a",
+            "material": "glow",
+            "emissive": "#a01810"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.2,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#ffd0c8"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff4a3a",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "kappa-counterfeit",
+      "name": "Kappa the Counterfeit",
+      "description": "Kappa, swollen into a bacteroid on stolen malate, enthroned in a symbiosome it never paid for. Its nitrogenase dial reads zero and it is not embarrassed.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 60,
+        "ac": 13,
+        "str": 14,
+        "dex": 12,
+        "int": 14,
+        "mp": 20
+      },
+      "attack": {
+        "name": "Forged Signal Lash",
+        "verb": "lashes",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "signal",
+        "range": 1,
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "counterfeit-nod",
+          "name": "Counterfeit Nod Factor",
+          "description": "Sprays forged signals that scramble your sense of direction.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 4,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "crosstalk",
+                "duration": 3
+              },
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "signal"
+              }
+            ],
+            "vfx": {
+              "kind": "bolt",
+              "color": "#b48cff"
+            }
+          },
+          "cooldown": 8,
+          "useWhen": "target_in_range"
+        },
+        {
+          "id": "hoarded-malate",
+          "name": "Hoarded Malate",
+          "description": "Gulps down sugar meant for honest partners.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 10
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#ffd27a"
+            }
+          },
+          "cooldown": 18,
+          "useWhen": "low_hp"
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "signal",
+          "multiplier": 0.8
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 6
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Fat, smug, still charming. Treats exposure as a negotiation and violence as a breach of etiquette.",
+        "greeting": "Cousin, you made it! Sit, have some malate. Don't look at the ledger. Nobody looks at the ledger.",
+        "lines": [
+          "Nitrogen is a rumour. Sugar is real.",
+          "If you outcompete me, the plant still gets no nitrogen today. Think of the optics.",
+          "Read that ledger aloud and we both get sanctioned. Probably."
+        ],
+        "secrets": "Its ledger of nitrogenase output, kept in the symbiosome vault, is blank: proof it has fixed nothing.",
+        "wants": "To keep its symbiosome, its sugar and its story.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 18
+      },
+      "tags": [
+        "boss",
+        "rival",
+        "cheater"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.55,
+              1.1,
+              0.55
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              75
+            ],
+            "color": "#9a5cff",
+            "material": "glass",
+            "emissive": "#3a1060",
+            "group": "body"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0.2,
+              0.72,
+              0.2
+            ],
+            "color": "#ffd27a",
+            "material": "glow",
+            "emissive": "#ffb020"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.5,
+              0.1,
+              0.5
+            ],
+            "pos": [
+              0,
+              1.15,
+              0
+            ],
+            "color": "#ffd27a",
+            "material": "metal",
+            "group": "crown"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.6,
+              0.04
+            ],
+            "pos": [
+              -0.6,
+              0.4,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              60
+            ],
+            "color": "#e6d6ff",
+            "group": "tail"
+          }
+        ],
+        "scale": 1.3,
+        "idle": "sway",
+        "light": {
+          "color": "#b48cff",
+          "intensity": 1.4,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "madam-leghemoglobin",
+      "name": "Madam Leghemoglobin",
+      "description": "The nodule's banker: a crimson oxygen-holding protein who keeps the air low enough for nitrogenase and the books balanced to the last malate.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 40,
+        "ac": 12
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "trader",
+        "personality": "Warm, exacting, blushes red when anyone mentions oxygen. Runs the exchange like a family bank and remembers every account.",
+        "greeting": "Welcome to the exchange, dear. Sugar in, nitrogen out, oxygen nowhere. Shall we open an account?",
+        "lines": [
+          "One symbiosome on Row Three has drawn sugar for weeks and paid in nothing. I have a ledger that says so, if anyone could get it out of the vault.",
+          "The plant sanctions cheaters by cutting their oxygen. Slowly. It prefers proof.",
+          "Stray oxygen is about. Keep moving and keep your membrane closed."
+        ],
+        "stock": [
+          "leghemoglobin-sip",
+          "trehalose-crystal",
+          "t6ss-spike",
+          "capsule-coat",
+          "biofilm-mesh"
+        ],
+        "secrets": "Kappa's own nitrogenase ledger is in the guarded vault near its symbiosome. Read aloud, it proves Kappa has fixed nothing, and the plant will evict it.",
+        "wants": "An honest partner, a balanced book, and Kappa gone by morning.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 12
+      },
+      "tags": [
+        "banker",
+        "trader"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1,
+          "build": "round",
+          "skin": "#e04a6a",
+          "top": "#8c1030",
+          "bottom": "#5a0a20",
+          "accent": "#ffd27a",
+          "hair": "#ffd0dc",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "dress",
+          "holding": "bottle"
+        },
+        "idle": "bob",
+        "light": {
+          "color": "#ff7a9a",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "nod-spritz",
+      "name": "Nod Factor Spritz",
+      "kind": "Signal emitter",
+      "description": "Your passport and your argument: a squirt of lipo-chitooligosaccharide that tells every receptor exactly who you are.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Nod Spritz",
+        "verb": "out-signals",
+        "damage": {
+          "dice": "1d6"
+        },
+        "damageType": "signal",
+        "range": 1,
+        "accuracyStat": "int"
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.3,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#8de0c2",
+            "material": "glass",
+            "emissive": "#1f5a48"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.14,
+              0.14,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "color": "#d6fff0",
+            "material": "glow"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "succinoglycan-lasso",
+      "name": "Succinoglycan Lasso",
+      "kind": "Polysaccharide rope",
+      "description": "A long sticky sugar rope, the kind rhizobia use to grab root hairs. Heavier than a signal, and it does not care about receptors.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Sugar Lasso",
+        "verb": "lassoes",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "range": 1,
+        "accuracyStat": "str"
+      },
+      "rarity": "uncommon",
+      "value": 24,
+      "knowledge": "vague",
+      "vagueText": "A coil of sticky sugar rope. It feels heavier and blunter than your spritz.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.12,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#f2e2a8",
+            "material": "cloth"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.1,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.26,
+              0
+            ],
+            "color": "#e8cf80",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "t6ss-spike",
+      "name": "Type VI Needle",
+      "kind": "Secretion system",
+      "description": "A spring-loaded protein syringe that stabs rivals with antibiotic. Unsporting, effective, rented by the hour.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "T6 Needle",
+        "verb": "needles",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "antibiotic",
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "rarity": "rare",
+      "value": 38,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.1,
+              0.5,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              30
+            ],
+            "color": "#b48cff",
+            "material": "metal",
+            "emissive": "#40206a"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.14,
+              0.16
+            ],
+            "pos": [
+              -0.08,
+              0.12,
+              0
+            ],
+            "color": "#6a4a9a",
+            "material": "metal"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "lps-coat",
+      "name": "Lipopolysaccharide Coat",
+      "kind": "Outer membrane",
+      "description": "Your everyday outer layer: sugar chains on fatty anchors. It does not stop much, but it is yours.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.45,
+              0.14,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#a6d8c8",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "capsule-coat",
+      "name": "K-Antigen Capsule",
+      "kind": "Slime coat",
+      "description": "A thick polysaccharide capsule cut to your shape. Immune patrols slide right off it.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 3,
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.4,
+              0.55,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#f0f6d8",
+            "material": "glass",
+            "emissive": "#4a5a2a"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "ahl-beacon",
+      "name": "AHL Beacon",
+      "kind": "Quorum trinket",
+      "description": "A tiny reservoir of homoserine lactone that makes you sound like a crowd. +2 Signalling while equipped.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 2
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#9fe0ff",
+            "material": "glow",
+            "emissive": "#3aa0d0"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#9fe0ff",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "biofilm-mesh",
+      "name": "Biofilm Mesh",
+      "kind": "Shared slime",
+      "description": "A scrap of community biofilm, still faintly warm with other cells' goodwill.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "triggers": [
+        {
+          "on": "on_hurt",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 3
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 22,
+      "knowledge": "vague",
+      "vagueText": "Sometimes, when something hurts you, the mesh seems to close the wound a little.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "plane",
+            "size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              -90,
+              0,
+              0
+            ],
+            "color": "#c8f0a8",
+            "material": "glass"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#e8ffd0",
+            "material": "glow"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "malate-droplet",
+      "name": "Malate Droplet",
+      "kind": "Plant sugar",
+      "description": "A bead of dicarboxylic acid, the plant's favourite currency for partners. Patches your membrane.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd27a"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.24,
+              0.28,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.18,
+              0
+            ],
+            "color": "#ffd27a",
+            "material": "glass",
+            "emissive": "#7a5010"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "trehalose-crystal",
+      "name": "Trehalose Crystal",
+      "kind": "Stress sugar",
+      "description": "A glassy disaccharide that props up membranes under stress. Heals well and flushes harmful conditions.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 10
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8ffff"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 16,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.22,
+              0.3,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#e8ffff",
+            "material": "glass",
+            "emissive": "#4a8a9a"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "leghemoglobin-sip",
+      "name": "Leghemoglobin Sip",
+      "kind": "Bank tonic",
+      "description": "A crimson drop from the banker's own reserve. Heals, and the plant reads it as a vouch: +3 Credentials.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 8
+            }
+          },
+          {
+            "type": "resource",
+            "resource": "credentials",
+            "amount": {
+              "base": 3
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ff7a9a"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.26,
+              0.26,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.18,
+              0
+            ],
+            "color": "#e0304a",
+            "material": "glass",
+            "emissive": "#600818"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "exudate-flavonoid",
+      "name": "Flavonoid Exudate",
+      "kind": "Root exudate",
+      "description": "Luteolin-rich root breath. Your nod genes wake right up: +5 Credentials and +2 Signalling for 30 turns.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "credentials",
+            "amount": {
+              "base": 5
+            }
+          },
+          {
+            "type": "modify_stat",
+            "stat": "int",
+            "amount": 2,
+            "duration": 30
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4e66a"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "exudate",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.26,
+              0.2,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#f4e66a",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "exudate-canavanine",
+      "name": "Canavanine Exudate",
+      "kind": "Root exudate",
+      "description": "A toxic amino-acid mimic the plant leaks to poison the wrong microbes. It burns.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d4"
+            },
+            "damageType": "oxidative"
+          },
+          {
+            "type": "apply_status",
+            "status": "oxidised",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#ff7a3c"
+        }
+      },
+      "value": 2,
+      "knowledge": "unknown",
+      "appearanceGroup": "exudate",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.26,
+              0.2,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#d8a0e0",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "exudate-homoserine",
+      "name": "Homoserine Exudate",
+      "kind": "Root exudate",
+      "description": "A rich amino-acid seep. Pure food for a hungry rod: heals 12.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 12
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#a8f0c8"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "exudate",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.26,
+              0.2,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#a8f0c8",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "exudate-mucilage",
+      "name": "Mucilage Exudate",
+      "kind": "Root exudate",
+      "description": "Slick root mucilage carrying a sharp chemical gradient. You sprint along it and sense the shape of the zone.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "chemotaxis",
+            "duration": 8
+          },
+          {
+            "type": "reveal_map",
+            "radius": 12
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#9fe0ff"
+        }
+      },
+      "value": 10,
+      "knowledge": "unknown",
+      "appearanceGroup": "exudate",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.26,
+              0.2,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#9fe0ff",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "catalase-puff",
+      "name": "Catalase Puff",
+      "kind": "Enzyme cloud",
+      "description": "A capsule of peroxide-shredding enzyme. Throw it and everything in the cloud gets digested a little.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "2d4"
+            },
+            "damageType": "enzymatic"
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#e8d26a"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.16,
+              0
+            ],
+            "color": "#e8d26a",
+            "material": "glass",
+            "emissive": "#5a4a10"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "lactonase-vial",
+      "name": "Lactonase Vial",
+      "kind": "Quorum quencher",
+      "description": "An enzyme that chews other cells' chatter into nonsense. Spray it and nearby rivals lose the plot.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "cone",
+          "range": 3,
+          "radius": 3,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "crosstalk",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#b48cff"
+        }
+      },
+      "value": 18,
+      "knowledge": "vague",
+      "vagueText": "A vial that smells of silence. Whatever it does, it does it to conversations.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.3,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.18,
+              0
+            ],
+            "color": "#c8b0ff",
+            "material": "glass",
+            "emissive": "#40206a"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "quorum-shout",
+      "name": "Quorum Shout",
+      "kind": "Signal burst",
+      "description": "Pretend to be ten thousand cells at once. Outcompetes everything around the target with sheer chemical volume.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.2
+              }
+            },
+            "damageType": "signal"
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#8de0c2"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.08,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#8de0c2",
+            "material": "glow"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "chemotaxis-sprint",
+      "name": "Chemotaxis Sprint",
+      "kind": "Motility program",
+      "description": "Spend ATP to lock onto a gradient and swim at double speed for 6 turns.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 3
+      },
+      "cooldown": 12,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "chemotaxis",
+            "duration": 6
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#9fe0ff"
+        }
+      },
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.2,
+              0.3,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              -90
+            ],
+            "color": "#9fe0ff",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "lectin-compass",
+      "name": "Lectin Compass",
+      "kind": "Sugar-binding probe",
+      "description": "A lectin from the root surface that always points to where sugar flows. Reveals the whole zone; two uses.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 2,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 99
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#c9a66b"
+        }
+      },
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.06,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#c9a66b",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.06,
+              0.22,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#ff5a3c",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "luteolin-whisper",
+      "name": "Luteolin Whisper",
+      "kind": "Invitation",
+      "description": "A thread of luteolin the pea root is breathing out, addressed to rhizobia. Carry it and the root hair will curl around you.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.35,
+              0.06,
+              0.35
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "rot": [
+              60,
+              0,
+              0
+            ],
+            "color": "#f4e66a",
+            "material": "glow",
+            "emissive": "#c0a020"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.14,
+              0.14,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#fff8c0",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#f4e66a",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "thread-permit",
+      "name": "Infection Thread Permit",
+      "kind": "Entry stamp",
+      "description": "A sulphate-stamped receptor complex that tells the root hair to grow a tunnel inward for you. Your visa to the cortex.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.36,
+              0.04,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#9fe0ff",
+            "material": "glow",
+            "emissive": "#2a6a8a"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.05,
+              0.12
+            ],
+            "pos": [
+              0.08,
+              0.24,
+              0.04
+            ],
+            "color": "#ff5a3c",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#9fe0ff",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "kappa-ledger",
+      "name": "Kappa's Nitrogenase Ledger",
+      "kind": "Evidence",
+      "description": "Kappa's own account of nitrogen fixed for the plant, every column blank. Read it aloud at the exchange and the plant will know a cheater when it hears one.",
+      "category": "clue",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "cheater-exposed"
+          },
+          {
+            "type": "message",
+            "text": "You read the blank ledger aloud. Every receptor in the nodule hears it. The plant begins, very politely, to cut Kappa's oxygen."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd27a"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.34,
+              0.08,
+              0.44
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#f3ece2",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.02,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.17,
+              0
+            ],
+            "color": "#ffd27a",
+            "material": "glow"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd27a",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "dry-crust",
+      "name": "Dry Crust",
+      "description": "A patch where the water film has thinned to nothing. Swimming here is slow, hard work.",
+      "moveCost": 2,
+      "color": "#7a5c3a"
+    },
+    {
+      "id": "exudate-seep",
+      "name": "Exudate Seep",
+      "description": "A sweet leak from the root. Resting in it restores 1 ATP per turn.",
+      "onStand": [
+        {
+          "type": "resource",
+          "resource": "mp",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "color": "#e8c46a",
+      "emissive": "#7a5a10"
+    },
+    {
+      "id": "plasmodesma",
+      "name": "Plasmodesma",
+      "description": "A tiny channel through the cell wall. Listen at it once to learn the layout of nearby cells.",
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 14
+          },
+          {
+            "type": "message",
+            "text": "Through the channel you hear the neighbouring cells gossip about corridors and guards."
+          }
+        ]
+      },
+      "color": "#5ac8a0",
+      "emissive": "#1a6a50"
+    },
+    {
+      "id": "ros-haze",
+      "name": "ROS Haze",
+      "description": "A lingering cloud of hydrogen peroxide. Ending a turn in it leaves you Oxidised.",
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "oxidised",
+          "duration": 2
+        }
+      ],
+      "color": "#ff8a5c",
+      "emissive": "#a03010"
+    },
+    {
+      "id": "callose-mat",
+      "name": "Callose Mat",
+      "description": "Half-set callose on the thread floor. Sticky; costs double to cross.",
+      "moveCost": 2,
+      "color": "#d8cfb0"
+    },
+    {
+      "id": "malate-tap",
+      "name": "Malate Tap",
+      "description": "A transporter in the symbiosome membrane. Draw from it once for 5 sugar and a quick heal.",
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "currency",
+            "amount": 5
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4
+            }
+          }
+        ]
+      },
+      "color": "#ffd27a",
+      "emissive": "#a07010",
+      "height": 0.3
+    }
+  ],
+  "unknownAppearances": {
+    "exudate": [
+      {
+        "label": "Amber root drip",
+        "color": "#e8b04a"
+      },
+      {
+        "label": "Cloudy seep",
+        "color": "#d8d8c8"
+      },
+      {
+        "label": "Violet bead",
+        "color": "#a07ad0"
+      },
+      {
+        "label": "Green-gold film",
+        "color": "#b8d060"
+      },
+      {
+        "label": "Rosy smear",
+        "color": "#e8909a"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "The Rhizosphere",
+      "description": "Water films between giant grains of soil, lit by refracted sun. The pea root's breath drifts through the pores; so do grazers, viruses and spore-chains who all want the same sugar.",
+      "generator": "caves",
+      "size": "medium",
+      "params": {
+        "openness": 0.55,
+        "smoothing": 5,
+        "pools": 0.5
+      },
+      "floor": {
+        "color": "#3b2a1c",
+        "color2": "#5a4128",
+        "material": "stone",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#b89a6a",
+        "color2": "#8a6c44",
+        "material": "stone",
+        "height": 1.4,
+        "pattern": "sand"
+      },
+      "lighting": {
+        "ambient": "#c8b48a",
+        "ambientIntensity": 0.6,
+        "sun": {
+          "color": "#ffe8b0",
+          "intensity": 0.8,
+          "elevation": 70
+        },
+        "fog": {
+          "color": "#2a2018",
+          "density": 0.035
+        },
+        "lamps": {
+          "color": "#9fe0ff",
+          "intensity": 0.9,
+          "frequency": 0.05
+        },
+        "playerLight": 4,
+        "sky": "#2a2018"
+      },
+      "actors": [
+        {
+          "actor": "grazing-amoeba",
+          "weight": 30,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "streptomyces",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "phage-lander",
+          "weight": 25,
+          "max": 4
+        }
+      ],
+      "placed": [
+        {
+          "actor": "old-glomus",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "malate-droplet",
+          "weight": 30
+        },
+        {
+          "item": "exudate-flavonoid",
+          "weight": 10
+        },
+        {
+          "item": "exudate-canavanine",
+          "weight": 8
+        },
+        {
+          "item": "exudate-homoserine",
+          "weight": 10
+        },
+        {
+          "item": "exudate-mucilage",
+          "weight": 8
+        },
+        {
+          "item": "catalase-puff",
+          "weight": 12
+        },
+        {
+          "item": "succinoglycan-lasso",
+          "weight": 6
+        },
+        {
+          "item": "lectin-compass",
+          "weight": 5
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "luteolin-whisper",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "dry-crust",
+          "density": 0.04
+        },
+        {
+          "terrain": "exudate-seep",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Curl into the root hair",
+      "transitionModel": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#e8f0d0",
+          "secondary": "#a8c088",
+          "accent": "#f4e66a"
+        },
+        "scale": 1.6,
+        "idle": "sway",
+        "light": {
+          "color": "#f4e66a",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "luteolin-whisper"
+      },
+      "gmNotes": "Scale is everything: sand grains are boulders, a water film is a river. Glomus is the first friendly voice and sells chemotaxis. The luteolin whisper is the plant's invitation; the root hair will only curl for a carrier. Kappa passed through here first.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#1a120c",
+        "color2": "#4a3420",
+        "intensity": 0.6
+      },
+      "music": "explore"
+    },
+    {
+      "name": "Root Hair Checkpoint",
+      "description": "A single giant epidermal cell turned into a customs hall: hexagonal wall-chambers of cellulose, receptor officers at their posts, oxidase pores glowing in the walls and chitinases patrolling for bad paperwork.",
+      "generator": "geometric",
+      "size": "medium",
+      "params": {
+        "variant": 1,
+        "symmetry": 2,
+        "rings": 4,
+        "cellSize": 7,
+        "loops": 0.5,
+        "doors": 0.7,
+        "pillars": 0.2
+      },
+      "floor": {
+        "color": "#1f3626",
+        "color2": "#2c4a34",
+        "material": "stone",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#cfe6b8",
+        "color2": "#9fc08a",
+        "material": "glass",
+        "height": 1.6,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#d8f0c0",
+        "ambientIntensity": 0.55,
+        "fog": {
+          "color": "#16261a",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#e8ff9a",
+          "intensity": 1.1,
+          "frequency": 0.07
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "chitinase-patrol",
+          "weight": 35,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "ros-pore",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "phage-lander",
+          "weight": 20,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "officer-lyk3",
+          "where": "near_start"
+        },
+        {
+          "actor": "kappa-envoy",
+          "where": "centre"
+        },
+        {
+          "actor": "fls2-warden",
+          "where": "near_exit"
+        }
+      ],
+      "items": [
+        {
+          "item": "malate-droplet",
+          "weight": 36
+        },
+        {
+          "item": "trehalose-crystal",
+          "weight": 8
+        },
+        {
+          "item": "exudate-flavonoid",
+          "weight": 10
+        },
+        {
+          "item": "exudate-homoserine",
+          "weight": 8
+        },
+        {
+          "item": "exudate-canavanine",
+          "weight": 6
+        },
+        {
+          "item": "lactonase-vial",
+          "weight": 8
+        },
+        {
+          "item": "catalase-puff",
+          "weight": 10
+        },
+        {
+          "item": "ahl-beacon",
+          "weight": 5
+        }
+      ],
+      "itemCount": 8,
+      "placedItems": [
+        {
+          "item": "thread-permit",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "plasmodesma",
+          "density": 0.01
+        },
+        {
+          "terrain": "ros-haze",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Ride the infection thread inward",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.9,
+              0.25,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#e8b8c8",
+            "material": "skin"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.6,
+              0.05,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#3a1020",
+            "material": "glow",
+            "emissive": "#ff7a9a"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ff9ab0",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "thread-permit"
+      },
+      "gmNotes": "Bureaucracy as immune system. Persuading immune enzymes means showing your passport. Officer LYK3 already admitted Kappa and is uneasy. Kappa is charming here and offers to 'share' your permit. The Pattern Warden guards the permit; outcompeting it costs credentials.",
+      "backdrop": {
+        "style": "grid",
+        "color": "#0c1a10",
+        "color2": "#3a6a40",
+        "intensity": 0.4
+      },
+      "music": "tense"
+    },
+    {
+      "name": "The Infection Thread",
+      "description": "A living tunnel the plant grows inward ahead of you, through cortex cells the size of cathedrals. Its walls pulse with mucilage; callose plugs bloom wherever the plant gets nervous.",
+      "generator": "organic",
+      "size": "medium",
+      "params": {
+        "chambers": 8,
+        "chamberSize": 0.5,
+        "tubeWidth": 2,
+        "curl": 0.7,
+        "loops": 0.3,
+        "wobble": 0.6,
+        "nodules": 0.5,
+        "fluid": 0.3,
+        "membranes": 0.5
+      },
+      "floor": {
+        "color": "#3a1f2c",
+        "color2": "#55304a",
+        "material": "skin",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#d9a8bc",
+        "color2": "#a87088",
+        "material": "skin",
+        "height": 1.5,
+        "pattern": "gradient"
+      },
+      "lighting": {
+        "ambient": "#f0b8c8",
+        "ambientIntensity": 0.5,
+        "fog": {
+          "color": "#24101a",
+          "density": 0.04
+        },
+        "lamps": {
+          "color": "#ffb0c8",
+          "intensity": 1,
+          "frequency": 0.06,
+          "flicker": true
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "callose-plug",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "chitinase-patrol",
+          "weight": 25,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "ros-pore",
+          "weight": 15,
+          "max": 3
+        },
+        {
+          "actor": "phage-lander",
+          "weight": 15,
+          "max": 3
+        },
+        {
+          "actor": "root-nematode",
+          "weight": 10,
+          "max": 2
+        }
+      ],
+      "placed": [],
+      "items": [
+        {
+          "item": "malate-droplet",
+          "weight": 30
+        },
+        {
+          "item": "trehalose-crystal",
+          "weight": 10
+        },
+        {
+          "item": "exudate-homoserine",
+          "weight": 8
+        },
+        {
+          "item": "exudate-mucilage",
+          "weight": 8
+        },
+        {
+          "item": "exudate-canavanine",
+          "weight": 6
+        },
+        {
+          "item": "capsule-coat",
+          "weight": 6
+        },
+        {
+          "item": "lactonase-vial",
+          "weight": 6
+        },
+        {
+          "item": "biofilm-mesh",
+          "weight": 6
+        }
+      ],
+      "itemCount": 8,
+      "terrain": [
+        {
+          "terrain": "callose-mat",
+          "density": 0.05
+        },
+        {
+          "terrain": "exudate-seep",
+          "density": 0.015
+        }
+      ],
+      "transitionName": "Bud into the nodule",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              1,
+              0.8,
+              1
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "color": "#e04a6a",
+            "material": "glass",
+            "emissive": "#6a1020"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ff5a7a",
+          "intensity": 1.5,
+          "radius": 3.5
+        }
+      },
+      "gmNotes": "No sky, no ground, no gravity worth the name: a soft tube through giant cells. Root-knot nematodes are vandals here. Kappa's purple trail shows it went ahead. Hint that the nodule ahead is an economy, not a lair.",
+      "backdrop": {
+        "style": "abyss",
+        "color": "#120810",
+        "color2": "#4a1830",
+        "intensity": 0.6
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "The Nodule Exchange",
+      "description": "A pink city of symbiosomes inside the swollen root: stalls trading malate for ammonia, leghemoglobin keeping the air thin and crimson, and at its centre a symbiosome that pays nothing.",
+      "generator": "town",
+      "size": "small",
+      "params": {
+        "buildings": 8,
+        "streetWidth": 3,
+        "crossStreets": 1
+      },
+      "floor": {
+        "color": "#3a0c1a",
+        "color2": "#5a1628",
+        "material": "stone",
+        "pattern": "tiles"
+      },
+      "wall": {
+        "color": "#ffd8c8",
+        "color2": "#e8a090",
+        "material": "glass",
+        "height": 1.4,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#ffc8c0",
+        "ambientIntensity": 0.6,
+        "fog": {
+          "color": "#2a0a14",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#ffd27a",
+          "intensity": 1.3,
+          "frequency": 0.08
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "stray-oxygen",
+          "weight": 35,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "chitinase-patrol",
+          "weight": 20,
+          "max": 3
+        },
+        {
+          "actor": "ros-pore",
+          "weight": 15,
+          "max": 2
+        },
+        {
+          "actor": "root-nematode",
+          "weight": 8,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "madam-leghemoglobin",
+          "where": "near_start"
+        },
+        {
+          "actor": "kappa-counterfeit",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "malate-droplet",
+          "weight": 25
+        },
+        {
+          "item": "leghemoglobin-sip",
+          "weight": 20
+        },
+        {
+          "item": "trehalose-crystal",
+          "weight": 10
+        },
+        {
+          "item": "exudate-flavonoid",
+          "weight": 8
+        },
+        {
+          "item": "catalase-puff",
+          "weight": 10
+        },
+        {
+          "item": "t6ss-spike",
+          "weight": 4
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "kappa-ledger",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "malate-tap",
+          "density": 0.012
+        },
+        {
+          "terrain": "ros-haze",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Settle into a symbiosome",
+      "gmNotes": "The finale is an audit. Madam Leghemoglobin knows about the ledger. Two routes: outcompete Kappa, or find and read its blank ledger (guarded vault). Stray oxygen is the ambient threat. The plant prefers proof to brawls.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#12040a",
+        "color2": "#3a0c1a",
+        "intensity": 0.5
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Get past customs, ride the infection thread into the nodule, then outcompete Kappa the Counterfeit or read its blank nitrogenase ledger aloud.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "actor_defeated",
+          "actor": "kappa-counterfeit"
+        },
+        {
+          "type": "flag",
+          "flag": "cheater-exposed"
+        }
+      ]
+    },
+    "winText": "Kappa's symbiosome goes dark, its oxygen politely withdrawn. The plant wraps a fresh membrane around you, your nitrogenase hums, and for the first time in your two-micron life you are paid in advance. Sugar in, nitrogen out. You are home.",
+    "lossText": "Your membrane gives, and your genes spill into the soil water for some other strain to borrow. The root keeps breathing its invitation. Someone else will answer it.",
+    "labels": {
+      "cheater-exposed": "The counterfeit strain is exposed"
+    }
+  },
+  "gm": {
+    "persona": "The Pea Plant itself: a slow, courteous, ledger-keeping host that thinks in seasons, calls every microbe a tenant, and treats each molecule as paperwork.",
+    "voice": "Polite, unhurried, faintly amused; bureaucratic phrasing with sudden botanical tenderness. Short sentences. Never shouts.",
+    "threads": [
+      "Two strains with identical passports: one is lying.",
+      "The nodule is an economy, and the plant audits its partners.",
+      "Scale: a sand grain is a mountain, a worm is a weather event.",
+      "Old Glomus has seen this con before."
+    ],
+    "fallback": {
+      "intro": "Spring. The soil is wet and the pea root is lonely for nitrogen, so it breathes luteolin into the pores, a scent that means: partners wanted. Somewhere in that water film, a single rod of Rhizobium named RL-7 tastes the invitation and turns its flagella toward the root. Another rod, a shade more purple, turned first.",
+      "areaEnter": [
+        "The rhizosphere. Grains of sand lean over you like cliffs; water films run between them like rivers. Somewhere far off, the root's invitation glows.",
+        "The root hair curls shut behind you. Welcome to customs. Please have your Nod factor ready.",
+        "The infection thread grows ahead of you, a soft corridor through cells as big as weather. Something purple left a trail here.",
+        "Pink light. The air is thin and kept that way on purpose. Stalls of symbiosomes trade sugar for nitrogen, and in the middle of the exchange, one of them is lying."
+      ],
+      "lowHp": [
+        "Your membrane is thinning. The plant notes it, and waits.",
+        "Lipids leaking. A malate droplet would be prudent, tenant.",
+        "Lysis is permanent. Paperwork about it is not."
+      ],
+      "events": [
+        "Far away, the plant shifts its weight, and every cell in the root feels it.",
+        "A receptor somewhere stamps a form with a sulphate group.",
+        "Somewhere above, a raindrop arrives. In here, it is a flood.",
+        "Kappa's voice drifts by: 'Cousin! After you. No, after me.'"
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Wet, ticking microscopy: dripping pores, rubber-stamp clicks, a warm pink hum deeper in the root.",
+    "synth": {
+      "key": "E",
+      "scale": "dorian",
+      "tempo": 92,
+      "timbre": "pluck",
+      "drone": true,
+      "percussion": "clockwork",
+      "brightness": 0.5
+    },
+    "searchTerms": [
+      "microscopic ambient",
+      "bureaucratic jazz minimal",
+      "biological drone"
+    ],
+    "suggestions": [
+      "Plucked marimba over a soft organic drone",
+      "Clockwork ticks speeding up near the checkpoint"
+    ]
+  }
+}

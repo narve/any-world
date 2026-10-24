@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/deep-sea-whale-fall/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Log. Diver vitals falling. Heart rate one-forty. The silt is very soft here. Do not lie down in it."
+          }
+        ]
+      }
+    }
+  ]
+}

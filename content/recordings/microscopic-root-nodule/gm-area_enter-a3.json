@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/microscopic-root-nodule/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Pink light, thin air, and the hum of a thousand small transactions: malate in, ammonia out. At the heart of the exchange one symbiosome glows purple and pays nothing at all."
+          },
+          {
+            "type": "say",
+            "actorId": "madam-leghemoglobin",
+            "text": "Welcome, dear. Keep your membrane closed; oxygen is about. And if you ever find a ledger with blank columns, bring it to my attention. Loudly."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#ff9ab0"
+          }
+        ]
+      }
+    }
+  ]
+}

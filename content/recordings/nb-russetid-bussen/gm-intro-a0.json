@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/nb-russetid-bussen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Kunngjøring: det er tre uker til 17. mai. Russebussen Gullkalven står hos verkstedet uten lakk, og kontoen den skulle betales fra, er tom. Bussjefen har kjøpt et lydanlegg ingen har sett, Ida svarer ikke på snap, og du, Eli, er den eneste som leser kontoutskriftene."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -15,7 +15,9 @@ import {
   isAlive,
   isPlayer,
   log,
+  logKey,
   playerActor,
+  statusName,
 } from './ctx';
 import { LOW_HP_FRACTION, getStat, maxHp, side, statMod } from './stats';
 import { evalAmount, los } from './effects';
@@ -23,7 +25,8 @@ import { fireDefTriggers, fireTriggers } from './triggers';
 import { defChain } from './actors';
 import { grantXp } from './progression';
 import { damageEquipped, dropItemAt } from './inventory';
-import { cap, cheb } from './util';
+import { cheb } from './util';
+import { END_REASON_KEYS, type EndReasonKey, type LogParams, renderTemplate } from './log-keys';
 import { withinRadius } from './fov';
 import { playerSeesTile } from './vision';
 import { switchesOf } from './rules';
@@ -111,7 +114,7 @@ export function performAttack(ctx: Ctx, attacker: ActorInstance, target: ActorIn
   provoke(ctx, attacker, target);
   if (!hit) {
     emit(ctx, { type: 'attacked', attackerId: attacker.id, targetId: target.id, hit: false, damage: 0, damageType: atk.damageType, ranged });
-    log(ctx, `${cap(aName)} ${atk.verb} ${tName} but misses.`, 'combat');
+    logKey(ctx, 'log.attack.miss', { attacker: aName, verb: atk.verb, target: tName }, 'combat');
     return res;
   }
   let dmg = evalAmount(ctx, atk.damage, attacker, res.crit);
@@ -120,8 +123,9 @@ export function performAttack(ctx: Ctx, attacker: ActorInstance, target: ActorIn
   const dealt = dealDamage(ctx, target, dmg, atk.damageType, attacker.id, { quiet: true, deferKill: true });
   res.damage = dealt;
   emit(ctx, { type: 'attacked', attackerId: attacker.id, targetId: target.id, hit: true, damage: dealt, damageType: atk.damageType, ranged });
-  const typeName = atk.damageType === 'physical' ? '' : ` ${damageTypeName(ctx, atk.damageType)}`;
-  log(ctx, `${cap(aName)} ${atk.verb} ${tName}${res.crit ? ' (critical)' : ''} for ${dealt}${typeName}.`, 'combat');
+  const hitParams = { attacker: aName, verb: atk.verb, target: tName, amount: dealt };
+  if (atk.damageType === 'physical') logKey(ctx, res.crit ? 'log.attack.crit' : 'log.attack.hit', hitParams, 'combat');
+  else logKey(ctx, res.crit ? 'log.attack.crit_typed' : 'log.attack.hit_typed', { ...hitParams, damageType: damageTypeName(ctx, atk.damageType) }, 'combat');
   if (isPlayer(ctx, attacker) && ai.slot !== null) damageEquipped(ctx, ai.slot);
   if (isAlive(ctx, attacker)) fireTriggers(ctx, attacker, 'on_hit', { other: target, pos: target.pos });
   // the kill is announced after the hit line
@@ -136,7 +140,7 @@ export function provoke(ctx: Ctx, attacker: ActorInstance, target: ActorInstance
   if (target.allyOf) return;
   if (target.faction === 'neutral' || target.faction === 'friendly') {
     target.faction = 'hostile';
-    log(ctx, `${cap(actorName(ctx, target))} turns on you.`, 'warning');
+    logKey(ctx, 'log.provoke', { target: actorName(ctx, target) }, 'warning');
   }
   target.ai.alerted = true;
   target.ai.lastSeen = { ...attacker.pos };
@@ -165,7 +169,7 @@ export function dealDamage(ctx: Ctx, target: ActorInstance, raw: number, damageT
   dmg = mult <= 0 ? 0 : Math.max(1, Math.round(dmg));
   const tName = actorName(ctx, target);
   if (dmg <= 0) {
-    if (!opts.quiet) log(ctx, `${cap(tName)} is unaffected.`, 'combat');
+    if (!opts.quiet) logKey(ctx, 'log.damage.immune', { target: tName }, 'combat');
     return 0;
   }
   target.hp -= dmg;
@@ -173,14 +177,18 @@ export function dealDamage(ctx: Ctx, target: ActorInstance, raw: number, damageT
   const src = src0;
   if (isPlayer(ctx, target)) {
     ctx.s.stats.damageTaken += dmg;
-    ctx.s.lastHarm = src && src !== target ? { by: actorName(ctx, src), damageType, turn: ctx.s.turn } : { damageType, turn: ctx.s.turn };
+    const harm: NonNullable<typeof ctx.s.lastHarm> = src && src !== target ? { by: actorName(ctx, src), damageType, turn: ctx.s.turn } : { damageType, turn: ctx.s.turn };
+    if (ctx.harmCause?.status) harm.status = ctx.harmCause.status;
+    if (ctx.harmCause?.terrain) harm.terrain = ctx.harmCause.terrain;
+    ctx.s.lastHarm = harm;
     damageEquipped(ctx, ctx.s.player.equipped.armour);
   } else if (src && isPlayer(ctx, src)) {
     ctx.s.stats.damageDealt += dmg;
   }
   if (!opts.quiet) {
-    const typeName = damageType === 'physical' ? '' : ` ${damageTypeName(ctx, damageType)}`;
-    log(ctx, `${cap(tName)} takes ${dmg}${typeName}.`, isPlayer(ctx, target) ? 'bad' : 'combat');
+    const kind = isPlayer(ctx, target) ? 'bad' : 'combat';
+    if (damageType === 'physical') logKey(ctx, 'log.damage.take', { target: tName, amount: dmg }, kind);
+    else logKey(ctx, 'log.damage.take_typed', { target: tName, amount: dmg, damageType: damageTypeName(ctx, damageType) }, kind);
   }
   if (!isPlayer(ctx, target)) {
     if (src && side(ctx, src) === 'P') provoke(ctx, src, target);
@@ -246,7 +254,7 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
   // a transformed actor (a unique's later phase) counts as defeating every form it has had
   const chain = defChain(victim);
   for (const id of chain) ctx.s.defeated[id] = (ctx.s.defeated[id] ?? 0) + 1;
-  log(ctx, `${cap(vName)} is ${ctx.world.vocabulary.defeated}.`, 'combat');
+  logKey(ctx, 'log.defeated', { target: vName, defeated: ctx.world.vocabulary.defeated }, 'combat');
   // on_death triggers run with the victim as the user (it is no longer listed); earlier unique
   // forms fire theirs too (oldest first), so a boss's "defeated" flags survive a second phase
   const tc = killer ? { other: killer, pos: victim.pos } : { pos: victim.pos };
@@ -276,7 +284,7 @@ function killPlayer(ctx: Ctx, killerId: string | undefined): void {
     ctx.s.mercyUsed = true;
     p.hp = Math.max(1, Math.ceil(maxHp(ctx, p) / 2));
     p.ai.lowHp = false;
-    log(ctx, `${ctx.world.player.name} should have fallen, but gets back up.`, 'good');
+    logKey(ctx, 'log.mercy', { player: ctx.world.player.name }, 'good');
     return;
   }
   p.hp = Math.min(p.hp, 0);
@@ -284,7 +292,8 @@ function killPlayer(ctx: Ctx, killerId: string | undefined): void {
   const k = findActor(ctx, killerId);
   const killer = k && k !== p ? k : undefined;
   emit(ctx, killer ? { type: 'died', actorId: p.id, defId: p.defId, killerId: killer.id } : { type: 'died', actorId: p.id, defId: p.defId });
-  endGame(ctx, 'lost', lossReason(ctx, killer));
+  const lr = lossReasonKeyed(ctx, killer);
+  endGame(ctx, 'lost', lr.text, lr);
 }
 
 /**
@@ -293,10 +302,30 @@ function killPlayer(ctx: Ctx, killerId: string | undefined): void {
  * player took (a status, a rule, terrain or an attacker that has since left).
  */
 export function lossReason(ctx: Ctx, killer?: ActorInstance): string {
-  const v = ctx.world.vocabulary.defeated;
+  return lossReasonKeyed(ctx, killer).text;
+}
+
+/**
+ * lossReason with its catalog key (END_REASON_KEYS) and params. The cause part names the status
+ * or terrain that did it ("Parched, Heat"), else the damage kind when the world names it (an
+ * unnamed built-in 'physical' says nothing).
+ */
+export function lossReasonKeyed(ctx: Ctx, killer?: ActorInstance): { text: string; key: EndReasonKey; params: LogParams } {
+  const defeated = ctx.world.vocabulary.defeated;
   const h = ctx.s.lastHarm;
   const by = killer ? actorName(ctx, killer) : h?.by;
-  // the damage kind when the world names it (an unnamed built-in 'physical' says nothing)
-  const what = h && ctx.ix.damageTypes.has(h.damageType) ? ` (${damageTypeName(ctx, h.damageType)})` : '';
-  return `${v}${by ? ` by ${by}` : ''}${what}`;
+  const typeName = h && ctx.ix.damageTypes.has(h.damageType) ? damageTypeName(ctx, h.damageType) : '';
+  const source = h?.status ? statusName(ctx, h.status) : h?.terrain ? (ctx.ix.terrains.get(h.terrain)?.name ?? h.terrain) : '';
+  const params: LogParams = { defeated };
+  if (by) params.by = by;
+  let key: EndReasonKey;
+  if (source && typeName && typeName !== source) {
+    key = by ? 'end.loss.by_cause_typed' : 'end.loss.cause_typed';
+    params.cause = source;
+    params.damageType = typeName;
+  } else if (source || typeName) {
+    key = by ? 'end.loss.by_cause' : 'end.loss.cause';
+    params.cause = source || typeName;
+  } else key = by ? 'end.loss.by' : 'end.loss.defeated';
+  return { text: renderTemplate(END_REASON_KEYS[key], params), key, params };
 }

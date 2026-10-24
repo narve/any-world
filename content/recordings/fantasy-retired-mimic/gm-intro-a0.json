@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/fantasy-retired-mimic/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "NOTICE, pinned to your own backrest at 9:02am: 'ARMCHAIR, WINGBACK, BURGUNDY — to be transitioned. Signed, A. Veneer, Head of Guest Experience.' Forty years of goblin naps creak in your springs. Across the carpet, Grubb Nettleworth is already rolling up his sleeves and muttering 'Clause 14'. Somewhere at the far end of the Level, filed under Disposals, sits your timecard."
+          }
+        ]
+      }
+    }
+  ]
+}

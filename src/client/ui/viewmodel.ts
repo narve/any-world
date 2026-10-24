@@ -243,6 +243,72 @@ export interface QuestView {
   status: 'active' | 'done' | 'failed';
 }
 
+/**
+ * One line of a condition rendered in plain words (goal tracker, onboarding, locked exits).
+ * Groups ("One of these:") are lines too; their parts follow with depth + 1.
+ */
+export interface ConditionLineView {
+  text: string;
+  /** nesting level, 0 = top */
+  depth: number;
+  /** a heading for the lines under it ("One of these:"), not a requirement itself */
+  group?: boolean;
+  /** already true now (✓), not yet (false), or not knowable / not applicable (null) */
+  done?: boolean | null;
+  /** current progress in plain words ("now 1") */
+  now?: string;
+}
+
+/** the concrete next thing to do, always shown under the goal */
+export interface GoalStepView {
+  kind: 'quest' | 'unlock' | 'exit' | 'explore' | 'final';
+  text: string;
+  /** second line ("Needed for: Walk home along the levee") */
+  detail?: string;
+}
+
+/** goal tracker: compact (summary + step), expands on tap into the full conditions */
+export interface GoalView {
+  summary: string;
+  step: GoalStepView;
+  /** the win condition in plain words */
+  win: ConditionLineView[];
+  /** ways to lose: always "your <health> reaches 0" first, then the world's lose condition */
+  lose: ConditionLineView[];
+  /** what this area's way on needs (absent when it is open or this is the last area) */
+  exitNeeds?: { way: string; lines: ConditionLineView[] } | null;
+  /** "Day 1 of 3" */
+  progress: string;
+}
+
+/** a contextual action button (touch-first): appears when relevant and doubles as a key hint */
+export interface ContextActionView {
+  id: 'exit' | 'pickup' | 'talk' | 'persuade' | 'interact' | 'search' | 'sneak' | 'wait';
+  label: string;
+  /** the keyboard key that does the same ('>', 'g', 't', 'Enter', 'f', 'c', '.') */
+  key: string;
+  /** can't be done yet: tapping it explains why (locked exit) instead of acting */
+  blocked?: string;
+  /** the important one right now (unlocked exit, something underfoot, someone to talk to) */
+  primary?: boolean;
+  /** always-available verbs are drawn smaller */
+  secondary?: boolean;
+}
+
+/** first-run onboarding card for one world (after the prologue) */
+export interface OnboardingView {
+  worldId: string;
+  worldTitle: string;
+  /** how to win: the goal summary, plus its conditions in plain words */
+  goal: string;
+  win: ConditionLineView[];
+  /** how conflict works in this world, in plain words (from world data) */
+  conflict: string[];
+  /** how the run is lost */
+  lose: string[];
+  verbs: { talk: boolean; sneak: boolean; search: boolean; persuade: boolean };
+}
+
 /** actor tooltip on hover / look mode */
 export interface ActorTooltipView extends ActorView {
   id: string;
@@ -289,10 +355,14 @@ export interface GameView {
   objective?: string;
   /** where to go next in this area; shown on its own line under `objective`, never truncated */
   objectiveHint?: string | null;
-  /** first-run hint lines (null/absent hides the card) */
-  hints?: string[] | null;
-  /** an adjacent tile that can be used (Enter / click) — shown as a key hint */
+  /** an adjacent tile that can be used (Enter / click); the context bar shows it as a button */
   interactHint?: string | null;
+  /** goal tracker (always visible, expands on tap) */
+  goal?: GoalView;
+  /** context action bar: buttons that appear when relevant and double as key hints */
+  actions?: ContextActionView[];
+  /** first-run onboarding card for this world (null hides it) */
+  onboarding?: OnboardingView | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -304,6 +374,8 @@ export interface InspirationPrompt {
   genre: string;
   tags?: string[];
   teaser?: string;
+  /** BCP-47 language of the prompt (and of the world it asks for); default "en" */
+  language?: string;
   /** id of a recorded world that plays in demo mode */
   worldId?: string;
 }
@@ -314,6 +386,8 @@ export interface DemoWorldView {
   tagline: string;
   genre: string;
   color?: string;
+  /** BCP-47 language of the world's text; the start screen groups demos by it (default "en") */
+  language?: string;
 }
 
 export interface SavedRunView {
@@ -343,6 +417,8 @@ export interface StartOptions {
   weirdness: number;
   /** true for "Surprise me" (prompt is ignored / empty) */
   surprise: boolean;
+  /** language for the generated world when the prompt came from an inspiration card in another language */
+  language?: string;
 }
 
 export interface LoadingStepView {
@@ -405,6 +481,12 @@ export interface SettingsView {
   transports?: ('direct' | 'backend')[];
 }
 
+/** UI languages with a catalog (the picker is hidden while there is only one) */
+export interface LanguageOptionView {
+  code: string;
+  name: string;
+}
+
 // ---------------------------------------------------------------------------
 // Root view model
 // ---------------------------------------------------------------------------
@@ -420,6 +502,8 @@ export interface UiViewModel {
   settings?: SettingsView | null;
   /** animation preferences (from Settings), applied to every screen */
   prefs?: { animationSpeed: number; reduceMotion: boolean };
+  /** UI language picker (start screen and settings); absent hides it */
+  language?: { current: string; options: LanguageOptionView[] };
 }
 
 // ---------------------------------------------------------------------------
@@ -451,8 +535,10 @@ export type UiIntent =
   | { type: 'hover_tile'; pos: Pos | null }
   /** use an adjacent usable tile (Enter): the integrator picks the tile */
   | { type: 'interact' }
-  /** the first-run hint card was closed */
-  | { type: 'dismiss_hints' }
+  /** the onboarding card was closed; `forever` = don't show it again for this world */
+  | { type: 'dismiss_onboarding'; forever: boolean }
+  /** open the onboarding card again (help overlay / goal tracker) */
+  | { type: 'show_onboarding' }
   /** open the trade panel from dialogue */
   | { type: 'open_trade'; npcId: string }
   /** the backpack / help / rules panels were opened or closed (pause hints, audio ducks…) */
@@ -481,4 +567,6 @@ export interface UiCallbacks {
   onEnd?(choice: 'new_world' | 'same_world'): void;
   onCancelLoading?(): void;
   onRetryLoading?(): void;
+  /** the player picked a UI language */
+  onLanguage?(code: string): void;
 }

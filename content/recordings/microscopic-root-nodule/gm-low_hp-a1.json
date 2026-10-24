@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/microscopic-root-nodule/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Your membrane is thinning, tenant. The plant notes it in the margin, and waits."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-teen/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Friday. The assembly hall is full and the banner says #NEWBEGINNINGS in a font that cost money. Mags is on the stage checking the microphone. Your hands are shaking. That is fine. Hands shake."
+          },
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

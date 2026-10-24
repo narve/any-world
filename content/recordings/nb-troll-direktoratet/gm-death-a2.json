@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/nb-troll-direktoratet/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Her ute på klagefristens øyer gikk tålmodigheten tom, med to av tre skjemaer i sekken. Saken er henlagt, men ikke glemt: en våt fele spiller en slått for søker nummer 000001, og om hundre år kan noen klage på avslaget."
+          }
+        ]
+      }
+    }
+  ]
+}

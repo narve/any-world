@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/folk-horror-scarecrow-wedding/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Your hands feel light and dry, like something stuffed. Mrs Tansy would tell you to eat."
+          }
+        ]
+      }
+    }
+  ]
+}

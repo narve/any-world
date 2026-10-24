@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/heist-silent-vault/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Not even past the cloakroom. The parquet sings, a porter sighs, and Mirela, who never heard a thing, signs one word through the hatch: next year."
+          }
+        ]
+      }
+    }
+  ]
+}

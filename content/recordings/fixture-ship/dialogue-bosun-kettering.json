@@ -1,0 +1,40 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/fixture-ship/bosun-kettering",
+      "json": {
+        "reply": "Canisters, rations, the odd bit of salvage. I take chits, not stories. Though if you've got a story about why the moss is leaning, I might listen for free.",
+        "options": [
+          "What do you have for sale?",
+          "Why is the moss leaning?",
+          "Never mind."
+        ],
+        "actions": [
+          {
+            "type": "trade",
+            "actorId": "bosun-kettering",
+            "items": [
+              {
+                "item": "o2-canister",
+                "price": 6
+              },
+              {
+                "item": "ration-brick",
+                "price": 5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "purpose": "dialogue/fixture-ship/bosun-kettering",
+      "json": {
+        "reply": "Thirty years on this deck. Moss doesn't lean. Not unless there's light on the other side of the hull. Don't repeat that where MATRON can hear.",
+        "options": [],
+        "actions": [],
+        "end": true
+      }
+    }
+  ]
+}

@@ -8,7 +8,9 @@
  */
 import { BACKPACK_SLOTS, QUICK_SLOTS, TOTAL_SLOTS } from '../../engine/types';
 import type { Dir, PlayerAction } from '../../engine/types';
+import type { Vocabulary } from '../../schema/world';
 import type { SlotItemView, UiIntent } from './viewmodel';
+import { t } from '../i18n/index';
 
 export { QUICK_SLOTS, BACKPACK_SLOTS, TOTAL_SLOTS };
 export const BACKPACK_COLS = 5;
@@ -94,6 +96,11 @@ export type ActivateResult =
   | { kind: 'action'; action: PlayerAction }
   | { kind: 'intent'; intent: UiIntent }
   | { kind: 'inspect' }
+  /**
+   * nothing to do on activation (already equipped, or passive): the UI explains the item in a small
+   * tip anchored to the slot — it never opens the backpack by surprise
+   */
+  | { kind: 'explain' }
   /** cannot be used right now (cooldown); `reason` is shown as a notice */
   | { kind: 'blocked'; reason: string }
   | null;
@@ -103,13 +110,13 @@ export type ActivateResult =
  *  - targeted items start targeting,
  *  - unequipped equipment is equipped ("activating a weapon swaps to it"),
  *  - usable items are used,
- *  - anything else (passive, already equipped) is inspected.
+ *  - anything else (passive, already equipped) is explained in a tip next to the slot.
  */
 export function activateSlot(slots: Slots, slot: number): ActivateResult {
   const it = slots[slot];
   if (!it) return null;
   if (it.usable && it.cooldown && it.cooldown > 0 && !(it.equipSlot && !it.equipped)) {
-    return { kind: 'blocked', reason: `${it.name} is ready in ${it.cooldown} ${it.cooldown === 1 ? 'turn' : 'turns'}` };
+    return { kind: 'blocked', reason: t('slot.cooldown', { item: it.name, n: it.cooldown }) };
   }
   if (it.usable && it.needsTarget) {
     return { kind: 'intent', intent: { type: 'begin_target', slot } };
@@ -117,7 +124,32 @@ export function activateSlot(slots: Slots, slot: number): ActivateResult {
   if (it.equipSlot && !it.equipped && !it.usable) return { kind: 'action', action: { type: 'equip', slot } };
   if (it.usable) return { kind: 'action', action: { type: 'use', slot } };
   if (it.equipSlot && !it.equipped) return { kind: 'action', action: { type: 'equip', slot } };
-  return { kind: 'inspect' };
+  return { kind: 'explain' };
+}
+
+/** what the slot tip says about an item that activating does nothing for */
+export interface SlotExplanation {
+  title: string;
+  lines: string[];
+}
+
+/**
+ * Plain words for an equipped or passive item, with the world's words: "Equipped as your
+ * Comeback — bump into anyone hostile to use it" (PLAN backlog "Clearer controls & goals").
+ */
+export function slotExplanation(it: SlotItemView, vocab: Pick<Vocabulary, 'conflict'>): SlotExplanation {
+  const lines: string[] = [];
+  const conflict = vocab.conflict;
+  if (it.equipped && it.equipSlot === 'weapon') lines.push(t('slot.explain.weapon', { item: it.name, conflict }));
+  else if (it.equipped && it.equipSlot === 'armour') lines.push(t('slot.explain.armour', { item: it.name }));
+  else if (it.equipped) lines.push(t('slot.explain.equipped', { item: it.name }));
+  else lines.push(t('slot.explain.passive', { item: it.name }));
+  // what it does, as far as the player knows
+  if (it.knowledge === 'clear' && it.effectLines.length) lines.push(...it.effectLines.slice(0, 3));
+  else if (it.knowledge === 'vague' && it.vagueText) lines.push(it.vagueText);
+  else if (it.knowledge === 'unknown') lines.push(t('item.unknownText'));
+  if (it.equipped) lines.push(t('slot.explain.badge'));
+  return { title: it.name, lines };
 }
 
 export type SlotMenuId = 'use' | 'equip' | 'unequip' | 'to_quick' | 'to_backpack' | 'move' | 'drop';
@@ -141,22 +173,22 @@ export function slotMenu(slots: Slots, slot: number): SlotMenuEntry[] {
     const coolingDown = !!(it.cooldown && it.cooldown > 0);
     out.push({
       id: 'use',
-      label: 'Use',
+      label: t('menu.use'),
       key: 'u',
       result: it.needsTarget
         ? { kind: 'intent', intent: { type: 'begin_target', slot } }
         : { kind: 'action', action: { type: 'use', slot } },
       disabled: coolingDown,
-      hint: coolingDown ? `Ready in ${it.cooldown} turns` : undefined,
+      hint: coolingDown ? t('menu.readyIn', { n: it.cooldown ?? 0 }) : undefined,
     });
   }
-  if (it.equipSlot && !it.equipped) out.push({ id: 'equip', label: 'Equip', key: 'e', result: { kind: 'action', action: { type: 'equip', slot } } });
-  if (it.equipped) out.push({ id: 'unequip', label: 'Unequip', key: 'e', result: { kind: 'action', action: { type: 'unequip', slot } } });
+  if (it.equipSlot && !it.equipped) out.push({ id: 'equip', label: t('menu.equip'), key: 'e', result: { kind: 'action', action: { type: 'equip', slot } } });
+  if (it.equipped) out.push({ id: 'unequip', label: t('menu.unequip'), key: 'e', result: { kind: 'action', action: { type: 'unequip', slot } } });
   if (isBackpackSlot(slot)) {
     const q = firstEmptyQuick(slots);
     out.push({
       id: 'to_quick',
-      label: q === null ? 'To quick slot (full)' : `To quick slot ${q + 1}`,
+      label: q === null ? t('menu.toQuickFull') : t('menu.toQuick', { n: q + 1 }),
       key: 'q',
       result: q === null ? null : { kind: 'action', action: { type: 'move_item', from: slot, to: q } },
       disabled: q === null,
@@ -165,14 +197,14 @@ export function slotMenu(slots: Slots, slot: number): SlotMenuEntry[] {
     const b = firstEmptyBackpack(slots);
     out.push({
       id: 'to_backpack',
-      label: b === null ? 'To backpack (full)' : 'To backpack',
+      label: b === null ? t('menu.toBackpackFull') : t('menu.toBackpack'),
       key: 'b',
       result: b === null ? null : { kind: 'action', action: { type: 'move_item', from: slot, to: b } },
       disabled: b === null,
     });
   }
-  out.push({ id: 'move', label: 'Move…', key: 'm', result: { kind: 'grab' } });
-  out.push({ id: 'drop', label: 'Drop', key: 'Delete', result: { kind: 'action', action: { type: 'drop', slot } } });
+  out.push({ id: 'move', label: t('menu.move'), key: 'm', result: { kind: 'grab' } });
+  out.push({ id: 'drop', label: t('menu.drop'), key: 'Delete', result: { kind: 'action', action: { type: 'drop', slot } } });
   return out;
 }
 

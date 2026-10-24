@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-western/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "It is cool down here. Damp, even. The air smells like the minute before a storm, the best minute there is. At the edge of a black cistern, Absalom Vane is uncorking the jar."
+          },
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/heist-silent-vault/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You lose the beat. The held note you were standing on ends, as all notes do, and you fall through the second movement into the noisy, ordinary rotunda, straight into the arms of a very surprised usher."
+          }
+        ]
+      }
+    }
+  ]
+}

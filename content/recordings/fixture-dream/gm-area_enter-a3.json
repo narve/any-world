@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-dream/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Rings close around a single point. Past them, static: the white of an unprimed canvas, hungry and patient. The Erasure turns, and where it looks, colour forgets itself."
+          },
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

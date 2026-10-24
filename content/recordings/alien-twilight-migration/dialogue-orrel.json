@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/alien-twilight-migration/orrel",
+      "json": {
+        "reply": "Pollen-child. You smell of the eastern herds' spore, and you're standing on Tamsin's shadow; she likes it there. Hollowhill has stopped at the head of the line. If the old one stops, the herd stops, and the night walks up behind us. Something is lodged in him. Go in through the feeding-flue and see. And on your way, watch who the glasswings dive at.",
+        "options": [
+          "Who are the glasswings diving at?",
+          "How do I get inside Hollowhill?",
+          "Can you patch me up first?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

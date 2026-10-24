@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/fantasy-retired-mimic/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "NOTICE: ARMCHAIR, WINGBACK, BURGUNDY — transitioned. Forty years of naps, one very bad week, and the pastel paint still drying. The goblins will sit on the floor now, out of respect. — Anon"
+          }
+        ]
+      }
+    }
+  ]
+}

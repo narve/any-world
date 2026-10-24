@@ -1,0 +1,30 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/fantasy-retired-mimic/dame-hatbox",
+      "json": {
+        "reply": "A chair, travelling? How terribly modern. Come here, dear, you're shedding horsehair all over the void. Hold still. There. Now: that dreadful trunk is sitting on the only proper baggage tag in the sack, and the carousel takes nobody without one. Nobody opens anything marked FRAGILE, either. I'm only saying.",
+        "options": [
+          "Why are you helping me?",
+          "Tell me about the carousel.",
+          "Do you know Ambrose Veneer?"
+        ],
+        "actions": [
+          {
+            "type": "effect",
+            "target": "player",
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 6
+                }
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

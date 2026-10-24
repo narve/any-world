@@ -143,6 +143,11 @@ export interface ItemKnowledgeState {
   /** free-form notes recorded by the engine on use ("You felt dizzy.") */
   notes: string[];
   timesUsed: number;
+  /**
+   * Hidden by an allConsumablesUnknown rule that came into force mid-run (GM add_rule); the
+   * knowledge returns to the item's own level when no such rule is in force any more.
+   */
+  ruleHidden?: boolean;
 }
 
 export interface AreaState {
@@ -205,6 +210,12 @@ export interface GameState {
   turn: number;
   status: 'playing' | 'won' | 'lost';
   endReason?: string;
+  /**
+   * i18n of endReason (engine/log-keys.ts END_REASON_KEYS): set when the engine composed the
+   * reason; absent when it is world-authored (the goal summary) or the state predates M3.
+   */
+  endReasonKey?: string;
+  endReasonParams?: Record<string, string | number>;
   area: AreaState;
   /** areas already visited are dropped (no backtracking in v1) */
   player: PlayerState;
@@ -235,14 +246,32 @@ export interface GameState {
    */
   gmRetiredHarm?: number;
   /** the last harm the player took (for the loss reason): who and what kind */
-  lastHarm?: { by?: string; damageType: string; turn: number };
+  lastHarm?: {
+    by?: string;
+    damageType: string;
+    turn: number;
+    /** status def id whose per-turn effect did it (the loss line names it) */
+    status?: string;
+    /** terrain def id underfoot that did it */
+    terrain?: string;
+  };
 }
 
 export interface PendingChoice {
   kind: 'gm_offer' | 'dialogue';
   prompt: string;
   speakerId?: string;
-  options: { label: string; actions: GmAction[]; /** engine-internal marker (e.g. "service:heal") */ tag?: string }[];
+  options: {
+    label: string;
+    actions: GmAction[];
+    /** engine-internal marker: "buy", "sell", "service:heal", "decline"… */
+    tag?: string;
+    /**
+     * tag "sell": the item the trader buys (one unit from this slot; the price is the option's
+     * positive `currency` action)
+     */
+    sell?: { slot: number; defId: string };
+  }[];
   /** gm_offer only: area GM budget reserved for the options when the offer was made (see gmActionCost) */
   reservedBudget?: number;
 }
@@ -292,7 +321,7 @@ export type GameEvent =
   | { type: 'low_hp' }
   | { type: 'quest_updated'; questId: string; status: Quest['status'] }
   | { type: 'game_over'; result: 'won' | 'lost'; reason: string }
-  | { type: 'message'; text: string; kind: LogMessage['kind'] }
+  | { type: 'message'; text: string; kind: LogMessage['kind']; /** i18n, as LogMessage.key/params */ key?: string; params?: Record<string, string | number> }
   | { type: 'noise'; pos: Pos; radius: number }
   | { type: 'invalid'; reason: string }
   | { type: 'rule_added'; id: string; name: string; source: 'gm'; reason?: string }

@@ -6,7 +6,7 @@
 import type { ItemDef } from '../schema/world';
 import type { ItemInstance, Pos } from './types';
 import { QUICK_SLOTS, TOTAL_SLOTS } from './types';
-import { type Ctx, emit, findFreeNear, itemName, log, nextId, playerActor, statName, tileWalkable } from './ctx';
+import { type Ctx, emit, findFreeNear, itemName, logKey, nextId, playerActor, statName, tileWalkable } from './ctx';
 import { getStat, hasFlag, maxHp, maxMp } from './stats';
 import { fireItemTriggers } from './triggers';
 import { type Obs, POSITIONAL_SHAPES, changeResource, isActorEffect, resolveTargets, runAction } from './effects';
@@ -114,7 +114,8 @@ export function giveItem(ctx: Ctx, defId: string, count = 1): number {
       placeFloorItem(ctx, it, p.pos);
     }
   }
-  if (given) log(ctx, `${ctx.world.player.name} receives ${displayItemName(ctx, defId)}${given > 1 ? ` ×${given}` : ''}.`, 'loot');
+  if (given > 1) logKey(ctx, 'log.item.receive_many', { player: ctx.world.player.name, item: displayItemName(ctx, defId), count: given }, 'loot');
+  else if (given) logKey(ctx, 'log.item.receive', { player: ctx.world.player.name, item: displayItemName(ctx, defId) }, 'loot');
   return given;
 }
 
@@ -158,7 +159,7 @@ function unequipSlot(ctx: Ctx, slot: number, announce = true): void {
   const def = it ? ctx.ix.items.get(it.defId) : undefined;
   if (def) {
     fireItemTriggers(ctx, playerActor(ctx), def, 'on_unequip');
-    if (announce) log(ctx, `${ctx.world.player.name} puts away ${displayItemName(ctx, def.id)}.`, 'info');
+    if (announce) logKey(ctx, 'log.item.unequip', { player: ctx.world.player.name, item: displayItemName(ctx, def.id) }, 'info');
   }
   clampVitals(ctx);
 }
@@ -184,7 +185,7 @@ export function damageEquipped(ctx: Ctx, slot: number | null): void {
     const name = displayItemName(ctx, it.defId);
     unequipSlot(ctx, slot, false);
     ctx.s.player.slots[slot] = null;
-    log(ctx, `${name} breaks.`, 'warning');
+    logKey(ctx, 'log.item.breaks', { item: name }, 'warning');
   }
 }
 
@@ -211,7 +212,7 @@ export function doEquip(ctx: Ctx, slot: number): ActionOutcome {
   if (prev !== null) unequipSlot(ctx, prev, false);
   ctx.s.player.equipped[kind] = slot;
   emit(ctx, { type: 'equipped', slot });
-  log(ctx, `${ctx.world.player.name} equips ${displayItemName(ctx, def.id)}.`, 'info');
+  logKey(ctx, 'log.item.equip', { player: ctx.world.player.name, item: displayItemName(ctx, def.id) }, 'info');
   fireItemTriggers(ctx, playerActor(ctx), def, 'on_equip');
   clampVitals(ctx);
   return done();
@@ -256,7 +257,7 @@ export function doDrop(ctx: Ctx, slot: number): ActionOutcome {
   ctx.s.player.slots[slot] = null;
   const p = playerActor(ctx);
   ctx.s.area.items.push({ item: it, pos: { ...p.pos } });
-  log(ctx, `${ctx.world.player.name} drops ${displayItemName(ctx, it.defId)}.`, 'info');
+  logKey(ctx, 'log.item.drop', { player: ctx.world.player.name, item: displayItemName(ctx, it.defId) }, 'info');
   return done();
 }
 
@@ -276,11 +277,12 @@ export function doPickup(ctx: Ctx): ActionOutcome {
     ctx.s.area.items = ctx.s.area.items.filter((x) => x !== fi);
     picked++;
     emit(ctx, { type: 'item_picked', itemId: fi.item.id, defId: def.id });
-    log(ctx, `${ctx.world.player.name} picks up ${displayItemName(ctx, def.id)}${fi.item.count > 1 ? ` ×${fi.item.count}` : ''}.`, 'loot');
+    if (fi.item.count > 1) logKey(ctx, 'log.item.pickup_many', { player: ctx.world.player.name, item: displayItemName(ctx, def.id), count: fi.item.count }, 'loot');
+    else logKey(ctx, 'log.item.pickup', { player: ctx.world.player.name, item: displayItemName(ctx, def.id) }, 'loot');
     fireItemTriggers(ctx, p, def, 'on_pickup');
   }
   if (!picked) return invalid('no room to carry that');
-  if (full) log(ctx, 'No room for the rest.', 'warning');
+  if (full) logKey(ctx, 'log.item.no_room', {}, 'warning');
   return done();
 }
 
@@ -325,7 +327,7 @@ export function doUse(ctx: Ctx, slot: number, target?: Pos): ActionOutcome {
   if (def.useMode === 'passive' || !def.onUse) return doEquip(ctx, slot);
   const p = playerActor(ctx);
   const shownName = displayItemName(ctx, def.id);
-  log(ctx, `${ctx.world.player.name} uses ${shownName}.`, 'info');
+  logKey(ctx, 'log.item.use', { player: ctx.world.player.name, item: shownName }, 'info');
   if (def.cost && def.cost.amount > 0) changeResource(ctx, p, def.cost.resource, -def.cost.amount);
   // consume before effects so the item can't be duplicated by its own effects
   let consumed = false;
@@ -334,7 +336,7 @@ export function doUse(ctx: Ctx, slot: number, target?: Pos): ActionOutcome {
     consumed = true;
   } else if (def.useMode === 'charges') {
     it.charges = Math.max(0, (it.charges ?? 1) - 1);
-    if (it.charges === 0) log(ctx, `${shownName} is spent.`, 'info');
+    if (it.charges === 0) logKey(ctx, 'log.item.spent', { item: shownName }, 'info');
   }
   // the round tick right after this action takes one off, so +1 makes "cooldown N" block the next N turns;
   // for a consumed stack the cooldown sits on what is left of the stack

@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-ship/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The ductworks swallow the hum of the cloisters. Cold air drags at your sleeves, always in the same direction: aft, toward the hull. Somewhere ahead, boots on grating. Ostrova's patrol."
+          },
+          {
+            "type": "mood",
+            "music": "tense"
+          }
+        ]
+      }
+    }
+  ]
+}

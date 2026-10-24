@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/abstract-yellow-triangle/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The paper ends. Below you is bare canvas, unprimed and endless, with islands of ultramarine floating on it like thoughts the Painter never finished. Somewhere near the middle, faint yellow outlines flicker under the blue. They look a lot like you."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#a8c5ff"
+          }
+        ]
+      }
+    }
+  ]
+}

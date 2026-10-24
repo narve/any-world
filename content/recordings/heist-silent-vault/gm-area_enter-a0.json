@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/heist-silent-vault/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The staff corridor. Under your foot a board considers creaking, then thinks better of it. Mirela signs from the cloakroom hatch: picks, pastilles, Kreuzer first."
+          },
+          {
+            "type": "mood",
+            "music": "tense",
+            "tint": "#ffdcaa"
+          }
+        ]
+      }
+    }
+  ]
+}

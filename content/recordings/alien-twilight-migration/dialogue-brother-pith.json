@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/alien-twilight-migration/brother-pith",
+      "json": {
+        "reply": "A visitor! Wipe your feet, the landlord's touchy about his lining. Brother Pith, twenty years a lodger. Everything I sell was swallowed honestly: curd, dew, a coat of old knee-plates, a whistle that still remembers wings. Spore-beads, please. And if you're here about the grinding, yes, I hear it too. It's a stone, deep past the fluke-folds. The mites came in with it.",
+        "options": [
+          "Show me what you're selling.",
+          "What kind of stone?",
+          "How do you live in here?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

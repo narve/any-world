@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/fixture-dream/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You thin out, a glaze over a glaze, until you are only a tint in the corner of something larger. The painting is finished without you. It is beautiful, and it is missing a colour."
+          }
+        ]
+      }
+    }
+  ]
+}

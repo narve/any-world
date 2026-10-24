@@ -3,16 +3,19 @@
  * renderer, so everything here is unit-tested in node (tests/client/view.test.ts).
  */
 import type { WorldSpec, ItemDef, Perk, Effect } from '../schema/world';
-import type { GameState, ItemView, LogMessage, PendingChoice } from '../engine/types';
+import type { GameState, ItemView, LogMessage, PendingChoice, PlayerAction } from '../engine/types';
 import { TOTAL_SLOTS } from '../engine/types';
 import {
   describeInventory,
   describeItemDef,
+  legalActions,
   playerSheet,
   transitionBlocker,
   type PlayerSheet,
 } from '../engine/index';
 import { activeRulesOf, type RuleTracker } from './rules';
+import { contextActions, goalView } from './guide';
+import { listJoin, t, tx } from './i18n/index';
 import type {
   ChoiceView,
   DangerView,
@@ -22,6 +25,7 @@ import type {
   HudView,
   LevelUpView,
   NarrationView,
+  OnboardingView,
   PaletteView,
   QuestView,
   RuleView,
@@ -146,7 +150,7 @@ export function wastedRestore(world: WorldSpec, def: ItemDef, sheet: PlayerSheet
     return null;
   }
   if (!restores) return null;
-  return names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0];
+  return listJoin(names, 'and');
 }
 
 export function hudView(world: WorldSpec, state: GameState, sheet: PlayerSheet): HudView {
@@ -290,12 +294,15 @@ export interface DialogueMap {
   leaveIndex: number | null;
   /** engine option indices of trader 'buy' offers */
   buy: number[];
+  /** engine option indices of the trader's 'sell' offers (they buy from the player) */
+  sell: number[];
 }
 
 export function dialogueMap(pc: PendingChoice): DialogueMap {
-  const m: DialogueMap = { labels: [], engineIndex: [], leaveIndex: null, buy: [] };
+  const m: DialogueMap = { labels: [], engineIndex: [], leaveIndex: null, buy: [], sell: [] };
   pc.options.forEach((o, i) => {
     if (o.tag === 'buy') m.buy.push(i);
+    else if (o.tag === 'sell') m.sell.push(i);
     else if (!o.tag && o.actions.length === 0 && m.leaveIndex === null && i === pc.options.length - 1) m.leaveIndex = i;
     else if (m.labels.length < 3) {
       m.labels.push(o.label);
@@ -317,14 +324,14 @@ export function dialogueView(
   const m = dialogueMap(pc);
   return {
     npcId: pc.speakerId ?? '',
-    npcName: def?.name ?? 'Someone',
+    npcName: def?.name ?? t('common.someone'),
     npcTitle: def?.npc ? def.npc.role.replace('_', ' ') : undefined,
     portraitColor: def?.model.humanoid?.top ?? def?.model.colors?.primary ?? world.palette.accent,
     reply: pc.prompt,
     options: m.labels,
     pending: false,
     canPersuade: !!world.verbs.persuade && !!npc && !npc.allyOf,
-    canTrade: m.buy.length > 0,
+    canTrade: m.buy.length > 0 || m.sell.length > 0,
     history: history.slice(-6),
   };
 }
@@ -342,8 +349,8 @@ function statLabel(world: WorldSpec, stat: string): string {
   if (v[stat]) return v[stat].name;
   const r = world.resources.find((x) => x.id === stat);
   if (r) return r.name;
-  if (stat === 'speed') return 'Speed';
-  if (stat === 'sight') return 'Sight';
+  if (stat === 'speed') return t('stat.speed');
+  if (stat === 'sight') return t('stat.sight');
   return stat;
 }
 
@@ -351,7 +358,7 @@ export function perkLines(world: WorldSpec, perk: Perk): string[] {
   const lines = perk.modifiers.map((m) => `${m.amount >= 0 ? '+' : ''}${m.amount} ${statLabel(world, m.stat)}`);
   for (const id of perk.grantItems) {
     const it = world.items.find((i) => i.id === id);
-    if (it) lines.push(`Gain: ${it.name}`);
+    if (it) lines.push(t('perk.gain', { item: it.name }));
   }
   return lines;
 }
@@ -370,7 +377,7 @@ export function tradeView(world: WorldSpec, state: GameState): TradeView | null 
   const pc = state.pendingChoice;
   if (!pc || pc.kind !== 'dialogue') return null;
   const m = dialogueMap(pc);
-  if (!m.buy.length) return null;
+  if (!m.buy.length && !m.sell.length) return null;
   const npc = state.area.actors.find((a) => a.id === pc.speakerId);
   const def = npc ? world.actors.find((d) => d.id === npc.defId) : undefined;
   const offers = m.buy.map((i) => {
@@ -382,13 +389,29 @@ export function tradeView(world: WorldSpec, state: GameState): TradeView | null 
   });
   return {
     traderId: pc.speakerId ?? '',
-    traderName: def?.name ?? 'Trader',
+    traderName: def?.name ?? t('trade.trader'),
     traderColor: def?.model.humanoid?.top ?? def?.model.colors?.primary ?? world.palette.accent,
     greeting: pc.prompt,
     currency: state.player.currency,
     offers,
-    sellable: [],
+    sellable: sellableOf(world, state, pc, m),
   };
+}
+
+/** the trader's sell offers (tag 'sell'): one unit of a carried item each, at a positive price */
+function sellableOf(world: WorldSpec, state: GameState, pc: PendingChoice, m: DialogueMap): TradeView['sellable'] {
+  if (!m.sell.length) return [];
+  const slots = slotViews(world, state, describeInventory(state));
+  const out: TradeView['sellable'] = [];
+  for (const i of m.sell) {
+    const o = pc.options[i];
+    if (!o.sell) continue;
+    const item = slots[o.sell.slot];
+    if (!item || item.defId !== o.sell.defId) continue;
+    const price = o.actions.reduce((n, a) => n + (a.type === 'currency' && a.amount > 0 ? a.amount : 0), 0);
+    out.push({ slot: o.sell.slot, item, price });
+  }
+  return out;
 }
 
 function fallbackItemView(label: string): ItemView {
@@ -397,14 +420,13 @@ function fallbackItemView(label: string): ItemView {
 
 /** "from the start" or "<Area word> N, turn T" */
 export function sinceLabel(world: WorldSpec, area?: number, turn?: number): string {
-  if (turn === undefined) return 'from the start';
-  const where = area !== undefined ? `${world.vocabulary.area} ${area + 1}, ` : '';
-  return `${where}turn ${turn}`;
+  if (turn === undefined) return t('rules.fromStart');
+  return area !== undefined ? t('rules.sinceAreaTurn', { area: world.vocabulary.area, n: area + 1, turn }) : t('rules.sinceTurn', { turn });
 }
 
 /** the rules in force (world + GM), with since-when and the GM's reason */
 export function rulesView(world: WorldSpec, state?: GameState, tracker?: RuleTracker): RuleView[] {
-  if (!state) return world.rules.map((r) => ({ id: r.id, name: r.name, description: r.description, since: 'from the start' }));
+  if (!state) return world.rules.map((r) => ({ id: r.id, name: r.name, description: r.description, since: t('rules.fromStart') }));
   return activeRulesOf(world, state).map((r) => {
     const memo = tracker?.memoFor(r.rule.id);
     const turn = r.sinceTurn ?? memo?.sinceTurn;
@@ -429,10 +451,10 @@ export function objectiveParts(world: WorldSpec, state: GameState, canTransition
   const plan = world.areas[state.area.index];
   const last = state.area.index >= world.areas.length - 1;
   if (!plan || last) return { goal, hint: null };
-  if (canTransition) return { goal, hint: `Press > to ${lowerFirst(plan.transitionName)}` };
+  if (canTransition) return { goal, hint: t('objective.press', { way: lowerFirst(plan.transitionName) }) };
   const ex = state.area.map.exit;
   const seen = (state.area.seen as ArrayLike<number>)[ex.y * state.area.map.width + ex.x] ?? 0;
-  return { goal, hint: seen ? `The way on (${plan.transitionName}) is marked on the map` : `Find the way on from ${plan.name}` };
+  return { goal, hint: seen ? t('objective.marked', { way: plan.transitionName }) : t('objective.find', { area: plan.name }) };
 }
 
 function objectiveFields(o: { goal: string; hint: string | null }): Pick<GameView, 'objective' | 'objectiveHint'> {
@@ -477,8 +499,13 @@ export interface GameViewExtras {
   tradeOpen: boolean;
   busy?: string | null;
   rules?: RuleTracker;
-  hints?: string[] | null;
   interactHint?: string | null;
+  /** the usable tile next to the player (context bar "Use …") */
+  interact?: { name: string } | null;
+  /** the onboarding card to show (null hides it) */
+  onboarding?: OnboardingView | null;
+  /** engine legalActions(state), when the caller already has them */
+  legal?: readonly PlayerAction[];
   /** item thumbnails by def id (renderer), used for known items only */
   thumbs?: (defId: string) => string | undefined;
 }
@@ -510,6 +537,7 @@ export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras):
     }
   }
   const canTransition = transitionBlocker(state) === null;
+  const legal = x.legal ?? (state.status === 'playing' ? legalActions(state) : []);
   return {
     hud,
     log: mergedLog(state, x.gmLog),
@@ -522,15 +550,17 @@ export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras):
     rules: rulesView(world, state, x.rules),
     quests: questsView(state),
     verbs: { talk: !!world.verbs.talk, sneak: !!world.verbs.sneak, search: !!world.verbs.search, persuade: !!world.verbs.persuade },
-    transitionName: plan?.transitionName ?? 'Move on',
+    transitionName: plan?.transitionName ?? t('help.takeExit'),
     canTransition,
     goalSummary: world.goal.summary,
     mode: x.mode,
     targetingSlot: x.targetingSlot,
     busy: x.busy ?? null,
     ...objectiveFields(objectiveParts(world, state, canTransition)),
-    hints: x.hints ?? null,
     interactHint: x.interactHint ?? null,
+    goal: goalView(world, state),
+    actions: contextActions(world, state, { legal, interact: x.interact ?? null, canTransition }),
+    onboarding: x.onboarding ?? null,
   };
 }
 
@@ -540,7 +570,7 @@ export function endView(world: WorldSpec, state: GameState, epitaph?: string, ru
     result: won ? 'won' : 'lost',
     worldTitle: world.meta.title,
     text: won ? world.goal.winText : world.goal.lossText,
-    reason: state.endReason,
+    reason: state.endReasonKey && state.endReason !== undefined ? tx(state.endReasonKey, state.endReasonParams, state.endReason) : state.endReason,
     epitaph,
     playerName: world.player.name,
     stats: {

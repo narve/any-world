@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/abstract-yellow-triangle/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Your yellow is thinning to an outline. Somewhere close there is blue; blue remembers how to breathe."
+          }
+        ]
+      }
+    }
+  ]
+}

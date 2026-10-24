@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/heist-silent-vault/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "A gasp, in the Room of Absolute Quiet, lands like a dropped cymbal. The parquet sings from wall to wall, the lanterns come, and the glass-lark goes back to sleep in its wax for another hundred years. The cat, unbothered, washes a paw."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -16,11 +16,14 @@ import {
   isFree,
   isPlayer,
   log,
+  logKey,
+  mutTile,
   opaque,
   passable,
   playerActor,
   tileWalkable,
 } from './ctx';
+import { END_REASON_KEYS, FACTION_KEYS, renderTemplate } from './log-keys';
 import { evalCondition } from './conditions';
 import { getStat, isAlly, isEnemy, maxHp, maxMp, sightRadius } from './stats';
 import { applyStatus, removeStatus } from './statuses';
@@ -499,7 +502,7 @@ export function applyActorEffect(
         target.ai.alerted = false;
         delete target.ai.lastSeen;
       }
-      log(ctx, `${who} is now ${e.faction}.`, e.faction === 'hostile' ? 'bad' : 'good');
+      logKey(ctx, FACTION_KEYS[e.faction], { actor: who }, e.faction === 'hostile' ? 'bad' : 'good');
       obs.push({ kind: 'faction', self, who, label: e.faction });
       return;
     }
@@ -536,7 +539,7 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
         n++;
       }
       if (n) {
-        log(ctx, `${ctx.ix.actors.get(e.actor)?.name ?? e.actor} appears.`, 'warning');
+        logKey(ctx, 'log.appears', { actor: ctx.ix.actors.get(e.actor)?.name ?? e.actor }, 'warning');
         obs.push({ kind: 'summon', self: false, amount: n, label: e.actor });
       }
       return;
@@ -582,7 +585,8 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
     case 'currency': {
       // paid to the player whoever the effect lands on (like grant_xp): currency is player state
       ctx.s.player.currency += e.amount;
-      log(ctx, `+${e.amount} ${ctx.world.vocabulary.currency}`, 'loot');
+      if (e.amount >= 0) logKey(ctx, 'log.currency.gain', { amount: e.amount, currency: ctx.world.vocabulary.currency }, 'loot');
+      else logKey(ctx, 'log.currency.spend', { amount: -e.amount, currency: ctx.world.vocabulary.currency }, 'info');
       return;
     }
     case 'set_flag':
@@ -640,12 +644,12 @@ export function changeResource(ctx: Ctx, a: ActorInstance, res: string, amount: 
 export function resourceEmptied(ctx: Ctx, a: ActorInstance, res: string): void {
   const def = ctx.ix.resources.get(res);
   if (def && isPlayer(ctx, a)) {
-    log(ctx, `${def.name} is empty.`, 'warning');
+    logKey(ctx, 'log.resource.empty', { resource: def.name }, 'warning');
     if (def.onEmpty.length) applyEffectList(ctx, def.onEmpty, a, [a], a.pos, []);
     if (def.emptyIsDeath && ctx.s.status === 'playing') {
       a.hp = 0;
       emit(ctx, { type: 'died', actorId: a.id, defId: a.defId });
-      endGame(ctx, 'lost', `${def.name} ran out`);
+      endGame(ctx, 'lost', renderTemplate(END_REASON_KEYS['end.loss.resource'], { resource: def.name }), { key: 'end.loss.resource', params: { resource: def.name } });
       return;
     }
   }
@@ -768,10 +772,11 @@ export function spawnTerrain(ctx: Ctx, terrainId: string, centre: Pos, radius: n
   const changed: { i: number; prev: Prev }[] = [];
   for (const p of circleTiles(ctx, centre, radius, false)) {
     const i = p.y * map.width + p.x;
-    const t = map.tiles[i];
-    if (t.kind !== 'floor' && t.kind !== 'door_open') continue;
+    const t0 = map.tiles[i];
+    if (t0.kind !== 'floor' && t0.kind !== 'door_open') continue;
     if (!td.walkable && actorAt(ctx, p)) continue;
     if (!td.walkable && ctx.s.area.items.some((fi) => samePos(fi.pos, p))) continue;
+    const t = mutTile(ctx, i);
     changed.push({ i, prev: { terrain: t.terrain, terrainTtl: t.terrainTtl, terrainUnder: t.terrainUnder, interacted: t.interacted } });
     if (duration) {
       // temporary terrain covers what is there (the permanent terrain, not an earlier temporary
@@ -796,7 +801,7 @@ export function spawnTerrain(ctx: Ctx, terrainId: string, centre: Pos, radius: n
   if (!changed.length) return 0;
   if (!td.walkable && (!exitReachable(ctx) || (reachBefore && cutsOff(ctx, reachBefore, new Set(changed.map((c) => c.i)))))) {
     for (const c of changed) {
-      const t = map.tiles[c.i];
+      const t = mutTile(ctx, c.i);
       delete t.terrain;
       delete t.terrainTtl;
       delete t.terrainUnder;

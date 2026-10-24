@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/cyberpunk-rooftop-yams/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The cloud tears like wet paper and the rain falls free, unmetered, over every roof on the island. You come down with it, three purple yams warm in a cloth bundle. Radio Agbado signs off: forecast for tomorrow, planting."
+          }
+        ]
+      }
+    }
+  ]
+}

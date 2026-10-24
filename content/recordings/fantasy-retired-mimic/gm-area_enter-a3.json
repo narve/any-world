@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fantasy-retired-mimic/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The carousel spits you onto quarterly-report carpet. At the head of the table, a mahogany desk in a pinstriped tie straightens a stack of memos, and under it, quite clearly, four carved claws flex. Through the glass, the Departures belt rolls past, taking luggage somewhere sunny."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#cfe0ff"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/folk-horror-scarecrow-wedding/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Hollin Moss Green, the wedding eve. Bees in the bunting, a brass band tuning behind the Plough, and on every doorstep a woman holding a daisy chain with your name stitched in the ribbon."
+          },
+          {
+            "type": "mood",
+            "music": "calm",
+            "tint": "#ffe6b0"
+          }
+        ]
+      }
+    }
+  ]
+}

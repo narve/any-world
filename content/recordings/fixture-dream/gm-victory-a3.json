@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/fixture-dream/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The fourth primary settles into the painting like a key into a lock. Everything that was grey remembers what it was going to be. Somewhere outside the frame, a brush is set down, satisfied."
+          }
+        ]
+      }
+    }
+  ]
+}

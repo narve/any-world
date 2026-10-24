@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/detective-sugar-hotel/hedda-imboden",
+      "json": {
+        "reply": "Boots, Inspector. Thank you. A hundred and twelve rooms in this house, a hundred and twelve keys on Herr Pell's board, and one brass hook between four and five with nothing on it and a name sanded off above it. I have dusted that hook for twenty-three years and never once been told what it is for.",
+        "options": [
+          "Who keeps the old guest registers?",
+          "Tell me about Herr Pell.",
+          "What did Odile want with the fourth floor?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

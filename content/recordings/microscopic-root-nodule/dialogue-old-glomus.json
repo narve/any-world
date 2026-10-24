@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/microscopic-root-nodule/old-glomus",
+      "json": {
+        "reply": "Another tenant, swimming at the landlord's door. Four hundred million years I've brokered for roots, little rod, and I've never seen two of you with the same papers on the same morning. Sugar talks. What are you buying?",
+        "options": [
+          "What do you know about the purple strain?",
+          "Where do I find the luteolin whisper?",
+          "What would you sell a tenant like me?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

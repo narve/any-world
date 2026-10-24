@@ -1,0 +1,44 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/folk-horror-scarecrow-wedding/old-bride-maud",
+      "json": {
+        "reply": "Mind the stooks, they're touchy. You'll be the new one; I can tell by the smock. I'd trade you my veil but you'd not want it. Salt, torches, a fork with some reach to it: those I'll part with, for pennies.",
+        "options": [
+          "What happened to you, Maud?",
+          "Is there any way out of this?",
+          "Show me what you've got."
+        ],
+        "actions": [
+          {
+            "type": "trade",
+            "actorId": "old-bride-maud",
+            "items": [
+              {
+                "item": "salt-twist",
+                "price": 12
+              },
+              {
+                "item": "seed-cake",
+                "price": 10
+              },
+              {
+                "item": "lammas-torch",
+                "price": 15
+              },
+              {
+                "item": "bird-scarer-clapper",
+                "price": 22
+              },
+              {
+                "item": "hay-fork",
+                "price": 30
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

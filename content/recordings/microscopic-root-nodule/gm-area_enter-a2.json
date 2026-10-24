@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/microscopic-root-nodule/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The infection thread opens ahead of you like a throat that has decided to be polite. Its walls pulse with mucilage, and along the floor runs a faint violet smear: Kappa's trail, still warm, pointing inward."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#d9a8bc"
+          }
+        ]
+      }
+    }
+  ]
+}

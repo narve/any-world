@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/viking-lawspeaker-althing/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The rift closes over you: black basalt, glacier water so clear it lies about its depth, and ravens on every ledge. One of them says 'boundary' in your master's voice, then swallows the rest of the word."
+          },
+          {
+            "type": "say",
+            "actorId": "brother-kolskegg",
+            "text": "Pax tibi! Mind the birds, child. They have eaten half a clause on inheritance this morning and they are still hungry."
+          },
+          {
+            "type": "mood",
+            "music": "tense",
+            "tint": "#b8c8d8"
+          }
+        ]
+      }
+    }
+  ]
+}

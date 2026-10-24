@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-western/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The mine swallows the daylight in one gulp. The walls hum, faintly, like a wire in the wind. The lodestone here pulls at your buckle and your bullets both."
+          },
+          {
+            "type": "mood",
+            "music": "eerie"
+          }
+        ]
+      }
+    }
+  ]
+}

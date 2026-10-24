@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/fixture-ship/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The shutters open. Outside there is a planet, green and close and impossibly real, and the moss on every deck sighs at once. The crew will vote at dawn. For the first time in two hundred years, the ship has nothing to hide."
+          }
+        ]
+      }
+    }
+  ]
+}

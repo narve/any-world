@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/fixture-ship/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The ship keeps your air a little longer than it has to. Then the moss grows over the place you stopped, gently, the way it grows over everything it loves."
+          }
+        ]
+      }
+    }
+  ]
+}

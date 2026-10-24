@@ -1,0 +1,3914 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "The Sugar Plan of the Hotel Kandelhorn",
+    "tagline": "A snowed-in Alpine palace, a missing pastry chef, and a sugar model with one room too many.",
+    "genre": "detective",
+    "tags": [
+      "mystery",
+      "alpine",
+      "snowbound",
+      "hotel",
+      "confectionery",
+      "surreal"
+    ],
+    "tone": "wry, cold, sweet-edged",
+    "era": "1930s, off-season",
+    "premise": "The Grand Hotel Kandelhorn is shut for the off-season and snowed in to the second-floor windows. Its pastry chef, Odile Fankhauser, has vanished from her kitchen, leaving a half-finished sugar model of the hotel on the marble slab — accurate to the last banister, and to a Room 4½ that appears on no plan and in no one's memory. You are a cantonal inspector who came up for the skiing. The skeleton staff are polite, tired and lying. Gather the evidence, walk the model, find the room, and name the culprit before the thaw opens the road.",
+    "prompt": "In a grand Alpine hotel snowed in for the off-season, the pastry chef has vanished, leaving behind a half-finished sugar model of the building — accurate down to a room nobody admits exists. Interview the skeleton staff, compare the model to the real corridors, and name the culprit before the thaw.",
+    "nonViolent": true,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Presence",
+        "abbr": "PRE",
+        "description": "How much room you take up in a conversation. Adds weight to every question."
+      },
+      "dex": {
+        "name": "Tact",
+        "abbr": "TCT",
+        "description": "Timing, manners and the well-placed pause. Lands questions and dodges deflections."
+      },
+      "int": {
+        "name": "Deduction",
+        "abbr": "DED",
+        "description": "Putting crumbs together. Powers your hunches and your sharper questions."
+      },
+      "hp": {
+        "name": "Composure",
+        "abbr": "COM",
+        "description": "How long you keep your temper and your nerve. At zero, you leave the case to someone else."
+      },
+      "mp": {
+        "name": "Insight",
+        "abbr": "INS",
+        "description": "Mental reserve spent on hunches and pointed silences. Comes back slowly."
+      },
+      "ac": {
+        "name": "Poise",
+        "abbr": "POI",
+        "description": "How hard you are to fluster. Evasions and cold looks must beat it."
+      }
+    },
+    "conflict": "Interrogate",
+    "defeated": "cracked",
+    "xp": "Leads",
+    "levelUp": "Breakthrough",
+    "currency": "francs",
+    "lossTitle": "The Case Goes Cold",
+    "winTitle": "Case Closed",
+    "area": "Floor"
+  },
+  "palette": {
+    "primary": "#f3d9e2",
+    "secondary": "#7a1f2b",
+    "accent": "#e8b04a",
+    "danger": "#c0392b",
+    "ui": "#1e2433",
+    "text": "#f7f3ee"
+  },
+  "damageTypes": [
+    {
+      "id": "pressure",
+      "name": "Pressure",
+      "color": "#e8b04a"
+    },
+    {
+      "id": "chill",
+      "name": "Chill",
+      "color": "#9fd3ff"
+    },
+    {
+      "id": "sugar",
+      "name": "Stickiness",
+      "color": "#f6a6c1"
+    },
+    {
+      "id": "heat",
+      "name": "Heat",
+      "color": "#ff7a3d"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "rattled",
+      "name": "Rattled",
+      "description": "Someone got under your skin. -2 Poise until you collect yourself.",
+      "harmful": true,
+      "color": "#e8b04a",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "chilled",
+      "name": "Chilled",
+      "description": "The draught has found your collar. You move and think slowly.",
+      "harmful": true,
+      "color": "#9fd3ff",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ],
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "sticky",
+      "name": "Sticky",
+      "description": "Caramel to the ankles. You cannot move until it sets loose.",
+      "harmful": true,
+      "color": "#d98e3a",
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "dumbstruck",
+      "name": "Dumbstruck",
+      "description": "Lost for words. Stands there blinking instead of answering back.",
+      "harmful": true,
+      "color": "#ffffff",
+      "flags": [
+        "stunned"
+      ]
+    },
+    {
+      "id": "focused",
+      "name": "On the Scent",
+      "description": "Everything fits together. +2 Deduction while it lasts.",
+      "harmful": false,
+      "color": "#f7e27a",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "warmed",
+      "name": "Warmed Through",
+      "description": "Something hot inside you. Composure returns a little each turn.",
+      "harmful": false,
+      "color": "#ff9f6b",
+      "flags": [
+        "regenerating"
+      ]
+    },
+    {
+      "id": "sugar-rush",
+      "name": "Sugar Rush",
+      "description": "Heart racing, feet quick. You act faster for a while.",
+      "harmful": false,
+      "color": "#ff6fa8",
+      "flags": [
+        "hasted"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "snowpack",
+      "name": "Snowpack",
+      "description": "How much snow still blocks the pass road. When it melts away, the road opens and the culprit walks out with the luggage.",
+      "color": "#dfefff",
+      "max": 600,
+      "start": 600,
+      "perTurn": 0,
+      "emptyIsDeath": true
+    }
+  ],
+  "rules": [
+    {
+      "id": "before-the-thaw",
+      "name": "Before the Thaw",
+      "description": "The Föhn wind is coming. You lose 1 Snowpack every 2 turns; at 0 the road opens and the case is lost. Avalanche bulletins add Snowpack back.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 2,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "snowpack",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "switches": {}
+    },
+    {
+      "id": "accurate-model",
+      "name": "Accurate to the Banister",
+      "description": "You studied the sugar model. Each time you enter a new floor, the corridors around you (radius 9) are already mapped in your head.",
+      "playerTriggers": [
+        {
+          "on": "on_area_enter",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "reveal_map",
+                "radius": 9
+              },
+              {
+                "type": "message",
+                "text": "You know this corridor. You have seen it in sugar, one hundredth of the size."
+              }
+            ]
+          }
+        }
+      ],
+      "switches": {}
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Inspector Vreni Aebischer",
+    "title": "Cantonal Police, On Skiing Leave",
+    "description": "Came up to the Kandelhorn for three weeks of snow and no crime. Has a pencil behind one ear, a notebook in every pocket and a habit of asking the second question nobody wants.",
+    "stats": {
+      "str": 10,
+      "dex": 11,
+      "int": 14,
+      "hp": 28,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 10,
+    "sight": 8,
+    "unarmed": {
+      "name": "Pointed Question",
+      "verb": "asks a pointed question of",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "pressure",
+      "range": 1,
+      "accuracyStat": "int"
+    },
+    "startingItems": [
+      {
+        "item": "pocket-notebook",
+        "equipped": true
+      },
+      {
+        "item": "loden-coat",
+        "equipped": true,
+        "quick": false
+      },
+      {
+        "item": "hot-chocolate",
+        "count": 2
+      },
+      {
+        "item": "tactful-silence"
+      },
+      {
+        "item": "formal-accusation"
+      },
+      {
+        "item": "avalanche-bulletin",
+        "quick": false
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 28,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "thick-loden",
+          "name": "Thick Loden",
+          "description": "Mountain wool and mountain patience. +6 Composure, +1 Poise.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 6
+            },
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "sharp-pencil",
+          "name": "Sharpened Pencil",
+          "description": "You write faster than they talk. +2 Deduction.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "good-manners",
+          "name": "Swiss Finishing School",
+          "description": "Impeccable manners disarm anyone. +2 Tact.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "eye-for-crumbs",
+          "name": "An Eye for Crumbs",
+          "description": "You notice where the sugar was spilled. +2 sight.",
+          "modifiers": [
+            {
+              "stat": "sight",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "hunch-perk",
+          "name": "Trust Your Hunch",
+          "description": "Learn Hunch: a sudden accusation thrown across a room.",
+          "grantItems": [
+            "hunch"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "unflappable",
+          "name": "Unflappable",
+          "description": "Every time someone rattles you, 30% chance you simply straighten your collar and shake off every harmful condition.",
+          "triggers": [
+            {
+              "on": "on_hurt",
+              "chance": 0.3,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "remove_status",
+                    "status": "all_harmful"
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "follow-up",
+          "name": "The Follow-Up Question",
+          "description": "When someone cracks, you note it down and feel better: regain 3 Composure and 1 Insight.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 3
+                    }
+                  },
+                  {
+                    "type": "resource",
+                    "resource": "mp",
+                    "amount": {
+                      "base": 1
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "commanding",
+          "name": "Commanding Presence",
+          "description": "You fill a doorway now. +2 Presence, +4 Composure.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            },
+            {
+              "stat": "hp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "whole-picture",
+          "name": "The Whole Picture",
+          "description": "Learn The Whole Picture: lay out the case so everyone near you falls silent.",
+          "grantItems": [
+            "whole-picture"
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.95,
+        "build": "slim",
+        "skin": "#f1d3bd",
+        "top": "#3d5a40",
+        "bottom": "#2b2f3a",
+        "accent": "#e8b04a",
+        "hair": "#b5651d",
+        "hairStyle": "bun",
+        "headwear": "fedora",
+        "outfit": "coat",
+        "holding": "book"
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "draught",
+      "name": "Draught from Nowhere",
+      "description": "A cold breath that comes out of a wall where no window is. It follows you like a rumour.",
+      "stats": {
+        "hp": 6,
+        "ac": 12,
+        "str": 6,
+        "dex": 14,
+        "int": 3
+      },
+      "speed": 130,
+      "sight": 6,
+      "attack": {
+        "name": "Icy Breath",
+        "verb": "breathes cold down the neck of",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "chill",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "affects": "enemies",
+              "range": 1
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "chilled",
+                "duration": 3
+              }
+            ]
+          }
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "pressure",
+          "multiplier": 0.75
+        },
+        {
+          "damageType": "heat",
+          "multiplier": 2
+        }
+      ],
+      "xp": 4,
+      "tags": [
+        "cold"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#cfe8ff",
+          "secondary": "#ffffff",
+          "accent": "#9fd3ff"
+        },
+        "scale": 0.7,
+        "idle": "hover",
+        "light": {
+          "color": "#bfe3ff",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "bellhop",
+      "name": "Stonewalling Bellhop",
+      "description": "Sixteen, gold buttons, perfectly trained to say 'I couldn't possibly say, madame' until you lose your temper.",
+      "stats": {
+        "hp": 10,
+        "ac": 11,
+        "str": 9,
+        "dex": 12,
+        "int": 9
+      },
+      "attack": {
+        "name": "I Couldn't Possibly Say",
+        "verb": "stonewalls",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "pressure",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "hot-chocolate",
+          "chance": 0.25
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "staff"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.8,
+          "build": "slim",
+          "skin": "#f3d2b8",
+          "top": "#1f5e4a",
+          "bottom": "#1b1f26",
+          "accent": "#e8b04a",
+          "hair": "#2a1d14",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "gossip-moth",
+      "name": "Gossip Moth",
+      "description": "A grey moth the size of a hand that lives in the linen cupboards and whispers what the guests said in 1924.",
+      "stats": {
+        "hp": 5,
+        "ac": 12,
+        "str": 4,
+        "dex": 14,
+        "int": 8
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Whispered Rumour",
+        "verb": "whispers something awful about",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "pressure",
+        "range": 3,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "linen"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#b9b3a8",
+          "secondary": "#6d665c",
+          "accent": "#f3e9c6"
+        },
+        "scale": 0.55,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "steam-ghost",
+      "name": "Radiator Ghost",
+      "description": "The hotel's heating hisses into shape when nobody is watching: a coil of scalding steam with opinions about your boots.",
+      "stats": {
+        "hp": 12,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 6
+      },
+      "attack": {
+        "name": "Scalding Hiss",
+        "verb": "hisses scalding steam at",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "heat",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "resistances": [
+        {
+          "damageType": "heat",
+          "multiplier": 0
+        },
+        {
+          "damageType": "chill",
+          "multiplier": 2
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "boiler"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#e9e4dc",
+          "secondary": "#a8a29a",
+          "accent": "#ff7a3d"
+        },
+        "scale": 0.8,
+        "idle": "pulse",
+        "light": {
+          "color": "#ffb38a",
+          "intensity": 0.5,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "sugar-mouse",
+      "name": "Sugar Mouse",
+      "description": "A pink fondant mouse with a string tail that got up off the cake board and never sat back down. They come in threes.",
+      "stats": {
+        "hp": 7,
+        "ac": 11,
+        "str": 7,
+        "dex": 13,
+        "int": 3
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Sticky Nibble",
+        "verb": "nibbles",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "sugar",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "resistances": [
+        {
+          "damageType": "heat",
+          "multiplier": 2
+        }
+      ],
+      "loot": [
+        {
+          "item": "violet-praline",
+          "chance": 0.15
+        }
+      ],
+      "xp": 4,
+      "tags": [
+        "sugar"
+      ],
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#f6a6c1",
+          "secondary": "#ffffff",
+          "accent": "#3b1f2b"
+        },
+        "scale": 0.5,
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "sous-chef",
+      "name": "Sous-Chef Brüggli",
+      "description": "The second-best pastry hand in the canton and furious about it. Answers every question with a louder one and a rolling pin.",
+      "stats": {
+        "hp": 24,
+        "ac": 12,
+        "str": 13,
+        "dex": 10,
+        "int": 11
+      },
+      "attack": {
+        "name": "Louder Question",
+        "verb": "shouts a louder question at",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "pressure",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              },
+              {
+                "type": "message",
+                "text": "Brüggli sits down on a flour sack. 'She was better than me. Fine. She was better than me.'"
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "kitchen-blowtorch",
+          "chance": 0.6
+        }
+      ],
+      "xp": 18,
+      "unique": true,
+      "tags": [
+        "staff",
+        "elite"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1,
+          "build": "broad",
+          "skin": "#e9b99a",
+          "top": "#f4f4f0",
+          "bottom": "#3a3f4a",
+          "accent": "#c0392b",
+          "hair": "#3a2a1f",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "tool"
+        },
+        "scale": 1.05
+      }
+    },
+    {
+      "id": "caramel-wasp",
+      "name": "Caramel Wasp",
+      "description": "Spun from burnt sugar, amber and humming. Inside the model it is the size of a dog.",
+      "stats": {
+        "hp": 13,
+        "ac": 12,
+        "str": 9,
+        "dex": 14,
+        "int": 3
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Burnt-Sugar Sting",
+        "verb": "stings",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "sugar",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.2
+      },
+      "resistances": [
+        {
+          "damageType": "pressure",
+          "multiplier": 0.75
+        },
+        {
+          "damageType": "heat",
+          "multiplier": 2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.2,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "affects": "enemies",
+              "range": 1
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "sticky",
+                "duration": 2
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "sugar"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#d98e3a",
+          "secondary": "#5a2e12",
+          "accent": "#ffe0a3"
+        },
+        "scale": 0.7,
+        "idle": "hover",
+        "light": {
+          "color": "#ffb347",
+          "intensity": 0.4,
+          "radius": 1.2
+        }
+      }
+    },
+    {
+      "id": "marzipan-doorman",
+      "name": "Marzipan Doorman",
+      "description": "A green-coated marzipan figure from the model's front steps. Guards a door that is only icing, with total conviction.",
+      "stats": {
+        "hp": 18,
+        "ac": 13,
+        "str": 12,
+        "dex": 9,
+        "int": 5
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Doorman's Shove",
+        "verb": "blocks the way of",
+        "damage": {
+          "base": 3,
+          "dice": "1d6"
+        },
+        "damageType": "pressure",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "resistances": [
+        {
+          "damageType": "pressure",
+          "multiplier": 0.75
+        },
+        {
+          "damageType": "heat",
+          "multiplier": 2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 10,
+      "tags": [
+        "sugar"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.1,
+          "build": "round",
+          "skin": "#f2e3c6",
+          "top": "#4f9a5a",
+          "bottom": "#f2e3c6",
+          "accent": "#e8b04a",
+          "hair": "#f2e3c6",
+          "hairStyle": "none",
+          "headwear": "top_hat",
+          "outfit": "coat",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "icing-drift",
+      "name": "Icing Drift",
+      "description": "A slow white heap of royal icing that slides across the sugar floor and sets around whatever it touches.",
+      "stats": {
+        "hp": 16,
+        "ac": 10,
+        "str": 10,
+        "dex": 6,
+        "int": 2
+      },
+      "speed": 70,
+      "attack": {
+        "name": "Setting Icing",
+        "verb": "sets around",
+        "damage": {
+          "base": 3,
+          "dice": "1d4"
+        },
+        "damageType": "sugar",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "resistances": [
+        {
+          "damageType": "pressure",
+          "multiplier": 0.5
+        },
+        {
+          "damageType": "heat",
+          "multiplier": 2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.35,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "affects": "enemies",
+              "range": 1
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "sticky",
+                "duration": 2
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "sugar"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#ffffff",
+          "secondary": "#e7e3f0",
+          "accent": "#f6a6c1"
+        },
+        "scale": 0.9,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "augustin-pell",
+      "name": "Augustin Pell, Night Concierge",
+      "description": "Forty years at the desk. Knows every key, every guest, every room — including the one he bricked up. Never raises his voice, never once blinks.",
+      "stats": {
+        "hp": 78,
+        "ac": 14,
+        "str": 12,
+        "dex": 12,
+        "int": 16,
+        "mp": 30
+      },
+      "speed": 100,
+      "sight": 9,
+      "attack": {
+        "name": "Impeccable Alibi",
+        "verb": "offers a flawless alibi to",
+        "damage": {
+          "base": 4,
+          "dice": "1d8"
+        },
+        "damageType": "pressure",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "ring-for-service",
+          "name": "Ring for Service",
+          "description": "Two chimes of the brass desk bell. Bellhops arrive, as they always have.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "bellhop",
+                "count": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#e8b04a"
+            }
+          },
+          "cooldown": 10,
+          "useWhen": "start_of_fight"
+        },
+        {
+          "id": "polite-threat",
+          "name": "A Polite Threat",
+          "description": "He mentions your career, your pension and the avalanche season, all very kindly.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "affects": "enemies",
+              "range": 4
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 2,
+                  "dice": "1d4"
+                },
+                "damageType": "pressure"
+              },
+              {
+                "type": "apply_status",
+                "status": "rattled",
+                "duration": 4
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#e8b04a"
+            }
+          },
+          "cooldown": 6,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 6
+      },
+      "xp": 120,
+      "unique": true,
+      "tags": [
+        "staff",
+        "boss",
+        "culprit"
+      ],
+      "npc": {
+        "role": "rival",
+        "personality": "Courteous, exact, faintly amused; treats the hotel as his and the guests as weather.",
+        "greeting": "Inspector. Room four-and-a-half does not exist, and yet here we both are. May I take your coat?",
+        "lines": [
+          "The Kandelhorn has one hundred and twelve rooms. It has always had one hundred and twelve rooms.",
+          "Miss Fankhauser measures too carefully. A hotel needs a little forgetting.",
+          "When the road opens, I will be on the first sledge down, with my luggage. All of it."
+        ],
+        "secrets": "Bricked up Room 4½ in 1911 after a guest died there owing the hotel a fortune in gold francs, which he kept. Odile's model exposed the gap; he locked her inside with the gold.",
+        "wants": "To reach the thaw with nobody believing the room exists.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 18
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.05,
+          "build": "slim",
+          "skin": "#efd9c8",
+          "top": "#1b1f2e",
+          "bottom": "#1b1f2e",
+          "accent": "#e8b04a",
+          "hair": "#d9d9d9",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "suit",
+          "holding": "lantern"
+        },
+        "scale": 1.1,
+        "light": {
+          "color": "#ffd27a",
+          "intensity": 0.9,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "hedda-imboden",
+      "name": "Hedda Imboden, Head Housekeeper",
+      "description": "Keys at her belt, linen lists in her head. Has counted every towel in the house since 1902.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "informant",
+        "personality": "Brisk, dry, loyal to the hotel and not to its men. Respects anyone who wipes their boots.",
+        "greeting": "Wipe your boots, Inspector. Then ask your question; I have a hundred and twelve rooms to air.",
+        "lines": [
+          "One hundred and twelve rooms. One hundred and twelve keys. And one hook on Pell's board with nothing on it.",
+          "The linen count is off by one set every week. Someone takes sheets up the back stairs.",
+          "Odile measured everything. Doorways, banisters, me."
+        ],
+        "secrets": "The fourth floor's numbering jumps from 4 to 5 in the middle of the east corridor. Pell keeps a key on his own watch chain.",
+        "wants": "For the hotel's good name to survive the winter."
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#f0cfb5",
+          "top": "#2f2f3a",
+          "bottom": "#2f2f3a",
+          "accent": "#ffffff",
+          "hair": "#a9a9a9",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "dress",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "lisl-marti",
+      "name": "Lisl Marti, Barmaid",
+      "description": "Keeps the Edelweiss Bar open for an audience of nobody. Sells what the cellar still has.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 18,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "trader",
+        "personality": "Cheerful, nosy, keeps a running tab in her head and forgives nothing on it.",
+        "greeting": "Cocoa, Inspector? Or something with a little kirsch in it? We're snowed in, nobody's counting. Except me.",
+        "lines": [
+          "Pell drinks one glass of Dôle every night at eleven. Last Tuesday he had three.",
+          "The avalanche bulletins come up with the milk. I keep a few behind the bar.",
+          "Odile used to buy my sugar ration. All of it."
+        ],
+        "stock": [
+          "hot-chocolate",
+          "avalanche-bulletin",
+          "smelling-salts",
+          "thermos-flask",
+          "kitchen-blowtorch"
+        ],
+        "secrets": "Saw Pell carry a tray of sugar-work up the back stairs at 2 a.m. the night Odile vanished.",
+        "wants": "Someone to finally pay off the hotel's tab with her."
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "round",
+          "skin": "#f6d5c0",
+          "top": "#c0392b",
+          "bottom": "#1f3a5f",
+          "accent": "#ffffff",
+          "hair": "#e3b04b",
+          "hairStyle": "braids",
+          "headwear": "none",
+          "outfit": "dress",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "kaspar",
+      "name": "Kaspar, Dishwasher",
+      "description": "Twelve years old, sleeves soaked to the shoulder, the only one in the kitchen who still says Odile's name out loud.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 14,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.4
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "lore",
+        "personality": "Fast-talking, frightened, proud to be asked anything at all.",
+        "greeting": "Are you the police? Real police? She didn't run off. She'd never leave the model half-iced.",
+        "lines": [
+          "She said the model was 'one room too fat' on the fourth floor. She measured it three times.",
+          "The sugar mice started walking on Thursday. Nobody believes me.",
+          "If you lean close to the model, it hums."
+        ],
+        "secrets": "Odile told him the model was wrong only if the hotel was right; she meant to check the east corridor with a tape measure.",
+        "wants": "Odile back, and a proper apprenticeship."
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.7,
+          "build": "slim",
+          "skin": "#f3d2b8",
+          "top": "#9db4c0",
+          "bottom": "#5a4632",
+          "accent": "#ffffff",
+          "hair": "#d19a4a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "sugar-odile",
+      "name": "The Sugar Odile",
+      "description": "A tiny figure of the pastry chef, piped in white icing, that she set inside her own model. In here she is your height and remembers what the real one saw.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "healer",
+        "personality": "Gentle, precise, speaks in measurements; slightly melts when moved.",
+        "greeting": "You're early. I'm not finished. Hold still — you're shaking. Sugar steadies the nerves.",
+        "lines": [
+          "The east corridor of the fourth floor is eleven metres on the drawings and fourteen in the building.",
+          "The key to the extra room was spun from the same sugar as everything else here.",
+          "When you find me — the real me — I'll be cold. Bring something warm."
+        ],
+        "secrets": "The missing room holds a dead guest's luggage of gold francs; Pell has guarded it for decades.",
+        "wants": "For the real Odile to be found before the snow melts."
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "slim",
+          "skin": "#fff6f8",
+          "top": "#ffffff",
+          "bottom": "#fde1ea",
+          "accent": "#f6a6c1",
+          "hair": "#fff6f8",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "dress",
+          "holding": "tool"
+        },
+        "idle": "sway",
+        "light": {
+          "color": "#ffd6e6",
+          "intensity": 0.6,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "odile-fankhauser",
+      "name": "Odile Fankhauser, Pastry Chef",
+      "description": "Cold, furious and very much alive, wrapped in a stolen tablecloth among dusty steamer trunks.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 24,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "ally",
+        "personality": "Sharp, practical, unafraid; furious mostly about the unfinished model.",
+        "greeting": "Inspector! He's here, somewhere in the dark with his lantern. The gloves — find his gloves, they're covered in my caramel.",
+        "lines": [
+          "I measured the corridor. Pell measured me measuring it.",
+          "Fourteen metres, not eleven. I was right.",
+          "Name him properly. In front of everyone. With evidence."
+        ],
+        "secrets": "Pell burned his hands on her caramel when he dragged her here; his gloves are still crusted with it.",
+        "wants": "Pell named, the model finished, and a hot bath."
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "slim",
+          "skin": "#f3d6c2",
+          "top": "#ffffff",
+          "bottom": "#e9e2d6",
+          "accent": "#c0392b",
+          "hair": "#4a2c1d",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "robe",
+          "holding": "none"
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "pocket-notebook",
+      "name": "Pocket Notebook",
+      "kind": "Line of Questioning",
+      "description": "Oilcloth cover, pencil in the spine, every lie of the week written down in order.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Line of Questioning",
+        "verb": "reads back the notes to",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "pressure",
+        "accuracyStat": "int"
+      },
+      "value": 5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.06,
+              0.4
+            ],
+            "color": "#2f3a2f",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.4,
+              0.03
+            ],
+            "pos": [
+              0.12,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e8b04a"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "silver-lorgnette",
+      "name": "Silver Lorgnette",
+      "kind": "Cross-Examination",
+      "description": "A dead countess's opera glasses on a stick. Looking at someone through them makes them confess to small things.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Cross-Examination",
+        "verb": "examines",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "pressure",
+        "accuracyStat": "int"
+      },
+      "requires": [
+        {
+          "stat": "int",
+          "min": 13
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.2,
+              0.05
+            ],
+            "pos": [
+              -0.1,
+              0.3,
+              0
+            ],
+            "color": "#d9d9e3",
+            "material": "metal"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.2,
+              0.05
+            ],
+            "pos": [
+              0.1,
+              0.3,
+              0
+            ],
+            "color": "#d9d9e3",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.35,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#d9d9e3",
+            "material": "metal"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "loden-coat",
+      "name": "Loden Coat",
+      "kind": "Coat",
+      "description": "Green Tyrolean wool, rain-proof, insult-proof, heavier than it looks.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.6,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#3d5a40",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "fur-stole",
+      "name": "Abandoned Fur Stole",
+      "kind": "Stole",
+      "description": "Left on a lobby chair in 1928 and never claimed. Wearing it makes staff assume you are important.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 25,
+      "knowledge": "vague",
+      "vagueText": "Thick, warm and a little imperious. People seem to stand straighter when you wear it.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.45,
+              0.45,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c7b299",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "cigarette-case",
+      "name": "Monogrammed Cigarette Case",
+      "kind": "Keepsake",
+      "description": "Silver, initials A.P., empty but for a pressed edelweiss. It steadies the hand that holds it.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 1
+        },
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 20,
+      "knowledge": "vague",
+      "vagueText": "Cool and heavy in the palm. Holding it, you feel calmer and a little cleverer.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.05,
+              0.2
+            ],
+            "color": "#d9d9e3",
+            "material": "metal"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "hot-chocolate",
+      "name": "Hot Chocolate",
+      "kind": "Cup",
+      "description": "Thick enough to stand a spoon in, with a cap of cream. The hotel's one remaining luxury.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#a0522d"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.22,
+              0.25,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glass"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.2,
+              0.04,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#6b3a1e"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "thermos-flask",
+      "name": "Ski-Patrol Thermos",
+      "kind": "Flask",
+      "description": "Dented steel flask of sweet tea with a splash of something. Three good swallows.",
+      "category": "consumable",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d3"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "chilled"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ff9f6b"
+        }
+      },
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.4,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#b0b7c0",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.18,
+              0.08,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.42,
+              0
+            ],
+            "color": "#c0392b"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "smelling-salts",
+      "name": "Smelling Salts",
+      "kind": "Vial",
+      "description": "Ammonia in a cut-glass bottle, kept at the front desk for fainting guests.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 3
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#e6fff2"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.22,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#c9f2e0",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "kirsch-praline",
+      "name": "Kirsch Praline",
+      "kind": "Praline",
+      "description": "Dark chocolate around a cherry soaked in kirsch. Warms you from the inside.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "warmed",
+            "duration": 8
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#8b1e3f"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "pralines",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.16,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#3b1f14"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "chili-praline",
+      "name": "Chili Praline",
+      "kind": "Praline",
+      "description": "Odile's experiment. Fire, then a terrible clarity.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2
+            },
+            "damageType": "heat"
+          },
+          {
+            "type": "apply_status",
+            "status": "focused",
+            "duration": 15
+          },
+          {
+            "type": "apply_status",
+            "status": "sugar-rush",
+            "duration": 5
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ff3d00"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "pralines",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.16,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#3b1f14"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "violet-praline",
+      "name": "Candied Violet Praline",
+      "kind": "Praline",
+      "description": "A sugared violet on white chocolate. Tastes of thinking clearly.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#b388ff"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "pralines",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.16,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#3b1f14"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "avalanche-bulletin",
+      "name": "Avalanche Bulletin",
+      "kind": "Telegram",
+      "description": "'PASS REMAINS CLOSED. FURTHER SNOW EXPECTED.' The best news an inspector could get.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "snowpack",
+            "amount": {
+              "base": 80
+            }
+          },
+          {
+            "type": "message",
+            "text": "More snow on the pass. The road stays shut a while longer."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#dfefff"
+        }
+      },
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.02,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#f3ead2",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "recipe-card",
+      "name": "Odile's Recipe Card",
+      "kind": "Index card",
+      "description": "Not a recipe: measurements of corridors in tiny precise handwriting, crossed out and redone.",
+      "category": "tool",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 18
+          },
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 3
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#f3d9e2"
+        }
+      },
+      "value": 10,
+      "knowledge": "vague",
+      "vagueText": "Numbers, arrows and the word 'COMPARE' underlined twice. Reading it carefully might show you the way.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.02,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#fffaf0",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "brass-desk-bell",
+      "name": "Brass Desk Bell",
+      "kind": "Bell",
+      "description": "Ding. Everyone in earshot turns, stops talking and forgets what they were saying.",
+      "category": "throwable",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 4,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d6"
+            },
+            "damageType": "pressure"
+          },
+          {
+            "type": "apply_status",
+            "status": "dumbstruck",
+            "duration": 1
+          },
+          {
+            "type": "noise",
+            "radius": 6
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e8b04a"
+        }
+      },
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.2,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#e8b04a",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.34,
+              0.03,
+              0.34
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#4a3520",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "kitchen-blowtorch",
+      "name": "Caramelising Torch",
+      "kind": "Torch",
+      "description": "A brass pastry torch. Sugar things fear it; everyone else just flinches.",
+      "category": "throwable",
+      "useMode": "charges",
+      "charges": 4,
+      "onUse": {
+        "targeting": {
+          "shape": "cone",
+          "range": 3,
+          "radius": 3,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4"
+            },
+            "damageType": "heat"
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#ff7a3d"
+        }
+      },
+      "value": 30,
+      "rarity": "uncommon",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.35,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.18,
+              0
+            ],
+            "color": "#c9a227",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.08,
+              0.15,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.42,
+              0
+            ],
+            "color": "#ff7a3d",
+            "emissive": "#ff7a3d"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "tactful-silence",
+      "name": "Tactful Silence",
+      "kind": "Technique",
+      "description": "You say nothing, for exactly too long. The person in front of you starts filling the gap.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 3,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d4",
+              "scale": {
+                "stat": "int",
+                "factor": 0.25
+              }
+            },
+            "damageType": "pressure"
+          },
+          {
+            "type": "apply_status",
+            "status": "dumbstruck",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#f7f3ee"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.3,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#f7f3ee",
+            "material": "glow",
+            "emissive": "#f7f3ee"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "hunch",
+      "name": "Hunch",
+      "kind": "Technique",
+      "description": "A sudden accusation thrown across the room, out of nowhere and somehow correct.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "ray",
+          "range": 6,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4",
+              "scale": {
+                "stat": "int",
+                "factor": 0.3
+              }
+            },
+            "damageType": "pressure"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#e8b04a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.15,
+              0.4,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#e8b04a",
+            "material": "glow",
+            "emissive": "#e8b04a"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "whole-picture",
+      "name": "The Whole Picture",
+      "kind": "Technique",
+      "description": "You lay out the case aloud. Everyone nearby goes very quiet, and some of them sit down.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 8
+      },
+      "cooldown": 8,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 0,
+          "radius": 3,
+          "affects": "enemies",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 3,
+              "dice": "2d6"
+            },
+            "damageType": "pressure"
+          },
+          {
+            "type": "apply_status",
+            "status": "rattled",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#f7e27a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.3,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#f7e27a",
+            "material": "glow",
+            "emissive": "#f7e27a"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "guest-register",
+      "name": "Guest Register, 1911",
+      "kind": "Evidence",
+      "description": "A leather register from the cellar. One line on the fourth floor reads 'Room 4½ — Herr L. Bircher, Zürich' and has been scraped with a razor.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.1,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#5c2a1a",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.36,
+              0.02,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#f3ead2"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffe9b0",
+          "intensity": 0.5,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "sugar-wing",
+      "name": "Sugar East Wing",
+      "kind": "Evidence",
+      "description": "The broken-off fourth-floor east wing of Odile's model. Count the windows: there is one more than the hotel has.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.3,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#fde1ea",
+            "material": "glass"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.5,
+              0.15,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.37,
+              0
+            ],
+            "color": "#f6a6c1"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffd6e6",
+          "intensity": 0.6,
+          "radius": 1.2
+        }
+      }
+    },
+    {
+      "id": "spun-sugar-key",
+      "name": "Spun-Sugar Key",
+      "kind": "Key",
+      "description": "Amber, warm, faintly sticky. It fits a door that is not on any plan.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.18,
+              0.18,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "color": "#e8a33d",
+            "material": "glass",
+            "emissive": "#7a4a10"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.05,
+              0.3,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#e8a33d",
+            "material": "glass"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ffb347",
+          "intensity": 0.7,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "burnt-sugar-gloves",
+      "name": "Caramel-Crusted Gloves",
+      "kind": "Evidence",
+      "description": "White concierge's gloves, initials A.P., crusted with Odile's burnt caramel and blistered at the palms.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.06,
+              0.3
+            ],
+            "pos": [
+              -0.1,
+              0.03,
+              0
+            ],
+            "color": "#f4f4f0",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.06,
+              0.3
+            ],
+            "pos": [
+              0.1,
+              0.03,
+              0.05
+            ],
+            "rot": [
+              0,
+              15,
+              0
+            ],
+            "color": "#a0622d",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffe9b0",
+          "intensity": 0.5,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "formal-accusation",
+      "name": "Formal Accusation",
+      "kind": "Procedure",
+      "description": "Stand up, say the name, lay down the evidence: the 1911 register, the sugar wing, the sugar key and the culprit's gloves. Only works with all four.",
+      "category": "quest",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "guest-register"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "sugar-wing"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "spun-sugar-key"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "burnt-sugar-gloves"
+            }
+          ]
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "culprit-named"
+          },
+          {
+            "type": "message",
+            "text": "'Augustin Pell. Room four-and-a-half. Nineteen-eleven.' Somewhere in the dark, a lantern stops moving."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e8b04a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.02,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#fffaf0",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.03,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.04,
+              0.1
+            ],
+            "color": "#c0392b"
+          }
+        ],
+        "idle": "bob"
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "potted-palm",
+      "name": "Potted Palm",
+      "description": "A tired palm in a brass pot, a long way from anywhere warm.",
+      "walkable": false,
+      "blocksSight": false,
+      "color": "#3f7a4a",
+      "height": 1.3,
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#3f7a4a",
+          "secondary": "#b08d57"
+        },
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "snowdrift",
+      "name": "Indoor Snowdrift",
+      "description": "Snow blown in under a door that should have been shut. Slow, and cold to stand in.",
+      "walkable": true,
+      "moveCost": 2,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "chilled",
+          "duration": 2
+        }
+      ],
+      "color": "#eef6ff",
+      "height": 0.2
+    },
+    {
+      "id": "key-board",
+      "name": "Concierge's Key Board",
+      "description": "One hundred and twelve brass hooks. One hook between 4 and 5 has a name scratched off above it.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#5c3a1e",
+      "height": 1.4,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "grant_xp",
+            "amount": 8
+          },
+          {
+            "type": "reveal_map",
+            "radius": 12
+          },
+          {
+            "type": "message",
+            "text": "Between hooks 4 and 5, under the varnish: a ghost of a number. 4½."
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.3,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.75,
+              0
+            ],
+            "color": "#5c3a1e",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              0.05,
+              0.05
+            ],
+            "pos": [
+              0,
+              1,
+              0.08
+            ],
+            "color": "#e8b04a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              0.05,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.7,
+              0.08
+            ],
+            "color": "#e8b04a",
+            "material": "metal"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "pantry-shelf",
+      "name": "Pastry Larder",
+      "description": "Shelves of tins, jars and parchment parcels. Something good might still be behind the flour.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#d8c3a0",
+      "height": 1.3,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "chance",
+          "p": 0.5
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "hot-chocolate"
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.3,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.65,
+              0
+            ],
+            "color": "#a67c52",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.15,
+              0.2,
+              0.15
+            ],
+            "pos": [
+              -0.2,
+              0.95,
+              0.05
+            ],
+            "color": "#c0392b",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.15,
+              0.2,
+              0.15
+            ],
+            "pos": [
+              0.2,
+              0.5,
+              0.05
+            ],
+            "color": "#f3ead2"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "hot-radiator",
+      "name": "Hissing Radiator",
+      "description": "Cast iron, painted cream, too hot to touch. The only warm thing below stairs.",
+      "walkable": false,
+      "blocksSight": false,
+      "color": "#e9e4dc",
+      "height": 0.8,
+      "emissive": "#5a2010",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              0.7,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "color": "#e9e4dc",
+            "material": "metal",
+            "emissive": "#3a1408"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ff9f6b",
+          "intensity": 0.5,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "caramel-pool",
+      "name": "Caramel Pool",
+      "description": "Amber caramel that never quite set. It grips the ankles.",
+      "walkable": true,
+      "moveCost": 3,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "sticky",
+          "duration": 1
+        }
+      ],
+      "color": "#d98e3a",
+      "emissive": "#5a2e12",
+      "height": 0
+    },
+    {
+      "id": "candle-pillar",
+      "name": "Candle-Sugar Pillar",
+      "description": "A twisted barley-sugar column glowing from inside like a lamp.",
+      "walkable": false,
+      "blocksSight": false,
+      "color": "#ffcf7a",
+      "height": 1.6,
+      "emissive": "#ffb347",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.3,
+              1.6,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#ffcf7a",
+            "material": "glass",
+            "emissive": "#c06a10"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffb347",
+          "intensity": 0.9,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "steamer-trunk",
+      "name": "Dusty Steamer Trunk",
+      "description": "Labels from Zürich, Baden-Baden and Nice, all from 1911. Heavy with something that clinks.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#6b4a2e",
+      "height": 0.9,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "currency",
+            "amount": 8
+          },
+          {
+            "type": "message",
+            "text": "Gold francs, minted 1909, wrapped in a dead man's shirts."
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.6,
+              0.55
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#6b4a2e",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.92,
+              0.06,
+              0.57
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#c9a227",
+            "material": "metal"
+          }
+        ],
+        "idle": "none"
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "pralines": [
+      {
+        "label": "Praline with a gold leaf",
+        "color": "#d4a017"
+      },
+      {
+        "label": "Praline dusted pink",
+        "color": "#f6a6c1"
+      },
+      {
+        "label": "Praline with a cocoa swirl",
+        "color": "#6b3a1e"
+      },
+      {
+        "label": "Praline wrapped in green foil",
+        "color": "#3f7a4a"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Ground Floor: The Grand Lobby",
+      "description": "Dust sheets over the armchairs, the chandeliers half lit, snow pressed against the tall windows. The front desk is manned by nobody and watched by everybody.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 2,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#7a1f2b",
+        "color2": "#5c1620",
+        "material": "cloth",
+        "pattern": "carpet"
+      },
+      "wall": {
+        "color": "#d8c7a3",
+        "color2": "#8a6a3e",
+        "material": "wood",
+        "height": 1.8,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#ffe6c4",
+        "ambientIntensity": 0.75,
+        "lamps": {
+          "color": "#ffd9a0",
+          "intensity": 1.4,
+          "frequency": 0.12,
+          "flicker": false
+        },
+        "playerLight": 3,
+        "fog": {
+          "color": "#2a1a18",
+          "density": 0.01
+        }
+      },
+      "actors": [
+        {
+          "actor": "bellhop",
+          "weight": 30,
+          "min": 3,
+          "max": 5
+        },
+        {
+          "actor": "draught",
+          "weight": 25,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "gossip-moth",
+          "weight": 20,
+          "min": 2,
+          "max": 4
+        }
+      ],
+      "placed": [
+        {
+          "actor": "hedda-imboden",
+          "where": "near_start"
+        },
+        {
+          "actor": "lisl-marti",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "hot-chocolate",
+          "weight": 12
+        },
+        {
+          "item": "smelling-salts",
+          "weight": 8
+        },
+        {
+          "item": "kirsch-praline",
+          "weight": 8
+        },
+        {
+          "item": "violet-praline",
+          "weight": 6
+        },
+        {
+          "item": "avalanche-bulletin",
+          "weight": 10
+        },
+        {
+          "item": "brass-desk-bell",
+          "weight": 8
+        },
+        {
+          "item": "cigarette-case",
+          "weight": 4
+        },
+        {
+          "item": "fur-stole",
+          "weight": 4
+        },
+        {
+          "item": "recipe-card",
+          "weight": 5
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "guest-register",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "potted-palm",
+          "density": 0.03
+        },
+        {
+          "terrain": "snowdrift",
+          "density": 0.02
+        },
+        {
+          "terrain": "key-board",
+          "density": 0.004
+        }
+      ],
+      "transitionName": "Take the service stairs down to the pastry kitchen",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "guest-register"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.8,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#8a6a3e",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.15,
+              0.02
+            ],
+            "pos": [
+              0,
+              1.5,
+              0.06
+            ],
+            "color": "#e8b04a",
+            "material": "metal"
+          }
+        ],
+        "idle": "none"
+      },
+      "gmNotes": "Introduce the hotel: grand, cold, polite, lying. Hedda counts keys and knows the numbering skips; Lisl saw Pell carry sugar-work upstairs. Pell himself is never seen here — only his empty desk and his lantern's glow somewhere upstairs. The 1911 register is somewhere far in the building.",
+      "backdrop": {
+        "style": "clouds",
+        "color": "#dfe8f0",
+        "color2": "#9fb3c8",
+        "intensity": 0.4
+      },
+      "music": "calm"
+    },
+    {
+      "name": "Below Stairs: The Pastry Kitchen",
+      "description": "White tiles, copper pans, cold ovens. On the marble slab, the sugar model of the Kandelhorn, iced to the third floor and broken off at the fourth.",
+      "generator": "rooms",
+      "size": "medium",
+      "params": {
+        "roomCount": 9,
+        "roomMin": 3,
+        "roomMax": 7,
+        "loops": 0.3
+      },
+      "floor": {
+        "color": "#e8e4da",
+        "color2": "#2f3a40",
+        "material": "stone",
+        "pattern": "tiles"
+      },
+      "wall": {
+        "color": "#f2efe8",
+        "color2": "#9db4c0",
+        "material": "stone",
+        "height": 1.6,
+        "pattern": "tiles"
+      },
+      "lighting": {
+        "ambient": "#f0f4ff",
+        "ambientIntensity": 0.7,
+        "lamps": {
+          "color": "#fff1cc",
+          "intensity": 1.2,
+          "frequency": 0.1,
+          "flicker": true
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "sugar-mouse",
+          "weight": 30,
+          "min": 3,
+          "max": 6
+        },
+        {
+          "actor": "steam-ghost",
+          "weight": 20,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "bellhop",
+          "weight": 15,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "draught",
+          "weight": 10,
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "kaspar",
+          "where": "near_start"
+        },
+        {
+          "actor": "sous-chef",
+          "where": "near_exit"
+        }
+      ],
+      "items": [
+        {
+          "item": "hot-chocolate",
+          "weight": 10
+        },
+        {
+          "item": "thermos-flask",
+          "weight": 8
+        },
+        {
+          "item": "chili-praline",
+          "weight": 8
+        },
+        {
+          "item": "kirsch-praline",
+          "weight": 6
+        },
+        {
+          "item": "violet-praline",
+          "weight": 6
+        },
+        {
+          "item": "avalanche-bulletin",
+          "weight": 8
+        },
+        {
+          "item": "kitchen-blowtorch",
+          "weight": 8
+        },
+        {
+          "item": "recipe-card",
+          "weight": 6
+        },
+        {
+          "item": "silver-lorgnette",
+          "weight": 3
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "sugar-wing",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "pantry-shelf",
+          "density": 0.02
+        },
+        {
+          "terrain": "hot-radiator",
+          "density": 0.015
+        }
+      ],
+      "transitionName": "Lean into the sugar model until it is the size of the world",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "sugar-wing"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.5,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#e8e4da",
+            "material": "stone"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.5,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.75,
+              0
+            ],
+            "color": "#fde1ea",
+            "material": "glass"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.6,
+              0.3,
+              0.5
+            ],
+            "pos": [
+              0,
+              1.15,
+              0
+            ],
+            "color": "#f6a6c1"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffd6e6",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "gmNotes": "The kitchen is where Odile vanished. Kaspar is frightened and honest. Brüggli guards the slab by the exit out of jealousy, not guilt — a red herring. The broken-off east wing of the model is somewhere far; the model hums. Sugar mice walk.",
+      "backdrop": {
+        "style": "color",
+        "color": "#1a1d24",
+        "intensity": 0.2
+      },
+      "music": "tense"
+    },
+    {
+      "name": "Inside the Sugar Model",
+      "description": "Corridors of spun sugar under a sky of pink glass. Every banister is accurate. Every room is the right size, except one, which is far too big on the inside.",
+      "generator": "geometric",
+      "size": "medium",
+      "params": {
+        "variant": 3,
+        "symmetry": 2,
+        "cellSize": 7,
+        "loops": 0.4,
+        "pillars": 0.3,
+        "doors": 0.5
+      },
+      "floor": {
+        "color": "#f4d6de",
+        "color2": "#e7b8c8",
+        "material": "glass",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#d98e3a",
+        "color2": "#ffcf7a",
+        "material": "glass",
+        "height": 1.4,
+        "pattern": "gradient"
+      },
+      "lighting": {
+        "ambient": "#ffd6e6",
+        "ambientIntensity": 0.6,
+        "lamps": {
+          "color": "#ffb347",
+          "intensity": 1.6,
+          "frequency": 0.12,
+          "flicker": false
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#3b1f3f",
+          "density": 0.025
+        }
+      },
+      "actors": [
+        {
+          "actor": "sugar-mouse",
+          "weight": 20,
+          "min": 3,
+          "max": 5
+        },
+        {
+          "actor": "caramel-wasp",
+          "weight": 25,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "icing-drift",
+          "weight": 20,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "marzipan-doorman",
+          "weight": 15,
+          "min": 2,
+          "max": 4
+        }
+      ],
+      "placed": [
+        {
+          "actor": "sugar-odile",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "hot-chocolate",
+          "weight": 9
+        },
+        {
+          "item": "kirsch-praline",
+          "weight": 10
+        },
+        {
+          "item": "chili-praline",
+          "weight": 8
+        },
+        {
+          "item": "violet-praline",
+          "weight": 8
+        },
+        {
+          "item": "avalanche-bulletin",
+          "weight": 8
+        },
+        {
+          "item": "kitchen-blowtorch",
+          "weight": 8
+        },
+        {
+          "item": "thermos-flask",
+          "weight": 6
+        },
+        {
+          "item": "silver-lorgnette",
+          "weight": 3
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "spun-sugar-key",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "caramel-pool",
+          "density": 0.03
+        },
+        {
+          "terrain": "candle-pillar",
+          "density": 0.012
+        }
+      ],
+      "transitionName": "Turn the spun-sugar key in the door that should not be there",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "spun-sugar-key"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.7,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.85,
+              0
+            ],
+            "color": "#ffcf7a",
+            "material": "glass",
+            "emissive": "#7a4a10"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0.3,
+              0.85,
+              0.06
+            ],
+            "color": "#e8a33d",
+            "material": "glass"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffb347",
+          "intensity": 1,
+          "radius": 2.5
+        }
+      },
+      "gmNotes": "Non-realistic: the player is inside the model at sugar scale. Mice are dog-sized, wasps hum, the marzipan doorman guards the spun-sugar key. The Sugar Odile is a gentle healer who speaks in measurements. Keep it sweet and slightly wrong, never horror.",
+      "backdrop": {
+        "style": "aurora",
+        "color": "#2b1840",
+        "color2": "#f7b2c4",
+        "intensity": 0.7
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "Room 4½",
+      "description": "Wallpaper from 1911, dust sheets over steamer trunks, a bed that was never stripped. A lantern moves somewhere between the trunks.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.25,
+        "sideRooms": 0.6
+      },
+      "floor": {
+        "color": "#6b4a2e",
+        "color2": "#4e3520",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#4f6b55",
+        "color2": "#2f4236",
+        "material": "stone",
+        "height": 1.8,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#c8b89a",
+        "ambientIntensity": 0.6,
+        "lamps": {
+          "color": "#ffd27a",
+          "intensity": 1.2,
+          "frequency": 0.06,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#1a140e",
+          "density": 0.02
+        }
+      },
+      "actors": [
+        {
+          "actor": "draught",
+          "weight": 20,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "gossip-moth",
+          "weight": 20,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "bellhop",
+          "weight": 15,
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "augustin-pell",
+          "where": "far"
+        },
+        {
+          "actor": "odile-fankhauser",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "hot-chocolate",
+          "weight": 9
+        },
+        {
+          "item": "smelling-salts",
+          "weight": 8
+        },
+        {
+          "item": "kirsch-praline",
+          "weight": 6
+        },
+        {
+          "item": "avalanche-bulletin",
+          "weight": 5
+        }
+      ],
+      "itemCount": 5,
+      "placedItems": [
+        {
+          "item": "burnt-sugar-gloves",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "steamer-trunk",
+          "density": 0.03
+        },
+        {
+          "terrain": "snowdrift",
+          "density": 0.015
+        }
+      ],
+      "transitionName": "Walk out and announce the name to the whole hotel",
+      "gmNotes": "The finale. Odile is found alive near the entrance, cold and furious. Pell guards the far end with his lantern and the gold. The player wins by cracking him under interrogation, or by finding his caramel-crusted gloves and making the Formal Accusation with all four pieces of evidence.",
+      "backdrop": {
+        "style": "color",
+        "color": "#0e0b09",
+        "intensity": 0.2
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Find the four pieces of evidence and reach Room 4½. Then crack Augustin Pell under interrogation, or lay out the Formal Accusation with all four pieces.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "actor_defeated",
+          "actor": "augustin-pell"
+        },
+        {
+          "type": "flag",
+          "flag": "culprit-named"
+        }
+      ]
+    },
+    "winText": "In the lobby, under the half-lit chandelier, you say his name. Hedda sets down her keys. Lisl stops polishing. Pell takes off his ruined gloves and, for the first time in forty years, sits down in a guest's armchair. Odile finishes the fourth floor of the model that night, every room exactly where it is.",
+    "lossText": "The Föhn arrives on a Tuesday. The road opens by noon. A sledge goes down the pass with a man in a dark coat and a great deal of luggage, and Room 4½ goes back to not existing.",
+    "labels": {
+      "culprit-named": "The culprit is formally accused"
+    }
+  },
+  "gm": {
+    "persona": "The Kandelhorn itself, speaking through its radiators, bells and the creak of its banisters: a grand old hotel embarrassed by what it has hidden.",
+    "voice": "Courtly, a little pompous, cold at the edges; describes sugar and snow precisely; never names the culprit before the player does.",
+    "threads": [
+      "One room too many: the sugar model is more honest than the building.",
+      "The thaw is coming; every drip from the eaves is a clock.",
+      "Odile is alive and cold somewhere warm-coloured.",
+      "Gold francs from 1911 and a guest who never checked out."
+    ],
+    "fallback": {
+      "intro": "The Grand Hotel Kandelhorn has been snowed in for nine days. The guests are gone, the staff are few, and Odile Fankhauser, pastry chef, has not been seen since Tuesday. On her marble slab she left a sugar model of the hotel: perfect, half-iced, and one room larger than the hotel admits. You are on leave. You were on leave.",
+      "areaEnter": [
+        "The lobby. Dust sheets, a dead fire, a front desk with no one behind it and every key in its place but one.",
+        "Below stairs it smells of cold butter and burnt sugar. The model sits on its slab, humming very softly.",
+        "You lean closer, and closer, and the sugar rises around you like a city. Somewhere in here is a door the real hotel forgot.",
+        "The key turns. Room 4½ breathes out air from 1911. A lantern, somewhere, stops."
+      ],
+      "lowHp": [
+        "Your hands are shaking. Sit, breathe, remember why you became a policewoman.",
+        "The hotel's politeness is wearing you down to the thread."
+      ],
+      "events": [
+        "A drip falls from the eaves outside. Then another.",
+        "Somewhere a bell rings for service no one requested.",
+        "The radiators knock twice, as if clearing their throats."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "A drawing-room waltz played slowly in an empty ballroom, with music-box bells and wind against the windows.",
+    "synth": {
+      "key": "D",
+      "scale": "dorian",
+      "tempo": 72,
+      "timbre": "bell",
+      "drone": true,
+      "percussion": "clockwork",
+      "brightness": 0.5
+    },
+    "searchTerms": [
+      "music box waltz",
+      "alpine winter ambient",
+      "1930s hotel lobby"
+    ],
+    "suggestions": [
+      "Satie, Gymnopédies",
+      "a music box in an empty room"
+    ]
+  }
+}

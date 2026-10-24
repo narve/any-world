@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/folk-horror-scarecrow-wedding/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Entered this day: marriage solemnised between Hob of the Long Acre and Ash Pellow, of this parish. A lovely service; the cake was excellent. The bride now stands in the north field, facing the spire, and the Register will read the banns again in seven summers."
+          }
+        ]
+      }
+    }
+  ]
+}

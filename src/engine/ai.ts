@@ -5,7 +5,7 @@
  */
 import type { ActorDef } from '../schema/world';
 import type { ActorInstance, Pos } from './types';
-import { type Ctx, actorDef, actorName, emit, isAlive, isFree, isPlayer, log, passable, playerActor, moveCost } from './ctx';
+import { type Ctx, actorDef, actorName, emit, isAlive, isFree, isPlayer, logKey, mutTile, passable, playerActor, moveCost } from './ctx';
 import { getStat, hasFlag, isAlly, isEnemy, maxHp, side, sightRadius } from './stats';
 import { attackOf, inAttackRange, performAttack } from './combat';
 import { POSITIONAL_SHAPES, changeResource, los, resolveTargets, runAction, targetingReach } from './effects';
@@ -13,7 +13,7 @@ import { moveActor } from './actors';
 import { findPath } from './path';
 import { withinRadius } from './fov';
 import { playerSeesTile } from './vision';
-import { DIR_LIST, DIRS, cap, cheb, dist2, samePos, tileAt } from './util';
+import { DIR_LIST, DIRS, cheb, dist2, samePos, tileAt } from './util';
 
 
 /** perception radius of `a` for `target` */
@@ -56,7 +56,7 @@ function tryMoveTo(ctx: Ctx, a: ActorInstance, p: Pos): number {
   const t = tileAt(map, p.x, p.y);
   if (!t || !passable(ctx, p.x, p.y)) return -1;
   if (t.kind === 'door') {
-    t.kind = 'door_open';
+    mutTile(ctx, p.y * map.width + p.x).kind = 'door_open';
     emit(ctx, { type: 'terrain_changed', positions: [{ ...p }] });
     return 0;
   }
@@ -189,7 +189,7 @@ function tryAbility(ctx: Ctx, a: ActorInstance, def: ActorDef, target: ActorInst
     if (side(ctx, a) === 'H' && offensive && tr.actors.some((x) => isPlayer(ctx, x)) && cheb(a.pos, playerActor(ctx).pos) > 1 && !playerSeesTile(ctx, a.pos)) continue;
     if (ab.cost && ab.cost.amount > 0) changeResource(ctx, a, ab.cost.resource, -ab.cost.amount);
     a.cooldowns[ab.id] = ab.cooldown;
-    log(ctx, `${cap(actorName(ctx, a))} uses ${ab.name}.`, 'combat');
+    logKey(ctx, 'log.ability', { actor: actorName(ctx, a), ability: ab.name }, 'combat');
     runAction(ctx, ab.action, a, { targetPos, targetActor: target });
     return true;
   }

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/nb-nordisk-noir-tromso/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Det blå lyset blir svakere rundt føttene dine. Et sted bak deg sier en gammel los, svært lavt: «Hold deg til de lyse rennene.»"
+          }
+        ]
+      }
+    }
+  ]
+}

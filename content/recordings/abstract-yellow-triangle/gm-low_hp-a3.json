@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/abstract-yellow-triangle/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The gloss is winning. Your yellow is a whisper of itself now."
+          }
+        ]
+      }
+    }
+  ]
+}

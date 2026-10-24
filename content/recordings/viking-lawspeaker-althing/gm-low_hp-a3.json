@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/viking-lawspeaker-althing/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Someone below laughs at the wrong moment, and half the crowd laughs with him. Your Standing is slipping out of your hands like a wet rope."
+          }
+        ]
+      }
+    }
+  ]
+}

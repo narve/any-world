@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/cyberpunk-rooftop-yams/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The balloon pops through into a hall of light made of fine print, every wall a clause and every floor tile a signature line. Far off, wrapped in thunder and a very good collar, something reads aloud: 'Clause one: you are trespassing.' Somewhere in the glow, a purple vine turns toward you like it knows your hands."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#9a7bff"
+          }
+        ]
+      }
+    }
+  ]
+}

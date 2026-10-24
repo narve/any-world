@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/alien-twilight-migration/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The small one with pollen lies still on the frost-glass, and the night steps over them. We walk on, as we must. The band moves; we remember every courier who ever rode us, and now we remember one more."
+          }
+        ]
+      }
+    }
+  ]
+}

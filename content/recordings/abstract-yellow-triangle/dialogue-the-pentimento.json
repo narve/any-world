@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/abstract-yellow-triangle/the-pentimento",
+      "json": {
+        "reply": "We were you. Well, we were yellow, and we were here, and then we were under. Don't look at us like that; it's quite peaceful. Listen, we have been thinking, for years, about that signature. It isn't finished. We think the last stroke was meant to be yellow.",
+        "options": [
+          "Meant to be me?",
+          "Why did the Painter cover you?",
+          "How do I get past the Final Coat?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

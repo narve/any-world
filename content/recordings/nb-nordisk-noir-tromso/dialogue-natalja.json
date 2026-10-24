@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-nordisk-noir-tromso/natalja",
+      "json": {
+        "reply": "Du er ikke fra rederiet. De har ikke så dårlige sko. Sett deg, det er suppe. Jeg var på land for å kjøpe dill da de forsvant, og ingen av dem gikk i land. Det er snø på landgangen, og bare dine spor.",
+        "options": [
+          "Hvor er mannskapet, Natalja?",
+          "Hva er det i lasterommet?",
+          "Hvem leter rederiets vakter etter?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

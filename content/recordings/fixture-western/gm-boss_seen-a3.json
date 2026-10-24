@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:boss_seen/fixture-western/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "say",
+            "actorId": "absalom-vane",
+            "text": "\"Rain is a commodity, friend. Like everything else. I just got to it first.\""
+          }
+        ]
+      }
+    }
+  ]
+}

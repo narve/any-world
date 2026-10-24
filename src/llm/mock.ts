@@ -8,7 +8,11 @@
  *   3. "gm"                (purpose prefix before ":"; disable with matchPrefix:false)
  *   4. fallback(req)       (generator hook)
  *   5. LLMInvalidResponseError "no recording"
- * Several responses under one key are served in order; the last one repeats.
+ * Scoped purposes (M3 recordings, see recording-keys.ts) carry "/"-separated segments, e.g.
+ * "gm:area_enter/fixture-ship/a1": after the exact key the lookup drops one trailing segment at a
+ * time ("gm:area_enter/fixture-ship"), then tries the bare purpose ("gm:area_enter") and its prefix.
+ * Several responses under one key are served in order; the last one repeats (repeatLast: false
+ * makes an exhausted key fall through instead, so demo mode answers each recorded moment once).
  * Browser-safe; load content/recordings in Node with `loadRecordingsFromDir` (recordings-node.ts).
  */
 import type { CompletionRequest, CompletionResponse, LLMProvider } from './types';
@@ -75,6 +79,8 @@ export interface MockProviderOptions {
   model?: string;
   /** try the purpose prefix before ":" (default true) */
   matchPrefix?: boolean;
+  /** serve the last recording of a key again once the key is exhausted (default true) */
+  repeatLast?: boolean;
   /**
    * how many recent requests to keep in `calls` (oldest dropped first). Default: unlimited, which is
    * what tests want; long-lived instances (the server's "mock" preset) must pass 0 or a small number,
@@ -140,6 +146,16 @@ export class MockProvider implements LLMProvider {
     return hash ? `${purpose}#${hash}` : purpose;
   }
 
+  /** the keys tried for a request, most specific first (see the lookup order above) */
+  static lookupKeys(purpose: string, hash: string, matchPrefix = true): string[] {
+    const keys = [MockProvider.key(purpose, hash), purpose];
+    const segs = purpose.split('/');
+    for (let n = segs.length - 1; n >= 1; n--) keys.push(segs.slice(0, n).join('/'));
+    const bare = segs[0]!;
+    if (matchPrefix && bare.includes(':')) keys.push(bare.split(':')[0]!);
+    return [...new Set(keys)];
+  }
+
   /** add a recording at runtime */
   add(r: Recording): void {
     this.addKey(MockProvider.key(r.purpose, r.hash), toValue(r));
@@ -160,6 +176,7 @@ export class MockProvider implements LLMProvider {
     const list = this.table.get(key);
     if (!list || !list.length) return undefined;
     const i = this.served.get(key) ?? 0;
+    if (i >= list.length && this.opts.repeatLast === false) return undefined;
     this.served.set(key, i + 1);
     return list[Math.min(i, list.length - 1)];
   }
@@ -236,8 +253,7 @@ export class MockProvider implements LLMProvider {
     if (failure) return this.throwFor(failure);
 
     const hash = requestHash(req);
-    const keys = [MockProvider.key(req.purpose, hash), req.purpose];
-    if (this.opts.matchPrefix !== false && req.purpose.includes(':')) keys.push(req.purpose.split(':')[0]!);
+    const keys = MockProvider.lookupKeys(req.purpose, hash, this.opts.matchPrefix !== false);
     for (const k of keys) {
       const v = this.take(k);
       if (v) return this.respond(v);

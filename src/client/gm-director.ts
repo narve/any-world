@@ -27,6 +27,7 @@ import * as engine from '../engine/index';
 // ---------------------------------------------------------------------------
 
 import type { Difficulty } from './ui/viewmodel';
+import { t as tr } from './i18n/index';
 export type { Difficulty };
 
 /** extra facts about the moment (all optional; hooks fill what they know) */
@@ -287,8 +288,8 @@ export class OfflineGmDirector implements GmDirector {
             type: 'offer_choice',
             prompt: line || `${name}?`,
             options: [
-              { label: `Take the ${name}`, actions: [{ type: 'give_item', item: pick.item, count: 1 }] },
-              { label: 'Leave it be', actions: [{ type: 'grant_xp', amount: 5 + area * 5 }] },
+              { label: tr('gm.offer.take', { item: name }), actions: [{ type: 'give_item', item: pick.item, count: 1 }] },
+              { label: tr('gm.offer.leave'), actions: [{ type: 'grant_xp', amount: 5 + area * 5 }] },
             ],
           },
         ];

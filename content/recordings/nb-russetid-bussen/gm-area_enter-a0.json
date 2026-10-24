@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-russetid-bussen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Gangen lukter kanel og panikk. På et elevskap har noen tusjet «GULLKALVEN = BLAKK», og under står det med en annen penn: «spør kasseren»."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

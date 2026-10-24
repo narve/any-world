@@ -20,6 +20,7 @@ import {
 } from '../format';
 import { slotKeyLabel as slotKeyLabelFor } from '../slots';
 import { textOn } from '../theme';
+import { t } from '../../i18n/index';
 
 export interface UiContext {
   vocab: Vocabulary;
@@ -58,14 +59,14 @@ export interface SlotRenderOpts {
 }
 
 export function slotAriaLabel(index: number, item: SlotItemView | null | undefined): string {
-  const where = index < 8 ? `Quick slot ${index + 1}` : `Backpack slot ${index - 7}`;
-  if (!item) return `${where}: empty`;
+  const where = index < 8 ? t('slot.aria.quick', { n: index + 1 }) : t('slot.aria.backpack', { n: index - 7 });
+  if (!item) return t('slot.aria.empty', { where });
   const bits = [item.name];
   if (item.count > 1) bits.push(`${item.count}`);
-  if (item.charges !== undefined) bits.push(`${item.charges} charges`);
-  if (item.equipped) bits.push('equipped');
-  if (item.cooldown && item.cooldown > 0) bits.push(`ready in ${item.cooldown}`);
-  return `${where}: ${bits.join(', ')}`;
+  if (item.charges !== undefined) bits.push(t('slot.aria.charges', { n: item.charges }));
+  if (item.equipped) bits.push(t('slot.aria.equipped'));
+  if (item.cooldown && item.cooldown > 0) bits.push(t('slot.aria.cooldown', { n: item.cooldown }));
+  return t('slot.aria.item', { where, what: bits.join(', ') });
 }
 
 export function slotButton(index: number, item: SlotItemView | null | undefined, opts: SlotRenderOpts = {}): HTMLButtonElement {
@@ -98,8 +99,8 @@ export function slotButton(index: number, item: SlotItemView | null | undefined,
     cd > 0
       ? h('span', { class: 'aw-slot-cd', style: { '--cd': cd.toFixed(3) }, 'aria-hidden': 'true' }, h('span', null, String(item?.cooldown ?? '')))
       : null,
-    item?.equipped ? h('span', { class: 'aw-slot-eq', 'aria-hidden': 'true', title: 'Equipped' }, 'E') : null,
-    item?.urgent && key ? h('span', { class: 'aw-slot-urgent', 'aria-hidden': 'true' }, `press ${key}`) : null,
+    item?.equipped ? h('span', { class: 'aw-slot-eq', 'aria-hidden': 'true', dataset: { tip: t('slot.badge.equipped') } }, t('slot.badge.e')) : null,
+    item?.urgent && key ? h('span', { class: 'aw-slot-urgent', 'aria-hidden': 'true' }, t('slot.press', { key })) : null,
     item?.durability !== undefined && item.maxDurability
       ? h('span', { class: 'aw-slot-dur', style: { '--wear': pct(item.durability, item.maxDurability) + '%' }, 'aria-hidden': 'true' })
       : null,
@@ -139,7 +140,7 @@ export function statusChip(s: StatusChipView): HTMLElement {
     {
       class: ['aw-chip', s.harmful ? 'is-harmful' : 'is-helpful'],
       style: { '--chip': s.color },
-      dataset: { tip: `${s.name} (${s.turnsLeft} turns) — ${s.description}` },
+      dataset: { tip: t('status.tip', { name: s.name, n: s.turnsLeft, description: s.description }) },
       tabindex: '0',
     },
     h('span', { class: 'aw-chip-dot', 'aria-hidden': 'true' }),
@@ -161,11 +162,11 @@ export function itemCard(item: ItemView | SlotItemView, ctx: UiContext, extra?: 
   const slotItem = item as SlotItemView;
   const meta: string[] = [];
   if (item.count > 1) meta.push(`×${item.count}`);
-  if (item.charges !== undefined) meta.push(slotItem.maxCharges ? `${item.charges}/${slotItem.maxCharges} charges` : `${item.charges} charges`);
-  if (slotItem.cooldown && slotItem.cooldown > 0) meta.push(`ready in ${slotItem.cooldown} turns`);
-  else if (slotItem.maxCooldown) meta.push(`cooldown ${slotItem.maxCooldown}`);
-  if (slotItem.durability !== undefined) meta.push(`wear ${slotItem.durability}${slotItem.maxDurability ? '/' + slotItem.maxDurability : ''}`);
-  if (item.equipped) meta.push('equipped');
+  if (item.charges !== undefined) meta.push(slotItem.maxCharges ? t('item.meta.chargesOf', { n: item.charges, max: slotItem.maxCharges }) : t('item.meta.charges', { n: item.charges }));
+  if (slotItem.cooldown && slotItem.cooldown > 0) meta.push(t('item.meta.readyIn', { n: slotItem.cooldown }));
+  else if (slotItem.maxCooldown) meta.push(t('item.meta.cooldown', { n: slotItem.maxCooldown }));
+  if (slotItem.durability !== undefined) meta.push(slotItem.maxDurability ? t('item.meta.wearOf', { n: slotItem.durability, max: slotItem.maxDurability }) : t('item.meta.wear', { n: slotItem.durability }));
+  if (item.equipped) meta.push(t('item.meta.equipped'));
   return h(
     'div',
     { class: ['aw-card', 'aw-item-card', `knowledge-${item.knowledge}`] },
@@ -184,11 +185,11 @@ export function itemCard(item: ItemView | SlotItemView, ctx: UiContext, extra?: 
     item.description ? h('p', { class: 'aw-card-desc' }, item.description) : null,
     k.kind === 'exact' && k.lines.length ? h('ul', { class: 'aw-effects' }, k.lines.map((l) => h('li', null, l))) : null,
     k.kind === 'vague' && k.lines.length ? h('p', { class: 'aw-vague' }, k.lines[0]) : null,
-    k.kind === 'vague' && !k.lines.length ? h('p', { class: 'aw-vague' }, 'You have a feeling about this, nothing more.') : null,
+    k.kind === 'vague' && !k.lines.length ? h('p', { class: 'aw-vague' }, t('item.vagueFallback')) : null,
     k.kind === 'unknown' ? h('p', { class: 'aw-unknown' }, k.lines[0]) : null,
     meta.length ? h('div', { class: 'aw-card-meta' }, meta.join(' · ')) : null,
     item.notes.length
-      ? h('div', { class: 'aw-notes' }, h('div', { class: 'aw-notes-title' }, 'Your notes'), h('ul', null, item.notes.map((n) => h('li', null, n))))
+      ? h('div', { class: 'aw-notes' }, h('div', { class: 'aw-notes-title' }, t('item.notes')), h('ul', null, item.notes.map((n) => h('li', null, n))))
       : null,
     extra ?? null,
   );
@@ -211,7 +212,7 @@ export function actorCard(a: ActorTooltipView, ctx: UiContext, hint?: string): H
       { class: 'aw-card-head' },
       h('span', { class: 'aw-portrait', style: { '--portrait': a.color ?? 'var(--c-secondary)' }, 'aria-hidden': 'true' }),
       h('div', { class: 'aw-card-titles' }, h('div', { class: 'aw-card-title' }, a.name), h('div', { class: 'aw-card-sub' }, factionLabel(a.faction))),
-      a.faction === 'hostile' || !a.isNpc ? plainChip(threatLabel(a.threat), THREAT_TONE[a.threat]) : plainChip(a.isNpc ? 'Talk' : factionLabel(a.faction), 'good'),
+      a.faction === 'hostile' || !a.isNpc ? plainChip(threatLabel(a.threat), THREAT_TONE[a.threat]) : plainChip(a.isNpc ? t('actor.talkChip') : factionLabel(a.faction), 'good'),
     ),
     bar({ id: 'hp', label: hp.name, abbr: hp.abbr, value: a.hp, max: a.maxHp, color: 'var(--c-danger)' }, { compact: true }),
     a.statusChips?.length
@@ -224,14 +225,14 @@ export function actorCard(a: ActorTooltipView, ctx: UiContext, hint?: string): H
   );
 }
 
-export function tileCard(t: TileTooltipView): HTMLElement {
+export function tileCard(tile: TileTooltipView): HTMLElement {
   return h(
     'div',
     { class: ['aw-card', 'aw-tile-card'] },
-    h('div', { class: 'aw-card-head' }, h('div', { class: 'aw-card-title' }, t.title), t.usable ? plainChip(t.usable === 'usable' ? 'Usable' : 'Used up', t.usable === 'usable' ? 'good' : 'muted') : null),
-    t.description ? h('p', { class: 'aw-card-desc' }, t.description) : null,
-    t.items?.length ? h('ul', { class: 'aw-tile-items' }, t.items.map((i) => h('li', null, i))) : null,
-    t.usable === 'usable' ? h('div', { class: 'aw-card-hint' }, 'Walk into it, click it, or press Enter next to it') : null,
+    h('div', { class: 'aw-card-head' }, h('div', { class: 'aw-card-title' }, tile.title), tile.usable ? plainChip(tile.usable === 'usable' ? t('tile.usable') : t('tile.usedUp'), tile.usable === 'usable' ? 'good' : 'muted') : null),
+    tile.description ? h('p', { class: 'aw-card-desc' }, tile.description) : null,
+    tile.items?.length ? h('ul', { class: 'aw-tile-items' }, tile.items.map((i) => h('li', null, i))) : null,
+    tile.usable === 'usable' ? h('div', { class: 'aw-card-hint' }, t('tile.usableHint')) : null,
   );
 }
 
@@ -281,13 +282,38 @@ export class Tooltip {
   private owner: Element | null = null;
   private pinned = false;
 
+  private abort = new AbortController();
+  /** time of the last touch: touch taps fire mouseover/focus too, which must not open hover cards */
+  private touchAt = -Infinity;
+
   constructor(private root: HTMLElement) {
     this.el = h('div', { class: 'aw-tooltip', role: 'tooltip', 'aria-hidden': 'true' });
     root.appendChild(this.el);
-    root.addEventListener('mouseover', (e) => this.onOver(e));
-    root.addEventListener('mouseout', (e) => this.onOut(e));
-    root.addEventListener('focusin', (e) => this.onOver(e));
-    root.addEventListener('focusout', () => this.hideOwned());
+    const signal = this.abort.signal;
+    root.addEventListener(
+      'pointerdown',
+      (e: PointerEvent) => {
+        if (e.pointerType !== 'touch') return;
+        this.touchAt = performance.now();
+        this.hideOwned();
+      },
+      { signal, capture: true },
+    );
+    root.addEventListener('mouseover', (e) => !this.recentTouch() && this.onOver(e), { signal });
+    root.addEventListener('mouseout', (e) => this.onOut(e), { signal });
+    // keyboard focus shows the tip; focus from a tap or click does not
+    root.addEventListener('focusin', (e) => !this.recentTouch() && (e.target as Element | null)?.matches?.(':focus-visible') !== false && this.onOver(e), { signal });
+    root.addEventListener('focusout', () => this.hideOwned(), { signal });
+  }
+
+  private recentTouch(): boolean {
+    return performance.now() - this.touchAt < 1200;
+  }
+
+  /** stop listening on the root (the UI is being rebuilt) */
+  dispose(): void {
+    this.abort.abort();
+    this.el.remove();
   }
 
   register(el: Element, content: () => Node | null): void {

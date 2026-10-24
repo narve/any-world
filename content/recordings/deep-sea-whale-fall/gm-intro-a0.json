@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/deep-sea-whale-fall/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Log, Kettleby Deep. 3,012 metres. 06:40. Relief diver Achterberg through the lock and dripping on the deck. Sample canisters from this station: none received topside in thirty-four days. Old Margery, the whale fall outside: nine tonnes heavier this week, and still gaining. Lamp battery ninety percent. Engineer Quill is two metres to your left, holding a wrench, deciding whether you are company."
+          },
+          {
+            "type": "mood",
+            "music": "tense"
+          }
+        ]
+      }
+    }
+  ]
+}

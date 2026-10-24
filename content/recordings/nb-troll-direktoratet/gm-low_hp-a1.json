@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/nb-troll-direktoratet/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Tålmodigheten Deres er tynn som gjennomslagspapir. Et sted i hyllene klikker et stempel, tålmodig og uten hast."
+          }
+        ]
+      }
+    }
+  ]
+}

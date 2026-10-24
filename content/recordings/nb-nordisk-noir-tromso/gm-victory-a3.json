@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/nb-nordisk-noir-tromso/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Isen sprekker som et vindu om våren, og elleve sjøfolk går ut på kaia ved Prostneset med snø i håret. Wenche har satt over kaffe. På UNN spør en gammel los om noen har sett pipa hans, og sola kommer tilbake 15. januar, som den alltid gjør."
+          }
+        ]
+      }
+    }
+  ]
+}

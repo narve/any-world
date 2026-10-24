@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/nb-nordisk-noir-tromso/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Klokka er elleve om formiddagen, og himmelen over Prostneset er like svart som fjorden. Ved enden av kaia ligger «Kapitan Sjirokov» med lasterommet fullt av blå is og ikke ett menneske om bord. Losen som skulle møte deg i går, ligger på UNN med varme hender og åpne øyne. Alle på kaia har sett deg komme, og ingen ser på deg."
+          },
+          {
+            "type": "mood",
+            "music": "explore",
+            "tint": "#1b2a44"
+          }
+        ]
+      }
+    }
+  ]
+}

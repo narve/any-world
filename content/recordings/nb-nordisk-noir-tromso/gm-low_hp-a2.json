@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/nb-nordisk-noir-tromso/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Orgeltonen synker en halv tone, og du kjenner den i tennene. Pennen glipper i hånda di."
+          }
+        ]
+      }
+    }
+  ]
+}

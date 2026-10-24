@@ -1,0 +1,4076 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Redundant Upholstery",
+    "tagline": "Forty years as the break-room armchair. One memo from new management. Bite back, or check yourself in as luggage.",
+    "genre": "fantasy dungeon satire",
+    "tags": [
+      "mimic",
+      "office",
+      "dungeon",
+      "union",
+      "satire",
+      "luggage"
+    ],
+    "tone": "dry workplace comedy with teeth",
+    "era": "a dungeon's late-corporate period",
+    "premise": "You are Wingback, a mimic who has spent forty comfortable years being the armchair in the B2 break room of the Gullet Deep dungeon. Goblins have napped in you, eaten biscuits over you and told you their secrets. Now the dungeon has a new Head of Guest Experience, the polished Ambrose Veneer, who wants the place 'adventurer-friendly': pastel corridors, foam spikes, and no furniture that bites. You are first on the redundancy list. The goblin union will back you if you can prove you are worth more than a beanbag. Or you could pin a stolen baggage tag to your cushion and leave with the lost property.",
+    "prompt": "You're a mimic who has spent forty comfortable years as the armchair in a dungeon's break room. New management wants the place 'adventurer-friendly', and you're the first furniture on the redundancy list. Prove your worth to the goblin union — or slip out disguised as luggage.",
+    "nonViolent": false,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Heft",
+        "abbr": "HFT",
+        "description": "Solid oak frame. How hard your lid slams and how much you can swallow."
+      },
+      "dex": {
+        "name": "Scuttle",
+        "abbr": "SCU",
+        "description": "How fast your little carved feet move when nobody is looking. Aim and dodging."
+      },
+      "int": {
+        "name": "Guile",
+        "abbr": "GUI",
+        "description": "Forty years of overheard gossip. Powers your tricks and disguises."
+      },
+      "hp": {
+        "name": "Stuffing",
+        "abbr": "STF",
+        "description": "Horsehair and old foam. When it runs out, you are just a broken chair."
+      },
+      "mp": {
+        "name": "Pretence",
+        "abbr": "PRT",
+        "description": "How convincingly you can be an ordinary object. Spent on tricks."
+      },
+      "ac": {
+        "name": "Upholstery",
+        "abbr": "UPH",
+        "description": "Thick velvet and brass studs between the world and your stuffing."
+      }
+    },
+    "conflict": "Chomp",
+    "defeated": "swallowed",
+    "xp": "Seniority",
+    "levelUp": "Promotion",
+    "currency": "luncheon vouchers",
+    "lossTitle": "Sent to the Skip",
+    "winTitle": "Position Secured",
+    "area": "Level"
+  },
+  "palette": {
+    "primary": "#8a2f3c",
+    "secondary": "#2f6f6a",
+    "accent": "#e2b84a",
+    "danger": "#d2452f",
+    "ui": "#241a16",
+    "text": "#f3e6cf"
+  },
+  "damageTypes": [
+    {
+      "id": "bite",
+      "name": "Bite",
+      "color": "#f0e6d0"
+    },
+    {
+      "id": "paperwork",
+      "name": "Paperwork",
+      "color": "#c9d6e8"
+    },
+    {
+      "id": "cheer",
+      "name": "Relentless Cheer",
+      "color": "#ff9fd0"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "disguised",
+      "name": "Just a Chair",
+      "description": "You are holding perfectly still and looking like furniture. Enemies cannot see you until it wears off.",
+      "harmful": false,
+      "color": "#b08a5a",
+      "flags": [
+        "invisible"
+      ]
+    },
+    {
+      "id": "moth-bitten",
+      "name": "Moth-Bitten",
+      "description": "Moths are eating your stuffing. Lose 1 Stuffing each turn.",
+      "harmful": true,
+      "color": "#9a8f70",
+      "perTurn": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "sticky",
+      "name": "Sticky",
+      "description": "Stuck in spilled coffee. You move slowly.",
+      "harmful": true,
+      "color": "#6b4423",
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "filed",
+      "name": "Filed in Triplicate",
+      "description": "Pinned under forms. You cannot move until processed.",
+      "harmful": true,
+      "color": "#c9d6e8",
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "dazzled",
+      "name": "Dazzled",
+      "description": "Glitter in every eye. Hard to see anything.",
+      "harmful": true,
+      "color": "#ff9fd0",
+      "flags": [
+        "blinded"
+      ]
+    },
+    {
+      "id": "inspired",
+      "name": "Motivated",
+      "description": "A poster told you that you can. +2 Heft.",
+      "harmful": false,
+      "color": "#e2b84a",
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "well-oiled",
+      "name": "Well-Oiled",
+      "description": "Freshly greased hinges. You act faster.",
+      "harmful": false,
+      "color": "#d9c36a",
+      "flags": [
+        "hasted"
+      ]
+    },
+    {
+      "id": "snug",
+      "name": "Snug",
+      "description": "Plumped and comfortable. Regain 1 Stuffing each turn.",
+      "harmful": false,
+      "color": "#7fbf7f",
+      "perTurn": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "furniture-reflex",
+      "name": "Forty Years of Sitting Still",
+      "description": "Every time you enter a new Level you freeze into a perfect armchair for 6 turns. Enemies cannot see you while it lasts.",
+      "playerTriggers": [
+        {
+          "on": "on_area_enter",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "disguised",
+                "duration": 6
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "moth-season",
+      "name": "Moth Season",
+      "description": "Every 30 turns, moths may get into your cushions: you lose 1 Stuffing a turn for 3 turns. Lavender sachets and rest put it right.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 30,
+          "chance": 0.6,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "moth-bitten",
+                "duration": 3
+              },
+              {
+                "type": "message",
+                "text": "Something flutters out of your seat cushion. Moths."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": true,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Wingback",
+    "title": "Break Room Armchair (40 Years' Service)",
+    "description": "A burgundy velvet wingback with brass studs, a sagging seat, and a hinged lid full of teeth where the cushion should be. Smells faintly of custard creams.",
+    "stats": {
+      "str": 14,
+      "dex": 10,
+      "int": 11,
+      "hp": 30,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 10,
+    "sight": 8,
+    "unarmed": {
+      "name": "Lid Snap",
+      "verb": "snaps at",
+      "damage": {
+        "base": 0,
+        "dice": "1d3"
+      },
+      "damageType": "bite",
+      "accuracyStat": "str"
+    },
+    "startingItems": [
+      {
+        "item": "coil-spring",
+        "equipped": true
+      },
+      {
+        "item": "tartan-throw",
+        "equipped": true
+      },
+      {
+        "item": "custard-cream",
+        "count": 2
+      },
+      {
+        "item": "play-dead"
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 5,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "extra-padding",
+          "name": "Extra Padding",
+          "description": "Someone stuffed a lost scarf into you. +6 maximum Stuffing.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 6
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "oak-frame",
+          "name": "Solid Oak Frame",
+          "description": "Not that flat-pack rubbish. +2 Heft.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "castors",
+          "name": "Castors Fitted",
+          "description": "Little brass wheels. +2 Scuttle.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "reupholstered",
+          "name": "Reupholstered",
+          "description": "Fresh velvet over old wounds. +1 Upholstery.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "long-tongue",
+          "name": "Long Tongue",
+          "description": "You learn to fling your tongue across a room. Grants Tongue Lash.",
+          "grantItems": [
+            "tongue-lash"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "snack-drawer",
+          "name": "Snack Drawer",
+          "description": "Whatever you swallow sometimes leaves crumbs. 35% chance to regain 3 Stuffing when you swallow a foe.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "chance": 0.35,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 3
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "velvet-lies",
+          "name": "Velvet Lies",
+          "description": "You have heard every excuse in forty years. +2 Guile, +4 Pretence.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "mp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "emergency-recline",
+          "name": "Emergency Recline",
+          "description": "When your Stuffing runs low you snap flat and greased: Well-Oiled for 4 turns.",
+          "triggers": [
+            {
+              "on": "on_low_hp",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "well-oiled",
+                    "duration": 4
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "sofa-bed",
+          "name": "Hidden Sofa Bed",
+          "description": "There was a fold-out bed in you all along. Grants Fold-Out Ambush.",
+          "grantItems": [
+            "fold-out-ambush"
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "freeform",
+      "parts": [
+        {
+          "shape": "box",
+          "size": [
+            0.8,
+            0.28,
+            0.7
+          ],
+          "pos": [
+            0,
+            0.3,
+            0
+          ],
+          "color": "#8a2f3c",
+          "material": "cloth"
+        },
+        {
+          "shape": "box",
+          "size": [
+            0.8,
+            0.65,
+            0.16
+          ],
+          "pos": [
+            0,
+            0.7,
+            -0.3
+          ],
+          "color": "#8a2f3c",
+          "material": "cloth",
+          "group": "head"
+        },
+        {
+          "shape": "box",
+          "size": [
+            0.16,
+            0.36,
+            0.7
+          ],
+          "pos": [
+            -0.42,
+            0.45,
+            0
+          ],
+          "color": "#73232f",
+          "material": "cloth"
+        },
+        {
+          "shape": "box",
+          "size": [
+            0.16,
+            0.36,
+            0.7
+          ],
+          "pos": [
+            0.42,
+            0.45,
+            0
+          ],
+          "color": "#73232f",
+          "material": "cloth"
+        },
+        {
+          "shape": "cylinder",
+          "size": [
+            0.08,
+            0.16,
+            0.08
+          ],
+          "pos": [
+            -0.32,
+            0.08,
+            0.27
+          ],
+          "color": "#3b2414",
+          "material": "wood"
+        },
+        {
+          "shape": "cylinder",
+          "size": [
+            0.08,
+            0.16,
+            0.08
+          ],
+          "pos": [
+            0.32,
+            0.08,
+            0.27
+          ],
+          "color": "#3b2414",
+          "material": "wood"
+        },
+        {
+          "shape": "cylinder",
+          "size": [
+            0.08,
+            0.16,
+            0.08
+          ],
+          "pos": [
+            -0.32,
+            0.08,
+            -0.27
+          ],
+          "color": "#3b2414",
+          "material": "wood"
+        },
+        {
+          "shape": "cylinder",
+          "size": [
+            0.08,
+            0.16,
+            0.08
+          ],
+          "pos": [
+            0.32,
+            0.08,
+            -0.27
+          ],
+          "color": "#3b2414",
+          "material": "wood"
+        },
+        {
+          "shape": "box",
+          "size": [
+            0.66,
+            0.07,
+            0.06
+          ],
+          "pos": [
+            0,
+            0.47,
+            0.33
+          ],
+          "color": "#f4efe0",
+          "material": "matte"
+        },
+        {
+          "shape": "capsule",
+          "size": [
+            0.14,
+            0.08,
+            0.34
+          ],
+          "pos": [
+            0,
+            0.46,
+            0.44
+          ],
+          "color": "#e0708a",
+          "material": "skin",
+          "group": "tongue"
+        },
+        {
+          "shape": "sphere",
+          "size": [
+            0.11,
+            0.11,
+            0.06
+          ],
+          "pos": [
+            -0.16,
+            0.86,
+            -0.21
+          ],
+          "color": "#ffd84a",
+          "material": "glow",
+          "emissive": "#ffcc33"
+        },
+        {
+          "shape": "sphere",
+          "size": [
+            0.11,
+            0.11,
+            0.06
+          ],
+          "pos": [
+            0.16,
+            0.86,
+            -0.21
+          ],
+          "color": "#ffd84a",
+          "material": "glow",
+          "emissive": "#ffcc33"
+        }
+      ],
+      "idle": "bob"
+    }
+  },
+  "actors": [
+    {
+      "id": "clipboard-imp",
+      "name": "Clipboard Imp",
+      "description": "A pink imp in a lanyard, hired to audit the furniture. It ticks boxes on you whether you like it or not.",
+      "stats": {
+        "hp": 8,
+        "ac": 11,
+        "str": 8,
+        "dex": 13,
+        "int": 9
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Tick Box",
+        "verb": "ticks a box on",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "paperwork"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "custard-cream",
+          "chance": 0.2
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "management"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.55,
+          "build": "slim",
+          "skin": "#e86a8a",
+          "top": "#f2f2f2",
+          "bottom": "#3a3a4a",
+          "accent": "#3fa0ff",
+          "hairStyle": "none",
+          "headwear": "antenna",
+          "outfit": "suit",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "tape-measure-sprite",
+      "name": "Tape-Measure Sprite",
+      "description": "A whirring yellow coil that measures everything from a safe distance and lashes anything that is not to spec.",
+      "stats": {
+        "hp": 5,
+        "ac": 11,
+        "str": 6,
+        "dex": 14,
+        "int": 6
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Measuring Lash",
+        "verb": "measures",
+        "damage": {
+          "base": 0,
+          "dice": "1d3"
+        },
+        "range": 3
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "xp": 5,
+      "tags": [
+        "management"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#f2c230",
+          "secondary": "#2a2a2a",
+          "accent": "#ffffff"
+        },
+        "scale": 0.6,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "dust-bunny",
+      "name": "Dust Bunny",
+      "description": "Forty years of sweepings from under you, now with opinions. They come in litters.",
+      "stats": {
+        "hp": 5,
+        "ac": 10,
+        "str": 7,
+        "dex": 12,
+        "int": 2
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Nibble",
+        "verb": "nibbles",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        }
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "xp": 4,
+      "tags": [
+        "vermin"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#b9b3a8",
+          "secondary": "#8a847a"
+        },
+        "scale": 0.45,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "intern-adventurer",
+      "name": "Intern Adventurer",
+      "description": "A trainee hero on a work-experience placement. Wooden sword, laminated map, no idea what a mimic is.",
+      "stats": {
+        "hp": 10,
+        "ac": 11,
+        "str": 10,
+        "dex": 11,
+        "int": 8
+      },
+      "attack": {
+        "name": "Practice Sword",
+        "verb": "pokes",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        }
+      },
+      "behaviour": {
+        "type": "coward",
+        "param": 0.3
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "custard-cream",
+          "chance": 0.3
+        },
+        {
+          "item": "stress-ball",
+          "chance": 0.15
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "adventurer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#e8c19a",
+          "top": "#4f8fd9",
+          "bottom": "#c9b48a",
+          "accent": "#ffffff",
+          "hair": "#d8a040",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "plain",
+          "holding": "sword"
+        }
+      }
+    },
+    {
+      "id": "grubb",
+      "name": "Grubb Nettleworth",
+      "description": "Goblin shop steward of the Gullet Deep branch of the Amalgamated Union of Lurkers. Has napped in you every Tuesday for thirty years.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 12,
+        "str": 9,
+        "dex": 12,
+        "int": 13
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "informant",
+        "personality": "Gruff, sentimental, quotes the union rulebook by clause number. Calls you 'Chair' and means it fondly.",
+        "greeting": "Chair! They've put you on the list. Clause 14: no member goes in the skip without a fight. Bring me proof you're worth keeping.",
+        "lines": [
+          "Your clocking-in card's still in the timecard rack. Can't leave the staff level without it.",
+          "Veneer's up in the Boardroom. Swallow him and the union will name a break room after you.",
+          "Or get yourself three Fragile stickers and a baggage tag and go out with Lost Property. No shame in it.",
+          "Mind the moths. I keep lavender in my locker for a reason."
+        ],
+        "secrets": "Grubb has seen Ambrose Veneer's legs: carved mahogany, with claws. The new manager is a mimic too, a desk who went corporate and wants no rivals.",
+        "wants": "To keep the break room as it was: the armchair, the kettle, and nap time written into the contract.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "goblin",
+        "union"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.65,
+          "build": "round",
+          "skin": "#6f9a3a",
+          "top": "#c0392b",
+          "bottom": "#4a3b2a",
+          "accent": "#e2b84a",
+          "hair": "#2a2a2a",
+          "hairStyle": "mohawk",
+          "headwear": "none",
+          "outfit": "coat",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "mrs-percolate",
+      "name": "Mrs Percolate",
+      "description": "The break-room tea urn, a fellow mimic of sixty years' standing. She sells from her lower cupboard and never forgets a debt.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 25,
+        "ac": 13,
+        "str": 8,
+        "dex": 6,
+        "int": 14
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "trader",
+        "personality": "Brisk, motherly and steaming. Gives advice nobody asked for. Strictly vouchers, no credit.",
+        "greeting": "Wingback, love. I heard. Vouchers on the counter and I'll see you right.",
+        "lines": [
+          "They've already measured me for a 'hydration station'. Over my element.",
+          "Sandwiches are from Lost Property. Don't ask whose.",
+          "Lavender for the moths, dear. You're shedding."
+        ],
+        "stock": [
+          "lost-sandwich",
+          "lavender-sachet",
+          "spare-hinge",
+          "union-badge",
+          "floor-plan",
+          "glitter-bomb"
+        ],
+        "secrets": "She knows the Lost Property sack has no bottom, and that the baggage carousel in it runs straight past the Boardroom to Departures.",
+        "wants": "To not be replaced by a water cooler. Someone to finally ask how she is."
+      },
+      "tags": [
+        "mimic",
+        "trader"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.55,
+              0.75,
+              0.55
+            ],
+            "pos": [
+              0,
+              0.38,
+              0
+            ],
+            "color": "#c0c4c8",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.5,
+              0.2,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.85,
+              0
+            ],
+            "color": "#a8acb0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.08,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.25,
+              0.32
+            ],
+            "color": "#2a2a2a",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.09,
+              0.09,
+              0.05
+            ],
+            "pos": [
+              -0.12,
+              0.58,
+              0.27
+            ],
+            "color": "#ffe08a",
+            "material": "glow",
+            "emissive": "#ffcc33"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.09,
+              0.09,
+              0.05
+            ],
+            "pos": [
+              0.12,
+              0.58,
+              0.27
+            ],
+            "color": "#ffe08a",
+            "material": "glow",
+            "emissive": "#ffcc33"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ffcf80",
+          "intensity": 1,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "tour-group-adventurer",
+      "name": "Tour-Group Adventurer",
+      "description": "Here on a guided 'Dungeon Experience' package. Wears a matching lanyard and stabs anything not on the itinerary.",
+      "stats": {
+        "hp": 15,
+        "ac": 12,
+        "str": 12,
+        "dex": 11,
+        "int": 8
+      },
+      "attack": {
+        "name": "Rental Shortsword",
+        "verb": "stabs",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "custard-cream",
+          "chance": 0.25
+        },
+        {
+          "item": "mystery-tupperware",
+          "chance": 0.15
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "adventurer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#c98e66",
+          "top": "#f07f2a",
+          "bottom": "#2e3a5a",
+          "accent": "#ffe14a",
+          "hair": "#3a2a1a",
+          "hairStyle": "short",
+          "headwear": "helmet",
+          "outfit": "armour",
+          "holding": "sword"
+        }
+      }
+    },
+    {
+      "id": "signage-golem",
+      "name": "Signage Golem",
+      "description": "A stack of cheerful wayfinding signs given legs. WELCOME, ADVENTURERS! THIS WAY TO TREASURE! It defends its corridor with the corners.",
+      "stats": {
+        "hp": 17,
+        "ac": 13,
+        "str": 13,
+        "dex": 7,
+        "int": 4
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Sharp Corner",
+        "verb": "directs",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "loot": [
+        {
+          "item": "motivational-poster",
+          "chance": 0.3
+        }
+      ],
+      "xp": 10,
+      "tags": [
+        "construct"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#f5f0e0",
+          "secondary": "#2f6f6a",
+          "accent": "#e2b84a"
+        },
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.7,
+              0.35,
+              0.05
+            ],
+            "pos": [
+              0,
+              1.15,
+              0.1
+            ],
+            "color": "#2f9f6a",
+            "material": "matte",
+            "emissive": "#1f6f4a"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "hi-vis-ooze",
+      "name": "Health-and-Safety Ooze",
+      "description": "A gelatinous cube in a high-visibility vest. Engulfs hazards, files them, and has recently classified you as one.",
+      "stats": {
+        "hp": 16,
+        "ac": 10,
+        "str": 12,
+        "dex": 6,
+        "int": 5
+      },
+      "speed": 80,
+      "attack": {
+        "name": "Risk Assessment",
+        "verb": "assesses",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "paperwork"
+      },
+      "abilities": [
+        {
+          "id": "file-report",
+          "name": "File a Report",
+          "description": "Pins its target under triplicate forms.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 2,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "filed",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "bolt",
+              "color": "#c9d6e8"
+            }
+          },
+          "cooldown": 8
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "lavender-sachet",
+          "chance": 0.2
+        }
+      ],
+      "xp": 11,
+      "tags": [
+        "ooze"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#9be05a",
+          "secondary": "#ffef3a",
+          "accent": "#c0c0c0"
+        },
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.75,
+              0.18,
+              0.78
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#ffe600",
+            "material": "cloth",
+            "emissive": "#665c00"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "ribsy",
+      "name": "Ribsy",
+      "description": "A skeleton who tested traps here for two hundred years. Retired last week; nobody told the traps. Sits on a crate, sharpening a spoon.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 18,
+        "ac": 11,
+        "str": 8,
+        "dex": 10,
+        "int": 12
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "lore",
+        "personality": "Cheerful, hollow-voiced, morbidly nostalgic. Rattles when he laughs, which is often.",
+        "greeting": "Another redundancy? Pull up a... oh, you ARE the chair. Sit down anyway.",
+        "lines": [
+          "They put foam on my spikes. Two hundred years of good honest impaling, and foam.",
+          "The Lost Property chute is behind the gift shop. Things go down it and don't stop.",
+          "Veneer never sits. Ever wonder why a desk doesn't need a chair?"
+        ],
+        "secrets": "Ribsy saw Veneer arrive by delivery crate, flat-packed, labelled DESK, EXECUTIVE, (LIVE).",
+        "wants": "A proper send-off for the old traps. Someone to remember the dungeon before the pastel."
+      },
+      "tags": [
+        "undead"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#ece4cf",
+          "top": "#ece4cf",
+          "bottom": "#5a4a3a",
+          "accent": "#8a6a3a",
+          "hairStyle": "none",
+          "headwear": "none",
+          "outfit": "rags",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "sock-wraith",
+      "name": "Sock Wraith",
+      "description": "The ghost of every sock that went into the sack without its partner. Drifts about, looking for its other half in your mouth.",
+      "stats": {
+        "hp": 13,
+        "ac": 12,
+        "str": 9,
+        "dex": 13,
+        "int": 6
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Static Cling",
+        "verb": "clings to",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        }
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.3
+      },
+      "loot": [
+        {
+          "item": "custard-cream",
+          "chance": 0.25
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "lost"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#d8d0f0",
+          "secondary": "#ff7aa8",
+          "accent": "#ffffff"
+        },
+        "idle": "hover",
+        "light": {
+          "color": "#c8b8ff",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "feral-umbrella",
+      "name": "Feral Umbrella",
+      "description": "Left behind on a sunny day and never forgiven anyone. Opens with a bang and stabs with the tip.",
+      "stats": {
+        "hp": 15,
+        "ac": 12,
+        "str": 11,
+        "dex": 13,
+        "int": 4
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Ferrule Jab",
+        "verb": "jabs",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "mystery-tupperware",
+          "chance": 0.15
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "lost"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#1f2a5a",
+          "secondary": "#d9d9d9",
+          "accent": "#c0392b"
+        },
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.8,
+              0.35,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.75,
+              0
+            ],
+            "color": "#1f2a5a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "steamer-trunk",
+      "name": "The Unclaimed Steamer Trunk",
+      "description": "A huge travelling trunk plastered with stickers from places that do not exist. Sits on the baggage tag it was never issued, and bites.",
+      "stats": {
+        "hp": 24,
+        "ac": 13,
+        "str": 14,
+        "dex": 8,
+        "int": 7
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Brass-Latch Bite",
+        "verb": "crunches",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "bite"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "lost-sandwich",
+          "chance": 0.6
+        }
+      ],
+      "xp": 22,
+      "unique": true,
+      "tags": [
+        "mimic",
+        "elite"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.95,
+              0.6,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.32,
+              0
+            ],
+            "color": "#6a4428",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.97,
+              0.08,
+              0.62
+            ],
+            "pos": [
+              0,
+              0.58,
+              0
+            ],
+            "color": "#c8a040",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.25,
+              0.18,
+              0.02
+            ],
+            "pos": [
+              -0.2,
+              0.38,
+              0.31
+            ],
+            "color": "#e86a4a",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.15,
+              0.02
+            ],
+            "pos": [
+              0.25,
+              0.25,
+              0.31
+            ],
+            "color": "#3fa0d9",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              0.05,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.52,
+              0.3
+            ],
+            "color": "#f4efe0",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "dame-hatbox",
+      "name": "Dame Hatbox",
+      "description": "A round striped hatbox, left on a train in 1904 and resident of Lost Property ever since. Inside: a very old, very kind hat.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 15,
+        "ac": 11,
+        "str": 5,
+        "dex": 8,
+        "int": 14
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "healer",
+        "personality": "Grand, gracious, Edwardian. Treats you as a fellow traveller. Sews.",
+        "greeting": "A chair, travelling? How modern. Come here, you're losing stuffing all over the void.",
+        "lines": [
+          "The trunk sits on the only proper baggage tag in the sack. Rude, really.",
+          "Fragile stickers are the secret. Nobody opens anything marked Fragile.",
+          "The carousel goes up to Departures. One simply must have the paperwork."
+        ],
+        "secrets": "She knows the carousel exit is checked only for a baggage tag and three Fragile stickers. She also knows Veneer will try to have Lost Property incinerated next quarter.",
+        "wants": "To be claimed by someone, someday. Failing that, conversation."
+      },
+      "tags": [
+        "lost",
+        "healer"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.6,
+              0.45,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.23,
+              0
+            ],
+            "color": "#f0c8d8",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.64,
+              0.08,
+              0.64
+            ],
+            "pos": [
+              0,
+              0.49,
+              0
+            ],
+            "color": "#7a3a5a",
+            "material": "cloth"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.08,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#e2b84a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "ambrose-veneer",
+      "name": "Ambrose Veneer",
+      "description": "Head of Guest Experience: an executive desk in a pinstriped tie, with a smile in the top drawer and mahogany claws underneath. He is a mimic too, and he wants to be the only one.",
+      "stats": {
+        "hp": 80,
+        "ac": 14,
+        "str": 15,
+        "dex": 10,
+        "int": 14
+      },
+      "speed": 100,
+      "sight": 9,
+      "attack": {
+        "name": "Drawer Slam",
+        "verb": "slams a drawer on",
+        "damage": {
+          "base": 4,
+          "dice": "1d8"
+        },
+        "damageType": "bite"
+      },
+      "abilities": [
+        {
+          "id": "restructure",
+          "name": "Restructure",
+          "description": "Calls in two auditors to take your measurements.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "clipboard-imp",
+                "count": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#c9d6e8"
+            }
+          },
+          "cooldown": 14,
+          "useWhen": "start_of_fight"
+        },
+        {
+          "id": "strongly-worded-memo",
+          "name": "Strongly Worded Memo",
+          "description": "A paper dart of pure policy.",
+          "action": {
+            "targeting": {
+              "shape": "ray",
+              "range": 5,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 1,
+                  "dice": "2d4"
+                },
+                "damageType": "paperwork"
+              }
+            ],
+            "vfx": {
+              "kind": "bolt",
+              "color": "#f4efe0"
+            }
+          },
+          "cooldown": 5
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "paperwork",
+          "multiplier": 0.5
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Smooth, relentlessly positive, never says 'fired', only 'transitioned'. Deeply afraid of being outclassed by older furniture.",
+        "greeting": "Wingback! Love the vintage energy. Sadly the brand is fresh, flat-pack and bite-free. Shall we discuss your transition?",
+        "lines": [
+          "I am not a mimic. I am an agile workspace solution.",
+          "Adventurers want comfort, not teeth. Says the man with teeth. Yes, well.",
+          "The union can have you back in pieces."
+        ],
+        "secrets": "He is a desk mimic who ate the last manager and took his tie. Removing old mimics is how he makes sure nobody recognises him.",
+        "wants": "A dungeon with no furniture older or hungrier than himself."
+      },
+      "tags": [
+        "boss",
+        "mimic",
+        "management"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.2,
+              0.1,
+              0.7
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#5a2e1e",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.7,
+              0.65
+            ],
+            "pos": [
+              -0.42,
+              0.4,
+              0
+            ],
+            "color": "#4a2416",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.7,
+              0.65
+            ],
+            "pos": [
+              0.42,
+              0.4,
+              0
+            ],
+            "color": "#4a2416",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.06,
+              0.02
+            ],
+            "pos": [
+              -0.42,
+              0.55,
+              0.33
+            ],
+            "color": "#e2b84a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.06,
+              0.02
+            ],
+            "pos": [
+              0.42,
+              0.55,
+              0.33
+            ],
+            "color": "#e2b84a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.05,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.72,
+              0.34
+            ],
+            "color": "#f4efe0",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.12,
+              0.5,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.95,
+              0.36
+            ],
+            "color": "#c0392b",
+            "material": "cloth",
+            "rot": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.06
+            ],
+            "pos": [
+              -0.22,
+              1.05,
+              0.2
+            ],
+            "color": "#9ff0ff",
+            "material": "glow",
+            "emissive": "#40d0ff"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.06
+            ],
+            "pos": [
+              0.22,
+              1.05,
+              0.2
+            ],
+            "color": "#9ff0ff",
+            "material": "glow",
+            "emissive": "#40d0ff"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.1,
+              0.25,
+              0.1
+            ],
+            "pos": [
+              -0.5,
+              0.05,
+              0.35
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#2a1a10",
+            "material": "wood"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.1,
+              0.25,
+              0.1
+            ],
+            "pos": [
+              0.5,
+              0.05,
+              0.35
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#2a1a10",
+            "material": "wood"
+          }
+        ],
+        "scale": 1.3,
+        "idle": "sway",
+        "light": {
+          "color": "#40d0ff",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "coil-spring",
+      "name": "Sprung Coil Spring",
+      "kind": "Upholstery spring",
+      "description": "A spring that worked loose from your own seat in 1991. You keep it in your mouth for emergencies.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Coil Spring",
+        "verb": "boings",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "bite",
+        "accuracyStat": "str"
+      },
+      "value": 5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.25,
+              0.06,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#c0c4c8",
+            "material": "metal"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.25,
+              0.06,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#c0c4c8",
+            "material": "metal"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.25,
+              0.06,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#c0c4c8",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "tartan-throw",
+      "name": "Tartan Throw",
+      "kind": "Blanket",
+      "description": "The blanket that has lived over your back since 1983. Surprisingly hard to bite through.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.1,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#2f6f6a",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.02,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#c0392b",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "custard-cream",
+      "name": "Custard Cream",
+      "kind": "Biscuit",
+      "description": "Found down the side of your own cushion. Restores Stuffing, somehow.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f2d08a"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.08,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#e8c070",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.03,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#fff2c8",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "lost-sandwich",
+      "name": "Lost Property Sandwich",
+      "kind": "Sandwich",
+      "description": "Cheese and pickle, labelled 'DO NOT EAT - DEREK'. Derek left in 2009.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 9,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8d090"
+        }
+      },
+      "value": 16,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.35,
+              0.12,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#e8d090",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.03,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#7aa83a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "lavender-sachet",
+      "name": "Lavender Sachet",
+      "kind": "Moth remedy",
+      "description": "A little muslin bag of lavender. Moths hate it. Removes harmful effects and restores 4 Stuffing.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#b49ae0"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.25,
+              0.22,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#b49ae0",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.26,
+              0
+            ],
+            "color": "#7a5aa0",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "spare-hinge",
+      "name": "Tin of Hinge Grease",
+      "kind": "Grease",
+      "description": "Smear it on your hinges and you'll move like a new-built ottoman for a while.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "well-oiled",
+            "duration": 8
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#d9c36a"
+        }
+      },
+      "value": 14,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.25,
+              0.12,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#d9c36a",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "play-dead",
+      "name": "Play Dead",
+      "kind": "Trick",
+      "description": "Go perfectly still and become an ordinary armchair. Enemies lose sight of you for 4 turns.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "cooldown": 10,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "disguised",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#b08a5a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.3,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#8a2f3c",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "tongue-lash",
+      "name": "Tongue Lash",
+      "kind": "Trick",
+      "description": "Fling your tongue across the room. Hits the first thing in a line for 1d6 + Guile/2.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "ray",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.5
+              }
+            },
+            "damageType": "bite"
+          }
+        ],
+        "vfx": {
+          "kind": "beam",
+          "color": "#e0708a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.12,
+              0.08,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#e0708a",
+            "material": "skin"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "fold-out-ambush",
+      "name": "Fold-Out Ambush",
+      "kind": "Trick",
+      "description": "Spring open into a full sofa bed and clamp down on everything adjacent: 2d6 + Heft/2.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 7
+      },
+      "cooldown": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "adjacent",
+          "range": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "2d6",
+              "scale": {
+                "stat": "str",
+                "factor": 0.5
+              }
+            },
+            "damageType": "bite"
+          }
+        ],
+        "vfx": {
+          "kind": "slash",
+          "color": "#8a2f3c"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.12,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#8a2f3c",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "stapler",
+      "name": "Industrial Stapler",
+      "kind": "Office weapon",
+      "description": "Taken from Facilities. Heavy, red and deeply unpleasant at close range.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Stapler",
+        "verb": "staples",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "accuracyStat": "str"
+      },
+      "requires": [
+        {
+          "stat": "str",
+          "min": 12
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.1,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#c0392b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.38,
+              0.08,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#d84a3a",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "filing-drawer",
+      "name": "Filing-Cabinet Drawer",
+      "kind": "Armour",
+      "description": "A steel drawer worn like a breastplate. Heavy enough to slow your little feet.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 3,
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 28,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.25,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#7a8a90",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.15,
+              0.04,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.18,
+              0.21
+            ],
+            "color": "#d0d0d0",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "union-badge",
+      "name": "Union Badge",
+      "kind": "Enamel pin",
+      "description": "Amalgamated Union of Lurkers, 40 years' membership. +1 Upholstery and +1 Guile while worn.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 1
+        },
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.22,
+              0.04,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#c0392b",
+            "material": "metal",
+            "emissive": "#401010"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.05,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#e2b84a",
+            "material": "metal"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "mystery-tupperware",
+      "name": "Unlabelled Tupperware",
+      "kind": "Leftovers",
+      "description": "Somebody's lunch from the communal fridge. It might be stew. It might be a science project.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "knowledge": "unknown",
+      "appearanceGroup": "tupperware",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 9,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "snug",
+            "duration": 5
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f0b060"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.15,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#e8e0d0",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.34,
+              0.03,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.17,
+              0
+            ],
+            "color": "#3fa0d9",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "suspicious-tupperware",
+      "name": "Fuzzy Tupperware",
+      "kind": "Leftovers",
+      "description": "Somebody's lunch from the communal fridge. It has developed a personality, and the personality is moths.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "knowledge": "unknown",
+      "appearanceGroup": "tupperware",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "moth-bitten",
+            "duration": 4
+          },
+          {
+            "type": "grant_xp",
+            "amount": 6
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#9a8f70"
+        }
+      },
+      "value": 2,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.15,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#c8d0a0",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.34,
+              0.03,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.17,
+              0
+            ],
+            "color": "#7aa83a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "curry-tupperware",
+      "name": "Tupperware of Vindaloo",
+      "kind": "Leftovers",
+      "description": "Somebody's lunch from the communal fridge. Lights a fire in your frame: +2 Heft for a while.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "knowledge": "unknown",
+      "appearanceGroup": "tupperware",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "inspired",
+            "duration": 15
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 3
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#e86a2a"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.15,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#e8a050",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.34,
+              0.03,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.17,
+              0
+            ],
+            "color": "#c0392b",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "stress-ball",
+      "name": "Corporate Stress Ball",
+      "kind": "Throwable",
+      "description": "A squeezy globe printed with the new logo. Thrown hard, it really does relieve stress: yours.",
+      "category": "throwable",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "1d6"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#3fa0ff"
+        }
+      },
+      "value": 14,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#3fa0ff",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "glitter-bomb",
+      "name": "Welcome-Pack Glitter Bomb",
+      "kind": "Throwable",
+      "description": "Part of the new 'Adventurer Welcome Experience'. Do not open indoors.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "knowledge": "vague",
+      "vagueText": "Pink, sparkly and under pressure. Whoever is near it when it goes off will not be seeing straight.",
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "dazzled",
+            "duration": 4
+          },
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d4"
+            },
+            "damageType": "cheer"
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ff9fd0"
+        }
+      },
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ff9fd0",
+            "material": "glow",
+            "emissive": "#a0406a"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "motivational-poster",
+      "name": "Motivational Poster",
+      "kind": "Poster",
+      "description": "A kitten on a rope. HANG IN THERE. Reading it does something to you.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 2,
+      "knowledge": "vague",
+      "vagueText": "The kitten looks so determined. You feel you could lift a filing cabinet. Maybe two.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "inspired",
+            "duration": 12
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e2b84a"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.45,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#f4efe0",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.28,
+              0.02
+            ],
+            "color": "#e8a050",
+            "material": "matte"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "floor-plan",
+      "name": "Floor Plan (Revised)",
+      "kind": "Map",
+      "description": "Management's new layout of the current Level, with every room renamed. Shows the whole Level when read.",
+      "category": "tool",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 99
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#c9d6e8"
+        }
+      },
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#a8c8f0",
+            "material": "matte"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "petty-cash",
+      "name": "Petty Cash Envelope",
+      "kind": "Envelope",
+      "description": "Marked 'Tea Fund'. Morally grey; financially useful. Gives 15 luncheon vouchers.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "currency",
+            "amount": 15
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e2b84a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.03,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#d8c090",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "timecard",
+      "name": "Your Timecard",
+      "kind": "Key",
+      "description": "Forty years of clock-ins in faded purple ink. The staff door will not open without it.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#f0e0b0",
+            "material": "matte",
+            "emissive": "#403820"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ffe0a0",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "fragile-sticker",
+      "name": "FRAGILE Sticker",
+      "kind": "Luggage sticker",
+      "description": "Red and white, slightly peeled. Nobody opens anything marked FRAGILE. You will need three.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "stackable": true,
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.25,
+              0.02,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#e83a3a",
+            "material": "matte",
+            "emissive": "#501010"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff6060",
+          "intensity": 0.6,
+          "radius": 1.2
+        }
+      }
+    },
+    {
+      "id": "baggage-tag",
+      "name": "Forged Baggage Tag",
+      "kind": "Key",
+      "description": "An official tag for 'ONE (1) ARMCHAIR, VINTAGE'. Opens the carousel out of Lost Property. In the Boardroom, use it with three FRAGILE stickers to check yourself out.",
+      "category": "key",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "fragile-sticker",
+              "count": 3
+            }
+          ]
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "checked-out"
+          },
+          {
+            "type": "message",
+            "text": "You fold your legs, show the tag, and lie very still. A porter heaves you onto the Departures belt."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e2b84a"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.02,
+              0.32
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#e2b84a",
+            "material": "matte",
+            "emissive": "#5a4010"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.08,
+              0.02,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.06,
+              0.18
+            ],
+            "color": "#c0392b",
+            "material": "cloth"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ffd060",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "spilled-coffee",
+      "name": "Spilled Coffee",
+      "description": "Forty years of Monday mornings. Sticky.",
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "sticky",
+          "duration": 2
+        }
+      ],
+      "color": "#5a3a1e"
+    },
+    {
+      "id": "wet-floor-sign",
+      "name": "Wet Floor Sign",
+      "description": "A yellow A-frame. It is not wet. It has never been wet.",
+      "walkable": false,
+      "color": "#ffe14a",
+      "height": 0.6,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.4,
+              0.6,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#ffe14a",
+            "material": "matte"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "welcome-mat",
+      "name": "Welcome Mat",
+      "description": "'YOU ARE VALUED' in cheerful letters. Search it for whatever adventurers dropped.",
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "custard-cream"
+          },
+          {
+            "type": "message",
+            "text": "Under the mat: a biscuit and a lot of glitter."
+          }
+        ]
+      },
+      "color": "#e86a8a"
+    },
+    {
+      "id": "sock-pile",
+      "name": "Sock Pile",
+      "description": "Odd socks in a drift. Something useful is usually at the bottom.",
+      "moveCost": 2,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "lavender-sachet"
+          },
+          {
+            "type": "message",
+            "text": "At the bottom of the socks, a lavender sachet. Bless whoever packed it."
+          }
+        ]
+      },
+      "color": "#c8c0e0",
+      "height": 0.2
+    },
+    {
+      "id": "potted-ficus",
+      "name": "Potted Ficus",
+      "description": "Corporate greenery, plastic and dusted daily.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#3a8a3a",
+      "height": 1.2,
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#3a8a3a",
+          "secondary": "#8a5a3a"
+        }
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "tupperware": [
+      {
+        "label": "Blue-Lidded Tupperware",
+        "color": "#3fa0d9"
+      },
+      {
+        "label": "Green-Lidded Tupperware",
+        "color": "#7aa83a"
+      },
+      {
+        "label": "Red-Lidded Tupperware",
+        "color": "#c0392b"
+      },
+      {
+        "label": "Lidless Tupperware (Clingfilm)",
+        "color": "#e0e0e0"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "The B2 Break Room",
+      "description": "Avocado carpet, a humming fridge, the kettle, and the dent in the floor where you have sat since the old management. The redundancy notice is pinned to your backrest. Auditors are already measuring the room for beanbags.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 2,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#56653f",
+        "color2": "#647448",
+        "material": "cloth",
+        "pattern": "carpet"
+      },
+      "wall": {
+        "color": "#d8c8a0",
+        "color2": "#b8a880",
+        "material": "stone",
+        "height": 1.6,
+        "pattern": "tiles"
+      },
+      "lighting": {
+        "ambient": "#e8f0d8",
+        "ambientIntensity": 0.55,
+        "lamps": {
+          "color": "#e8f8ff",
+          "intensity": 1.6,
+          "frequency": 0.08,
+          "flicker": true
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "clipboard-imp",
+          "weight": 30,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "tape-measure-sprite",
+          "weight": 15,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "dust-bunny",
+          "weight": 25,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "actor": "intern-adventurer",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "grubb",
+          "where": "near_start"
+        },
+        {
+          "actor": "mrs-percolate",
+          "where": "anywhere"
+        }
+      ],
+      "items": [
+        {
+          "item": "custard-cream",
+          "weight": 18
+        },
+        {
+          "item": "mystery-tupperware",
+          "weight": 12
+        },
+        {
+          "item": "suspicious-tupperware",
+          "weight": 6
+        },
+        {
+          "item": "curry-tupperware",
+          "weight": 6
+        },
+        {
+          "item": "stress-ball",
+          "weight": 10
+        },
+        {
+          "item": "petty-cash",
+          "weight": 10
+        },
+        {
+          "item": "floor-plan",
+          "weight": 6
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "timecard",
+          "where": "far"
+        },
+        {
+          "item": "fragile-sticker",
+          "where": "anywhere"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "spilled-coffee",
+          "density": 0.03
+        }
+      ],
+      "transitionName": "Clock out through the staff door",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.6,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#6a7a5a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.15,
+              0.02
+            ],
+            "pos": [
+              0,
+              1.3,
+              0.07
+            ],
+            "color": "#f4efe0",
+            "material": "matte",
+            "emissive": "#404040"
+          }
+        ],
+        "idle": "none"
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "timecard"
+      },
+      "gmNotes": "Home turf. Goblins pass through nervously. Grubb gives the two routes. Auditors swarm; the timecard is somewhere at the far end, filed under 'Disposals'.",
+      "music": "calm",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#1c2016",
+        "color2": "#3a4430",
+        "intensity": 0.5
+      }
+    },
+    {
+      "name": "The Adventurer-Friendly Wing",
+      "description": "The old trap halls, repainted in sugared-almond pastels. Spikes padded with foam, pits filled with ball-pit balls, and arrows on every wall pointing to the gift shop. Tour groups shuffle through in matching lanyards.",
+      "generator": "rooms",
+      "size": "medium",
+      "params": {
+        "roomCount": 10,
+        "roomMin": 3,
+        "roomMax": 7,
+        "loops": 0.4
+      },
+      "floor": {
+        "color": "#d8c8d8",
+        "color2": "#c0e0d0",
+        "material": "stone",
+        "pattern": "cobble"
+      },
+      "wall": {
+        "color": "#8fc8b8",
+        "color2": "#f0b8c8",
+        "material": "stone",
+        "height": 1.8,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#fff0f0",
+        "ambientIntensity": 0.6,
+        "lamps": {
+          "color": "#ffd0e0",
+          "intensity": 1.4,
+          "frequency": 0.07
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "tour-group-adventurer",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "signage-golem",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "hi-vis-ooze",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "clipboard-imp",
+          "weight": 15,
+          "min": 0,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "ribsy",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "custard-cream",
+          "weight": 15
+        },
+        {
+          "item": "lost-sandwich",
+          "weight": 4
+        },
+        {
+          "item": "glitter-bomb",
+          "weight": 12
+        },
+        {
+          "item": "motivational-poster",
+          "weight": 8
+        },
+        {
+          "item": "stapler",
+          "weight": 6
+        },
+        {
+          "item": "filing-drawer",
+          "weight": 5
+        },
+        {
+          "item": "mystery-tupperware",
+          "weight": 8
+        },
+        {
+          "item": "lavender-sachet",
+          "weight": 8
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "fragile-sticker",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "wet-floor-sign",
+          "density": 0.015
+        },
+        {
+          "terrain": "welcome-mat",
+          "density": 0.012
+        }
+      ],
+      "transitionName": "Jump down the Lost Property chute",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.9,
+              0.5,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#7a5aa0",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.7,
+              0.05,
+              0.7
+            ],
+            "pos": [
+              0,
+              0.51,
+              0
+            ],
+            "color": "#120a18",
+            "material": "matte"
+          }
+        ],
+        "idle": "none"
+      },
+      "gmNotes": "Satire of 'adventurer-friendly' redesign. Tour groups are cheerful and violent. Ribsy can be visited for lore. Hint that Veneer is a desk.",
+      "music": "upbeat",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#2e2232",
+        "color2": "#6a5a72",
+        "intensity": 0.5
+      }
+    },
+    {
+      "name": "Inside the Lost Property Sack",
+      "description": "The chute drops you into the sack, which has no bottom. Islands of forgotten luggage float in velvet dark, joined by trailing scarves and belts. Odd socks drift past like jellyfish. Far above, a baggage carousel creaks.",
+      "generator": "islands",
+      "size": "medium",
+      "params": {
+        "islandCount": 9,
+        "islandSize": 0.55,
+        "bridgeLength": 4,
+        "loops": 0.3,
+        "outcrops": 0.4,
+        "rims": 1
+      },
+      "floor": {
+        "color": "#6a4a7a",
+        "color2": "#7a5a8a",
+        "material": "cloth",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#3a2a4a",
+        "color2": "#5a3a6a",
+        "material": "cloth",
+        "height": 1,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#c0a8e0",
+        "ambientIntensity": 0.45,
+        "fog": {
+          "color": "#1a1024",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#ffcf80",
+          "intensity": 1.8,
+          "frequency": 0.05,
+          "flicker": false
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "sock-wraith",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "feral-umbrella",
+          "weight": 25,
+          "min": 1,
+          "max": 5
+        },
+        {
+          "actor": "dust-bunny",
+          "weight": 15,
+          "min": 0,
+          "max": 4
+        }
+      ],
+      "placed": [
+        {
+          "actor": "steamer-trunk",
+          "where": "far"
+        },
+        {
+          "actor": "dame-hatbox",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "custard-cream",
+          "weight": 12
+        },
+        {
+          "item": "lost-sandwich",
+          "weight": 10
+        },
+        {
+          "item": "lavender-sachet",
+          "weight": 10
+        },
+        {
+          "item": "mystery-tupperware",
+          "weight": 8
+        },
+        {
+          "item": "curry-tupperware",
+          "weight": 6
+        },
+        {
+          "item": "suspicious-tupperware",
+          "weight": 5
+        },
+        {
+          "item": "stress-ball",
+          "weight": 8
+        },
+        {
+          "item": "petty-cash",
+          "weight": 6
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "baggage-tag",
+          "where": "guarded"
+        },
+        {
+          "item": "fragile-sticker",
+          "where": "anywhere"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "sock-pile",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Ride the baggage carousel up",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              1,
+              0.15,
+              1
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#2a2a2a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.3,
+              0.3
+            ],
+            "pos": [
+              0.3,
+              0.4,
+              0
+            ],
+            "color": "#6a4428",
+            "material": "wood"
+          }
+        ],
+        "idle": "spin"
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "baggage-tag"
+      },
+      "gmNotes": "Non-realistic: a bottomless bag. The trunk guards the baggage tag; the carousel will not take untagged luggage. Dame Hatbox heals and explains the sticker route.",
+      "backdrop": {
+        "style": "abyss",
+        "color": "#120a18",
+        "color2": "#3a1a4a",
+        "intensity": 0.6
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "The Boardroom by Departures",
+      "description": "Glass walls, a carpet the colour of a quarterly report, and plastic ficuses. Through the far window the Departures belt rolls past. At the head of the room a desk in a tie smiles with its top drawer.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.3,
+        "sideRooms": 0.5
+      },
+      "floor": {
+        "color": "#3e5068",
+        "color2": "#4a5e78",
+        "material": "cloth",
+        "pattern": "carpet"
+      },
+      "wall": {
+        "color": "#c8d8e0",
+        "color2": "#e8f0f4",
+        "material": "glass",
+        "height": 2,
+        "pattern": "grid"
+      },
+      "lighting": {
+        "ambient": "#e0ecff",
+        "ambientIntensity": 0.5,
+        "lamps": {
+          "color": "#f0f8ff",
+          "intensity": 1.8,
+          "frequency": 0.08
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "clipboard-imp",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "signage-golem",
+          "weight": 15,
+          "min": 0,
+          "max": 2
+        },
+        {
+          "actor": "feral-umbrella",
+          "weight": 15,
+          "min": 0,
+          "max": 2
+        },
+        {
+          "actor": "hi-vis-ooze",
+          "weight": 15,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "ambrose-veneer",
+          "where": "near_exit"
+        }
+      ],
+      "items": [
+        {
+          "item": "custard-cream",
+          "weight": 12
+        },
+        {
+          "item": "lost-sandwich",
+          "weight": 9
+        },
+        {
+          "item": "stress-ball",
+          "weight": 10
+        },
+        {
+          "item": "glitter-bomb",
+          "weight": 8
+        }
+      ],
+      "itemCount": 5,
+      "terrain": [
+        {
+          "terrain": "potted-ficus",
+          "density": 0.03
+        }
+      ],
+      "transitionName": "Step onto the Departures belt",
+      "gmNotes": "Finale. Veneer talks first, in management-speak; reveal he is a mimic. Two endings: swallow him for the union, or use the tag with three FRAGILE stickers and leave as luggage.",
+      "music": "boss",
+      "backdrop": {
+        "style": "grid",
+        "color": "#0c1420",
+        "color2": "#2a4a6a",
+        "intensity": 0.4
+      }
+    }
+  ],
+  "goal": {
+    "summary": "Prove your worth to the goblin union by swallowing Ambrose Veneer, or collect three FRAGILE stickers and the baggage tag and check yourself out of the Boardroom as luggage.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "actor_defeated",
+          "actor": "ambrose-veneer"
+        },
+        {
+          "type": "flag",
+          "flag": "checked-out"
+        }
+      ]
+    },
+    "winText": "Either way, the memo is shredded. If Veneer is inside you, the union pins a brass plaque to your backrest: WINGBACK, ESSENTIAL STAFF. If you left by the belt, you wake on a sunny porch somewhere, and an old man sits in you with a sigh of pure relief. Both are good jobs.",
+    "lossText": "They carry you up to the skip behind the gift shop. Grubb holds his cap. Somewhere a beanbag is unboxed, and it has no teeth, and nobody naps in it ever again.",
+    "labels": {
+      "checked-out": "You are checked out as luggage"
+    }
+  },
+  "gm": {
+    "persona": "The break-room noticeboard: forty years of cork, pinned with rotas, passive-aggressive notes about the fridge, and every union leaflet ever printed. It has watched you the whole time.",
+    "voice": "Writes like pinned notes: short, underlined, petty, dated. Signs off 'Mgmt' or 'Anon'. Secretly fond of the chair.",
+    "threads": [
+      "Veneer is a mimic too, and fears being recognised",
+      "The goblin union's last stand over nap time",
+      "Lost Property as a place things go to be forgiven",
+      "Moths: the slow enemy of all upholstery"
+    ],
+    "fallback": {
+      "intro": "NOTICE (pinned, 9:02am): Following a review, B2 Break Room furniture will be 'transitioned' to make Gullet Deep adventurer-friendly. Item one: ARMCHAIR, WINGBACK, BURGUNDY. Underneath, in goblin crayon: 'Not if the union has anything to say about it. - G.' You open one eye. Then your lid.",
+      "areaEnter": [
+        "NOTICE: Please do not feed the furniture. (Somebody has crossed out 'please'.)",
+        "NOTICE: The Adventurer-Friendly Wing is now open! Spikes are foam. Pits are fun. Mimics are not permitted.",
+        "NOTICE: Lost Property is not responsible for items lost in Lost Property.",
+        "NOTICE: Board meeting in progress. Agenda item 1: you."
+      ],
+      "lowHp": [
+        "NOTICE: Stuffing on floor. Whose is this?",
+        "Reminder: furniture found damaged will be skipped without consultation.",
+        "NOTICE: First aid kit is in the kettle cupboard. (It is biscuits.)"
+      ],
+      "events": [
+        "Somebody has pinned a photo of you from 1986. You looked good.",
+        "A goblin slips a lavender sachet under your cushion and walks away whistling.",
+        "NOTICE: the fridge will be emptied on Friday. Again.",
+        "A tannoy chimes: 'Would the owner of a burgundy armchair please report to Disposals.'"
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Lounge muzak played on a dungeon organ: polite, slightly sinister, with a ticking office clock.",
+    "synth": {
+      "key": "F",
+      "scale": "dorian",
+      "tempo": 92,
+      "timbre": "organ",
+      "drone": false,
+      "percussion": "clockwork",
+      "brightness": 0.55
+    },
+    "searchTerms": [
+      "lounge organ muzak",
+      "office elevator music",
+      "bossa nova organ"
+    ],
+    "suggestions": [
+      "Hammond organ lounge jazz",
+      "1970s library music"
+    ]
+  }
+}

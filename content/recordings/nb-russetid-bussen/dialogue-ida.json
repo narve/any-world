@@ -1,0 +1,33 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-russetid-bussen/ida",
+      "json": {
+        "reply": "Ikke si noe ennå. Jeg vet hvor anlegget står, og jeg vet hvor kvitteringen er, for jeg bar det inn selv. Kasper sa det var en overraskelse for alle. Jeg trodde på ham, Eli.",
+        "options": [
+          "Hvor står det?",
+          "Har du bevis på kjøpet?",
+          "Hvorfor sa du ingenting?"
+        ],
+        "actions": []
+      }
+    },
+    {
+      "purpose": "dialogue/nb-russetid-bussen/ida",
+      "json": {
+        "reply": "Jeg tok skjermbilde av kvitteringen klokka tre om natta, da jeg skjønte hva det var. Fjorten dagers angrerett, og fristen går ut fredag. Ta det, og gjør hva du vil med det. Bare ikke fortell gjengen at det var jeg som bar.",
+        "options": [
+          "Jeg forteller ingen ting.",
+          "Gjengen fortjener å vite det.",
+          "Hvor finner jeg koden til lageret?"
+        ],
+        "actions": [
+          {
+            "type": "give_item",
+            "item": "idas-skjermbilde"
+          }
+        ]
+      }
+    }
+  ]
+}

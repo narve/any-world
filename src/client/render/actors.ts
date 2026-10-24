@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import type { WorldSpec, ModelSpec } from '../../schema/world';
 import type { ActorInstance, Faction, Pos } from '../../engine/types';
 import { buildModel, animateModel, modelHeight, type Motion } from './models';
+import { compactModel } from './models/merge';
 import { col, luminance, mixHex } from './color';
 
 /** every actor model is drawn a little larger than its spec so it reads at the default zoom */
@@ -41,13 +42,26 @@ const RIM = { value: new THREE.Color(0.22, 0.22, 0.24) };
 function addRim(m: THREE.Material): void {
   const std = m as THREE.MeshStandardMaterial;
   if (!std.isMeshStandardMaterial) return;
+  // merged vertex-coloured parts: the light floor (a uniform emissive) follows each vertex's colour
+  const vertexFloor = !!std.vertexColors && !!std.userData.vertexFloor;
   std.onBeforeCompile = (shader) => {
     shader.uniforms.uRim = RIM;
+    if (vertexFloor) {
+      // per-vertex roughness / metalness of the merged parts (see compactModel)
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nattribute float aRough;\nattribute float aMetal;\nvarying float vRough;\nvarying float vMetal;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRough = aRough;\nvMetal = aMetal;');
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying float vRough;\nvarying float vMetal;')
+        .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = vRough;')
+        .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = vMetal;');
+    }
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', '#include <common>\nuniform vec3 uRim;')
       .replace(
         '#include <emissivemap_fragment>',
         `#include <emissivemap_fragment>
+        ${vertexFloor ? '#ifdef USE_COLOR\n totalEmissiveRadiance *= mix(vec3(1.0), vColor.rgb, 0.7);\n#endif' : ''}
         {
           vec3 vdir = normalize(vViewPosition);
           float fres = pow(1.0 - clamp(abs(dot(normal, vdir)), 0.0, 1.0), 2.5);
@@ -57,7 +71,7 @@ function addRim(m: THREE.Material): void {
         }`,
       );
   };
-  std.customProgramCacheKey = () => 'actor-rim';
+  std.customProgramCacheKey = () => (vertexFloor ? 'actor-rim-vc' : 'actor-rim');
 }
 
 export const FACTION_COLORS: Record<Faction | 'ally', string> = {
@@ -161,6 +175,8 @@ export class ActorLayer {
   readonly group = new THREE.Group();
   readonly views = new Map<string, ActorView>();
   private templates = new Map<string, THREE.Group>();
+  /** outlined + merged copies of the templates, per defId and outline strength (what views clone) */
+  private compact = new Map<string, { model: THREE.Group; natural: number }>();
   /** actor-owned copies of the shared model materials (so the light floor never touches terrain) */
   private ownMats = new Map<THREE.Material, THREE.MeshStandardMaterial>();
   private world: WorldSpec;
@@ -238,20 +254,79 @@ export class ActorLayer {
     return a.faction;
   }
 
+  /**
+   * The model a view clones: the template scaled for display, with silhouette outlines added and
+   * every rigid part merged per material (compactModel), so an actor costs a handful of draw calls
+   * instead of two per primitive. Cached per defId and outline strength.
+   */
+  private compactTemplate(defId: string, weak: boolean): { model: THREE.Group; natural: number } {
+    const key = `${defId}|${weak ? 1 : 0}`;
+    let c = this.compact.get(key);
+    if (!c) {
+      const tpl = this.template(defId);
+      const natural = modelHeight(tpl);
+      const model = tpl.clone();
+      model.traverse((o) => {
+        if ((o as THREE.Mesh).isMesh) o.castShadow = true;
+      });
+      model.scale.multiplyScalar(actorScaleFor(natural));
+      this.addOutlines(model, 'neutral', weak);
+      compactModel(model, { colorClass: (m) => this.colorClass(m), vertexColorMaterial: (m) => this.vertexColorMat(m) });
+      c = { model, natural };
+      this.compact.set(key, c);
+    }
+    return c;
+  }
+
+  /**
+   * Opaque standard materials without their own glow merge into one vertex-coloured class per side;
+   * colour, roughness and metalness travel per vertex.
+   */
+  private colorClass(m: THREE.Material): string | null {
+    const std = m as THREE.MeshStandardMaterial;
+    if (!std.isMeshStandardMaterial || std.transparent || std.map || std.vertexColors || !std.userData.floorBase) return null;
+    return [std.side, std.alphaTest].join('|');
+  }
+
+  private vcMats = new Map<string, THREE.MeshStandardMaterial>();
+
+  /** a white, vertex-coloured copy of an actor material whose light floor follows the vertex colours */
+  private vertexColorMat(src: THREE.Material): THREE.Material {
+    const key = this.colorClass(src) ?? src.uuid;
+    let m = this.vcMats.get(key);
+    if (!m) {
+      m = (src as THREE.MeshStandardMaterial).clone();
+      m.color.set(1, 1, 1);
+      m.vertexColors = true;
+      m.flatShading = false; // flat parts carry baked face normals
+      m.roughness = 1;
+      m.metalness = 0;
+      m.userData = { cached: false, vertexFloor: true, floorBase: WHITE.clone() };
+      ActorLayer.applyFloor(m, this.lightFloor);
+      addRim(m);
+      this.vcMats.set(key, m);
+      this.ownMats.set(m, m);
+    }
+    return m;
+  }
+
   ensure(a: ActorInstance, isPlayer: boolean): ActorView {
     const existing = this.views.get(a.id);
     if (existing) return existing;
-    const tpl = this.template(a.defId);
-    const model = tpl.clone();
-    model.userData.phase = (hashStr(a.id) % 628) / 100;
-    model.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh) o.castShadow = true;
-    });
-    const natural = modelHeight(tpl);
-    model.scale.multiplyScalar(actorScaleFor(natural));
     const faction0 = ActorLayer.factionOf(a, isPlayer);
     const weak = !isPlayer && lowContrast(this.spec(a.defId).colors?.primary, this.groundColor);
-    const outlines = this.addOutlines(model, faction0, weak);
+    const ct = this.compactTemplate(a.defId, weak);
+    const natural = ct.natural;
+    const model = ct.model.clone();
+    model.userData.phase = (hashStr(a.id) % 628) / 100;
+    const outlines: THREE.Mesh[] = [];
+    const omat = this.outlineMat(faction0, weak);
+    model.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh && o.userData.outline) {
+        (o as THREE.Mesh).material = omat;
+        outlines.push(o as THREE.Mesh);
+      }
+    });
     const root = new THREE.Group();
     root.name = `actor:${a.id}`;
     root.position.set(a.pos.x, 0, a.pos.y);
@@ -445,6 +520,9 @@ export class ActorLayer {
   dispose(): void {
     for (const id of [...this.views.keys()]) this.remove(id);
     this.templates.clear();
+    this.vcMats.clear();
+    for (const c of this.compact.values()) c.model.traverse((o) => (o as THREE.Mesh).isMesh && !(o as THREE.Mesh).geometry.userData.shared && (o as THREE.Mesh).geometry.dispose());
+    this.compact.clear();
     for (const m of this.ownMats.values()) m.dispose();
     this.ownMats.clear();
     for (const m of this.outlineMats.values()) m.dispose();

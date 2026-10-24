@@ -1,0 +1,30 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/viking-lawspeaker-althing/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You close your eyes in the rift and open them inside him. No ground, no sky: rings of carved stone hang in the dark, gold runes burn in the floor, and where a clause should be there is only a hole the shape of a bribe. Somewhere in the outer ring, something old uncoils at the sound of your step."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#8a7ac8"
+          },
+          {
+            "type": "spawn",
+            "actor": "forgotten-precedent",
+            "count": 1,
+            "near": "random"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_2"
+          }
+        ]
+      }
+    }
+  ]
+}

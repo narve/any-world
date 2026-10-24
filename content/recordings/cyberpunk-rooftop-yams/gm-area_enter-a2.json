@@ -1,0 +1,35 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/cyberpunk-rooftop-yams/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Wind, feathers and the smell of millet: a thousand pigeons lift off the lofts at once as the hatch swings open. Between the washing lines a black falcon drone banks, and a ribbon-tied bag of racing feed lies abandoned on the planks where a fancier dropped it running."
+          },
+          {
+            "type": "mood",
+            "music": "explore",
+            "tint": "#9fc6e6"
+          },
+          {
+            "type": "place_item",
+            "item": "pigeon-feed",
+            "near": "player"
+          },
+          {
+            "type": "spawn",
+            "actor": "falcon-unit",
+            "count": 1,
+            "near": "exit"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_2"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/folk-horror-scarecrow-wedding/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Entered this evening: no marriage solemnised. The barley stood up straight for the first time in three hundred years, the weathercock swung east and stayed there, and Ash Pellow walked home through the Long Acre with cake crumbs on the wedding smock and nothing whatever following behind."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/corporate-merger-kitchen/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The grapevine says your name one last time, then moves on to someone else. On Friday the all-hands runs to schedule. Your yoghurt is still in the fridge, still labelled. Hum. I will keep it cold."
+          }
+        ]
+      }
+    }
+  ]
+}

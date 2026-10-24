@@ -3,6 +3,7 @@ import type { HudView } from '../viewmodel';
 import { dataKey, h, setChildren } from '../dom';
 import { areaLabel, signed, speedLabel, turnLabel } from '../format';
 import { bar, plainChip, statusChip, type UiContext } from './common';
+import { t } from '../../i18n/index';
 
 export class Hud {
   readonly panel: HTMLElement;
@@ -10,7 +11,7 @@ export class Hud {
   private key = '';
 
   constructor() {
-    this.panel = h('section', { class: 'aw-panel aw-hud', 'aria-label': 'Character' });
+    this.panel = h('section', { class: 'aw-panel aw-hud', 'aria-label': t('hud.character') });
     this.strip = h('div', { class: 'aw-strip', role: 'status', 'aria-live': 'off' });
   }
 
@@ -26,7 +27,7 @@ export class Hud {
     if (v.mp) bars.push(bar({ id: 'mp', label: mpS.name, abbr: mpS.abbr, description: mpS.description, value: v.mp.value, max: v.mp.max, color: 'var(--c-secondary)' }));
     for (const r of v.resources) bars.push(bar(r));
     const xpBar = bar(
-      { id: 'xp', label: `${vocab.xp} — level ${v.level}`, abbr: `Lv ${v.level}`, value: v.xpInLevel, max: v.xpForLevel, color: 'var(--c-accent)' },
+      { id: 'xp', label: t('hud.xpLabel', { xp: vocab.xp, level: v.level }), abbr: t('hud.levelAbbr', { level: v.level }), value: v.xpInLevel, max: v.xpForLevel, color: 'var(--c-accent)' },
       { compact: true },
     );
     if (v.pendingLevels) {
@@ -34,8 +35,8 @@ export class Hud {
       xpBar.append(
         h(
           'span',
-          { class: 'aw-xp-pending', dataset: { tip: `${n} more level${n === 1 ? '' : 's'} earned — they come one at a time after each choice` } },
-          `+${n} level${n === 1 ? '' : 's'}`,
+          { class: 'aw-xp-pending', dataset: { tip: t('hud.pendingTip', { n }) } },
+          t('hud.pending', { n }),
         ),
       );
     }
@@ -48,7 +49,7 @@ export class Hud {
         const diff = s.value - s.base;
         return h(
           'div',
-          { class: 'aw-stat', dataset: { tip: `${sv.name} — ${sv.description}${diff ? ` (base ${s.base}, ${signed(diff)})` : ''}` }, tabindex: '0' },
+          { class: 'aw-stat', dataset: { tip: diff ? t('hud.statTipMod', { name: sv.name, description: sv.description, base: s.base, diff: signed(diff) }) : t('hud.statTip', { name: sv.name, description: sv.description }) }, tabindex: '0' },
           h('span', { class: 'aw-stat-abbr' }, sv.abbr),
           h('span', { class: ['aw-stat-val', diff > 0 && 'is-up', diff < 0 && 'is-down'] }, String(s.value)),
         );
@@ -73,15 +74,15 @@ export class Hud {
                 'div',
                 { class: ['aw-danger-row', `is-${d.level}`], style: { '--danger': d.color } },
                 h('span', { class: 'aw-danger-dot', 'aria-hidden': 'true' }),
-                h('span', null, `${d.label} ${d.level === 'empty' ? 'empty' : 'low'}${d.draining && d.id !== 'hp' ? ` — losing ${hpS.name}` : ''}`),
-                d.slot !== undefined ? h('kbd', { class: 'aw-danger-key', title: `Quick slot ${d.slot + 1}` }, `press ${d.slot + 1}`) : null,
+                h('span', null, d.draining && d.id !== 'hp' ? t('hud.dangerDraining', { label: d.label, level: d.level, hp: hpS.name }) : t('hud.danger', { label: d.label, level: d.level })),
+                d.slot !== undefined ? h('kbd', { class: 'aw-danger-key', title: t('slot.aria.quick', { n: d.slot + 1 }) }, t('slot.press', { key: d.slot + 1 })) : null,
               ),
             ),
           )
         : null,
       xpBar,
       stats,
-      v.statuses.length ? h('div', { class: 'aw-chips', 'aria-label': 'Conditions' }, v.statuses.map(statusChip)) : null,
+      v.statuses.length ? h('div', { class: 'aw-chips', 'aria-label': t('hud.conditions') }, v.statuses.map(statusChip)) : null,
     );
 
     const speed = speedLabel(v.speed);
@@ -90,8 +91,8 @@ export class Hud {
       h('span', { class: 'aw-strip-area' }, h('span', { class: 'aw-strip-label' }, areaLabel(vocab, v.areaIndex, v.areaCount)), h('span', { class: 'aw-strip-name' }, v.areaName)),
       h('span', { class: 'aw-strip-sep', 'aria-hidden': 'true' }),
       h('span', { class: 'aw-strip-turn' }, turnLabel(v.turn)),
-      h('span', { class: 'aw-strip-money', dataset: { tip: vocab.currency } }, `${v.currency} ${vocab.currency}`),
-      v.sneaking ? plainChip('Sneaking', 'good', 'Moving quietly (c to stop)') : null,
+      h('span', { class: 'aw-strip-money', dataset: { tip: vocab.currency } }, t('hud.money', { n: v.currency, currency: vocab.currency })),
+      v.sneaking ? plainChip(t('hud.sneaking'), 'good', t('hud.sneakingTip')) : null,
       speed ? plainChip(speed, v.speed === 'fast' ? 'good' : 'danger') : null,
     );
   }

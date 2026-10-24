@@ -6,7 +6,7 @@ import type { ItemDef, Knowledge } from '../schema/world';
 import type { ItemKnowledgeState } from './types';
 import type { SeededRng } from './rng';
 import type { WorldSpec } from '../schema/world';
-import { type Ctx, emit, itemName, log, statName, statusName } from './ctx';
+import { type Ctx, emit, itemName, logKey, statName, statusName } from './ctx';
 import type { Obs } from './effects';
 import { indexWorld } from './ctx';
 
@@ -45,6 +45,8 @@ export function initKnowledge(world: WorldSpec, rng: SeededRng): Record<string, 
   for (const def of world.items) {
     const level = initialKnowledge(world, def);
     const st: ItemKnowledgeState = { level, notes: [], timesUsed: 0 };
+    // hidden by the world's allConsumablesUnknown rule: comes back if the GM lifts that rule
+    if (level !== def.knowledge) st.ruleHidden = true;
     if (level !== 'clear') {
       const pool = def.appearanceGroup ? pools.get(def.appearanceGroup) : undefined;
       if (pool && pool.length) {
@@ -56,6 +58,71 @@ export function initKnowledge(world: WorldSpec, rng: SeededRng): Record<string, 
   }
   for (const def of needFallback) out[def.id].appearance = fallbackAppearance(def, taken);
   return out;
+}
+
+/**
+ * An allConsumablesUnknown rule came into force mid-run (GM add_rule): every consumable the player
+ * knows only from the world (never used it, not carrying it) becomes unknown again and gets a
+ * per-run appearance, drawn from its appearance group's pool like at run start (labels already in
+ * use are skipped; the fallback "unfamiliar <kind>" names are kept distinct). Silent: the rule's
+ * own announcement says what happened. Returns the def ids hidden.
+ */
+export function hideConsumablesForRule(ctx: Ctx): string[] {
+  const carried = new Set(ctx.s.player.slots.filter((it) => !!it).map((it) => it!.defId));
+  const taken = new Set<string>();
+  for (const k of Object.values(ctx.s.knowledge)) if (k.appearance) taken.add(k.appearance.label.toLowerCase());
+  const pools = new Map<string, { label: string; color: string }[]>();
+  const poolFor = (g: string | undefined) => {
+    if (!g) return undefined;
+    let p = pools.get(g);
+    if (!p) {
+      const list = (ctx.world.unknownAppearances ?? {})[g] ?? [];
+      p = ctx.rng.shuffle(list.filter((x) => !taken.has(x.label.toLowerCase())).map((x) => ({ ...x })));
+      pools.set(g, p);
+    }
+    return p;
+  };
+  const hidden: string[] = [];
+  const needFallback: ItemDef[] = [];
+  for (const def of ctx.world.items) {
+    if (def.category !== 'consumable' || def.knowledge !== 'clear' || carried.has(def.id)) continue;
+    const k = knowledgeOf(ctx, def.id);
+    if (k.level !== 'clear' || k.timesUsed > 0 || k.ruleHidden) continue;
+    k.level = 'unknown';
+    k.ruleHidden = true;
+    hidden.push(def.id);
+    if (k.appearance) continue;
+    const pool = poolFor(def.appearanceGroup);
+    const pick = pool?.find((x) => !taken.has(x.label.toLowerCase()));
+    if (pick && pool) {
+      pool.splice(pool.indexOf(pick), 1);
+      k.appearance = pick;
+      taken.add(pick.label.toLowerCase());
+    } else needFallback.push(def);
+  }
+  for (const def of needFallback) ctx.s.knowledge[def.id].appearance = fallbackAppearance(def, taken);
+  for (const id of hidden) emit(ctx, { type: 'item_identified', defId: id, level: 'unknown' });
+  return hidden;
+}
+
+/**
+ * No allConsumablesUnknown rule is in force any more: what hideConsumablesForRule hid goes back
+ * to the item's own knowledge level (what the player learned meanwhile is kept). Returns the def
+ * ids restored.
+ */
+export function unhideConsumablesForRule(ctx: Ctx): string[] {
+  const restored: string[] = [];
+  for (const [id, k] of Object.entries(ctx.s.knowledge)) {
+    if (!k.ruleHidden) continue;
+    delete k.ruleHidden;
+    const own = ctx.ix.items.get(id)?.knowledge ?? 'clear';
+    if (RANK[own] > RANK[k.level]) {
+      k.level = own;
+      restored.push(id);
+      emit(ctx, { type: 'item_identified', defId: id, level: own });
+    }
+  }
+  return restored;
 }
 
 export function knowledgeOf(ctx: Ctx, defId: string): ItemKnowledgeState {
@@ -79,9 +146,9 @@ export function reveal(ctx: Ctx, defId: string, level: Knowledge, announce = tru
   if (announce) {
     const def = ctx.ix.items.get(defId);
     if (before === 'unknown' && k.appearance) {
-      log(ctx, `The ${k.appearance.label} is ${def?.name ?? defId}${level === 'vague' ? ' (you have a rough idea what it does)' : ''}.`, 'good');
+      logKey(ctx, level === 'vague' ? 'log.identify.appearance_vague' : 'log.identify.appearance', { appearance: k.appearance.label, item: def?.name ?? defId }, 'good');
     } else {
-      log(ctx, `You understand ${itemName(ctx, defId)} now.`, 'good');
+      logKey(ctx, 'log.identify.understand', { item: itemName(ctx, defId) }, 'good');
     }
   }
   return true;

@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-troll-direktoratet/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Venterommet lukter kokekaffe og våt mose. På veggen henger en klokke med bare én viser, og den tikker høyere enn den burde. Borte ved kiosken løfter et troll en kopp mot Dem i stum hilsen."
+          },
+          {
+            "type": "mood",
+            "music": "calm",
+            "tint": "#d8f0e0"
+          }
+        ]
+      }
+    }
+  ]
+}

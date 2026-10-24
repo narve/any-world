@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/fixture-teen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You go home early and lie on your bed with your shoes on. The speech stays in someone else's bag. On Friday they play a slideshow instead, and the goose is not in it."
+          }
+        ]
+      }
+    }
+  ]
+}

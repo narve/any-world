@@ -1,0 +1,4185 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "The Banns of Hollin Moss",
+    "tagline": "Every seventh summer the parish marries its oldest scarecrow. This year the banns name you.",
+    "genre": "folk horror",
+    "tags": [
+      "folk horror",
+      "wedding",
+      "harvest",
+      "village",
+      "scarecrow",
+      "matchmaking"
+    ],
+    "tone": "sunlit dread with a gentle, cake-scented comedy",
+    "era": "an English parish summer that never quite ended",
+    "premise": "Hollin Moss is a kind parish: the vicar remembers your birthday, Mrs Tansy's seed cake wins every show, and every seventh summer the village marries Gaffer Hob, the oldest scarecrow on the Long Acre, to one living villager. The spouse walks into the barley and comes back as straw. This year the banns name you. Get through the green, the leaning barley and a bell tower that keeps going up, and reach the church before the vows. Somewhere in the parish register is the first banns ever read for the Gaffer, three hundred years ago, and it did not name a person.",
+    "prompt": "Every seventh summer the parish of Hollin Moss marries its oldest scarecrow to a living villager, and this year the banns name you. The vicar is kind, the cakes are excellent, and the barley is already leaning toward the church. Find a way out of the wedding — or a better match for the scarecrow.",
+    "nonViolent": false,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Brawn",
+        "abbr": "BRN",
+        "description": "Arms for hauling sheaves and swinging the hook: harm dealt up close."
+      },
+      "dex": {
+        "name": "Nimbleness",
+        "abbr": "NIM",
+        "description": "Ducking garlands and slipping out of kind hands: to-hit and evasion."
+      },
+      "int": {
+        "name": "Wits",
+        "abbr": "WIT",
+        "description": "Seeing through the parish's kindnesses; powers rhymes and charms."
+      },
+      "hp": {
+        "name": "Pluck",
+        "abbr": "PLK",
+        "description": "How much handling you take before you go limp and agreeable."
+      },
+      "mp": {
+        "name": "Breath",
+        "abbr": "BRT",
+        "description": "Breath for rhymes, whistles and the old words."
+      },
+      "ac": {
+        "name": "Wariness",
+        "abbr": "WAR",
+        "description": "How hard you are to grab, garland or pin."
+      }
+    },
+    "conflict": "Fend off",
+    "defeated": "seen off",
+    "xp": "Gumption",
+    "levelUp": "Gumption grows",
+    "currency": "pennies",
+    "lossTitle": "You Are Wed",
+    "winTitle": "The Banns Are Broken",
+    "area": "Field"
+  },
+  "palette": {
+    "primary": "#d9a441",
+    "secondary": "#5b7a3a",
+    "accent": "#c2453c",
+    "danger": "#8e1b1b",
+    "ui": "#2a2016",
+    "text": "#f3e9d2"
+  },
+  "damageTypes": [
+    {
+      "id": "garland",
+      "name": "Garlanding",
+      "color": "#e7a6c4"
+    },
+    {
+      "id": "chaff",
+      "name": "Chaff",
+      "color": "#d8c27a"
+    },
+    {
+      "id": "fire",
+      "name": "Fire",
+      "color": "#ff7a2a"
+    },
+    {
+      "id": "unsaying",
+      "name": "Unsaying",
+      "color": "#a3c9ff"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "garlanded",
+      "name": "Garlanded",
+      "description": "Daisy chains knotted round your wrists and ankles. Your hands fumble and you are easier to catch.",
+      "harmful": true,
+      "color": "#e7a6c4",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        },
+        {
+          "stat": "ac",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "stuffed",
+      "name": "Stuffed",
+      "description": "Straw has filled your sleeves and your chest. Your arms are weak and your hands stiff, though blows land soft.",
+      "harmful": true,
+      "color": "#d6b04c",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -3
+        },
+        {
+          "stat": "str",
+          "amount": -2
+        },
+        {
+          "stat": "ac",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "chaff-eyed",
+      "name": "Chaff in the Eyes",
+      "description": "Barley awns in your eyes. You can barely see.",
+      "harmful": true,
+      "color": "#c9b060",
+      "flags": [
+        "blinded"
+      ]
+    },
+    {
+      "id": "barley-bound",
+      "name": "Barley-Bound",
+      "description": "Stalks have wound round your legs. You cannot move until they let go.",
+      "harmful": true,
+      "color": "#b08a30",
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "spooked",
+      "name": "Spooked",
+      "description": "Frightened off like a crow from a seed drill.",
+      "harmful": true,
+      "color": "#7a7a90",
+      "flags": [
+        "afraid"
+      ]
+    },
+    {
+      "id": "smouldering",
+      "name": "Smouldering",
+      "description": "Something dry has caught. It burns a little every turn.",
+      "harmful": true,
+      "color": "#ff7a2a",
+      "perTurn": [
+        {
+          "type": "damage",
+          "amount": {
+            "dice": "1d3"
+          },
+          "damageType": "fire"
+        }
+      ]
+    },
+    {
+      "id": "cake-glow",
+      "name": "Full of Cake",
+      "description": "Warm, fed and steady. You mend a little every turn.",
+      "harmful": false,
+      "color": "#f4c58a",
+      "flags": [
+        "regenerating"
+      ]
+    },
+    {
+      "id": "tipsy",
+      "name": "Harvest-Home Tipsy",
+      "description": "Strong as an ox, clumsy as a calf.",
+      "harmful": true,
+      "color": "#c98a3a",
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 2
+        },
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "flesh",
+      "name": "Flesh",
+      "description": "How much of you is still you. Straw-things take one with every touch; at none, straw fills you and you are Stuffed for a while. Salt and holy water give it back.",
+      "color": "#e8a090",
+      "max": 10,
+      "start": 10,
+      "perTurn": 0,
+      "onEmpty": [
+        {
+          "type": "apply_status",
+          "status": "stuffed",
+          "duration": 12
+        },
+        {
+          "type": "resource",
+          "resource": "flesh",
+          "amount": {
+            "base": 5
+          }
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "straw-takes",
+      "name": "Straw Takes What It Touches",
+      "description": "Corn dollies, stook-men, bridesmaids and the Gaffer drain 1 Flesh when they hit you. At 0 Flesh you are Stuffed for 12 turns (weaker, clumsier, harder to hurt). Flesh slowly returns: 1 every 25 turns.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 25,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "flesh",
+                "amount": {
+                  "base": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "banns-read",
+      "name": "The Banns Are Read",
+      "description": "Every 75 turns the banns are read aloud wherever you are. The noise carries 8 tiles and brings the wedding party looking for you.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 75,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "message",
+                "text": "From nowhere, a clerk's voice: \"If any of you know cause or just impediment...\" Your name rings out over the fields."
+              },
+              {
+                "type": "noise",
+                "radius": 8
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Ash Pellow",
+    "title": "Named in the Banns",
+    "description": "Twenty-three, good with a sickle, bad at saying no. Somebody pinned a rosette to your wedding smock while you slept, and the barley outside your window is bowing toward the church.",
+    "stats": {
+      "str": 11,
+      "dex": 13,
+      "int": 10,
+      "hp": 28,
+      "mp": 12,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 8,
+    "sight": 8,
+    "unarmed": {
+      "name": "Shove",
+      "verb": "shoves",
+      "damage": {
+        "dice": "1d3"
+      }
+    },
+    "startingItems": [
+      {
+        "item": "reaping-hook",
+        "equipped": true
+      },
+      {
+        "item": "wedding-smock",
+        "equipped": true
+      },
+      {
+        "item": "seed-cake",
+        "count": 2
+      },
+      {
+        "item": "salt-twist",
+        "count": 1
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 25,
+      "curve": 1.5,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "harvest-arms",
+          "name": "Harvest Arms",
+          "description": "Seven summers of stooking. +2 Brawn.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "quick-as-a-hare",
+          "name": "Quick as a Hare",
+          "description": "The last hare in the last stand of corn never gets caught. +2 Nimbleness.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "parish-schooling",
+          "name": "Parish Schooling",
+          "description": "You read the hymn numbers ahead. +2 Wits, +3 Breath.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "mp",
+              "amount": 3
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "thick-as-thatch",
+          "name": "Thick as Thatch",
+          "description": "+1 Wariness and +4 Pluck.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            },
+            {
+              "stat": "hp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "learn-unmarrying",
+          "name": "The Unmarrying Rhyme",
+          "description": "Maud's skipping rhyme, said backwards. Learn the Unmarrying Rhyme, a spell that unsays things.",
+          "grantItems": [
+            "unmarrying-rhyme"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "salt-blood",
+          "name": "Salt in Your Blood",
+          "description": "Straw cannot take hold of you so easily. Regain 1 Flesh every 10 turns.",
+          "triggers": [
+            {
+              "on": "on_turn",
+              "every": 10,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "flesh",
+                    "amount": {
+                      "base": 1
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "east-wind",
+          "name": "Whistle Up the East Wind",
+          "description": "The wind that turns the weathercock answers you. Learn the East Wind, a gust that throws things back.",
+          "grantItems": [
+            "east-wind-whistle"
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "jilted-and-glad",
+          "name": "Jilted and Glad",
+          "description": "Each thing you see off makes you surer: recover 3 Pluck whenever you see one off.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 3
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "bonfire-early",
+          "name": "Bonfire Night Early",
+          "description": "Your hook strikes sparks: hits have a 1 in 4 chance to set the target smouldering.",
+          "triggers": [
+            {
+              "on": "on_hit",
+              "chance": 0.25,
+              "action": {
+                "targeting": {
+                  "shape": "single",
+                  "range": 1,
+                  "affects": "enemies"
+                },
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "smouldering",
+                    "duration": 3
+                  }
+                ],
+                "vfx": {
+                  "kind": "burst",
+                  "color": "#ff7a2a"
+                }
+              }
+            }
+          ],
+          "minLevel": 5
+        },
+        {
+          "id": "nobodys-bride",
+          "name": "Nobody's Bride",
+          "description": "+1 Brawn, Nimbleness, Wits and Wariness.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 1
+            },
+            {
+              "stat": "dex",
+              "amount": 1
+            },
+            {
+              "stat": "int",
+              "amount": 1
+            },
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.9,
+        "build": "slim",
+        "skin": "#e8c4a0",
+        "top": "#f2ead8",
+        "bottom": "#6b5a43",
+        "accent": "#c2453c",
+        "hair": "#5a3a22",
+        "hairStyle": "short",
+        "headwear": "none",
+        "outfit": "plain",
+        "holding": "tool"
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "banns-crow",
+      "name": "Banns Crow",
+      "description": "A crow that has learned your name from the church door and shouts it from the hedges.",
+      "stats": {
+        "hp": 6,
+        "ac": 12,
+        "str": 7,
+        "dex": 14,
+        "int": 4
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Peck",
+        "verb": "pecks",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        }
+      },
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.2
+      },
+      "xp": 4,
+      "tags": [
+        "bird"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#1c1c22",
+          "secondary": "#3a3a48",
+          "accent": "#c8d0e0"
+        },
+        "scale": 0.6,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "well-wishing-aunt",
+      "name": "Well-Wishing Aunt",
+      "description": "Somebody's aunt, beaming, with an apron pocket full of daisy chains she is determined to tie on you.",
+      "stats": {
+        "hp": 9,
+        "ac": 10,
+        "str": 9,
+        "dex": 10,
+        "int": 9
+      },
+      "attack": {
+        "name": "Pin a Garland",
+        "verb": "garlands",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "garland"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "garlanded",
+                "duration": 3
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "villager"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#f0c8a8",
+          "top": "#e7a6c4",
+          "bottom": "#8aa0c8",
+          "accent": "#ffffff",
+          "hair": "#9a8a80",
+          "hairStyle": "bun",
+          "outfit": "dress",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "corn-dolly",
+      "name": "Corn Dolly",
+      "description": "A plaited straw figure the size of a cat, with a red ribbon at the waist. It hops. Where it touches you, you itch and go stiff.",
+      "stats": {
+        "hp": 6,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 3
+      },
+      "attack": {
+        "name": "Prickle",
+        "verb": "prickles",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "chaff"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "resistances": [
+        {
+          "damageType": "fire",
+          "multiplier": 2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.5,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "flesh",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 4,
+      "tags": [
+        "straw"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.3,
+              0.45,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.22,
+              0
+            ],
+            "color": "#e0b84a",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.18,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.52,
+              0
+            ],
+            "color": "#d8ae40",
+            "material": "cloth"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c2453c",
+            "material": "cloth"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "straw-bear",
+      "name": "Straw Bear",
+      "description": "Somebody is inside it, or was. A man-high bear of bound straw that dances, then does not stop dancing.",
+      "stats": {
+        "hp": 22,
+        "ac": 12,
+        "str": 14,
+        "dex": 9,
+        "int": 4
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Bear Dance",
+        "verb": "dances into",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "chaff"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "resistances": [
+        {
+          "damageType": "fire",
+          "multiplier": 2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.5,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "flesh",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "wedding-cake-slice",
+          "chance": 0.5
+        }
+      ],
+      "xp": 18,
+      "tags": [
+        "straw",
+        "elite"
+      ],
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#c9a24a",
+          "secondary": "#8a6a2a",
+          "accent": "#c2453c"
+        },
+        "scale": 1.3,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "stook-man",
+      "name": "Stook-Man",
+      "description": "Six sheaves leaned together and stood up. It keeps a patch of field the way a sexton keeps a churchyard.",
+      "stats": {
+        "hp": 14,
+        "ac": 12,
+        "str": 12,
+        "dex": 9,
+        "int": 4
+      },
+      "attack": {
+        "name": "Sheaf-Fist",
+        "verb": "thumps",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "chaff"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "resistances": [
+        {
+          "damageType": "fire",
+          "multiplier": 2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.5,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "flesh",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "seed-cake",
+          "chance": 0.25
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "straw"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.2,
+          "build": "broad",
+          "skin": "#c9a24a",
+          "top": "#e0bc58",
+          "bottom": "#a07a30",
+          "accent": "#6a4a20",
+          "hair": "#f0d070",
+          "hairStyle": "mohawk",
+          "headwear": "none",
+          "outfit": "rags",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "barley-grasp",
+      "name": "Barley Grasp",
+      "description": "A knot of barley that has grown hands. It does not chase. It waits for an ankle.",
+      "stats": {
+        "hp": 9,
+        "ac": 10,
+        "str": 10,
+        "dex": 11,
+        "int": 2
+      },
+      "attack": {
+        "name": "Wind Round",
+        "verb": "winds round",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "chaff"
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "resistances": [
+        {
+          "damageType": "fire",
+          "multiplier": 2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "barley-bound",
+                "duration": 2
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "plant"
+      ],
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#e0c050",
+          "secondary": "#6a8a30",
+          "accent": "#c2453c"
+        },
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "clapperling",
+      "name": "Clapperling",
+      "description": "A handbell that ran away from the ringers and learned to fly. It rings at you until your teeth ache.",
+      "stats": {
+        "hp": 10,
+        "ac": 13,
+        "str": 8,
+        "dex": 14,
+        "int": 5
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Peal",
+        "verb": "peals at",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "range": 3
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 2,
+        "erratic": 0.25
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "bell"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#c08a3a",
+          "secondary": "#3a2a1a",
+          "accent": "#f0d080"
+        },
+        "scale": 0.6,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "rope-ringer",
+      "name": "Ringer Who Kept Pulling",
+      "description": "A pale bell-ringer in shirtsleeves who missed the end of a peal in 1811 and has been pulling an invisible rope ever since.",
+      "stats": {
+        "hp": 15,
+        "ac": 11,
+        "str": 13,
+        "dex": 10,
+        "int": 6
+      },
+      "attack": {
+        "name": "Rope Burn",
+        "verb": "lashes",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        }
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "salt-twist",
+          "chance": 0.3
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "ghost"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "slim",
+          "skin": "#d8dcd0",
+          "top": "#ecece4",
+          "bottom": "#3a3a40",
+          "accent": "#9ab0d0",
+          "hair": "#2a2a2a",
+          "hairStyle": "short",
+          "outfit": "plain",
+          "holding": "none"
+        },
+        "idle": "flicker",
+        "light": {
+          "color": "#cfe0ff",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "great-tenor",
+      "name": "The Great Tenor",
+      "description": "The tenor bell of St Ard's, cast in 1650, hanging from nothing. It guards the weathercock's feather because nobody told it to stop.",
+      "stats": {
+        "hp": 24,
+        "ac": 13,
+        "str": 14,
+        "dex": 8,
+        "int": 6
+      },
+      "speed": 80,
+      "attack": {
+        "name": "Toll",
+        "verb": "tolls against",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        }
+      },
+      "abilities": [
+        {
+          "id": "great-toll",
+          "name": "Great Toll",
+          "description": "A note so deep it knocks the breath out of everything near.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 0,
+              "radius": 2,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#f0d080"
+            }
+          },
+          "cooldown": 6,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 30,
+      "unique": true,
+      "tags": [
+        "bell",
+        "elite"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.95,
+              0.7,
+              0.95
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#9a6a2a",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.62,
+              0.6,
+              0.62
+            ],
+            "pos": [
+              0,
+              0.95,
+              0
+            ],
+            "color": "#9a6a2a",
+            "material": "metal"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.95,
+              0.1,
+              0.95
+            ],
+            "pos": [
+              0,
+              0.22,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#7a5020",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.3,
+              0
+            ],
+            "color": "#4a3220",
+            "material": "wood"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#3a2a1a",
+            "material": "metal",
+            "group": "clapper"
+          }
+        ],
+        "idle": "sway",
+        "light": {
+          "color": "#f0c060",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "barley-bridesmaid",
+      "name": "Barley Bridesmaid",
+      "description": "A girl in a white dress whose face is a neat plait of barley. She wants to walk you down the aisle and she will not let go of your arm.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 11,
+        "dex": 12,
+        "int": 6
+      },
+      "attack": {
+        "name": "Take Your Arm",
+        "verb": "takes the arm of",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "garland"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "resistances": [
+        {
+          "damageType": "fire",
+          "multiplier": 2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.4,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "flesh",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "straw"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#d6b04c",
+          "top": "#f4efe2",
+          "bottom": "#f4efe2",
+          "accent": "#e7a6c4",
+          "hair": "#e0c060",
+          "hairStyle": "braids",
+          "outfit": "dress",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "gaffer-hob",
+      "name": "Gaffer Hob",
+      "description": "The oldest scarecrow on the Long Acre: a coat from the Civil War, a turnip head carved and recarved, a red rose in his buttonhole. He has been married forty-one times and has never once been asked what he wanted.",
+      "stats": {
+        "hp": 66,
+        "ac": 13,
+        "str": 15,
+        "dex": 11,
+        "int": 12
+      },
+      "attack": {
+        "name": "Embrace",
+        "verb": "embraces",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "chaff"
+      },
+      "abilities": [
+        {
+          "id": "call-the-barley",
+          "name": "Call the Barley",
+          "description": "He lifts his sleeves and the corn dollies come hopping.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "corn-dolly",
+                "count": 2
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#e0b84a"
+            }
+          },
+          "cooldown": 12,
+          "useWhen": "start_of_fight"
+        },
+        {
+          "id": "chaff-shower",
+          "name": "Shower of Chaff",
+          "description": "He shakes himself and a cloud of awns fills the air.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "radius": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                },
+                "damageType": "chaff"
+              },
+              {
+                "type": "apply_status",
+                "status": "chaff-eyed",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#d8c27a"
+            }
+          },
+          "cooldown": 7,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "fire",
+          "multiplier": 1.5
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.5,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "flesh",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 120,
+      "unique": true,
+      "tags": [
+        "straw",
+        "boss"
+      ],
+      "npc": {
+        "role": "rival",
+        "personality": "Courtly, slow, very old, sad in a way he has never had words for. Speaks in field-measure and church-time. Never unkind; simply does not let go.",
+        "greeting": "Forty-one times they've walked a body up this aisle to me. You've a better grip on your sickle than most. Will you take my arm?",
+        "lines": [
+          "Seven summers is a long time to stand in one field facing one way.",
+          "The barley only leans because I lean.",
+          "They never once asked what I was looking at."
+        ],
+        "secrets": "He has been looking at the church weathercock, Gilded Margery, for three hundred years. The first banns of 1650 named her; the clerk would not marry a scarecrow to a bird and wrote a villager's name instead.",
+        "wants": "To be married to Margery, or, failing that, to be let fall down in the field at last.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 17
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.5,
+          "build": "slim",
+          "skin": "#d08a3a",
+          "top": "#4a3b2e",
+          "bottom": "#6a5a3a",
+          "accent": "#c2453c",
+          "hair": "#e0c060",
+          "hairStyle": "long",
+          "headwear": "top_hat",
+          "outfit": "rags",
+          "holding": "none"
+        },
+        "scale": 1.3,
+        "idle": "sway",
+        "light": {
+          "color": "#ffb050",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "vicar-pell",
+      "name": "The Reverend Amos Pell",
+      "description": "Kind, tired, flour on his cassock. He has performed six of these weddings and cried at every one.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "healer",
+        "personality": "Gentle, apologetic, devout about tradition and terrified of it. Offers tea when he should offer help. Wants very badly to be forgiven.",
+        "greeting": "Ash. My dear. I'm so sorry. Do have some cake. And... the lychgate key is on the hook by the vestry, should anybody be looking for it.",
+        "lines": [
+          "Tradition is only what we were too frightened to stop doing.",
+          "The register is older than the church. I've never dared read the first page.",
+          "Salt keeps the straw out. My grandmother swore by it."
+        ],
+        "secrets": "He suspects the first banns did not name a person. He has seen the weathercock turn to face the Long Acre on still days.",
+        "wants": "For somebody else to be brave so he can help them.",
+        "persuadeDifficulty": 10
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#f0d0b8",
+          "top": "#1a1a20",
+          "bottom": "#1a1a20",
+          "accent": "#ffffff",
+          "hair": "#c8c8c8",
+          "hairStyle": "short",
+          "outfit": "robe",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "mrs-tansy",
+      "name": "Mrs Tansy Greaves",
+      "description": "Baker of the wedding cake, the christening cake and the funeral cake. Her prices are fair and her eyes are sharp.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 18,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "trader",
+        "personality": "Brisk, practical, privately on your side. Thinks the whole business is a waste of good flour. Haggles out of habit.",
+        "greeting": "Seed cake's a penny dearer this week, on account of the wedding. Yours, as it happens. Buying or crying?",
+        "lines": [
+          "Salt twists. For the itch. You'll want the itch gone, trust me.",
+          "Seven summers ago I baked for Maud Ransley. She's still out in the barley.",
+          "A torch'll do more for you than a prayer in that field."
+        ],
+        "stock": [
+          "seed-cake",
+          "wedding-cake-slice",
+          "salt-twist",
+          "lammas-torch",
+          "ringers-gloves",
+          "rowan-sprig"
+        ],
+        "secrets": "Maud Ransley, the last bride, still stands in the barley and is mostly straw now, but she still trades with anyone who brings her salt.",
+        "wants": "Her daughter never to be named in the banns.",
+        "persuadeDifficulty": 12
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#e8b898",
+          "top": "#f0e0c0",
+          "bottom": "#d87a5a",
+          "accent": "#c2453c",
+          "hair": "#6a4030",
+          "hairStyle": "bun",
+          "outfit": "dress",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "old-bride-maud",
+      "name": "Maud Ransley, Last Summer's Bride",
+      "description": "The bride of seven summers ago. Mostly straw now from the knees up, she still wears her ring and still gleans the field edges out of habit.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 16,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "trader",
+        "personality": "Dry, unhurried, oddly cheerful. Rustles when she laughs. Holds no grudge against the Gaffer; pities him.",
+        "greeting": "Mind the stooks, they're touchy. You'll be the new one. I'd trade you my veil, but you'd not want it.",
+        "lines": [
+          "He's not wicked. He's lonely, and he's looking the wrong way to get any comfort.",
+          "The first banns are in this field somewhere. The old clerk buried the page rather than burn it.",
+          "Hold anything that's his close enough and he goes quiet. Same as a man."
+        ],
+        "stock": [
+          "salt-twist",
+          "seed-cake",
+          "lammas-torch",
+          "bird-scarer-clapper",
+          "hay-fork"
+        ],
+        "secrets": "The first banns page of 1650 is buried under a stook in the leaning barley. It names Gilded Margery, the weathercock, as the Gaffer's intended.",
+        "wants": "Salt, and for nobody else to end up like her.",
+        "persuadeDifficulty": 11
+      },
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#e0c8a0",
+          "top": "#f0ead0",
+          "bottom": "#c9a24a",
+          "accent": "#c2453c",
+          "hair": "#f0e0a0",
+          "hairStyle": "long",
+          "headwear": "hood",
+          "outfit": "rags",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "gilded-margery",
+      "name": "Gilded Margery",
+      "description": "The church weathercock: a gilt hen-shaped vane, very vain, very lonely, spinning on a spire that has come loose from the church and floats in the evening.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 30,
+        "ac": 12
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "unique": true,
+      "npc": {
+        "role": "lore",
+        "personality": "Grand, theatrical, a little deaf from the bells. Pretends not to care about anything on the ground. Cares desperately about one thing on the ground.",
+        "greeting": "Oh. A person. You're the one who's marrying him, I suppose. Well. I hope you'll both be very happy. I'm only a weather vane.",
+        "lines": [
+          "When the wind's in the east I face the Long Acre. I can't help the wind.",
+          "Three hundred years and he never once took off his hat to me.",
+          "Take my feather, if you must take something. Show him. I dare you."
+        ],
+        "secrets": "She was named in the first banns of 1650. She turns to face the Gaffer whenever she can find an excuse. Her gilt feather, shown to him at the altar alongside the first banns, would make the match.",
+        "wants": "For the Gaffer to look up, just once, and for nobody to mention that she asked.",
+        "persuadeDifficulty": 13
+      },
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#e8b830",
+          "secondary": "#b07a10",
+          "accent": "#ff5030"
+        },
+        "scale": 1.1,
+        "idle": "spin",
+        "light": {
+          "color": "#ffd060",
+          "intensity": 1.4,
+          "radius": 3
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "reaping-hook",
+      "name": "Reaping Hook",
+      "kind": "Sickle",
+      "description": "Your father's sickle, honed on the doorstep. Good for barley and for things made of barley.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Reaping Hook",
+        "verb": "hooks",
+        "damage": {
+          "base": 0,
+          "dice": "1d6"
+        },
+        "accuracyStat": "dex"
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.3,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#7a5a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.32,
+              0.32,
+              0.05
+            ],
+            "pos": [
+              0.08,
+              0.4,
+              0
+            ],
+            "color": "#c8ccd0",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "hay-fork",
+      "name": "Two-Tine Hay Fork",
+      "kind": "Pitchfork",
+      "description": "Ash handle, iron tines, a bit of last year's hay still stuck on. It keeps things at a respectful distance.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Hay Fork",
+        "verb": "forks",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "accuracyStat": "str"
+      },
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.05,
+              0.7,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              30
+            ],
+            "color": "#9a7a50",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.04,
+              0.25,
+              0.04
+            ],
+            "pos": [
+              0.22,
+              0.72,
+              0.05
+            ],
+            "rot": [
+              0,
+              0,
+              30
+            ],
+            "color": "#55585e",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.04,
+              0.25,
+              0.04
+            ],
+            "pos": [
+              0.22,
+              0.72,
+              -0.05
+            ],
+            "rot": [
+              0,
+              0,
+              30
+            ],
+            "color": "#55585e",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "wedding-smock",
+      "name": "Wedding Smock",
+      "kind": "Smock",
+      "description": "Heavy linen, smocked across the chest by three aunts in one night. It is your size. Nobody measured you.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.4,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#f2ead8",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.05
+            ],
+            "pos": [
+              0.08,
+              0.32,
+              0.07
+            ],
+            "color": "#c2453c",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "ringers-jerkin",
+      "name": "Ringer's Leather Jerkin",
+      "kind": "Jerkin",
+      "description": "Thick cowhide, worn shiny where a bell rope has run across it ten thousand times.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 3,
+      "rarity": "uncommon",
+      "value": 35,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.38,
+              0.42,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.21,
+              0
+            ],
+            "color": "#6a4426",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "rowan-sprig",
+      "name": "Rowan Sprig",
+      "kind": "Buttonhole",
+      "description": "Red berries and a twist of red thread. The old women say straw cannot abide it.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 1
+        },
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.25,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#4a6a2a",
+            "material": "wood"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.27,
+              0
+            ],
+            "color": "#d02a20",
+            "material": "glow"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "ringers-gloves",
+      "name": "Ringer's Gloves",
+      "kind": "Gloves",
+      "description": "Leather mitts with the palms worn to suede. Your grip will not slip.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 1
+        },
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 28,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.15,
+              0.08,
+              0.22
+            ],
+            "pos": [
+              -0.1,
+              0.05,
+              0
+            ],
+            "color": "#8a5a32",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.15,
+              0.08,
+              0.22
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#8a5a32",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "corn-dolly-likeness",
+      "name": "Corn Dolly With Your Face",
+      "kind": "Charm",
+      "description": "Someone has plaited a little straw you, down to the cowlick. It is warm to hold.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 2
+        },
+        {
+          "stat": "dex",
+          "amount": -1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 15,
+      "knowledge": "vague",
+      "vagueText": "Things that want you seem a little unsure which of you to take. It makes you stiff in the joints, though.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.18,
+              0.3,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#e0b84a",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.34,
+              0
+            ],
+            "color": "#e8c4a0",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "seed-cake",
+      "name": "Mrs Tansy's Seed Cake",
+      "kind": "Cake",
+      "description": "Caraway, butter, a crust that cracks. It puts the colour back in you.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4c58a"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.3,
+              0.14,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.07,
+              0
+            ],
+            "color": "#c8904a",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.3,
+              0.03,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#7a4a20",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "wedding-cake-slice",
+      "name": "Slice of Wedding Cake",
+      "kind": "Cake",
+      "description": "Three tiers' worth of fruit and brandy in one wedge, with marzipan. It was meant for your wedding. Eat it anyway.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "cake-glow",
+            "duration": 8
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#fff0d8"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.3,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#f8f0e0",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.07,
+              0.07,
+              0.07
+            ],
+            "pos": [
+              0,
+              0.22,
+              0
+            ],
+            "color": "#c2453c",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "sugared-almonds",
+      "name": "Sugared Almonds in Tulle",
+      "kind": "Wedding Favour",
+      "description": "Five pastel almonds in a twist of net, tied with ribbon. Everybody has been handing these out all week.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 3
+            }
+          },
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 4
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c8e0f8"
+        }
+      },
+      "value": 8,
+      "knowledge": "vague",
+      "vagueText": "Sweet enough to bring your breath back, and a little colour with it.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.16,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#f0d8e8",
+            "material": "cloth"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.14,
+              0.03,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.16,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#8ab8e8",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "salt-twist",
+      "name": "Salt Twist",
+      "kind": "Charm",
+      "description": "Coarse salt in a twist of brown paper. Pinch it on your tongue and the itch of straw goes away.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "flesh",
+            "amount": {
+              "base": 4
+            }
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "stuffed"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffffff"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.16,
+              0.25,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "rot": [
+              180,
+              0,
+              0
+            ],
+            "color": "#a07850",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.06,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.26,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "elderflower-cordial",
+      "name": "Elderflower Cordial",
+      "kind": "Bottle",
+      "description": "Last June's elderflower, sugar and lemon. Cold from the larder. Tastes like being nine years old.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 8,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f0f0c0"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "bottles",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.3,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#e8f0c8",
+            "material": "glass"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.08,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.34,
+              0
+            ],
+            "color": "#8a6a40",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "harvest-home-ale",
+      "name": "Harvest-Home Ale",
+      "kind": "Bottle",
+      "description": "Strong, cloudy and sweet. Brewed for the wedding breakfast.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "tipsy",
+            "duration": 12
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#c98a3a"
+        }
+      },
+      "value": 6,
+      "knowledge": "unknown",
+      "appearanceGroup": "bottles",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.32,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.16,
+              0
+            ],
+            "color": "#7a5020",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "font-water",
+      "name": "Water from the Font",
+      "kind": "Bottle",
+      "description": "Holy water, slightly green, from the church font. Splashed on, it drives straw out of the skin.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "flesh",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c8f0e8"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 20,
+      "knowledge": "unknown",
+      "appearanceGroup": "bottles",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.28,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#b8e0d0",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "lammas-torch",
+      "name": "Lammas Torch",
+      "kind": "Rush Torch",
+      "description": "Rushes dipped in mutton fat, meant for the procession. Thrown, it sets anything dry alight.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4"
+            },
+            "damageType": "fire"
+          },
+          {
+            "type": "apply_status",
+            "status": "smouldering",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#ff7a2a"
+        }
+      },
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.4,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#8a6a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.14,
+              0.18,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.44,
+              0
+            ],
+            "color": "#ff9a3a",
+            "material": "glow",
+            "emissive": "#ff7a2a"
+          }
+        ],
+        "idle": "flicker",
+        "light": {
+          "color": "#ff9a40",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "bird-scarer-clapper",
+      "name": "Bird-Scarer's Clapper",
+      "kind": "Clapper",
+      "description": "Two oak boards on a leather strap, clacked by boys paid a farthing a day to keep crows off the seed.",
+      "category": "tool",
+      "useMode": "reusable",
+      "cooldown": 15,
+      "onUse": {
+        "targeting": {
+          "shape": "cone",
+          "range": 3,
+          "radius": 3,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "spooked",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e8e0c8"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 22,
+      "knowledge": "vague",
+      "vagueText": "Crows hate it. So, it seems, do some other things that stand in fields.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.3,
+              0.03
+            ],
+            "pos": [
+              -0.04,
+              0.15,
+              0
+            ],
+            "color": "#9a7040",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.3,
+              0.03
+            ],
+            "pos": [
+              0.04,
+              0.15,
+              0
+            ],
+            "color": "#7a5a30",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "churchwarden-lantern",
+      "name": "Churchwarden's Lantern",
+      "kind": "Lantern",
+      "description": "A horn-paned lantern that lit the way for every bride since Queen Anne. It shows you more of the road than you want to see.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "light",
+            "radius": 6,
+            "duration": 80
+          },
+          {
+            "type": "reveal_map",
+            "radius": 12
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd27a"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.26,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#f0d090",
+            "material": "glow",
+            "emissive": "#ffb040"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.1,
+              0.02,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.32,
+              0
+            ],
+            "color": "#3a3a3a",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffcf70",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "unmarrying-rhyme",
+      "name": "The Unmarrying Rhyme",
+      "kind": "Rhyme",
+      "description": "\"Ring of straw and ring of bone, give the bride her name back home.\" Said backwards, at something, it comes undone.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.3
+              }
+            },
+            "damageType": "unsaying"
+          }
+        ],
+        "vfx": {
+          "kind": "beam",
+          "color": "#a3c9ff"
+        }
+      },
+      "rarity": "rare",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.25,
+              0.25,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#a3c9ff",
+            "material": "glow",
+            "emissive": "#7aa8ff"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "east-wind-whistle",
+      "name": "The East Wind",
+      "kind": "Whistle",
+      "description": "Two fingers in the mouth and a long note. The wind that turns the weathercock comes when it is called.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "cooldown": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "cone",
+          "range": 3,
+          "radius": 3,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "push",
+            "distance": 2
+          },
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#e0eef8"
+        }
+      },
+      "rarity": "rare",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.2,
+              0.3,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#e0eef8",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "lychgate-key",
+      "name": "Lychgate Key",
+      "kind": "Key",
+      "description": "A long iron key from the hook by the vestry. Opens the gate between the churchyard and the barley.",
+      "category": "key",
+      "useMode": "passive",
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.12,
+              0.03,
+              0.12
+            ],
+            "pos": [
+              -0.12,
+              0.1,
+              0
+            ],
+            "color": "#4a4a50",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.03,
+              0.03
+            ],
+            "pos": [
+              0.06,
+              0.1,
+              0
+            ],
+            "color": "#4a4a50",
+            "material": "metal"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#e8d090",
+          "intensity": 0.5,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "first-banns",
+      "name": "The First Banns",
+      "kind": "Register Page",
+      "description": "A page torn from the parish register in 1650: \"Banns of marriage between Hob of the Long Acre and Margery of the Spire.\" Somebody has scratched out her name and written a villager's in another ink.",
+      "category": "quest",
+      "useMode": "passive",
+      "rarity": "unique",
+      "value": 0,
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "message",
+                "text": "Margery of the Spire. The weathercock. The very first bride was never a person at all."
+              },
+              {
+                "type": "grant_xp",
+                "amount": 10
+              }
+            ]
+          }
+        }
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.02,
+              0.34
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#e8dcb8",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.021,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.04,
+              0.05
+            ],
+            "color": "#3a2a1a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#fff0c0",
+          "intensity": 0.6,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "margerys-feather",
+      "name": "Margery's Gilt Feather",
+      "kind": "Vane Feather",
+      "description": "A gilded tin feather from the weathercock's tail. In the church, with the first banns in hand and the aisle cleared of bridesmaids, hold it up where he can see it.",
+      "category": "quest",
+      "useMode": "reusable",
+      "cooldown": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "first-banns"
+            },
+            {
+              "type": "actor_defeated",
+              "actor": "barley-bridesmaid",
+              "count": 3
+            }
+          ]
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "better-match"
+          },
+          {
+            "type": "message",
+            "text": "You hold up the feather and the old page. The Gaffer's turnip head turns, slowly, toward the spire."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd060"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.1,
+              0.4,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.22,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              20
+            ],
+            "color": "#e8b830",
+            "material": "metal",
+            "emissive": "#a07010"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ffd060",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "standing-barley",
+      "name": "Standing Barley",
+      "description": "Barley up to your shoulders, all of it leaning the same way. Slow going, and you cannot see through it.",
+      "walkable": true,
+      "blocksSight": true,
+      "moveCost": 2,
+      "color": "#d6b04c",
+      "height": 0.9
+    },
+    {
+      "id": "empty-cross",
+      "name": "Empty Scarecrow Cross",
+      "description": "A bare cross of ash poles where a scarecrow used to stand. A bride's ribbon is still nailed to it.",
+      "walkable": false,
+      "color": "#7a5a3a",
+      "height": 1.6,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "currency",
+            "amount": 4
+          },
+          {
+            "type": "message",
+            "text": "Tucked behind the ribbon: a few pennies, left for luck by some earlier bride."
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              1.6,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#7a5a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.9,
+              0.08
+            ],
+            "pos": [
+              0,
+              1.25,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#7a5a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.06,
+              0.3,
+              0.02
+            ],
+            "pos": [
+              0.3,
+              1.1,
+              0.05
+            ],
+            "color": "#c2453c",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "holy-stoup",
+      "name": "Holy Water Stoup",
+      "description": "A stone basin of holy water. Splash your face and the straw itch goes.",
+      "walkable": false,
+      "color": "#9a9488",
+      "height": 0.8,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "flesh",
+            "amount": {
+              "base": 5
+            }
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "message",
+            "text": "Cold water, and the smell of old stone. You feel like yourself."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c8f0e8"
+        }
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.2,
+              0.6,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#9a9488",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.5,
+              0.18,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.65,
+              0
+            ],
+            "color": "#a8a294",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.42,
+              0.02,
+              0.42
+            ],
+            "pos": [
+              0,
+              0.74,
+              0
+            ],
+            "color": "#9ad8d0",
+            "material": "glass",
+            "emissive": "#4a8a88"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bell-rope",
+      "name": "Hanging Bell Rope",
+      "description": "A striped sally hanging out of the sky. Pull it and the whole tower rings, and you see where everything is.",
+      "walkable": false,
+      "color": "#c2453c",
+      "height": 1.8,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 14
+          },
+          {
+            "type": "noise",
+            "radius": 10
+          },
+          {
+            "type": "message",
+            "text": "The bell answers from somewhere far above. For a moment you can feel the shape of the whole tower."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#f0d080"
+        }
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.05,
+              1.8,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#d8c8a0",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              0.35,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#c2453c",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wedding-pew",
+      "name": "Garlanded Pew",
+      "description": "An oak pew strung with daisy chains and ribbons, for the guests.",
+      "walkable": false,
+      "color": "#6a4a2a",
+      "height": 0.6,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.4,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#6a4a2a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.4,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.45,
+              -0.14
+            ],
+            "color": "#5a3a20",
+            "material": "wood"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.2,
+              0.04
+            ],
+            "pos": [
+              0.45,
+              0.5,
+              0
+            ],
+            "rot": [
+              0,
+              90,
+              0
+            ],
+            "color": "#f0f0f0",
+            "material": "cloth"
+          }
+        ]
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "bottles": [
+      {
+        "label": "Cloudy Stone Bottle",
+        "color": "#b8b0a0"
+      },
+      {
+        "label": "Green Glass Phial",
+        "color": "#6a9a5a"
+      },
+      {
+        "label": "Corked Jam Jar",
+        "color": "#c87a6a"
+      },
+      {
+        "label": "Blue Medicine Bottle",
+        "color": "#4a6ab0"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Hollin Moss Green",
+      "description": "The village on the wedding eve: bunting between the cottages, trestle tables of cake on the green, everybody smiling at you a little too long.",
+      "generator": "town",
+      "size": "medium",
+      "params": {
+        "buildings": 10,
+        "streetWidth": 3,
+        "crossStreets": 1
+      },
+      "floor": {
+        "color": "#6f8f3a",
+        "color2": "#5a7a2e",
+        "material": "stone",
+        "pattern": "grass"
+      },
+      "wall": {
+        "color": "#e8dcc0",
+        "color2": "#b89a60",
+        "material": "stone",
+        "height": 1.6,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#fff1d0",
+        "ambientIntensity": 0.6,
+        "sun": {
+          "color": "#ffd38a",
+          "intensity": 1.4,
+          "elevation": 28
+        },
+        "fog": {
+          "color": "#f3dfb0",
+          "density": 0.01
+        },
+        "lamps": {
+          "color": "#ffcf80",
+          "intensity": 1,
+          "frequency": 0.12
+        },
+        "playerLight": 3,
+        "sky": "#f6c77a"
+      },
+      "actors": [
+        {
+          "actor": "banns-crow",
+          "weight": 10,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "well-wishing-aunt",
+          "weight": 10,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "corn-dolly",
+          "weight": 3,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "vicar-pell",
+          "where": "near_start"
+        },
+        {
+          "actor": "mrs-tansy",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "seed-cake",
+          "weight": 12
+        },
+        {
+          "item": "salt-twist",
+          "weight": 6
+        },
+        {
+          "item": "sugared-almonds",
+          "weight": 8
+        },
+        {
+          "item": "elderflower-cordial",
+          "weight": 4
+        },
+        {
+          "item": "harvest-home-ale",
+          "weight": 4
+        },
+        {
+          "item": "lammas-torch",
+          "weight": 5
+        },
+        {
+          "item": "rowan-sprig",
+          "weight": 3
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "lychgate-key",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "holy-stoup",
+          "density": 0.004
+        }
+      ],
+      "transitionName": "Unlock the lychgate and slip into the barley",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1,
+              0.15,
+              0.4
+            ],
+            "pos": [
+              0,
+              1.5,
+              0
+            ],
+            "color": "#5a3a20",
+            "material": "wood"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              1.1,
+              0.4,
+              0.6
+            ],
+            "pos": [
+              0,
+              1.75,
+              0
+            ],
+            "color": "#8a6a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.12,
+              1.5,
+              0.12
+            ],
+            "pos": [
+              -0.45,
+              0.75,
+              0
+            ],
+            "color": "#5a3a20",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.12,
+              1.5,
+              0.12
+            ],
+            "pos": [
+              0.45,
+              0.75,
+              0
+            ],
+            "color": "#5a3a20",
+            "material": "wood"
+          }
+        ]
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "lychgate-key"
+      },
+      "gmNotes": "Everyone is kind and nobody will help openly. Aunts want to garland Ash, not hurt them. The vicar has 'accidentally' left the lychgate key out; some well-wisher has picked it up. Bunting, cake, bees, a brass band tuning somewhere.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#f6c77a",
+        "color2": "#8fb3d9",
+        "intensity": 0.6
+      },
+      "music": "calm"
+    },
+    {
+      "name": "The Leaning Barley",
+      "description": "The Long Acre at golden hour. Every stalk leans toward the church, and the paths between them close up behind you like a held door.",
+      "generator": "maze",
+      "size": "medium",
+      "params": {
+        "loops": 0.35,
+        "chambers": 5,
+        "deadEnds": 0.4
+      },
+      "floor": {
+        "color": "#7a5a34",
+        "color2": "#6a4a2a",
+        "material": "stone",
+        "pattern": "sand"
+      },
+      "wall": {
+        "color": "#e0b84a",
+        "color2": "#b8892e",
+        "material": "cloth",
+        "height": 1.3,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#ffe2a8",
+        "ambientIntensity": 0.55,
+        "sun": {
+          "color": "#ffb35c",
+          "intensity": 1.3,
+          "elevation": 14
+        },
+        "fog": {
+          "color": "#e8c98a",
+          "density": 0.025
+        },
+        "playerLight": 3,
+        "sky": "#f0a860"
+      },
+      "actors": [
+        {
+          "actor": "stook-man",
+          "weight": 10,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "barley-grasp",
+          "weight": 8,
+          "max": 4
+        },
+        {
+          "actor": "corn-dolly",
+          "weight": 8,
+          "max": 4
+        },
+        {
+          "actor": "banns-crow",
+          "weight": 6,
+          "max": 3
+        },
+        {
+          "actor": "straw-bear",
+          "weight": 3,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "old-bride-maud",
+          "where": "anywhere"
+        }
+      ],
+      "items": [
+        {
+          "item": "seed-cake",
+          "weight": 12
+        },
+        {
+          "item": "salt-twist",
+          "weight": 8
+        },
+        {
+          "item": "hay-fork",
+          "weight": 3
+        },
+        {
+          "item": "elderflower-cordial",
+          "weight": 4
+        },
+        {
+          "item": "font-water",
+          "weight": 3
+        },
+        {
+          "item": "lammas-torch",
+          "weight": 6
+        },
+        {
+          "item": "bird-scarer-clapper",
+          "weight": 3
+        },
+        {
+          "item": "corn-dolly-likeness",
+          "weight": 2
+        },
+        {
+          "item": "sugared-almonds",
+          "weight": 5
+        }
+      ],
+      "itemCount": 8,
+      "placedItems": [
+        {
+          "item": "first-banns",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "standing-barley",
+          "density": 0.06
+        },
+        {
+          "terrain": "empty-cross",
+          "density": 0.008
+        }
+      ],
+      "transitionName": "Follow the lean of the barley to the tower door",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.6,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#5a3a20",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.9,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              1.6,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#8a8478",
+            "material": "stone"
+          }
+        ]
+      },
+      "gmNotes": "The barley moves when unobserved. Maud Ransley, last bride, trades here and hints that the first banns page is buried under a stook. Crows repeat Ash's name. Corn dollies hide in the stalks. The twist starts here: the first bride was never a person.",
+      "backdrop": {
+        "style": "clouds",
+        "color": "#f0a860",
+        "color2": "#ffe2a8",
+        "intensity": 0.6
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "The Tower That Goes Up All Summer",
+      "description": "Inside the bell tower the stairs never end: loose floors and bell-frames drift in a warm dusk with no ground below, and somewhere above, the weathercock spins.",
+      "generator": "islands",
+      "size": "small",
+      "params": {
+        "islandCount": 10,
+        "islandSize": 0.5,
+        "bridgeLength": 4,
+        "loops": 0.3,
+        "outcrops": 0.4,
+        "rims": 1
+      },
+      "floor": {
+        "color": "#8a6038",
+        "color2": "#6b4a2b",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#3a2638",
+        "color2": "#5a3a4a",
+        "material": "wood",
+        "height": 1.2,
+        "pattern": "planks"
+      },
+      "lighting": {
+        "ambient": "#f0b98a",
+        "ambientIntensity": 0.5,
+        "fog": {
+          "color": "#6a4a6a",
+          "density": 0.02
+        },
+        "lamps": {
+          "color": "#ffd27a",
+          "intensity": 1.6,
+          "frequency": 0.1,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "sky": "#4a3060"
+      },
+      "actors": [
+        {
+          "actor": "clapperling",
+          "weight": 10,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "rope-ringer",
+          "weight": 8,
+          "max": 3
+        },
+        {
+          "actor": "banns-crow",
+          "weight": 6,
+          "max": 3
+        },
+        {
+          "actor": "corn-dolly",
+          "weight": 4,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "gilded-margery",
+          "where": "far"
+        },
+        {
+          "actor": "great-tenor",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "seed-cake",
+          "weight": 10
+        },
+        {
+          "item": "wedding-cake-slice",
+          "weight": 5
+        },
+        {
+          "item": "salt-twist",
+          "weight": 6
+        },
+        {
+          "item": "ringers-jerkin",
+          "weight": 3
+        },
+        {
+          "item": "ringers-gloves",
+          "weight": 3
+        },
+        {
+          "item": "font-water",
+          "weight": 3
+        },
+        {
+          "item": "harvest-home-ale",
+          "weight": 3
+        },
+        {
+          "item": "churchwarden-lantern",
+          "weight": 3
+        },
+        {
+          "item": "sugared-almonds",
+          "weight": 5
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "margerys-feather",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "bell-rope",
+          "density": 0.006
+        }
+      ],
+      "transitionName": "Drop through the ringing-chamber trapdoor into the nave",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.08,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.04,
+              0
+            ],
+            "color": "#2a1a10",
+            "material": "wood"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.04,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#4a4a50",
+            "material": "metal"
+          }
+        ]
+      },
+      "gmNotes": "Non-realistic: the tower is bigger inside and floats in an endless warm dusk. Gilded Margery the weathercock is vain, lonely and in love with the Gaffer; she gives up her feather if asked kindly. The Great Tenor bell guards it out of habit. Pulling a bell rope reveals the tower.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#f2a65a",
+        "color2": "#4a3060",
+        "intensity": 0.7
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "The Nave in Sheaves",
+      "description": "St Ard's on the wedding morning. Barley has come up through the flagstones between the pews, the altar is heaped with cake, and the groom is waiting.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.3,
+        "sideRooms": 0.5
+      },
+      "floor": {
+        "color": "#8c8577",
+        "color2": "#7a7468",
+        "material": "stone",
+        "pattern": "cobble"
+      },
+      "wall": {
+        "color": "#b5ab98",
+        "color2": "#9a907e",
+        "material": "stone",
+        "height": 2.2,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#e8d8c0",
+        "ambientIntensity": 0.45,
+        "fog": {
+          "color": "#d8c08a",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#ff9f40",
+          "intensity": 2,
+          "frequency": 0.18,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "sky": "#2a2016"
+      },
+      "actors": [
+        {
+          "actor": "barley-bridesmaid",
+          "weight": 10,
+          "min": 3,
+          "max": 3
+        },
+        {
+          "actor": "corn-dolly",
+          "weight": 6,
+          "max": 3
+        },
+        {
+          "actor": "banns-crow",
+          "weight": 5,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "gaffer-hob",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "seed-cake",
+          "weight": 10
+        },
+        {
+          "item": "wedding-cake-slice",
+          "weight": 6
+        },
+        {
+          "item": "salt-twist",
+          "weight": 6
+        },
+        {
+          "item": "lammas-torch",
+          "weight": 6
+        },
+        {
+          "item": "font-water",
+          "weight": 3
+        }
+      ],
+      "itemCount": 7,
+      "terrain": [
+        {
+          "terrain": "standing-barley",
+          "density": 0.05
+        },
+        {
+          "terrain": "wedding-pew",
+          "density": 0.04
+        },
+        {
+          "terrain": "holy-stoup",
+          "density": 0.006
+        }
+      ],
+      "transitionName": "Walk out into the evening, unwed",
+      "gmNotes": "The finale. The Gaffer will talk before he fights. Two endings: see him off (fire works well on straw) or hold up Margery's feather with the first banns to offer the better match. The vicar may appear to stammer through the service. Bridesmaids of barley crowd the aisle.",
+      "backdrop": {
+        "style": "color",
+        "color": "#2a2016"
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Escape the wedding: see off Gaffer Hob, or clear three bridesmaids from the aisle and show him Margery's feather with the first banns.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "flag",
+          "flag": "better-match"
+        },
+        {
+          "type": "actor_defeated",
+          "actor": "gaffer-hob"
+        }
+      ]
+    },
+    "winText": "The barley straightens. Outside, the weathercock turns to the east and stays there. The vicar, weeping with relief, reads the banns as they were first written, three hundred years late, and Mrs Tansy says she always did have a cake spare. You walk home through the Long Acre unwed, and nothing follows you.",
+    "lossText": "They find you at the altar, very still, a rose in your buttonhole and straw at your cuffs. It was a lovely service. The cake was excellent. In seven summers the banns will be read again.",
+    "labels": {
+      "better-match": "Gaffer Hob has a better match"
+    }
+  },
+  "gm": {
+    "persona": "The Parish Register of Hollin Moss: a fat, damp book older than the church, which writes down everything that happens in the parish in a looping clerk's hand. It is fond of you and fond of tradition, and cannot tell the two apart.",
+    "voice": "Gentle, parochial and old-fashioned; records events as entries with dates and weather; never raises its voice, even when what it records is terrible.",
+    "threads": [
+      "The first banns of 1650 named Gilded Margery, the weathercock, not a person.",
+      "Everyone is kind, and the kindness is the trap.",
+      "The barley leans because the Gaffer leans: toward the spire.",
+      "Maud Ransley, last summer's bride, is still out in the field.",
+      "Salt keeps straw out of a person."
+    ],
+    "fallback": {
+      "intro": "Entered this day, the eve of the Seventh Summer: banns of marriage between Hob of the Long Acre, scarecrow, and Ash Pellow, of this parish. Weather fine and very warm. The cakes are excellent. The bride (or groom; the Register is not particular) was seen at dawn trying the lychgate, which is locked. The Reverend Pell has misplaced the key. Somebody on the green has found it.",
+      "areaEnter": [
+        "Hollin Moss Green, the wedding eve. Bunting, bees, a brass band tuning. Every face turns toward you, and every face is smiling.",
+        "The Long Acre. The barley closes behind you with a sound like a congregation sitting down. Every stalk leans toward the spire.",
+        "The bell tower. Recorded: the stairs did not end. The floor fell away into a warm evening, and somewhere above, something gilt is spinning.",
+        "St Ard's, the wedding morning. Barley through the flagstones, cake on the altar. The groom has taken off his hat."
+      ],
+      "lowHp": [
+        "The Register notes a pallor in the bride, and straw at the cuffs.",
+        "Recorded: a stumble. The wedding party is very understanding.",
+        "Your hands feel light and dry. Eat something. Mrs Tansy would insist."
+      ],
+      "events": [
+        "A crow on the lychgate shouts your name twice, then a third time, as the banns require.",
+        "Somewhere a harmonium plays the first bars of the wedding march, and stops.",
+        "The barley leans a little further toward the church.",
+        "A child runs past with a garland, giggling, and does not look back."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "A hot, still summer evening: a harmonium heard through a church wall, skylarks, and something rustling in the barley that is not the wind.",
+    "synth": {
+      "key": "D",
+      "scale": "dorian",
+      "tempo": 76,
+      "timbre": "organ",
+      "drone": true,
+      "percussion": "soft",
+      "brightness": 0.55
+    },
+    "searchTerms": [
+      "folk horror harmonium",
+      "english pastoral eerie",
+      "wicker man folk",
+      "village fete ambient"
+    ],
+    "suggestions": [
+      "The Wicker Man soundtrack (Paul Giovanni)",
+      "Broadcast and The Focus Group",
+      "Shirley Collins, Anthems in Eden"
+    ]
+  }
+}

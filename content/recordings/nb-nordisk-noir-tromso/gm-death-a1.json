@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/nb-nordisk-noir-tromso/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "De finner deg i messa på «Kapitan Sjirokov», ved siden av elleve kalde kaffekopper. Saken blir sendt tilbake til Oslo med en kort rapport, og i lasterommet nynner noen videre."
+          }
+        ]
+      }
+    }
+  ]
+}

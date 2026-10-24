@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:idle/fixture-ship/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "A pressure door cycles on its own, very slowly, and stops halfway. \"Maintenance,\" MATRON says, too calmly. Something long and pale uncoils in the duct beyond."
+          },
+          {
+            "type": "spawn",
+            "actor": "vent-eel",
+            "count": 1,
+            "near": "random"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          }
+        ]
+      }
+    }
+  ]
+}

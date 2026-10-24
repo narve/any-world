@@ -85,8 +85,15 @@ function triggerHarm(world: WorldSpec, tr: Trigger): number {
         return 1;
     }
   })();
-  return per * fires * tr.chance;
+  // a trigger whose action only works while a condition holds (e.g. "while Credentials are 0")
+  // fires far less than its schedule says; chance conditions are already a rate
+  const cond = tr.action.condition;
+  const gated = cond && cond.type !== 'chance' ? CONDITIONAL_SHARE : cond?.type === 'chance' ? cond.p : 1;
+  return per * fires * tr.chance * gated;
 }
+
+/** share of the time a condition-gated rule trigger is assumed to apply */
+export const CONDITIONAL_SHARE = 0.3;
 
 export function estimateRuleImpact(world: WorldSpec, rule: RuleVariant): RuleImpact {
   const notes: string[] = [];

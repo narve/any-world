@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/folk-horror-scarecrow-wedding/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The tower stairs went up a hundred and forty steps and then forgot to stop. Floorboards drift loose in a warm violet evening with no ground beneath them; far overhead, something gilt turns on its spindle and pretends not to look down."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#c890b0"
+          }
+        ]
+      }
+    }
+  ]
+}

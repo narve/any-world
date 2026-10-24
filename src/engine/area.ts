@@ -5,7 +5,7 @@
 import type { AreaPlan } from '../schema/world';
 import { GM_BUDGET_PER_AREA } from '../schema/gm';
 import type { ActorInstance, AreaMap, Pos } from './types';
-import { type Ctx, emit, log, tileWalkable } from './ctx';
+import { type Ctx, emit, logKey, tileWalkable } from './ctx';
 import { spawnActor } from './actors';
 import { dropItemAt } from './inventory';
 import { fireTriggers } from './triggers';
@@ -236,7 +236,7 @@ export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
   placeActors(ctx, plan);
   placeItems(ctx, plan);
   emit(ctx, { type: 'area_entered', index });
-  log(ctx, `${ctx.world.vocabulary.area} ${index + 1}: ${plan.name}`, 'system');
+  logKey(ctx, 'log.area.enter', { area: ctx.world.vocabulary.area, number: index + 1, name: plan.name }, 'system');
   updateFov(ctx);
   fireTriggers(ctx, player, 'on_area_enter', { pos: player.pos });
   updateFov(ctx);
@@ -266,6 +266,11 @@ export function transitionFailure(ctx: Ctx): string | null {
   if (!samePos(p.pos, map.exit) && t?.kind !== 'transition') return 'not at the way onward';
   const plan = ctx.world.areas[ctx.s.area.index];
   if (ctx.s.area.index >= ctx.world.areas.length - 1) return 'there is nowhere further to go';
-  if (plan.transitionRequires && !evalCondition(ctx, plan.transitionRequires, { self: p })) return `${plan.transitionName}: locked`;
+  if (plan.transitionRequires && !evalCondition(ctx, plan.transitionRequires, { self: p })) return lockedReason(ctx);
   return null;
+}
+
+/** transitionFailure's reason when the current area's way onward is locked */
+export function lockedReason(ctx: Ctx): string {
+  return `${ctx.world.areas[ctx.s.area.index]?.transitionName ?? ''}: locked`;
 }

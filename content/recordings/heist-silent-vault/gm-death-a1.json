@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/heist-silent-vault/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The gallery catches you mid-gasp. Two hundred stuffed birds keep perfectly still while the watch walks you out, and in the third case Haberl, who has seen many second acts go wrong, quietly closes his eyes."
+          }
+        ]
+      }
+    }
+  ]
+}

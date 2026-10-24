@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-dream/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Cold cyan lines run to every horizon at once, all of them aimed at one point. The grid beneath everything has no opinions. It only measures."
+          },
+          {
+            "type": "mood",
+            "music": "tense"
+          }
+        ]
+      }
+    }
+  ]
+}

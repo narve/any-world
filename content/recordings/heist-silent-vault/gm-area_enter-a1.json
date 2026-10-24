@@ -1,0 +1,29 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/heist-silent-vault/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The dumbwaiter opens onto marble and glass. Two hundred stuffed songbirds face the door you came through, beaks parted on a note none of them will ever finish; in the third case along, a 'Viennese Gentleman, c. 1880' lifts one eyebrow at you."
+          },
+          {
+            "type": "mood",
+            "music": "eerie"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          },
+          {
+            "type": "spawn",
+            "actor": "echo-moth",
+            "count": 2,
+            "near": "random"
+          }
+        ]
+      }
+    }
+  ]
+}

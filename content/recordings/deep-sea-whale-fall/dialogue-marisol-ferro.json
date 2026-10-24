@@ -1,0 +1,36 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/deep-sea-whale-fall/marisol-ferro",
+      "json": {
+        "reply": "Sit. Eat. You're grey as a hagfish and your lamp's flickering like a bad heart. Broth's ten chits, or free if you tell me something true about what topside actually said.",
+        "options": [
+          "Topside thinks the crew stopped working.",
+          "What's happening to the whale?",
+          "I'll take the broth. Paying."
+        ],
+        "actions": [
+          {
+            "type": "trade",
+            "actorId": "a25",
+            "items": [
+              {
+                "item": "galley-broth",
+                "price": 10
+              },
+              {
+                "item": "kelp-gel",
+                "price": 12
+              },
+              {
+                "item": "stim-ampoule",
+                "price": 20
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

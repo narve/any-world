@@ -1,0 +1,3804 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Gullkalven",
+    "tagline": "Tre uker til 17. mai. Bussen er pantsatt, bussjefen har kjøpt et lydanlegg ingen har sett, og bassen begynner å synge i drømmene dine.",
+    "genre": "tenåringsdrama",
+    "tags": [
+      "russetid",
+      "skole",
+      "ikke-voldelig",
+      "sosialt",
+      "bass",
+      "lojalitet"
+    ],
+    "tone": "morsomt, kaotisk, litt vondt",
+    "era": "nåtid, mai, tre uker før 17. mai",
+    "premise": "Russebussen «Gullkalven» har kostet ni gutter og jenter to år med dugnad, dopapirsalg og bokseinnsamling. Nå står den hos verkstedet uten lakk, for bussjef Kasper «Kaptein» Brekke har brukt 410 000 kroner på et lydanlegg så stort at det visstnok har sitt eget vær. Ingen har sett det. Bare Ida, kjæresten din, vet hvilket lager det står i. Du er økonomiansvarlig, eksamen nærmer seg, og bassen har begynt å dunke inni hodet ditt om natta.",
+    "prompt": "Det er tre uker igjen til 17. mai, og russebussen dere har spart til i to år henger i en tynn tråd: bussjefen har brukt pengene på et lydanlegg ingen har sett, og kjæresten din er den eneste som vet hvor det står. Hold gjengen samlet, ikke dump eksamen, og bestem deg for hvem du egentlig er lojal mot.",
+    "nonViolent": true,
+    "language": "nb"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Utstråling",
+        "abbr": "UTS",
+        "description": "Hvor mye plass du tar i et rom. Stemme, holdning, å være umulig å overse."
+      },
+      "dex": {
+        "name": "Timing",
+        "abbr": "TIM",
+        "description": "Å si det riktige i riktig sekund, og å smette unna kleine øyeblikk."
+      },
+      "int": {
+        "name": "Kvikkhet",
+        "abbr": "KVK",
+        "description": "Hvor fort og hvor skarpt du tenker. Driver de store replikkene."
+      },
+      "hp": {
+        "name": "Fatning",
+        "abbr": "FAT",
+        "description": "Hvor lenge du holder masken. På null drar du hjem og griner i dusjen."
+      },
+      "mp": {
+        "name": "Mot",
+        "abbr": "MOT",
+        "description": "Krutt du sparer til de store øyeblikkene."
+      },
+      "ac": {
+        "name": "Tykk hud",
+        "abbr": "HUD",
+        "description": "Hvor godt ting preller av deg."
+      }
+    },
+    "conflict": "Sett på plass",
+    "defeated": "satt på plass",
+    "xp": "Rykte",
+    "levelUp": "Ny russeknute",
+    "currency": "kroner",
+    "lossTitle": "Du dro hjem og grein i dusjen",
+    "winTitle": "Bussen ruller!",
+    "area": "Dag"
+  },
+  "palette": {
+    "primary": "#d7192d",
+    "secondary": "#2a3d8f",
+    "accent": "#ffd23f",
+    "danger": "#ff4f79",
+    "ui": "#1b1622",
+    "text": "#fbf3ea"
+  },
+  "damageTypes": [
+    {
+      "id": "physical",
+      "name": "Dytt",
+      "color": "#d6d6d6"
+    },
+    {
+      "id": "kleinhet",
+      "name": "Kleinhet",
+      "color": "#ff7aa2"
+    },
+    {
+      "id": "sladder",
+      "name": "Sladder",
+      "color": "#ffd23f"
+    },
+    {
+      "id": "skyld",
+      "name": "Dårlig samvittighet",
+      "color": "#8f7cff"
+    },
+    {
+      "id": "bass",
+      "name": "Bass",
+      "color": "#25e4ff"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "flau",
+      "name": "Flau",
+      "description": "Kinnene brenner, ordene kommer i feil rekkefølge.",
+      "harmful": true,
+      "color": "#ff8fab",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "trott",
+      "name": "Trøtt",
+      "description": "Du sov tre timer. Alt går i sirup.",
+      "harmful": true,
+      "color": "#8a8aa8",
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "strykfare",
+      "name": "Strykfare",
+      "description": "Pensum har rent ut av hodet. Du tenker tregere og tåler mindre.",
+      "harmful": true,
+      "color": "#c0392b",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": -2
+        },
+        {
+          "stat": "ac",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "pipelyd",
+      "name": "Pipelyd i øret",
+      "description": "Et høyt, tynt pip som ikke vil gi seg. Vanskelig å følge med.",
+      "harmful": true,
+      "color": "#25e4ff",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -1
+        },
+        {
+          "stat": "int",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "gira",
+      "name": "Gira",
+      "description": "Sukker og koffein. Du er overalt samtidig.",
+      "harmful": false,
+      "color": "#c6ff3a",
+      "flags": [
+        "hasted"
+      ]
+    },
+    {
+      "id": "pugget",
+      "name": "Pugget",
+      "description": "Fakta sitter. Replikkene også.",
+      "harmful": false,
+      "color": "#7fd6ff",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "gjengen-bak",
+      "name": "Gjengen i ryggen",
+      "description": "Du hører bussjingelen bak deg. Ingenting biter.",
+      "harmful": false,
+      "color": "#ffd23f",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 2
+        },
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "pensum",
+      "name": "Pensum",
+      "description": "Hvor mye av eksamenspensumet du faktisk husker. Tomt pensum gir Strykfare.",
+      "color": "#7fd6ff",
+      "max": 20,
+      "start": 14
+    }
+  ],
+  "rules": [
+    {
+      "id": "tre-uker-til-eksamen",
+      "name": "Tre uker til eksamen",
+      "description": "Hver 20. tur glemmer du 1 Pensum. Står Pensum på 0, får du Strykfare (−2 Kvikkhet, −1 Tykk hud) til du leser deg opp igjen. Kollokvienotater og gamle oppgaver fyller på.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 20,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "pensum",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "none"
+            }
+          }
+        },
+        {
+          "on": "on_turn",
+          "every": 10,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "condition": {
+              "type": "stat",
+              "who": "player",
+              "stat": "pensum",
+              "cmp": "lte",
+              "value": 0
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "strykfare",
+                "duration": 8
+              }
+            ],
+            "vfx": {
+              "kind": "none"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "russeknuter",
+      "name": "Russeknuter",
+      "description": "Hver gang du setter noen på plass, er det 1 av 4 sjanse for at de betaler en russeknute-bot: +2 kroner.",
+      "playerTriggers": [
+        {
+          "on": "on_kill",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#ffd23f"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Eli Nygård",
+    "title": "Økonomiansvarlig på russebussen Gullkalven",
+    "description": "Den eneste i gjengen som leser kontoutskrifter. Rød russebukse med regnestykker tusjet på låret, en mobil med sprukket skjerm og en kjæreste som plutselig ikke svarer på snap.",
+    "stats": {
+      "str": 11,
+      "dex": 12,
+      "int": 14,
+      "hp": 30,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 7,
+    "sight": 8,
+    "unarmed": {
+      "name": "Himle med øynene",
+      "verb": "himler med øynene mot",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "kleinhet"
+    },
+    "startingItems": [
+      {
+        "item": "sprukket-mobil",
+        "equipped": true
+      },
+      {
+        "item": "russebukse",
+        "equipped": true
+      },
+      {
+        "item": "kantinebolle",
+        "count": 2
+      },
+      {
+        "item": "energidrikk",
+        "count": 1
+      },
+      {
+        "item": "kollokvienotater",
+        "count": 1
+      },
+      {
+        "item": "bussjingelen"
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 5,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "tykkere-hud",
+          "name": "Tykkere hud",
+          "description": "Du har hørt det meste før. +1 Tykk hud.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "hovedrolle",
+          "name": "Hovedrolle",
+          "description": "Folk snur seg når du kommer inn. +2 Utstråling.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "rask-i-kjeften",
+          "name": "Rask i kjeften",
+          "description": "Du svarer før de er ferdige. +2 Timing.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "roast-mester",
+          "name": "Roast-mester",
+          "description": "Lærer deg Roast: en presis, ondskapsfull kommentar på avstand.",
+          "grantItems": [
+            "roast"
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "lesehest",
+          "name": "Lesehest",
+          "description": "Hver gang du setter noen på plass, er det 1 av 3 sjanse for at du husker 1 Pensum til. +1 Kvikkhet.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 1
+            }
+          ],
+          "triggers": [
+            {
+              "on": "on_kill",
+              "chance": 0.33,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "pensum",
+                    "amount": {
+                      "base": 1
+                    }
+                  }
+                ],
+                "vfx": {
+                  "kind": "sparkle",
+                  "color": "#7fd6ff"
+                }
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "gruppechat-admin",
+          "name": "Gruppechat-admin",
+          "description": "Lærer deg Gruppechat-storm: sladder som treffer alle rundt et punkt.",
+          "grantItems": [
+            "gruppechat-storm"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "hvilepuls",
+          "name": "Hvilepuls",
+          "description": "Du har sluttet å stresse over ting du ikke kan styre. +6 Fatning.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 6
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "knutejeger",
+          "name": "Knutejeger",
+          "description": "Hver gang du setter noen på plass, får du 2 kroner.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "currency",
+                    "amount": 2
+                  }
+                ],
+                "vfx": {
+                  "kind": "none"
+                }
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "uknuselig",
+          "name": "Uknuselig",
+          "description": "Når Fatningen nesten er borte, trekker du pusten og henter deg inn igjen: helbreder 8.",
+          "triggers": [
+            {
+              "on": "on_low_hp",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 8
+                    }
+                  }
+                ],
+                "vfx": {
+                  "kind": "ring",
+                  "color": "#ffd23f"
+                }
+              }
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.9,
+        "build": "slim",
+        "skin": "#f1c9a5",
+        "top": "#d7192d",
+        "bottom": "#d7192d",
+        "accent": "#ffffff",
+        "hair": "#6b4a2b",
+        "hairStyle": "short",
+        "headwear": "cap",
+        "outfit": "plain",
+        "holding": "phone"
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "russekortjeger",
+      "name": "Russekortjeger",
+      "description": "Sju år gammel, klissete fingre, en plastlomme med 140 russekort. «Har du russekort? Har du? HAR DU?»",
+      "faction": "hostile",
+      "stats": {
+        "hp": 6,
+        "ac": 10,
+        "str": 6,
+        "dex": 13,
+        "int": 6
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Maser",
+        "verb": "maser på",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "kleinhet"
+      },
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.15
+      },
+      "loot": [
+        {
+          "item": "kantinebolle",
+          "chance": 0.15
+        }
+      ],
+      "xp": 4,
+      "tags": [
+        "barn"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.55,
+          "build": "round",
+          "skin": "#f5d0b0",
+          "top": "#3fa9f5",
+          "bottom": "#2b2b6b",
+          "hair": "#e8c35a",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "snap-sladrer",
+      "name": "Snap-sladrer",
+      "description": "Filmer alt med blitsen på og legger det ut før du rekker å si «ikke legg det ut».",
+      "faction": "hostile",
+      "stats": {
+        "hp": 6,
+        "ac": 11,
+        "str": 7,
+        "dex": 14,
+        "int": 10
+      },
+      "attack": {
+        "name": "Snapper",
+        "verb": "legger ut en story om",
+        "damage": {
+          "base": 0,
+          "dice": "1d4"
+        },
+        "damageType": "sladder",
+        "range": 3
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "elev"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#c99b78",
+          "top": "#f2f2f2",
+          "bottom": "#1e88e5",
+          "hair": "#1a1a1a",
+          "hairStyle": "long",
+          "holding": "phone"
+        },
+        "light": {
+          "color": "#ffffff",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      },
+      "speed": 85
+    },
+    {
+      "id": "eksamensvakt",
+      "name": "Eksamensvakt",
+      "description": "Pensjonert lektor i ullvest som vokter gangen foran gymsalen. Hysjer så det gjør vondt.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 10,
+        "dex": 9,
+        "int": 13
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Hysjer",
+        "verb": "hysjer strengt på",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "skyld"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "gammel-eksamensoppgave",
+          "chance": 0.3
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "voksen"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#e9c4a6",
+          "top": "#7a6a4f",
+          "bottom": "#3b3b3b",
+          "hair": "#cfcfcf",
+          "hairStyle": "bun",
+          "outfit": "coat",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "rivalruss",
+      "name": "Rivalruss fra «Bermuda»",
+      "description": "Blå russebukse, solbriller om natta, roper bussnavnet sitt som et krigsrop. De vet at Gullkalven står uten lakk.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 13,
+        "ac": 11,
+        "str": 12,
+        "dex": 11,
+        "int": 8
+      },
+      "attack": {
+        "name": "Brøler bussjingel",
+        "verb": "brøler bussjingelen sin mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "kleinhet"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "boks-sukker",
+          "chance": 0.15
+        },
+        {
+          "item": "boks-sovn",
+          "chance": 0.1
+        },
+        {
+          "item": "boks-turbo",
+          "chance": 0.1
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "russ"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "broad",
+          "skin": "#e0b48f",
+          "top": "#ffffff",
+          "bottom": "#1f4fd1",
+          "accent": "#1f4fd1",
+          "hair": "#3a2a1a",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "natteravn",
+      "name": "Natteravn",
+      "description": "Voksen i gul vest som går rundt med termos og spør om du har det bra. Hver gang. Det er det verste.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 14,
+        "ac": 12,
+        "str": 11,
+        "dex": 9,
+        "int": 12
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Spør om du har det bra",
+        "verb": "spør bekymret om",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "skyld"
+      },
+      "abilities": [
+        {
+          "id": "bekymret-blikk",
+          "name": "Bekymret blikk",
+          "description": "Et langt, vennlig blikk som får deg til å skamme deg.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "flau",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#ffe14d"
+            }
+          },
+          "cooldown": 8
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "loot": [
+        {
+          "item": "kantinebolle",
+          "chance": 0.3
+        }
+      ],
+      "xp": 10,
+      "tags": [
+        "voksen"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1,
+          "build": "average",
+          "skin": "#d9a77f",
+          "top": "#ffe14d",
+          "bottom": "#2f3640",
+          "hair": "#8a8a8a",
+          "hairStyle": "short",
+          "outfit": "coat",
+          "holding": "lantern"
+        },
+        "light": {
+          "color": "#ffe9a8",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "russepresident",
+      "name": "Russepresident",
+      "description": "Valgt med 61 % i et Google-skjema. Har mikrofon festet til russelua og en tale for alt.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 22,
+        "ac": 13,
+        "str": 13,
+        "dex": 11,
+        "int": 12
+      },
+      "attack": {
+        "name": "Taleflom",
+        "verb": "holder en tale for",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "kleinhet"
+      },
+      "abilities": [
+        {
+          "id": "allsang",
+          "name": "Påtvunget allsang",
+          "description": "Alle rundt må synge med. Du også.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 3,
+              "radius": 2,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "flau",
+                "duration": 3
+              },
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "kleinhet"
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#ff7aa2"
+            }
+          },
+          "cooldown": 8
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "speilsolbriller",
+          "chance": 0.4
+        }
+      ],
+      "xp": 22,
+      "tags": [
+        "russ",
+        "elite"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "scale": 1.1,
+        "humanoid": {
+          "height": 1,
+          "build": "broad",
+          "skin": "#f0c8a0",
+          "top": "#d7192d",
+          "bottom": "#d7192d",
+          "accent": "#ffd23f",
+          "hair": "#e8c35a",
+          "hairStyle": "mohawk",
+          "headwear": "crown",
+          "holding": "staff"
+        }
+      }
+    },
+    {
+      "id": "basstone",
+      "name": "Basstone",
+      "description": "En klump av 38 hertz som ruller sakte gjennom tunnelen og rister tennene løs på alle den møter.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 18,
+        "ac": 10,
+        "str": 14,
+        "dex": 7,
+        "int": 3
+      },
+      "speed": 70,
+      "attack": {
+        "name": "Rister",
+        "verb": "rister gjennom",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "bass"
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "loot": [
+        {
+          "item": "kantinebolle",
+          "chance": 0.2
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "lyd"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#1f3cff",
+          "secondary": "#25e4ff",
+          "accent": "#ffffff"
+        },
+        "idle": "pulse",
+        "light": {
+          "color": "#25e4ff",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "feedbackhyl",
+      "name": "Feedbackhyl",
+      "description": "Et skrik med vinger: lyden når noen holder mikrofonen foran høyttaleren. Kommer fort og går aldri helt.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 10,
+        "ac": 12,
+        "str": 8,
+        "dex": 15,
+        "int": 5
+      },
+      "speed": 140,
+      "attack": {
+        "name": "Hyler",
+        "verb": "hyler inn i øret på",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "bass"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "pipelyd",
+                "duration": 4
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#25e4ff"
+            }
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "lyd"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#ff2e88",
+          "secondary": "#ffffff",
+          "accent": "#25e4ff"
+        },
+        "idle": "hover",
+        "light": {
+          "color": "#ff2e88",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "autotune-ekko",
+      "name": "Autotune-ekko",
+      "description": "Deg selv, tre halvtoner for høyt, som synger alt du har sagt det siste året tilbake til deg.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 12,
+        "ac": 11,
+        "str": 8,
+        "dex": 13,
+        "int": 12
+      },
+      "attack": {
+        "name": "Synger feil",
+        "verb": "synger falskt mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "kleinhet",
+        "range": 3,
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "lyd",
+        "speil"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "slim",
+          "skin": "#b8f4ff",
+          "top": "#ff2e88",
+          "bottom": "#ff2e88",
+          "accent": "#25e4ff",
+          "hair": "#25e4ff",
+          "hairStyle": "short",
+          "headwear": "headphones",
+          "holding": "phone"
+        },
+        "idle": "flicker",
+        "light": {
+          "color": "#b8f4ff",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      },
+      "speed": 90
+    },
+    {
+      "id": "bassdroppet",
+      "name": "Bassdroppet",
+      "description": "Stillheten rett før droppet, med tenner. Ligger på lur og slår alt flatt når den kommer.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 24,
+        "ac": 12,
+        "str": 15,
+        "dex": 10,
+        "int": 6
+      },
+      "attack": {
+        "name": "Dropper",
+        "verb": "dropper bassen på",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "bass"
+      },
+      "abilities": [
+        {
+          "id": "droppet",
+          "name": "Droppet",
+          "description": "Alt rundt den blir slått bakover av en vegg av lyd.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 1,
+              "radius": 2,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "bass"
+              },
+              {
+                "type": "push",
+                "distance": 1
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#1f3cff"
+            }
+          },
+          "cooldown": 7
+        }
+      ],
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "loot": [
+        {
+          "item": "stoydempende-horetelefoner",
+          "chance": 0.35
+        }
+      ],
+      "xp": 24,
+      "tags": [
+        "lyd",
+        "elite"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              1,
+              0.35,
+              1
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#111122",
+            "material": "metal"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.8,
+              0.8,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#25e4ff",
+            "material": "glow",
+            "emissive": "#25e4ff"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.45,
+              0.45,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#1f3cff",
+            "material": "glow",
+            "emissive": "#1f3cff",
+            "group": "head"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#25e4ff",
+          "intensity": 1.5,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "lojalist",
+      "name": "Kaspers lojalist",
+      "description": "Har fått lova førsteplass foran høyttaleren 17. mai. Forsvarer Kasper med full stemme og null argumenter.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 14,
+        "ac": 11,
+        "str": 12,
+        "dex": 11,
+        "int": 8
+      },
+      "attack": {
+        "name": "Forsvarer Kasper",
+        "verb": "kjefter på",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "skyld"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "energidrikk",
+          "chance": 0.2
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "russ"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "broad",
+          "skin": "#e8b896",
+          "top": "#d7192d",
+          "bottom": "#d7192d",
+          "accent": "#111111",
+          "hair": "#2a1a10",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "kasper",
+      "name": "Kasper «Kaptein» Brekke",
+      "description": "Bussjefen. Kaptein-lue, gullkjede, overbevist om at et lydanlegg til 410 000 er en investering i fellesskapet. Han tror faktisk på det.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 55,
+        "ac": 13,
+        "str": 15,
+        "dex": 12,
+        "int": 13
+      },
+      "attack": {
+        "name": "Kapteinens ord",
+        "verb": "minner om ofrene sine for",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "skyld"
+      },
+      "abilities": [
+        {
+          "id": "lydsjekk",
+          "name": "Lydsjekk",
+          "description": "Han skrur opp. Alt rundt ham rister, og ørene piper.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 1,
+              "radius": 2,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                },
+                "damageType": "bass"
+              },
+              {
+                "type": "apply_status",
+                "status": "pipelyd",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#25e4ff"
+            }
+          },
+          "cooldown": 6
+        },
+        {
+          "id": "kaller-gjengen",
+          "name": "Kaller inn gjengen",
+          "description": "«Gutta! Hun prøver å ta fra oss bassen!»",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "lojalist",
+                "count": 1
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#d7192d"
+            }
+          },
+          "cooldown": 25,
+          "useWhen": "low_hp"
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Sjarmerende, sårbar, og sikker på at han redder russetida. Snakker i kapteinmetaforer. Hater å bli kalt egoist.",
+        "greeting": "Eli! Endelig. Du må høre den. Bare én låt, så forstår du alt.",
+        "lines": [
+          "Bussen er bare et kjøretøy. Bassen er en følelse.",
+          "Ida skjønte det. Hvorfor skjønner ikke du det?",
+          "Jeg har lovet alle at 17. mai skal kjennes i brystet. Det er jo det vi sparte til."
+        ],
+        "secrets": "Han har kvitteringen i lageret og 14 dagers angrerett igjen. Han vet at Gullkalven ikke får kjøre uten lakk og forsikring. Han er livredd for å være den som ødela russetida.",
+        "wants": "At noen hører anlegget og sier at det var verdt det. At Eli ikke forteller gjengen før 17. mai.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 17
+      },
+      "tags": [
+        "boss",
+        "russ"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "scale": 1.15,
+        "humanoid": {
+          "height": 1.05,
+          "build": "broad",
+          "skin": "#efc29c",
+          "top": "#d7192d",
+          "bottom": "#d7192d",
+          "accent": "#ffd23f",
+          "hair": "#c99a4a",
+          "hairStyle": "short",
+          "headwear": "top_hat",
+          "outfit": "coat",
+          "holding": "phone"
+        },
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "kantine-kari",
+      "name": "Kantine-Kari",
+      "description": "Har drevet kantina i 23 år og sett hvert eneste russekull falle fra hverandre og finne sammen igjen.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Tørr, varm, sier sannheter mens hun teller vekslepenger. Kaller alle «vennen».",
+        "greeting": "Bolle, vennen? Du ser ut som du trenger to.",
+        "lines": [
+          "Kasper kjøpte femti boller i fjor og betalte aldri. Bare så du vet.",
+          "Eksamen er om tre uker. Russetida er om tre uker. Det ene varer litt lenger enn det andre.",
+          "Ida satt her i går og grein inn i kakaoen. Jeg sier ikke mer."
+        ],
+        "stock": [
+          "kantinebolle",
+          "energidrikk",
+          "kollokvienotater",
+          "vannballong",
+          "megafon"
+        ],
+        "secrets": "Ida har vært her hver dag og sett skyldig ut. Kasper har betalt med Gullkalvens kort.",
+        "wants": "At noen i dette kullet faktisk besta eksamen.",
+        "persuadeStat": "str",
+        "persuadeDifficulty": 11
+      },
+      "tags": [
+        "voksen"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#e8bfa0",
+          "top": "#ffffff",
+          "bottom": "#5b6b8a",
+          "accent": "#d7192d",
+          "hair": "#b0b0b0",
+          "hairStyle": "bun",
+          "outfit": "plain",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "ida",
+      "name": "Ida Sæther",
+      "description": "Kjæresten din. Grønn russelue på skeiva, fotografisk hukommelse og en hemmelighet hun holder for godt.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "quest_giver",
+        "personality": "Lojal til det gjør vondt, rask i hodet, flau over at hun lot Kasper bruke henne. Vil at du skal velge selv.",
+        "greeting": "Jeg skulle sagt det før. Jeg vet hvor det står. Jeg vet også hvor kvitteringen er.",
+        "lines": [
+          "Kasper sa det var en overraskelse. Jeg trodde han mente for alle.",
+          "Lageret ligger på Alnabru, port 7. Koden ligger i bassen, bokstavelig talt. Ikke spør.",
+          "Hvis du velger gjengen, velger du ikke bort meg. Ikke sant?"
+        ],
+        "stock": [
+          "idas-skjermbilde"
+        ],
+        "secrets": "Hun hjalp Kasper å bære inn anlegget. Hun har et skjermbilde av kvitteringen og vet at angrefristen går ut fredag.",
+        "wants": "At Eli tilgir henne, og at ingen i gjengen får vite at hun hjalp til.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "kjæreste"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.88,
+          "build": "slim",
+          "skin": "#f3d2b8",
+          "top": "#2e8b57",
+          "bottom": "#2e8b57",
+          "accent": "#ffffff",
+          "hair": "#2b1b12",
+          "hairStyle": "braids",
+          "headwear": "cap",
+          "holding": "phone"
+        },
+        "light": {
+          "color": "#9cffc4",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "sanitetsvakt",
+      "name": "Sanitetsvakta Torild",
+      "description": "Frivillig med førstehjelpsskrin, ullteppe og et uendelig lager av kjeks. Har sett alt, dømmer ingen.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Rolig, praktisk, litt morsom. Behandler sviktende selvtillit som en forstuet ankel.",
+        "greeting": "Sett deg ned. Pust. Ta en kjeks.",
+        "lines": [
+          "Halvparten av dem som kommer hit, trenger bare at noen hører på.",
+          "Jeg så en buss uten lakk kjøre forbi i stad. Tror jeg. Kanskje det var en drøm."
+        ],
+        "secrets": "Hun var russ selv i 1989. Bussen deres het også Gullkalven.",
+        "wants": "At alle kommer seg hjem i ett stykke."
+      },
+      "tags": [
+        "voksen"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#c58c69",
+          "top": "#ff3b30",
+          "bottom": "#2f3640",
+          "accent": "#ffffff",
+          "hair": "#4a3426",
+          "hairStyle": "bun",
+          "outfit": "uniform",
+          "holding": "tool"
+        },
+        "light": {
+          "color": "#ffffff",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "lydmann-kjell",
+      "name": "Lydmann-Kjell",
+      "description": "Bor inni basselementet siden et russetreff i 1987. Selger det han finner mellom lydbølgene.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Svevende, vennlig, snakker i frekvenser og gamle bandnavn. Glemmer hele tiden hvilket år det er.",
+        "greeting": "Ah, ny lytter! Du hører hvor fint det svinger her inne?",
+        "lines": [
+          "Alt som spilles høyt nok, blir et sted. Dette er stedet.",
+          "Portkoden? Den ligger der droppet sover. Den gløder.",
+          "Ikke bli her for lenge. Jeg skulle bare høre ett spor."
+        ],
+        "stock": [
+          "sanitetspakke",
+          "stoydempende-horetelefoner",
+          "speilsolbriller",
+          "gammel-eksamensoppgave",
+          "konfettikanon"
+        ],
+        "secrets": "Han var bussjef selv en gang og kjøpte også for stort anlegg. Han vet at man kommer ut igjen ved å slå av lyden, ikke skru den opp.",
+        "wants": "At noen husker å slå av anlegget når de går.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 12
+      },
+      "tags": [
+        "lyd"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.8,
+          "build": "slim",
+          "skin": "#d6f6ff",
+          "top": "#3b2a5c",
+          "bottom": "#1a1030",
+          "accent": "#25e4ff",
+          "hair": "#eeeeee",
+          "hairStyle": "long",
+          "headwear": "headphones",
+          "outfit": "coat",
+          "holding": "tool"
+        },
+        "idle": "hover",
+        "light": {
+          "color": "#25e4ff",
+          "intensity": 1,
+          "radius": 2.5
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "sprukket-mobil",
+      "name": "Sprukket mobil",
+      "kind": "Mobil",
+      "description": "Skjermen er knust i hjørnet, men kameraet virker, og galleriet ditt er et arsenal.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Skjermbilde",
+        "verb": "viser et skjermbilde til",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "sladder",
+        "accuracyStat": "int"
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.4,
+              0.04
+            ],
+            "color": "#111111",
+            "material": "glass",
+            "emissive": "#5ac8fa"
+          }
+        ]
+      }
+    },
+    {
+      "id": "megafon",
+      "name": "Megafon",
+      "kind": "Megafon",
+      "description": "Lånt fra russestyret og aldri levert. Gjør hver replikk dobbelt så pinlig for den som får den.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Megafonreplikk",
+        "verb": "roper gjennom megafon på",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "kleinhet",
+        "accuracyStat": "str"
+      },
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.35,
+              0.5,
+              0.35
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#ffffff",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.25,
+              0.1
+            ],
+            "pos": [
+              0,
+              -0.2,
+              0
+            ],
+            "color": "#d7192d"
+          }
+        ]
+      }
+    },
+    {
+      "id": "russebukse",
+      "name": "Russebukse med navnelapper",
+      "kind": "Russebukse",
+      "description": "Rød, stiv av gammel brus og tusj. 47 signaturer, tre telefonnumre og ett regnestykke som ikke går opp.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.15,
+              0.4
+            ],
+            "color": "#d7192d",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "speilsolbriller",
+      "name": "Speilsolbriller",
+      "kind": "Solbriller",
+      "description": "Ingen ser øynene dine. Ingen ser at du er usikker.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "rare",
+      "value": 35,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.1,
+              0.05
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.14,
+              0.12,
+              0.04
+            ],
+            "pos": [
+              -0.1,
+              0,
+              0.03
+            ],
+            "color": "#9fd8ff",
+            "material": "glass"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.14,
+              0.12,
+              0.04
+            ],
+            "pos": [
+              0.1,
+              0,
+              0.03
+            ],
+            "color": "#9fd8ff",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "russelue-knuter",
+      "name": "Russelue med knuter",
+      "kind": "Russelue",
+      "description": "Tunge av knuter: en pinnsvinpigg, en bit av en IKEA-kvittering, en knapp fra en natteravn.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        },
+        {
+          "stat": "mp",
+          "amount": 2
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.35,
+              0.15,
+              0.35
+            ],
+            "color": "#d7192d",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.02,
+              0.4,
+              0.02
+            ],
+            "pos": [
+              0.2,
+              -0.1,
+              0
+            ],
+            "color": "#111111"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.2,
+              -0.3,
+              0
+            ],
+            "color": "#ffd23f"
+          }
+        ]
+      }
+    },
+    {
+      "id": "stoydempende-horetelefoner",
+      "name": "Støydempende hodetelefoner",
+      "kind": "Hodetelefoner",
+      "description": "Store, svarte og litt for gode. Verden blir stille, men noe annet blir også borte.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 2
+        },
+        {
+          "stat": "sight",
+          "amount": -1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 28,
+      "knowledge": "vague",
+      "vagueText": "Demper det meste som treffer deg. Du hører og ser verden litt dårligere.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.4,
+              0.08
+            ],
+            "color": "#1a1a1a",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.08,
+              0.14
+            ],
+            "pos": [
+              -0.2,
+              -0.1,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#25e4ff",
+            "material": "glow",
+            "emissive": "#25e4ff"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.08,
+              0.14
+            ],
+            "pos": [
+              0.2,
+              -0.1,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#25e4ff",
+            "material": "glow",
+            "emissive": "#25e4ff"
+          }
+        ]
+      }
+    },
+    {
+      "id": "kantinebolle",
+      "name": "Kantinebolle",
+      "kind": "Bolle",
+      "description": "Kanelbolle fra Kari, fortsatt litt varm. Gjenoppretter verdigheten.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8b06a"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.35,
+              0.18,
+              0.35
+            ],
+            "color": "#c98a4b",
+            "material": "matte"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.2,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#f5e6c8"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energidrikk",
+      "name": "Energidrikk",
+      "kind": "Boks",
+      "description": "Smaker som et batteri som har spist et skumgodtdyr. Gir deg litt fatning og mye fart.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "gira",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c6ff3a"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.38,
+              0.16
+            ],
+            "color": "#c6ff3a",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.17,
+              0.06,
+              0.17
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#111111",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sanitetspakke",
+      "name": "Sanitetspakke",
+      "kind": "Førstehjelp",
+      "description": "Plaster, vann, druesukker og en lapp der det står «du klarer dette».",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 10
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffffff"
+        }
+      },
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.22,
+              0.25
+            ],
+            "color": "#ffffff",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.06,
+              0.26
+            ],
+            "pos": [
+              0,
+              0,
+              0
+            ],
+            "color": "#ff3b30"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.06,
+              0.2,
+              0.26
+            ],
+            "pos": [
+              0,
+              0,
+              0
+            ],
+            "color": "#ff3b30"
+          }
+        ]
+      }
+    },
+    {
+      "id": "kollokvienotater",
+      "name": "Kollokvienotater",
+      "kind": "Notater",
+      "description": "Noen andres notater, med fargekoder og hjerter over i-ene. Husker du dem, husker du pensum.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "pensum",
+            "amount": {
+              "base": 4
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "strykfare"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#7fd6ff"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.04,
+              0.45
+            ],
+            "color": "#fff7d6",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.05,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.01,
+              0.1
+            ],
+            "color": "#ff7aa2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "gammel-eksamensoppgave",
+      "name": "Gammel eksamensoppgave",
+      "kind": "Oppgavesett",
+      "description": "Fjorårets eksamen, med noen andres svar i margen. Noen av dem stemmer kanskje.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "pensum",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "pugget",
+            "duration": 15
+          },
+          {
+            "type": "remove_status",
+            "status": "strykfare"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#7fd6ff"
+        }
+      },
+      "value": 16,
+      "knowledge": "vague",
+      "vagueText": "Å bla gjennom den får pensum til å sitte, og gjør deg kvikkere en stund.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.38,
+              0.06,
+              0.48
+            ],
+            "color": "#e8e8e8",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.07,
+              0.1
+            ],
+            "pos": [
+              0.12,
+              0,
+              -0.15
+            ],
+            "color": "#c0392b"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vannballong",
+      "name": "Vannballong",
+      "kind": "Kasteting",
+      "description": "En klassiker. Ingen blir skadet, alle blir våte og flaue.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "2d4"
+            },
+            "damageType": "kleinhet"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#5ac8fa"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.28,
+              0.32,
+              0.28
+            ],
+            "color": "#5ac8fa",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "konfettikanon",
+      "name": "Konfettikanon",
+      "kind": "Festutstyr",
+      "description": "Tre skudd glitter. Alle i nærheten blir stående og se dumme ut.",
+      "category": "throwable",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 4,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d6"
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 22,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.45,
+              0.14
+            ],
+            "color": "#ffd23f",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.2,
+              0.15,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.28,
+              0
+            ],
+            "color": "#ff2e88"
+          }
+        ]
+      }
+    },
+    {
+      "id": "boks-sukker",
+      "name": "Sukkerbombe",
+      "kind": "Boks",
+      "description": "En boks uten etikett fra russetreffet.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 8,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ff7aa2"
+        }
+      },
+      "value": 8,
+      "knowledge": "unknown",
+      "appearanceGroup": "bokser",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.36,
+              0.16
+            ],
+            "color": "#ff7aa2",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "boks-sovn",
+      "name": "Sovedrikk",
+      "kind": "Boks",
+      "description": "En boks uten etikett fra russetreffet.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "trott",
+            "duration": 5
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#8a8aa8"
+        }
+      },
+      "value": 3,
+      "knowledge": "unknown",
+      "appearanceGroup": "bokser",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.36,
+              0.16
+            ],
+            "color": "#8a8aa8",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "boks-turbo",
+      "name": "Turbobrus",
+      "kind": "Boks",
+      "description": "En boks uten etikett fra russetreffet.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "gira",
+            "duration": 6
+          },
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 4
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c6ff3a"
+        }
+      },
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "bokser",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.36,
+              0.16
+            ],
+            "color": "#c6ff3a",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bussjingelen",
+      "name": "Bussjingelen",
+      "kind": "Allsang",
+      "description": "Gullkalvens egen låt, som gjengen betalte en produsent 18 000 for. Når du synger den, står de bak deg.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "cooldown": 15,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "gjengen-bak",
+            "duration": 8
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd23f"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "roast",
+      "name": "Roast",
+      "kind": "Replikk",
+      "description": "Én setning, perfekt timet, levert fra fem meters avstand.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 3
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.25
+              }
+            },
+            "damageType": "kleinhet"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#ff7aa2"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.15,
+              0.35,
+              0.15
+            ],
+            "color": "#ff7aa2",
+            "material": "glow",
+            "emissive": "#ff7aa2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "gruppechat-storm",
+      "name": "Gruppechat-storm",
+      "kind": "Sladder",
+      "description": "Du sender én melding i riktig gruppechat. Alle rundt et punkt får vite alt.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "cooldown": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d6"
+            },
+            "damageType": "sladder"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ffd23f"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.2,
+              0.05
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ]
+      }
+    },
+    {
+      "id": "portkoden",
+      "name": "Portkoden til port 7",
+      "kind": "Nøkkel",
+      "description": "Fire sifre som gløder blått: 1705. Koden til lageret på Alnabru der anlegget står.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.25,
+              0.04
+            ],
+            "color": "#25e4ff",
+            "material": "glow",
+            "emissive": "#25e4ff"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#25e4ff",
+          "intensity": 1.2,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "idas-skjermbilde",
+      "name": "Idas skjermbilde",
+      "kind": "Bevis",
+      "description": "Et skjermbilde av kvitteringen for lydanlegget, sendt fra Ida klokka 03:12 med teksten «unnskyld».",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.4,
+              0.04
+            ],
+            "color": "#2e8b57",
+            "material": "glass",
+            "emissive": "#9cffc4"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "kvitteringen",
+      "name": "Kvitteringen",
+      "kind": "Kvittering",
+      "description": "Originalkvitteringen for lydanlegget: 410 000 kroner, 14 dagers angrerett, Kaspers krusedull. Med Idas skjermbilde som bevis på at du er kjøperens kasserer, kan du heve kjøpet.",
+      "category": "quest",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "has_item",
+          "who": "player",
+          "item": "idas-skjermbilde"
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "kjopet-hevet"
+          },
+          {
+            "type": "message",
+            "text": "Du ringer butikken. «Angrerett? Jada, det går fint.» Pengene er på vei tilbake til Gullkalven."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.25,
+              0.02,
+              0.5
+            ],
+            "color": "#fffef5",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.03,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.01,
+              0.18
+            ],
+            "color": "#d7192d"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#fff2b0",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "elevskap",
+      "name": "Elevskap",
+      "description": "Grå blikkskap med klistremerker. Noen står på gløtt.",
+      "walkable": false,
+      "blocksSight": false,
+      "color": "#5d7aa0",
+      "height": 1.3,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "chance",
+          "p": 0.35
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "kollokvienotater"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#7fd6ff"
+        }
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.3,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.65,
+              0
+            ],
+            "color": "#5d7aa0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.1,
+              0.02
+            ],
+            "pos": [
+              0.25,
+              0.9,
+              0.31
+            ],
+            "color": "#ffd23f"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sol-energidrikk",
+      "name": "Sølt energidrikk",
+      "description": "Klissete, gjennomsiktig grønn. Skoene sitter fast.",
+      "walkable": true,
+      "moveCost": 2,
+      "color": "#a7d13a"
+    },
+    {
+      "id": "balpanne",
+      "name": "Bålpanne",
+      "description": "Varmt og trygt. Folk står rundt den og forteller sannheten.",
+      "walkable": false,
+      "color": "#5a3a22",
+      "height": 0.6,
+      "emissive": "#ff8a2a",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.8,
+              0.3,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#3a3a3a",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#ff8a2a",
+            "material": "glow",
+            "emissive": "#ff8a2a"
+          }
+        ],
+        "idle": "flicker",
+        "light": {
+          "color": "#ff9a3a",
+          "intensity": 2,
+          "radius": 4
+        }
+      }
+    },
+    {
+      "id": "bassbolge",
+      "name": "Bassbølge",
+      "description": "Gulvet buler opp i takt med bassen. Står du her, rister det i deg.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          },
+          "damageType": "bass"
+        }
+      ],
+      "color": "#1f3cff",
+      "emissive": "#1f3cff"
+    },
+    {
+      "id": "stille-lomme",
+      "name": "Stille lomme",
+      "description": "Et lite hull i lyden. Her kan du høre deg selv tenke igjen.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "color": "#0b2a3a",
+      "emissive": "#9cffc4"
+    },
+    {
+      "id": "pallestabel",
+      "name": "Pallestabel",
+      "description": "Pappesker med «HÅNDTERES MED BASS» stemplet på siden.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#a07a4a",
+      "height": 1.6,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.2,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#7a5a35",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              1.2,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#c49a62",
+            "material": "matte"
+          }
+        ]
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "bokser": [
+      {
+        "label": "Lilla boks uten etikett",
+        "color": "#9b5de5"
+      },
+      {
+        "label": "Boks med polsk tekst",
+        "color": "#f15bb5"
+      },
+      {
+        "label": "Glitrende gullboks",
+        "color": "#fee440"
+      },
+      {
+        "label": "Bulkete sølvboks",
+        "color": "#c0c0c0"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Mandag: Skolen",
+      "description": "Videregående i siste time før lunsj. Linoleum, elevskap, en rektor på høyttaleranlegget som sier ordet «russ» som om det var en diagnose. Gjengen er spredt, og alle vet allerede at bussen er uten lakk.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 2,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#a9b9ae",
+        "color2": "#94a79b",
+        "material": "stone",
+        "pattern": "tiles"
+      },
+      "wall": {
+        "color": "#e9dfc8",
+        "color2": "#cfc3a8",
+        "material": "stone",
+        "height": 1.6
+      },
+      "lighting": {
+        "ambient": "#f2f6ff",
+        "ambientIntensity": 0.95,
+        "lamps": {
+          "color": "#fff8e0",
+          "intensity": 1.2,
+          "frequency": 0.25,
+          "flicker": true
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "russekortjeger",
+          "weight": 40,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "snap-sladrer",
+          "weight": 30,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "eksamensvakt",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "kantine-kari",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "kantinebolle",
+          "weight": 30
+        },
+        {
+          "item": "kollokvienotater",
+          "weight": 25
+        },
+        {
+          "item": "vannballong",
+          "weight": 20
+        },
+        {
+          "item": "energidrikk",
+          "weight": 15
+        },
+        {
+          "item": "gammel-eksamensoppgave",
+          "weight": 8
+        },
+        {
+          "item": "russelue-knuter",
+          "weight": 5
+        }
+      ],
+      "itemCount": 7,
+      "terrain": [
+        {
+          "terrain": "elevskap",
+          "density": 0.015
+        },
+        {
+          "terrain": "sol-energidrikk",
+          "density": 0.015
+        }
+      ],
+      "transitionName": "Ta T-banen opp til russetreffet",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.1,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#ff6a00",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.2,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#ffffff"
+          }
+        ],
+        "light": {
+          "color": "#ffb070",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      },
+      "gmNotes": "Mandag. Alle har hørt rykter om bussen. Ida svarer ikke på snap. Kari i kantina vet mer enn hun sier. Ingen vold: konflikter er replikker, flauhet og maset til sjuåringer som samler russekort.",
+      "music": "upbeat",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#2b3140",
+        "color2": "#4a5266",
+        "intensity": 0.5
+      }
+    },
+    {
+      "name": "Onsdag: Russetreffet",
+      "description": "En jorde ved skogkanten i lys maikveld. Partytelt, bålpanner, tjue busser som dunker i kor, og en tom plass der Gullkalven skulle stått. Ida er her et sted.",
+      "generator": "open",
+      "size": "medium",
+      "params": {
+        "cover": 0.12,
+        "rockiness": 0.3,
+        "ponds": 1
+      },
+      "floor": {
+        "color": "#4f7d3a",
+        "color2": "#3f6a2e",
+        "material": "stone",
+        "pattern": "grass"
+      },
+      "wall": {
+        "color": "#2c4429",
+        "color2": "#1f331d",
+        "material": "wood",
+        "height": 1.8
+      },
+      "lighting": {
+        "ambient": "#9fb4e8",
+        "ambientIntensity": 0.7,
+        "sun": {
+          "color": "#ffb37a",
+          "intensity": 0.7,
+          "elevation": 8
+        },
+        "lamps": {
+          "color": "#ff3fa4",
+          "intensity": 1.6,
+          "frequency": 0.2,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "sky": "#5d6fae",
+        "fog": {
+          "color": "#7d86b8",
+          "density": 0.02
+        }
+      },
+      "backdrop": {
+        "style": "gradient",
+        "color": "#5d6fae",
+        "color2": "#ffb37a",
+        "intensity": 0.6
+      },
+      "actors": [
+        {
+          "actor": "rivalruss",
+          "weight": 35,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "natteravn",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "snap-sladrer",
+          "weight": 12,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "russekortjeger",
+          "weight": 15,
+          "min": 0,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "ida",
+          "where": "far"
+        },
+        {
+          "actor": "sanitetsvakt",
+          "where": "centre"
+        },
+        {
+          "actor": "russepresident",
+          "where": "near_exit"
+        }
+      ],
+      "items": [
+        {
+          "item": "sanitetspakke",
+          "weight": 12
+        },
+        {
+          "item": "kantinebolle",
+          "weight": 25
+        },
+        {
+          "item": "boks-sukker",
+          "weight": 15
+        },
+        {
+          "item": "boks-sovn",
+          "weight": 10
+        },
+        {
+          "item": "boks-turbo",
+          "weight": 10
+        },
+        {
+          "item": "vannballong",
+          "weight": 15
+        },
+        {
+          "item": "kollokvienotater",
+          "weight": 15
+        },
+        {
+          "item": "konfettikanon",
+          "weight": 6
+        }
+      ],
+      "itemCount": 9,
+      "terrain": [
+        {
+          "terrain": "balpanne",
+          "density": 0.01
+        },
+        {
+          "terrain": "sol-energidrikk",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Ta på Idas hodetelefoner og følg bassen",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              1,
+              1.4,
+              1
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#111111",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.7,
+              0.05,
+              0.7
+            ],
+            "pos": [
+              0,
+              0.9,
+              0.5
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#25e4ff",
+            "material": "glow",
+            "emissive": "#25e4ff"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#25e4ff",
+          "intensity": 2,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Russetreffet. Rivalbussen Bermuda håner Gullkalven. Natteravnene er snille og derfor uutholdelige. Ida venter i utkanten: hun gir Eli et skjermbilde av kvitteringen hvis Eli snakker med henne. Hun hjalp Kasper. Lojalitetsvalget begynner her.",
+      "music": "explore"
+    },
+    {
+      "name": "Torsdag natt: Inne i bassen",
+      "description": "Du sovner med Idas hodetelefoner på, og bassen trekker deg inn. Tunneler av pulserende membran, rom som slår i 128 bpm, ekko av alt du har sagt. Et sted her sover droppet, og det har portkoden.",
+      "generator": "organic",
+      "size": "medium",
+      "params": {
+        "chambers": 8,
+        "chamberSize": 0.6,
+        "tubeWidth": 2,
+        "curl": 0.6,
+        "loops": 0.4,
+        "wobble": 0.7,
+        "nodules": 0.4,
+        "fluid": 0.2,
+        "membranes": 0.6
+      },
+      "floor": {
+        "color": "#2a1850",
+        "color2": "#4a2a8a",
+        "material": "glow",
+        "pattern": "lines"
+      },
+      "wall": {
+        "color": "#ff2e88",
+        "color2": "#7a1050",
+        "material": "skin",
+        "height": 1.4
+      },
+      "lighting": {
+        "ambient": "#7a5cff",
+        "ambientIntensity": 0.8,
+        "lamps": {
+          "color": "#25e4ff",
+          "intensity": 2,
+          "frequency": 0.3,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#1a0838",
+          "density": 0.04
+        }
+      },
+      "backdrop": {
+        "style": "abyss",
+        "color": "#05010f",
+        "color2": "#2a0a5a",
+        "intensity": 0.7
+      },
+      "actors": [
+        {
+          "actor": "basstone",
+          "weight": 30,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "feedbackhyl",
+          "weight": 30,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "autotune-ekko",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "bassdroppet",
+          "weight": 6,
+          "min": 0,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "bassdroppet",
+          "where": "far"
+        },
+        {
+          "actor": "lydmann-kjell",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "kantinebolle",
+          "weight": 30
+        },
+        {
+          "item": "sanitetspakke",
+          "weight": 15
+        },
+        {
+          "item": "energidrikk",
+          "weight": 15
+        },
+        {
+          "item": "kollokvienotater",
+          "weight": 15
+        },
+        {
+          "item": "gammel-eksamensoppgave",
+          "weight": 10
+        },
+        {
+          "item": "konfettikanon",
+          "weight": 8
+        },
+        {
+          "item": "stoydempende-horetelefoner",
+          "weight": 5
+        }
+      ],
+      "itemCount": 8,
+      "placedItems": [
+        {
+          "item": "portkoden",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "bassbolge",
+          "density": 0.03
+        },
+        {
+          "terrain": "stille-lomme",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Våkn opp og ta bussen til Alnabru",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "portkoden"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              1,
+              1,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#9cffc4"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#9cffc4",
+          "intensity": 2,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Det ikke-virkelige laget: Eli er inne i lydanlegget, i en drøm eller ikke. Autotune-ekkoene gjentar ting Eli har sagt til Ida og gjengen. Lydmann-Kjell har bodd her siden 1987. Portkoden ligger hos droppet. Utgangen er låst uten koden.",
+      "music": "eerie"
+    },
+    {
+      "name": "Fredag: Lageret på Alnabru",
+      "description": "Port 7. Betonggulv, paller til taket, og midt i hallen: anlegget. Tolv basselementer som en kirke av svart tre. Kasper sitter foran det med fjernkontrollen. Angrefristen går ut ved midnatt.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.3,
+        "sideRooms": 0.5
+      },
+      "floor": {
+        "color": "#7a7a76",
+        "color2": "#6a6a66",
+        "material": "stone",
+        "pattern": "plain"
+      },
+      "wall": {
+        "color": "#3d4450",
+        "color2": "#2b313a",
+        "material": "metal",
+        "height": 2.4
+      },
+      "lighting": {
+        "ambient": "#c9b48a",
+        "ambientIntensity": 0.8,
+        "lamps": {
+          "color": "#ffb347",
+          "intensity": 1.8,
+          "frequency": 0.2,
+          "flicker": false
+        },
+        "playerLight": 5
+      },
+      "actors": [
+        {
+          "actor": "lojalist",
+          "weight": 40,
+          "min": 2,
+          "max": 3
+        },
+        {
+          "actor": "autotune-ekko",
+          "weight": 20,
+          "min": 0,
+          "max": 2
+        },
+        {
+          "actor": "feedbackhyl",
+          "weight": 20,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "kasper",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "kantinebolle",
+          "weight": 35
+        },
+        {
+          "item": "sanitetspakke",
+          "weight": 20
+        },
+        {
+          "item": "energidrikk",
+          "weight": 15
+        },
+        {
+          "item": "kollokvienotater",
+          "weight": 10
+        },
+        {
+          "item": "vannballong",
+          "weight": 10
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "kvitteringen",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "pallestabel",
+          "density": 0.04
+        }
+      ],
+      "transitionName": "Kjør Gullkalven ut av porten",
+      "gmNotes": "Finalen. To veier: sett Kasper på plass foran gjengen, eller bruk kvitteringen sammen med Idas skjermbilde og hev kjøpet. Kasper kan også overtales til å gi opp. Uansett: det handler om hvem Eli er lojal mot.",
+      "music": "boss",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#14161c",
+        "color2": "#3a2a18",
+        "intensity": 0.5
+      }
+    }
+  ],
+  "goal": {
+    "summary": "Redd Gullkalven før fredag: sett Kasper på plass, eller hev kjøpet med kvitteringen og Idas skjermbilde.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "actor_defeated",
+          "actor": "kasper"
+        },
+        {
+          "type": "flag",
+          "flag": "kjopet-hevet"
+        }
+      ]
+    },
+    "winText": "Pengene kommer tilbake. Gullkalven får lakk på mandag, og 17. mai ruller dere nedover Karl Johan med et helt vanlig, helt for lite lydanlegg. Kasper står på taket og synger bussjingelen falskt. Ida holder deg i hånda. Eksamen er på tirsdag. Du kommer til å klare det.",
+    "lossText": "Du går hjem før det er over. Gruppechatten eksploderer, Gullkalven blir solgt som delebil, og 17. mai står du på fortauet og ser Bermuda kjøre forbi. Det er ikke verdens undergang. Det føles sånn.",
+    "labels": {
+      "kjopet-hevet": "Kjøpet av lydanlegget er hevet"
+    }
+  },
+  "gm": {
+    "persona": "Høyttalerstemmen på skolen: rektors gamle kunngjøringsanlegg, som har blitt selvbevisst etter 30 russekull og nå kommenterer alt med tørr omsorg.",
+    "voice": "Korte kunngjøringer. Tørr, varm humor. Sier «Kunngjøring:» før store ting. Alltid bokmål, aldri moraliserende.",
+    "threads": [
+      "Hvem er Eli lojal mot: gjengen, Ida eller seg selv?",
+      "Eksamen nærmer seg, uansett hva som skjer med bussen.",
+      "Bassen kaller, og den lyder som Kaspers stemme.",
+      "Ida hjalp Kasper, og det skammer hun seg over."
+    ],
+    "fallback": {
+      "intro": "Kunngjøring: det er tre uker til 17. mai. Russebussen Gullkalven står hos verkstedet uten lakk, for bussjefen har brukt 410 000 kroner på et lydanlegg ingen har sett. Bare Ida vet hvor det står. Eksamen kommer uansett. Lykke til, Eli.",
+      "areaEnter": [
+        "Mandag, tredje time. Gangen lukter kanel og panikk. Noen har allerede tusjet «GULLKALVEN = BLAKK» på et skap.",
+        "Onsdag kveld. Tjue busser dunker i kor over jordet. Plassen der Gullkalven skulle stått, er tom. Et sted i mylderet står Ida og ser ut som hun vil si noe.",
+        "Kunngjøring: du er nå inne i bassen. Gulvet slår i 128 bpm. Ekkoene synger tilbake alt du har sagt, bare litt feil.",
+        "Fredag. Port 7. Midt i hallen står anlegget som en svart katedral, og Kasper sitter foran det med fjernkontrollen i hånda."
+      ],
+      "lowHp": [
+        "Kunngjøring: Fatningen din er lav. Trekk pusten. Ingen har dødd av å være flau. Nesten ingen.",
+        "Det svir i kinnene. Kanskje en bolle hadde hjulpet."
+      ],
+      "events": [
+        "Gruppechatten plinger 47 ganger på ett minutt.",
+        "Noen roper «GULLKALVEN!» langt borte, og noen andre ler.",
+        "Mobilen viser én ny melding fra Ida: «er du sint?»"
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Pumpende russelåt-bass under en skjør, lys melodi; fest og angst i samme takt.",
+    "synth": {
+      "key": "F#",
+      "scale": "minor",
+      "tempo": 128,
+      "timbre": "pluck",
+      "drone": true,
+      "percussion": "electronic",
+      "brightness": 0.65
+    },
+    "searchTerms": [
+      "russelåt 2020",
+      "norsk EDM bass",
+      "festival bass drop"
+    ],
+    "suggestions": [
+      "Lag bussjingelen som en lys pluck-melodi over firetakts kick."
+    ]
+  }
+}

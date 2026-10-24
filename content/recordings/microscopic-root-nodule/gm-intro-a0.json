@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/microscopic-root-nodule/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Spring, and the soil is wet. Between sand grains the size of cathedrals, a water film carries a faint yellow scent: luteolin, the pea root's handwritten invitation to partners. You are RL-7, two microns long, carrying the one gene cluster the plant wants. Somewhere ahead, a rod a shade more purple than you is carrying the same papers."
+          },
+          {
+            "type": "mood",
+            "music": "explore"
+          }
+        ]
+      }
+    }
+  ]
+}

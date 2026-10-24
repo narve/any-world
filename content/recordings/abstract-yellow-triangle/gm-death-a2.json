@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/abstract-yellow-triangle/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The colour goes out of you in a long soft sigh and you settle into the background, one more faint yellow shape under the paint. The Pentimento makes room. Up in the lower right corner, the signature stays half written."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#8d99ae"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-nordisk-noir-tromso/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Landgangen er dekket av urørt snø, og du er den første som setter spor i den. I messa står elleve kaffekopper med is i bunnen, og fra et sted under dørken nynner noen en melodi uten ord."
+          },
+          {
+            "type": "mood",
+            "music": "tense",
+            "tint": "#33465a"
+          },
+          {
+            "type": "place_item",
+            "item": "stemmeis",
+            "near": "random"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          }
+        ]
+      }
+    }
+  ]
+}

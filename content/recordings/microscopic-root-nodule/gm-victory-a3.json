@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/microscopic-root-nodule/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Kappa's symbiosome goes dark, its oxygen politely withdrawn. A fresh membrane folds around you, your nitrogenase begins to hum, and the plant enters a single line in its ledger: partner received, as ordered."
+          }
+        ]
+      }
+    }
+  ]
+}

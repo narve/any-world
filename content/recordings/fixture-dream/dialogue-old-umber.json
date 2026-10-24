@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/fixture-dream/old-umber",
+      "json": {
+        "reply": "Slow, slow. I am the colour of the bottom of things. I keep what the others drop: little warm tubes, drops of oil. Trade me a brightness and take a darkness. That is fair. That is how paint works.",
+        "options": [
+          "What do you keep?",
+          "What is at the vanishing point?",
+          "I'll drift on."
+        ],
+        "actions": []
+      }
+    },
+    {
+      "purpose": "dialogue/fixture-dream/old-umber",
+      "json": {
+        "reply": "Nothing is at the vanishing point. That is the trouble. Nothing, getting bigger.",
+        "options": [],
+        "actions": [],
+        "end": true
+      }
+    }
+  ]
+}

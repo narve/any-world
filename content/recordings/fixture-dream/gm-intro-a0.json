@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/fixture-dream/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The painting is almost finished. Three primaries hum in it: rose, which is warm and sounds like a held breath; cyan, which is cold and sounds like glass; ochre, which is slow. There should be a fourth. You are the fourth. Something at the vanishing point is rubbing everything out."
+          },
+          {
+            "type": "mood",
+            "music": "eerie"
+          }
+        ]
+      }
+    }
+  ]
+}

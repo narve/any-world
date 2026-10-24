@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/abstract-yellow-triangle/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The facets slope away like a sunset someone folded. A big blue circle sits in the warm, lending it a little sadness. Charcoal smudges drift where the Painter hesitated; they look at your yellow the way doubt looks at a good idea."
+          },
+          {
+            "type": "mood",
+            "music": "calm"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/folk-horror-scarecrow-wedding/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Entered this day, the eve of the Seventh Summer: banns of marriage between Hob of the Long Acre, scarecrow, and Ash Pellow, of this parish. Weather fine and very warm; the bunting is up and the cakes are excellent. The Register notes that the lychgate to the barley is locked, that the Reverend Pell has mislaid the key on purpose, and that somebody on the green has picked it up."
+          },
+          {
+            "type": "mood",
+            "music": "calm"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -594,7 +594,8 @@
     },
     "lose": { "type": "counter", "counter": "detentions", "cmp": "gte", "value": 3 },
     "winText": "You read every name. Every family, every shop, the swimming hole, Mrs. Pell's cookies, Theo Marsh who knew things, the stupid goose. It takes twelve minutes. Nobody leaves. When you finish, Nan Ottoline is the first one standing, and Mags Calloway is the second.",
-    "lossText": "Your mum picks you up early. You watch the school get smaller in the wing mirror, and the speech stays folded in your pocket, and on Saturday the water closes over all of it without anyone saying a word."
+    "lossText": "Your mum picks you up early. You watch the school get smaller in the wing mirror, and the speech stays folded in your pocket, and on Saturday the water closes over all of it without anyone saying a word.",
+    "labels": { "speech-delivered": "The farewell speech is given", "detentions": "Detentions" }
   },
   "gm": {
     "persona": "A narrator who remembers being sixteen: affectionate, sharp-eyed, never mocking the feelings, always noticing the water creeping in at the edges.",

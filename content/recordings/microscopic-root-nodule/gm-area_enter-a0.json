@@ -1,0 +1,24 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/microscopic-root-nodule/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Sand grains lean over you like cliffs; the water film runs between them like a slow green river. Pale fungal threads wind through the pores, and one of them is waving a ledger."
+          },
+          {
+            "type": "say",
+            "actorId": "old-glomus",
+            "text": "Another tenant at the landlord's door. Purple one came through an hour ago, asking about you. Sugar talks, little rod."
+          },
+          {
+            "type": "mood",
+            "music": "explore"
+          }
+        ]
+      }
+    }
+  ]
+}

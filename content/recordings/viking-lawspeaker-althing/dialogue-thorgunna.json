@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/viking-lawspeaker-althing/thorgunna",
+      "json": {
+        "reply": "Little sister. You climbed all the way up here with that heavy staff, and look at you, still breathing. Every family below me has been promised a clause, and every family will go home happy. Stand beside me and nod, and next summer the Rock is yours.",
+        "options": [
+          "The law is not yours to sell.",
+          "What did my master promise you?",
+          "Then let the Thing decide which of us remembers it truly."
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

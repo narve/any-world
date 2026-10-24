@@ -654,6 +654,11 @@ export const GoalSpec = z.object({
   lose: Condition.optional(),
   winText: z.string().max(500),
   lossText: z.string().max(500),
+  /**
+   * Player-facing names for the flags and counters the goal and locks use, keyed by their id
+   * ({"soknad-stemplet": "Søknaden er stemplet"}); the goal tracker shows these instead of the ids.
+   */
+  labels: z.record(Id, z.string().min(1).max(60)).optional(),
 });
 export type GoalSpec = z.infer<typeof GoalSpec>;
 

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/detective-sugar-hotel/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Your pencil skids across the page. Somewhere above you, very politely, the hotel waits for you to give up."
+          }
+        ]
+      }
+    }
+  ]
+}

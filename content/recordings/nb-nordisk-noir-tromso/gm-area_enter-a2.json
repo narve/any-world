@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-nordisk-noir-tromso/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Varmen fra hundre levende lys slår mot deg i døra. Orgelet spiller en lav, lang tone som ingen sitter og spiller, og rimet på glassmosaikken har skrevet et nytt ord siden i morges."
+          },
+          {
+            "type": "say",
+            "actorId": "aslak",
+            "text": "Kom inn, kar. Ikke bry deg om orgelet. Elias sier det stemmer seg selv."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#4a4466"
+          }
+        ]
+      }
+    }
+  ]
+}

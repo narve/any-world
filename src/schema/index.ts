@@ -2,3 +2,4 @@
 export * from './world';
 export * from './gm';
 export * from './refs';
+export * from './prompts';

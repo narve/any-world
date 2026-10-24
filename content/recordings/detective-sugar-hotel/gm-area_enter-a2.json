@@ -1,0 +1,30 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/detective-sugar-hotel/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You lean closer, and the banisters rise past your shoulders until they are columns of barley sugar. The sky is pink glass; the corridors ring when you walk. Every room is exactly the right size. Every room but one."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#ffd6e6"
+          },
+          {
+            "type": "spawn",
+            "actor": "sugar-mouse",
+            "count": 2,
+            "near": "random"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_2"
+          }
+        ]
+      }
+    }
+  ]
+}

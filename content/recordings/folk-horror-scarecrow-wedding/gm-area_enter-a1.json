@@ -1,0 +1,30 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/folk-horror-scarecrow-wedding/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Recorded: the bride entered the Long Acre at the golden hour. The barley closes behind with a sound like a congregation sitting down, and every stalk, every one, is leaning toward the spire."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#f0b860"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          },
+          {
+            "type": "spawn",
+            "actor": "banns-crow",
+            "count": 1,
+            "near": "random"
+          }
+        ]
+      }
+    }
+  ]
+}

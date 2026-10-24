@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/fixture-western/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The jar breaks the old way: all at once. Thunder rolls up through the mesa like a train coming home, and by the time you climb out, Sweetwater is standing in the street with its mouth open, getting wet."
+          }
+        ]
+      }
+    }
+  ]
+}

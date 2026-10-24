@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-troll-direktoratet/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Det røde teppet demper skrittene Deres. Bak granittskranken krangler tre hoder om et komma, og gjennom ljoren i taket er himmelen ikke lenger svart, bare blågrå. Det er ikke lenge igjen."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#a8b8e0"
+          }
+        ]
+      }
+    }
+  ]
+}

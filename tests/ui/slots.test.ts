@@ -141,10 +141,10 @@ describe('activating a slot', () => {
     expect(r).toEqual({ kind: 'blocked', reason: 'Ricochet Shot is ready in 2 turns' });
   });
 
-  it('unequipped equipment gets equipped; equipped passive items are inspected', () => {
+  it('unequipped equipment gets equipped; equipped and passive items are explained, never the backpack', () => {
     expect(activateSlot(slotsWith({ 0: it_({ usable: false, equipSlot: 'weapon' }) }), 0)).toEqual({ kind: 'action', action: { type: 'equip', slot: 0 } });
-    expect(activateSlot(slotsWith({ 0: it_({ usable: false, equipSlot: 'weapon', equipped: true }) }), 0)).toEqual({ kind: 'inspect' });
-    expect(activateSlot(slotsWith({ 0: it_({ usable: false }) }), 0)).toEqual({ kind: 'inspect' });
+    expect(activateSlot(slotsWith({ 0: it_({ usable: false, equipSlot: 'weapon', equipped: true }) }), 0)).toEqual({ kind: 'explain' });
+    expect(activateSlot(slotsWith({ 0: it_({ usable: false }) }), 0)).toEqual({ kind: 'explain' });
   });
 });
 

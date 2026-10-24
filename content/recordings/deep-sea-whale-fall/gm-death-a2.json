@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/deep-sea-whale-fall/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Log. Diver Achterberg, last position inside the ribcage. Lamp battery: unknown. The worms have begun a new spiral on the suit. One mark. Tally continues."
+          }
+        ]
+      }
+    }
+  ]
+}

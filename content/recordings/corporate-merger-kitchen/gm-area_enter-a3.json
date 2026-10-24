@@ -1,0 +1,29 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/corporate-merger-kitchen/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Friday, 3:59. Two hundred empty chairs, both logos on the screen, and at the far end a cream suit and a red pen. The slide counter in the corner reads 1 of 41."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#dfe6ff"
+          },
+          {
+            "type": "say",
+            "actorId": "odile-greaves",
+            "text": "You're early. Nobody is ever early. Sit anywhere, we won't be needing the seating plan."
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_3"
+          }
+        ]
+      }
+    }
+  ]
+}

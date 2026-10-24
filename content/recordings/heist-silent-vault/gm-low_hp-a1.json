@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/heist-silent-vault/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Your hands are shaking, and two hundred glass eyes watch them shake. Breathe in four counts. Out four."
+          }
+        ]
+      }
+    }
+  ]
+}

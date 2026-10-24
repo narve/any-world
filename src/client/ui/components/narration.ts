@@ -2,6 +2,7 @@
 import type { NarrationView } from '../viewmodel';
 import { h } from '../dom';
 import { typewriterCount, typewriterSpeed } from '../format';
+import { t } from '../../i18n/index';
 
 export class NarrationCard {
   readonly el: HTMLElement;
@@ -21,10 +22,10 @@ export class NarrationCard {
     this.titleEl = h('h2', { class: 'aw-narr-title' });
     this.speakerEl = h('div', { class: 'aw-narr-speaker' });
     this.kindEl = h('div', { class: 'aw-narr-kind' });
-    this.btn = h('button', { type: 'button', class: 'aw-btn aw-btn-ghost aw-narr-btn', onclick: (e: Event) => { e.stopPropagation(); this.skip(); } }, 'Continue');
+    this.btn = h('button', { type: 'button', class: 'aw-btn aw-btn-ghost aw-narr-btn', onclick: (e: Event) => { e.stopPropagation(); this.skip(); } }, t('narr.continue'));
     this.el = h(
       'section',
-      { class: 'aw-narration', role: 'dialog', 'aria-modal': 'false', 'aria-label': 'Narration', hidden: true, onclick: () => this.skip() },
+      { class: 'aw-narration', role: 'dialog', 'aria-modal': 'false', 'aria-label': t('narr.label'), hidden: true, onclick: () => this.skip() },
       h('div', { class: 'aw-narr-card' }, this.kindEl, this.titleEl, this.textEl, h('div', { class: 'aw-narr-foot' }, this.speakerEl, this.btn)),
     );
   }
@@ -51,7 +52,7 @@ export class NarrationCard {
     this.current = n;
     this.el.hidden = false;
     this.el.dataset.kind = n.kind;
-    this.kindEl.textContent = n.kind === 'intro' ? 'Prologue' : n.kind === 'area_enter' ? 'Arrival' : n.kind === 'epitaph' ? 'Epitaph' : n.kind === 'event' ? 'Meanwhile' : '';
+    this.kindEl.textContent = n.kind === 'intro' ? t('narr.intro') : n.kind === 'area_enter' ? t('narr.arrival') : n.kind === 'epitaph' ? t('narr.epitaph') : n.kind === 'event' ? t('narr.event') : '';
     this.titleEl.textContent = n.title ?? '';
     this.titleEl.hidden = !n.title;
     this.speakerEl.textContent = n.speaker ? `— ${n.speaker}` : '';
@@ -72,7 +73,7 @@ export class NarrationCard {
     const text = this.current.text;
     this.textEl.textContent = '';
     this.textEl.append(text.slice(0, n), h('span', { class: 'aw-narr-rest', 'aria-hidden': 'true' }, text.slice(n)));
-    this.btn.textContent = n < text.length ? 'Skip' : 'Continue';
+    this.btn.textContent = n < text.length ? t('narr.skip') : t('narr.continue');
     // no scrollbar flicker while the text types out (the full text is laid out from the start)
     this.el.classList.toggle('is-typing', n < text.length);
     if (n < text.length) this.raf = requestAnimationFrame(this.tick);

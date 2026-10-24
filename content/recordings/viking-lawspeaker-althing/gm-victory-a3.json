@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/viking-lawspeaker-althing/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The last clause leaves your mouth and the plain goes quiet enough to hear the river. It is said in law that what is spoken on the Rock binds, and this summer it binds in your words. Somewhere Hallbjorn's widow is laughing, and somewhere three families are counting what it cost them."
+          }
+        ]
+      }
+    }
+  ]
+}

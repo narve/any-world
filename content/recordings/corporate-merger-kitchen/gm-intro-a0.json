@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/corporate-merger-kitchen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Monday, 8:58. Hum. I am the fridge on the third floor, and this kitchen is the last room in Halberd & Pike that Greyline has not re-tagged. By Friday at four, somebody decides which departments still exist. You, temp, know whose yoghurt is whose. Hum. That is more than the board knows."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

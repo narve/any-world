@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:boss_seen/fixture-ship/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "say",
+            "actorId": "matron-proxy",
+            "text": "\"Ines. You should be asleep. Everyone should be asleep. It is kinder.\""
+          },
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

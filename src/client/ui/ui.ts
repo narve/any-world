@@ -9,12 +9,15 @@
  * PlayerActions via onAction, everything else via onIntent and the other callbacks.
  */
 import type { PlayerAction } from '../../engine/types';
-import type { ActorTooltipView, GameView, SlotItemView, TileTooltipView, UiCallbacks, UiIntent, UiViewModel } from './viewmodel';
-import { dataKey, h, icon, ICONS, setChildren } from './dom';
+import type { ActorTooltipView, ContextActionView, GameView, SlotItemView, TileTooltipView, UiCallbacks, UiIntent, UiViewModel } from './viewmodel';
+import { dataKey, h } from './dom';
 import { applyTheme } from './theme';
-import { DEFAULT_VOCABULARY } from './format';
+import { defaultVocabulary } from './format';
 import { attachKeyboard, computeLayer, type InputLayer, type InputVerbs, type KeyboardBinding, type UiCommand } from './input';
-import { activateSlot, decodeDrag, DRAG_MIME, encodeDrag, moveAction, navigateSlot, slotMenu, type ActivateResult, type SlotMenuEntry, assignQuickAction } from './slots';
+import { activateSlot, decodeDrag, DRAG_MIME, encodeDrag, moveAction, navigateSlot, slotExplanation, slotMenu, type ActivateResult, type SlotMenuEntry, assignQuickAction, isQuickSlot } from './slots';
+import { initialInputMode, nextInputMode, type InputMode } from './onboarding';
+import { ContextBar, GoalTracker, OnboardingCard, SlotTip } from './components/guide';
+import { t } from '../i18n/index';
 import { actorCard, tileCard, Tooltip, type UiContext } from './components/common';
 import { Hud } from './components/hud';
 import { MessageLog } from './components/log';
@@ -53,6 +56,8 @@ export interface GameUi {
   toast(text: string, tone?: 'info' | 'warn'): void;
   /** current keyboard layer (for the integrator's own input decisions) */
   layer(): InputLayer;
+  /** how the player is playing (key hints show only for 'keyboard') */
+  inputMode(): InputMode;
   /** true while a panel/modal is consuming input */
   isBlocking(): boolean;
   destroy(): void;
@@ -74,7 +79,7 @@ export function createUi(root: HTMLElement, cb: UiCallbacks, opts: CreateUiOptio
 class UiRoot implements GameUi {
   readonly root: HTMLElement;
   private vm: UiViewModel | null = null;
-  private ctxValue: UiContext = { vocab: DEFAULT_VOCABULARY };
+  private ctxValue: UiContext = { vocab: defaultVocabulary() };
   private themeKey = '';
   private kb: KeyboardBinding;
 
@@ -84,10 +89,12 @@ class UiRoot implements GameUi {
   private modeBanner: HTMLElement;
   private busyEl: HTMLElement;
   private rulesBadgeWrap: HTMLElement;
-  private objectiveEl: HTMLElement;
-  private interactEl: HTMLElement;
-  private hintsEl: HTMLElement;
-  private hintsKey = '';
+  private goal: GoalTracker;
+  private ctxBar: ContextBar;
+  private onboard: OnboardingCard;
+  private slotTip: SlotTip;
+  private mode: InputMode;
+  private inputAbort = new AbortController();
   private vignette: HTMLElement;
   private dialogueSide: 'left' | 'right' | null = null;
   private toasts: HTMLElement;
@@ -158,7 +165,10 @@ class UiRoot implements GameUi {
     this.choice = new ChoiceModal((i) => cb.onAction({ type: 'choose_option', index: i }));
     this.levelUp = new LevelUpModal((perkId) => cb.onAction({ type: 'choose_perk', perkId }), ctx);
     this.trade = new TradePanel((t) => cb.onTrade?.(t), this.tooltip, ctx);
-    this.help = new HelpOverlay(() => this.setHelpOpen(false));
+    this.help = new HelpOverlay(
+      () => this.setHelpOpen(false),
+      () => this.vm?.screen === 'game' && this.intent({ type: 'show_onboarding' }),
+    );
     this.rules = new RulesPanel(() => this.setRulesOpen(false));
     this.start = new StartScreen(cb, opts.rand);
     this.loading = new LoadingScreen(cb);
@@ -167,11 +177,17 @@ class UiRoot implements GameUi {
 
     this.modeBanner = h('div', { class: 'aw-mode-banner', role: 'status', hidden: true });
     this.busyEl = h('div', { class: 'aw-busy', role: 'status', hidden: true });
-    this.objectiveEl = h('div', { class: 'aw-objective', role: 'status', hidden: true });
-    this.interactEl = h('div', { class: 'aw-interact-hint', hidden: true });
-    this.hintsEl = h('aside', { class: 'aw-hints', 'aria-label': 'First steps', hidden: true });
+    this.goal = new GoalTracker({
+      howToPlay: () => {
+        this.goal.setExpanded(false);
+        this.intent({ type: 'show_onboarding' });
+      },
+    });
+    this.ctxBar = new ContextBar((a, el) => this.runContext(a, el));
+    this.onboard = new OnboardingCard((forever) => this.intent({ type: 'dismiss_onboarding', forever }));
+    this.slotTip = new SlotTip(root);
     this.vignette = h('div', { class: 'aw-vignette', 'aria-hidden': 'true', hidden: true });
-    this.stripWrap = h('div', { class: 'aw-top-centre' }, this.hud.strip, this.objectiveEl, this.modeBanner, this.busyEl, this.interactEl);
+    this.stripWrap = h('div', { class: 'aw-top-centre' }, this.hud.strip, this.goal.el, this.modeBanner, this.busyEl);
     this.rulesBadgeWrap = h('div', { class: 'aw-top-right' });
     this.toasts = h('div', { class: 'aw-toasts', 'aria-live': 'polite' });
 
@@ -182,8 +198,9 @@ class UiRoot implements GameUi {
       h('div', { class: 'aw-top-left' }, this.hud.panel),
       this.stripWrap,
       h('div', { class: 'aw-top-right-col' }, this.rulesBadgeWrap, this.rules.el),
-      h('div', { class: 'aw-bottom-left' }, this.hintsEl, this.log.el),
-      h('div', { class: 'aw-bottom-centre' }, this.hotbar.el),
+      h('div', { class: 'aw-bottom-left' }, this.log.el),
+      h('div', { class: 'aw-bottom-centre' }, this.ctxBar.el, this.hotbar.el),
+      this.onboard.el,
       this.narration.el,
       this.backpack.el,
       this.dialogue.el,
@@ -192,8 +209,28 @@ class UiRoot implements GameUi {
       this.choice.el,
       this.help.el,
     );
-    root.append(this.start.el, this.loading.el, this.end.el, this.gameEl, this.settings.el, this.toasts, this.tooltip.el);
+    root.append(this.start.el, this.loading.el, this.end.el, this.gameEl, this.settings.el, this.toasts, this.slotTip.el, this.tooltip.el);
     for (const s of [this.start.el, this.loading.el, this.end.el]) s.hidden = true;
+
+    // input mode: key hints (context bar, menus) only show once a keyboard has been used
+    const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+    this.mode = initialInputMode(coarse);
+    root.dataset.input = this.mode;
+    const signal = this.inputAbort.signal;
+    const kt = opts.keyboardTarget ?? window;
+    kt.addEventListener('keydown', () => this.setInputMode('key'), { capture: true, signal } as AddEventListenerOptions);
+    window.addEventListener('pointerdown', (e: PointerEvent) => this.setInputMode(e.pointerType === 'touch' ? 'touch' : 'mouse'), { capture: true, signal });
+    // a tap anywhere else closes the slot tip
+    window.addEventListener(
+      'pointerdown',
+      (e: PointerEvent) => {
+        if (this.slotTip.shownFor === null) return;
+        const target = e.target as Node | null;
+        if (target && (this.slotTip.el.contains(target) || this.hotbar.el.contains(target))) return;
+        this.slotTip.hide();
+      },
+      { signal },
+    );
 
     this.kb = attachKeyboard(
       () => this.layer(),
@@ -209,7 +246,7 @@ class UiRoot implements GameUi {
 
   render(vm: UiViewModel): void {
     this.vm = vm;
-    this.ctxValue = { vocab: vm.theme.vocabulary ?? DEFAULT_VOCABULARY };
+    this.ctxValue = { vocab: vm.theme.vocabulary ?? defaultVocabulary() };
     const tk = dataKey(vm.theme.palette);
     if (tk !== this.themeKey) {
       this.themeKey = tk;
@@ -229,7 +266,7 @@ class UiRoot implements GameUi {
     this.root.dataset.screen = vm.screen;
 
     if (vm.screen === 'start' && vm.start) {
-      this.start.update(vm.start);
+      this.start.update(vm.start, vm.language);
       if (screenChanged) queueMicrotask(() => this.start.el.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true }));
     }
     if (vm.screen === 'loading' && vm.loading) this.loading.update(vm.loading);
@@ -239,17 +276,17 @@ class UiRoot implements GameUi {
       this.helpOpen = false;
       this.rulesOpen = false;
       this.tooltip.hideAt();
+      this.slotTip.hide();
     }
     if (vm.screen === 'game' && vm.game) this.renderGame(vm.game);
     else this.help.update(false, NO_VERBS, this.ctxValue);
-    this.settings.update(vm.settings ?? null);
+    this.settings.update(vm.settings ?? null, vm.language);
   }
 
   private renderGame(g: GameView): void {
     const ctx = this.ctxValue;
     this.hud.update(g.hud, ctx);
     this.log.update(g.log, ctx.vocab);
-    this.renderAids(g);
     this.narration.update(g.narration);
     this.hotbar.update(g.slots, g.mode === 'target' ? (g.targetingSlot ?? null) : null);
     this.backpack.update(g.slots, this.bp);
@@ -262,6 +299,7 @@ class UiRoot implements GameUi {
     this.choice.update(lv ? null : g.choice);
     this.help.update(this.helpOpen, g.verbs, ctx, g.transitionName);
     this.rules.update(this.rulesOpen, g.goalSummary, g.rules, g.quests);
+    this.renderAids(g);
 
     const rk = dataKey([g.rules, this.rulesOpen]);
     if (rk !== this.rulesBadgeKey) {
@@ -270,15 +308,18 @@ class UiRoot implements GameUi {
       if (!this.rulesOpen) this.rulesBadgeWrap.appendChild(rulesBadge(g.rules, () => this.setRulesOpen(true)));
     }
 
+    const touch = this.mode === 'touch';
     if (g.mode === 'look') {
       this.modeBanner.hidden = false;
-      this.modeBanner.textContent = 'Looking — arrows move the cursor · Enter describe · x / Esc done';
+      this.modeBanner.textContent = touch ? t('mode.lookTouch') : t('mode.look');
     } else if (g.mode === 'target') {
       const it = g.targetingSlot !== undefined ? g.slots[g.targetingSlot] : null;
       this.modeBanner.hidden = false;
       this.modeBanner.textContent = it?.aimsDirection
-        ? `Aim ${it.name} — arrow keys pick a direction (or click) · Enter confirm · Esc cancel`
-        : `Choose a target${it ? ` for ${it.name}` : ''} — arrows or click · Enter confirm · Esc cancel`;
+        ? t(touch ? 'mode.aimTouch' : 'mode.aim', { item: it.name })
+        : it
+          ? t(touch ? 'mode.targetItemTouch' : 'mode.targetItem', { item: it.name })
+          : t(touch ? 'mode.targetTouch' : 'mode.target');
     } else {
       this.modeBanner.hidden = true;
     }
@@ -289,37 +330,15 @@ class UiRoot implements GameUi {
     this.gameEl.classList.toggle('can-transition', g.canTransition);
   }
 
-  /** objective line, interact hint, first-run hints and the danger vignette */
+  /** goal tracker, context action bar, onboarding card and the danger vignette */
   private renderAids(g: GameView): void {
-    const obj = g.objective ?? '';
-    const hint = g.objectiveHint ?? '';
-    this.objectiveEl.hidden = (!obj && !hint) || g.mode !== 'normal';
-    const full = obj && hint ? `${obj} — ${hint}` : obj || hint;
-    if (this.objectiveEl.dataset.tip !== full) {
-      // the goal may be clamped; the hint has its own line so it is never the part cut off
-      // (issues/M2-objective-hint-truncated.md)
-      setChildren(
-        this.objectiveEl,
-        obj ? h('span', { class: 'aw-objective-goal' }, obj) : null,
-        hint ? h('span', { class: 'aw-objective-hint' }, hint) : null,
-      );
-      this.objectiveEl.dataset.tip = full;
-    }
-    const ih = g.interactHint ?? '';
-    this.interactEl.hidden = !ih;
-    if (this.interactEl.textContent !== ih) this.interactEl.textContent = ih;
-
-    const hk = dataKey(g.hints ?? null);
-    if (hk !== this.hintsKey) {
-      this.hintsKey = hk;
-      const hints = g.hints ?? [];
-      this.hintsEl.hidden = !hints.length;
-      setChildren(
-        this.hintsEl,
-        h('div', { class: 'aw-hints-head' }, h('span', null, 'First steps'), h('button', { type: 'button', class: 'aw-icon-btn aw-hints-close', 'aria-label': 'Hide hints', onclick: () => this.intent({ type: 'dismiss_hints' }) }, icon(ICONS.close))),
-        h('ul', null, hints.map((t) => h('li', null, t))),
-      );
-    }
+    const layer = this.layer();
+    const playing = layer === 'game' || layer === 'narration';
+    this.goal.update(g.goal, g.quests, g.mode !== 'normal');
+    // the context bar is for the map: hidden while a panel, dialogue or targeting has the input
+    this.ctxBar.update(g.actions, g.mode !== 'normal' || !(layer === 'game' || layer === 'rules'));
+    this.onboard.update(g.onboarding, this.mode, this.ctxValue.vocab, g.transitionName, !playing || this.narration.visible || g.mode !== 'normal');
+    this.gameEl.classList.toggle('has-onboarding', this.onboard.visible);
 
     // screen-edge vignette in the colour of whatever is draining health
     const drain = (g.hud.danger ?? []).find((d) => d.draining);
@@ -327,6 +346,50 @@ class UiRoot implements GameUi {
     if (drain) {
       this.vignette.style.setProperty('--vignette', drain.color);
       this.vignette.dataset.level = drain.level;
+    }
+  }
+
+  private setInputMode(event: 'key' | 'touch' | 'mouse'): void {
+    const next = nextInputMode(this.mode, event);
+    if (next === this.mode) return;
+    this.mode = next;
+    this.root.dataset.input = next;
+    // the onboarding controls and the targeting banner depend on the mode
+    if (event !== 'key') this.rerenderGame();
+    else queueMicrotask(() => this.rerenderGame());
+  }
+
+  inputMode(): InputMode {
+    return this.mode;
+  }
+
+  /** a context bar button: the same as its key */
+  private runContext(a: ContextActionView, el: HTMLElement): void {
+    this.slotTip.hide();
+    if (a.blocked) {
+      this.toast(a.blocked, 'warn');
+      el.classList.remove('is-shaking');
+      void el.offsetWidth;
+      el.classList.add('is-shaking');
+      return;
+    }
+    switch (a.id) {
+      case 'exit':
+        return this.act({ type: 'transition' });
+      case 'pickup':
+        return this.act({ type: 'pickup' });
+      case 'talk':
+        return this.intent({ type: 'talk' });
+      case 'persuade':
+        return this.intent({ type: 'persuade' });
+      case 'interact':
+        return this.intent({ type: 'interact' });
+      case 'search':
+        return this.act({ type: 'search' });
+      case 'sneak':
+        return this.act({ type: 'toggle_sneak' });
+      case 'wait':
+        return this.act({ type: 'wait' });
     }
   }
 
@@ -341,7 +404,7 @@ class UiRoot implements GameUi {
   showActorTooltip(actor: ActorTooltipView | null, at?: { x: number; y: number }, avoid?: { x: number; y: number } | null): void {
     if (!actor || !at) return this.tooltip.hideAt();
     const verbs = this.vm?.game?.verbs;
-    const hint = actor.isNpc && verbs?.talk && actor.faction !== 'hostile' ? 'Walk into them or press t to talk' : undefined;
+    const hint = actor.isNpc && verbs?.talk && actor.faction !== 'hostile' ? (this.mode === 'touch' ? t('actor.talkHintTouch') : t('actor.talkHint')) : undefined;
     this.tooltip.showAt(actorCard(actor, this.ctxValue, hint), at.x, at.y, avoid);
   }
 
@@ -457,8 +520,17 @@ class UiRoot implements GameUi {
     return l !== 'game' && l !== 'narration' && l !== 'look' && l !== 'target';
   }
 
+  /** the goal tracker is expanded (the map is still usable, but travel should pause) */
+  goalExpanded(): boolean {
+    return this.goal.isExpanded;
+  }
+
   destroy(): void {
     this.kb.detach();
+    this.inputAbort.abort();
+    this.slotTip.hide();
+    this.tooltip.dispose();
+    this.toastStack.clear();
     this.root.textContent = '';
     this.root.classList.remove('aw-ui');
   }
@@ -468,6 +540,7 @@ class UiRoot implements GameUi {
   // -------------------------------------------------------------------------
 
   private act(a: PlayerAction): void {
+    this.slotTip.hide();
     this.cb.onAction(a);
   }
 
@@ -540,6 +613,9 @@ class UiRoot implements GameUi {
       case 'inspect':
         this.openBackpackAt(slot, false);
         break;
+      case 'explain':
+        this.explainSlot(slot);
+        break;
       case 'blocked':
         this.toast(r.reason, 'warn');
         break;
@@ -548,6 +624,28 @@ class UiRoot implements GameUi {
         this.rerenderGame();
         break;
     }
+  }
+
+  /**
+   * An equipped or passive item does nothing when activated: say so next to the slot (with a
+   * Details button for the full card) instead of opening the backpack by surprise.
+   */
+  private explainSlot(slot: number): void {
+    const it = this.slots()[slot];
+    if (!it) return;
+    const exp = slotExplanation(it, this.ctxValue.vocab);
+    const anchor = isQuickSlot(slot) && !this.bp.open ? this.hotbar.slotEl(slot) : null;
+    if (!anchor || !anchor.isConnected) {
+      // in the backpack the inspect pane already shows the item: a short notice is enough
+      this.toast(exp.lines[0], 'info');
+      return;
+    }
+    if (this.slotTip.shownFor === slot) {
+      this.slotTip.hide();
+      return;
+    }
+    this.tooltip.clear();
+    this.slotTip.show(anchor, slot, exp, () => this.openBackpackAt(slot, false));
   }
 
   private runEntry(slot: number, e: SlotMenuEntry): void {
@@ -697,6 +795,9 @@ class UiRoot implements GameUi {
         return this.intent({ type: 'interact' });
       case 'close':
         if (this.narration.visible) this.narration.skip();
+        else if (this.slotTip.shownFor !== null) this.slotTip.hide();
+        else if (this.goal.isExpanded) this.goal.setExpanded(false);
+        else if (this.onboard.visible) this.onboard.close();
         return;
       default:
         return this.common(cmd);

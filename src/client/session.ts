@@ -23,10 +23,13 @@ import type {
 import { aimsDirection, dialogueMap, endView, gameView, needsTarget, playerOf, themeOf, wastedRestore } from './view';
 import { actorAt, cheb, dirTo, rotateDir, travelPath, travelStep, visibleHostiles } from './travel';
 import type { SavedRun } from './storage';
+import type { VoiceRequest } from './ai';
 import { explainInvalid } from './invalid';
 import { RuleTracker, type RuleChange, type RuleMemo } from './rules';
 import { drainEngineQueue, gmHooksFor, narrationOf, newHookTracker, type GmContext, type GmHookEvent, type HookTracker } from './gm-director';
 import { isDifficulty } from './ui/format';
+import { onboardingView } from './guide';
+import { t as tr } from './i18n/index';
 
 const DELTA: Record<Dir, [number, number]> = { n: [0, -1], ne: [1, -1], e: [1, 0], se: [1, 1], s: [0, 1], sw: [-1, 1], w: [-1, 0], nw: [-1, -1] };
 const HISTORY_LIMIT = 12;
@@ -85,9 +88,11 @@ export interface InteractTarget {
   door: boolean;
 }
 
-const FIRST_RUN_HINTS = ['Click a tile to walk there', 'Walk into someone to act on them', 'g picks up · Enter uses things next to you', '? shows every control'];
-/** turn-taking actions before the first-run hints fade */
-const HINT_ACTIONS = 3;
+/**
+ * turn-taking actions after which an onboarding card nobody closed gets out of the way (it is not
+ * marked as seen, so the next run in this world shows it again)
+ */
+export const ONBOARDING_ACTIONS = 12;
 
 export interface SessionInit {
   world: WorldSpec;
@@ -107,8 +112,8 @@ export interface SessionInit {
   /** resumed client memory (SavedRun) */
   rules?: RuleMemo[];
   hooks?: HookTracker;
-  /** show the first-run hint card */
-  hints?: boolean;
+  /** show the onboarding card for this world (after the prologue) */
+  onboarding?: boolean;
 }
 
 export class GameSession {
@@ -123,6 +128,10 @@ export class GameSession {
   gmLog: LogMessage[];
   history: { who: 'npc' | 'player'; text: string }[] = [];
   tradeOpen = false;
+  /** the NPC voice (LLM, ai.ts): its latest line stands in for the engine's dialogue prompt */
+  private voice: { token: number; line: string } | null = null;
+  private voiceToken = 0;
+  private voiceWanted: VoiceRequest | null = null;
   /** camera yaw step 0..3, mirrored from the renderer */
   cameraStep = 0;
   /** the last direction the player moved (map space): where direction aiming starts */
@@ -136,9 +145,9 @@ export class GameSession {
   readonly weirdness: number;
   readonly rules: RuleTracker;
   hookTracker: HookTracker;
-  /** first-run hints still showing */
-  hintsOn: boolean;
-  private hintActions = 0;
+  /** the onboarding card is wanted (shown once no narration or choice is in the way) */
+  onboardingOn: boolean;
+  private onboardingActions = 0;
   private travelSeen = new Set<string>();
   private narrationSeq = 0;
   /** GM moments waiting for the controller (takeHooks) */
@@ -152,7 +161,7 @@ export class GameSession {
     this.seed = init.seed;
     this.gmLog = init.gmLog ? [...init.gmLog] : [];
     this.prefs = init.prefs ?? { animationSpeed: 1, reduceMotion: false };
-    this.hintsOn = !!init.hints;
+    this.onboardingOn = !!init.onboarding;
     if (init.saved) {
       this.state = deserialize(init.world, init.saved);
       this.narration = null;
@@ -194,9 +203,11 @@ export class GameSession {
 
   viewModel(extra: Partial<UiViewModel> = {}): UiViewModel {
     const theme = themeOf(this.world);
+    const state = this.voicedState();
     if (this.ended) return { screen: 'end', theme, end: endView(this.world, this.state, undefined, { difficulty: this.difficulty, weirdness: this.weirdness }), prefs: this.prefs, ...extra };
-    const it = this.interactTargets()[0];
-    const game = gameView(this.world, this.state, {
+    const legal = legalActions(this.state);
+    const it = this.interactTargets(legal)[0];
+    const game = gameView(this.world, state, {
       gmLog: this.gmLog,
       narration: this.narration,
       mode: this.mode,
@@ -204,8 +215,10 @@ export class GameSession {
       dialogueHistory: this.history,
       tradeOpen: this.tradeOpen,
       rules: this.rules,
-      hints: this.hintsOn ? FIRST_RUN_HINTS : null,
-      interactHint: it && !it.door ? `Enter: use ${it.name}` : null,
+      legal,
+      interactHint: it && !it.door ? tr('ctx.interactHint', { name: it.name }) : null,
+      interact: it && !it.door ? { name: it.name } : null,
+      onboarding: this.onboardingVisible() ? onboardingView(this.world, this.worldId, this.state) : null,
       ...(this.thumbs ? { thumbs: this.thumbs } : {}),
     });
     return { screen: 'game', theme, game, prefs: this.prefs, ...extra };
@@ -243,17 +256,23 @@ export class GameSession {
     return path ? { pos, kind: 'walk', path } : { pos, kind: 'none', path: [] };
   }
 
+  /** the onboarding card shows after the prologue, while nothing else needs an answer */
+  onboardingVisible(): boolean {
+    if (!this.onboardingOn || this.ended || this.narration) return false;
+    return !this.state.pendingChoice && !this.state.player.pendingPerkChoice;
+  }
+
   /** usable tiles next to the player: terrain interactions first, then doors */
-  interactTargets(): InteractTarget[] {
+  interactTargets(legal?: readonly PlayerAction[]): InteractTarget[] {
     if (this.ended) return [];
     const map = this.state.area.map;
     const out: InteractTarget[] = [];
-    for (const a of legalActions(this.state)) {
+    for (const a of legal ?? legalActions(this.state)) {
       if (a.type !== 'interact') continue;
       const t = map.tiles[a.pos.y * map.width + a.pos.x];
       const terr = t?.terrain ? this.world.terrains.find((x) => x.id === t.terrain) : undefined;
       if (terr?.interact && !t.interacted) out.push({ pos: { ...a.pos }, name: terr.name, door: false });
-      else if (t?.kind === 'door') out.push({ pos: { ...a.pos }, name: 'Door', door: true });
+      else if (t?.kind === 'door') out.push({ pos: { ...a.pos }, name: tr('tile.door'), door: true });
     }
     return out.sort((a, b) => Number(a.door) - Number(b.door));
   }
@@ -328,11 +347,11 @@ export class GameSession {
       out.rules = [...(out.rules ?? []), ...changes];
       for (const c of changes) {
         if (c.kind === 'added') {
-          out.toasts.push({ text: `New rule: ${c.name}`, tone: 'warn' });
-          this.gmLog = [...this.gmLog, { turn: this.state.turn, kind: 'gm', speaker: 'New rule', text: `${c.name} — ${c.reason ? `${c.reason} ` : ''}${c.description}`.trim() }];
+          out.toasts.push({ text: tr('rules.toastNew', { name: c.name }), tone: 'warn' });
+          this.gmLog = [...this.gmLog, { turn: this.state.turn, kind: 'gm', speaker: tr('rules.speakerNew'), text: `${c.name} — ${c.reason ? `${c.reason} ` : ''}${c.description}`.trim() }];
         } else {
-          out.toasts.push({ text: `Rule lifted: ${c.name}`, tone: 'info' });
-          this.gmLog = [...this.gmLog, { turn: this.state.turn, kind: 'gm', speaker: 'Rule lifted', text: c.name }];
+          out.toasts.push({ text: tr('rules.toastLifted', { name: c.name }), tone: 'info' });
+          this.gmLog = [...this.gmLog, { turn: this.state.turn, kind: 'gm', speaker: tr('rules.speakerLifted'), text: c.name }];
         }
       }
     }
@@ -343,8 +362,15 @@ export class GameSession {
     this.rules.acknowledge();
   }
 
-  dismissHints(): void {
-    this.hintsOn = false;
+  /** close the onboarding card (the controller remembers "don't show again") */
+  dismissOnboarding(): void {
+    this.onboardingOn = false;
+  }
+
+  /** open the onboarding card again (help overlay, goal tracker) */
+  showOnboarding(): void {
+    this.onboardingOn = true;
+    this.onboardingActions = 0;
   }
 
   savedRun(now: number): SavedRun {
@@ -406,31 +432,31 @@ export class GameSession {
     } else {
       switch (t?.kind) {
         case 'wall':
-          title = 'Wall';
+          title = tr('tile.wall');
           break;
         case 'door':
-          title = 'Door (closed)';
+          title = tr('tile.doorClosed');
           break;
         case 'door_open':
-          title = 'Door (open)';
+          title = tr('tile.doorOpen');
           break;
         case 'water':
-          title = 'Water';
+          title = tr('tile.water');
           break;
         case 'void':
-          title = 'Void';
+          title = tr('tile.void');
           break;
         case 'transition':
-          title = plan?.transitionName ?? 'Exit';
-          description = 'Stand here and press > to move on.';
+          title = plan?.transitionName ?? tr('tile.exit');
+          description = tr('tile.exitHint');
           break;
         default:
-          title = plan?.name ?? 'Ground';
+          title = plan?.name ?? tr('tile.ground');
       }
     }
     let usable: TileTooltipView['usable'];
     if (terr?.interact) usable = t?.interacted ? 'used' : 'usable';
-    if (!visible) description = description ? `${description} (remembered)` : '(remembered)';
+    if (!visible) description = description ? tr('tile.rememberedDesc', { description }) : tr('tile.remembered');
     const items = visible
       ? this.state.area.items.filter((fi) => fi.pos.x === pos.x && fi.pos.y === pos.y).map((fi) => {
           const v = describeItemDef(this.state, fi.item.defId);
@@ -460,16 +486,18 @@ export class GameSession {
     this.narration = null;
     this.narrationHook = null;
     const prevChoice = before.pendingChoice;
+    const prevLine = this.voiceLine();
     this.state = res.state;
     const pc = this.state.pendingChoice;
 
     // dialogue history: the NPC line + the player's reply, for the conversation just answered
     if (action.type === 'choose_option' && prevChoice?.kind === 'dialogue') {
       const label = prevChoice.options[action.index]?.label ?? '';
-      this.pushHistory({ who: 'npc', text: prevChoice.prompt }, { who: 'player', text: label });
+      this.pushHistory({ who: 'npc', text: prevLine ?? prevChoice.prompt }, { who: 'player', text: label });
     }
     if (pc?.kind !== 'dialogue') this.tradeOpen = false;
     else if (action.type !== 'choose_option' && prevChoice?.kind !== 'dialogue') this.history = []; // a new conversation
+    this.noteVoiceTurn(action, prevChoice);
 
     if (this.state.area.index !== before.area.index) {
       out.areaChanged = true;
@@ -483,7 +511,7 @@ export class GameSession {
       }
     }
     this.afterChange(before, res.events, out);
-    if (res.tookTurn && this.hintsOn && ++this.hintActions >= HINT_ACTIONS) this.hintsOn = false;
+    if (res.tookTurn && this.onboardingVisible() && ++this.onboardingActions >= ONBOARDING_ACTIONS) this.onboardingOn = false;
     if (this.ended) {
       this.cancelCursor();
       this.travelDest = null;
@@ -524,7 +552,7 @@ export class GameSession {
         const full = known ? wastedRestore(this.world, def, playerSheet(this.state), this.player().statuses) : null;
         if (full) {
           this.wasteWarned = it.id;
-          return { ...emptyOutcome(), toasts: [{ text: `${full} is already full — use ${def.name} anyway? (press again)`, tone: 'warn' }] };
+          return { ...emptyOutcome(), toasts: [{ text: tr('toast.wasted', { full, item: def.name }), tone: 'warn' }] };
         }
       }
     }
@@ -574,8 +602,11 @@ export class GameSession {
         return emptyOutcome();
       case 'interact':
         return this.interact();
-      case 'dismiss_hints':
-        this.hintsOn = false;
+      case 'dismiss_onboarding':
+        this.dismissOnboarding();
+        return emptyOutcome();
+      case 'show_onboarding':
+        this.showOnboarding();
         return emptyOutcome();
       case 'panel':
         if (i.open) this.travelDest = null;
@@ -595,7 +626,7 @@ export class GameSession {
       if (kind === 'talk') return out;
       const leave = dialogueMap(this.state.pendingChoice).leaveIndex;
       const speaker = this.state.pendingChoice.speakerId;
-      if (leave === null) return { ...out, toasts: [{ text: 'finish the conversation first', tone: 'warn' }] };
+      if (leave === null) return { ...out, toasts: [{ text: tr('toast.finishConversation'), tone: 'warn' }] };
       out = this.act({ type: 'choose_option', index: leave });
       targetId = targetId ?? speaker;
     }
@@ -612,8 +643,7 @@ export class GameSession {
       id = (looked ?? cands[0])?.id;
     }
     if (!id) {
-      const what = kind === 'talk' ? 'talk to' : 'persuade';
-      return merge(out, { ...emptyOutcome(), toasts: [{ text: `There is no one nearby to ${what}.`, tone: 'warn' }] });
+      return merge(out, { ...emptyOutcome(), toasts: [{ text: kind === 'talk' ? tr('toast.noOneToTalk') : tr('toast.noOneToPersuade'), tone: 'warn' }] });
     }
     return merge(out, this.act({ type: kind, targetId: id }));
   }
@@ -625,14 +655,14 @@ export class GameSession {
     const ts = this.interactTargets();
     const at = this.cursor ? ts.find((t) => t.pos.x === this.cursor!.x && t.pos.y === this.cursor!.y) : undefined;
     const t = at ?? ts.find((x) => !x.door);
-    if (!t) return { ...emptyOutcome(), toasts: [{ text: 'There is nothing to use right next to you.', tone: 'info' }] };
+    if (!t) return { ...emptyOutcome(), toasts: [{ text: tr('toast.nothingToUse'), tone: 'info' }] };
     return this.act({ type: 'interact', pos: t.pos });
   }
 
   private beginTarget(slot: number): Outcome {
     this.travelDest = null;
     const it = this.state.player.slots[slot];
-    if (!it) return { ...emptyOutcome(), toasts: [{ text: 'That slot is empty.', tone: 'warn' }] };
+    if (!it) return { ...emptyOutcome(), toasts: [{ text: tr('toast.slotEmpty'), tone: 'warn' }] };
     this.mode = 'target';
     this.targetingSlot = slot;
     // start on the engine's automatic target (nearest sensible foe in range), else on the player
@@ -751,7 +781,7 @@ export class GameSession {
       const atk = legalActions(this.state).find((a) => a.type === 'attack' && a.targetId === target.id);
       if (atk) return this.act(atk);
     }
-    if (!travelStep(this.state, pos)) return { ...emptyOutcome(), toasts: [{ text: 'No known way there.', tone: 'info' }] };
+    if (!travelStep(this.state, pos)) return { ...emptyOutcome(), toasts: [{ text: tr('toast.noWay'), tone: 'info' }] };
     this.travelDest = { ...pos };
     this.travelSeen = visibleHostiles(this.state);
     return { ...emptyOutcome(), travel: true };
@@ -848,7 +878,7 @@ export class GameSession {
     if (idx === null) {
       for (let i = pc.options.length - 1; i >= 0; i--) if (pc.options[i].actions.length === 0 && !pc.options[i].tag) { idx = i; break; }
     }
-    if (idx === null) return { ...emptyOutcome(), toasts: [{ text: 'Pick one of the replies.', tone: 'warn' }] };
+    if (idx === null) return { ...emptyOutcome(), toasts: [{ text: tr('toast.pickReply'), tone: 'warn' }] };
     return this.act({ type: 'choose_option', index: idx });
   }
 
@@ -857,13 +887,13 @@ export class GameSession {
       this.tradeOpen = false;
       return emptyOutcome();
     }
-    if (t.type === 'sell') return { ...emptyOutcome(), toasts: [{ text: 'This trader is not buying.', tone: 'info' }] };
     const pc = this.state.pendingChoice;
     if (!pc || pc.kind !== 'dialogue') return emptyOutcome();
     const m = dialogueMap(pc);
-    const idx = m.buy[t.offerIndex];
-    if (idx === undefined) return emptyOutcome();
+    const idx = t.type === 'sell' ? m.sell.find((i) => pc.options[i].sell?.slot === t.slot) : m.buy[t.offerIndex];
+    if (idx === undefined) return t.type === 'sell' ? { ...emptyOutcome(), toasts: [{ text: tr('trade.notBuying'), tone: 'info' }] } : emptyOutcome();
     const speaker = pc.speakerId;
+    const voice = { voice: this.voice, token: this.voiceToken };
     const out = this.act({ type: 'choose_option', index: idx });
     if (!out.changed || !speaker || this.state.pendingChoice) return out;
     // buying resolves the engine's choice; reopen the conversation so the shop stays open
@@ -872,10 +902,73 @@ export class GameSession {
     const reopened = this.state.pendingChoice as PendingChoice | null; // (TS narrowed it to null above)
     if (again.changed && reopened?.kind === 'dialogue') {
       this.history = history;
-      this.tradeOpen = dialogueMap(reopened).buy.length > 0;
+      // the reopen is the same conversation: keep the NPC's voice, ask for no new turn
+      this.voice = voice.voice;
+      this.voiceToken = voice.token;
+      this.voiceWanted = null;
+      const rm = dialogueMap(reopened);
+      this.tradeOpen = rm.buy.length > 0 || rm.sell.length > 0;
     }
     // the reopen is bookkeeping: its refusal (if any) is not news to the player
     return merge(out, { ...again, toasts: [] });
+  }
+
+  // ---------------------------------------------------------------------------
+  // NPC voice (ai.ts): the controller asks the LLM for each conversation turn and hands the answer
+  // back; the engine's options stay the player's replies (they carry the engine actions)
+  // ---------------------------------------------------------------------------
+
+  /** the voice line for the open conversation, if the LLM has answered this turn */
+  voiceLine(): string | null {
+    return this.voice && this.voice.token === this.voiceToken && this.state.pendingChoice?.kind === 'dialogue' ? this.voice.line : null;
+  }
+
+  /** the state the view shows: the open dialogue's prompt replaced by the NPC's voiced line */
+  private voicedState(): GameState {
+    const line = this.voiceLine();
+    const pc = this.state.pendingChoice;
+    return line && pc ? { ...this.state, pendingChoice: { ...pc, prompt: line } } : this.state;
+  }
+
+  private noteVoiceTurn(action: PlayerAction, prevChoice: PendingChoice | null | undefined): void {
+    const pc = this.state.pendingChoice;
+    if (pc?.kind !== 'dialogue' || !pc.speakerId) {
+      this.voice = null;
+      this.voiceWanted = null;
+      return;
+    }
+    const answered = action.type === 'choose_option' && prevChoice?.kind === 'dialogue';
+    const opened = action.type !== 'choose_option' && prevChoice?.kind !== 'dialogue';
+    if (!answered && !opened) return;
+    this.voiceToken++;
+    this.voice = null;
+    const last = this.history[this.history.length - 1];
+    this.voiceWanted = {
+      token: this.voiceToken,
+      npcId: pc.speakerId,
+      history: this.history.map((h) => ({ speaker: h.who, text: h.text })),
+      ...(answered && last?.who === 'player' ? { playerLine: last.text } : {}),
+    };
+  }
+
+  /** the conversation turn waiting for the NPC's voice (taken once) */
+  takeVoiceRequest(): VoiceRequest | null {
+    const r = this.voiceWanted;
+    this.voiceWanted = null;
+    return r;
+  }
+
+  /**
+   * The NPC's voiced answer for turn `token`: its line replaces the engine's prompt while that turn
+   * is open, and its actions (gifts, trades, flags) go through the GM path (budget and checks apply).
+   * Answers for an older turn, or after the conversation closed, are dropped.
+   */
+  setVoice(token: number, response: { reply: string; actions: GmAction[] }): Outcome {
+    if (token !== this.voiceToken || this.state.pendingChoice?.kind !== 'dialogue' || this.ended) return emptyOutcome();
+    this.voice = { token, line: response.reply.trim() };
+    const out = response.actions.length ? this.applyGm(response.actions) : emptyOutcome();
+    // the line changed even when the state did not: the controller re-renders on any outcome
+    return out;
   }
 
   dismissNarration(id: string): void {

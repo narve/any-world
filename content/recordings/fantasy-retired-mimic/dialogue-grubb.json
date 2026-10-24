@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/fantasy-retired-mimic/grubb",
+      "json": {
+        "reply": "Chair! Sit down — well, you are sitting down. They've put you on the list, top line, burgundy ink. Clause 14 of the Lurkers' rulebook: no member goes in the skip without a fight. Bring me proof you're worth more than a beanbag, and the union backs you to the last goblin.",
+        "options": [
+          "What kind of proof?",
+          "Where's my timecard?",
+          "What if I just leave?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

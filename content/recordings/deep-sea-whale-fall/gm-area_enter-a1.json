@@ -1,0 +1,35 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/deep-sea-whale-fall/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Log. 07:52. Seafloor. Silt rises to the knee and hangs there, lit by your lamp and nothing else. Lamp battery twenty-five percent. Ahead, the ribcage glows the colour of a held breath, and something long turns once at the edge of the light, unhurried."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#0a2a3a"
+          },
+          {
+            "type": "spawn",
+            "actor": "ghost-chimaera",
+            "count": 1,
+            "near": "random"
+          },
+          {
+            "type": "place_item",
+            "item": "lamp-cell",
+            "near": "random"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          }
+        ]
+      }
+    }
+  ]
+}

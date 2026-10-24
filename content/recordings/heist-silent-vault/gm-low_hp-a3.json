@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/heist-silent-vault/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Fermata. In this room your heartbeat is the loudest thing in Vienna, and she can hear it too."
+          }
+        ]
+      }
+    }
+  ]
+}

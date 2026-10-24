@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/viking-lawspeaker-althing/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The crowd turns its back mid-clause and Thorgunna picks up your sentence and finishes it her way. It is said in law that the law is what is remembered. By evening, nobody remembers Steinunn Hallsdottir said anything at all."
+          }
+        ]
+      }
+    }
+  ]
+}

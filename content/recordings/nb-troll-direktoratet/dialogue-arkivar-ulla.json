@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-troll-direktoratet/arkivar-ulla",
+      "json": {
+        "reply": "Shh. Dette er et arkiv, ikke et venterom. Sett deg, De ser ut som De har stått i kø i tre hundre år, og det har jeg, så jeg vet hvordan det ser ut. Nabovarselet ligger innerst, men pass Dem for ormene: de spiser bare mapper. Vanligvis.",
+        "options": [
+          "Hvordan kommer jeg meg forbi ormene?",
+          "Har du selv en søknad liggende her?",
+          "Har du noe mot skjemautmattelse?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

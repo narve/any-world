@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/abstract-yellow-triangle/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You slide into the gap at the end of the signature and fit as if you were measured for it. High above, the Painter steps back, laughs once, and sets the big brush down for good. The varnish arrives and finds nothing left to stop: the painting is finished, and it is yellow in the corner, on purpose."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat",
+            "tint": "#ffd60a"
+          }
+        ]
+      }
+    }
+  ]
+}

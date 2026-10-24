@@ -1,0 +1,53 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/deep-sea-whale-fall/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Log. 13:15. Inside the ribcage. The ribs measured nineteen metres last month. Twenty-six now. Every surface is written on in red, and the writing is still being written. A radio crackles somewhere in the vertebrae, receiving only."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#3a0a14"
+          },
+          {
+            "type": "add_rule",
+            "rule": {
+              "id": "the-tally-answers",
+              "name": "The Tally Answers",
+              "description": "Inside the ribs the whale keeps count. Whenever you drive something off, fresh bone (slow ground) grows around you for a while.",
+              "playerTriggers": [
+                {
+                  "on": "on_kill",
+                  "action": {
+                    "targeting": {
+                      "shape": "self",
+                      "affects": "self_only",
+                      "range": 0
+                    },
+                    "effects": [
+                      {
+                        "type": "spawn_terrain",
+                        "terrain": "fresh-bone",
+                        "radius": 1,
+                        "duration": 15
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "reason": "The worms add a mark for every wound in this place, and the Fall answers each mark in bone. You can hear it creak when something stops moving."
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_2"
+          }
+        ]
+      }
+    }
+  ]
+}

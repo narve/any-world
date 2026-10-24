@@ -1,0 +1,30 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/abstract-yellow-triangle/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The colour drains to cream paper ruled in black ink. Lines are corridors here, and every corridor is suspiciously straight. Far off, something red is shouting about nothing, and the lines all bend toward one tangled place."
+          },
+          {
+            "type": "mood",
+            "music": "tense",
+            "tint": "#efe9dc"
+          },
+          {
+            "type": "spawn",
+            "actor": "stray-hatching",
+            "count": 1,
+            "near": "random"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:idle/fixture-ship/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "A grow-lamp stutters. In the half-dark a trellis panel swings loose, and behind it, wedged in the moss, someone has hidden a spare tank. Taped to it: a child's drawing of a sun."
+          },
+          {
+            "type": "offer_choice",
+            "prompt": "Take the hidden tank, or leave it for whoever hid it?",
+            "options": [
+              {
+                "label": "Take the tank",
+                "actions": [
+                  {
+                    "type": "give_item",
+                    "item": "o2-canister",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "label": "Leave it, and the drawing, where they are",
+                "actions": [
+                  {
+                    "type": "grant_xp",
+                    "amount": 8
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_0"
+          }
+        ]
+      }
+    }
+  ]
+}

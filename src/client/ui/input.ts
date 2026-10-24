@@ -22,6 +22,7 @@
  */
 import type { Dir } from '../../engine/types';
 import type { Vocabulary } from '../../schema/world';
+import { t } from '../i18n/index';
 
 export interface KeyLike {
   key: string;
@@ -287,58 +288,72 @@ export interface HelpSection {
   rows: { keys: string[]; what: string }[];
 }
 
-export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, transitionName = 'Take the exit'): HelpSection[] {
+export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, transitionName = t('help.takeExit')): HelpSection[] {
   const play: HelpSection = {
-    title: 'Play',
+    title: t('help.section.play'),
     rows: [
-      { keys: ['↑ ↓ ← →', 'W A S D', 'h j k l y u b n', 'Numpad'], what: `Move · bump to ${vocab.conflict.toLowerCase()}` },
-      { keys: ['.', 'Space', 'Numpad 5'], what: 'Wait a turn' },
-      { keys: ['1 – 8'], what: 'Use quick slot' },
-      { keys: ['g', ','], what: 'Pick up' },
+      { keys: ['↑ ↓ ← →', 'W A S D', 'h j k l y u b n', t('key.numpad')], what: t('help.move', { conflict: vocab.conflict.toLowerCase() }) },
+      { keys: ['.', t('key.space'), t('key.numpad5')], what: t('help.wait') },
+      { keys: ['1 – 8'], what: t('help.slot') },
+      { keys: ['g', ','], what: t('help.pickup') },
       { keys: ['>'], what: transitionName },
-      { keys: ['Enter'], what: 'Use something next to you' },
-      { keys: ['x'], what: 'Look around (inspect)' },
+      { keys: [t('key.enter')], what: t('help.interact') },
+      { keys: ['x'], what: t('help.look') },
     ],
   };
-  if (verbs.talk) play.rows.push({ keys: ['t'], what: 'Talk to someone nearby' });
-  if (verbs.persuade) play.rows.push({ keys: ['p'], what: 'Persuade someone nearby' });
-  if (verbs.search) play.rows.push({ keys: ['f'], what: 'Search here' });
-  if (verbs.sneak) play.rows.push({ keys: ['c'], what: 'Toggle sneaking' });
+  if (verbs.talk) play.rows.push({ keys: ['t'], what: t('help.talk') });
+  if (verbs.persuade) play.rows.push({ keys: ['p'], what: t('help.persuade') });
+  if (verbs.search) play.rows.push({ keys: ['f'], what: t('help.search') });
+  if (verbs.sneak) play.rows.push({ keys: ['c'], what: t('help.sneak') });
   return [
     play,
     {
-      title: 'Panels & camera',
+      title: t('help.section.panels'),
       rows: [
-        { keys: ['i', 'Tab'], what: 'Backpack' },
-        { keys: ['r'], what: 'Rules & goals' },
-        { keys: ['q', 'e'], what: 'Rotate camera' },
-        { keys: ['+', '-'], what: 'Zoom' },
-        { keys: ['?'], what: 'This help' },
-        { keys: ['Esc'], what: 'Close / cancel' },
+        { keys: ['i', t('key.tab')], what: t('help.backpack') },
+        { keys: ['r'], what: t('help.rules') },
+        { keys: ['q', 'e'], what: t('help.rotate') },
+        { keys: ['+', '-'], what: t('help.zoom') },
+        { keys: ['?'], what: t('help.help') },
+        { keys: [t('key.esc')], what: t('help.close') },
       ],
     },
     {
-      title: 'Backpack',
+      title: t('help.section.backpack'),
       rows: [
-        { keys: ['Arrows', 'WASD', 'hjkl'], what: 'Move the cursor' },
-        { keys: ['Enter'], what: 'Actions for the item' },
-        { keys: ['1 – 8'], what: 'Put item in that quick slot' },
-        { keys: ['u'], what: 'Use' },
-        { keys: ['e'], what: 'Equip / unequip' },
-        { keys: ['m'], what: 'Move (then Enter to place)' },
-        { keys: ['Del'], what: 'Drop' },
-        { keys: ['Drag'], what: 'Drag items between any slots' },
+        { keys: [t('key.arrows'), 'WASD', 'hjkl'], what: t('help.bp.cursor') },
+        { keys: [t('key.enter')], what: t('help.bp.actions') },
+        { keys: ['1 – 8'], what: t('help.bp.assign') },
+        { keys: ['u'], what: t('help.bp.use') },
+        { keys: ['e'], what: t('help.bp.equip') },
+        { keys: ['m'], what: t('help.bp.move') },
+        { keys: [t('key.del')], what: t('help.bp.drop') },
+        { keys: [t('key.drag')], what: t('help.bp.drag') },
       ],
     },
     {
-      title: 'Mouse',
+      title: t('help.section.touch'),
       rows: [
-        { keys: ['Click tile'], what: 'Travel there / pick target' },
-        { keys: ['Click next to you'], what: 'Use it / act on who stands there' },
-        { keys: ['Hover'], what: 'Inspect · shows the route a click takes' },
-        { keys: ['Right-click slot'], what: 'Item actions' },
+        { keys: [t('key.tapTile'), t('key.clickTile')], what: t('help.touch.travel') },
+        { keys: [t('key.tapNext')], what: t('help.touch.act') },
+        { keys: [t('key.ctxButtons')], what: t('help.touch.ctx') },
+        { keys: [t('key.tapGoal')], what: t('help.touch.goal') },
+        { keys: [t('key.hover')], what: t('help.mouse.hover') },
+        { keys: [t('key.longPressSlot'), t('key.rightClickSlot')], what: t('help.mouse.slotMenu') },
       ],
     },
+  ];
+}
+
+/** the hotbar badges and marks, explained (help overlay legend) */
+export function slotLegend(): { mark: string; what: string }[] {
+  return [
+    { mark: 'E', what: t('legend.equipped') },
+    { mark: '1', what: t('legend.key') },
+    { mark: '×3', what: t('legend.stack') },
+    { mark: '2/3', what: t('legend.charges') },
+    { mark: '◔', what: t('legend.cooldown') },
+    { mark: t('legend.pressMark'), what: t('legend.urgent') },
   ];
 }
 

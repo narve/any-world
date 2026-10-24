@@ -13,9 +13,25 @@ import { sightRadius } from './stats';
 export function playerSeesTile(ctx: Ctx, pos: Pos): boolean {
   const map = ctx.s.area.map;
   const p = playerActor(ctx);
-  if (!withinRadius(p.pos, pos, sightRadius(ctx, p))) return false;
-  const vis = computeFov(map.width, map.height, p.pos, sightRadius(ctx, p), (x, y) => opaque(ctx, x, y));
-  return vis.has(pos.y * map.width + pos.x);
+  const r = sightRadius(ctx, p);
+  if (!withinRadius(p.pos, pos, r)) return false;
+  return playerFov(ctx, r).has(pos.y * map.width + pos.x);
+}
+
+/**
+ * The player's field of view (tile indices) with sight radius `r`, cached on the context until
+ * the player moves, the radius changes or a tile changes (every tile write goes through mutTile,
+ * which bumps ctx.tileWrites; a new area brings a new tile array).
+ */
+function playerFov(ctx: Ctx, r: number): Set<number> {
+  const map = ctx.s.area.map;
+  const p = playerActor(ctx);
+  const c = ctx.fovCache;
+  const writes = ctx.tileWrites ?? 0;
+  if (c && c.tiles === map.tiles && c.writes === writes && c.x === p.pos.x && c.y === p.pos.y && c.r === r) return c.vis;
+  const vis = computeFov(map.width, map.height, p.pos, r, (x, y) => opaque(ctx, x, y));
+  ctx.fovCache = { tiles: map.tiles, writes, x: p.pos.x, y: p.pos.y, r, vis };
+  return vis;
 }
 
 export function updateFov(ctx: Ctx): void {
@@ -24,7 +40,7 @@ export function updateFov(ctx: Ctx): void {
   const seen = area.seen;
   for (let i = 0; i < seen.length; i++) if (seen[i] === 2) seen[i] = 1;
   const p = playerActor(ctx);
-  const vis = computeFov(map.width, map.height, p.pos, sightRadius(ctx, p), (x, y) => opaque(ctx, x, y));
+  const vis = playerFov(ctx, sightRadius(ctx, p));
   const known = new Set(area.discoveredRegions);
   const valid = new Set(map.regions.map((r) => r.id));
   for (const i of vis) {

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/heist-silent-vault/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Your breath is coming too loud. Somewhere below the floor, something tuned to listen leans closer."
+          }
+        ]
+      }
+    }
+  ]
+}

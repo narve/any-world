@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-dream/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Down a layer the paint is warm and it breathes. Membranes shiver as you pass, and every surface remembers being red before it was anything else."
+          },
+          {
+            "type": "mood",
+            "music": "calm"
+          }
+        ]
+      }
+    }
+  ]
+}

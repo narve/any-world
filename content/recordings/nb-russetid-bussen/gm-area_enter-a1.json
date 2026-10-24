@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-russetid-bussen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Tjue busser dunker i kor over jordet, og bassen fra Bermuda kjennes i mellomgulvet. Der Gullkalven skulle stått, er det bare et rektangel av gult gress. Langt borte, ved skogkanten, står en grønn russelue helt stille."
+          },
+          {
+            "type": "mood",
+            "music": "explore",
+            "tint": "#ffb37a"
+          }
+        ]
+      }
+    }
+  ]
+}

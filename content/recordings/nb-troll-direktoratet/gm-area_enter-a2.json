@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-troll-direktoratet/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Bak klageskuffen er det ikke mer fjell. Øyer av mosegrodd tid henger i mørket, og under Dem blafrer et nordlys av blekk. På den nærmeste øya stemmer noen en våt fele."
+          },
+          {
+            "type": "say",
+            "actorId": "a43",
+            "text": "Hundre år klagefrist, De. Jeg er på det femte hundreåret. Vil De høre en slått mens De venter?"
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#8fe0c0"
+          }
+        ]
+      }
+    }
+  ]
+}

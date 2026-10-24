@@ -1,0 +1,35 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/heist-silent-vault/haberl",
+      "json": {
+        "reply": "Psst. Up here, in the case marked 'Viennese Gentleman'; I have been a very convincing exhibit since noon. The second movement starts in four minutes and I cannot let you into it without my cue sheet, which I dropped beside that dreadful grouse. Fetch it, and when the cellos swell at bar ninety, walk as loudly as you like.",
+        "options": [
+          "Which grouse? They are all dreadful.",
+          "Why does the cellist matter so much?",
+          "Are you going to get out of that case?"
+        ],
+        "actions": [
+          {
+            "type": "start_quest",
+            "id": "fetch-the-cue-sheet",
+            "title": "The Dropped Cue",
+            "description": "Haberl dropped his cue sheet near a guarded specimen in the gallery. Without it, nobody knows the bar to step into the music.",
+            "complete": {
+              "type": "has_item",
+              "who": "player",
+              "item": "cue-sheet"
+            },
+            "reward": [
+              {
+                "type": "grant_xp",
+                "amount": 10
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

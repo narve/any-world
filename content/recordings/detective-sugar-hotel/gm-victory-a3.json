@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/detective-sugar-hotel/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "You say his name in my lobby, under my half-lit chandelier, and for the first time in forty years Augustin Pell sits down in a guest's armchair. That night Odile ices the fourth floor of my sugar twin, every room exactly where it is. I find, to my surprise, that I am relieved."
+          }
+        ]
+      }
+    }
+  ]
+}

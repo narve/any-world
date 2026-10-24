@@ -1,0 +1,35 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/corporate-merger-kitchen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The fire door shuts behind you on nothing. White, in every direction, ruled into pale green cells. Somewhere below, a row turns grey, then blank. Its header read CLAIMS (LEGACY)."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#e9f6ea"
+          },
+          {
+            "type": "say",
+            "actorId": "dev-it",
+            "text": "Don't stand on the borders, they autofill. And whatever you do, don't press Delete."
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_1"
+          },
+          {
+            "type": "spawn",
+            "actor": "ref-error",
+            "count": 1,
+            "near": "exit"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/nb-troll-direktoratet/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Så nær skranken, så nær stempelet. Tålmodigheten tok slutt mens tre hoder fremdeles var uenige, og sola fant direktoratet forsteinet og Dem utenfor døra med en bunke skjemaer i fanget."
+          }
+        ]
+      }
+    }
+  ]
+}

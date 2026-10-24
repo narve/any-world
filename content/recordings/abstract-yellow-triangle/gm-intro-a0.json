@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/abstract-yellow-triangle/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "A brushstroke ended in a flick, and the flick was you: one small yellow triangle, still wet, loose on warm terracotta. Every other yellow in this painting has been painted over. Somewhere in the lower right corner a signature waits, only half written, and at the edges of the frame the varnish has already begun to creep."
+          },
+          {
+            "type": "mood",
+            "music": "calm",
+            "tint": "#ffd8b0"
+          }
+        ]
+      }
+    }
+  ]
+}

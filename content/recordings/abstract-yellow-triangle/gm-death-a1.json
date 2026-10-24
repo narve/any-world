@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/abstract-yellow-triangle/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The ink lines close over you one ruled stroke at a time, until you are just a yellow stain on the grid paper. Somewhere, a palette knife stops scraping."
+          }
+        ]
+      }
+    }
+  ]
+}

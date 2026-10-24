@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/cyberpunk-rooftop-yams/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Good morning, Idumota, this is Radio Agbado on the pirate band, and today's forecast is theft with scattered lawyers. At midnight Nimbus Holdings filed a patent on Mama Iyabo's purple water yam, kicked open the seed bank, and flew the tubers up the irrigation tower. Her grandchild is standing in the beds with a taped-up deck and a full bowl of anger. The paid rain over the island runs out soon, so drink your zobo and go get those seeds."
+          }
+        ]
+      }
+    }
+  ]
+}

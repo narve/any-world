@@ -30,6 +30,16 @@ describe('extractJson', () => {
     expect(extractJson('   ').ok).toBe(false);
   });
 
+  it('does not mistake a nested fragment of a cut-off reply for the answer', () => {
+    const cut = extractJson('{"meta": {"title": "X"}, "areas": [{"name": "A"}, {"name": "B"');
+    expect(cut.ok).toBe(false);
+    expect(!cut.ok && cut.error).toMatch(/cut off/);
+    const fenced = extractJson('Here:\n```json\n[{"a": 1}, {"b": 2');
+    expect(!fenced.ok && fenced.error).toMatch(/cut off/);
+    // a stray brace in prose before the real answer is still skipped
+    expect(extractJson('Use {curly braces like so. {"ok": 1}')).toEqual({ ok: true, value: { ok: 1 } });
+  });
+
   it('relaxJson leaves commas and slashes inside strings alone', () => {
     expect(relaxJson('{"a": "x,}", "u": "a//b",}')).toBe('{"a": "x,}", "u": "a//b"}');
   });

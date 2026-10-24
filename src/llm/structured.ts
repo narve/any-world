@@ -93,6 +93,9 @@ function tryParse(s: string): { ok: true; value: unknown } | null {
  * Find the JSON value in a model reply: bare JSON, ```json fences, JSON after leading prose or
  * before trailing prose, trailing commas and comments tolerated.
  */
+const TRUNCATED =
+  'The JSON was incomplete (unbalanced brackets; the reply was probably cut off). Reply with the complete JSON, written more compactly (shorter descriptions, no indentation).';
+
 export function extractJson(raw: string): ExtractResult {
   const text = stripThinking(raw.replace(/^﻿/, '')).trim();
   if (!text) return { ok: false, error: 'The reply was empty.' };
@@ -118,13 +121,17 @@ export function extractJson(raw: string): ExtractResult {
     tries++;
     const b = balancedFrom(text, i);
     if (!b) {
+      // An unbalanced opener that clearly starts a JSON value (`{"…`, `[{…`) means the reply was cut
+      // off: everything after it is nested inside, so a later balanced fragment would be a piece of
+      // the real answer, not the answer. Stray braces in prose (`{like this`) keep the scan going.
+      if (/^(?:\{\s*["}]|\[\s*[[{"\]\d-])/.test(text.slice(i, i + 64))) return { ok: false, error: TRUNCATED };
       sawUnbalanced = true;
       continue;
     }
     const r = tryParse(b);
     if (r) return r;
   }
-  if (sawUnbalanced) return { ok: false, error: 'The JSON was incomplete (unbalanced brackets; the reply may have been cut off).' };
+  if (sawUnbalanced) return { ok: false, error: TRUNCATED };
   return { ok: false, error: 'The reply did not contain a JSON object.' };
 }
 
@@ -184,6 +191,28 @@ export function repairMessage(errors: string[], truncated: boolean, max = 30): s
   return msg;
 }
 
+export type CheckResult<T> = { ok: true; value: T } | { ok: false; errors: string[] };
+
+/**
+ * The validation steps of one reply, exactly as completeStructured runs them: find the JSON in the
+ * text, parse it with `schema` (zod, defaults applied), then the extra `validate` checks. The errors
+ * are the readable lines that `repairMessage` quotes back to the model (tools/agent-provider.ts
+ * uses this to show agents the same feedback an LLM would get).
+ */
+export async function checkStructuredText<T>(
+  text: string,
+  schema: z.ZodType<T>,
+  validate?: (value: T) => string[] | Promise<string[]>,
+): Promise<CheckResult<T>> {
+  const ex = extractJson(text);
+  if (!ex.ok) return { ok: false, errors: [ex.error] };
+  const parsed = schema.safeParse(ex.value);
+  if (!parsed.success) return { ok: false, errors: formatZodError(parsed.error) };
+  const extra = validate ? await validate(parsed.data) : [];
+  if (extra.length) return { ok: false, errors: extra };
+  return { ok: true, value: parsed.data };
+}
+
 /**
  * Ask `provider` for JSON matching `schema`. Transport errors (auth, rate limit after the
  * provider's own retries, refusal…) propagate unchanged; unusable output triggers up to
@@ -218,20 +247,12 @@ export async function completeStructured<T>(
       errors = [e.message];
     }
     if (!errors.length) {
-      const ex = extractJson(text);
-      if (!ex.ok) errors = [ex.error];
-      else {
-        const parsed = schema.safeParse(ex.value);
-        if (!parsed.success) errors = formatZodError(parsed.error);
-        else {
-          const extra = opts.validate ? await opts.validate(parsed.data) : [];
-          if (!extra.length) {
-            opts.onAttempt?.({ attempt, ok: true, errors: [] });
-            return { value: parsed.data, attempts: attempt, usage, text, model };
-          }
-          errors = extra;
-        }
+      const checked = await checkStructuredText(text, schema, opts.validate);
+      if (checked.ok) {
+        opts.onAttempt?.({ attempt, ok: true, errors: [] });
+        return { value: checked.value, attempts: attempt, usage, text, model };
       }
+      errors = checked.errors;
     }
     if (truncated && !errors.some((e) => /cut off/.test(e))) errors.push('The reply hit the output token limit and was cut off.');
     opts.onAttempt?.({ attempt, ok: false, errors });

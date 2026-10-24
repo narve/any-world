@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/folk-horror-scarecrow-wedding/vicar-pell",
+      "json": {
+        "reply": "Ash. My dear. I'm so terribly sorry, and do have some cake, Mrs Tansy's outdone herself. I'm not supposed to help, you understand. But the lychgate key is not on its hook by the vestry, and I couldn't say which of the aunts picked it up.",
+        "options": [
+          "Why does the parish keep doing this?",
+          "What's on the first page of the register?",
+          "Can you at least patch me up?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

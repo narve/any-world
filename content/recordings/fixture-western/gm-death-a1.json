@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/fixture-western/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The flats keep you, the way they keep everything. Nineteen months becomes twenty. Somebody in town says your name at supper, and then the wind takes it."
+          }
+        ]
+      }
+    }
+  ]
+}

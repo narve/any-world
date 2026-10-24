@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/nb-troll-direktoratet/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Tre hoder ser på Dem samtidig. Det midterste smiler for første gang, og det er ikke et godt tegn."
+          }
+        ]
+      }
+    }
+  ]
+}

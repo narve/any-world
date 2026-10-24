@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/heist-silent-vault/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Attacca. Haberl whispers the bar number and you step through the music onto it: a held viola note, warm as a floorboard in August, stretched over violet nothing. Somewhere beneath you a cello breathes in, and far off something with a voice like a cracked string begins, very softly, to howl."
+          },
+          {
+            "type": "mood",
+            "music": "calm",
+            "tint": "#b8a8ff"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,32 +1,43 @@
 /**
  * Pure formatting helpers for the UI (no DOM). Everything world-specific comes from the
- * vocabulary; the only fixed words are neutral UI verbs.
+ * vocabulary; every fixed word comes from the UI message catalog (src/client/i18n).
  */
 import type { Vocabulary } from '../../schema/world';
 import type { ActorView, ItemView, LogMessage } from '../../engine/types';
 import type { CoreStatKey, Difficulty, RunStatsView, SlotItemView, TradeView } from './viewmodel';
 import type { ProviderPreset } from '../../llm/types';
+import { t } from '../i18n/index';
 
-export const UNKNOWN_ITEM_TEXT = 'Unknown — could be anything';
+/** the text for an unknown item, in the current UI language */
+export function unknownItemText(): string {
+  return t('item.unknownText');
+}
 
-export const DEFAULT_VOCABULARY: Vocabulary = {
-  stats: {
-    str: { name: 'Strength', abbr: 'STR', description: 'Raw power. Melee damage and carrying.' },
-    dex: { name: 'Dexterity', abbr: 'DEX', description: 'Aim, speed of hand, dodging.' },
-    int: { name: 'Intelligence', abbr: 'INT', description: 'Ability power and focus.' },
-    hp: { name: 'Health', abbr: 'HP', description: 'You are out of the run at 0.' },
-    mp: { name: 'Mana', abbr: 'MP', description: 'Spent on abilities; returns slowly.' },
-    ac: { name: 'Armour', abbr: 'AC', description: 'Reduces and avoids incoming harm.' },
-  },
-  conflict: 'Attack',
-  defeated: 'defeated',
-  xp: 'XP',
-  levelUp: 'Level up',
-  currency: 'coins',
-  lossTitle: 'You have fallen',
-  winTitle: 'Victory',
-  area: 'Area',
-};
+/** @deprecated the English text at load time; use unknownItemText() */
+export const UNKNOWN_ITEM_TEXT = unknownItemText();
+
+/** the generic vocabulary used before a world exists (start screen), in the current UI language */
+export function defaultVocabulary(): Vocabulary {
+  const stat = (k: 'str' | 'dex' | 'int' | 'hp' | 'mp' | 'ac') => ({
+    name: t(`vocab.${k}.name` as const),
+    abbr: t(`vocab.${k}.abbr` as const),
+    description: t(`vocab.${k}.desc` as const),
+  });
+  return {
+    stats: { str: stat('str'), dex: stat('dex'), int: stat('int'), hp: stat('hp'), mp: stat('mp'), ac: stat('ac') },
+    conflict: t('vocab.conflict'),
+    defeated: t('vocab.defeated'),
+    xp: t('vocab.xp'),
+    levelUp: t('vocab.levelUp'),
+    currency: t('vocab.currency'),
+    lossTitle: t('vocab.lossTitle'),
+    winTitle: t('vocab.winTitle'),
+    area: t('vocab.area'),
+  };
+}
+
+/** @deprecated the vocabulary at load time; use defaultVocabulary() */
+export const DEFAULT_VOCABULARY: Vocabulary = defaultVocabulary();
 
 export function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -54,14 +65,14 @@ export function statLabel(vocab: Vocabulary, key: CoreStatKey | 'hp' | 'mp'): { 
   return vocab.stats[key];
 }
 
-/** "Turn 42" → we keep the neutral word "Turn"; areas use vocabulary.area */
+/** "Turn 42" (a neutral UI word); areas use vocabulary.area */
 export function turnLabel(turn: number): string {
-  return `Turn ${turn}`;
+  return t('hud.turn', { n: turn });
 }
 
-/** "Stretch 2 / 4 · Dry Creek Flats" */
+/** "Stretch 2 / 4" */
 export function areaLabel(vocab: Vocabulary, index: number, count: number): string {
-  return count > 0 ? `${vocab.area} ${index + 1} / ${count}` : `${vocab.area} ${index + 1}`;
+  return count > 0 ? t('hud.areaOf', { area: vocab.area, n: index + 1, count }) : t('hud.area', { area: vocab.area, n: index + 1 });
 }
 
 /** single display character for an item icon; unknown items always show '?' */
@@ -76,11 +87,11 @@ export function itemGlyph(item: Pick<ItemView, 'name' | 'knowledge'> & { glyph?:
 export function knowledgeLines(item: ItemView): { kind: 'exact' | 'vague' | 'unknown'; lines: string[] } {
   if (item.knowledge === 'clear') return { kind: 'exact', lines: item.effectLines.length ? item.effectLines : [] };
   if (item.knowledge === 'vague') return { kind: 'vague', lines: item.vagueText ? [item.vagueText] : [] };
-  return { kind: 'unknown', lines: [UNKNOWN_ITEM_TEXT] };
+  return { kind: 'unknown', lines: [unknownItemText()] };
 }
 
 export function knowledgeBadge(k: ItemView['knowledge']): string {
-  return k === 'clear' ? 'Known' : k === 'vague' ? 'Partly known' : 'Unknown';
+  return k === 'clear' ? t('item.known') : k === 'vague' ? t('item.partlyKnown') : t('item.unknown');
 }
 
 /** small badge text for stack/charges: "×3", "2/3" */
@@ -100,27 +111,22 @@ export function cooldownFraction(item: Pick<SlotItemView, 'cooldown' | 'maxCoold
   return clamp(cd / max, 0, 1);
 }
 
-export const THREAT_LABEL: Record<ActorView['threat'], string> = {
-  trivial: 'Harmless',
-  even: 'Even match',
-  dangerous: 'Dangerous',
-  deadly: 'Deadly',
-};
+const THREATS: readonly ActorView['threat'][] = ['trivial', 'even', 'dangerous', 'deadly'];
 
-export function threatLabel(t: ActorView['threat']): string {
-  return THREAT_LABEL[t] ?? t;
+export function threatLabel(threat: ActorView['threat']): string {
+  return THREATS.includes(threat) ? t(`actor.threat.${threat}` as const) : threat;
 }
 
 export function factionLabel(f: ActorView['faction']): string {
   switch (f) {
     case 'hostile':
-      return 'Hostile';
+      return t('actor.faction.hostile');
     case 'friendly':
-      return 'Friendly';
+      return t('actor.faction.friendly');
     case 'neutral':
-      return 'Neutral';
+      return t('actor.faction.neutral');
     default:
-      return 'You';
+      return t('actor.faction.player');
   }
 }
 
@@ -132,13 +138,13 @@ export function logKindClass(kind: LogMessage['kind']): string {
 /** run stats for the end screen, labelled through the vocabulary */
 export function runStatLines(s: RunStatsView, vocab: Vocabulary): { label: string; value: string }[] {
   return [
-    { label: 'Turns', value: String(s.turns) },
-    { label: `${vocab.area} reached`, value: `${Math.min(s.areaCount, s.areasCleared + 1)} / ${s.areaCount}` },
+    { label: t('end.stat.turns'), value: String(s.turns) },
+    { label: t('end.stat.areas', { area: vocab.area }), value: t('common.fraction', { n: Math.min(s.areaCount, s.areasCleared + 1), of: s.areaCount }) },
     { label: capitalize(vocab.defeated), value: String(s.kills) },
-    { label: 'Items used', value: String(s.itemsUsed) },
-    { label: 'Harm dealt', value: String(s.damageDealt) },
-    { label: 'Harm taken', value: String(s.damageTaken) },
-    { label: `${vocab.xp} level`, value: String(s.level) },
+    { label: t('end.stat.itemsUsed'), value: String(s.itemsUsed) },
+    { label: t('end.stat.harmDealt'), value: String(s.damageDealt) },
+    { label: t('end.stat.harmTaken'), value: String(s.damageTaken) },
+    { label: t('end.stat.level', { xp: vocab.xp }), value: String(s.level) },
   ];
 }
 
@@ -157,12 +163,6 @@ export function typewriterSpeed(animationSpeed: number, reduceMotion: boolean): 
 /** the four difficulty levels, easiest first (StartOptions.difficulty) */
 export const DIFFICULTIES: readonly Difficulty[] = ['gentle', 'normal', 'hard', 'brutal'];
 
-const DIFFICULTY_TEXT: Record<Difficulty, { label: string; hint: string }> = {
-  gentle: { label: 'Gentle', hint: 'Forgiving. The GM may not add harsh rules without a counterweight.' },
-  normal: { label: 'Normal', hint: 'Fair but deadly. Permadeath, as intended.' },
-  hard: { label: 'Hard', hint: 'Tougher foes, sharper rules, fewer second chances.' },
-  brutal: { label: 'Brutal', hint: 'Everything bites. The GM is allowed to be cruel.' },
-};
 
 export function isDifficulty(v: unknown): v is Difficulty {
   return typeof v === 'string' && (DIFFICULTIES as readonly string[]).includes(v);
@@ -170,11 +170,11 @@ export function isDifficulty(v: unknown): v is Difficulty {
 
 /** label for a difficulty; numbers are slider positions (0..3, out of range clamps) */
 export function difficultyLabel(d: Difficulty | number): string {
-  return DIFFICULTY_TEXT[toDifficulty(d)].label;
+  return t(`difficulty.${toDifficulty(d)}.label` as const);
 }
 
 export function difficultyHint(d: Difficulty | number): string {
-  return DIFFICULTY_TEXT[toDifficulty(d)].hint;
+  return t(`difficulty.${toDifficulty(d)}.hint` as const);
 }
 
 /** slider position (0..3) or name → Difficulty ('normal' for anything unreadable) */
@@ -186,11 +186,11 @@ export function toDifficulty(d: unknown): Difficulty {
 
 export function weirdnessLabel(w: number): string {
   const v = clamp(w, 0, 1);
-  if (v < 0.15) return 'Familiar';
-  if (v < 0.4) return 'Off-kilter';
-  if (v < 0.65) return 'Strange';
-  if (v < 0.85) return 'Uncanny';
-  return 'Unhinged';
+  if (v < 0.15) return t('weirdness.familiar');
+  if (v < 0.4) return t('weirdness.offKilter');
+  if (v < 0.65) return t('weirdness.strange');
+  if (v < 0.85) return t('weirdness.uncanny');
+  return t('weirdness.unhinged');
 }
 
 /** deterministic-if-you-want shuffle pick: n distinct entries using `rand` in [0,1) */
@@ -205,7 +205,7 @@ export function pickCards<T>(list: readonly T[], n: number, rand: () => number):
 
 /** "Fast"/"Slow" chip text; null for normal */
 export function speedLabel(speed: 'fast' | 'normal' | 'slow'): string | null {
-  return speed === 'fast' ? 'Fast' : speed === 'slow' ? 'Slow' : null;
+  return speed === 'fast' ? t('hud.fast') : speed === 'slow' ? t('hud.slow') : null;
 }
 
 /** truncate for tooltips */
@@ -216,12 +216,12 @@ export function ellipsis(s: string, max: number): string {
 
 /** pure: notes shown under the provider select */
 export function presetNotes(p: ProviderPreset | undefined, transport: 'direct' | 'backend'): { text: string; warn: boolean }[] {
-  if (!p) return [{ text: 'Custom OpenAI-compatible endpoint. Enter its base URL and model.', warn: false }];
-  const out: { text: string; warn: boolean }[] = [{ text: `Region: ${p.region}`, warn: false }];
-  if (!p.cors && transport === 'direct') out.push({ text: 'This provider blocks browser calls (no CORS). Use the backend transport.', warn: true });
-  else if (!p.cors) out.push({ text: 'Browser calls are blocked by this provider; the backend proxies them.', warn: false });
-  if (transport === 'backend') out.push({ text: 'Backend: the server holds the API key; nothing is sent from this browser.', warn: false });
-  else if (p.needsKey) out.push({ text: 'Your API key is stored only in this browser (localStorage).', warn: false });
+  if (!p) return [{ text: t('settings.note.custom'), warn: false }];
+  const out: { text: string; warn: boolean }[] = [{ text: t('settings.note.region', { region: p.region }), warn: false }];
+  if (!p.cors && transport === 'direct') out.push({ text: t('settings.note.noCorsDirect'), warn: true });
+  else if (!p.cors) out.push({ text: t('settings.note.noCors'), warn: false });
+  if (transport === 'backend') out.push({ text: t('settings.note.backend'), warn: false });
+  else if (p.needsKey) out.push({ text: t('settings.note.keyLocal'), warn: false });
   if (p.notes) out.push({ text: p.notes, warn: false });
   return out;
 }
@@ -295,4 +295,54 @@ export function displayLogText(text: string, vocab: Pick<Vocabulary, 'stats'>): 
  */
 export function tradeColumns(t: Pick<TradeView, 'sellable'>): { buy: true; sell: boolean } {
   return { buy: true, sell: t.sellable.length > 0 };
+}
+
+/** the base language of a BCP-47 tag ("nb-NO" → "nb", "" → "en") */
+export function baseLang(tag: string | undefined | null): string {
+  const b = String(tag ?? '').trim().toLowerCase().split(/[-_]/)[0];
+  return b === 'no' ? 'nb' : b || 'en';
+}
+
+/**
+ * A language's own name with a capital first letter ("nb" → "Norsk bokmål", "en" → "English"),
+ * which reads right whatever the UI language is; the upper-cased tag when Intl cannot name it.
+ */
+export function languageEndonym(tag: string | undefined | null): string {
+  const code = baseLang(tag);
+  try {
+    const name = new Intl.DisplayNames([code], { type: 'language' }).of(code);
+    if (name && name.toLowerCase() !== code) return name.charAt(0).toLocaleUpperCase(code) + name.slice(1);
+  } catch {
+    /* no Intl.DisplayNames, or an unknown tag */
+  }
+  return code.toUpperCase();
+}
+
+/**
+ * Groups items by base language, the UI language's group first, then the rest by endonym; the
+ * order inside a group is kept.
+ */
+export function groupByLanguage<T extends { language?: string }>(items: readonly T[], uiLang: string): { language: string; label: string; items: T[] }[] {
+  const groups = new Map<string, T[]>();
+  for (const it of items) {
+    const k = baseLang(it.language);
+    const g = groups.get(k);
+    if (g) g.push(it);
+    else groups.set(k, [it]);
+  }
+  const ui = baseLang(uiLang);
+  return [...groups.entries()]
+    .map(([language, list]) => ({ language, label: languageEndonym(language), items: list }))
+    .sort((a, b) => (a.language === ui ? -1 : b.language === ui ? 1 : a.label.localeCompare(b.label)));
+}
+
+/**
+ * Inspiration cards: `n` random prompts, those in the UI language first (others fill up when there
+ * are too few).
+ */
+export function pickInspiration<T extends { language?: string }>(list: readonly T[], n: number, uiLang: string, rand: () => number): T[] {
+  const ui = baseLang(uiLang);
+  const mine = pickCards(list.filter((p) => baseLang(p.language) === ui), n, rand);
+  if (mine.length >= n) return mine;
+  return [...mine, ...pickCards(list.filter((p) => baseLang(p.language) !== ui), n - mine.length, rand)];
 }

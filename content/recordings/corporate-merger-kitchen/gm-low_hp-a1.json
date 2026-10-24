@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/corporate-merger-kitchen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Your smile has gone stiff at the corners. Somewhere, a leaving card is being passed round for signatures."
+          }
+        ]
+      }
+    }
+  ]
+}

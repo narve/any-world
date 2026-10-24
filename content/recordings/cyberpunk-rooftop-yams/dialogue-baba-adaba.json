@@ -1,0 +1,35 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/cyberpunk-rooftop-yams/baba-adaba",
+      "json": {
+        "reply": "Ah. Iyabo's grandchild, with her chin and her impatience. Sit, sit; nobody does business standing in my lofts. Your grandmother's book sleeps in my safest coop, wrapped in her own ankara. Books have prices, even books of friends. But the Nimbus falcons have taken eleven of my racers this week. Ground three of those black birds for me, and the syndicate will remember you kindly.",
+        "options": [
+          "What is in my grandmother's book?",
+          "How much for the almanac?",
+          "I'll clear your sky of falcons."
+        ],
+        "actions": [
+          {
+            "type": "start_quest",
+            "id": "clear-the-sky",
+            "title": "Clear the Syndicate's Sky",
+            "description": "Baba Adaba wants three Nimbus falcon drones jammed before they take any more of his racing pigeons.",
+            "complete": {
+              "type": "actor_defeated",
+              "actor": "falcon-unit",
+              "count": 3
+            },
+            "reward": [
+              {
+                "type": "currency",
+                "amount": 15
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

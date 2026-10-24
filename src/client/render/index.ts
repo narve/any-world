@@ -27,6 +27,19 @@
  *   r.resize(): void                                   // also automatic via ResizeObserver
  *   r.dispose(): void
  *
+ * Mobile / performance (DESIGN §6b)
+ *   r.setQuality('auto' | 'low' | 'high'): void        // 'auto' (default): low on phones / touch or
+ *                                                      // when frames are slow (adaptive, hysteresis)
+ *   r.quality: { setting, tier, profile }              // what is in effect now
+ *   r.stats(): RenderStats                             // { drawCalls, triangles, fps, ... } of the last frame
+ *   r.pick(clientX, clientY): Pos | null               // tapped tile; a tap on an actor's body gives its tile
+ *   r.zoomBy(f: number): void                          // pinch: f > 1 zooms in (camera closer)
+ *   r.rotateStep(dir: -1 | 1): void                    // 90° step (same as rotateCamera)
+ *   r.setViewportInsets({ top, bottom, left, right })  // CSS px covered by HUD / hotbar / safe areas;
+ *                                                      // the player is centred in the rest
+ *   r.onContextChange = (lost: boolean) => …           // WebGL context lost / restored (rebuilt in place)
+ *   attachTouchCamera(r, el)                           // pinch + twist gestures (see touch.ts)
+ *
  * Coordinates: tile (x, y) is centred at world (x, 0, y); see coords.ts. Models: see models/index.ts.
  */
 import * as THREE from 'three';
@@ -46,10 +59,30 @@ import { clearMaterialCache } from './materials';
 import { clearTextureCache } from './textures';
 import { Backdrop } from './backdrop';
 import { disposeSurfaceTextures } from './surfaces';
+import { AdaptiveQuality, FpsMeter, QUALITY_PROFILES, browserDeviceHints, initialTier, isMobileDevice, type DeviceHints, type QualityProfile, type QualitySetting, type QualityTier } from './quality';
+import type { ViewInsets } from './camera';
 
 export { buildModel, animateModel } from './models';
 export type { ModelSpecIn } from './models';
 export { towardCamera, tileCentre, worldToTile } from './coords';
+export { attachTouchCamera, TouchCameraGesture } from './touch';
+export { QUALITY_PROFILES, isMobileDevice } from './quality';
+export type { QualitySetting, QualityTier, QualityProfile } from './quality';
+export type { ViewInsets } from './camera';
+
+/** What the last rendered frame cost (Renderer.stats()). */
+export interface RenderStats {
+  drawCalls: number;
+  triangles: number;
+  /** frames per second, smoothed over ~0.5 s (0 until measured) */
+  fps: number;
+  geometries: number;
+  textures: number;
+  programs: number;
+  tier: QualityTier;
+  pixelRatio: number;
+  contextLost: boolean;
+}
 
 export interface RendererOptions {
   antialias?: boolean;
@@ -62,6 +95,10 @@ export interface RendererOptions {
    * `prefers-reduced-motion` setting. Change later with setReduceMotion().
    */
   reduceMotion?: boolean;
+  /** render quality (default 'auto'); change later with setQuality() */
+  quality?: QualitySetting;
+  /** device facts used by 'auto' (default: read from the browser); for tests */
+  device?: DeviceHints;
 }
 
 const MOVE_MS = 120;
@@ -99,11 +136,35 @@ export class Renderer {
   private raycaster = new THREE.Raycaster();
   private syncGen = 0;
   private ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  private qualitySetting: QualitySetting = 'auto';
+  private profile: QualityProfile = QUALITY_PROFILES.high;
+  private readonly mobile: boolean;
+  private adaptive: AdaptiveQuality | null = null;
+  private fpsMeter = new FpsMeter();
+  private maxPixelRatio: number;
+  private shadowsOpt: boolean;
+  private lastStats = { drawCalls: 0, triangles: 0 };
+  private contextLost = false;
+  private onLost = (e: Event) => {
+    e.preventDefault(); // lets the browser restore the context later
+    this.contextLost = true;
+    this.anim.finishAll();
+    this.onContextChange?.(true);
+  };
+  private onRestored = () => {
+    this.contextLost = false;
+    this.rebuild();
+    this.onContextChange?.(false);
+  };
+  /** called when the WebGL context is lost (true) and after it was restored and the scene rebuilt (false) */
+  onContextChange: ((lost: boolean) => void) | null = null;
 
   constructor(container: HTMLElement, opts: RendererOptions = {}) {
     this.container = container;
     this.gl = new THREE.WebGLRenderer({ antialias: opts.antialias ?? true, powerPreference: 'high-performance' });
-    this.gl.setPixelRatio(Math.min(globalThis.devicePixelRatio || 1, opts.maxPixelRatio ?? 2));
+    this.maxPixelRatio = opts.maxPixelRatio ?? 2;
+    this.shadowsOpt = opts.shadows ?? true;
+    this.mobile = isMobileDevice(opts.device ?? browserDeviceHints());
     this.gl.outputColorSpace = THREE.SRGBColorSpace;
     this.gl.toneMapping = THREE.NeutralToneMapping;
     this.gl.toneMappingExposure = 1.0;
@@ -115,12 +176,15 @@ export class Renderer {
     canvas.style.height = '100%';
     canvas.style.touchAction = 'none';
     container.appendChild(canvas);
+    canvas.addEventListener('webglcontextlost', this.onLost, false);
+    canvas.addEventListener('webglcontextrestored', this.onRestored, false);
 
     this.rig = new CameraRig(1);
     this.vfx = new VfxLayer(this.anim);
     this.scene.add(this.lights.group, this.vfx.group, this.backdrop.mesh);
     this.scene.background = new THREE.Color('#101014');
     this.setReduceMotion(opts.reduceMotion ?? prefersReducedMotion());
+    this.setQuality(opts.quality ?? 'auto');
 
     this.resize();
     if (typeof ResizeObserver !== 'undefined') {
@@ -679,6 +743,152 @@ export class Renderer {
     this.rig.zoom(delta);
   }
 
+  /** Pinch zoom: f > 1 brings the camera closer (fingers spreading), f < 1 moves it away. */
+  zoomBy(f: number): void {
+    this.rig.zoomBy(f);
+  }
+
+  /** One animated 90° camera step (touch rotate button / two-finger twist). */
+  rotateStep(dir: -1 | 1): void {
+    this.rotateCamera(dir);
+  }
+
+  /**
+   * CSS px of the canvas covered by overlay UI (HUD on top, hotbar at the bottom, safe-area insets).
+   * The player is kept centred in the uncovered part and default zoom / auto framing only count it.
+   */
+  setViewportInsets(insets: Partial<ViewInsets>): void {
+    this.rig.setInsets(insets);
+    this.cutKey = '';
+  }
+
+  get viewportInsets(): ViewInsets {
+    return { ...this.rig.insets };
+  }
+
+  /**
+   * Tile under viewport coordinates (a tap / click). A hit on a visible actor's model gives the tile
+   * it stands on (tall models cover the tiles behind them); otherwise the ground under the point.
+   */
+  pick(x: number, y: number): Pos | null {
+    if (!this.area) return null;
+    const ndc = this.toNdc(x, y);
+    if (!ndc) return null;
+    this.raycaster.setFromCamera(ndc, this.rig.camera);
+    if (this.actors) {
+      const roots: THREE.Object3D[] = [];
+      const byRoot = new Map<THREE.Object3D, ActorView>();
+      for (const v of this.actors.views.values()) {
+        if (!v.root.visible || v.dying) continue;
+        roots.push(v.inner);
+        byRoot.set(v.inner, v);
+      }
+      if (roots.length) {
+        for (const hit of this.raycaster.intersectObjects(roots, true)) {
+          if (!hit.object.visible || !(hit.object as THREE.Mesh).isMesh) continue;
+          let o: THREE.Object3D | null = hit.object;
+          while (o && !byRoot.has(o)) o = o.parent;
+          const v = o ? byRoot.get(o) : undefined;
+          if (v && inBounds(v.tile, this.area.width, this.area.height)) return { ...v.tile };
+        }
+      }
+    }
+    return this.screenToTile(x, y);
+  }
+
+  private toNdc(x: number, y: number): THREE.Vector2 | null {
+    const rect = this.gl.domElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    return new THREE.Vector2(((x - rect.left) / rect.width) * 2 - 1, -((y - rect.top) / rect.height) * 2 + 1);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Quality & stats
+  // ---------------------------------------------------------------------------
+
+  /**
+   * 'high': full pixel ratio (≤ 2), sun shadows, all lights, detailed backdrop. 'low': pixel ratio
+   * ≤ 1.5, no shadows, fewer lights, cheaper backdrop. 'auto' starts low on phones / touch devices and
+   * high elsewhere, then drops to low when frames are slow (and may come back, with hysteresis).
+   */
+  setQuality(q: QualitySetting): void {
+    this.qualitySetting = q === 'low' || q === 'high' ? q : 'auto';
+    const tier = initialTier(this.qualitySetting, this.mobile);
+    this.adaptive = this.qualitySetting === 'auto' ? new AdaptiveQuality(tier) : null;
+    this.applyTier(tier);
+  }
+
+  get quality(): { setting: QualitySetting; tier: QualityTier; profile: QualityProfile; mobile: boolean } {
+    return { setting: this.qualitySetting, tier: this.profile.tier, profile: this.profile, mobile: this.mobile };
+  }
+
+  private applyTier(tier: QualityTier): void {
+    const p = QUALITY_PROFILES[tier];
+    this.profile = p;
+    const ratio = Math.min(globalThis.devicePixelRatio || 1, this.maxPixelRatio, p.maxPixelRatio);
+    if (this.gl.getPixelRatio() !== ratio) {
+      this.gl.setPixelRatio(ratio);
+      this.resize();
+    }
+    const shadows = p.shadows && this.shadowsOpt;
+    if (this.gl.shadowMap.enabled !== shadows) {
+      this.gl.shadowMap.enabled = shadows;
+      this.scene.traverse((o) => {
+        const m = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+        if (m) for (const mat of Array.isArray(m) ? m : [m]) mat.needsUpdate = true;
+      });
+    }
+    this.gl.shadowMap.type = THREE.PCFShadowMap;
+    this.lights.setBudget({ lamps: p.lampLights, models: p.modelLights, shadows, shadowMapSize: p.shadowMapSize });
+    this.backdrop.setDetail(p.backdropOctaves, p.backdropSegments);
+  }
+
+  /** Cost of the last rendered frame plus the measured frame rate. */
+  stats(): RenderStats {
+    const mem = this.gl.info.memory;
+    return {
+      drawCalls: this.lastStats.drawCalls,
+      triangles: this.lastStats.triangles,
+      fps: Math.round(this.fpsMeter.fps * 10) / 10,
+      geometries: mem.geometries,
+      textures: mem.textures,
+      programs: this.gl.info.programs?.length ?? 0,
+      tier: this.profile.tier,
+      pixelRatio: this.gl.getPixelRatio(),
+      contextLost: this.contextLost,
+    };
+  }
+
+  /**
+   * Rebuild everything GPU-side from the current state (after a WebGL context restore): the area's
+   * geometry, lighting, backdrop and actor / item views. Camera position, zoom and rotation stay.
+   */
+  rebuild(): void {
+    // three.js re-creates its GL state on restore; make sure every texture is uploaded again
+    this.scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+      if (!m) return;
+      for (const mat of Array.isArray(m) ? m : [m]) {
+        for (const v of Object.values(mat as unknown as Record<string, unknown>)) {
+          if (v instanceof THREE.Texture && (v.image || (v as THREE.DataTexture).isDataTexture)) v.needsUpdate = true;
+        }
+        mat.needsUpdate = true;
+      }
+    });
+    this.applyTier(this.profile.tier);
+    const st = this.state;
+    if (st && this.world) {
+      const step = this.rig.step;
+      this.setArea(st.area);
+      this.rig.step = step;
+      this.rig.settle();
+      void this.sync(st, []);
+    } else if (this.area && this.world) {
+      this.cutKey = '';
+    }
+    this.renderNow();
+  }
+
   /** Current camera yaw step 0..3 (0 = looking north). */
   get cameraStep(): number {
     return this.rig.yawStep;
@@ -728,12 +938,12 @@ export class Renderer {
     const w = Math.max(1, this.container.clientWidth);
     const h = Math.max(1, this.container.clientHeight);
     this.gl.setSize(w, h, false);
-    this.rig.setAspect(w / h);
+    this.rig.setViewport(w, h);
   }
 
   /** Render one frame immediately (tests/screenshots). */
   renderNow(): void {
-    this.frame(performance.now());
+    this.frame(performance.now(), false);
   }
 
   /**
@@ -749,6 +959,17 @@ export class Renderer {
     const rect = this.gl.domElement.getBoundingClientRect();
     p.project(this.rig.camera);
     return { x: rect.left + ((p.x + 1) / 2) * rect.width, y: rect.top + ((1 - p.y) / 2) * rect.height, frac: v.hp.frac };
+  }
+
+  /** Viewport coordinates of a point `frac` (0 feet .. 1 top) up an actor's model, or null. For tests. */
+  actorScreen(actorId: string, frac = 0.6): { x: number; y: number } | null {
+    const v = this.actors?.views.get(actorId);
+    if (!v || !v.root.visible) return null;
+    const p = v.root.position.clone();
+    p.y += v.height * frac;
+    p.project(this.rig.camera);
+    const rect = this.gl.domElement.getBoundingClientRect();
+    return { x: rect.left + ((p.x + 1) / 2) * rect.width, y: rect.top + ((1 - p.y) / 2) * rect.height };
   }
 
   /**
@@ -826,6 +1047,8 @@ export class Renderer {
   dispose(): void {
     this.disposed = true;
     cancelAnimationFrame(this.raf);
+    this.gl.domElement.removeEventListener('webglcontextlost', this.onLost);
+    this.gl.domElement.removeEventListener('webglcontextrestored', this.onRestored);
     this.resizeObs?.disconnect();
     this.anim.finishAll();
     this.clearArea();
@@ -849,9 +1072,16 @@ export class Renderer {
     return this.actors.views.get(this.playerId)?.tile ?? null;
   }
 
-  private frame(now: number): void {
-    const dt = Math.min(0.1, Math.max(0, (now - this.last) / 1000));
+  private frame(now: number, measure = true): void {
+    const ms = now - this.last;
+    const dt = Math.min(0.1, Math.max(0, ms / 1000));
     this.last = now;
+    if (this.contextLost) return;
+    if (measure) this.fpsMeter.sample(ms);
+    if (measure && this.adaptive && !(typeof document !== 'undefined' && document.hidden)) {
+      const changed = this.adaptive.sample(ms);
+      if (changed) this.applyTier(changed);
+    }
     this.time += dt;
     const t = this.time;
     this.anim.tick(now);
@@ -883,6 +1113,9 @@ export class Renderer {
     this.backdrop.update(dt, this.rig.camera);
 
     this.gl.render(this.scene, this.rig.camera);
+    const info = this.gl.info.render;
+    this.lastStats.drawCalls = info.calls;
+    this.lastStats.triangles = info.triangles;
   }
 }
 

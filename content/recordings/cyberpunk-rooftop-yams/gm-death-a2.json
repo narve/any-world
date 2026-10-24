@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/cyberpunk-rooftop-yams/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Somewhere above the drowned streets, a falcon drone files its report and the paperwork is very thorough. But the pigeons saw everything, and the syndicate never forgets a name. Radio Agbado plays Mama Iyabo's favourite song, twice."
+          }
+        ]
+      }
+    }
+  ]
+}

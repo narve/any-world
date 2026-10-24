@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/fantasy-retired-mimic/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "NOTICE: Horsehair found on the foam spikes. Whoever is leaking, please tidy up after yourself. — Mgmt"
+          }
+        ]
+      }
+    }
+  ]
+}

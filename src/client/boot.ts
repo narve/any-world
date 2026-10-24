@@ -11,6 +11,7 @@
  *  - `?continue=1` resumes the autosaved run (the start screen when there is none).
  *  - anything else opens the start screen.
  */
+import { t } from './i18n/index';
 
 export interface SavedRunInfo {
   worldId: string;
@@ -43,7 +44,7 @@ export function bootRoute(search: string, saved: SavedRunInfo | null, worldTitle
     const title = worldTitle?.(world) ?? world;
     return {
       kind: 'start',
-      notice: `You have a run in progress in ${saved.worldTitle}. Continue it, or pick ${title} to start over.`,
+      notice: t('boot.runInProgress', { saved: saved.worldTitle, title }),
     };
   }
   if (q.get('continue') === '1') return saved ? { kind: 'continue' } : { kind: 'start' };

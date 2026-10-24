@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/cyberpunk-rooftop-yams/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Radio Agbado, quietly now: breathe, child. Mama Iyabo argued with soldiers and still made dinner. Eat something before you sign anything."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/folk-horror-scarecrow-wedding/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "St Ard's, the wedding morning. Barley has come up between the flagstones, the altar is heaped with cake, and at the far end of the aisle a tall figure in a Civil War coat has taken off his hat. The Register records that the groom is smiling, as far as a turnip can."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#ffcf90"
+          }
+        ]
+      }
+    }
+  ]
+}

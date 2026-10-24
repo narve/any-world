@@ -1,0 +1,36 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/deep-sea-whale-fall/tomas-quill",
+      "json": {
+        "reply": "Relief diver, eh? Took them long enough. Cells are eighteen chits until topside pays me, and yes, I'm rationing too. If you want a couple free, put three of those company drones in the bilge. They've been coring the pipework.",
+        "options": [
+          "Who stopped sending samples up?",
+          "Show me what you've got.",
+          "Where's the moonpool override?"
+        ],
+        "actions": [
+          {
+            "type": "start_quest",
+            "id": "bilge-the-drones",
+            "title": "Bilge the Drones",
+            "description": "Quill wants three Sampling Drones driven off before they core through the habitat's pipework. He'll pay in lamp cells.",
+            "complete": {
+              "type": "actor_defeated",
+              "actor": "sampler-drone",
+              "count": 3
+            },
+            "reward": [
+              {
+                "type": "give_item",
+                "item": "lamp-cell",
+                "amount": 2
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

@@ -132,13 +132,15 @@ describe('loss reason', () => {
     expect(s.endReason).toBe('bested by Archer (fire)');
   });
 
-  it('a sourceless status death says what kind of harm it was', () => {
+  it('a sourceless status death names the status and the kind of harm', () => {
     const w = testWorld();
     let s = game(w);
     player(s).hp = 1;
     applyStatus(ctxFor(w, s), player(s), 'burning', 5);
     for (let i = 0; i < 3 && s.status === 'playing'; i++) s = act(w, s, { type: 'wait' }).state;
     expect(s.status).toBe('lost');
-    expect(s.endReason).toBe('bested (fire)');
+    expect(s.endReason).toBe('bested (Burning, fire)');
+    expect(s.endReasonKey).toBe('end.loss.cause_typed');
+    expect(s.endReasonParams).toEqual({ defeated: 'bested', cause: 'Burning', damageType: 'fire' });
   });
 });

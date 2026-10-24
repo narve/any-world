@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-russetid-bussen/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Kunngjøring: du befinner deg nå inne i bassen. Gulvet slår i 128 bpm, veggene puster som membraner, og et sted lenger inne synger en stemme som ligner din: «Jeg er ikke sint, Ida. Jeg er bare skuffet.»"
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#7a5cff"
+          }
+        ]
+      }
+    }
+  ]
+}

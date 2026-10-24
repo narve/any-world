@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/abstract-yellow-triangle/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Your corners are chipping. Straight lines do not forgive; find a quiet place off the corridor."
+          }
+        ]
+      }
+    }
+  ]
+}

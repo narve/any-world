@@ -1,0 +1,17 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/microscopic-root-nodule/kappa-envoy",
+      "json": {
+        "reply": "Cousin! Same biovar, same lovely Nod factor, what are the odds? The officer here is a dear, but slow; I could vouch for you, if you let me hold your permit for just a moment. Plenty of sugar for two inside, wouldn't you say?",
+        "options": [
+          "Show me your nitrogenase, then.",
+          "Nobody holds my permit but me.",
+          "Why were you asking Glomus about me?"
+        ],
+        "actions": [],
+        "end": false
+      }
+    }
+  ]
+}

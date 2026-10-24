@@ -1,0 +1,3665 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Trolldirektoratet under Dovre",
+    "tagline": "Den første byggesøknaden fra et menneske. Tre hoder skal enes før sola står opp. Klagefristen er hundre år.",
+    "genre": "folkeeventyr-byråkrati",
+    "tags": [
+      "folkeeventyr",
+      "byråkrati",
+      "troll",
+      "ikke-voldelig",
+      "komedie",
+      "underjordisk"
+    ],
+    "tone": "tørrvittig, varm og litt uhyggelig",
+    "era": "nå, men under fjellet er det alltid 1300-tallet",
+    "premise": "Trollene under Dovre har fått sitt eget direktorat, med lysrør hugget inn i granitten og kønummer skrevet med kull. Kari Brekkestø vil bygge en liten hytte på trollgrunn, og hun er det første mennesket som noen gang har søkt. Skjemaene DT-1, DT-2 og DT-3 må finnes, fylles ut og stemples før sola står opp, for da forsteines hele etaten til neste natt. Saksbehandleren Trehode har tre hoder som aldri er enige, og den som får avslag kan klage – med hundre års frist.",
+    "prompt": "Trollene under Dovre har fått sitt eget direktorat, og du er det første mennesket som har søkt om å bygge hytte på trollgrunn. Skjemaene må være ferdig utfylt før sola står opp, saksbehandleren har tre hoder som er hjertens uenige, og klagefristen er hundre år.",
+    "nonViolent": true,
+    "language": "nb"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Stahet",
+        "abbr": "STA",
+        "description": "Hvor hardt du står på ditt. Gir tyngde til innvendingene dine."
+      },
+      "dex": {
+        "name": "Fingerferdighet",
+        "abbr": "FIN",
+        "description": "Hvor raskt du blar, signerer og smetter unna en stempelhånd."
+      },
+      "int": {
+        "name": "Paragrafsans",
+        "abbr": "PAR",
+        "description": "Hvor godt du kjenner reglene. Styrer overtalelse og blekkets kraft."
+      },
+      "hp": {
+        "name": "Tålmodighet",
+        "abbr": "TÅL",
+        "description": "Når tålmodigheten er brukt opp, gir du opp søknaden."
+      },
+      "mp": {
+        "name": "Blekk",
+        "abbr": "BLK",
+        "description": "Blekk i fyllepennen, brukt til stempler, klager og dagslys."
+      },
+      "ac": {
+        "name": "Tykk hud",
+        "abbr": "HUD",
+        "description": "Hvor lite sure kommentarer biter på deg."
+      }
+    },
+    "conflict": "Innvend",
+    "defeated": "henlagt",
+    "xp": "Ansiennitet",
+    "levelUp": "Opprykk",
+    "currency": "gebyrmerker",
+    "lossTitle": "Søknaden er avslått",
+    "winTitle": "Søknaden er innvilget",
+    "area": "Instans"
+  },
+  "palette": {
+    "primary": "#5f7d4e",
+    "secondary": "#8a8f99",
+    "accent": "#e8b84a",
+    "danger": "#c8443a",
+    "ui": "#1c2220",
+    "text": "#efe8d8"
+  },
+  "damageTypes": [
+    {
+      "id": "skjemavelde",
+      "name": "Skjemavelde",
+      "color": "#c9b98f"
+    },
+    {
+      "id": "sollys",
+      "name": "Sollys",
+      "color": "#ffd36a"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "forvirret",
+      "name": "Paragrafforvirret",
+      "description": "Hodet går rundt i underpunkter. Bevegelsene blir tilfeldige.",
+      "harmful": true,
+      "color": "#9b7fd1",
+      "flags": [
+        "confused"
+      ]
+    },
+    {
+      "id": "henvist",
+      "name": "Henvist til annen etat",
+      "description": "Du står fast i en kø som ikke beveger seg.",
+      "harmful": true,
+      "color": "#7a8a99",
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "halvforsteinet",
+      "name": "Halvforsteinet",
+      "description": "Dagslys har gjort lemmene grå og stive. Kan ikke handle.",
+      "harmful": true,
+      "color": "#b0a890",
+      "flags": [
+        "stunned"
+      ]
+    },
+    {
+      "id": "skremt",
+      "name": "Kirkeklokkeskrekk",
+      "description": "En kirkeklokke har ringt, og trollet vil bare bort.",
+      "harmful": true,
+      "color": "#e0d0a0",
+      "flags": [
+        "afraid"
+      ]
+    },
+    {
+      "id": "tilgriset",
+      "name": "Tilgriset av blekk",
+      "description": "Blekket renner og svir. Mister litt tålmodighet hver runde.",
+      "harmful": true,
+      "color": "#2a2f5a",
+      "perTurn": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          },
+          "damageType": "skjemavelde"
+        }
+      ]
+    },
+    {
+      "id": "saklig",
+      "name": "Saklig ro",
+      "description": "Du puster med magen og siterer forvaltningsloven stille for deg selv.",
+      "harmful": false,
+      "color": "#8fc1a9",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "kaffefart",
+      "name": "Kaffefart",
+      "description": "Tredje kopp. Du rekker to ting før noen andre rekker én.",
+      "harmful": false,
+      "color": "#a0663a",
+      "flags": [
+        "hasted"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "natt",
+      "name": "Natt igjen",
+      "description": "Hvor mye natt som er igjen før sola står opp og etaten stenger. Tom natt koster tålmodighet.",
+      "color": "#3b4a8a",
+      "max": 300,
+      "start": 300,
+      "perTurn": -1,
+      "onEmpty": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          },
+          "damageType": "sollys"
+        },
+        {
+          "type": "message",
+          "text": "En stripe morgenlys siver inn under døra. Saksbehandlerne grynter. Tålmodigheten din tæres."
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "for-soloppgang",
+      "name": "Før sola står opp",
+      "description": "Natten tikker ned én for hver runde. Hver nye instans gir deg ny natt, og mørkleggingsgardiner gir mer. Er natten tom, mister du 1 Tålmodighet hvert femte trekk.",
+      "playerTriggers": [
+        {
+          "on": "on_area_enter",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "natt",
+                "amount": {
+                  "base": 300
+                }
+              },
+              {
+                "type": "message",
+                "text": "Nytt kontor, ny kø, og klokka på veggen er stilt tilbake til midnatt."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "klagefrist",
+      "name": "Klagefrist: hundre år",
+      "description": "Første gang Tålmodigheten din tar slutt, klager du på avslaget i stedet for å gi opp. Du får fortsette – men bare én gang.",
+      "switches": {
+        "permadeathMercy": true
+      }
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Kari Brekkestø",
+    "title": "Søker nr. 000001, første menneske",
+    "description": "Lektor fra Dombås med termos, lusekofte og en drøm om en torvtakshytte ved Snøhetta. Har lest hele plan- og bygningsloven to ganger, for moro skyld.",
+    "stats": {
+      "str": 10,
+      "dex": 11,
+      "int": 14,
+      "hp": 28,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 10,
+    "sight": 7,
+    "unarmed": {
+      "name": "Hevet pekefinger",
+      "verb": "peker strengt på",
+      "damage": {
+        "dice": "1d3"
+      },
+      "accuracyStat": "int"
+    },
+    "startingItems": [
+      {
+        "item": "lovsamling",
+        "equipped": true
+      },
+      {
+        "item": "lusekofte",
+        "equipped": true
+      },
+      {
+        "item": "termos-kaffe",
+        "count": 2
+      },
+      {
+        "item": "dagslyslykt"
+      },
+      {
+        "item": "morkleggingsgardin",
+        "count": 1
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "seig-sak",
+          "name": "Seig som en sak",
+          "description": "Du har stått i kø på NAV. Dette er ingenting. +5 Tålmodighet.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 5
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "paragrafrytter",
+          "name": "Paragrafrytter",
+          "description": "Du siterer fotnoter utenat. +1 Paragrafsans.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "albuer",
+          "name": "Albuer i køen",
+          "description": "Lært på Vinmonopolet lille julaften. +1 Stahet, +1 Fingerferdighet.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 1
+            },
+            {
+              "stat": "dex",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "muntlig-klage-perk",
+          "name": "Muntlig klage",
+          "description": "Du lærer å fremme en klage så skarp at den kan henlegge et troll på avstand.",
+          "grantItems": [
+            "muntlig-klage"
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "haster-perk",
+          "name": "Stempelet «HASTER»",
+          "description": "Du får et eget stempel. Stemplet på deg selv gir kaffefart.",
+          "grantItems": [
+            "haster-stempel"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "tykkhudet",
+          "name": "Tykkhudet",
+          "description": "Sure kommentarer preller av. +1 Tykk hud.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "kaffeavhengig",
+          "name": "Kontorkaffe i blodet",
+          "description": "Hver gang en sak blir henlagt, tar du en slurk: 30 % sjanse for å få tilbake 4 Tålmodighet.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "chance": 0.3,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 4
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "nattmenneske",
+          "name": "Nattmenneske",
+          "description": "Du har alltid vært B-menneske. Hver ny instans gir 100 ekstra natt.",
+          "triggers": [
+            {
+              "on": "on_area_enter",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "natt",
+                    "amount": {
+                      "base": 100
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "rask-signatur",
+          "name": "Lynsignatur",
+          "description": "Du signerer med begge hender. +2 Fingerferdighet.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "kjenner-noen",
+          "name": "Kjenner noen i etaten",
+          "description": "En fetter av en nisse sitter i resepsjonen. +2 Paragrafsans, +4 Blekk.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "mp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.85,
+        "build": "average",
+        "skin": "#f0c9a8",
+        "top": "#b8323a",
+        "bottom": "#2f3a5c",
+        "accent": "#f2efe6",
+        "hair": "#c98a3e",
+        "hairStyle": "braids",
+        "headwear": "none",
+        "outfit": "coat",
+        "holding": "book"
+      },
+      "idle": "bob"
+    }
+  },
+  "actors": [
+    {
+      "id": "kolapp-vette",
+      "name": "Kølappvette",
+      "description": "Et lite vesen av sammenkrøllede kønummer. Den sniker i køen og biter folk som har lavere nummer.",
+      "stats": {
+        "hp": 6,
+        "ac": 11,
+        "str": 8,
+        "dex": 13,
+        "int": 4
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Sniker i køen",
+        "verb": "sniker seg foran",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "skjemavelde",
+        "accuracyStat": "dex"
+      },
+      "resistances": [
+        {
+          "damageType": "sollys",
+          "multiplier": 2
+        }
+      ],
+      "behaviour": {
+        "type": "pack"
+      },
+      "loot": [
+        {
+          "item": "kvikklunsj",
+          "chance": 0.2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "vette",
+        "papir"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#e9e4d4",
+          "secondary": "#c43a3a",
+          "accent": "#202020"
+        },
+        "scale": 0.55,
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "evig-ventende",
+      "name": "Evig ventende hulder",
+      "description": "En hulder som har ventet på svar på en fiskeløyvesøknad siden 1624. Halen hennes har grodd fast i stolen, men hun hiver den med seg når hun er sint.",
+      "stats": {
+        "hp": 10,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 12
+      },
+      "attack": {
+        "name": "Lang klagesang",
+        "verb": "klager sårt til",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "skjemavelde",
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "loot": [
+        {
+          "item": "brunost-skive",
+          "chance": 0.35
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "hulder"
+      ],
+      "persuadeDifficulty": 11,
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#e8d6c2",
+          "top": "#3d5a3a",
+          "bottom": "#3d5a3a",
+          "accent": "#b8a07a",
+          "hair": "#e8d27a",
+          "hairStyle": "long",
+          "outfit": "dress",
+          "holding": "none"
+        },
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.08,
+              0.5,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.25,
+              -0.22
+            ],
+            "rot": [
+              40,
+              0,
+              0
+            ],
+            "color": "#7a5a3a",
+            "material": "skin"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "blankettflaggermus",
+      "name": "Blankettflaggermus",
+      "description": "Brettede blanketter som har lært seg å fly. De holder avstand og kaster kopier i tre eksemplarer.",
+      "stats": {
+        "hp": 5,
+        "ac": 12,
+        "str": 6,
+        "dex": 14,
+        "int": 4
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Papirkutt",
+        "verb": "kaster blanketter på",
+        "damage": {
+          "base": 1,
+          "dice": "1d2"
+        },
+        "damageType": "skjemavelde",
+        "range": 3,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "xp": 5,
+      "tags": [
+        "papir"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#f3efe2",
+          "secondary": "#7d8fa8",
+          "accent": "#c43a3a"
+        },
+        "scale": 0.6,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "arkivorm",
+      "name": "Arkivorm",
+      "description": "En lang, støvgrå orm som spiser mapper fra 1700-tallet og ligger på lur mellom hyllene.",
+      "stats": {
+        "hp": 13,
+        "ac": 12,
+        "str": 12,
+        "dex": 11,
+        "int": 3
+      },
+      "attack": {
+        "name": "Arkiveringsbitt",
+        "verb": "arkiverer",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "loot": [
+        {
+          "item": "brunost-skive",
+          "chance": 0.3
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "orm",
+        "arkiv"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#8a8478",
+          "secondary": "#d9cfb8",
+          "accent": "#3a2a1a"
+        },
+        "scale": 0.9,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "stempeltroll",
+      "name": "Stempeltroll",
+      "description": "Et kort, bredt troll med et stempel i hver neve. Det stempler AVSLÅTT på alt som beveger seg, også seg selv.",
+      "stats": {
+        "hp": 15,
+        "ac": 12,
+        "str": 13,
+        "dex": 9,
+        "int": 6
+      },
+      "speed": 90,
+      "attack": {
+        "name": "AVSLÅTT-stempel",
+        "verb": "stempler AVSLÅTT på",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "skjemavelde",
+        "accuracyStat": "str"
+      },
+      "resistances": [
+        {
+          "damageType": "sollys",
+          "multiplier": 2
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "termos-kaffe",
+          "chance": 0.25
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "troll"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.75,
+          "build": "round",
+          "skin": "#7b8a5c",
+          "top": "#6a5040",
+          "bottom": "#4a3a30",
+          "accent": "#c43a3a",
+          "hair": "#3d3a2a",
+          "hairStyle": "mohawk",
+          "outfit": "rags",
+          "holding": "tool"
+        },
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.1,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.62,
+              0.12
+            ],
+            "color": "#6a7a4c",
+            "material": "skin"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "solvkre",
+      "name": "Sølvkresverm",
+      "description": "En glitrende sverm sølvkre som lever av lim og frimerker. De går alltid i flokk.",
+      "stats": {
+        "hp": 7,
+        "ac": 11,
+        "str": 7,
+        "dex": 13,
+        "int": 2
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Kribling",
+        "verb": "kribler over",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.2
+      },
+      "xp": 5,
+      "tags": [
+        "insekt"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#c8ccd4",
+          "secondary": "#8890a0"
+        },
+        "scale": 0.5,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "hundrearsklage",
+      "name": "Hundreårsklage",
+      "description": "En klage så gammel at den har fått sin egen vilje. Den svever som et sammenrullet pergament og forvirrer alle med vedlegg.",
+      "stats": {
+        "hp": 18,
+        "ac": 12,
+        "str": 10,
+        "dex": 12,
+        "int": 10
+      },
+      "attack": {
+        "name": "Vedlegg 14b",
+        "verb": "vedlegger noe til",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "skjemavelde",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "vedleggsstorm",
+          "name": "Vedleggsstorm",
+          "description": "Kaster et lass med vedlegg som gjør hodet tungt.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "forvirret",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#c9b98f"
+            }
+          },
+          "cooldown": 10
+        }
+      ],
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.15
+      },
+      "loot": [
+        {
+          "item": "gjenpartspapir",
+          "chance": 0.3
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 10,
+      "tags": [
+        "papir",
+        "klage"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#e4d6a8",
+          "secondary": "#a8823a",
+          "accent": "#7a1f1f"
+        },
+        "scale": 0.8,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "horingsinstans",
+      "name": "Høringsinstans",
+      "description": "En grønn klump av høringsuttalelser som alltid har noe å tilføye. Den kryper etter deg og uttaler seg fra fire ruters avstand.",
+      "stats": {
+        "hp": 12,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 12
+      },
+      "attack": {
+        "name": "Høringsuttalelse",
+        "verb": "avgir uttalelse om",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "skjemavelde",
+        "range": 4,
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "kvikklunsj",
+          "chance": 0.3
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "papir"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#5e8a4a",
+          "secondary": "#e9e4d4",
+          "accent": "#2a3a20"
+        },
+        "scale": 0.7,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "nemndleder-skrubb",
+      "name": "Nemndleder Skrubb",
+      "description": "Leder av Klagenemnda, et langt troll med mose i ørene og en bunke DT-3-skjemaer under armen. Han har aldri innvilget noe.",
+      "stats": {
+        "hp": 24,
+        "ac": 13,
+        "str": 14,
+        "dex": 10,
+        "int": 12
+      },
+      "attack": {
+        "name": "Nemndas vedtak",
+        "verb": "leser vedtaket for",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "skjemavelde",
+        "accuracyStat": "str"
+      },
+      "abilities": [
+        {
+          "id": "henvisning",
+          "name": "Henvisning",
+          "description": "Henviser deg til en etat som ikke finnes. Du står fast.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "henvist",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#7a8a99"
+            }
+          },
+          "cooldown": 9
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "sollys",
+          "multiplier": 2
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "loot": [
+        {
+          "item": "trollskinnsvest",
+          "chance": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 30,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Pedantisk, langsom og stolt av at nemnda har avslått alt siden 1350. Elsker latinske uttrykk han har misforstått.",
+        "greeting": "Hm. Et menneske. Nemnda har behandlet tolv tusen klager. Avslått tolv tusen. De er velkommen til å bli nummer tolv tusen og én.",
+        "lines": [
+          "Skjema DT-3 utleveres bare til søkere som allerede har levert skjema DT-3.",
+          "Ad hoc, ad hytte, ad absurdum. Nei.",
+          "Kom igjen om hundre år. Da har jeg kanskje lest vedlegget."
+        ],
+        "secrets": "Han har DT-3-skjemaene, men innerst inne har han lyst til å innvilge én eneste søknad før han forsteines for godt.",
+        "wants": "At noen endelig siterer reglementet hans riktig.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 15
+      },
+      "tags": [
+        "troll",
+        "elite"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.25,
+          "build": "slim",
+          "skin": "#6f7a5a",
+          "top": "#3a3a44",
+          "bottom": "#2a2a30",
+          "accent": "#c9b98f",
+          "hair": "#4a5a3a",
+          "hairStyle": "long",
+          "outfit": "robe",
+          "holding": "book"
+        },
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.14,
+              0.12,
+              0.18
+            ],
+            "pos": [
+              0,
+              1.04,
+              0.15
+            ],
+            "color": "#5f6a4a",
+            "material": "skin"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "fullmektig",
+      "name": "Fullmektig",
+      "description": "En av Trehodes fullmektiger, et troll i dress som bare har fullmakt til å si nei.",
+      "stats": {
+        "hp": 16,
+        "ac": 12,
+        "str": 12,
+        "dex": 10,
+        "int": 8
+      },
+      "attack": {
+        "name": "Nei",
+        "verb": "sier bestemt nei til",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "skjemavelde",
+        "accuracyStat": "str"
+      },
+      "resistances": [
+        {
+          "damageType": "sollys",
+          "multiplier": 2
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "termos-kaffe",
+          "chance": 0.3
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "troll"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1,
+          "build": "broad",
+          "skin": "#7b8a5c",
+          "top": "#2a2f3a",
+          "bottom": "#2a2f3a",
+          "accent": "#e8b84a",
+          "hair": "#2a2a1a",
+          "hairStyle": "short",
+          "outfit": "suit",
+          "holding": "book"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "saksbehandler-trehode",
+      "name": "Saksbehandler Trehode",
+      "description": "Tre hoder på én kropp i dress. Venstre hode sier ja, midterste sier nei, høyre hode vil ha saken utsatt. Sammen har de aldri fattet et vedtak.",
+      "stats": {
+        "hp": 80,
+        "ac": 13,
+        "str": 15,
+        "dex": 10,
+        "int": 14,
+        "mp": 20
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Trestemmig avslag",
+        "verb": "avslår trestemmig",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "skjemavelde",
+        "accuracyStat": "str"
+      },
+      "abilities": [
+        {
+          "id": "tre-meninger",
+          "name": "Tre meninger",
+          "description": "Alle tre hodene snakker samtidig. Det er umulig å tenke klart.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "radius": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "2d4"
+                },
+                "damageType": "skjemavelde"
+              },
+              {
+                "type": "apply_status",
+                "status": "forvirret",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#9b7fd1"
+            }
+          },
+          "cooldown": 6
+        },
+        {
+          "id": "utsatt-behandling",
+          "name": "Utsatt behandling",
+          "description": "Høyre hode vinner en avstemning: saken utsettes, og Trehode tar en kaffepause.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 10
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#a0663a"
+            }
+          },
+          "cooldown": 12,
+          "useWhen": "low_hp"
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "sollys",
+          "multiplier": 1.5
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Tre personligheter: Venstre (Ja-Jon) er vennlig og naiv, Midten (Nei-Nils) er sur og grundig, Høyre (Kanskje-Karsten) vil alltid utsette. De avbryter hverandre.",
+        "greeting": "«Velkommen!» sier venstre hode. «Avslått,» sier det midterste. «La oss ta det opp på neste møte om hundre år,» sier det høyre.",
+        "lines": [
+          "«Har De skjema DT-1?» «Irrelevant!» «Utsett!»",
+          "«Hytte? Så koselig!» «Torvtak er ikke godkjent materiale.» «La oss nedsette et utvalg.»",
+          "«Vi er hjertens uenige,» sier alle tre hodene, og er for en gangs skyld enige."
+        ],
+        "secrets": "Hodene kan bare enes om ett vedtak: Trehodestempelet, som står bak skranken, stempler en søknad gyldig hvis alle tre skjemaene ligger ved. Ingen har noen gang hatt alle tre.",
+        "wants": "Venstre vil ha en venn, midterste vil ha orden, høyre vil ha kaffe.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 18
+      },
+      "tags": [
+        "troll",
+        "sjef"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.45,
+          "build": "broad",
+          "skin": "#7a8460",
+          "top": "#2e3440",
+          "bottom": "#252a33",
+          "accent": "#e8b84a",
+          "hair": "#3a3a2a",
+          "hairStyle": "short",
+          "outfit": "suit",
+          "holding": "book"
+        },
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.28,
+              0.3,
+              0.28
+            ],
+            "pos": [
+              -0.33,
+              1.12,
+              0
+            ],
+            "color": "#86906a",
+            "material": "skin",
+            "group": "head"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.28,
+              0.3,
+              0.28
+            ],
+            "pos": [
+              0.33,
+              1.12,
+              0
+            ],
+            "color": "#6e7854",
+            "material": "skin",
+            "group": "head"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.12,
+              0.03,
+              0.12
+            ],
+            "pos": [
+              0.33,
+              1.14,
+              0.13
+            ],
+            "color": "#e8b84a",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.12,
+              0.14,
+              0.12
+            ],
+            "pos": [
+              -0.33,
+              1.33,
+              0
+            ],
+            "color": "#c43a3a",
+            "material": "cloth"
+          }
+        ],
+        "scale": 1.1,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "kaffetroll-bruse",
+      "name": "Kaffetrollet Bruse",
+      "description": "Et vennlig, mosegrodd troll som driver kiosken i venterommet. Kokekaffen er så sterk at skjeen står.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "str": 14,
+        "dex": 8,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Godlynt, prater om været han aldri har sett, og er den eneste i direktoratet som synes menneskesøkere er spennende.",
+        "greeting": "Nei, se! Et ekte menneske! Kaffe? Det er lang kø. Det har vært lang kø siden svartedauden.",
+        "lines": [
+          "Skjema DT-1 ligger hos vettene borti gangen. De gir det ikke fra seg frivillig.",
+          "Kirkeklokker liker vi ikke, men jeg selger dem likevel. Butikk er butikk.",
+          "Mørkleggingsgardiner! Hold sola ute litt lenger."
+        ],
+        "stock": [
+          "termos-kaffe",
+          "brunost-skive",
+          "morkleggingsgardin",
+          "lommekirkeklokke",
+          "kopi-tre-eksemplarer"
+        ],
+        "secrets": "Bruse vet at Trehodestempelet godkjenner alt med tre skjemaer vedlagt, men tør ikke si det høyt.",
+        "wants": "Å få se en ekte soloppgang uten å bli til stein.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "troll",
+        "kiosk"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.1,
+          "build": "round",
+          "skin": "#7f8f5e",
+          "top": "#8a5a3a",
+          "bottom": "#4a3a2a",
+          "accent": "#e8d8b8",
+          "hair": "#5a6a3a",
+          "hairStyle": "bun",
+          "outfit": "plain",
+          "holding": "bottle"
+        },
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.15,
+              0.12,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.92,
+              0.14
+            ],
+            "color": "#6f7f50",
+            "material": "skin"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "arkivar-ulla",
+      "name": "Arkivar Ulla Underjord",
+      "description": "Huldra som har ansvaret for arkivet. Hun har kuhale, lesebriller og et tre hundre år gammelt rulleregister i hodet.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 25,
+        "ac": 12,
+        "str": 9,
+        "dex": 12,
+        "int": 15
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Strengt hyggelig, hvisker selv om hun er alene, og retter grammatikken din uten å spørre.",
+        "greeting": "Shh. Dette er et arkiv. Sett deg, du ser ut som du har stått i kø i tre hundre år. Her er en kopp nypete.",
+        "lines": [
+          "DT-2, Nabovarsel til fjellet, ligger innerst i arkivet. Fjellet har ikke svart.",
+          "Ormene spiser bare mapper. Vanligvis.",
+          "Stempeltrollene er sterke, men sollys gjør dem stive som statuer."
+        ],
+        "secrets": "Ulla har selv søkt om å flytte ut av fjellet, i 1702. Saken ligger fortsatt under behandling.",
+        "wants": "At noen endelig får en søknad innvilget, så hun vet at det går an.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "hulder"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "slim",
+          "skin": "#efdcc8",
+          "top": "#5a3a5a",
+          "bottom": "#3a2a3a",
+          "accent": "#e8b84a",
+          "hair": "#d8c060",
+          "hairStyle": "bun",
+          "outfit": "dress",
+          "holding": "lantern"
+        },
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.07,
+              0.5,
+              0.07
+            ],
+            "pos": [
+              0,
+              0.25,
+              -0.22
+            ],
+            "rot": [
+              40,
+              0,
+              0
+            ],
+            "color": "#8a6a4a",
+            "material": "skin"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "fossegrimen",
+      "name": "Fossegrimen Gjøl",
+      "description": "En våt spillemann som søkte om fiskeløyve i 1624 og fortsatt venter på klagesvaret. Fela hans drypper.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 12,
+        "str": 10,
+        "dex": 14,
+        "int": 13
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Melankolsk, spiller små triller mellom setningene og regner tiden i klagefrister.",
+        "greeting": "Hundre år klagefrist, sier de. Jeg har klaget fire ganger. Snart er det fem hundre år siden jeg fikk lov til å fiske.",
+        "lines": [
+          "Klagefristen er ikke en frist. Det er et sted. Du står på den nå.",
+          "Nemndleder Skrubb har DT-3 under armen. Han sover aldri, men han blunker.",
+          "Trolla tåler ikke sol. Har du lys som ligner sol, holder de seg unna."
+        ],
+        "secrets": "Gjøl vet at hver øy her ute er ett tiår av en eneste klage, hans egen.",
+        "wants": "At noen spiller en vals for ham, eller i det minste nynner.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 12
+      },
+      "tags": [
+        "vette",
+        "musikk"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "slim",
+          "skin": "#b8d0d8",
+          "top": "#2a4a5a",
+          "bottom": "#1a3040",
+          "accent": "#e0f0ff",
+          "hair": "#2a3a4a",
+          "hairStyle": "long",
+          "outfit": "rags",
+          "holding": "staff"
+        },
+        "light": {
+          "color": "#8fd0e8",
+          "intensity": 0.8,
+          "radius": 2
+        },
+        "idle": "sway"
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "lovsamling",
+      "name": "Lovsamling i lommeformat",
+      "kind": "Oppslagsverk",
+      "description": "Norsk Lovtidend, tynt papir, gule lapper overalt. Du slår opp riktig paragraf og leser den høyt.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Paragrafhenvisning",
+        "verb": "siterer paragrafer for",
+        "damage": {
+          "dice": "1d6"
+        },
+        "damageType": "skjemavelde",
+        "accuracyStat": "int"
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.08,
+              0.4
+            ],
+            "color": "#7a1f1f",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.28,
+              0.07,
+              0.38
+            ],
+            "pos": [
+              0.01,
+              0,
+              0
+            ],
+            "color": "#efe8d8",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "rodpenn",
+      "name": "Saksbehandlerens rødpenn",
+      "kind": "Fyllepenn",
+      "description": "En tung rødpenn som har strøket ut tusenvis av søknader. I dine hender stryker den ut innvendinger.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Rødt strek",
+        "verb": "stryker ut",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "skjemavelde",
+        "accuracyStat": "int"
+      },
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.5,
+              0.06
+            ],
+            "rot": [
+              0,
+              0,
+              70
+            ],
+            "color": "#c43a3a",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.05,
+              0.1,
+              0.05
+            ],
+            "pos": [
+              0.26,
+              0.09,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              -110
+            ],
+            "color": "#e8b84a",
+            "material": "metal"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "lusekofte",
+      "name": "Bestemors lusekofte",
+      "kind": "Strikkeplagg",
+      "description": "Tykk, kløende og helt ugjennomtrengelig for sarkasme.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.35,
+              0.15
+            ],
+            "color": "#2f3a5c",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.46,
+              0.08,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#f2efe6",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "trollskinnsvest",
+      "name": "Vest av trollskinn",
+      "kind": "Embetsdrakt",
+      "description": "Skrubbs gamle vest. Den lukter mose og gir en ro som bare et fjell kan ha.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 3,
+      "modifiers": [
+        {
+          "stat": "hp",
+          "amount": 3
+        }
+      ],
+      "rarity": "rare",
+      "value": 40,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.4,
+              0.15
+            ],
+            "color": "#4a5a3a",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.06,
+              0.06,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.1,
+              0.08
+            ],
+            "color": "#e8b84a",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "gammel-fullmakt",
+      "name": "Gulnet fullmakt",
+      "kind": "Dokument",
+      "description": "En fullmakt med segl. Den er utstedt til noen, for noe, en gang.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        },
+        {
+          "stat": "ac",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 25,
+      "knowledge": "vague",
+      "vagueText": "Seglet er fortsatt varmt. Folk virker litt mer villige til å høre på den som bærer den.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "plane",
+            "size": [
+              0.35,
+              0.45,
+              0.01
+            ],
+            "rot": [
+              -80,
+              0,
+              0
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#e0cf9a",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              0.03,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.07,
+              0.05
+            ],
+            "color": "#a82a2a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "termos-kaffe",
+      "name": "Termos med kokekaffe",
+      "kind": "Kaffe",
+      "description": "Svart, bitter og varm. Gir tilbake 7 Tålmodighet.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 7
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#a0663a"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.16,
+              0.42,
+              0.16
+            ],
+            "color": "#b8323a",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.17,
+              0.08,
+              0.17
+            ],
+            "pos": [
+              0,
+              0.24,
+              0
+            ],
+            "color": "#d8d8d8",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "brunost-skive",
+      "name": "Skive med brunost",
+      "kind": "Matpakke",
+      "description": "Grovbrød, smør og en tykk skive brunost. Gir 6 til 9 Tålmodighet.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c98a3e"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.06,
+              0.32
+            ],
+            "color": "#8a6a3a",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.04,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#c9803a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "kvikklunsj",
+      "name": "Kvikklunsj",
+      "kind": "Sjokolade",
+      "description": "Fire fingre. Gir 5 Tålmodighet og noen runder med kaffefart.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "kaffefart",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8c84a"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.06,
+              0.16
+            ],
+            "color": "#e8c84a",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.065,
+              0.161
+            ],
+            "color": "#c43a3a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "morkleggingsgardin",
+      "name": "Mørkleggingsgardin",
+      "kind": "Gardin",
+      "description": "Tung, svart gardin fra krigens dager. Henges for en sprekk og gir 80 mer natt.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "natt",
+            "amount": {
+              "base": 80
+            }
+          },
+          {
+            "type": "message",
+            "text": "Du henger opp gardinen. Morgenen må vente litt til."
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#1a1a30"
+        }
+      },
+      "value": 14,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.1,
+              0.25
+            ],
+            "color": "#1a1a24",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "dagslyslykt",
+      "name": "Dagslyslykt",
+      "kind": "Lommelykt",
+      "description": "En lykt med dagslyspære fra Clas Ohlson. Troll tåler den dårlig: 2d4 sollys i en stråle, og kan gjøre dem halvt forsteinet. Koster 4 Blekk.",
+      "category": "tool",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "cooldown": 2,
+      "onUse": {
+        "targeting": {
+          "shape": "ray",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "2d4"
+            },
+            "damageType": "sollys"
+          },
+          {
+            "type": "apply_status",
+            "status": "halvforsteinet",
+            "duration": 1
+          }
+        ],
+        "vfx": {
+          "kind": "beam",
+          "color": "#ffe9a0"
+        }
+      },
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              0.35,
+              0.1
+            ],
+            "rot": [
+              0,
+              0,
+              80
+            ],
+            "color": "#3a3a3a",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0.18,
+              0.04,
+              0
+            ],
+            "color": "#fff2b0",
+            "material": "glow",
+            "emissive": "#ffe080"
+          }
+        ],
+        "light": {
+          "color": "#ffe9a0",
+          "intensity": 0.6,
+          "radius": 1.5
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "lommekirkeklokke",
+      "name": "Lommekirkeklokke",
+      "kind": "Klokke",
+      "description": "En bitte liten kirkeklokke. Når den ringer, vil alle troll og vetter i nærheten bare bort. Tre ringinger.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 0,
+          "radius": 3,
+          "affects": "enemies",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "skremt",
+            "duration": 6
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e8d8a0"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.25,
+              0.28,
+              0.25
+            ],
+            "color": "#c8a040",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.06,
+              0.06,
+              0.06
+            ],
+            "pos": [
+              0,
+              -0.14,
+              0
+            ],
+            "color": "#806020",
+            "material": "metal"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "kopi-tre-eksemplarer",
+      "name": "Kopi i tre eksemplarer",
+      "kind": "Blankett",
+      "description": "Kast den, og alle i nærheten må lese alle tre eksemplarene. Forvirrer i 3 runder.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "forvirret",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#f3efe2"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.04,
+              0.4
+            ],
+            "color": "#f3efe2",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.04,
+              0.4
+            ],
+            "pos": [
+              0.03,
+              0.04,
+              0.02
+            ],
+            "color": "#f0c8d0",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.04,
+              0.4
+            ],
+            "pos": [
+              0.06,
+              0.08,
+              0.04
+            ],
+            "color": "#c8e0f0",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "gjenpartspapir",
+      "name": "Gjenpartspapir",
+      "kind": "Blåpapir",
+      "description": "Et ark blått karbonpapir som smitter av på alt det treffer.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4"
+            },
+            "damageType": "skjemavelde"
+          },
+          {
+            "type": "apply_status",
+            "status": "tilgriset",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#2a3a8a"
+        }
+      },
+      "value": 14,
+      "knowledge": "vague",
+      "vagueText": "Blekket er fortsatt vått. Det ser ut som det kunne gjort skikkelig gris av noens dag.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.03,
+              0.42
+            ],
+            "color": "#2a3a8a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "huldremjod",
+      "name": "Huldremjød",
+      "kind": "Drikk",
+      "description": "Søt, gyllen og varmende. Gir tilbake 12 Tålmodighet.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 12
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8c84a"
+        }
+      },
+      "value": 18,
+      "knowledge": "unknown",
+      "appearanceGroup": "trollflasker",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.16,
+              0.3,
+              0.16
+            ],
+            "color": "#5a8a4a",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "gammel-kaffegrut",
+      "name": "Kaffegrut fra 1814",
+      "kind": "Drikk",
+      "description": "Noen har spart på den siden Eidsvoll. Du blir paragrafforvirret i 4 runder.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "forvirret",
+            "duration": 4
+          },
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 3
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#4a3020"
+        }
+      },
+      "value": 4,
+      "knowledge": "unknown",
+      "appearanceGroup": "trollflasker",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.16,
+              0.3,
+              0.16
+            ],
+            "color": "#4a3020",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "myrvann",
+      "name": "Myrvann fra Dovre",
+      "kind": "Drikk",
+      "description": "Brunt og kaldt. Gir 60 natt og 4 Blekk, og smaker mørke.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "natt",
+            "amount": {
+              "base": 60
+            }
+          },
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 4
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#3b4a8a"
+        }
+      },
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "trollflasker",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.16,
+              0.3,
+              0.16
+            ],
+            "color": "#5a4a2a",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "muntlig-klage",
+      "name": "Muntlig klage",
+      "kind": "Ferdighet",
+      "description": "Du fremmer en klage så presis at den treffer fra fire ruter unna: 1d8 pluss halve Paragrafsansen. Koster 5 Blekk.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d8",
+              "scale": {
+                "stat": "int",
+                "factor": 0.5
+              }
+            },
+            "damageType": "skjemavelde"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#e8b84a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.25,
+              0.05,
+              0.25
+            ],
+            "color": "#e8b84a",
+            "material": "glow",
+            "emissive": "#e8b84a"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "haster-stempel",
+      "name": "Stempelet «HASTER»",
+      "kind": "Stempel",
+      "description": "Stempler HASTER på deg selv: kaffefart og saklig ro i 5 runder. Koster 4 Blekk.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "cooldown": 10,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "kaffefart",
+            "duration": 5
+          },
+          {
+            "type": "apply_status",
+            "status": "saklig",
+            "duration": 5
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#c43a3a"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.18,
+              0.08,
+              0.18
+            ],
+            "color": "#c43a3a",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.2,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.14,
+              0
+            ],
+            "color": "#6a4a2a",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "skjema-dt1",
+      "name": "Skjema DT-1: Søknad om å få søke",
+      "kind": "Skjema",
+      "description": "Første skjema. Uten det slipper ingen ned til 2. instans. Hjørnet er tygget av en vette.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.02,
+              0.42
+            ],
+            "color": "#f3efe2",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.021,
+              0.06
+            ],
+            "pos": [
+              0.08,
+              0.01,
+              0.14
+            ],
+            "color": "#c43a3a",
+            "material": "matte"
+          }
+        ],
+        "light": {
+          "color": "#ffe9a0",
+          "intensity": 0.5,
+          "radius": 1.2
+        },
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "skjema-dt2",
+      "name": "Skjema DT-2: Nabovarsel til fjellet",
+      "kind": "Skjema",
+      "description": "Nabovarsel, sendt til Dovrefjell selv. Fjellet har ikke svart, og det regnes som samtykke.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.02,
+              0.42
+            ],
+            "color": "#e0ecf3",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.021,
+              0.06
+            ],
+            "pos": [
+              0.08,
+              0.01,
+              0.14
+            ],
+            "color": "#2a3a8a",
+            "material": "matte"
+          }
+        ],
+        "light": {
+          "color": "#ffe9a0",
+          "intensity": 0.5,
+          "radius": 1.2
+        },
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "skjema-dt3",
+      "name": "DT-3: Erklæring om at du ikke er geit",
+      "kind": "Skjema",
+      "description": "Det siste skjemaet. Signeres i nærvær av klagenemnda. Geiter har hatt det for lett i fjellet.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.02,
+              0.42
+            ],
+            "color": "#f3e8c8",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.021,
+              0.06
+            ],
+            "pos": [
+              0.08,
+              0.01,
+              0.14
+            ],
+            "color": "#3a7a3a",
+            "material": "matte"
+          }
+        ],
+        "light": {
+          "color": "#ffe9a0",
+          "intensity": 0.5,
+          "radius": 1.2
+        },
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "trehodestempelet",
+      "name": "Trehodestempelet",
+      "kind": "Embetsstempel",
+      "description": "Stempelet med tre håndtak. Løft det med DT-1, DT-2 og DT-3 i sekken, og det stempler søknaden selv – INNVILGET – uansett hva hodene mener.",
+      "category": "quest",
+      "useMode": "passive",
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.12,
+              0.25
+            ],
+            "color": "#7a1f1f",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.25,
+              0.06
+            ],
+            "pos": [
+              -0.12,
+              0.18,
+              0
+            ],
+            "color": "#6a4a2a",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.25,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.18,
+              0
+            ],
+            "color": "#6a4a2a",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.25,
+              0.06
+            ],
+            "pos": [
+              0.12,
+              0.18,
+              0
+            ],
+            "color": "#6a4a2a",
+            "material": "wood"
+          }
+        ],
+        "light": {
+          "color": "#e8b84a",
+          "intensity": 0.8,
+          "radius": 1.5
+        },
+        "idle": "hover"
+      },
+      "passiveWhenCarried": true
+    }
+  ],
+  "terrains": [
+    {
+      "id": "papirhaug",
+      "name": "Papirhaug",
+      "description": "En haug med uåpnede søknader. Det er tungt å vasse gjennom, men noen har glemt gebyrmerker i den.",
+      "moveCost": 2,
+      "color": "#d9d0b8",
+      "height": 0.3,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "currency",
+            "amount": 3
+          },
+          {
+            "type": "message",
+            "text": "Mellom søknadene finner du noen løse gebyrmerker."
+          }
+        ]
+      }
+    },
+    {
+      "id": "blekkpol",
+      "name": "Blekkpøl",
+      "description": "En blank pøl av blekk som har dryppet fra taket i hundrevis av år. Fyller fyllepennen.",
+      "color": "#1e2440",
+      "onStand": [
+        {
+          "type": "resource",
+          "resource": "mp",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "emissive": "#2a3a8a"
+    },
+    {
+      "id": "forsteinet-soker",
+      "name": "Forsteinet saksbehandler",
+      "description": "Et troll som ble stående ute da sola kom. Nå er det en stein med slips.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#8a8a80",
+      "height": 1.1,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.8,
+              1,
+              0.7
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#8a8a80",
+            "material": "stone"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.35,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.6,
+              0.34
+            ],
+            "color": "#7a1f1f",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "trollflasker": [
+      {
+        "label": "Grønnlig flaske",
+        "color": "#5a8a4a"
+      },
+      {
+        "label": "Brun krukke",
+        "color": "#6a4a2a"
+      },
+      {
+        "label": "Mosegrodd dunk",
+        "color": "#4a6a3a"
+      },
+      {
+        "label": "Sotet glass",
+        "color": "#3a3a40"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "1. instans: Venterommet",
+      "description": "Et venterom hugget inn i granitten, med lysrør som summer og flimrer. Hundre år gamle kølapper ligger i driver langs veggene, og alle stolene er fulle av vesener som har ventet siden svartedauden.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 2,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#6b6e64",
+        "color2": "#5d6058",
+        "material": "stone",
+        "pattern": "tiles"
+      },
+      "wall": {
+        "color": "#4a4a52",
+        "color2": "#3a3a40",
+        "material": "stone",
+        "height": 1.6
+      },
+      "lighting": {
+        "ambient": "#7a8088",
+        "ambientIntensity": 0.55,
+        "lamps": {
+          "color": "#d8f0e0",
+          "intensity": 1.6,
+          "frequency": 0.08,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#2a2e30",
+          "density": 0.03
+        }
+      },
+      "actors": [
+        {
+          "actor": "kolapp-vette",
+          "weight": 40,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "blankettflaggermus",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "evig-ventende",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "kaffetroll-bruse",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "termos-kaffe",
+          "weight": 20
+        },
+        {
+          "item": "brunost-skive",
+          "weight": 20
+        },
+        {
+          "item": "kvikklunsj",
+          "weight": 12
+        },
+        {
+          "item": "kopi-tre-eksemplarer",
+          "weight": 12
+        },
+        {
+          "item": "morkleggingsgardin",
+          "weight": 10
+        },
+        {
+          "item": "huldremjod",
+          "weight": 6
+        },
+        {
+          "item": "gammel-kaffegrut",
+          "weight": 5
+        },
+        {
+          "item": "myrvann",
+          "weight": 5
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "skjema-dt1",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "papirhaug",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Ta paternosterheisen ned til 2. instans",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.4,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#8a6a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              1.1,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "matte"
+          }
+        ],
+        "light": {
+          "color": "#e8b84a",
+          "intensity": 1,
+          "radius": 2
+        },
+        "idle": "none"
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "skjema-dt1"
+      },
+      "gmNotes": "Komisk start. Bruse i kiosken er varm og hjelpsom. DT-1 voktes av vetter i en sidegang. Hint om at sola kommer: klokka på veggen tikker høyt.",
+      "music": "calm"
+    },
+    {
+      "name": "2. instans: Det uendelige arkivet",
+      "description": "Hyller så høye at de forsvinner i mørket, fulle av mapper som puster. Gulvet er knirkende eikeplanker, lyset kommer fra nakne lyspærer, og et sted innerst ligger nabovarselet til fjellet.",
+      "generator": "maze",
+      "size": "medium",
+      "params": {
+        "loops": 0.3,
+        "chambers": 4,
+        "deadEnds": 0.4
+      },
+      "floor": {
+        "color": "#6e5236",
+        "color2": "#5e4630",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#3e2c1e",
+        "color2": "#c9b98f",
+        "material": "wood",
+        "height": 1.9
+      },
+      "lighting": {
+        "ambient": "#8a7050",
+        "ambientIntensity": 0.45,
+        "lamps": {
+          "color": "#ffcf80",
+          "intensity": 1.8,
+          "frequency": 0.07,
+          "flicker": false
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#1e160e",
+          "density": 0.04
+        }
+      },
+      "actors": [
+        {
+          "actor": "arkivorm",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "stempeltroll",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "solvkre",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "blankettflaggermus",
+          "weight": 10,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "arkivar-ulla",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "termos-kaffe",
+          "weight": 18
+        },
+        {
+          "item": "brunost-skive",
+          "weight": 18
+        },
+        {
+          "item": "kvikklunsj",
+          "weight": 10
+        },
+        {
+          "item": "gjenpartspapir",
+          "weight": 12
+        },
+        {
+          "item": "rodpenn",
+          "weight": 6
+        },
+        {
+          "item": "gammel-fullmakt",
+          "weight": 5
+        },
+        {
+          "item": "morkleggingsgardin",
+          "weight": 10
+        },
+        {
+          "item": "huldremjod",
+          "weight": 6
+        },
+        {
+          "item": "gammel-kaffegrut",
+          "weight": 5
+        },
+        {
+          "item": "myrvann",
+          "weight": 5
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "skjema-dt2",
+          "where": "far"
+        },
+        {
+          "item": "rodpenn",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "blekkpol",
+          "density": 0.015
+        },
+        {
+          "terrain": "papirhaug",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Krabb inn i klageskuffen",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.6,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#5a3a22",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.06,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.4,
+              0.46
+            ],
+            "color": "#e8b84a",
+            "material": "metal"
+          }
+        ],
+        "light": {
+          "color": "#ffcf80",
+          "intensity": 1,
+          "radius": 2
+        },
+        "idle": "none"
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "skjema-dt2"
+      },
+      "gmNotes": "Stille og klaustrofobisk. Ulla hvisker. Arkivormer ligger på lur i blindgangene. Stempeltroll er sårbare for dagslyslykta – minn spilleren på det.",
+      "music": "eerie"
+    },
+    {
+      "name": "3. instans: Klagefristen",
+      "description": "Bak klageskuffen er det ikke mer fjell. Hundre år klagefrist henger i et mørkt tomrom som øyer av mosegrodd tid, ett tiår per øy, bundet sammen av smale bruer av papirstrimler. Over alt danser et nordlys av blekk.",
+      "generator": "islands",
+      "size": "medium",
+      "params": {
+        "islandCount": 9,
+        "islandSize": 0.55,
+        "bridgeLength": 4,
+        "loops": 0.3,
+        "outcrops": 0.4,
+        "rims": 1
+      },
+      "floor": {
+        "color": "#5d6b4a",
+        "color2": "#4a5a3c",
+        "material": "stone",
+        "pattern": "grass"
+      },
+      "wall": {
+        "color": "#33402f",
+        "color2": "#283224",
+        "material": "stone",
+        "height": 0.8
+      },
+      "lighting": {
+        "ambient": "#5a6a8a",
+        "ambientIntensity": 0.6,
+        "lamps": {
+          "color": "#8fe0c0",
+          "intensity": 1.2,
+          "frequency": 0.05,
+          "flicker": true
+        },
+        "playerLight": 5,
+        "sky": "#0a1020"
+      },
+      "actors": [
+        {
+          "actor": "hundrearsklage",
+          "weight": 30,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "horingsinstans",
+          "weight": 30,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "stempeltroll",
+          "weight": 20,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "solvkre",
+          "weight": 15,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "nemndleder-skrubb",
+          "where": "far"
+        },
+        {
+          "actor": "fossegrimen",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "termos-kaffe",
+          "weight": 18
+        },
+        {
+          "item": "brunost-skive",
+          "weight": 15
+        },
+        {
+          "item": "kvikklunsj",
+          "weight": 10
+        },
+        {
+          "item": "gjenpartspapir",
+          "weight": 10
+        },
+        {
+          "item": "lommekirkeklokke",
+          "weight": 6
+        },
+        {
+          "item": "morkleggingsgardin",
+          "weight": 10
+        },
+        {
+          "item": "huldremjod",
+          "weight": 8
+        },
+        {
+          "item": "gammel-kaffegrut",
+          "weight": 5
+        },
+        {
+          "item": "myrvann",
+          "weight": 6
+        }
+      ],
+      "itemCount": 5,
+      "placedItems": [
+        {
+          "item": "skjema-dt3",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "forsteinet-soker",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Stig opp gjennom saksbunken",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.7,
+              0.3,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#e9e4d4",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.65,
+              0.3,
+              0.85
+            ],
+            "pos": [
+              0.03,
+              0.45,
+              0
+            ],
+            "color": "#d9d0b8",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.3,
+              0.8
+            ],
+            "pos": [
+              -0.02,
+              0.75,
+              0
+            ],
+            "color": "#e9e4d4",
+            "material": "matte"
+          }
+        ],
+        "light": {
+          "color": "#8fe0c0",
+          "intensity": 1.2,
+          "radius": 2.5
+        },
+        "idle": "none"
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "skjema-dt3"
+      },
+      "gmNotes": "Det ikke-realistiske kapitlet: tid som sted. Gjøl spiller fele. Skrubb vokter DT-3 og kan overtales med Paragrafsans. Hint: øyene er tiår av hans klage.",
+      "backdrop": {
+        "style": "aurora",
+        "color": "#0a1020",
+        "color2": "#3a8a6a",
+        "intensity": 0.7
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "Siste instans: Trehodes kontor",
+      "description": "Et høyt kontor med rød teppe og en skranke av granitt. Bak skranken sitter Saksbehandler Trehode og diskuterer med seg selv. Gjennom ljoren i taket har himmelen begynt å bli blågrå.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.3,
+        "sideRooms": 0.4
+      },
+      "floor": {
+        "color": "#6b2e2e",
+        "color2": "#5a2626",
+        "material": "cloth",
+        "pattern": "carpet"
+      },
+      "wall": {
+        "color": "#3a3a42",
+        "color2": "#2a2a30",
+        "material": "stone",
+        "height": 2
+      },
+      "lighting": {
+        "ambient": "#8a7a90",
+        "ambientIntensity": 0.55,
+        "sun": {
+          "color": "#a8b8e0",
+          "intensity": 0.4,
+          "elevation": 12
+        },
+        "lamps": {
+          "color": "#ffc870",
+          "intensity": 2,
+          "frequency": 0.06,
+          "flicker": false
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "fullmektig",
+          "weight": 40,
+          "min": 2,
+          "max": 3
+        },
+        {
+          "actor": "blankettflaggermus",
+          "weight": 20,
+          "max": 2
+        },
+        {
+          "actor": "kolapp-vette",
+          "weight": 20,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "saksbehandler-trehode",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "termos-kaffe",
+          "weight": 20
+        },
+        {
+          "item": "brunost-skive",
+          "weight": 15
+        },
+        {
+          "item": "kvikklunsj",
+          "weight": 10
+        },
+        {
+          "item": "kopi-tre-eksemplarer",
+          "weight": 10
+        },
+        {
+          "item": "morkleggingsgardin",
+          "weight": 8
+        }
+      ],
+      "itemCount": 4,
+      "placedItems": [
+        {
+          "item": "trehodestempelet",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [],
+      "transitionName": "Gå ut i morgenlyset",
+      "gmNotes": "Finalen. Trehodes tre hoder snakker i munnen på hverandre. To veier: henlegg Trehode, eller snik deg til Trehodestempelet ved skranken: med alle tre skjemaene i sekken stempler det søknaden selv. Morgengryet nærmer seg.",
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Finn skjemaene DT-1, DT-2 og DT-3 og løft Trehodestempelet bak skranken – eller henlegg Saksbehandler Trehode – før sola står opp.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "trehodestempelet"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "skjema-dt1"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "skjema-dt2"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "skjema-dt3"
+            }
+          ]
+        },
+        {
+          "type": "actor_defeated",
+          "actor": "saksbehandler-trehode"
+        }
+      ]
+    },
+    "winText": "Tre hoder ser på hverandre, så på deg, og for første gang i direktoratets historie nikker de samtidig. Byggetillatelsen er skrevet på bjørkenever. Da du kommer ut av fjellet, står sola opp over Snøhetta, og bak deg hører du et lite, forsiktig klapp fra kiosken.",
+    "lossText": "Tålmodigheten tar slutt. Du legger fra deg lovsamlingen, og et troll gir deg en kvittering: Saken er henlagt. Klagefrist: hundre år. Kanskje blir det hytte på barnebarna dine."
+  },
+  "gm": {
+    "persona": "Ekkoet i Dovre: fjellets egen stemme, som har ropt opp kønummer i direktoratet siden 1300-tallet og har en svak forkjærlighet for søkere som ikke gir seg.",
+    "voice": "Høflig, tørr byråkratprosa med De-form, korte setninger, og en og annen glipe av eldgammel ømhet.",
+    "threads": [
+      "Sola nærmer seg: klokker, lysstriper, trolls nervøsitet",
+      "De tre hodene er uenige om alt, også om deg",
+      "Alle i direktoratet har en egen gammel søknad som aldri ble behandlet",
+      "Fjellet selv har fått nabovarsel og tenker seg om"
+    ],
+    "fallback": {
+      "intro": "Nummer 000001, vær så god. Ekkoet ruller gjennom granitten, og lysrørene blunker. De er det første mennesket som har søkt om å bygge hytte på trollgrunn. Direktoratet stenger når sola står opp. Ta med Dem tålmodigheten.",
+      "areaEnter": [
+        "Venterommet. Stolene knirker, vettene teller kølapper, og et sted borte i gangen ligger skjema DT-1 og venter.",
+        "Arkivet. Mappene puster i hyllene. Nabovarselet til fjellet ligger innerst, der lyset er svakest.",
+        "Klagefristen. Her er det ikke fjell lenger, bare tid. Hver øy er et tiår, og Nemndleder Skrubb vokter DT-3.",
+        "Siste instans. Tre hoder løfter blikket samtidig og sier tre forskjellige ting. Gjennom ljoren lysner himmelen."
+      ],
+      "lowHp": [
+        "Tålmodigheten er nesten oppbrukt. Kanskje en kopp kaffe?",
+        "Ekkoet hvisker: Ingen har klart det før. Det betyr ikke at det ikke går."
+      ],
+      "events": [
+        "En høyttaler knitrer: «Nummer 000002?» Ingen svarer.",
+        "Et sted langt borte stempler noen AVSLÅTT tre ganger.",
+        "Klokka på veggen hopper fem minutter fram. Så tilbake fire."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Lun orgeldrone i fjellet, klokkespill som tikker som stempler, og en felemelodi som ikke helt finner hjem.",
+    "synth": {
+      "key": "D",
+      "scale": "dorian",
+      "tempo": 72,
+      "timbre": "organ",
+      "drone": true,
+      "percussion": "clockwork",
+      "brightness": 0.35
+    },
+    "searchTerms": [
+      "norsk folkemusikk hardingfele",
+      "Dovregubbens hall orgel",
+      "ambient nordic folk"
+    ],
+    "suggestions": [
+      "Grieg: I Dovregubbens hall, i langsom versjon",
+      "Hardingfeleslått, slått ned i tempo"
+    ]
+  }
+}

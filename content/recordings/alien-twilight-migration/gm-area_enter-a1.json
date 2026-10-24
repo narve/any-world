@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/alien-twilight-migration/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Warm dark closes over you, and Hollowhill's heartbeat arrives a long moment after your own. The walls are lichen grown inward, pink and breathing, and somewhere far down the folds something heavy grinds against them with every slow beat."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#ff9fb0"
+          },
+          {
+            "type": "say",
+            "actorId": "brother-pith",
+            "text": "Mind the yellow pools, visitor. The landlord's breakfast. Wipe your feet."
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/corporate-merger-kitchen/maureen-facilities",
+      "json": {
+        "reply": "Mind the floor, petal, I've just mopped round the Greyline lot. Biscuits up front, I don't do invoices. And if you're going past that microwave queue, keep your elbows in: the Warden's been guarding it since the fish incident.",
+        "options": [
+          "What have you got in the cupboard?",
+          "Who's been nicking the yoghurts?",
+          "Why's the Warden guarding the fire door end?"
+        ],
+        "actions": [
+          {
+            "type": "trade",
+            "actorId": "a7",
+            "items": [
+              {
+                "item": "builders-tea",
+                "price": 12
+              },
+              {
+                "item": "filter-coffee",
+                "price": 10
+              },
+              {
+                "item": "calendar-invite",
+                "price": 14
+              },
+              {
+                "item": "out-of-office",
+                "price": 18
+              },
+              {
+                "item": "heavy-stapler",
+                "price": 30
+              },
+              {
+                "item": "hi-vis-vest",
+                "price": 35
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

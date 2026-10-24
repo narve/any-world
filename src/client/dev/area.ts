@@ -5,9 +5,12 @@
  *   /dev/area.html?world=fixture-dream&area=0          (synthetic dream world until content/worlds has it)
  *   /dev/area.html?world=fixture-western&backdrop=starfield&bd=0b0820&bd2=a98bff&bi=0.7&gen=islands
  *   &still=1 freezes cosmetic motion (reduce motion); see applyOverrides for every override.
+ *   &quality=auto|low|high   render quality tier (Renderer.setQuality)
+ *   &insets=top,right,bottom,left   CSS px covered by a pretend HUD / hotbar (shown as dim bands)
+ * Touch: pinch zooms, two-finger twist rotates (attachTouchCamera), a tap highlights the tile.
  * window.__dev exposes { renderer, state, demo(), move(dx,dy) } for e2e tests.
  */
-import { Renderer } from '../render';
+import { Renderer, attachTouchCamera, type QualitySetting } from '../render';
 import { loadWorld, buildDemoState, isOpaqueTile, simpleFov } from './fixtures';
 import type { GameEvent, GameState, Pos } from '../../engine/types';
 import type { WorldSpec, AreaPlan } from '../../schema/world';
@@ -47,7 +50,22 @@ async function main() {
   }
 
   const view = document.getElementById('view')!;
-  const r = new Renderer(view, { reduceMotion: q.get('still') === '1' ? true : undefined });
+  const quality = (q.get('quality') ?? 'auto') as QualitySetting;
+  const r = new Renderer(view, { reduceMotion: q.get('still') === '1' ? true : undefined, quality });
+  const ins = (q.get('insets') ?? '').split(',').map((n) => Number(n) || 0);
+  if (ins.some((n) => n > 0)) {
+    const [top = 0, right = 0, bottom = 0, left = 0] = ins;
+    r.setViewportInsets({ top, right, bottom, left });
+    for (const [side, size] of [['top', top], ['right', right], ['bottom', bottom], ['left', left]] as const) {
+      if (!size) continue;
+      const band = document.createElement('div');
+      band.className = `inset inset-${side}`;
+      band.style[side] = '0';
+      band.style[side === 'top' || side === 'bottom' ? 'height' : 'width'] = `${size}px`;
+      document.body.appendChild(band);
+    }
+  }
+  attachTouchCamera(r, view);
   r.setWorld(world);
   r.setArea(state.area);
   const step = Number(q.get('step') ?? 0) | 0;
@@ -141,7 +159,7 @@ async function main() {
     r.zoom(e.deltaY / 100);
   }, { passive: false });
   view.addEventListener('click', (e) => {
-    const t = r.screenToTile(e.clientX, e.clientY);
+    const t = r.pick(e.clientX, e.clientY);
     r.highlightTiles(t ? [t] : []);
   });
 

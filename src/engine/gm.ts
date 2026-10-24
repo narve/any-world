@@ -9,11 +9,12 @@ import type { Effect } from '../schema/world';
 import { GM_ACTION_COST } from '../schema/gm';
 import { RuleVariant } from '../schema/world';
 import type { ActorInstance, PendingChoice, Pos, Quest } from './types';
-import { type Ctx, actorName, emit, findActor, findFreeNear, isAlive, isPlayer, log, playerActor } from './ctx';
+import { type Ctx, actorName, emit, findActor, findFreeNear, isAlive, isPlayer, log, logKey, playerActor } from './ctx';
 import { spawnActor } from './actors';
 import { displayItemName, dropItemAt, giveItem } from './inventory';
 import { applyEffectList, isVisibleToPlayer } from './effects';
 import { reveal } from './knowledge';
+import { FACTION_KEYS } from './log-keys';
 import { grantXp } from './progression';
 import { evalCondition } from './conditions';
 import { side } from './stats';
@@ -220,7 +221,9 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
         if (s) n++;
       }
       if (!n) return 'nowhere to place it';
-      log(ctx, `${ix.actors.get(a.actor)!.name}${n > 1 ? ` ×${n}` : ''} appears.`, 'warning');
+      const actorNm = ix.actors.get(a.actor)!.name;
+      if (n > 1) logKey(ctx, 'log.appears_many', { actor: actorNm, count: n }, 'warning');
+      else logKey(ctx, 'log.appears', { actor: actorNm }, 'warning');
       return null;
     }
     case 'give_item':
@@ -264,7 +267,7 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
         actor.ai.alerted = false;
         delete actor.ai.lastSeen;
       }
-      log(ctx, `${actorName(ctx, actor)} is now ${a.faction}.`, a.faction === 'hostile' ? 'bad' : 'good');
+      logKey(ctx, FACTION_KEYS[a.faction], { actor: actorName(ctx, actor) }, a.faction === 'hostile' ? 'bad' : 'good');
       return null;
     }
     case 'reveal_item':
@@ -283,7 +286,7 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
       const q: Quest = { id: a.id, title: a.title, description: a.description, complete: a.complete, reward, status: 'active' };
       ctx.s.quests.push(q);
       emit(ctx, { type: 'quest_updated', questId: q.id, status: 'active' });
-      log(ctx, `New: ${q.title}`, 'gm');
+      logKey(ctx, 'log.quest.new', { title: q.title }, 'gm');
       return null;
     }
     case 'trade': {
@@ -309,7 +312,8 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
     }
     case 'currency':
       ctx.s.player.currency = Math.max(0, ctx.s.player.currency + a.amount);
-      if (a.amount) log(ctx, `${a.amount > 0 ? '+' : ''}${a.amount} ${ctx.world.vocabulary.currency}`, a.amount > 0 ? 'loot' : 'info');
+      if (a.amount > 0) logKey(ctx, 'log.currency.gain', { amount: a.amount, currency: ctx.world.vocabulary.currency }, 'loot');
+      else if (a.amount < 0) logKey(ctx, 'log.currency.spend', { amount: -a.amount, currency: ctx.world.vocabulary.currency }, 'info');
       return null;
     case 'grant_xp':
       grantXp(ctx, a.amount);
@@ -345,7 +349,8 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
       const entry = addActiveRule(ctx, rule, reason);
       if (entry.reason) log(ctx, entry.reason, 'gm');
       const harmful = estimateRuleImpact(ctx.world, rule).harmful;
-      log(ctx, `New rule: ${rule.name}${rule.description ? ` — ${rule.description}` : ''}`, harmful ? 'warning' : 'good');
+      if (rule.description) logKey(ctx, 'log.rule.new_desc', { name: rule.name, description: rule.description }, harmful ? 'warning' : 'good');
+      else logKey(ctx, 'log.rule.new', { name: rule.name }, harmful ? 'warning' : 'good');
       emit(ctx, { type: 'rule_added', id: rule.id, name: rule.name, source: 'gm', ...(entry.reason ? { reason: entry.reason } : {}) });
       return null;
     }
@@ -357,7 +362,7 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
       if (!gone) return `no rule "${a.id}" in force`;
       const reason = typeof a.reason === 'string' ? a.reason.trim() : '';
       if (reason) log(ctx, reason, 'gm');
-      log(ctx, `Rule lifted: ${gone.rule.name}`, 'info');
+      logKey(ctx, 'log.rule.lifted', { name: gone.rule.name }, 'info');
       emit(ctx, { type: 'rule_removed', id: gone.rule.id, name: gone.rule.name, ...(reason ? { reason } : {}) });
       return null;
     }
@@ -372,7 +377,7 @@ export function checkQuests(ctx: Ctx): void {
     if (!evalCondition(ctx, q.complete, { self: playerActor(ctx) })) continue;
     q.status = 'done';
     emit(ctx, { type: 'quest_updated', questId: q.id, status: 'done' });
-    log(ctx, `Done: ${q.title}`, 'good');
+    logKey(ctx, 'log.quest.done', { title: q.title }, 'good');
     applyGmList(ctx, q.reward, { charge: false });
   }
 }

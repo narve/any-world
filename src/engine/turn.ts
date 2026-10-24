@@ -4,7 +4,7 @@
  * ends: statuses, terrain, regen, resources, on_turn triggers, quests; then everyone gains energy
  * equal to its (hasted/slowed) speed.
  */
-import { type Ctx, actorAt, emit, endGame, isAlive, isPlayer, log, playerActor } from './ctx';
+import { type Ctx, actorAt, emit, endGame, isAlive, isPlayer, logKey, mutTile, playerActor } from './ctx';
 import { samePos } from './util';
 import { energyGain, hasFlag, maxHp, maxMp } from './stats';
 import { actorTurn } from './ai';
@@ -15,7 +15,7 @@ import { checkQuests } from './gm';
 import { evalCondition } from './conditions';
 import { heal } from './combat';
 import { switchesOf } from './rules';
-import { lossReason } from './combat';
+import { lossReasonKeyed } from './combat';
 import { regenInterval } from './difficulty';
 
 export const ACT_COST = 100;
@@ -30,7 +30,7 @@ export function runWorld(ctx: Ctx): void {
     if (guard >= RUN_WORLD_GUARD) {
       // never expected (statuses and terrain always let the player act again); hand control back
       // with a visible note rather than silently burning further rounds
-      log(ctx, `${ctx.world.player.name} can act again.`, 'system');
+      logKey(ctx, 'log.turn.act_again', { player: ctx.world.player.name }, 'system');
       return;
     }
     if (ctx.s.status !== 'playing') return;
@@ -40,7 +40,7 @@ export function runWorld(ctx: Ctx): void {
     if (p.energy >= ACT_COST) {
       if (hasFlag(ctx, p, 'stunned')) {
         p.energy -= ACT_COST;
-        log(ctx, `${ctx.world.player.name} can't act.`, 'bad');
+        logKey(ctx, 'log.turn.stunned', { player: ctx.world.player.name }, 'bad');
         continue;
       }
       return;
@@ -94,7 +94,13 @@ export function endRound(ctx: Ctx): void {
     const skip = expiredBy.get(a.id) ?? new Set<string>();
     const has = new Set(a.statuses.map((st) => st.id));
     const effects = td.onStand.filter((e) => !(e.type === 'apply_status' && (skip.has(e.status) || has.has(e.status))));
-    applyEffectList(ctx, effects, a, [a], a.pos, []);
+    const prevCause = ctx.harmCause;
+    ctx.harmCause = { terrain: td.id };
+    try {
+      applyEffectList(ctx, effects, a, [a], a.pos, []);
+    } finally {
+      ctx.harmCause = prevCause;
+    }
     if (s.status !== 'playing') return;
   }
   for (const a of s.area.actors) {
@@ -128,9 +134,9 @@ export function endRound(ctx: Ctx): void {
   // temporary terrain
   const changed: { x: number; y: number }[] = [];
   for (let i = 0; i < map.tiles.length; i++) {
-    const t = map.tiles[i];
-    if (t.terrainTtl === undefined) continue;
-    t.terrainTtl -= 1;
+    if (map.tiles[i].terrainTtl === undefined) continue;
+    const t = mutTile(ctx, i);
+    t.terrainTtl = (t.terrainTtl ?? 1) - 1;
     if (t.terrainTtl > 0) continue;
     const pos = { x: i % map.width, y: Math.floor(i / map.width) };
     const under = t.terrainUnder;
@@ -163,7 +169,8 @@ export function checkEnd(ctx: Ctx): void {
   if (s.status !== 'playing') return;
   const p = playerActor(ctx);
   if (p.hp <= 0) {
-    endGame(ctx, 'lost', lossReason(ctx));
+    const lr = lossReasonKeyed(ctx);
+    endGame(ctx, 'lost', lr.text, lr);
     return;
   }
   const cc = { self: p };

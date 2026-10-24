@@ -10,6 +10,18 @@ import { optionPrice } from './gm';
 import { transitionFailure } from './area';
 import { hasFlag, side } from './stats';
 import { DIR_LIST, addDir, cheb, samePos, tileAt } from './util';
+import { requiredDefeats } from './goals';
+import type { ActorInstance } from './types';
+
+/**
+ * Whether the run still needs this (non-hostile) actor defeated: its def id, or an earlier form
+ * of it, is named by an actor_defeated the goal, a lock or an active quest has not had yet.
+ */
+function defeatRequired(required: Set<string>, a: ActorInstance): boolean {
+  if (!required.size) return false;
+  if (required.has(a.defId)) return true;
+  return (a.formerDefIds ?? []).some((id) => required.has(id));
+}
 
 export function computeLegalActions(ctx: Ctx): PlayerAction[] {
   const s = ctx.s;
@@ -41,12 +53,15 @@ export function computeLegalActions(ctx: Ctx): PlayerAction[] {
     if (passable(ctx, to.x, to.y) && !rooted) out.push({ type: 'move', dir });
   }
   out.push({ type: 'wait' });
+  const required = requiredDefeats(ctx);
   if (s.area.items.some((fi) => samePos(fi.pos, p.pos)) && firstFreeSlot(ctx) >= 0) out.push({ type: 'pickup' });
   if (!transitionFailure(ctx)) out.push({ type: 'transition' });
   for (const a of s.area.actors) {
     if (isPlayer(ctx, a) || a.hp <= 0) continue;
     if (!isVisibleToPlayer(ctx, a) && cheb(a.pos, p.pos) > 1) continue;
-    if (side(ctx, a) === 'H' && !attackFailure(ctx, a)) out.push({ type: 'attack', targetId: a.id });
+    // hostiles, and anyone else the run needs defeated (a persuaded rival the goal still names):
+    // step() accepts an attack on a neutral or friendly actor (it provokes them)
+    if ((side(ctx, a) === 'H' || defeatRequired(required, a)) && !attackFailure(ctx, a)) out.push({ type: 'attack', targetId: a.id });
     if (cheb(a.pos, p.pos) <= TALK_RANGE) {
       if (canTalkTo(ctx, a)) out.push({ type: 'talk', targetId: a.id });
       if (ctx.world.verbs.persuade && !a.allyOf) out.push({ type: 'persuade', targetId: a.id });

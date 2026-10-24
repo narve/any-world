@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/fantasy-retired-mimic/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "NOTICE, final: The redundancy list has been taken down. Someone has drawn a small armchair on it in goblin crayon, with teeth, and underlined it three times. — Anon"
+          }
+        ]
+      }
+    }
+  ]
+}

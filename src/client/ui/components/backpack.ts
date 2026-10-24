@@ -6,6 +6,8 @@ import type { SlotItemView } from '../viewmodel';
 import { dataKey, h, icon, ICONS, setChildren } from '../dom';
 import { QUICK_SLOTS, TOTAL_SLOTS, slotMenu, type SlotMenuEntry } from '../slots';
 import { itemCard, slotButton, type Tooltip, type UiContext } from './common';
+import { bindLongPress } from './hotbar';
+import { t } from '../../i18n/index';
 
 export interface BackpackState {
   open: boolean;
@@ -34,23 +36,23 @@ export class Backpack {
   private slotEls: HTMLButtonElement[] = [];
 
   constructor(private handlers: BackpackHandlers, _tooltip: Tooltip, private ctx: () => UiContext) {
-    this.quickEl = h('div', { class: 'aw-bp-quick', role: 'grid', 'aria-label': 'Quick slots' });
-    this.gridEl = h('div', { class: 'aw-bp-grid', role: 'grid', 'aria-label': 'Backpack' });
+    this.quickEl = h('div', { class: 'aw-bp-quick', role: 'grid', 'aria-label': t('hotbar.label') });
+    this.gridEl = h('div', { class: 'aw-bp-grid', role: 'grid', 'aria-label': t('bp.title') });
     this.inspectEl = h('div', { class: 'aw-bp-inspect', 'aria-live': 'polite' });
     this.hintEl = h('div', { class: 'aw-bp-hint' });
     this.el = h(
       'section',
-      { class: 'aw-panel aw-backpack', role: 'dialog', 'aria-label': 'Backpack', hidden: true },
+      { class: 'aw-panel aw-backpack', role: 'dialog', 'aria-label': t('bp.title'), hidden: true },
       h(
         'header',
         { class: 'aw-panel-head' },
-        h('h2', null, 'Backpack'),
-        h('button', { type: 'button', class: 'aw-icon-btn', 'aria-label': 'Close backpack', onclick: () => handlers.close() }, icon(ICONS.close)),
+        h('h2', null, t('bp.title')),
+        h('button', { type: 'button', class: 'aw-icon-btn', 'aria-label': t('bp.closeAria'), onclick: () => handlers.close() }, icon(ICONS.close)),
       ),
       h(
         'div',
         { class: 'aw-bp-body' },
-        h('div', { class: 'aw-bp-slots' }, h('div', { class: 'aw-bp-label' }, 'Quick slots 1–8'), this.quickEl, h('div', { class: 'aw-bp-label' }, 'Carried'), this.gridEl),
+        h('div', { class: 'aw-bp-slots' }, h('div', { class: 'aw-bp-label' }, t('bp.quick')), this.quickEl, h('div', { class: 'aw-bp-label' }, t('bp.carried')), this.gridEl),
         this.inspectEl,
       ),
       this.hintEl,
@@ -75,6 +77,7 @@ export class Backpack {
       b.tabIndex = st.cursor === i ? 0 : -1;
       b.setAttribute('role', 'gridcell');
       b.setAttribute('aria-selected', String(st.cursor === i));
+      if (it) bindLongPress(b, () => this.handlers.openMenu(i));
       b.addEventListener('click', () => this.handlers.select(i));
       b.addEventListener('dblclick', () => this.handlers.activate(i));
       b.addEventListener('contextmenu', (e) => {
@@ -90,8 +93,8 @@ export class Backpack {
     this.renderInspect(slots, st);
     this.hintEl.textContent =
       st.grabbed !== null
-        ? 'Moving: pick a slot with the arrows and press Enter (Esc cancels). You can also drag.'
-        : 'Arrows move · Enter actions · 1–8 to quick slot · u use · e equip · m move · Del drop · Esc close';
+        ? t('bp.hintMoving')
+        : t('bp.hint');
     const inModal = !!(document.activeElement as HTMLElement | null)?.closest?.('.aw-modal:not([hidden])');
     if (!inModal) {
       const target = st.menuIndex !== null ? this.inspectEl.querySelector<HTMLElement>(`[data-menu="${st.menuIndex}"]`) : this.slotEls[st.cursor];
@@ -102,13 +105,13 @@ export class Backpack {
   private renderInspect(slots: (SlotItemView | null)[], st: BackpackState): void {
     const it = slots[st.cursor] ?? null;
     if (!it) {
-      setChildren(this.inspectEl, h('div', { class: 'aw-bp-empty' }, st.cursor < QUICK_SLOTS ? `Quick slot ${st.cursor + 1} is empty.` : 'Empty slot.'));
+      setChildren(this.inspectEl, h('div', { class: 'aw-bp-empty' }, st.cursor < QUICK_SLOTS ? t('bp.emptyQuick', { n: st.cursor + 1 }) : t('bp.empty')));
       return;
     }
     const entries = slotMenu(slots, st.cursor);
     const actions = h(
       'div',
-      { class: 'aw-bp-actions', role: 'menu', 'aria-label': `Actions for ${it.name}` },
+      { class: 'aw-bp-actions', role: 'menu', 'aria-label': t('bp.actionsFor', { item: it.name }) },
       entries.map((e, idx) =>
         h(
           'button',
@@ -122,7 +125,7 @@ export class Backpack {
             onclick: () => this.handlers.runEntry(st.cursor, e),
           },
           e.label,
-          h('kbd', null, e.key === 'Delete' ? 'Del' : e.key),
+          h('kbd', { class: 'aw-key' }, e.key === 'Delete' ? t('key.del') : e.key),
         ),
       ),
     );

@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/abstract-yellow-triangle/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Viridian underfoot, gilt frame overhead, and the sharp smell of varnish everywhere. At the far end a sheet of amber gloss stands perfectly still in front of a name that stops halfway. The space after the last letter is exactly your shape."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#ffb703"
+          }
+        ]
+      }
+    }
+  ]
+}

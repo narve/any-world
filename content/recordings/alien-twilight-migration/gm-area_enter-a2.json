@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/alien-twilight-migration/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Cold reaches you before the light does: the glass underfoot is furred with nightfrost, and the aurora above it moves like breath on a window. At the edge of the lamps, pale shapes pace in step with us. They are not ours."
+          },
+          {
+            "type": "mood",
+            "music": "tense",
+            "tint": "#9fd8ff"
+          },
+          {
+            "type": "say",
+            "actorId": "ysolde-kett",
+            "text": "Hollowhill's courier. Late, as promised. The Matriarch's Musk is out on the glass inside a Sun-Echo. Coldmouths first. Glare hurts them."
+          }
+        ]
+      }
+    }
+  ]
+}

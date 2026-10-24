@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/nb-russetid-bussen/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Kunngjøring: Eli Nygård forlot bassen før droppet kom. Hun våknet med hodetelefonene på, en snap fra Ida som aldri ble åpnet, og en buss som ingen lenger snakker om."
+          }
+        ]
+      }
+    }
+  ]
+}

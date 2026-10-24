@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/deep-sea-whale-fall/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Log. 14:02. Interior of the Fall. Dimensions inconsistent with exterior. The marrow is warm against the suit, and it pulses, three short beats, in time with a drill somewhere ahead. Dr Brandvold's beacon: two metres. She is not wearing a helmet."
+          },
+          {
+            "type": "say",
+            "actorId": "a63",
+            "text": "Don't shine that in my eyes. Listen. Every time it cuts her, she grows twice. Count the beats with me."
+          },
+          {
+            "type": "mood",
+            "music": "boss",
+            "tint": "#4a0a18"
+          }
+        ]
+      }
+    }
+  ]
+}

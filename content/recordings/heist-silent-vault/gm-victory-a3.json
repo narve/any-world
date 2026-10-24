@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/heist-silent-vault/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Curtain. You cross the rotunda as the encore begins: a cello and a viola playing two notes at once, the glass-lark's call, heard in a full hall for the first time in twenty-nine years. In the prompter's corner Haberl is crying without a sound, and Herr Kapellmeister follows you out into the November night, in no hurry at all."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

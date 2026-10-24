@@ -1,0 +1,3931 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Yams Before the Rain",
+    "tagline": "Lagos, 2071. Weathercorp owns the clouds. Your grandmother's yams were never for sale.",
+    "genre": "solarpunk cyberpunk",
+    "tags": [
+      "cyberpunk",
+      "solarpunk",
+      "lagos",
+      "heist",
+      "communal",
+      "pigeons",
+      "non-violent"
+    ],
+    "tone": "warm, wry, defiant",
+    "era": "Lagos, 2071",
+    "premise": "Above the flooded streets of Lagos Island, the Idumota Rooftop Allotment Co-op grows real water yams on solar-shaded terraces. At midnight, Nimbus Holdings filed a patent on Mama Iyabo's purple seed strain and sent its drones to impound every tuber. You have until the paid rain contract over the island expires to jailbreak the irrigation drones, bargain with the pigeon-fancier syndicate that owns the sky between towers, and climb into the rain cloud itself, where the patent lives as weather.",
+    "prompt": "Lagos, 2071: megacorps own the weather, but the rooftop allotment co-op still grows real yams. Overnight, someone patented your grandmother's seed strain. Hack the irrigation drones, bargain with the pigeon-fancier syndicate, and get the seeds back before the rain contract expires.",
+    "nonViolent": true,
+    "language": "en"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Grit",
+        "abbr": "GRT",
+        "description": "Hauling soil, holding ground, shrugging off a shove."
+      },
+      "dex": {
+        "name": "Hustle",
+        "abbr": "HUS",
+        "description": "Quick feet and quick hands on hot rooftops; helps you land a hack and dodge."
+      },
+      "int": {
+        "name": "Code",
+        "abbr": "COD",
+        "description": "How well you talk to machines. Powers your deck and your patches."
+      },
+      "hp": {
+        "name": "Cool",
+        "abbr": "COOL",
+        "description": "Your composure. Lose it all and you sign whatever they put in front of you."
+      },
+      "mp": {
+        "name": "Charge",
+        "abbr": "CHG",
+        "description": "Solar charge in your deck. Spent on tricks; refills in sunlight."
+      },
+      "ac": {
+        "name": "Shade",
+        "abbr": "SHD",
+        "description": "How hard you are to pin down, served or scanned."
+      }
+    },
+    "conflict": "Hack",
+    "defeated": "jammed",
+    "xp": "Rep",
+    "levelUp": "Rep grows",
+    "currency": "cowries",
+    "lossTitle": "Signed, Sealed, Rained Out",
+    "winTitle": "The Seeds Come Home",
+    "area": "Rooftop"
+  },
+  "palette": {
+    "primary": "#f2a541",
+    "secondary": "#2bb3a3",
+    "accent": "#c45ab3",
+    "danger": "#e63946",
+    "ui": "#1c1626",
+    "text": "#f6ecd9"
+  },
+  "damageTypes": [
+    {
+      "id": "signal",
+      "name": "Signal",
+      "color": "#2bf0d0"
+    },
+    {
+      "id": "legalese",
+      "name": "Legalese",
+      "color": "#d9d2ff"
+    },
+    {
+      "id": "rain",
+      "name": "Licensed Rain",
+      "color": "#5aa9e6"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "drenched",
+      "name": "Drenched",
+      "description": "Soaked by contract rain. Your feet slip and your deck sputters.",
+      "harmful": true,
+      "color": "#5aa9e6",
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "spoofed",
+      "name": "Spoofed",
+      "description": "Fed fake coordinates; it wanders and swings at the wrong things.",
+      "harmful": true,
+      "color": "#2bf0d0",
+      "flags": [
+        "confused"
+      ]
+    },
+    {
+      "id": "served",
+      "name": "Served",
+      "description": "Legal papers stuck to you. Every clause makes you easier to pin down.",
+      "harmful": true,
+      "color": "#d9d2ff",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "glitter-blind",
+      "name": "Glitter-Blind",
+      "description": "Chaff glitter in every lens and eye.",
+      "harmful": true,
+      "color": "#ffd166",
+      "flags": [
+        "blinded"
+      ]
+    },
+    {
+      "id": "okra-stuck",
+      "name": "Okra-Stuck",
+      "description": "Glued to the floor by slick okra gel.",
+      "harmful": true,
+      "color": "#7bc950",
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "ghostmode",
+      "name": "Ghostmode",
+      "description": "Your ID is scrubbed from every camera on the block.",
+      "harmful": false,
+      "color": "#9aa0ff",
+      "flags": [
+        "invisible"
+      ]
+    },
+    {
+      "id": "kola-buzz",
+      "name": "Kola Buzz",
+      "description": "Bitter kola and fast decisions.",
+      "harmful": false,
+      "color": "#c4703a",
+      "flags": [
+        "hasted"
+      ]
+    },
+    {
+      "id": "sun-fed",
+      "name": "Sun-Fed",
+      "description": "Warm and steady; your composure mends itself.",
+      "harmful": false,
+      "color": "#f2a541",
+      "flags": [
+        "regenerating"
+      ]
+    },
+    {
+      "id": "bricked",
+      "name": "Bricked",
+      "description": "Its firmware is rebooting.",
+      "harmful": true,
+      "color": "#888888",
+      "flags": [
+        "stunned"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "rain-contract",
+      "name": "The Rain Contract",
+      "description": "Every 30 turns the paid rain hits the island: you are Drenched (slowed) for 3 turns, but the rain also restores 2 Cool. Act fast while it pours.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 30,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "drenched",
+                "duration": 3
+              },
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 2
+                }
+              },
+              {
+                "type": "message",
+                "text": "The contract rain arrives on schedule, warm and metered."
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#5aa9e6"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "solar-deck",
+      "name": "Solar Deck",
+      "description": "Your deck charges from the sun: every 6 turns you gain 1 extra Charge, unless you are Drenched.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 6,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "condition": {
+              "type": "not",
+              "cond": {
+                "type": "has_status",
+                "who": "player",
+                "status": "drenched"
+              }
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "mp",
+                "amount": {
+                  "base": 1
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "none"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": true,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Yemi Adebayo",
+    "title": "Grandchild of the Co-op, Hobby Hacker",
+    "description": "Nineteen, sunburnt, owner of a jailbroken deck held together with electrical tape and a sticker of a yam. Mama Iyabo taught you to plant by the moon; the internet taught you the rest.",
+    "stats": {
+      "str": 9,
+      "dex": 11,
+      "int": 14,
+      "hp": 28,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 8,
+    "sight": 8,
+    "unarmed": {
+      "name": "Elbow",
+      "verb": "elbows",
+      "damage": {
+        "dice": "1d3"
+      },
+      "accuracyStat": "dex"
+    },
+    "startingItems": [
+      {
+        "item": "jailbreak-deck",
+        "equipped": true
+      },
+      {
+        "item": "faraday-agbada",
+        "equipped": true
+      },
+      {
+        "item": "yam-pottage",
+        "count": 2
+      },
+      {
+        "item": "zobo-flask",
+        "count": 1
+      },
+      {
+        "item": "spoof-ping"
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "street-smart",
+          "name": "Street Smart",
+          "description": "+1 Hustle. You know which roofs creak.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "script-kiddie-no-more",
+          "name": "Script Kiddie No More",
+          "description": "+2 Code.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "thick-skin",
+          "name": "Market Thick Skin",
+          "description": "+5 max Cool. Balogun market taught you worse insults.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 5
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "overclock",
+          "name": "Overclock Burst",
+          "description": "Learn Overclock Burst: jam every machine around you.",
+          "grantItems": [
+            "overclock-burst"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "shade-tree",
+          "name": "Shade Tree",
+          "description": "+1 Shade. You move like someone with an umbrella.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "compost-heart",
+          "name": "Compost Heart",
+          "description": "Each machine you jam restores 2 Cool. Nothing is wasted.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 2
+                    }
+                  }
+                ],
+                "vfx": {
+                  "kind": "sparkle",
+                  "color": "#7bc950"
+                }
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "pigeon-friend",
+          "name": "Friend of the Lofts",
+          "description": "Learn the Pigeon Whistle call: summon a courier pigeon ally.",
+          "grantItems": [
+            "pigeon-whistle"
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "solar-skin",
+          "name": "Solar Skin",
+          "description": "+3 max Charge and +1 Code.",
+          "modifiers": [
+            {
+              "stat": "mp",
+              "amount": 3
+            },
+            {
+              "stat": "int",
+              "amount": 1
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "grandmas-patience",
+          "name": "Grandma's Patience",
+          "description": "When your Cool runs low, you breathe like she taught you: become Sun-Fed for 6 turns.",
+          "triggers": [
+            {
+              "on": "on_low_hp",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "sun-fed",
+                    "duration": 6
+                  }
+                ],
+                "vfx": {
+                  "kind": "ring",
+                  "color": "#f2a541"
+                }
+              }
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.9,
+        "build": "slim",
+        "skin": "#6b4226",
+        "top": "#2bb3a3",
+        "bottom": "#3a2e5a",
+        "accent": "#f2a541",
+        "hair": "#111111",
+        "hairStyle": "braids",
+        "headwear": "headphones",
+        "outfit": "plain",
+        "holding": "phone"
+      },
+      "light": {
+        "color": "#2bf0d0",
+        "intensity": 0.8,
+        "radius": 2
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "mist-drone",
+      "name": "Mist Drone",
+      "description": "A Nimbus irrigation quadcopter repurposed for impound duty. It sprays licensed fog and scans every leaf for logos.",
+      "stats": {
+        "hp": 7,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 4
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Fog Burst",
+        "verb": "fogs",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "rain",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "resistances": [
+        {
+          "damageType": "signal",
+          "multiplier": 1.5
+        }
+      ],
+      "loot": [
+        {
+          "item": "solar-cell",
+          "chance": 0.2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "drone",
+        "machine"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#e8eef2",
+          "secondary": "#5aa9e6",
+          "accent": "#e63946"
+        },
+        "scale": 0.7,
+        "idle": "hover",
+        "light": {
+          "color": "#5aa9e6",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "logo-weevil",
+      "name": "Trademark Weevil",
+      "description": "A gene-patented beetle that burns the Nimbus logo into every leaf it chews. They come in polite little swarms.",
+      "stats": {
+        "hp": 5,
+        "ac": 10,
+        "str": 6,
+        "dex": 11,
+        "int": 2
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Branding Nibble",
+        "verb": "brands",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "xp": 4,
+      "tags": [
+        "bug"
+      ],
+      "model": {
+        "archetype": "quadruped",
+        "colors": {
+          "primary": "#3fe0ff",
+          "secondary": "#0b3c5d",
+          "accent": "#ffffff"
+        },
+        "scale": 0.45,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "panel-leech",
+      "name": "Panel Leech",
+      "description": "A scavenger bot that clamps onto solar panels and drinks the sun out of them, skittering from rack to rack.",
+      "stats": {
+        "hp": 8,
+        "ac": 11,
+        "str": 7,
+        "dex": 13,
+        "int": 5
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Drain Clamp",
+        "verb": "clamps",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "signal",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.2
+      },
+      "loot": [
+        {
+          "item": "solar-cell",
+          "chance": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "machine"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#3b3f48",
+          "secondary": "#f2a541",
+          "accent": "#e63946"
+        },
+        "scale": 0.6,
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "process-server",
+      "name": "Hoverskate Process Server",
+      "description": "A courier on humming hover-skates who fires sticky legal notices from a wrist launcher. Paid per signature.",
+      "stats": {
+        "hp": 11,
+        "ac": 12,
+        "str": 9,
+        "dex": 14,
+        "int": 10
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Sticky Notice",
+        "verb": "serves",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "legalese",
+        "range": 4,
+        "accuracyStat": "dex"
+      },
+      "abilities": [
+        {
+          "id": "serve-papers",
+          "name": "Serve Papers",
+          "description": "Slaps a binding notice on you.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 4,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "served",
+                "duration": 4
+              }
+            ],
+            "vfx": {
+              "kind": "bolt",
+              "color": "#d9d2ff"
+            }
+          },
+          "cooldown": 10
+        }
+      ],
+      "behaviour": {
+        "type": "kiter",
+        "param": 3
+      },
+      "loot": [
+        {
+          "item": "weather-coupon",
+          "chance": 0.3
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "persuadeDifficulty": 13,
+      "xp": 8,
+      "tags": [
+        "person",
+        "corp"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "slim",
+          "skin": "#4a2c1a",
+          "top": "#d9d2ff",
+          "bottom": "#22223a",
+          "accent": "#e63946",
+          "hair": "#1a1a1a",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "phone"
+        }
+      }
+    },
+    {
+      "id": "repo-agent",
+      "name": "Nimbus Repo Agent",
+      "description": "A broad enforcer in a rain-sealed suit with a tablet of impound orders. Polite until the paperwork runs out.",
+      "stats": {
+        "hp": 15,
+        "ac": 12,
+        "str": 13,
+        "dex": 10,
+        "int": 9
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Impound Order",
+        "verb": "impounds",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "legalese",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "resistances": [
+        {
+          "damageType": "signal",
+          "multiplier": 0.75
+        }
+      ],
+      "loot": [
+        {
+          "item": "yam-pottage",
+          "chance": 0.25
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "persuadeDifficulty": 14,
+      "xp": 9,
+      "tags": [
+        "person",
+        "corp"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1,
+          "build": "broad",
+          "skin": "#3b2416",
+          "top": "#2a2f3a",
+          "bottom": "#2a2f3a",
+          "accent": "#5aa9e6",
+          "hair": "#0f0f0f",
+          "hairStyle": "none",
+          "headwear": "fedora",
+          "outfit": "suit",
+          "holding": "phone"
+        }
+      }
+    },
+    {
+      "id": "cloud-seeder",
+      "name": "Cloud Seeder",
+      "description": "A slow silver drone that fires silver-iodide pellets, starting tiny private rainstorms over whoever it dislikes.",
+      "stats": {
+        "hp": 13,
+        "ac": 12,
+        "str": 8,
+        "dex": 12,
+        "int": 8
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Iodide Pellet",
+        "verb": "seeds",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "rain",
+        "range": 5,
+        "accuracyStat": "dex"
+      },
+      "abilities": [
+        {
+          "id": "private-storm",
+          "name": "Private Storm",
+          "description": "A small, rude cloud bursts over the target.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 5,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "drenched",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#5aa9e6"
+            }
+          },
+          "cooldown": 10
+        }
+      ],
+      "behaviour": {
+        "type": "kiter",
+        "param": 4
+      },
+      "resistances": [
+        {
+          "damageType": "signal",
+          "multiplier": 1.25
+        }
+      ],
+      "loot": [
+        {
+          "item": "bootleg-firmware-a",
+          "chance": 0.2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "drone",
+        "machine"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#c9d1d9",
+          "secondary": "#7a8a99",
+          "accent": "#5aa9e6"
+        },
+        "scale": 0.8,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "falcon-unit",
+      "name": "Falcon Unit",
+      "description": "A carbon-fibre falcon drone Nimbus flies to clear 'unlicensed birds' from its sky. Stoops fast, panics when hurt.",
+      "stats": {
+        "hp": 12,
+        "ac": 13,
+        "str": 10,
+        "dex": 15,
+        "int": 5
+      },
+      "speed": 140,
+      "attack": {
+        "name": "Stoop",
+        "verb": "stoops on",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "resistances": [
+        {
+          "damageType": "signal",
+          "multiplier": 1.25
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "drone",
+        "machine"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#1b1b1f",
+          "secondary": "#e63946",
+          "accent": "#f2a541"
+        },
+        "scale": 0.75,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "hail-auditor",
+      "name": "Hail Auditor",
+      "description": "A clerk made of rotating hailstone facets, counting every drop that falls without a licence. It recites clauses as it spins.",
+      "stats": {
+        "hp": 18,
+        "ac": 12,
+        "str": 11,
+        "dex": 11,
+        "int": 12
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Clause Shard",
+        "verb": "audits",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "legalese",
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "resistances": [
+        {
+          "damageType": "rain",
+          "multiplier": 0
+        }
+      ],
+      "loot": [
+        {
+          "item": "yam-pottage",
+          "chance": 0.3
+        }
+      ],
+      "xp": 10,
+      "tags": [
+        "cloud",
+        "construct"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.5,
+              0.6,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#e0f4ff",
+            "material": "glass",
+            "emissive": "#5aa9e6"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "rot": [
+              180,
+              0,
+              0
+            ],
+            "color": "#bfe3ff",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.08,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.6,
+              0.22
+            ],
+            "color": "#d9d2ff",
+            "material": "glow",
+            "emissive": "#d9d2ff"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "irrigation-matriarch",
+      "name": "The Irrigation Matriarch",
+      "description": "The mother drone of the tower's mesh: a hexacopter the size of a market stall with a tank of metered water and a cargo hold of impounded seedlings. Its override chip opens the way to the lofts.",
+      "stats": {
+        "hp": 26,
+        "ac": 13,
+        "str": 12,
+        "dex": 11,
+        "int": 10
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Pressure Hose",
+        "verb": "hoses",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "rain",
+        "range": 2,
+        "accuracyStat": "dex"
+      },
+      "abilities": [
+        {
+          "id": "flood-valve",
+          "name": "Flood Valve",
+          "description": "Opens every valve at once.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 0,
+              "radius": 2,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "rain"
+              },
+              {
+                "type": "apply_status",
+                "status": "drenched",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#5aa9e6"
+            }
+          },
+          "cooldown": 9,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "resistances": [
+        {
+          "damageType": "signal",
+          "multiplier": 1.25
+        }
+      ],
+      "loot": [
+        {
+          "item": "override-chip",
+          "chance": 1
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              },
+              {
+                "type": "message",
+                "text": "The Matriarch lands softly and opens its hold. A warm override chip drops out with a smell of wet soil."
+              }
+            ]
+          }
+        }
+      ],
+      "unique": true,
+      "xp": 30,
+      "tags": [
+        "drone",
+        "machine",
+        "elite"
+      ],
+      "model": {
+        "archetype": "vehicle",
+        "colors": {
+          "primary": "#e8eef2",
+          "secondary": "#2bb3a3",
+          "accent": "#e63946"
+        },
+        "scale": 1.4,
+        "idle": "hover",
+        "light": {
+          "color": "#2bb3a3",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "assessor-nimbus",
+      "name": "Assessor Nimbus",
+      "description": "The patent itself, given a body: a storm cloud in a tailored collar, carrying Mama Iyabo's seeds in a briefcase of lightning. It speaks only in clauses and is very sure it owns you too.",
+      "stats": {
+        "hp": 74,
+        "ac": 13,
+        "str": 13,
+        "dex": 12,
+        "int": 15,
+        "mp": 30
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Binding Clause",
+        "verb": "binds",
+        "damage": {
+          "base": 4,
+          "dice": "1d8"
+        },
+        "damageType": "legalese",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "injunction",
+          "name": "Injunction",
+          "description": "A legal bolt that pins its target.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 5,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                },
+                "damageType": "legalese"
+              },
+              {
+                "type": "apply_status",
+                "status": "served",
+                "duration": 4
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#d9d2ff"
+            }
+          },
+          "cooldown": 5
+        },
+        {
+          "id": "cease-and-desist",
+          "name": "Cease-and-Desist Downpour",
+          "description": "A cloudburst that soaks everyone nearby.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 0,
+              "radius": 2,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                },
+                "damageType": "rain"
+              },
+              {
+                "type": "apply_status",
+                "status": "drenched",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#5aa9e6"
+            }
+          },
+          "cooldown": 10
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 6
+      },
+      "resistances": [
+        {
+          "damageType": "rain",
+          "multiplier": 0
+        },
+        {
+          "damageType": "signal",
+          "multiplier": 0.9
+        }
+      ],
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Courteous, airless, speaks in numbered clauses, genuinely believes weather and seeds are property. Flinches at the phrase 'prior art'.",
+        "greeting": "Clause one: you are trespassing in a registered cloud. Clause two: those yams are licensed product. Clause three: please sign here.",
+        "lines": [
+          "Ownership is just memory with a lawyer.",
+          "Your grandmother never filed. Therefore she never grew anything.",
+          "The rain contract expires at dawn. After that, so does your co-op."
+        ],
+        "secrets": "The patent is only valid if no prior art exists. Mama Iyabo's almanac, held by the pigeon syndicate, records the strain thirty years before the filing.",
+        "wants": "A signature from a co-op member, which would make the patent unchallengeable.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 17
+      },
+      "tags": [
+        "boss",
+        "cloud",
+        "corp"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              1,
+              0.7,
+              0.9
+            ],
+            "pos": [
+              0,
+              1.1,
+              0
+            ],
+            "color": "#c9d3dc",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.7,
+              0.55,
+              0.7
+            ],
+            "pos": [
+              -0.45,
+              1,
+              0
+            ],
+            "color": "#dde4ea",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.7,
+              0.55,
+              0.7
+            ],
+            "pos": [
+              0.45,
+              1,
+              0
+            ],
+            "color": "#b3bfca",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.25,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.8,
+              0.42
+            ],
+            "color": "#f6ecd9",
+            "material": "cloth"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.12,
+              0.3,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.6,
+              0.44
+            ],
+            "rot": [
+              180,
+              0,
+              0
+            ],
+            "color": "#e63946",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              -0.18,
+              1.15,
+              0.42
+            ],
+            "color": "#d9d2ff",
+            "material": "glow",
+            "emissive": "#d9d2ff"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0.18,
+              1.15,
+              0.42
+            ],
+            "color": "#d9d2ff",
+            "material": "glow",
+            "emissive": "#d9d2ff"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.3,
+              0.12
+            ],
+            "pos": [
+              0.45,
+              0.35,
+              0
+            ],
+            "color": "#3a2e5a",
+            "material": "metal",
+            "emissive": "#c45ab3"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.08,
+              0.5,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "rot": [
+              180,
+              0,
+              0
+            ],
+            "color": "#fff3a0",
+            "material": "glow",
+            "emissive": "#fff3a0",
+            "group": "bolt"
+          }
+        ],
+        "scale": 1.3,
+        "idle": "hover",
+        "light": {
+          "color": "#d9d2ff",
+          "intensity": 1.6,
+          "radius": 4
+        }
+      }
+    },
+    {
+      "id": "aunty-bisi",
+      "name": "Aunty Bisi, Co-op Treasurer",
+      "description": "Runs the co-op's cowrie ledger from a shaded plastic chair and an ancient solar fridge. Has opinions about everybody's grandmother.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Brisk, gossipy, fiercely loyal to the co-op; haggles even with family but always throws in an extra pepper.",
+        "greeting": "Yemi! They took the seed bank at midnight and you are only now waking? Buy something, the co-op needs cowries.",
+        "lines": [
+          "Nimbus sells us the rain and then patents what the rain grows. Wonderful business.",
+          "Your grandmother gave seeds away to anyone who asked. That was her whole patent.",
+          "The pigeon people owe her. Remind them."
+        ],
+        "stock": [
+          "yam-pottage",
+          "zobo-flask",
+          "solar-cell",
+          "okra-slick",
+          "rain-poncho"
+        ],
+        "secrets": "Mama Iyabo kept a handwritten almanac of every planting since 2041; she lent it to the pigeon syndicate for safekeeping.",
+        "wants": "The seeds back before the rain contract lapses and the co-op loses its water rights."
+      },
+      "tags": [
+        "co-op"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#5a3520",
+          "top": "#f2a541",
+          "bottom": "#2bb3a3",
+          "accent": "#c45ab3",
+          "hair": "#1a1a1a",
+          "hairStyle": "bun",
+          "headwear": "bandana",
+          "outfit": "dress",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "chidi-static",
+      "name": "Chidi Static",
+      "description": "A thirteen-year-old drone modder who lives in the tower's pipe crawlspaces with a soldering iron and a pet weevil he de-branded himself.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 12,
+        "ac": 12
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Fast-talking, cocky, secretly scared; sells tips for snacks and respect.",
+        "greeting": "You're the yam kid's kid. The Matriarch is two pipes over and she is in a mood. Want a tip? Tips cost pottage.",
+        "lines": [
+          "Drones hate signal noise. Spoof them and they argue with walls.",
+          "The Matriarch carries the override chip. Or... I kept a debug spare. Twenty cowries, no questions.",
+          "Never stand in the open when the rain is due. You'll skate like butter."
+        ],
+        "stock": [
+          "override-chip",
+          "bootleg-firmware-a",
+          "bootleg-firmware-b",
+          "glitter-chaff"
+        ],
+        "secrets": "He wrote half the Matriarch's firmware for Nimbus as a contractor and is ashamed of it; he kept a debug override chip, and its weak spot is signal noise.",
+        "wants": "Someone to tell him he did not ruin the co-op."
+      },
+      "tags": [
+        "kid"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.7,
+          "build": "slim",
+          "skin": "#4a2c1a",
+          "top": "#e63946",
+          "bottom": "#222222",
+          "accent": "#2bf0d0",
+          "hair": "#111111",
+          "hairStyle": "mohawk",
+          "headwear": "none",
+          "outfit": "rags",
+          "holding": "tool"
+        },
+        "light": {
+          "color": "#2bf0d0",
+          "intensity": 0.5,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "baba-adaba",
+      "name": "Baba Adaba, Fancier-General",
+      "description": "Head of the pigeon-fancier syndicate, which owns every loft between Idumota and Marina and moves the island's real secrets by wing. Wears a coat of racing ribbons.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 24,
+        "ac": 12
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Slow, grand, theatrical; treats every deal as a ceremony; never forgets a debt or a pigeon's name.",
+        "greeting": "Ah. Iyabo's grandchild. You come to my lofts while Nimbus falcons hunt my birds. What will you trade, and what will you promise?",
+        "lines": [
+          "Pigeons do not need permission to cross the sky. That is why Nimbus hates us.",
+          "Your grandmother's book is in my safest loft. Books have prices, even books of friends.",
+          "Clear my sky of falcons and the price gets kinder."
+        ],
+        "stock": [
+          "iyabo-almanac",
+          "pigeon-feed",
+          "racing-ribbon",
+          "kola-nut"
+        ],
+        "secrets": "The almanac proves the yam strain is prior art. Filing it from inside the rain cloud voids the patent outright.",
+        "wants": "Nimbus's falcon drones gone from his sky and a share of next season's yams.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 13
+      },
+      "tags": [
+        "syndicate"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "broad",
+          "skin": "#3b2416",
+          "top": "#f6ecd9",
+          "bottom": "#c45ab3",
+          "accent": "#f2a541",
+          "hair": "#d0d0d0",
+          "hairStyle": "short",
+          "headwear": "top_hat",
+          "outfit": "robe",
+          "holding": "staff"
+        }
+      }
+    },
+    {
+      "id": "courier-pigeon",
+      "name": "Syndicate Courier Pigeon",
+      "description": "A grey racer with a ribbon on its leg and an attitude. Pecks at drones on principle.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 8,
+        "ac": 13,
+        "str": 6,
+        "dex": 15,
+        "int": 6
+      },
+      "speed": 150,
+      "attack": {
+        "name": "Peck",
+        "verb": "pecks",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "follower"
+      },
+      "xp": 0,
+      "tags": [
+        "bird",
+        "ally"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#8a8f99",
+          "secondary": "#5b8c5a",
+          "accent": "#c45ab3"
+        },
+        "scale": 0.5,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "yam-shadow",
+      "name": "The Yam's Shadow",
+      "description": "Inside the cloud, the patent's copy of Mama Iyabo's strain has grown a voice: a purple vine of light that remembers every hand that planted it.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 30,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Gentle, slow, earthy; speaks like a grandmother's proverb; amused by lawyers.",
+        "greeting": "Ah, a familiar hand. They copied me into weather, child, but a copy cannot be planted. Only the seed can.",
+        "lines": [
+          "She never sold me. She shared me. That is older than any patent.",
+          "Show the cloud her book and it will forget it ever owned me.",
+          "The Assessor guards my body. Its clauses fall apart when you name what came first."
+        ],
+        "secrets": "Using Mama Iyabo's almanac anywhere inside the cloud files the prior art; with the seeds in hand, that alone wins them back without facing the Assessor.",
+        "wants": "To be planted in real soil before the rain contract ends."
+      },
+      "tags": [
+        "cloud",
+        "spirit"
+      ],
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#c45ab3",
+          "secondary": "#7bc950",
+          "accent": "#fff3a0"
+        },
+        "scale": 1.1,
+        "idle": "sway",
+        "light": {
+          "color": "#c45ab3",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "jailbreak-deck",
+      "name": "Jailbreak Deck",
+      "kind": "Hacking deck",
+      "description": "A taped-up solar deck with a yam sticker. Point it at a machine or a corp rig and flood it with noise.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Noise Flood",
+        "verb": "jams",
+        "damage": {
+          "dice": "1d6",
+          "scale": {
+            "stat": "int",
+            "factor": 0.1
+          }
+        },
+        "damageType": "signal",
+        "range": 1,
+        "accuracyStat": "int"
+      },
+      "rarity": "common",
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.35,
+              0.06,
+              0.25
+            ],
+            "color": "#2a2f3a",
+            "material": "metal"
+          },
+          {
+            "shape": "plane",
+            "size": [
+              0.28,
+              0.18,
+              0.01
+            ],
+            "pos": [
+              0,
+              0.04,
+              0
+            ],
+            "rot": [
+              -90,
+              0,
+              0
+            ],
+            "color": "#2bf0d0",
+            "material": "glow",
+            "emissive": "#2bf0d0"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "faraday-agbada",
+      "name": "Faraday Agbada",
+      "kind": "Robe",
+      "description": "Grandpa's agbada, re-lined with copper mesh. Scanners slide off it; so do some insults.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "rarity": "common",
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.5,
+              0.6,
+              0.5
+            ],
+            "color": "#2bb3a3",
+            "material": "cloth"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.25,
+              0.25,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#f2a541",
+            "material": "metal"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "rain-poncho",
+      "name": "Pirate-Rain Poncho",
+      "kind": "Poncho",
+      "description": "A poncho woven from stolen weather-balloon skin. Licensed rain beads off it, and so do papers.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 24,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.55,
+              0.55,
+              0.55
+            ],
+            "color": "#5aa9e6",
+            "material": "glass"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "drone-tamer-rig",
+      "name": "Drone-Tamer Rig",
+      "kind": "Antenna rig",
+      "description": "A backpack antenna that speaks fluent Nimbus firmware. Machines listen; then they stop listening to anyone.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Firmware Lullaby",
+        "verb": "lulls",
+        "damage": {
+          "base": 1,
+          "dice": "1d8",
+          "scale": {
+            "stat": "int",
+            "factor": 0.1
+          }
+        },
+        "damageType": "signal",
+        "range": 2,
+        "accuracyStat": "int"
+      },
+      "requires": [
+        {
+          "stat": "int",
+          "min": 13
+        }
+      ],
+      "rarity": "rare",
+      "value": 40,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.35,
+              0.15
+            ],
+            "color": "#3a2e5a",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.6,
+              0.03
+            ],
+            "pos": [
+              0.1,
+              0.45,
+              0
+            ],
+            "color": "#c9d1d9",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.78,
+              0
+            ],
+            "color": "#2bf0d0",
+            "material": "glow",
+            "emissive": "#2bf0d0"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#2bf0d0",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "signal-slingshot",
+      "name": "Signal Slingshot",
+      "kind": "Slingshot",
+      "description": "A catapult that fires pellets stuffed with junk packets. Fine for drones at a distance.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Packet Pellet",
+        "verb": "pings",
+        "damage": {
+          "dice": "1d6"
+        },
+        "damageType": "signal",
+        "range": 4,
+        "accuracyStat": "dex"
+      },
+      "rarity": "uncommon",
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.05,
+              0.35,
+              0.05
+            ],
+            "color": "#8b5a2b",
+            "material": "wood"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.18,
+              0.18,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#e63946",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "yam-pottage",
+      "name": "Yam Pottage",
+      "kind": "Food",
+      "description": "Asaro in a tin: yam, palm oil, pepper and spinach. One bowl and the world slows down.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f2a541"
+        }
+      },
+      "value": 10,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.3,
+              0.15,
+              0.3
+            ],
+            "color": "#c9d1d9",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.26,
+              0.04,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#e8913a",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "zobo-flask",
+      "name": "Iced Zobo Flask",
+      "kind": "Drink",
+      "description": "Hibiscus, ginger and cloves, cold from the co-op's solar fridge. Clears the head and the legal fog.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#a4133c"
+        }
+      },
+      "value": 12,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.15,
+              0.35,
+              0.15
+            ],
+            "color": "#a4133c",
+            "material": "glass"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.06,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#f6ecd9",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "solar-cell",
+      "name": "Pocket Solar Cell",
+      "kind": "Battery",
+      "description": "A palm-sized cell still warm from a rooftop. Slots into your deck for a jolt of Charge.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 5
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd166"
+        }
+      },
+      "value": 8,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.25,
+              0.05,
+              0.18
+            ],
+            "color": "#1d3557",
+            "material": "glass",
+            "emissive": "#2b4f8a"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffd166",
+          "intensity": 0.4,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "kola-nut",
+      "name": "Grandma's Kola Nut",
+      "kind": "Kola",
+      "description": "Bitter, pink, wrapped in a leaf the way she always wrapped them.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "kola-buzz",
+            "duration": 6
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 3
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c4703a"
+        }
+      },
+      "value": 14,
+      "knowledge": "vague",
+      "vagueText": "Bitter enough to wake the dead or the lazy. Grandma chewed one before every argument she won.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.15,
+              0.18
+            ],
+            "color": "#d4707a",
+            "material": "matte"
+          },
+          {
+            "shape": "plane",
+            "size": [
+              0.3,
+              0.2,
+              0.01
+            ],
+            "pos": [
+              0,
+              -0.05,
+              0
+            ],
+            "rot": [
+              -90,
+              0,
+              0
+            ],
+            "color": "#5b8c5a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "okra-slick",
+      "name": "Okra Slick Grenade",
+      "kind": "Throwable",
+      "description": "A balloon of fermented okra gel. Bursts into a slime that glues feet, wheels and landing gear.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "okra-stuck",
+            "duration": 4
+          },
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "physical"
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#7bc950"
+        }
+      },
+      "value": 12,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.25,
+              0.22
+            ],
+            "color": "#7bc950",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "glitter-chaff",
+      "name": "Glitter Chaff",
+      "kind": "Throwable",
+      "description": "Party glitter laced with radar chaff, left over from a wedding nobody will forget.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "glitter-blind",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#ffd166"
+        }
+      },
+      "value": 10,
+      "knowledge": "vague",
+      "vagueText": "It gets into everything: eyes, lenses, lawsuits. Throw it and watch them squint.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.2,
+              0.12
+            ],
+            "color": "#ffd166",
+            "material": "glow",
+            "emissive": "#ffd166"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "spoof-ping",
+      "name": "Spoof Ping",
+      "kind": "Deck routine",
+      "description": "Sends a target fake coordinates of where you are. It argues with the wall for a while.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 3
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "spoofed",
+            "duration": 4
+          },
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4",
+              "scale": {
+                "stat": "int",
+                "factor": 0.2
+              }
+            },
+            "damageType": "signal"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#2bf0d0"
+        }
+      },
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.25,
+              0.25,
+              0.04
+            ],
+            "color": "#2bf0d0",
+            "material": "glow",
+            "emissive": "#2bf0d0"
+          }
+        ],
+        "idle": "spin"
+      },
+      "cooldown": 3
+    },
+    {
+      "id": "overclock-burst",
+      "name": "Overclock Burst",
+      "kind": "Deck routine",
+      "description": "Dumps your whole buffer at once. Every rig around you hiccups.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "cooldown": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 0,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4",
+              "scale": {
+                "stat": "int",
+                "factor": 0.2
+              }
+            },
+            "damageType": "signal"
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#2bf0d0"
+        }
+      },
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.25,
+              0.25,
+              0.25
+            ],
+            "color": "#2bf0d0",
+            "material": "glow",
+            "emissive": "#2bf0d0"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "pigeon-whistle",
+      "name": "Pigeon Whistle",
+      "kind": "Whistle",
+      "description": "A clay whistle with the syndicate's mark. One note and a courier pigeon drops out of the sky to help.",
+      "category": "tool",
+      "useMode": "reusable",
+      "cooldown": 25,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "summon",
+            "actor": "courier-pigeon",
+            "count": 1,
+            "allied": true
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c45ab3"
+        }
+      },
+      "value": 30,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.1,
+              0.2,
+              0.1
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#b5651d",
+            "material": "stone"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "pigeon-feed",
+      "name": "Bag of Racing Feed",
+      "kind": "Feed",
+      "description": "Syndicate-grade millet. Scatter it and a flock arrives to bicker with whatever is chasing you.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 2,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "summon",
+            "actor": "courier-pigeon",
+            "count": 2,
+            "allied": true
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ffd166"
+        }
+      },
+      "value": 16,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.25,
+              0.3,
+              0.2
+            ],
+            "color": "#c8a46e",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "racing-ribbon",
+      "name": "Racing Ribbon",
+      "kind": "Trinket",
+      "description": "A silk ribbon from a champion pigeon. Syndicate members nod at you; your steps feel lighter.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 1
+        },
+        {
+          "stat": "ac",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 22,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.2,
+              0.03
+            ],
+            "color": "#c45ab3",
+            "material": "cloth"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "weather-coupon",
+      "name": "Weather Futures Coupon",
+      "kind": "Coupon",
+      "description": "A glossy Nimbus coupon for 'one unit of premium drizzle'. Somebody, somewhere, will pay for it.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "currency",
+            "amount": 8
+          },
+          {
+            "type": "message",
+            "text": "You sell the coupon on the grey market. Someone in Ikoyi now owns a cloud."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f2a541"
+        }
+      },
+      "value": 8,
+      "knowledge": "vague",
+      "vagueText": "Worth something to somebody. The fine print is printed finer than the rain.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "plane",
+            "size": [
+              0.3,
+              0.18,
+              0.01
+            ],
+            "rot": [
+              -90,
+              0,
+              0
+            ],
+            "color": "#d9d2ff",
+            "material": "glow",
+            "emissive": "#5aa9e6"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "bootleg-firmware-a",
+      "name": "Bootleg Firmware: Sunbath",
+      "kind": "Firmware stick",
+      "description": "Patches your deck to route sunlight straight into your nerves. Feels like noon in a hammock.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "sun-fed",
+            "duration": 10
+          },
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 3
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f2a541"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "firmware",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.04,
+              0.22
+            ],
+            "color": "#f2a541",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "bootleg-firmware-b",
+      "name": "Bootleg Firmware: Ghostmode",
+      "kind": "Firmware stick",
+      "description": "Scrubs your face from every camera on the block for a while.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "ghostmode",
+            "duration": 8
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#9aa0ff"
+        }
+      },
+      "value": 16,
+      "knowledge": "unknown",
+      "appearanceGroup": "firmware",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.04,
+              0.22
+            ],
+            "color": "#9aa0ff",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "bootleg-firmware-c",
+      "name": "Bootleg Firmware: Feedback Loop",
+      "kind": "Firmware stick",
+      "description": "Malware. Your deck screams in your ears and you stagger about.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "spoofed",
+            "duration": 3
+          },
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2
+            },
+            "damageType": "signal"
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#e63946"
+        }
+      },
+      "value": 2,
+      "knowledge": "unknown",
+      "appearanceGroup": "firmware",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.04,
+              0.22
+            ],
+            "color": "#e63946",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "bootleg-firmware-d",
+      "name": "Bootleg Firmware: Street Map",
+      "kind": "Firmware stick",
+      "description": "A leaked Nimbus survey of the whole rooftop, plus a free hit of Charge.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 99
+          },
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 2
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#2bf0d0"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "firmware",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.04,
+              0.22
+            ],
+            "color": "#2bf0d0",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "override-chip",
+      "name": "Matriarch Override Chip",
+      "kind": "Key chip",
+      "description": "An override chip for the mother drone's mesh. It opens the service hatch from the drone tower to the pigeon lofts.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 20,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.03,
+              0.2
+            ],
+            "color": "#2bb3a3",
+            "material": "metal",
+            "emissive": "#2bf0d0"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#2bf0d0",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "iyabo-almanac",
+      "name": "Mama Iyabo's Almanac",
+      "kind": "Notebook",
+      "description": "Thirty years of plantings in her careful hand, dated and witnessed by the whole co-op. Use it inside the rain cloud to file it as prior art against the patent.",
+      "category": "clue",
+      "useMode": "reusable",
+      "cooldown": 5,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "in_area",
+          "area": 3
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "prior-art-filed"
+          },
+          {
+            "type": "message",
+            "text": "You read her first entry aloud: 'Planted the purple ones, March 2041. Gave cuttings to everyone.' The cloud shudders. The patent has a hole in it now."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#c45ab3"
+        }
+      },
+      "rarity": "unique",
+      "value": 28,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.08,
+              0.22
+            ],
+            "color": "#8b5a2b",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.28,
+              0.02,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#f6ecd9",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#c45ab3",
+          "intensity": 0.5,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "iyabo-seeds",
+      "name": "Mama Iyabo's Seed Tubers",
+      "kind": "Seed yams",
+      "description": "Three small purple water yams, sprouting already. The whole strain, the whole co-op, in a cloth bundle.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.15,
+              0.3,
+              0.15
+            ],
+            "rot": [
+              0,
+              0,
+              70
+            ],
+            "color": "#7a2e6e",
+            "material": "skin"
+          },
+          {
+            "shape": "capsule",
+            "size": [
+              0.13,
+              0.25,
+              0.13
+            ],
+            "pos": [
+              0.12,
+              0,
+              0.08
+            ],
+            "rot": [
+              0,
+              40,
+              80
+            ],
+            "color": "#8e3a80",
+            "material": "skin"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.04,
+              0.15,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#7bc950",
+            "material": "matte"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#c45ab3",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "yam-mound",
+      "name": "Yam Mound",
+      "description": "A heaped bed of red soil and yam vines climbing bamboo stakes. Slow to cross.",
+      "walkable": true,
+      "moveCost": 2,
+      "color": "#7a3e1d",
+      "height": 0.3,
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#4f9a3a",
+          "secondary": "#7a3e1d"
+        },
+        "scale": 0.7,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "solar-panel",
+      "name": "Solar Panel Rack",
+      "description": "Tilted panels shading the beds. Standing in their glow tops up your deck.",
+      "walkable": true,
+      "blocksSight": false,
+      "onStand": [
+        {
+          "type": "resource",
+          "resource": "mp",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "color": "#1d3557",
+      "height": 0.15,
+      "emissive": "#2b4f8a"
+    },
+    {
+      "id": "rain-tank",
+      "name": "Rain Tank",
+      "description": "A blue plastic tank of unlicensed rainwater. Nimbus would fine you for looking at it.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#2f6fb0",
+      "height": 1.2
+    },
+    {
+      "id": "pigeon-loft",
+      "name": "Pigeon Loft",
+      "description": "A plywood loft full of cooing racers. Search it and someone has left you something.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#c8a46e",
+      "height": 1.1,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "pigeon-feed",
+            "count": 1
+          },
+          {
+            "type": "message",
+            "text": "A syndicate pigeon drops a bag of feed at your feet and looks expectant."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c8a46e"
+        }
+      }
+    },
+    {
+      "id": "patent-firewall",
+      "name": "Patent Firewall",
+      "description": "A shimmering wall of fine print. Standing in it costs you Cool.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          },
+          "damageType": "legalese"
+        }
+      ],
+      "color": "#3b2a6b",
+      "height": 0.1,
+      "emissive": "#9a7bff"
+    },
+    {
+      "id": "puddle-of-light",
+      "name": "Unlicensed Puddle",
+      "description": "A pool of rain nobody has paid for, glowing faintly. It washes legal papers right off you.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "remove_status",
+          "status": "served"
+        }
+      ],
+      "color": "#5aa9e6",
+      "height": 0,
+      "emissive": "#2b6fa0"
+    }
+  ],
+  "unknownAppearances": {
+    "firmware": [
+      {
+        "label": "Orange stick with a goat sticker",
+        "color": "#f2a541"
+      },
+      {
+        "label": "Violet stick, smells of suya",
+        "color": "#9aa0ff"
+      },
+      {
+        "label": "Red stick labelled DO NOT",
+        "color": "#e63946"
+      },
+      {
+        "label": "Teal stick, warm to the touch",
+        "color": "#2bf0d0"
+      },
+      {
+        "label": "Unlabelled stick wrapped in ankara",
+        "color": "#c45ab3"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Idumota Rooftop Allotment",
+      "description": "Sunrise over the co-op: terraced yam mounds, solar racks, blue rain tanks and a seed bank kicked open in the night. Nimbus drones hum over the beds tagging every leaf.",
+      "generator": "open",
+      "size": "medium",
+      "params": {
+        "cover": 0.12,
+        "rockiness": 0.3,
+        "ponds": 1
+      },
+      "floor": {
+        "color": "#8a5a3c",
+        "color2": "#6e4630",
+        "material": "stone",
+        "pattern": "cobble"
+      },
+      "wall": {
+        "color": "#d6c7a8",
+        "color2": "#b8a585",
+        "material": "stone",
+        "height": 1.2,
+        "pattern": "tiles"
+      },
+      "lighting": {
+        "ambient": "#ffd9b0",
+        "ambientIntensity": 0.6,
+        "sun": {
+          "color": "#ffc27a",
+          "intensity": 1.4,
+          "elevation": 25
+        },
+        "fog": {
+          "color": "#f2b880",
+          "density": 0.02
+        },
+        "lamps": {
+          "color": "#ffb347",
+          "intensity": 0.8,
+          "frequency": 0.05
+        },
+        "playerLight": 3,
+        "sky": "#f7a26b"
+      },
+      "actors": [
+        {
+          "actor": "mist-drone",
+          "weight": 30,
+          "min": 3,
+          "max": 5
+        },
+        {
+          "actor": "logo-weevil",
+          "weight": 30,
+          "min": 3,
+          "max": 6
+        },
+        {
+          "actor": "panel-leech",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "process-server",
+          "weight": 10,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "aunty-bisi",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "yam-pottage",
+          "weight": 18
+        },
+        {
+          "item": "zobo-flask",
+          "weight": 15
+        },
+        {
+          "item": "solar-cell",
+          "weight": 15
+        },
+        {
+          "item": "okra-slick",
+          "weight": 10
+        },
+        {
+          "item": "weather-coupon",
+          "weight": 8
+        },
+        {
+          "item": "bootleg-firmware-a",
+          "weight": 6
+        },
+        {
+          "item": "bootleg-firmware-c",
+          "weight": 5
+        },
+        {
+          "item": "signal-slingshot",
+          "weight": 6
+        },
+        {
+          "item": "kola-nut",
+          "weight": 5
+        }
+      ],
+      "itemCount": 7,
+      "terrain": [
+        {
+          "terrain": "yam-mound",
+          "density": 0.08
+        },
+        {
+          "terrain": "solar-panel",
+          "density": 0.03
+        },
+        {
+          "terrain": "rain-tank",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Climb the irrigation tower",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.6,
+              1.6,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#c9d1d9",
+            "material": "metal"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.4,
+              0.06
+            ],
+            "pos": [
+              0,
+              1.6,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#2bb3a3",
+            "material": "glow",
+            "emissive": "#2bb3a3"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#2bb3a3",
+          "intensity": 1,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Morning, hopeful, angry. Aunty Bisi sells supplies. Drones are tagging leaves with logos. Seed bank door hangs open; the culprits went up the irrigation tower. Introduce the rain schedule.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#f7a26b",
+        "color2": "#3a2e5a",
+        "intensity": 0.7
+      },
+      "music": "upbeat"
+    },
+    {
+      "name": "The Irrigation Mesh",
+      "description": "Inside the drone tower: a braided maze of humming water pipes, valve chambers and charging cradles, lit teal by drone eyes. The Matriarch nests near the service hatch.",
+      "generator": "maze",
+      "size": "medium",
+      "params": {
+        "loops": 0.35,
+        "chambers": 5,
+        "deadEnds": 0.3
+      },
+      "floor": {
+        "color": "#2a3a40",
+        "color2": "#1f2c31",
+        "material": "metal",
+        "pattern": "metal_plates"
+      },
+      "wall": {
+        "color": "#4a6670",
+        "color2": "#34505a",
+        "material": "metal",
+        "height": 1.1,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#6fd6c8",
+        "ambientIntensity": 0.35,
+        "fog": {
+          "color": "#16343a",
+          "density": 0.05
+        },
+        "lamps": {
+          "color": "#2bf0d0",
+          "intensity": 1.4,
+          "frequency": 0.12,
+          "flicker": true
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "mist-drone",
+          "weight": 30,
+          "min": 2,
+          "max": 6
+        },
+        {
+          "actor": "panel-leech",
+          "weight": 20,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "cloud-seeder",
+          "weight": 20,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "logo-weevil",
+          "weight": 15,
+          "min": 0,
+          "max": 4
+        },
+        {
+          "actor": "repo-agent",
+          "weight": 10,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "irrigation-matriarch",
+          "where": "near_exit"
+        },
+        {
+          "actor": "chidi-static",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "yam-pottage",
+          "weight": 22
+        },
+        {
+          "item": "solar-cell",
+          "weight": 20
+        },
+        {
+          "item": "zobo-flask",
+          "weight": 10
+        },
+        {
+          "item": "glitter-chaff",
+          "weight": 10
+        },
+        {
+          "item": "bootleg-firmware-b",
+          "weight": 6
+        },
+        {
+          "item": "bootleg-firmware-c",
+          "weight": 5
+        },
+        {
+          "item": "bootleg-firmware-d",
+          "weight": 6
+        },
+        {
+          "item": "drone-tamer-rig",
+          "weight": 4
+        }
+      ],
+      "itemCount": 7,
+      "terrain": [
+        {
+          "terrain": "puddle-of-light",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Open the service hatch to the lofts",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.1,
+              0.9
+            ],
+            "color": "#3f5660",
+            "material": "metal"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.35,
+              0.35,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#f2a541",
+            "material": "glow",
+            "emissive": "#f2a541"
+          }
+        ],
+        "idle": "none"
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "override-chip"
+      },
+      "gmNotes": "Claustrophobic, wet, humming. Chidi wrote the Matriarch's firmware and feels guilty. The hatch only opens with the override chip the Matriarch carries. Let the rain clock tick louder.",
+      "backdrop": {
+        "style": "color",
+        "color": "#0b1a1f"
+      },
+      "music": "tense"
+    },
+    {
+      "name": "Pigeon Exchange Skyline",
+      "description": "Above the tower, the syndicate's lofts float on rooftops linked by washing lines and plank bridges, high over a city of drowned streets and towering weather masts. Nimbus falcons hunt between the clouds.",
+      "generator": "islands",
+      "size": "medium",
+      "params": {
+        "islandCount": 8,
+        "islandSize": 0.6,
+        "bridgeLength": 4,
+        "loops": 0.3,
+        "pockets": 0.4,
+        "rims": 1
+      },
+      "floor": {
+        "color": "#b0756b",
+        "color2": "#8e5a52",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#e8d8c0",
+        "color2": "#c9b79c",
+        "material": "wood",
+        "height": 0.6,
+        "pattern": "planks"
+      },
+      "lighting": {
+        "ambient": "#ffe7c9",
+        "ambientIntensity": 0.55,
+        "sun": {
+          "color": "#fff1d6",
+          "intensity": 1.2,
+          "elevation": 55
+        },
+        "fog": {
+          "color": "#9fc6e6",
+          "density": 0.015
+        },
+        "lamps": {
+          "color": "#c45ab3",
+          "intensity": 0.9,
+          "frequency": 0.06
+        },
+        "playerLight": 3,
+        "sky": "#9fc6e6"
+      },
+      "actors": [
+        {
+          "actor": "falcon-unit",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "process-server",
+          "weight": 20,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "cloud-seeder",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "repo-agent",
+          "weight": 15,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "baba-adaba",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "yam-pottage",
+          "weight": 22
+        },
+        {
+          "item": "zobo-flask",
+          "weight": 12
+        },
+        {
+          "item": "kola-nut",
+          "weight": 10
+        },
+        {
+          "item": "pigeon-feed",
+          "weight": 10
+        },
+        {
+          "item": "weather-coupon",
+          "weight": 10
+        },
+        {
+          "item": "bootleg-firmware-a",
+          "weight": 5
+        },
+        {
+          "item": "bootleg-firmware-b",
+          "weight": 5
+        },
+        {
+          "item": "racing-ribbon",
+          "weight": 5
+        },
+        {
+          "item": "rain-poncho",
+          "weight": 5
+        }
+      ],
+      "itemCount": 7,
+      "terrain": [
+        {
+          "terrain": "pigeon-loft",
+          "density": 0.03
+        }
+      ],
+      "transitionName": "Ride a weather balloon into the cloud",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.9,
+              1,
+              0.9
+            ],
+            "pos": [
+              0,
+              1.4,
+              0
+            ],
+            "color": "#f6ecd9",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.3,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#8b5a2b",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      },
+      "gmNotes": "Open sky, wind, pigeons everywhere, bargaining. Baba Adaba holds Mama Iyabo's almanac; he sells it, or softens if falcons are cleared. Hint that the almanac matters inside the cloud.",
+      "backdrop": {
+        "style": "clouds",
+        "color": "#9fc6e6",
+        "color2": "#f6ecd9",
+        "intensity": 0.7
+      },
+      "music": "explore"
+    },
+    {
+      "name": "Inside the Rain Contract",
+      "description": "The cloud Nimbus sells by the hour, seen from inside: a lattice of glowing clauses, hail facets and floating puddles of light. The patent is a storm here, and it has Mama Iyabo's seeds.",
+      "generator": "geometric",
+      "size": "small",
+      "params": {
+        "variant": 1,
+        "symmetry": 2,
+        "rings": 4,
+        "spokes": 6,
+        "cellSize": 7,
+        "loops": 0.4,
+        "pillars": 0.3,
+        "doors": 0.3
+      },
+      "floor": {
+        "color": "#30285c",
+        "color2": "#3d3478",
+        "material": "glass",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#9a7bff",
+        "color2": "#5a4aa8",
+        "material": "glass",
+        "height": 1.4,
+        "pattern": "gradient"
+      },
+      "lighting": {
+        "ambient": "#a99cff",
+        "ambientIntensity": 0.45,
+        "fog": {
+          "color": "#2b2060",
+          "density": 0.04
+        },
+        "lamps": {
+          "color": "#d9d2ff",
+          "intensity": 1.2,
+          "frequency": 0.1,
+          "flicker": true
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "hail-auditor",
+          "weight": 35,
+          "min": 3,
+          "max": 5
+        },
+        {
+          "actor": "cloud-seeder",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "process-server",
+          "weight": 20,
+          "min": 1,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "assessor-nimbus",
+          "where": "far"
+        },
+        {
+          "actor": "yam-shadow",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "yam-pottage",
+          "weight": 22
+        },
+        {
+          "item": "zobo-flask",
+          "weight": 15
+        },
+        {
+          "item": "solar-cell",
+          "weight": 15
+        },
+        {
+          "item": "glitter-chaff",
+          "weight": 10
+        },
+        {
+          "item": "okra-slick",
+          "weight": 10
+        }
+      ],
+      "itemCount": 4,
+      "placedItems": [
+        {
+          "item": "iyabo-seeds",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "patent-firewall",
+          "density": 0.04
+        },
+        {
+          "terrain": "puddle-of-light",
+          "density": 0.03
+        }
+      ],
+      "transitionName": "Fall back to the roof with the rain",
+      "gmNotes": "Surreal, legal, electric. Two ways out: jam the Assessor, or grab the seeds and use the almanac anywhere here to file prior art. The Yam's Shadow tells the player so. Lightning, clauses read aloud.",
+      "backdrop": {
+        "style": "grid",
+        "color": "#140f2e",
+        "color2": "#9a7bff",
+        "intensity": 0.6
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Get Mama Iyabo's seeds back: jam Assessor Nimbus, or carry the seeds and file her almanac as prior art inside the cloud. The rain contract expires after 1400 turns.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "actor_defeated",
+          "actor": "assessor-nimbus"
+        },
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "iyabo-seeds"
+            },
+            {
+              "type": "flag",
+              "flag": "prior-art-filed"
+            }
+          ]
+        }
+      ]
+    },
+    "lose": {
+      "type": "turn",
+      "cmp": "gte",
+      "value": 1400
+    },
+    "winText": "The cloud tears open like wet paper and the rain falls free for the first time in years. You ride it down to the roof with three purple yams in a cloth bundle. Aunty Bisi is already digging. By evening every co-op on the island has cuttings, and no one has signed anything.",
+    "lossText": "The contract lapses, the weather masts turn their backs on Idumota, and a Nimbus clerk laminates your grandmother's yam into a catalogue. Somewhere, a pigeon remembers her name.",
+    "labels": {
+      "prior-art-filed": "Mama Iyabo's almanac is filed as prior art"
+    }
+  },
+  "gm": {
+    "persona": "Radio Agbado, the co-op's pirate weather station: a sardonic old DJ broadcasting from a solar shack between the yam beds, reading the forecast nobody paid for.",
+    "voice": "Warm, quick, Lagos-wry; short lines like a radio drop, the odd pidgin aside, never cruel, always on the co-op's side.",
+    "threads": [
+      "The rain contract clock: every drop is metered and the deadline is real.",
+      "Mama Iyabo gave her seeds to everyone; sharing is her prior art.",
+      "Pigeons versus falcons: the old sky against the owned sky.",
+      "Chidi's guilt about the Matriarch firmware.",
+      "Nimbus Holdings is polite, paperwork-heavy and very, very thorough."
+    ],
+    "fallback": {
+      "intro": "Good morning, Idumota, this is Radio Agbado on the pirate band. Forecast: patented, with a chance of lawsuits. Overnight, Nimbus Holdings filed a claim on Mama Iyabo's purple water yam and impounded the seed bank. Her grandchild is awake now. The paid rain runs out soon. Somebody had better go get those seeds.",
+      "areaEnter": [
+        "You step out among the yam beds. Drones are stamping logos on the leaves, and Aunty Bisi is shouting at all of them.",
+        "The irrigation tower swallows you: pipes, valves, and the teal eyes of drones in the dark. Somewhere above, the Matriarch is humming.",
+        "The hatch opens onto open sky. Lofts on every roof, washing lines for bridges, and black falcons circling the pigeons.",
+        "The weather balloon pops through into the cloud. Everything here is a clause, and somewhere in the fine print, Mama Iyabo's seeds are glowing."
+      ],
+      "lowHp": [
+        "Breathe, child. Grandma argued with soldiers and still made dinner.",
+        "Your Cool is cracking. Eat something, or step back into the shade.",
+        "Radio Agbado says: nobody wins a lawsuit while panicking."
+      ],
+      "events": [
+        "Static crackles: 'Nimbus reminds residents that rain is a premium service.'",
+        "A pigeon lands on your shoulder, looks at you, and leaves again.",
+        "Somewhere below, a co-op auntie starts a protest song.",
+        "The weather masts tilt toward the sea, counting down."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Afrobeat-tinged synth, sunny but nervous, talking drums under a solar hum",
+    "synth": {
+      "key": "D",
+      "scale": "dorian",
+      "tempo": 104,
+      "timbre": "pluck",
+      "drone": true,
+      "percussion": "tribal",
+      "brightness": 0.65
+    },
+    "searchTerms": [
+      "afrobeat synth instrumental",
+      "lagos electronic highlife",
+      "solarpunk afrofuturism music"
+    ],
+    "suggestions": [
+      "Tony Allen style drum loops under warm synth pads",
+      "Highlife guitar lines played on a pluck synth"
+    ]
+  }
+}

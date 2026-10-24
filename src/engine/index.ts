@@ -41,6 +41,7 @@ import { xpToNext } from './progression';
 import { transitionFailure } from './area';
 import { isDifficulty } from './difficulty';
 import { initialActiveRules } from './rules';
+import { cloneState } from './clone';
 
 export interface EngineEnv {
   /** the world spec (defaults to the registered one for state.worldId) */
@@ -55,10 +56,12 @@ function worldFor(state: GameState, env?: EngineEnv): WorldSpec {
   return w;
 }
 
-function cloneState(s: GameState): GameState {
-  const c = structuredClone(s);
-  if (!(c.area.seen instanceof Uint8Array)) c.area.seen = Uint8Array.from(c.area.seen as number[]);
-  return c;
+/** a working context on a copy of `state` (copy-on-write map tiles, see clone.ts) */
+function clonedCtx(world: WorldSpec, state: GameState, env?: EngineEnv): Ctx {
+  const { state: s, cow } = cloneState(state);
+  const ctx = makeCtx(world, s, env);
+  ctx.cow = cow;
+  return ctx;
 }
 
 function makeCtx(world: WorldSpec, s: GameState, env?: EngineEnv): Ctx {
@@ -176,8 +179,7 @@ export function step(state: GameState, action: PlayerAction, env?: EngineEnv): S
   if (state.status !== 'playing') {
     return { state, events: [{ type: 'invalid', reason: 'the run is over' }], tookTurn: false };
   }
-  const s = cloneState(state);
-  const ctx = makeCtx(world, s, env);
+  const ctx = clonedCtx(world, state, env);
   const r = doPlayerAction(ctx, action);
   if (!r.ok) {
     const events: GameEvent[] = [{ type: 'invalid', reason: r.reason ?? 'not possible' }];
@@ -200,8 +202,7 @@ export function step(state: GameState, action: PlayerAction, env?: EngineEnv): S
 export function applyGmActions(state: GameState, actions: GmAction[], env?: EngineEnv): StepResult {
   const world = worldFor(state, env);
   if (state.status !== 'playing') return { state, events: [], tookTurn: false };
-  const s = cloneState(state);
-  const ctx = makeCtx(world, s, env);
+  const ctx = clonedCtx(world, state, env);
   for (const a of Array.isArray(actions) ? actions : []) {
     try {
       applyGmList(ctx, [a], { charge: true });
@@ -217,13 +218,13 @@ export function applyGmActions(state: GameState, actions: GmAction[], env?: Engi
 
 export function legalActions(state: GameState, env?: EngineEnv): PlayerAction[] {
   const world = worldFor(state, env);
-  const ctx = makeCtx(world, cloneState(state), env);
+  const ctx = clonedCtx(world, state, env);
   return computeLegalActions(ctx);
 }
 
 export function describeItem(state: GameState, itemInstanceId: string, env?: EngineEnv): ItemView {
   const world = worldFor(state, env);
-  const ctx = makeCtx(world, cloneState(state), env);
+  const ctx = clonedCtx(world, state, env);
   const found = findItemInstance(ctx, itemInstanceId);
   if (!found) throw new Error(`no item instance "${itemInstanceId}"`);
   return viewItem(ctx, found.item, found.slot);
@@ -231,7 +232,7 @@ export function describeItem(state: GameState, itemInstanceId: string, env?: Eng
 
 export function describeActor(state: GameState, actorInstanceId: string, env?: EngineEnv): ActorView {
   const world = worldFor(state, env);
-  const ctx = makeCtx(world, cloneState(state), env);
+  const ctx = clonedCtx(world, state, env);
   const a = ctx.s.area.actors.find((x) => x.id === actorInstanceId);
   if (!a) throw new Error(`no actor instance "${actorInstanceId}"`);
   return viewActor(ctx, a);
@@ -262,7 +263,7 @@ export interface PlayerSheet {
 
 export function playerSheet(state: GameState, env?: EngineEnv): PlayerSheet {
   const world = worldFor(state, env);
-  const ctx = makeCtx(world, cloneState(state), env);
+  const ctx = clonedCtx(world, state, env);
   const p = playerActor(ctx);
   return {
     str: getStat(ctx, p, 'str'),
@@ -295,25 +296,38 @@ export function passability(state: GameState, env?: EngineEnv): (x: number, y: n
 export function transitionBlocker(state: GameState, env?: EngineEnv): string | null {
   if (state.status !== 'playing') return 'the run is over';
   const world = worldFor(state, env);
-  return transitionFailure(makeCtx(world, cloneState(state), env));
+  return transitionFailure(clonedCtx(world, state, env));
 }
 
 /** ItemViews for all 28 slots in one go (null for empty slots) */
 export function describeInventory(state: GameState, env?: EngineEnv): (ItemView | null)[] {
   const world = worldFor(state, env);
-  const ctx = makeCtx(world, cloneState(state), env);
+  const ctx = clonedCtx(world, state, env);
   return ctx.s.player.slots.map((it, i) => (it ? viewItem(ctx, it, i) : null));
 }
 
 /** ItemView for an item kind the player doesn't hold (trader stock, rewards), respecting knowledge */
 export function describeItemDef(state: GameState, defId: string, env?: EngineEnv): ItemView {
   const world = worldFor(state, env);
-  const ctx = makeCtx(world, cloneState(state), env);
+  const ctx = clonedCtx(world, state, env);
   const def = ctx.ix.items.get(defId);
   return viewItem(ctx, { id: `preview-${defId}`, defId, count: 1, ...(def?.charges ? { charges: def.charges } : {}) }, null);
 }
 
 export { serialize, deserialize } from './serialize';
+export { LOG_KEYS, END_REASON_KEYS, FACTION_KEYS, renderTemplate, renderLogKey, templateParams, type LogKey, type EndReasonKey, type LogParams } from './log-keys';
+export {
+  buildGmContext,
+  estimateTokens,
+  GM_CONTEXT_MAX_TOKENS,
+  GM_CONTEXT_VERSION,
+  type GmContextSummary,
+  type GmContextHook,
+  type GmContextItem,
+  type GmContextActor,
+  type GmContextOptions,
+} from './gm-context';
+export { sellPrice, MAX_SELL_OPTIONS } from './npc';
 export { DIFFICULTIES, DIFFICULTY_PROFILES, difficultyOf, isDifficulty, type DifficultyProfile } from './difficulty';
 export { estimateRuleImpact, activeRuleEntries, type RuleImpact } from './rules';
 export { registerWorld, getWorld, worldIdOf } from './registry';

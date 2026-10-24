@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/alien-twilight-migration/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "We are walking, small one with pollen. Two hundred hills of lichen groan west across the Shelf, the sun burning on the rim behind us and the night waiting ahead. But Hollowhill, the oldest, stands still at the front of the line, and when the oldest stops, we all stop. Smell the wind before you trust a fang: not everything that dives at us is hungry."
+          },
+          {
+            "type": "mood",
+            "music": "calm"
+          }
+        ]
+      }
+    }
+  ]
+}

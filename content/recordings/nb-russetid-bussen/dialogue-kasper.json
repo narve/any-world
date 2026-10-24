@@ -1,0 +1,21 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-russetid-bussen/kasper",
+      "json": {
+        "reply": "Eli! Endelig. Ikke si noe om kontoen ennå, kaptein. Hør på den først. Én låt, så forstår du hvorfor 17. mai skal kjennes i brystet og ikke bare i lommeboka.",
+        "options": [
+          "Spill den, da. Én låt.",
+          "Bussen står uten lakk, Kasper.",
+          "Jeg vet om angreretten."
+        ],
+        "actions": [
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

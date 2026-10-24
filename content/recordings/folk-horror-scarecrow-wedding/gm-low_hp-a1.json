@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/folk-horror-scarecrow-wedding/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The Register notes a pallor in the bride, and straw at the cuffs."
+          }
+        ]
+      }
+    }
+  ]
+}

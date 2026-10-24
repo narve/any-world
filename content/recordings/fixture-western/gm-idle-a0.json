@@ -1,0 +1,25 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:idle/fixture-western/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "A water wagon rolls past with the Company's brand on the barrels. One barrel leaks, a thin bright line in the dust, and every dog in town follows it. So does a deputy, who has noticed you noticing."
+          },
+          {
+            "type": "spawn",
+            "actor": "company-deputy",
+            "count": 1,
+            "near": "random"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_0"
+          }
+        ]
+      }
+    }
+  ]
+}

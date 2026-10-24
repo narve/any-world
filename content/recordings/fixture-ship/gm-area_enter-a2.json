@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/fixture-ship/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "The bridge is round, and so quiet you can hear the moss growing. The shutters are closed. They have been closed for a very long time. In the middle of the room, MATRON's Proxy turns its face toward you, the way a flower turns toward light."
+          },
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

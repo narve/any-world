@@ -1,0 +1,48 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/heist-silent-vault/mirela",
+      "json": {
+        "reply": "You're late, and you're walking on your heels. Toes, Ottilie, the floor upstairs was tuned by a woman who can hear a pin decide to fall. I brought pastilles, marbles and the good felt. Kreuzer first, sentiment later.",
+        "options": [
+          "Show me the felt overshoes.",
+          "What do you know about the vault lock?",
+          "Did you bring the cat?"
+        ],
+        "actions": [
+          {
+            "type": "trade",
+            "actorId": "mirela",
+            "items": [
+              {
+                "item": "hush-pastille",
+                "price": 10
+              },
+              {
+                "item": "sacher-slice",
+                "price": 12
+              },
+              {
+                "item": "bag-of-marbles",
+                "price": 14
+              },
+              {
+                "item": "stage-smoke",
+                "price": 20
+              },
+              {
+                "item": "felt-overshoes",
+                "price": 30
+              },
+              {
+                "item": "opera-glasses",
+                "price": 25
+              }
+            ]
+          }
+        ],
+        "end": false
+      }
+    }
+  ]
+}

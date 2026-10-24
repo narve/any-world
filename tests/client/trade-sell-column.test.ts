@@ -1,7 +1,7 @@
 /**
  * Regression test for issues/M2-sell-column-dead-ui.md: the trade window must not show a Sell
- * column that can never be used. No trader buys anything (there is no engine sell action), so
- * the column is hidden and the Buy column takes the full width.
+ * column that can never be used. Since M3 the engine's traders buy (tag 'sell' options): the column
+ * shows exactly when there is something they buy, and selling works.
  */
 import { describe, it, expect } from 'vitest';
 import type { GameState, Pos } from '../../src/engine/types';
@@ -38,14 +38,30 @@ describe('trade window columns', () => {
     expect(tradeColumns({ sellable })).toEqual({ buy: true, sell: true });
   });
 
-  it('a real trader opens a shop with offers and no dead Sell column', () => {
+  it('a real trader opens a shop with offers, and a Sell column exactly when they buy something', () => {
     const s = session();
     const id = setup(s, 'widow-oquendo', { x: 5, y: 5 }, { x: 6, y: 5 });
     s.intent({ type: 'talk' });
     s.intent({ type: 'open_trade', npcId: id });
     const tv = s.viewModel().game!.trade!;
     expect(tv.offers.length).toBeGreaterThan(0);
-    expect(tradeColumns(tv).sell).toBe(false);
+    // the engine's trader buys (tag 'sell' options, M3): the column follows what is on offer
+    expect(tradeColumns(tv).sell).toBe(tv.sellable.length > 0);
+  });
+
+  it('selling to a trader pays and keeps the shop open (engine sell offers)', () => {
+    const s = session();
+    const id = setup(s, 'widow-oquendo', { x: 5, y: 5 }, { x: 6, y: 5 });
+    s.intent({ type: 'talk' });
+    s.intent({ type: 'open_trade', npcId: id });
+    const tv = s.viewModel().game!.trade!;
+    if (!tv.sellable.length) return; // nothing this trader wants from the starting kit
+    const offer = tv.sellable[0];
+    const before = s.state.player.currency;
+    const out = s.trade({ type: 'sell', slot: offer.slot });
+    expect(out.changed).toBe(true);
+    expect(s.state.player.currency).toBe(before + offer.price);
+    expect(s.viewModel().game!.trade).not.toBeNull();
   });
 
   it('a stray sell intent is a harmless no-op with an explanation', () => {
@@ -54,7 +70,8 @@ describe('trade window columns', () => {
     s.intent({ type: 'talk' });
     s.intent({ type: 'open_trade', npcId: id });
     const before = s.state;
-    const out = s.trade({ type: 'sell', slot: 0 });
+    // a slot the trader made no offer for (an empty backpack slot)
+    const out = s.trade({ type: 'sell', slot: 27 });
     expect(s.state).toBe(before);
     expect(out.toasts[0]?.tone).toBe('info');
     expect(s.viewModel().game!.trade).not.toBeNull();

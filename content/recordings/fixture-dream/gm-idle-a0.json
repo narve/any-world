@@ -1,0 +1,24 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:idle/fixture-dream/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Two islands of loose pigment bump, and where they touch a new colour blooms for a moment, a colour with no name, the temperature of a cheek. It leaves something behind when it fades."
+          },
+          {
+            "type": "place_item",
+            "item": "tube-of-rose",
+            "near": "player"
+          },
+          {
+            "type": "set_flag",
+            "flag": "gm_event_area_0"
+          }
+        ]
+      }
+    }
+  ]
+}

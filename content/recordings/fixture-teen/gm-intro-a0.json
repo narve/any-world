@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/fixture-teen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Monday. Five days until the floodgates close and Lowmoor becomes the bottom of a reservoir. You wrote the speech for Friday's Last Assembly, the one that names every family and the stupid goose. At lunch the notebook vanished. You know exactly who has it."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

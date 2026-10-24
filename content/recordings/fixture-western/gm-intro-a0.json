@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/fixture-western/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Sweetwater has not seen rain in nineteen months. Then a man named Absalom Vane came to town with a jar he says holds a storm, and a price list. You do not like his prices. You like his jar even less."
+          },
+          {
+            "type": "mood",
+            "music": "explore"
+          }
+        ]
+      }
+    }
+  ]
+}
