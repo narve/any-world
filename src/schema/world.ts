@@ -703,6 +703,11 @@ export const WorldMeta = z.object({
   prompt: z.string().max(500).default(''),
   /** whether conflict is mostly non-violent (social, investigative…) */
   nonViolent: z.boolean().default(false),
+  /**
+   * BCP-47 language of all player-facing text in this world (names, descriptions, dialogue, GM text),
+   * e.g. "en", "nb". Ids stay ASCII. See DESIGN §7b.
+   */
+  language: z.string().min(2).max(12).default('en'),
 });
 export type WorldMeta = z.infer<typeof WorldMeta>;
 

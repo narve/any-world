@@ -187,6 +187,14 @@ export interface LogMessage {
   text: string;
   kind: 'info' | 'combat' | 'gm' | 'npc' | 'loot' | 'warning' | 'good' | 'bad' | 'system';
   speaker?: string;
+  /**
+   * i18n (DESIGN §7b): message-catalog key for engine-generated lines (e.g. "log.attack.hit").
+   * `text` remains the English fallback; the client renders `key` + `params` through its catalog
+   * when present. World/GM/NPC-authored text has no key (it is already in the world's language).
+   */
+  key?: string;
+  /** catalog params: numbers, or strings that are already world-language names (actor/item/damage names) */
+  params?: Record<string, string | number>;
 }
 
 export interface GameState {
