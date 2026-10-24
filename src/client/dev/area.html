@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>Area preview</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body { margin: 0; height: 100%; background: #0d0d12; color: #e8e6e3; font: 13px/1.4 system-ui, sans-serif; overflow: hidden; }
+      #view { position: fixed; inset: 0; }
+      #hud { position: fixed; left: 12px; top: 10px; background: rgba(10,10,16,0.72); padding: 8px 12px; border-radius: 8px; max-width: 46ch; pointer-events: none; }
+      #hud h1 { font-size: 15px; margin: 0 0 2px; }
+      #hud p { margin: 0; opacity: 0.8; }
+      #hud .err { color: #ff8f8f; }
+      #help { position: fixed; right: 12px; bottom: 10px; opacity: 0.6; font-size: 12px; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="view"></div>
+    <div id="hud"><h1 id="title">Loading…</h1><p id="sub"></p></div>
+    <div id="help">Q/E rotate · wheel zoom · arrows move · space demo events · click highlights a tile</div>
+    <script type="module" src="./area.ts"></script>
+  </body>
+</html>

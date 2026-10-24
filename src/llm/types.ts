@@ -21,6 +21,12 @@ export interface CompletionRequest {
   signal?: AbortSignal;
   /** tag for logs / mock lookup ("world", "gm:area_enter", "dialogue") */
   purpose: string;
+  /**
+   * When the provider has no native structured output, append the JSON Schema to the system prompt.
+   * Default: true for schemas up to ~24k chars; larger schemas only get a "reply with JSON only" note
+   * (prompts are expected to carry a condensed schema description themselves).
+   */
+  schemaInPrompt?: boolean;
 }
 
 export interface CompletionResponse {
@@ -52,6 +58,14 @@ export interface ProviderPreset {
   needsKey: boolean;
   contextTokens: number;
   notes?: string;
+  /** server-side environment variable holding the API key (backend transport) */
+  envKey?: string;
+  /** server-side environment variable that overrides baseUrl (e.g. OLLAMA_BASE_URL) */
+  baseUrlEnv?: string;
+  /** OpenAI-compatible: name of the output-token limit field (default "max_tokens") */
+  maxTokensParam?: 'max_tokens' | 'max_completion_tokens';
+  /** whether the endpoint accepts a `temperature` field (default true; Anthropic: false) */
+  supportsTemperature?: boolean;
 }
 
 export interface ProviderConfig {

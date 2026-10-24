@@ -1,10 +1,97 @@
 /**
- * Map generation entry point. OWNED BY the mapgen builder (M1) — this is a placeholder stub.
- * Contract: generateArea(plan, world, rng) → AreaMap, deterministic for a given rng state,
- * start and exit always connected by walkable tiles.
+ * Map generation entry point.
+ *
+ * generateArea(plan, world, rng) → AreaMap. Deterministic for a given rng state. Guarantees:
+ *  - start ('start' tile) and exit ('transition' tile) are distinct, walkable and connected
+ *    (every passable tile is in one 4-connected component);
+ *  - start and exit are far apart (≥ 40% of the map diagonal whenever the shape allows);
+ *  - no passable tile on the map border; tiles outside the playable shape are 'void';
+ *  - rooms / buildings / zones are numbered in `regions` (tile.region) with centre + size;
+ *  - lamps (tile.lamp) according to plan.lighting.lamps.frequency.
+ * Custom terrain (plan.terrain) is NOT applied here — call applyAreaTerrain / scatterTerrain.
  */
-import type { AreaMap, MapGenerator } from '../types';
+import type { AreaPlan, WorldSpec } from '../../schema/world';
+import type { AreaMap, MapGenerator, Rng } from '../types';
+import { makeContext, type GenContext } from './context';
+import { finalize } from './finalize';
+import { PASSABLE_KINDS, components } from './grid';
+import { genArena } from './generators/arena';
+import { genBuilding } from './generators/building';
+import { genCaves } from './generators/caves';
+import { genMaze } from './generators/maze';
+import { genOpen } from './generators/open';
+import { genRooms } from './generators/rooms';
+import { genShip } from './generators/ship';
+import { genTown } from './generators/town';
 
-export const generateArea: MapGenerator = (): AreaMap => {
-  throw new Error('mapgen not implemented yet');
+export type GeneratorName = AreaPlan['generator'];
+
+const GENERATORS: Record<GeneratorName, (ctx: GenContext) => void> = {
+  rooms: genRooms,
+  caves: genCaves,
+  open: genOpen,
+  town: genTown,
+  building: genBuilding,
+  ship: genShip,
+  maze: genMaze,
+  arena: genArena,
 };
+
+export const GENERATOR_NAMES = Object.keys(GENERATORS) as GeneratorName[];
+
+/** Problems with a finished map (empty array = valid). Used for self-checks and tests. */
+export function validateMap(map: AreaMap): string[] {
+  const problems: string[] = [];
+  const { width: W, height: H, tiles } = map;
+  if (tiles.length !== W * H) problems.push('tile count mismatch');
+  const at = (p: { x: number; y: number }) => tiles[p.y * W + p.x];
+  if (map.start.x === map.exit.x && map.start.y === map.exit.y) problems.push('start equals exit');
+  if (!at(map.start) || at(map.start).kind !== 'start') problems.push('start tile is not kind start');
+  if (!at(map.exit) || at(map.exit).kind !== 'transition') problems.push('exit tile is not kind transition');
+  for (let x = 0; x < W; x++)
+    for (const y of [0, H - 1]) if (PASSABLE_KINDS.has(tiles[y * W + x].kind)) problems.push(`passable border tile ${x},${y}`);
+  for (let y = 0; y < H; y++)
+    for (const x of [0, W - 1]) if (PASSABLE_KINDS.has(tiles[y * W + x].kind)) problems.push(`passable border tile ${x},${y}`);
+  const { sizes } = components(W, H, (i) => PASSABLE_KINDS.has(tiles[i].kind));
+  if (sizes.length !== 1) problems.push(`passable area split into ${sizes.length} components`);
+  return problems;
+}
+
+function generateOnce(plan: AreaPlan, rng: Rng): AreaMap {
+  const ctx = makeContext(plan, rng);
+  const gen = GENERATORS[plan.generator] ?? genRooms;
+  gen(ctx);
+  return finalize(ctx.g, rng, {
+    lampFrequency: plan.lighting?.lamps?.frequency ?? 0,
+    dropBelow: ctx.dropBelow,
+    voronoi: ctx.voronoi,
+    doors: ctx.carveDoors,
+  });
+}
+
+export const generateArea: MapGenerator = (plan: AreaPlan, _world: WorldSpec, rng: Rng): AreaMap => {
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const map = generateOnce(plan, rng);
+      if (validateMap(map).length === 0) return map;
+      lastErr = new Error(validateMap(map).join('; '));
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  // last resort: plain rooms & corridors always work
+  try {
+    const map = generateOnce({ ...plan, generator: 'rooms', params: {} }, rng);
+    if (validateMap(map).length === 0) return map;
+  } catch (e) {
+    lastErr = e;
+  }
+  throw new Error(`mapgen failed for generator ${plan.generator}: ${String(lastErr)}`);
+};
+
+export { renderAscii, type AsciiOptions } from './ascii';
+export { MAP_SIZES, type MapSize } from './context';
+export { PASSABLE_KINDS, isPassableKind, isPassableTile, posKey } from './grid';
+export { applyAreaTerrain, distanceField, findPlacement, scatterTerrain, type PlacementOptions, type PlacementWhere } from './placement';
+export { seededRng } from './rng';

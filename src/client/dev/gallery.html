@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>Model gallery</title>
+    <style>
+      :root { color-scheme: dark; }
+      html, body { margin: 0; height: 100%; background: #16171c; color: #e8e6e3; font: 12px/1.3 system-ui, sans-serif; overflow: hidden; }
+      #view { position: fixed; inset: 0; }
+      #labels { position: fixed; inset: 0; pointer-events: none; }
+      .label { position: absolute; transform: translate(-50%, 0); white-space: nowrap; max-width: 118px; overflow: hidden; text-overflow: ellipsis;
+        background: rgba(12,12,18,0.72); padding: 1px 5px; border-radius: 4px; font-size: 10.5px; }
+      .label small { opacity: 0.6; }
+      .section { position: absolute; transform: translate(0, -50%); font-weight: 600; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.75; }
+      #hud { position: fixed; left: 12px; top: 8px; background: rgba(10,10,16,0.7); padding: 6px 10px; border-radius: 8px; }
+      #hud h1 { font-size: 14px; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="view"></div>
+    <div id="labels"></div>
+    <div id="hud"><h1 id="title">Loading…</h1></div>
+    <script type="module" src="./gallery.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,431 @@
+/**
+ * UI-facing view model + callbacks — the contract between the overlay UI (src/client/ui) and the
+ * game controller (integrator). The controller builds a `UiViewModel` from GameState, the world spec
+ * and the engine's describe functions (describeItem / describeActor), then calls `ui.render(vm)`.
+ * The UI never reads GameState directly and never mutates anything: it only emits callbacks.
+ *
+ * All player-facing words come from the world (vocabulary, names); the UI only adds neutral
+ * verbs such as "Use", "Drop", "Leave".
+ */
+import type { Vocabulary } from '../../schema/world';
+import type { ActorView, Dir, ItemView, LogMessage, PlayerAction, Pos } from '../../engine/types';
+import type { ProviderConfig, ProviderPreset } from '../../llm/types';
+
+export type { Vocabulary, ItemView, ActorView, LogMessage, PlayerAction, Pos, Dir, ProviderPreset, ProviderConfig };
+
+// ---------------------------------------------------------------------------
+// Theme
+// ---------------------------------------------------------------------------
+
+/** world.palette (or DEFAULT_PALETTE before a world exists). */
+export interface PaletteView {
+  primary: string;
+  secondary: string;
+  accent: string;
+  danger: string;
+  ui: string;
+  text: string;
+}
+
+export interface ThemeView {
+  palette: PaletteView;
+  vocabulary: Vocabulary;
+}
+
+// ---------------------------------------------------------------------------
+// HUD
+// ---------------------------------------------------------------------------
+
+export type CoreStatKey = 'str' | 'dex' | 'int' | 'ac';
+
+export interface StatLineView {
+  key: CoreStatKey;
+  /** current value including modifiers */
+  value: number;
+  /** base value; when different, the UI shows a +/- hint */
+  base: number;
+}
+
+export interface BarView {
+  /** 'hp' | 'mp' | 'xp' | custom resource id */
+  id: string;
+  label: string;
+  abbr?: string;
+  description?: string;
+  value: number;
+  max: number;
+  color: string;
+}
+
+export interface StatusChipView {
+  id: string;
+  name: string;
+  description: string;
+  harmful: boolean;
+  color: string;
+  turnsLeft: number;
+}
+
+export interface HudView {
+  playerName: string;
+  playerTitle: string;
+  /** player model colour, used for the portrait dot */
+  playerColor?: string;
+  stats: StatLineView[];
+  hp: { value: number; max: number };
+  /** null when the world has no MP (max 0) */
+  mp: { value: number; max: number } | null;
+  /** custom resources (world.resources), at most 2 */
+  resources: BarView[];
+  level: number;
+  /** xp gathered since the current level began, and needed for the next */
+  xpInLevel: number;
+  xpForLevel: number;
+  currency: number;
+  statuses: StatusChipView[];
+  areaName: string;
+  /** 0-based */
+  areaIndex: number;
+  areaCount: number;
+  turn: number;
+  sneaking: boolean;
+  /** derived from speed: shown as a chip, never as a number */
+  speed: 'fast' | 'normal' | 'slow';
+}
+
+// ---------------------------------------------------------------------------
+// Items & slots
+// ---------------------------------------------------------------------------
+
+/** an item in a generic slot: the engine's ItemView plus slot-level runtime data. */
+export interface SlotItemView extends ItemView {
+  instanceId: string;
+  defId: string;
+  stackable: boolean;
+  maxCharges?: number;
+  /** turns left before it can be used again */
+  cooldown?: number;
+  maxCooldown?: number;
+  /** which equipment slot it fits, if any */
+  equipSlot?: 'weapon' | 'armour' | 'trinket';
+  durability?: number;
+  maxDurability?: number;
+  /** activating it needs a target tile/actor (the integrator runs targeting) */
+  needsTarget?: boolean;
+  /** optional custom glyph (single character); default is the name's initial or '?' */
+  glyph?: string;
+  /** rarity hint for border colour */
+  rarity?: 'common' | 'uncommon' | 'rare' | 'unique';
+}
+
+// ---------------------------------------------------------------------------
+// Overlays
+// ---------------------------------------------------------------------------
+
+export interface NarrationView {
+  /** stable id; dismiss callbacks receive it */
+  id: string;
+  kind: 'intro' | 'area_enter' | 'event' | 'epitaph';
+  /** e.g. world title or area name */
+  title?: string;
+  /** e.g. the GM persona name or an NPC */
+  speaker?: string;
+  text: string;
+}
+
+export interface DialogueView {
+  npcId: string;
+  npcName: string;
+  npcTitle?: string;
+  portraitColor: string;
+  /** the NPC's current line; empty while `pending` */
+  reply: string;
+  /** player reply options (max 3) */
+  options: string[];
+  /** waiting for the GM to answer */
+  pending: boolean;
+  /** show a persuade button (verbs.persuade) */
+  canPersuade?: boolean;
+  /** show a trade button (trader NPCs) */
+  canTrade?: boolean;
+  /** last few exchanges, oldest first */
+  history?: { who: 'npc' | 'player'; text: string }[];
+}
+
+export interface ChoiceView {
+  prompt: string;
+  speaker?: string;
+  options: { label: string }[];
+}
+
+export interface PerkView {
+  id: string;
+  name: string;
+  description: string;
+  /** readable modifier lines, e.g. "+2 Draw" */
+  lines?: string[];
+}
+
+export interface LevelUpView {
+  level: number;
+  perks: PerkView[];
+}
+
+export interface TradeOfferView {
+  item: ItemView;
+  price: number;
+}
+
+export interface TradeSellView {
+  slot: number;
+  item: SlotItemView;
+  price: number;
+}
+
+export interface TradeView {
+  traderId: string;
+  traderName: string;
+  traderColor: string;
+  greeting?: string;
+  currency: number;
+  offers: TradeOfferView[];
+  sellable: TradeSellView[];
+}
+
+export interface RuleView {
+  id: string;
+  name: string;
+  description: string;
+  /** "from the start", "since turn 140" */
+  since?: string;
+  /** introduced by the GM during play */
+  fromGm?: boolean;
+}
+
+export interface QuestView {
+  id: string;
+  title: string;
+  description: string;
+  status: 'active' | 'done' | 'failed';
+}
+
+/** actor tooltip on hover / look mode */
+export interface ActorTooltipView extends ActorView {
+  id: string;
+  color?: string;
+  /** status chips when known; ActorView.statuses names are used otherwise */
+  statusChips?: StatusChipView[];
+}
+
+/** tile description for look mode / hover over terrain */
+export interface TileTooltipView {
+  title: string;
+  description?: string;
+  /** items lying here */
+  items?: string[];
+}
+
+export interface GameView {
+  hud: HudView;
+  log: LogMessage[];
+  /** length TOTAL_SLOTS (28): 0..7 quick, 8..27 backpack */
+  slots: (SlotItemView | null)[];
+  narration: NarrationView | null;
+  dialogue: DialogueView | null;
+  choice: ChoiceView | null;
+  levelUp: LevelUpView | null;
+  trade: TradeView | null;
+  rules: RuleView[];
+  quests: QuestView[];
+  verbs: { talk: boolean; sneak: boolean; search: boolean; persuade: boolean };
+  /** what moving on is called in this area ("Board the 6:15 train") */
+  transitionName: string;
+  /** the player stands on the exit and it is unlocked */
+  canTransition: boolean;
+  /** the world's goal summary */
+  goalSummary?: string;
+  /** 'look' while look mode is on; 'target' while picking a target for `targetingSlot` */
+  mode: 'normal' | 'look' | 'target';
+  targetingSlot?: number;
+  /** busy indicator (e.g. waiting for the GM) */
+  busy?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Start / loading / end / settings
+// ---------------------------------------------------------------------------
+
+export interface InspirationPrompt {
+  prompt: string;
+  genre: string;
+  tags?: string[];
+  teaser?: string;
+  /** id of a recorded world that plays in demo mode */
+  worldId?: string;
+}
+
+export interface DemoWorldView {
+  id: string;
+  title: string;
+  tagline: string;
+  genre: string;
+  color?: string;
+}
+
+export interface SavedRunView {
+  worldTitle: string;
+  playerName: string;
+  areaName: string;
+  turn: number;
+}
+
+export interface StartView {
+  prompts: InspirationPrompt[];
+  demos: DemoWorldView[];
+  savedRun: SavedRunView | null;
+  /** short "Provider: Claude (backend)" line; null hides it */
+  providerLabel?: string | null;
+  /** false when no LLM is configured: create buttons show a hint and open settings */
+  canGenerate: boolean;
+  defaults?: { prompt?: string; difficulty?: number; weirdness?: number };
+}
+
+export interface StartOptions {
+  prompt: string;
+  /** 1 (gentle) .. 5 (merciless) */
+  difficulty: number;
+  /** 0 (familiar) .. 1 (unhinged) */
+  weirdness: number;
+  /** true for "Surprise me" (prompt is ignored / empty) */
+  surprise: boolean;
+}
+
+export interface LoadingStepView {
+  id: string;
+  label: string;
+  status: 'pending' | 'active' | 'done' | 'error';
+  detail?: string;
+}
+
+export interface LoadingView {
+  steps: LoadingStepView[];
+  /** shown as soon as the world has a name */
+  title?: string;
+  tagline?: string;
+  genre?: string;
+  error?: string | null;
+  canCancel?: boolean;
+  canRetry?: boolean;
+}
+
+export interface RunStatsView {
+  turns: number;
+  kills: number;
+  itemsUsed: number;
+  damageDealt: number;
+  damageTaken: number;
+  areasCleared: number;
+  areaCount: number;
+  level: number;
+}
+
+export interface EndView {
+  result: 'won' | 'lost';
+  worldTitle: string;
+  /** goal.winText / goal.lossText */
+  text: string;
+  /** engine endReason */
+  reason?: string;
+  /** GM epitaph / victory narration if available */
+  epitaph?: string;
+  playerName: string;
+  stats: RunStatsView;
+}
+
+export interface Settings {
+  provider: ProviderConfig;
+  audio: { volume: number; muted: boolean };
+  /** 0.5 (slow) .. 3 (fast); multiplies animation speed */
+  animationSpeed: number;
+  reduceMotion: boolean;
+}
+
+export interface SettingsView {
+  presets: ProviderPreset[];
+  current: Settings;
+  /** transports this build allows (static builds have no backend) */
+  transports?: ('direct' | 'backend')[];
+}
+
+// ---------------------------------------------------------------------------
+// Root view model
+// ---------------------------------------------------------------------------
+
+export interface UiViewModel {
+  screen: 'start' | 'loading' | 'game' | 'end';
+  theme: ThemeView;
+  start?: StartView;
+  loading?: LoadingView;
+  game?: GameView;
+  end?: EndView;
+  /** settings dialog open when non-null (over any screen) */
+  settings?: SettingsView | null;
+  /** animation preferences (from Settings), applied to every screen */
+  prefs?: { animationSpeed: number; reduceMotion: boolean };
+}
+
+// ---------------------------------------------------------------------------
+// Events emitted by the UI
+// ---------------------------------------------------------------------------
+
+/** UI-level intents that are not engine actions; the integrator decides what they mean. */
+export type UiIntent =
+  | { type: 'rotate_camera'; dir: -1 | 1 }
+  | { type: 'zoom'; delta: -1 | 1 }
+  /** look mode on/off (x) */
+  | { type: 'look'; on: boolean }
+  /** move the look cursor */
+  | { type: 'look_move'; dir: Dir }
+  /** start targeting with the item in `slot` (items with needsTarget) */
+  | { type: 'begin_target'; slot: number }
+  /** move the target cursor */
+  | { type: 'target_move'; dir: Dir }
+  /** confirm the current look/target cursor */
+  | { type: 'confirm_cursor' }
+  /** cancel targeting / look */
+  | { type: 'cancel' }
+  /** talk / persuade with an adjacent NPC (integrator picks the target) */
+  | { type: 'talk' }
+  | { type: 'persuade'; targetId?: string }
+  /** mouse: click a tile (travel in normal mode, target in target mode, describe in look mode) */
+  | { type: 'click_tile'; pos: Pos; button: 'primary' | 'secondary' }
+  /** mouse: hover a tile (null = left the map) */
+  | { type: 'hover_tile'; pos: Pos | null }
+  /** open the trade panel from dialogue */
+  | { type: 'open_trade'; npcId: string }
+  /** the backpack / help / rules panels were opened or closed (pause hints, audio ducks…) */
+  | { type: 'panel'; panel: 'backpack' | 'help' | 'rules'; open: boolean };
+
+export type TradeIntent =
+  | { type: 'buy'; offerIndex: number }
+  | { type: 'sell'; slot: number }
+  | { type: 'close' };
+
+export interface UiCallbacks {
+  onAction(action: PlayerAction): void;
+  onIntent?(intent: UiIntent): void;
+  onStart?(opts: StartOptions): void;
+  onPlayDemo?(worldId: string): void;
+  onContinue?(): void;
+  onSettings?(settings: Settings): void;
+  /** open/close the settings dialog (the controller sets vm.settings) */
+  onOpenSettings?(open: boolean): void;
+  onDismissNarration?(id: string): void;
+  /** player chose dialogue reply `index` (text included for convenience) */
+  onDialogueReply?(index: number, text: string): void;
+  onDialogueLeave?(): void;
+  onTrade?(intent: TradeIntent): void;
+  onEnd?(choice: 'new_world' | 'same_world'): void;
+  onCancelLoading?(): void;
+  onRetryLoading?(): void;
+}

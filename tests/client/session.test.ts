@@ -1,0 +1,349 @@
+/**
+ * GameSession — the DOM-free integrator (issues/M1-missing-main-controller.md). These tests play
+ * the fixture worlds through the same calls the browser controller makes for UI callbacks.
+ */
+import { describe, it, expect } from 'vitest';
+import type { GameState, Pos } from '../../src/engine/types';
+import { GameSession } from '../../src/client/session';
+import { loadFixture, roomMap } from '../engine/helpers';
+
+const western = loadFixture('fixture-western.json');
+const ship = loadFixture('fixture-ship.json');
+
+function session(world = western, seed = 1, map = roomMap(14, 10)) {
+  return new GameSession({ world, worldId: 'fixture-test', seed, map });
+}
+
+const P = (s: GameSession) => s.player().pos;
+
+/** moves the player (and only the player) to `pos`, then lets one free action refresh FOV */
+function teleport(s: GameSession, pos: Pos): void {
+  const st = structuredClone(s.state) as GameState;
+  st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { ...pos };
+  s.state = st;
+  s.act({ type: 'toggle_sneak' }); // may be refused (no sneak verb): FOV only refreshes on success
+  s.act({ type: 'wait' });
+}
+
+/** clears every actor except the player and the given def ids */
+function onlyKeep(s: GameSession, defIds: string[]): void {
+  const st = structuredClone(s.state) as GameState;
+  st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || defIds.includes(a.defId));
+  s.state = st;
+}
+
+function placeActor(s: GameSession, defId: string, pos: Pos): string {
+  const st = structuredClone(s.state) as GameState;
+  const a = st.area.actors.find((x) => x.defId === defId);
+  if (!a) throw new Error(`no ${defId} in area`);
+  a.pos = { ...pos };
+  s.state = st;
+  return a.id;
+}
+
+describe('GameSession basics', () => {
+  it('starts a run with the intro narration and a full game view', () => {
+    const s = session();
+    const vm = s.viewModel();
+    expect(vm.screen).toBe('game');
+    expect(vm.game!.narration?.kind).toBe('intro');
+    expect(vm.game!.narration?.title).toBe(western.meta.title);
+    expect(vm.game!.slots).toHaveLength(28);
+    expect(vm.game!.hud.playerName).toBe(western.player.name);
+    expect(vm.theme.palette.primary).toBe(western.palette.primary);
+    s.dismissNarration('intro');
+    expect(s.viewModel().game!.narration).toBeNull();
+  });
+
+  it('turns screen-relative movement into map directions using the camera step', () => {
+    const s = session();
+    onlyKeep(s, []);
+    teleport(s, { x: 5, y: 5 });
+    const t0 = s.state.turn;
+    s.uiAction({ type: 'move', dir: 'n' });
+    expect(P(s)).toEqual({ x: 5, y: 4 });
+    s.setCameraStep(1); // camera looks east: screen-up is east
+    s.uiAction({ type: 'move', dir: 'n' });
+    expect(P(s)).toEqual({ x: 6, y: 4 });
+    s.setCameraStep(2); // looks south
+    s.uiAction({ type: 'move', dir: 'n' });
+    expect(P(s)).toEqual({ x: 6, y: 5 });
+    expect(s.state.turn).toBeGreaterThan(t0);
+  });
+
+  it('reports refused actions as warnings without changing the state', () => {
+    const s = session();
+    onlyKeep(s, []);
+    teleport(s, { x: 1, y: 1 });
+    const before = s.state;
+    const out = s.uiAction({ type: 'move', dir: 'nw' }); // into the wall
+    expect(out.changed).toBe(false);
+    expect(s.state).toBe(before);
+    expect(out.toasts[0]?.tone).toBe('warn');
+  });
+
+  it('autosave data restores the same run', () => {
+    const s = session();
+    s.uiAction({ type: 'wait' });
+    s.uiAction({ type: 'wait' });
+    const saved = s.savedRun(123);
+    expect(saved.worldTitle).toBe(western.meta.title);
+    expect(saved.turn).toBe(s.state.turn);
+    const r = new GameSession({ world: western, worldId: saved.worldId, seed: 0, saved: saved.state, gmLog: saved.gmLog });
+    expect(r.state.turn).toBe(s.state.turn);
+    expect(r.player().pos).toEqual(s.player().pos);
+    expect(r.viewModel().game!.narration).toBeNull();
+  });
+
+  it('shows the end screen once the run is over', () => {
+    const s = session();
+    s.state = { ...s.state, status: 'lost', endReason: 'test' };
+    const vm = s.viewModel();
+    expect(vm.screen).toBe('end');
+    expect(vm.end!.result).toBe('lost');
+    expect(vm.end!.text).toBe(western.goal.lossText);
+  });
+});
+
+describe('talk, dialogue and trade', () => {
+  it('talk with nobody nearby says so instead of acting', () => {
+    const s = session();
+    onlyKeep(s, []);
+    const out = s.intent({ type: 'talk' });
+    expect(out.changed).toBe(false);
+    expect(out.toasts[0].text).toMatch(/no one nearby/);
+  });
+
+  it('talk picks the nearby NPC, replies are mapped onto engine options and leaving closes it', () => {
+    const s = session();
+    onlyKeep(s, ['preacher-weekes']);
+    teleport(s, { x: 5, y: 5 });
+    placeActor(s, 'preacher-weekes', { x: 6, y: 5 });
+    s.intent({ type: 'talk' });
+    const d = s.viewModel().game!.dialogue!;
+    expect(d).toBeTruthy();
+    expect(d.npcName).toBe(western.actors.find((a) => a.id === 'preacher-weekes')!.name);
+    expect(d.options.length).toBeGreaterThan(0);
+    expect(d.options).not.toContain('Goodbye');
+    // reply 0 = "Ask for help" (healer service) resolves the engine choice
+    const hurt = structuredClone(s.state) as GameState;
+    hurt.area.actors.find((a) => a.id === hurt.player.actorId)!.hp = 3;
+    s.state = hurt;
+    s.dialogueReply(0);
+    expect(s.state.pendingChoice).toBeNull();
+    expect(s.player().hp).toBeGreaterThan(3);
+    expect(s.history.map((h) => h.who)).toEqual(['npc', 'player']);
+    // talk again, then leave
+    s.intent({ type: 'talk' });
+    expect(s.state.pendingChoice?.kind).toBe('dialogue');
+    expect(s.history).toEqual([]); // a new conversation
+    s.dialogueLeave();
+    expect(s.state.pendingChoice).toBeNull();
+    expect(s.viewModel().game!.dialogue).toBeNull();
+  });
+
+  it('persuade from the dialogue panel leaves the conversation first', () => {
+    const s = session();
+    onlyKeep(s, ['kid-tobias']);
+    teleport(s, { x: 5, y: 5 });
+    const id = placeActor(s, 'kid-tobias', { x: 6, y: 5 });
+    s.intent({ type: 'talk' });
+    expect(s.state.pendingChoice?.kind).toBe('dialogue');
+    const t0 = s.state.turn;
+    const out = s.intent({ type: 'persuade', targetId: id });
+    expect(out.changed).toBe(true);
+    expect(s.state.pendingChoice).toBeNull();
+    expect(s.state.turn).toBeGreaterThan(t0); // persuading took the turn
+  });
+
+  it('trade: open, buy (shop stays open), close back to the dialogue', () => {
+    const s = session();
+    onlyKeep(s, ['widow-oquendo']);
+    teleport(s, { x: 5, y: 5 });
+    const id = placeActor(s, 'widow-oquendo', { x: 6, y: 5 });
+    const rich = structuredClone(s.state) as GameState;
+    rich.player.currency = 500;
+    s.state = rich;
+    s.intent({ type: 'talk' });
+    expect(s.viewModel().game!.dialogue!.canTrade).toBe(true);
+    s.intent({ type: 'open_trade', npcId: id });
+    const tv = s.viewModel().game!.trade!;
+    expect(tv.offers.length).toBeGreaterThan(0);
+    expect(s.viewModel().game!.dialogue).toBeNull(); // trade replaces the dialogue panel
+    const price = tv.offers[0].price;
+    const countHeld = () => s.state.player.slots.filter(Boolean).length;
+    const held = countHeld();
+    s.trade({ type: 'buy', offerIndex: 0 });
+    expect(s.state.player.currency).toBe(500 - price);
+    expect(countHeld()).toBeGreaterThanOrEqual(held); // stacks may merge
+    expect(s.viewModel().game!.trade).not.toBeNull();
+    s.trade({ type: 'close' });
+    expect(s.viewModel().game!.trade).toBeNull();
+    expect(s.viewModel().game!.dialogue).not.toBeNull();
+  });
+
+  it('buying without enough money is refused with a warning and keeps the shop open', () => {
+    const s = session();
+    onlyKeep(s, ['widow-oquendo']);
+    teleport(s, { x: 5, y: 5 });
+    const id = placeActor(s, 'widow-oquendo', { x: 6, y: 5 });
+    const poor = structuredClone(s.state) as GameState;
+    poor.player.currency = 0;
+    s.state = poor;
+    s.intent({ type: 'talk' });
+    s.intent({ type: 'open_trade', npcId: id });
+    const offers = s.viewModel().game!.trade!.offers;
+    const pricey = offers.findIndex((o) => o.price > 0);
+    expect(pricey).toBeGreaterThanOrEqual(0);
+    const out = s.trade({ type: 'buy', offerIndex: pricey });
+    expect(out.toasts[0]?.tone).toBe('warn');
+    expect(s.viewModel().game!.trade).not.toBeNull();
+  });
+});
+
+describe('look and target modes', () => {
+  it('look mode describes the cursor tile and the cursor follows the camera', () => {
+    const s = session();
+    onlyKeep(s, []);
+    teleport(s, { x: 5, y: 5 });
+    const out = s.intent({ type: 'look', on: true });
+    expect(s.mode).toBe('look');
+    expect(out.describe?.actor?.name).toBe(western.player.name);
+    s.setCameraStep(1);
+    const o2 = s.intent({ type: 'look_move', dir: 'n' });
+    expect(s.cursor).toEqual({ x: 6, y: 5 });
+    expect(o2.describe?.tile?.title).toBeTruthy();
+    expect(s.highlights()).toEqual([{ x: 6, y: 5 }]);
+    s.intent({ type: 'look', on: false });
+    expect(s.mode).toBe('normal');
+    expect(s.highlights()).toEqual([]);
+  });
+
+  it('aimed items go through targeting and fire at the confirmed tile', () => {
+    const s = session();
+    const slot = s.state.player.slots.findIndex((it) => it?.defId === 'trick-shot');
+    expect(slot).toBeGreaterThanOrEqual(0);
+    const foe = s.state.area.actors.find((a) => a.faction === 'hostile');
+    onlyKeep(s, foe ? [foe.defId] : []);
+    teleport(s, { x: 3, y: 5 });
+    // activating from a menu without a target starts targeting instead of failing
+    const o = s.uiAction({ type: 'use', slot });
+    expect(o.changed).toBe(false);
+    expect(s.mode).toBe('target');
+    expect(s.targetingSlot).toBe(slot);
+    s.intent({ type: 'cancel' });
+    expect(s.mode).toBe('normal');
+
+    s.intent({ type: 'begin_target', slot });
+    expect(s.mode).toBe('target');
+    if (foe) {
+      // the cursor starts on the engine's automatic target when one is in range
+      const st = structuredClone(s.state) as GameState;
+      const f = st.area.actors.find((a) => a.defId === foe.defId)!;
+      f.pos = { x: 6, y: 5 };
+      s.state = st;
+      s.intent({ type: 'cancel' });
+      s.act({ type: 'wait' });
+      if (s.state.player.pendingPerkChoice || s.ended) return;
+      s.intent({ type: 'begin_target', slot });
+    }
+    const cursor = s.cursor!;
+    const turn = s.state.turn;
+    const out = s.intent({ type: 'confirm_cursor' });
+    if (out.changed) {
+      expect(s.mode).toBe('normal');
+      expect(s.state.turn).toBeGreaterThanOrEqual(turn);
+    } else {
+      // refused (e.g. own tile) keeps targeting so the player can pick another tile
+      expect(s.mode).toBe('target');
+      expect(s.cursor).toEqual(cursor);
+    }
+  });
+
+  it('a primary click in target mode uses the item on that tile; secondary cancels', () => {
+    const s = session();
+    const slot = s.state.player.slots.findIndex((it) => it?.defId === 'trick-shot');
+    onlyKeep(s, []);
+    teleport(s, { x: 3, y: 5 });
+    s.intent({ type: 'begin_target', slot });
+    s.intent({ type: 'click_tile', pos: { x: 3, y: 5 }, button: 'secondary' });
+    expect(s.mode).toBe('normal');
+    s.intent({ type: 'begin_target', slot });
+    s.intent({ type: 'hover_tile', pos: { x: 6, y: 5 } });
+    expect(s.cursor).toEqual({ x: 6, y: 5 });
+  });
+});
+
+describe('click-to-travel', () => {
+  it('walks to a clicked explored tile one step per tick', () => {
+    const s = session();
+    onlyKeep(s, []);
+    teleport(s, { x: 2, y: 2 });
+    const out = s.intent({ type: 'click_tile', pos: { x: 8, y: 6 }, button: 'primary' });
+    expect(out.travel).toBe(true);
+    let ticks = 0;
+    for (;;) {
+      const r = s.travelTick();
+      ticks++;
+      if (!r.more) break;
+      expect(ticks).toBeLessThan(50);
+    }
+    expect(P(s)).toEqual({ x: 8, y: 6 });
+    expect(ticks).toBe(6); // Chebyshev distance
+    // fixture-western's heat rule hurts every few turns: ambient drains must not stop travel
+  });
+
+  it('stops when a new hostile comes into view', () => {
+    const s = session(western, 1, roomMap(20, 10, { walls: [{ x: 10, y: 1 }, { x: 10, y: 2 }, { x: 10, y: 3 }, { x: 10, y: 4 }, { x: 10, y: 5 }, { x: 10, y: 6 }, { x: 10, y: 7 }] }));
+    const foe = s.state.area.actors.find((a) => a.faction === 'hostile')!;
+    expect(foe).toBeDefined();
+    onlyKeep(s, [foe.defId]);
+    const st = structuredClone(s.state) as GameState;
+    st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.id === foe.id);
+    st.area.actors.find((a) => a.id === foe.id)!.pos = { x: 15, y: 2 }; // behind the wall
+    s.state = st;
+    teleport(s, { x: 3, y: 8 });
+    // reveal the whole row so the destination past the wall is "explored"
+    const seen = Uint8Array.from(s.state.area.seen as ArrayLike<number>, (v) => (v === 0 ? 1 : v));
+    s.state = { ...s.state, area: { ...s.state.area, seen } };
+    expect(s.intent({ type: 'click_tile', pos: { x: 17, y: 8 }, button: 'primary' }).travel).toBe(true);
+    let stoppedAt: Pos | null = null;
+    for (let i = 0; i < 30; i++) {
+      const r = s.travelTick();
+      if (!r.more) {
+        stoppedAt = P(s);
+        break;
+      }
+    }
+    expect(stoppedAt).not.toBeNull();
+    expect(stoppedAt).not.toEqual({ x: 17, y: 8 });
+    expect(stoppedAt!.x).toBeGreaterThanOrEqual(10); // it walked until the wall stopped hiding the foe
+    expect(s.travelDest).toBeNull();
+  });
+
+  it('refuses unexplored destinations', () => {
+    const s = session();
+    const seen = new Uint8Array(s.state.area.seen.length);
+    s.state = { ...s.state, area: { ...s.state.area, seen } };
+    const out = s.intent({ type: 'click_tile', pos: { x: 10, y: 7 }, button: 'primary' });
+    expect(out.travel).toBeUndefined();
+    expect(out.toasts.length).toBe(1);
+  });
+});
+
+describe('area transitions', () => {
+  it('taking the exit narrates the new area and resets the cursor', () => {
+    const s = session(ship, 2);
+    onlyKeep(s, []);
+    teleport(s, s.state.area.map.exit);
+    s.intent({ type: 'look', on: true });
+    s.intent({ type: 'cancel' });
+    const out = s.uiAction({ type: 'transition' });
+    if (!out.changed) throw new Error(`transition refused: ${out.toasts.map((t) => t.text).join()}`);
+    expect(out.areaChanged).toBe(true);
+    expect(s.state.area.index).toBe(1);
+    const n = s.viewModel().game!.narration!;
+    expect(n.kind).toBe('area_enter');
+    expect(n.title).toBe(ship.areas[1].name);
+  });
+});

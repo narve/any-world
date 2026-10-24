@@ -35,6 +35,13 @@ export interface Tile {
   region?: number;
   /** a lamp is placed here (renderer) */
   lamp?: boolean;
+  /** terrain interaction already used (each interactable tile works once) */
+  interacted?: boolean;
+  /**
+   * The terrain (and its interacted flag) covered by temporary terrain; restored when the
+   * temporary terrain expires.
+   */
+  terrainUnder?: { terrain: string; interacted?: boolean };
 }
 
 export interface AreaMap {
@@ -72,13 +79,29 @@ export interface ActorInstance {
   energy: number;
   cooldowns: Record<string, number>;
   /** AI memory (last seen player pos, alert state, home pos for guardians…) */
-  ai: { alerted: boolean; lastSeen?: Pos; home?: Pos; fleeing?: boolean };
+  ai: {
+    alerted: boolean;
+    lastSeen?: Pos;
+    home?: Pos;
+    fleeing?: boolean;
+    /** below the low-hp threshold (on_low_hp fires once per crossing) */
+    lowHp?: boolean;
+    /** wanderer's current destination */
+    wander?: Pos;
+  };
   /** temporary stat modifiers with durations */
   tempMods: { stat: string; amount: number; turnsLeft: number }[];
   /** allied summon / follower of player */
   allyOf?: string;
   /** npc has been talked to */
   talkedTo?: boolean;
+  /** one-off npc services already used (offline dialogue: "heal", "gift", "recruit") */
+  npcUsed?: string[];
+  /**
+   * Def ids this instance had before it transformed, oldest first (a boss's earlier phases).
+   * Defeating the instance counts as defeating every one of them.
+   */
+  formerDefIds?: string[];
 }
 
 export interface ItemInstance {
@@ -172,13 +195,19 @@ export interface GameState {
   pendingChoice: PendingChoice | null;
   nextId: number;
   stats: { kills: number; itemsUsed: number; damageDealt: number; damageTaken: number; areasCleared: number };
+  /** unique actor def ids spawned at least once this run (record only: a unique may reappear until defeated, see uniqueSpawnable) */
+  uniquesSpawned?: string[];
+  /** permadeathMercy rule already saved the player once */
+  mercyUsed?: boolean;
 }
 
 export interface PendingChoice {
   kind: 'gm_offer' | 'dialogue';
   prompt: string;
   speakerId?: string;
-  options: { label: string; actions: GmAction[] }[];
+  options: { label: string; actions: GmAction[]; /** engine-internal marker (e.g. "service:heal") */ tag?: string }[];
+  /** gm_offer only: area GM budget reserved for the options when the offer was made (see gmActionCost) */
+  reservedBudget?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -241,6 +270,8 @@ export interface NewGameOptions {
   seed: number;
   /** optional pre-generated area map (from tests) */
   map?: AreaMap;
+  /** optional map generator override, used for this createGame call (tests, tools) */
+  mapGenerator?: MapGenerator;
 }
 
 /** generator contract (src/engine/mapgen) */

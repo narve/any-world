@@ -1,0 +1,612 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Lowmoor Goes Under",
+    "tagline": "Five school days until the reservoir swallows the town. Someone stole the speech you wrote for the last assembly.",
+    "genre": "teen social drama",
+    "tags": ["school", "teen", "non-violent", "social", "bittersweet", "small town"],
+    "tone": "funny, tender, a little heartbroken",
+    "era": "present day, a town that will not exist next month",
+    "premise": "On Saturday the floodgates close and Lowmoor becomes the bottom of a reservoir. Everyone is moving to different cities; the school is half packed into boxes. Junie Okafor-Pryce, class rep by default, has written the farewell speech for Friday's Last Assembly: the one that names every family, every shop, the swimming hole and the stupid goose. Then her notebook vanished at Monday lunch. Rosalind, her ex-best-friend, has it. And Mags Calloway, whose father sits on the Reservoir Board, has booked the Last Assembly for a sponsored 'Celebration of New Beginnings'.",
+    "prompt": "the last week of school before a town floods",
+    "nonViolent": true
+  },
+  "vocabulary": {
+    "stats": {
+      "str": { "name": "Presence", "abbr": "PRS", "description": "Taking up space in a room. Volume, posture, being impossible to ignore." },
+      "dex": { "name": "Timing", "abbr": "TIM", "description": "Knowing exactly when to say it. Dodging awkward moments." },
+      "int": { "name": "Wit", "abbr": "WIT", "description": "How fast and how sharp. Fuels signature moves." },
+      "hp": { "name": "Composure", "abbr": "CMP", "description": "How long you can keep it together. At zero you go home early and cry in the car." },
+      "mp": { "name": "Nerve", "abbr": "NRV", "description": "Courage in reserve. Spent on big moments." },
+      "ac": { "name": "Poise", "abbr": "POI", "description": "How well things roll off you." }
+    },
+    "conflict": "Comeback",
+    "defeated": "left speechless",
+    "xp": "Rep",
+    "levelUp": "Glow-up",
+    "currency": "favours",
+    "lossTitle": "You went home early",
+    "winTitle": "Standing ovation",
+    "area": "Day"
+  },
+  "palette": {
+    "primary": "#ff6fa8",
+    "secondary": "#4fb3bf",
+    "accent": "#ffd166",
+    "danger": "#ef476f",
+    "ui": "#1f2a44",
+    "text": "#fdf6ec"
+  },
+  "damageTypes": [
+    { "id": "physical", "name": "Bump", "color": "#d6d6d6" },
+    { "id": "embarrassment", "name": "Embarrassment", "color": "#ff6fa8" },
+    { "id": "guilt", "name": "Guilt", "color": "#9a7cff" },
+    { "id": "gossip", "name": "Gossip", "color": "#ffd166" },
+    { "id": "nostalgia", "name": "Nostalgia", "color": "#7fd6c9" }
+  ],
+  "statuses": [
+    { "id": "flustered", "name": "Flustered", "description": "Cheeks hot, words in the wrong order.", "harmful": true, "color": "#ff8fab", "modifiers": [{ "stat": "dex", "amount": -2 }, { "stat": "int", "amount": -1 }] },
+    { "id": "distracted", "name": "Distracted", "description": "Phone buzzing. Who said what? Wait, what were we doing?", "harmful": true, "color": "#ffd166", "flags": ["confused"] },
+    { "id": "mortified", "name": "Mortified", "description": "Frozen. Wishing the floor would open. It might, actually, by Saturday.", "harmful": true, "color": "#ef476f", "flags": ["stunned"] },
+    { "id": "grounded", "name": "Written Up", "description": "Told to stand right there and wait. You do.", "harmful": true, "color": "#8d99ae", "flags": ["rooted"] },
+    { "id": "seen-through", "name": "Seen Through", "description": "Someone who knows you too well just said the true thing.", "harmful": true, "color": "#9a7cff", "modifiers": [{ "stat": "ac", "amount": -3 }] },
+    { "id": "camera-flash", "name": "Flash-blind", "description": "Purple blobs everywhere. That photo is going in the yearbook.", "harmful": true, "color": "#ffffff", "modifiers": [{ "stat": "sight", "amount": -4 }], "flags": ["blinded"] },
+    { "id": "offline", "name": "Offline", "description": "Dead phone. You have no idea what anyone is saying about you.", "harmful": true, "color": "#5c677d", "modifiers": [{ "stat": "sight", "amount": -2 }] },
+    { "id": "hyped", "name": "Hyped", "description": "Song in your head, bounce in your step.", "harmful": false, "color": "#06d6a0", "modifiers": [{ "stat": "dex", "amount": 2 }], "flags": ["hasted"] },
+    { "id": "in-the-zone", "name": "In the Zone", "description": "Everything is landing. Each breath steadies you a little more.", "harmful": false, "color": "#4fb3bf", "perTurn": [{ "type": "heal", "amount": { "base": 1 } }], "flags": ["regenerating"] },
+    { "id": "starstruck", "name": "Starstruck", "description": "Briefly convinced you are the coolest person alive.", "harmful": true, "color": "#ffe066", "flags": ["charmed"] },
+    { "id": "spooked", "name": "Honked At", "description": "The goose has chosen you. Run.", "harmful": true, "color": "#f8f9fa", "flags": ["afraid"] }
+  ],
+  "resources": [
+    {
+      "id": "battery",
+      "name": "Battery",
+      "description": "Your phone, cracked screen and all. Apps cost charge; at zero you are offline.",
+      "color": "#06d6a0",
+      "max": 20,
+      "start": 14,
+      "perTurn": 0,
+      "onEmpty": [{ "type": "apply_status", "status": "offline", "duration": 15 }, { "type": "message", "text": "Your phone dies mid-scroll. The silence is enormous." }],
+      "emptyIsDeath": false
+    }
+  ],
+  "rules": [
+    {
+      "id": "long-memory",
+      "name": "Small Town, Long Memory",
+      "description": "Every time you leave someone speechless, the group chat hears about it. Lowmoor keeps score.",
+      "playerTriggers": [
+        { "on": "on_kill", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "counter", "counter": "gossip", "add": 1 }] } },
+        { "on": "on_resource_empty", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "message", "text": "Without your phone, the hallways feel twice as long." }] } }
+      ],
+      "switches": { "violenceCounter": "gossip" }
+    },
+    {
+      "id": "rising-water",
+      "name": "The Water's Coming",
+      "description": "The reservoir is already seeping up through the floors. Every day, and every so often, a little more of Lowmoor goes wet.",
+      "playerTriggers": [
+        { "on": "on_area_enter", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "spawn_terrain", "terrain": "seep-water", "radius": 2, "duration": 60 }, { "type": "message", "text": "There is water on the floor again. Nobody mentions it." }] } },
+        { "on": "on_turn", "every": 60, "chance": 0.6, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "spawn_terrain", "terrain": "seep-water", "radius": 1, "duration": 40 }] } }
+      ],
+      "switches": {}
+    },
+    {
+      "id": "detention",
+      "name": "Three Strikes",
+      "description": "Hall monitors are writing people up for anything. Collect three detention slips and you are sent home for the week, and the week is all there is.",
+      "playerTriggers": [],
+      "switches": { "noLoot": false }
+    }
+  ],
+  "verbs": { "talk": true, "sneak": false, "search": true, "persuade": true },
+  "player": {
+    "name": "Juniper Okafor-Pryce",
+    "title": "Class Rep (Nobody Else Ran)",
+    "description": "Sixteen. Knows the name of every family on every street, which turns out to be a superpower nobody asked for. Has a speech to give.",
+    "stats": { "str": 10, "dex": 12, "int": 14, "hp": 26, "mp": 16, "ac": 11 },
+    "mpRegenEvery": 4,
+    "hpRegenEvery": 6,
+    "sight": 8,
+    "unarmed": { "name": "Awkward joke", "verb": "makes an awkward joke at", "damage": { "base": 0, "dice": "1d3" }, "damageType": "embarrassment", "range": 1, "accuracyStat": "int" },
+    "startingItems": [
+      { "item": "thesaurus", "count": 1, "equipped": true, "quick": true },
+      { "item": "thrift-blazer", "count": 1, "equipped": true, "quick": false },
+      { "item": "perfect-comeback", "count": 1, "equipped": false, "quick": true },
+      { "item": "cracked-phone", "count": 1, "equipped": false, "quick": true },
+      { "item": "iced-tea", "count": 2, "equipped": false, "quick": true },
+      { "item": "power-bank", "count": 1, "equipped": false, "quick": false }
+    ],
+    "growth": {
+      "firstLevelXp": 25,
+      "curve": 1.5,
+      "hpPerLevel": 4,
+      "mpPerLevel": 3,
+      "choices": 3,
+      "perks": [
+        { "id": "thick-skin", "name": "Thick Skin", "description": "You've heard worse. From your own brother. +6 Composure, +1 Poise.", "modifiers": [{ "stat": "hp", "amount": 6 }, { "stat": "ac", "amount": 1 }], "minLevel": 2 },
+        { "id": "quick-wit", "name": "Quick Wit", "description": "The comeback arrives before the shower, for once. +2 Wit.", "modifiers": [{ "stat": "int", "amount": 2 }], "minLevel": 2 },
+        { "id": "main-character", "name": "Main Character Energy", "description": "You walk like there's a soundtrack. +2 Presence.", "modifiers": [{ "stat": "str", "amount": 2 }], "minLevel": 2 },
+        { "id": "read-the-room", "name": "Read the Room", "description": "You notice who's about to say something. +2 sight.", "modifiers": [{ "stat": "sight", "amount": 2 }], "minLevel": 2 },
+        { "id": "pep-talker", "name": "Pep Talker", "description": "Coach's speeches finally rubbed off. Learn Pep Talk.", "grantItems": ["pep-talk"], "minLevel": 3 },
+        { "id": "unbothered", "name": "Unbothered", "description": "Sometimes it just rolls off.", "triggers": [{ "on": "on_hurt", "chance": 0.25, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "remove_status", "status": "all_harmful" }] } }], "minLevel": 2 },
+        { "id": "last-word", "name": "Last Word", "description": "Getting the last word feels incredible. Recover a little Composure every time.", "triggers": [{ "on": "on_kill", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 3 } }] } }], "minLevel": 2 },
+        { "id": "power-saver", "name": "Power Saver Mode", "description": "You finally turned off background refresh. Each new day starts with extra charge.", "triggers": [{ "on": "on_area_enter", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "resource", "resource": "battery", "amount": { "base": 6 } }] } }], "minLevel": 2 }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": { "height": 0.82, "build": "slim", "skin": "#7a4a2e", "top": "#ffd166", "bottom": "#2b3a67", "accent": "#ff6fa8", "hair": "#1a1210", "hairStyle": "braids", "headwear": "headphones", "outfit": "coat", "holding": "book" },
+      "scale": 1,
+      "idle": "bob"
+    }
+  },
+  "actors": [
+    {
+      "id": "group-chat-lurker", "name": "Group Chat Lurker", "description": "Never says anything to your face. Screenshots everything. Travels in threes.",
+      "faction": "hostile", "stats": { "hp": 6, "ac": 10, "str": 7, "dex": 12, "int": 10, "mp": 0 }, "speed": 100, "sight": 8,
+      "attack": { "name": "Screenshot", "verb": "screenshots", "damage": { "base": 0, "dice": "1d4" }, "damageType": "gossip", "range": 3, "accuracyStat": "dex" },
+      "behaviour": { "type": "pack", "param": 3, "erratic": 0.1 }, "xp": 4,
+      "loot": [{ "item": "power-bank", "chance": 0.15 }],
+      "tags": ["student", "online"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.78, "build": "slim", "skin": "#e8b996", "top": "#5c677d", "bottom": "#22223b", "accent": "#06d6a0", "hair": "#6b4226", "hairStyle": "long", "headwear": "hood", "outfit": "plain", "holding": "phone" }, "scale": 1, "idle": "sway", "light": { "color": "#9ad1ff", "intensity": 0.4, "radius": 1 } }
+    },
+    {
+      "id": "senior-prankster", "name": "Senior Prankster", "description": "Graduating into a town that won't exist. Has decided nothing matters, loudly, at you.",
+      "faction": "hostile", "stats": { "hp": 11, "ac": 10, "str": 13, "dex": 11, "int": 8, "mp": 0 }, "speed": 110, "sight": 7,
+      "attack": { "name": "Loud impression", "verb": "does a loud impression of", "damage": { "base": 1, "dice": "1d6" }, "damageType": "embarrassment", "range": 1, "accuracyStat": "str" },
+      "triggers": [{ "on": "on_hit", "chance": 0.3, "action": { "targeting": { "shape": "adjacent", "range": 1, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "flustered", "duration": 3 }] } }],
+      "behaviour": { "type": "chaser", "erratic": 0.15 }, "xp": 8,
+      "loot": [{ "item": "inside-joke", "chance": 0.3 }, { "item": "energy-drink", "chance": 0.2 }],
+      "tags": ["student", "senior"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.98, "build": "broad", "skin": "#c68c5a", "top": "#c1121f", "bottom": "#3d405b", "accent": "#fdf6ec", "hair": "#2b2118", "hairStyle": "mohawk", "headwear": "cap", "outfit": "plain", "holding": "none" }, "scale": 1, "idle": "bob" }
+    },
+    {
+      "id": "hall-monitor", "name": "Hall Monitor", "description": "Sash, clipboard, absolute certainty. Has been waiting four years for authority and this is the last week to use it.",
+      "faction": "hostile", "stats": { "hp": 12, "ac": 12, "str": 10, "dex": 9, "int": 12, "mp": 0 }, "speed": 90, "sight": 8,
+      "attack": { "name": "Rules recital", "verb": "recites the rules at", "damage": { "base": 1, "dice": "1d4" }, "damageType": "guilt", "range": 2, "accuracyStat": "int" },
+      "abilities": [
+        { "id": "write-up", "name": "Write-Up", "description": "Tears off a pink slip with your name already on it.", "action": { "targeting": { "shape": "single", "range": 2, "radius": 0, "affects": "enemies", "needsLos": true }, "condition": { "type": "chance", "p": 0.35 }, "effects": [{ "type": "counter", "counter": "detentions", "add": 1 }, { "type": "apply_status", "status": "grounded", "duration": 2 }, { "type": "message", "text": "A detention slip. That's one more." }], "vfx": { "kind": "slash", "color": "#ff8fab" } }, "cooldown": 30, "useWhen": "target_in_range" }
+      ],
+      "behaviour": { "type": "guardian", "param": 6, "erratic": 0 }, "xp": 10,
+      "loot": [{ "item": "detention-eraser", "chance": 0.25 }, { "item": "hall-pass", "chance": 0.15 }],
+      "tags": ["student", "authority"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.85, "build": "average", "skin": "#f1c9a5", "top": "#fdf6ec", "bottom": "#264653", "accent": "#ef476f", "hair": "#d4a373", "hairStyle": "bun", "headwear": "none", "outfit": "uniform", "holding": "book" }, "parts": [{ "shape": "box", "size": [0.08, 0.5, 0.03], "pos": [0.05, 0.6, 0.1], "rot": [0, 0, 35], "color": "#ef476f", "material": "cloth" }], "scale": 1, "idle": "none" }
+    },
+    {
+      "id": "dam-surveyor", "name": "Reservoir Board Surveyor", "description": "Hi-vis vest, laser level, a smile like a brochure. Keeps asking whether your parents have signed the buyout forms.",
+      "faction": "hostile", "stats": { "hp": 10, "ac": 11, "str": 9, "dex": 11, "int": 13, "mp": 0 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Buyout pitch", "verb": "delivers a buyout pitch to", "damage": { "base": 1, "dice": "1d6" }, "damageType": "guilt", "range": 4, "accuracyStat": "int" },
+      "behaviour": { "type": "kiter", "param": 3, "erratic": 0 }, "xp": 9,
+      "loot": [{ "item": "power-bank", "chance": 0.3 }],
+      "tags": ["adult", "company"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 1.0, "build": "average", "skin": "#d8a07c", "top": "#ff9f1c", "bottom": "#3d405b", "accent": "#e9ff70", "hair": "#4a4e69", "hairStyle": "short", "headwear": "helmet", "outfit": "uniform", "holding": "tool" }, "scale": 1, "idle": "sway" }
+    },
+    {
+      "id": "yearbook-paparazzo", "name": "Yearbook Paparazzo", "description": "Waits behind doors with a camera. Has never taken a flattering photo in their life and considers this artistic integrity.",
+      "faction": "hostile", "stats": { "hp": 7, "ac": 12, "str": 7, "dex": 14, "int": 11, "mp": 0 }, "speed": 110, "sight": 9,
+      "attack": { "name": "Candid shot", "verb": "snaps a candid of", "damage": { "base": 0, "dice": "1d4" }, "damageType": "embarrassment", "range": 3, "accuracyStat": "dex" },
+      "triggers": [{ "on": "on_hit", "chance": 0.4, "action": { "targeting": { "shape": "single", "range": 3, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "camera-flash", "duration": 3 }], "vfx": { "kind": "burst", "color": "#ffffff" } } }],
+      "behaviour": { "type": "ambusher", "param": 3, "erratic": 0 }, "xp": 6,
+      "loot": [{ "item": "polaroid", "chance": 0.2 }],
+      "tags": ["student", "yearbook"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.8, "build": "slim", "skin": "#a86b4c", "top": "#2a9d8f", "bottom": "#e9c46a", "accent": "#000000", "hair": "#0b090a", "hairStyle": "short", "headwear": "bandana", "outfit": "plain", "holding": "phone" }, "parts": [{ "shape": "box", "size": [0.16, 0.1, 0.08], "pos": [0, 0.62, 0.14], "color": "#22223b", "material": "metal" }], "scale": 1, "idle": "bob" }
+    },
+    {
+      "id": "bio-goose", "name": "The Biology Lab Goose", "description": "Arrived in Year 7 for a project and never left. Nobody knows who feeds it. It has opinions about you specifically.",
+      "faction": "hostile", "stats": { "hp": 9, "ac": 12, "str": 10, "dex": 13, "int": 4, "mp": 0 }, "speed": 120, "sight": 7,
+      "attack": { "name": "Wing slap", "verb": "wing-slaps", "damage": { "base": 0, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
+      "abilities": [
+        { "id": "honk", "name": "HONK", "description": "A sound that reaches the soul.", "action": { "targeting": { "shape": "cone", "range": 3, "radius": 3, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "spooked", "duration": 2 }, { "type": "noise", "radius": 8 }], "vfx": { "kind": "ring", "color": "#f8f9fa" } }, "cooldown": 7, "useWhen": "target_in_range" }
+      ],
+      "behaviour": { "type": "chaser", "erratic": 0.35 }, "xp": 7,
+      "tags": ["animal", "legend"],
+      "model": { "archetype": "flier", "colors": { "primary": "#f8f9fa", "secondary": "#adb5bd", "accent": "#ff9f1c" }, "parts": [{ "shape": "cone", "size": [0.06, 0.12, 0.06], "pos": [0, 0.45, 0.25], "rot": [90, 0, 0], "color": "#ff9f1c", "material": "matte", "group": "head" }], "scale": 0.8, "idle": "bob" }
+    },
+    {
+      "id": "rosalind", "name": "Rosalind Achterberg", "description": "Your best friend from age four to fourteen. Then something happened neither of you will name. She has your notebook, and she has read it.",
+      "faction": "hostile", "stats": { "hp": 24, "ac": 13, "str": 11, "dex": 13, "int": 15, "mp": 10 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Old inside joke, turned", "verb": "turns an old joke on", "damage": { "base": 1, "dice": "1d6" }, "damageType": "nostalgia", "range": 2, "accuracyStat": "int" },
+      "abilities": [
+        { "id": "brutal-honesty", "name": "Brutal Honesty", "description": "She says the true thing. Out loud. In front of people.", "action": { "targeting": { "shape": "single", "range": 3, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 2, "dice": "2d4" }, "damageType": "guilt" }, { "type": "apply_status", "status": "seen-through", "duration": 4 }], "vfx": { "kind": "beam", "color": "#9a7cff" } }, "cost": { "resource": "mp", "amount": 4 }, "cooldown": 5, "useWhen": "target_in_range" }
+      ],
+      "triggers": [{ "on": "on_low_hp", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "change_faction", "faction": "friendly" }, { "type": "spawn_item", "item": "speech-notebook", "count": 1 }, { "type": "message", "text": "Rosalind's voice cracks. 'It's a good speech, Junie. You put my mum's bakery in it.' She holds out the notebook." }] } }],
+      "behaviour": { "type": "kiter", "param": 2, "erratic": 0 }, "xp": 35, "unique": true,
+      "loot": [{ "item": "speech-notebook", "chance": 1 }],
+      "npc": { "role": "rival", "personality": "Sharp, guarded, secretly devastated about moving to a city where nobody knew her at four.", "greeting": "Looking for something? You always did leave things lying around.", "lines": ["You wrote about the swimming hole. You wrote about me.", "Everyone's leaving anyway. What's a speech going to do?", "Fine. Say the thing. You always say the thing."], "secrets": "She stole the notebook to read what Junie wrote about her, not to stop the speech.", "wants": "An apology for Year 9, which Junie doesn't know she owes.", "persuadeStat": "int", "persuadeDifficulty": 16 },
+      "tags": ["student", "rival", "boss"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.84, "build": "slim", "skin": "#f3d2c1", "top": "#3a0ca3", "bottom": "#14213d", "accent": "#f72585", "hair": "#e85d04", "hairStyle": "long", "headwear": "none", "outfit": "coat", "holding": "book" }, "scale": 1, "idle": "sway" }
+    },
+    {
+      "id": "mags-calloway", "name": "Magdalena 'Mags' Calloway", "description": "Head girl, debate champion, daughter of the Reservoir Board chair. She has a sponsor, a slideshow and a hashtag: #NewBeginnings. She will not be interrupted.",
+      "faction": "hostile", "stats": { "hp": 45, "ac": 14, "str": 13, "dex": 12, "int": 16, "mp": 24 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Withering once-over", "verb": "gives a withering once-over to", "damage": { "base": 2, "dice": "1d6" }, "damageType": "embarrassment", "range": 2, "accuracyStat": "int" },
+      "abilities": [
+        { "id": "devastating-read", "name": "Devastating Read", "description": "A paragraph-long takedown, delivered at microphone volume.", "action": { "targeting": { "shape": "ray", "range": 6, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 3, "dice": "2d4" }, "damageType": "embarrassment" }, { "type": "apply_status", "status": "mortified", "duration": 1 }], "vfx": { "kind": "beam", "color": "#ff6fa8" } }, "cost": { "resource": "mp", "amount": 6 }, "cooldown": 5, "useWhen": "target_in_range" },
+        { "id": "rally-the-squad", "name": "Rally the Squad", "description": "Three phones light up at once.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "summon", "actor": "group-chat-lurker", "count": 2, "allied": false }], "vfx": { "kind": "sparkle", "color": "#9ad1ff" } }, "cooldown": 20, "useWhen": "start_of_fight" },
+        { "id": "fix-lip-gloss", "name": "Fix Lip Gloss", "description": "A compact mirror, a deep breath, total reset.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 6, "dice": "1d6" } }, { "type": "remove_status", "status": "all_harmful" }], "vfx": { "kind": "sparkle", "color": "#ffd6e0" } }, "cooldown": 16, "useWhen": "low_hp" }
+      ],
+      "resistances": [{ "damageType": "gossip", "multiplier": 0.5 }, { "damageType": "nostalgia", "multiplier": 1.5 }],
+      "behaviour": { "type": "guardian", "param": 5, "erratic": 0 }, "xp": 100, "unique": true,
+      "npc": { "role": "rival", "personality": "Polished, relentless, privately terrified that the town will blame her family forever.", "greeting": "Junie! Love that you came. You're not on the programme, but you can clap.", "lines": ["Change is an opportunity, not a tragedy.", "Nobody wants to cry at an assembly, Juniper.", "My dad didn't flood the town. Physics did."], "secrets": "Her grandmother's house is on the list too; she has not told anyone she voted against the dam in the student poll.", "wants": "For someone to tell her it isn't her fault.", "persuadeStat": "str", "persuadeDifficulty": 20 },
+      "tags": ["student", "boss", "head girl"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.9, "build": "slim", "skin": "#8d5524", "top": "#fdf6ec", "bottom": "#1d3557", "accent": "#ffd166", "hair": "#0b090a", "hairStyle": "long", "headwear": "crown", "outfit": "suit", "holding": "phone" }, "scale": 1.05, "idle": "sway", "light": { "color": "#ffe8a3", "intensity": 1, "radius": 2.5 } }
+    },
+    {
+      "id": "janitor", "name": "Mr. Abernathy-Oyelaran", "description": "School custodian for thirty-one years. Keeper of the lost-and-found, which this week is the size of a small department store.",
+      "faction": "neutral", "stats": { "hp": 25, "ac": 12, "str": 14, "dex": 9, "int": 13, "mp": 0 }, "speed": 80, "sight": 8,
+      "behaviour": { "type": "stationary", "erratic": 0 }, "xp": 0,
+      "npc": { "role": "trader", "personality": "Unhurried, kind, extremely precise about mops. Trades lost property for favours, never for money.", "greeting": "Ah. Okafor-Pryce. You'll want the lost-and-found. Everybody wants the lost-and-found this week.", "lines": ["Thirty-one years. Never once found a left shoe and a right shoe that matched.", "The goose? Leave the goose alone.", "Water's in the boiler room again. Doesn't matter now, I suppose."], "stock": ["varsity-jacket", "lucky-scrunchie", "headphones", "mixtape", "iced-tea", "power-bank", "megaphone", "detention-eraser"], "secrets": "He has the school's old 1961 yearbook and knows Nan Ottoline was the last person to give a farewell speech in Lowmoor, when the old village went under.", "wants": "Someone to take the trophy case photographs before the water does.", "persuadeStat": "int", "persuadeDifficulty": 10 },
+      "tags": ["adult", "staff"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.95, "build": "round", "skin": "#5a3825", "top": "#4a6fa5", "bottom": "#4a6fa5", "accent": "#ffd166", "hair": "#d9d9d9", "hairStyle": "short", "headwear": "cap", "outfit": "uniform", "holding": "tool" }, "scale": 1, "idle": "bob" }
+    },
+    {
+      "id": "priya", "name": "Priya Dass", "description": "Drama club, every play, every year. Has decided this week is a tragedy in five acts and she is going to give it her all.",
+      "faction": "friendly", "stats": { "hp": 16, "ac": 11, "str": 12, "dex": 12, "int": 12, "mp": 0 }, "speed": 100, "sight": 8,
+      "attack": { "name": "Dramatic monologue", "verb": "monologues dramatically at", "damage": { "base": 1, "dice": "1d4" }, "damageType": "embarrassment", "range": 2, "accuracyStat": "str" },
+      "behaviour": { "type": "follower", "param": 2, "erratic": 0.05 }, "xp": 0,
+      "npc": { "role": "ally", "personality": "Theatrical, loyal, quotes plays nobody has read, cries easily and recovers instantly.", "greeting": "Junie! Exeunt, pursued by a goose! Where are we going?", "lines": ["Every great speech is stolen at least once. It's tradition.", "If anyone makes you cry, I will cry louder.", "Is this the third act? It feels like the third act."], "secrets": "She saw Rosalind reading the notebook on the bus, crying.", "wants": "To be part of something people will remember.", "persuadeStat": "str", "persuadeDifficulty": 6 },
+      "tags": ["student", "drama"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.8, "build": "average", "skin": "#a0663f", "top": "#8338ec", "bottom": "#212529", "accent": "#ffbe0b", "hair": "#120d0b", "hairStyle": "bun", "headwear": "none", "outfit": "dress", "holding": "book" }, "scale": 1, "idle": "bob" }
+    },
+    {
+      "id": "coach", "name": "Coach Wendeline Strand", "description": "PE teacher, swimming coach, lifeguard at the old swimming hole for twenty summers. Whistle permanently around her neck.",
+      "faction": "friendly", "stats": { "hp": 30, "ac": 12, "str": 15, "dex": 12, "int": 11, "mp": 20 }, "speed": 100, "sight": 8,
+      "behaviour": { "type": "idle", "erratic": 0 }, "xp": 0,
+      "npc": { "role": "healer", "personality": "Booming, sentimental, believes any problem can be solved by hydration and a lap.", "greeting": "OKAFOR-PRYCE! Water bottle. Deep breath. Tell Coach.", "lines": ["Shoulders back. Chin up. You've got this.", "Twenty summers I watched that swimming hole. Not one drowning. And now look.", "Drink something. Not that. Water."], "stock": ["iced-tea"], "secrets": "She is moving into a flat with no window. She hasn't told her swimmers.", "wants": "To hear the swimming hole mentioned at the assembly.", "persuadeStat": "str", "persuadeDifficulty": 7 },
+      "tags": ["adult", "staff"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.98, "build": "broad", "skin": "#e0ac8a", "top": "#e63946", "bottom": "#1d3557", "accent": "#f1faee", "hair": "#a8763e", "hairStyle": "short", "headwear": "cap", "outfit": "plain", "holding": "none" }, "scale": 1, "idle": "bob" }
+    },
+    {
+      "id": "theo", "name": "Theo Marsh", "description": "Year 8. Knows everything about everyone, mostly from standing very still in corridors. Bolts at loud noises.",
+      "faction": "friendly", "stats": { "hp": 6, "ac": 13, "str": 5, "dex": 15, "int": 14, "mp": 0 }, "speed": 130, "sight": 10,
+      "behaviour": { "type": "coward", "param": 0.9, "erratic": 0.2 }, "xp": 0,
+      "npc": { "role": "informant", "personality": "Whispers. Exact. Slightly unsettling. Wants to be useful more than anything.", "greeting": "Psst. I know where your notebook is. I also know where the goose sleeps.", "lines": ["Rosalind's having a party Wednesday. Her house is half boxes.", "Hall monitors only write you up if you stop moving.", "Mags practised her speech in the empty pool. It echoed. She cried a bit."], "secrets": "He knows the hall monitors' detention slips can be erased with the janitor's special eraser.", "wants": "To be mentioned in the speech. Just once. 'Theo Marsh, who knew things.'", "persuadeStat": "int", "persuadeDifficulty": 8 },
+      "tags": ["student", "informant"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.62, "build": "slim", "skin": "#f4d3b8", "top": "#606c38", "bottom": "#283618", "accent": "#fefae0", "hair": "#bc6c25", "hairStyle": "short", "headwear": "none", "outfit": "uniform", "holding": "none" }, "scale": 1, "idle": "flicker" }
+    },
+    {
+      "id": "nan-ottoline", "name": "Nan Ottoline", "description": "Class of 1961. Gave the farewell speech when the OLD village went under the first reservoir. Has come back for the second one.",
+      "faction": "friendly", "stats": { "hp": 14, "ac": 10, "str": 6, "dex": 7, "int": 17, "mp": 0 }, "speed": 60, "sight": 6,
+      "behaviour": { "type": "stationary", "erratic": 0 }, "xp": 0,
+      "npc": { "role": "quest_giver", "personality": "Tiny, funny, unsentimental about everything except names. Remembers every family that was lost the first time.", "greeting": "You're the one with the speech. Good. Read me the first line. No, louder.", "lines": ["We lost the first village in 1961. I said every name. It took eleven minutes. Nobody left.", "Don't make it pretty. Make it true.", "The water doesn't care. That's why you have to."], "stock": ["old-yearbook", "lucky-scrunchie"], "secrets": "Her own speech was cut short by the then-chair of the Reservoir Board: Mags Calloway's great-grandfather.", "wants": "To hear the old village named alongside the new.", "persuadeStat": "int", "persuadeDifficulty": 9 },
+      "tags": ["elder", "lore"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.7, "build": "round", "skin": "#f2d0b8", "top": "#bc4749", "bottom": "#6a994e", "accent": "#f2e8cf", "hair": "#f8f9fa", "hairStyle": "bun", "headwear": "none", "outfit": "dress", "holding": "staff" }, "scale": 1, "idle": "none" }
+    }
+  ],
+  "items": [
+    {
+      "id": "thesaurus", "name": "Dog-eared Thesaurus", "kind": "Vocabulary", "description": "Fourteen synonyms for 'devastated' are highlighted. Always the right word, eventually.",
+      "category": "weapon", "equipSlot": "weapon", "useMode": "passive",
+      "weapon": { "name": "Precise word", "verb": "finds the precise word for", "damage": { "base": 1, "dice": "1d6" }, "damageType": "embarrassment", "range": 1, "accuracyStat": "int" },
+      "rarity": "common", "value": 5, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.22, 0.07, 0.3], "pos": [0, 0.04, 0], "color": "#2b3a67", "material": "cloth" }, { "shape": "box", "size": [0.2, 0.06, 0.29], "pos": [0.01, 0.04, 0], "color": "#fdf6ec", "material": "matte" }], "idle": "bob" }
+    },
+    {
+      "id": "megaphone", "name": "Drama Club Megaphone", "kind": "Volume", "description": "Red, dented, smells of stage paint. Makes anything you say sound like an announcement.",
+      "category": "weapon", "equipSlot": "weapon", "useMode": "passive",
+      "weapon": { "name": "Amplified opinion", "verb": "amplifies an opinion at", "damage": { "base": 1, "dice": "1d6" }, "damageType": "embarrassment", "range": 4, "accuracyStat": "str" },
+      "requires": [{ "stat": "str", "min": 11 }], "rarity": "uncommon", "value": 25, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cone", "size": [0.2, 0.35, 0.2], "pos": [0, 0.15, 0], "rot": [0, 0, 90], "color": "#e63946", "material": "matte" }, { "shape": "box", "size": [0.05, 0.12, 0.05], "pos": [-0.08, 0.05, 0], "color": "#1d3557", "material": "matte" }], "idle": "bob" }
+    },
+    {
+      "id": "permanent-marker", "name": "Permanent Marker of Truth", "kind": "Marker", "description": "Used to sign every cast in Lowmoor for a decade. Write the true thing where everyone can read it.",
+      "category": "weapon", "equipSlot": "weapon", "useMode": "passive",
+      "weapon": { "name": "True thing, in ink", "verb": "writes the true thing about", "damage": { "base": 2, "dice": "1d8" }, "damageType": "guilt", "range": 1, "accuracyStat": "dex" },
+      "rarity": "rare", "value": 40, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.05, 0.25, 0.05], "pos": [0, 0.1, 0], "rot": [0, 0, 80], "color": "#0b090a", "material": "matte" }, { "shape": "cylinder", "size": [0.052, 0.06, 0.052], "pos": [0.11, 0.12, 0], "rot": [0, 0, 80], "color": "#ffffff", "material": "matte" }], "idle": "spin" }
+    },
+    {
+      "id": "thrift-blazer", "name": "Thrift-Store Blazer", "kind": "Outfit", "description": "Two sizes too big, elbow patches, smells faintly of someone else's grandad. You look like you mean it.",
+      "category": "armour", "equipSlot": "armour", "useMode": "passive", "armour": 1,
+      "modifiers": [{ "stat": "int", "amount": 1 }], "rarity": "common", "value": 8, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.4, 0.45, 0.18], "pos": [0, 0.22, 0], "color": "#7f5539", "material": "cloth" }], "idle": "none" }
+    },
+    {
+      "id": "varsity-jacket", "name": "Borrowed Varsity Jacket", "kind": "Outfit", "description": "Somebody's brother's, from the year Lowmoor won the county. Instantly gives you the walk.",
+      "category": "armour", "equipSlot": "armour", "useMode": "passive", "armour": 2,
+      "modifiers": [{ "stat": "str", "amount": 1 }], "rarity": "uncommon", "value": 30, "knowledge": "clear",
+      "triggers": [{ "on": "on_equip", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "apply_status", "status": "hyped", "duration": 4 }] } }],
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.42, 0.45, 0.2], "pos": [0, 0.22, 0], "color": "#003049", "material": "cloth" }, { "shape": "box", "size": [0.12, 0.42, 0.21], "pos": [0.2, 0.22, 0], "color": "#fcbf49", "material": "cloth" }], "idle": "none" }
+    },
+    {
+      "id": "lucky-scrunchie", "name": "Lucky Scrunchie", "kind": "Accessory", "description": "Velvet, faded teal. Worn for every exam since Year 7. Undefeated.",
+      "category": "trinket", "equipSlot": "trinket", "useMode": "passive",
+      "modifiers": [{ "stat": "ac", "amount": 1 }, { "stat": "dex", "amount": 1 }], "rarity": "uncommon", "value": 20, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "torus", "size": [0.16, 0.06, 0.16], "pos": [0, 0.06, 0], "rot": [90, 0, 0], "color": "#2a9d8f", "material": "cloth" }], "idle": "spin" }
+    },
+    {
+      "id": "headphones", "name": "Noise-Cancelling Headphones", "kind": "Accessory", "description": "The world gets quieter. Insults lose their edge. So does everything else.",
+      "category": "trinket", "equipSlot": "trinket", "useMode": "passive",
+      "modifiers": [{ "stat": "ac", "amount": 2 }, { "stat": "sight", "amount": -1 }],
+      "triggers": [
+        { "on": "on_equip", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "apply_status", "status": "in-the-zone", "duration": 5 }] } },
+        { "on": "on_unequip", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "message", "text": "The hallway noise rushes back in like water." }] } }
+      ],
+      "rarity": "uncommon", "value": 35, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "torus", "size": [0.22, 0.04, 0.22], "pos": [0, 0.15, 0], "color": "#212529", "material": "matte" }, { "shape": "cylinder", "size": [0.1, 0.05, 0.1], "pos": [0.11, 0.08, 0], "rot": [0, 0, 90], "color": "#ff6fa8", "material": "matte" }, { "shape": "cylinder", "size": [0.1, 0.05, 0.1], "pos": [-0.11, 0.08, 0], "rot": [0, 0, 90], "color": "#ff6fa8", "material": "matte" }], "idle": "bob" }
+    },
+    {
+      "id": "cracked-phone", "name": "Cracked Phone", "kind": "Phone", "description": "Spiderweb screen, sticker case, 40% of the time it works every time. Opens the map app.",
+      "category": "tool", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "reveal_map", "radius": 15 }, { "type": "message", "text": "The map loads, mostly. Half of Lowmoor is already marked as 'water'." }], "vfx": { "kind": "ring", "color": "#06d6a0" } },
+      "cost": { "resource": "battery", "amount": 3 }, "cooldown": 10, "rarity": "unique", "value": 0, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.1, 0.02, 0.18], "pos": [0, 0.02, 0], "color": "#212529", "material": "glass", "emissive": "#2a9d8f" }], "idle": "bob" }
+    },
+    {
+      "id": "group-text", "name": "Group Text Blast", "kind": "App", "description": "Send one message to everyone. Watch every phone in the room buzz at once.",
+      "category": "spell", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "all_visible", "range": 8, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "distracted", "duration": 4 }], "vfx": { "kind": "sparkle", "color": "#9ad1ff" } },
+      "cost": { "resource": "battery", "amount": 5 }, "cooldown": 8, "rarity": "uncommon", "value": 30, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "sphere", "size": [0.16, 0.16, 0.16], "pos": [0, 0.2, 0], "color": "#9ad1ff", "material": "glow", "emissive": "#4895ef" }], "idle": "pulse" }
+    },
+    {
+      "id": "perfect-comeback", "name": "Perfect Comeback", "kind": "Signature move", "description": "You've rehearsed it in the shower for years. Costs nerve to actually say.",
+      "category": "spell", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "single", "range": 4, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 2, "dice": "2d6", "scale": { "stat": "int", "factor": 0.3 } }, "damageType": "embarrassment" }], "vfx": { "kind": "bolt", "color": "#ff6fa8" } },
+      "cost": { "resource": "mp", "amount": 5 }, "cooldown": 2, "rarity": "unique", "value": 0, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "pyramid", "size": [0.16, 0.2, 0.16], "pos": [0, 0.2, 0], "color": "#ff6fa8", "material": "glow", "emissive": "#ff006e" }], "idle": "spin" }
+    },
+    {
+      "id": "pep-talk", "name": "Pep Talk", "kind": "Signature move", "description": "Shoulders back, chin up, and tell everybody nearby - including yourself - that they've got this.",
+      "category": "spell", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "area", "range": 0, "radius": 2, "affects": "allies", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 5, "dice": "1d6" } }, { "type": "remove_status", "status": "flustered" }, { "type": "apply_status", "status": "hyped", "duration": 5 }], "vfx": { "kind": "ring", "color": "#06d6a0" } },
+      "cost": { "resource": "mp", "amount": 6 }, "cooldown": 6, "rarity": "unique", "value": 0, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "sphere", "size": [0.16, 0.16, 0.16], "pos": [0, 0.2, 0], "color": "#06d6a0", "material": "glow", "emissive": "#06d6a0" }], "idle": "pulse" }
+    },
+    {
+      "id": "power-bank", "name": "Power Bank", "kind": "Charger", "description": "Somebody's sticker-covered brick of borrowed electricity.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "resource", "resource": "battery", "amount": { "base": 8 } }, { "type": "remove_status", "status": "offline" }] },
+      "rarity": "common", "value": 8, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.12, 0.04, 0.2], "pos": [0, 0.03, 0], "color": "#ffd166", "material": "matte" }], "idle": "bob" }
+    },
+    {
+      "id": "iced-tea", "name": "Vending Machine Iced Tea", "kind": "Drink", "description": "Peach flavour. The vending machine is the only thing in school still fully stocked.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 6 } }], "vfx": { "kind": "sparkle", "color": "#f4a261" } },
+      "rarity": "common", "value": 4, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.09, 0.2, 0.09], "pos": [0, 0.1, 0], "color": "#f4a261", "material": "metal" }], "idle": "bob" }
+    },
+    {
+      "id": "mixtape", "name": "Rosalind's Old Mixtape", "kind": "Mixtape", "description": "A real cassette. Side A: 'SUMMER'. Side B: 'DO NOT LISTEN WITHOUT ME'. Three good plays left in the tape.",
+      "category": "tool", "useMode": "charges", "charges": 3,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "apply_status", "status": "hyped", "duration": 10 }, { "type": "modify_stat", "stat": "str", "amount": 2, "duration": 10 }], "vfx": { "kind": "sparkle", "color": "#ffbe0b" } },
+      "rarity": "uncommon", "value": 25, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.2, 0.03, 0.13], "pos": [0, 0.03, 0], "color": "#f72585", "material": "matte" }, { "shape": "cylinder", "size": [0.04, 0.035, 0.04], "pos": [-0.05, 0.04, 0], "color": "#fdf6ec", "material": "matte" }, { "shape": "cylinder", "size": [0.04, 0.035, 0.04], "pos": [0.05, 0.04, 0], "color": "#fdf6ec", "material": "matte" }], "idle": "spin" }
+    },
+    {
+      "id": "inside-joke", "name": "Inside Joke", "kind": "One-liner", "description": "Only works once. Only works on one person. Absolutely destroys them.",
+      "category": "throwable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "single", "range": 5, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 1, "dice": "2d4" }, "damageType": "embarrassment" }, { "type": "apply_status", "status": "mortified", "duration": 1 }], "vfx": { "kind": "bolt", "color": "#ffd166" } },
+      "rarity": "common", "value": 10, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "sphere", "size": [0.14, 0.14, 0.14], "pos": [0, 0.15, 0], "color": "#ffd166", "material": "glow", "emissive": "#ff9f1c" }], "idle": "hover" }
+    },
+    {
+      "id": "detention-eraser", "name": "The Janitor's Special Eraser", "kind": "Eraser", "description": "Grey, pumice-hard, rumoured to remove anything from any official form.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "counter", "counter": "detentions", "add": -1 }, { "type": "message", "text": "One detention slip, gently erased into history." }] },
+      "rarity": "rare", "value": 30, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.14, 0.05, 0.08], "pos": [0, 0.03, 0], "color": "#8d99ae", "material": "matte" }], "idle": "bob" }
+    },
+    {
+      "id": "hall-pass", "name": "Laminated Hall Pass", "kind": "Pass", "description": "Signed by a teacher who left in March. Nobody questions a laminated hall pass.",
+      "category": "tool", "useMode": "charges", "charges": 1,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "teleport", "mode": "to_exit" }, { "type": "message", "text": "You wave the pass. Corridors part like the Red Sea." }], "vfx": { "kind": "sparkle", "color": "#fdf6ec" } },
+      "rarity": "rare", "value": 40, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.18, 0.01, 0.1], "pos": [0, 0.02, 0], "color": "#e9ff70", "material": "glass" }], "idle": "spin" }
+    },
+    {
+      "id": "cafeteria-cookie", "name": "Cafeteria Cookie", "kind": "Snack", "description": "Made by Mrs. Pell, whose recipe goes under the water with the rest of the town. Still warm.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 5 } }, { "type": "apply_status", "status": "in-the-zone", "duration": 6 }] },
+      "rarity": "common", "value": 6, "knowledge": "unknown", "appearanceGroup": "snack", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.16, 0.03, 0.16], "pos": [0, 0.03, 0], "color": "#c08552", "material": "matte" }], "idle": "bob" }
+    },
+    {
+      "id": "energy-drink", "name": "Lightning Lemon Energy", "kind": "Snack", "description": "Banned in two countries. You can feel it in your teeth.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "apply_status", "status": "hyped", "duration": 8 }, { "type": "resource", "resource": "mp", "amount": { "base": 6 } }, { "type": "apply_status", "status": "flustered", "duration": 3 }] },
+      "rarity": "common", "value": 6, "knowledge": "unknown", "appearanceGroup": "snack", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.08, 0.22, 0.08], "pos": [0, 0.11, 0], "color": "#e9ff70", "material": "metal" }], "idle": "bob" }
+    },
+    {
+      "id": "gas-station-sushi", "name": "Gas Station Sushi", "kind": "Snack", "description": "Bought on Tuesday. It is no longer Tuesday.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "damage", "amount": { "base": 3 }, "damageType": "guilt" }, { "type": "apply_status", "status": "distracted", "duration": 3 }, { "type": "message", "text": "That was a mistake, and your stomach would like a word." }] },
+      "rarity": "common", "value": 1, "knowledge": "unknown", "appearanceGroup": "snack", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.18, 0.06, 0.12], "pos": [0, 0.04, 0], "color": "#fdf6ec", "material": "glass" }], "idle": "bob" }
+    },
+    {
+      "id": "admirer-note", "name": "Secret Admirer Note", "kind": "Note", "description": "'Your speech is going to be the best thing anyone says about this town. - ?'",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 10 } }, { "type": "remove_status", "status": "all_harmful" }] },
+      "rarity": "uncommon", "value": 15, "knowledge": "unknown", "appearanceGroup": "note", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "pyramid", "size": [0.12, 0.03, 0.12], "pos": [0, 0.02, 0], "color": "#ffc8dd", "material": "cloth" }], "idle": "bob" }
+    },
+    {
+      "id": "burn-book-page", "name": "Burn Book Page", "kind": "Note", "description": "A torn page of everyone's secrets in four colours of gel pen. Reading it tells you a lot, and costs you something.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "identify", "scope": "all_carried" }, { "type": "apply_status", "status": "flustered", "duration": 3 }, { "type": "message", "text": "Now you know what everything is. And what everyone thinks." }] },
+      "rarity": "uncommon", "value": 15, "knowledge": "unknown", "appearanceGroup": "note", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "pyramid", "size": [0.12, 0.03, 0.12], "pos": [0, 0.02, 0], "color": "#ffc8dd", "material": "cloth" }], "idle": "bob" }
+    },
+    {
+      "id": "polaroid", "name": "Polaroid of the Swimming Hole", "kind": "Photo", "description": "Summer, years ago. Everyone in it is laughing at something just out of frame.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 8, "dice": "1d6" } }, { "type": "remove_status", "status": "all_harmful" }, { "type": "apply_status", "status": "in-the-zone", "duration": 4 }], "vfx": { "kind": "sparkle", "color": "#7fd6c9" } },
+      "rarity": "uncommon", "value": 20, "knowledge": "vague", "vagueText": "Looking at it makes your chest ache in a way that somehow helps.", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.14, 0.01, 0.17], "pos": [0, 0.02, 0], "color": "#fdf6ec", "material": "matte" }, { "shape": "box", "size": [0.12, 0.012, 0.12], "pos": [0, 0.022, -0.015], "color": "#4fb3bf", "material": "matte" }], "idle": "bob" }
+    },
+    {
+      "id": "old-yearbook", "name": "Lowmoor Yearbook, 1961", "kind": "Yearbook", "description": "The year the old village went under. On the last page, a speech, typed and pasted in.",
+      "category": "clue", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "set_flag", "flag": "read-1961-speech", "value": true }, { "type": "grant_xp", "amount": 15 }, { "type": "message", "text": "'We will not pretend this is progress. We will say their names.' - O. Ottoline, Head Girl, 1961." }] },
+      "cooldown": 100, "rarity": "unique", "value": 0, "knowledge": "vague", "vagueText": "A cracked leather yearbook. The last page has been read so many times it's soft.", "revealOnUse": "full",
+      "triggers": [{ "on": "on_pickup", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "message", "text": "It's heavier than it looks." }] } }],
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.26, 0.06, 0.32], "pos": [0, 0.04, 0], "color": "#6f1d1b", "material": "cloth" }, { "shape": "box", "size": [0.1, 0.005, 0.06], "pos": [0, 0.072, 0], "color": "#ffd166", "material": "metal" }], "idle": "bob" }
+    },
+    {
+      "id": "speech-notebook", "name": "Junie's Speech Notebook", "kind": "Notebook", "description": "Every family, every shop, the swimming hole, the stupid goose. Use it at the Last Assembly, once the stage is yours.",
+      "category": "quest", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "condition": { "type": "all", "of": [{ "type": "in_area", "area": 2 }, { "type": "actor_defeated", "actor": "mags-calloway" }] }, "effects": [{ "type": "set_flag", "flag": "speech-delivered", "value": true }, { "type": "message", "text": "You step up to the microphone and start with the first name." }], "vfx": { "kind": "ring", "color": "#ffd166" } },
+      "triggers": [{ "on": "on_pickup", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "set_flag", "flag": "has-speech", "value": true }, { "type": "grant_xp", "amount": 10 }] } }],
+      "rarity": "unique", "value": 0, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.2, 0.04, 0.27], "pos": [0, 0.03, 0], "color": "#ffd166", "material": "cloth" }, { "shape": "cylinder", "size": [0.01, 0.27, 0.01], "pos": [-0.1, 0.05, 0], "rot": [90, 0, 0], "color": "#adb5bd", "material": "metal" }], "idle": "hover", "light": { "color": "#ffd166", "intensity": 0.8, "radius": 2 } }
+    }
+  ],
+  "terrains": [
+    { "id": "lockers", "name": "Half-emptied Lockers", "description": "Doors hanging open, stickers peeling. Some still have stuff inside.", "walkable": false, "blocksSight": true, "color": "#457b9d", "height": 1.3, "interact": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "condition": { "type": "chance", "p": 0.3 }, "effects": [{ "type": "spawn_item", "item": "admirer-note", "count": 1 }] }, "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.9, 1.3, 0.5], "pos": [0, 0.65, 0], "color": "#457b9d", "material": "metal" }, { "shape": "box", "size": [0.05, 0.3, 0.02], "pos": [0.2, 0.9, 0.26], "color": "#1d3557", "material": "metal" }], "idle": "none" } },
+    { "id": "moving-boxes", "name": "Stacked Moving Boxes", "description": "Labelled in marker: KITCHEN, MUM'S STUFF, DO NOT OPEN.", "walkable": false, "blocksSight": true, "color": "#c9a66b", "height": 1.0, "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.8, 0.5, 0.7], "pos": [0, 0.25, 0], "color": "#c9a66b", "material": "cloth" }, { "shape": "box", "size": [0.6, 0.4, 0.5], "pos": [0.05, 0.7, 0], "rot": [0, 12, 0], "color": "#b08d57", "material": "cloth" }], "idle": "none" } },
+    { "id": "mop-water", "name": "Freshly Mopped Floor", "description": "There is a yellow sign. Nobody reads the yellow sign.", "walkable": true, "blocksSight": false, "moveCost": 2, "onStand": [{ "type": "apply_status", "status": "flustered", "duration": 1 }], "color": "#a8dadc", "height": 0 },
+    { "id": "seep-water", "name": "Reservoir Seep", "description": "Cold water coming up between the floor tiles. The town is already going.", "walkable": true, "blocksSight": false, "moveCost": 2, "onStand": [{ "type": "resource", "resource": "battery", "amount": { "base": -1 } }], "color": "#4895ef", "height": 0, "emissive": "#1b3a5c" },
+    { "id": "vending-machine", "name": "Vending Machine", "description": "The last fully stocked thing in Lowmoor. Bang it in the right place.", "walkable": false, "blocksSight": true, "color": "#e63946", "height": 1.4, "emissive": "#ffd6e0", "interact": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "condition": { "type": "chance", "p": 0.5 }, "effects": [{ "type": "spawn_item", "item": "iced-tea", "count": 1 }, { "type": "noise", "radius": 5 }] }, "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.7, 1.4, 0.5], "pos": [0, 0.7, 0], "color": "#e63946", "material": "metal" }, { "shape": "box", "size": [0.5, 0.8, 0.02], "pos": [0, 0.85, 0.26], "color": "#ffd6e0", "material": "glass", "emissive": "#ffd6e0" }], "idle": "none", "light": { "color": "#ffd6e0", "intensity": 0.7, "radius": 2 } } },
+    { "id": "trophy-case", "name": "Trophy Case", "description": "County champions, 1987. Spelling bee, 2004. Best Kept Village, every year until this one.", "walkable": false, "blocksSight": false, "color": "#ffd166", "height": 1.2, "interact": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "set_flag", "flag": "photographed-trophies", "value": true }, { "type": "grant_xp", "amount": 5 }, { "type": "message", "text": "You take a photo of every trophy. Someone should remember." }] }, "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.9, 1.2, 0.4], "pos": [0, 0.6, 0], "color": "#a8dadc", "material": "glass" }, { "shape": "cylinder", "size": [0.12, 0.25, 0.12], "pos": [0, 0.8, 0], "color": "#ffd166", "material": "metal" }], "idle": "none" } },
+    { "id": "spotlight", "name": "Stage Spotlight", "description": "A pool of warm light on the assembly hall floor. Standing in it makes your heart go fast.", "walkable": true, "blocksSight": false, "onStand": [{ "type": "apply_status", "status": "hyped", "duration": 2 }], "color": "#fff3b0", "height": 0, "emissive": "#ffe066" }
+  ],
+  "unknownAppearances": {
+    "snack": [
+      { "label": "foil-wrapped something, still warm", "color": "#c0c0c0" },
+      { "label": "can with a cartoon lightning bolt", "color": "#e9ff70" },
+      { "label": "clamshell box from the petrol station", "color": "#fdf6ec" },
+      { "label": "cookie the size of your palm", "color": "#c08552" },
+      { "label": "unlabelled lunchbox container", "color": "#90e0ef" }
+    ],
+    "note": [
+      { "label": "note folded into a triangle", "color": "#ffc8dd" },
+      { "label": "note folded into a tiny star", "color": "#bde0fe" },
+      { "label": "sticky note with just a heart", "color": "#ffafcc" }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Monday: Lowmoor High",
+      "description": "Corridors half packed into boxes, noticeboards stripped to drawing pins. Water stains climbing the walls. Somewhere, the goose.",
+      "generator": "building", "size": "medium", "params": { "rooms": 10, "corridorWidth": 2, "floors": 1 },
+      "floor": { "color": "#d8e2dc", "color2": "#c5d1cb", "material": "stone", "pattern": "tiles" },
+      "wall": { "color": "#9fb8ad", "color2": "#457b9d", "material": "stone", "height": 1.5, "pattern": "plain" },
+      "lighting": { "ambient": "#eef6ff", "ambientIntensity": 0.8, "fog": { "color": "#dfe9f0", "density": 0.01 }, "lamps": { "color": "#e8f6ff", "intensity": 1.0, "frequency": 0.1, "flicker": true }, "playerLight": 0 },
+      "actors": [
+        { "actor": "group-chat-lurker", "weight": 30, "min": 2, "max": 5 },
+        { "actor": "senior-prankster", "weight": 20, "min": 1, "max": 3 },
+        { "actor": "hall-monitor", "weight": 15, "min": 1, "max": 2 },
+        { "actor": "yearbook-paparazzo", "weight": 10, "min": 0, "max": 2 },
+        { "actor": "bio-goose", "weight": 5, "min": 0, "max": 1 }
+      ],
+      "placed": [
+        { "actor": "janitor", "where": "near_start" },
+        { "actor": "coach", "where": "centre" },
+        { "actor": "theo", "where": "anywhere" }
+      ],
+      "items": [
+        { "item": "iced-tea", "weight": 20 }, { "item": "power-bank", "weight": 15 }, { "item": "inside-joke", "weight": 12 },
+        { "item": "cafeteria-cookie", "weight": 10 }, { "item": "energy-drink", "weight": 8 }, { "item": "gas-station-sushi", "weight": 6 },
+        { "item": "admirer-note", "weight": 5 }, { "item": "burn-book-page", "weight": 5 }, { "item": "group-text", "weight": 4 }
+      ],
+      "itemCount": 7,
+      "placedItems": [{ "item": "old-yearbook", "where": "far" }],
+      "terrain": [{ "terrain": "lockers", "density": 0.04 }, { "terrain": "mop-water", "density": 0.02 }, { "terrain": "vending-machine", "density": 0.004 }, { "terrain": "trophy-case", "density": 0.004 }],
+      "transitionName": "The bell rings. Survive until Wednesday.",
+      "transitionModel": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.4, 0.15, 0.4], "pos": [0, 1.4, 0], "rot": [90, 0, 0], "color": "#e63946", "material": "metal" }, { "shape": "box", "size": [0.9, 1.6, 0.1], "pos": [0, 0.8, 0], "color": "#adb5bd", "material": "metal" }], "idle": "none" },
+      "gmNotes": "Establish the week: boxes, water stains, everyone leaving. Theo knows Rosalind has the notebook and is having a party on Wednesday. The janitor trades lost property for favours. Hall monitors give detention slips; three means going home.",
+      "music": "upbeat"
+    },
+    {
+      "name": "Wednesday: The Achterbergs' Empty House",
+      "description": "Rosalind's farewell party in a house that is mostly boxes and echoes. Fairy lights on bare walls. Music too loud. Your notebook is somewhere in here, and so is she.",
+      "generator": "rooms", "size": "medium", "params": { "roomCount": 9, "roomMin": 4, "roomMax": 8 },
+      "floor": { "color": "#b08968", "color2": "#9c6644", "material": "wood", "pattern": "planks" },
+      "wall": { "color": "#ede0d4", "color2": "#ddb892", "material": "stone", "height": 1.5, "pattern": "plain" },
+      "lighting": { "ambient": "#5a4a7a", "ambientIntensity": 0.35, "fog": { "color": "#2d1e3e", "density": 0.02 }, "lamps": { "color": "#ffb3c6", "intensity": 1.6, "frequency": 0.12, "flicker": false }, "playerLight": 3 },
+      "actors": [
+        { "actor": "group-chat-lurker", "weight": 25, "min": 2, "max": 5 },
+        { "actor": "senior-prankster", "weight": 25, "min": 2, "max": 4 },
+        { "actor": "yearbook-paparazzo", "weight": 20, "min": 1, "max": 3 },
+        { "actor": "dam-surveyor", "weight": 10, "min": 0, "max": 2 }
+      ],
+      "placed": [
+        { "actor": "rosalind", "where": "far" },
+        { "actor": "priya", "where": "near_start" }
+      ],
+      "items": [
+        { "item": "iced-tea", "weight": 15 }, { "item": "power-bank", "weight": 12 }, { "item": "inside-joke", "weight": 12 },
+        { "item": "energy-drink", "weight": 10 }, { "item": "cafeteria-cookie", "weight": 8 }, { "item": "polaroid", "weight": 8 },
+        { "item": "admirer-note", "weight": 6 }, { "item": "burn-book-page", "weight": 6 }, { "item": "mixtape", "weight": 4 },
+        { "item": "permanent-marker", "weight": 3 }, { "item": "hall-pass", "weight": 2 }
+      ],
+      "itemCount": 8,
+      "placedItems": [{ "item": "speech-notebook", "where": "guarded" }],
+      "terrain": [{ "terrain": "moving-boxes", "density": 0.06 }, { "terrain": "seep-water", "density": 0.02 }],
+      "transitionName": "Walk home along the levee. Friday's coming.",
+      "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.9, 1.8, 0.1], "pos": [0, 0.9, 0], "color": "#6d597a", "material": "wood" }, { "shape": "sphere", "size": [0.08, 0.08, 0.08], "pos": [0.3, 0.9, 0.08], "color": "#ffd166", "material": "metal" }], "idle": "none" },
+      "transitionRequires": { "type": "has_item", "who": "player", "item": "speech-notebook" },
+      "gmNotes": "Party energy curdled by goodbyes. Rosalind can be talked down rather than out-argued; when she cracks, she hands the notebook back and becomes friendly. Priya tags along and helps.",
+      "music": "tense"
+    },
+    {
+      "name": "Friday: The Last Assembly",
+      "description": "The assembly hall, chairs in rows, a banner reading #NEWBEGINNINGS over the stage. Water at the edges of the floor. Mags Calloway stands at the microphone.",
+      "generator": "building", "size": "small", "params": { "rooms": 5, "hall": 1, "floors": 1 },
+      "floor": { "color": "#a47148", "color2": "#8b5e34", "material": "wood", "pattern": "planks" },
+      "wall": { "color": "#283d3b", "color2": "#197278", "material": "stone", "height": 2, "pattern": "plain" },
+      "lighting": { "ambient": "#3a4a6b", "ambientIntensity": 0.3, "fog": { "color": "#1b2a41", "density": 0.015 }, "lamps": { "color": "#ffe066", "intensity": 2.2, "frequency": 0.05, "flicker": false }, "playerLight": 3, "sky": "#1b2a41" },
+      "actors": [
+        { "actor": "group-chat-lurker", "weight": 20, "min": 1, "max": 3 },
+        { "actor": "hall-monitor", "weight": 20, "min": 1, "max": 2 },
+        { "actor": "dam-surveyor", "weight": 20, "min": 1, "max": 3 },
+        { "actor": "bio-goose", "weight": 5, "min": 0, "max": 1 }
+      ],
+      "placed": [
+        { "actor": "mags-calloway", "where": "near_exit" },
+        { "actor": "nan-ottoline", "where": "near_start" },
+        { "actor": "coach", "where": "anywhere" }
+      ],
+      "items": [{ "item": "iced-tea", "weight": 15 }, { "item": "power-bank", "weight": 10 }, { "item": "polaroid", "weight": 8 }, { "item": "detention-eraser", "weight": 4 }],
+      "itemCount": 4,
+      "placedItems": [],
+      "terrain": [{ "terrain": "spotlight", "density": 0.03 }, { "terrain": "seep-water", "density": 0.04 }],
+      "transitionName": "Walk out into the rain",
+      "gmNotes": "Final confrontation, verbal. Mags is not a villain; she is scared. Leaving her speechless and then giving the speech (using the notebook) wins. Nan Ottoline wants the old village named too.",
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Get your speech notebook back from Rosalind, out-talk Mags Calloway at Friday's Last Assembly, then give the farewell speech Lowmoor deserves.",
+    "win": {
+      "type": "any",
+      "of": [
+        { "type": "flag", "flag": "speech-delivered", "value": true },
+        { "type": "all", "of": [{ "type": "in_area", "area": 2 }, { "type": "actor_defeated", "actor": "mags-calloway" }, { "type": "has_item", "who": "player", "item": "speech-notebook" }] }
+      ]
+    },
+    "lose": { "type": "counter", "counter": "detentions", "cmp": "gte", "value": 3 },
+    "winText": "You read every name. Every family, every shop, the swimming hole, Mrs. Pell's cookies, Theo Marsh who knew things, the stupid goose. It takes twelve minutes. Nobody leaves. When you finish, Nan Ottoline is the first one standing, and Mags Calloway is the second.",
+    "lossText": "Your mum picks you up early. You watch the school get smaller in the wing mirror, and the speech stays folded in your pocket, and on Saturday the water closes over all of it without anyone saying a word."
+  },
+  "gm": {
+    "persona": "A narrator who remembers being sixteen: affectionate, sharp-eyed, never mocking the feelings, always noticing the water creeping in at the edges.",
+    "voice": "Present tense, second person. Specific details: brand-less snacks, stickers, the exact sound of lockers. Funny first, then gently sad.",
+    "threads": [
+      "Everyone is moving somewhere different; this is the last week they will all be in one place.",
+      "Rosalind and Junie's friendship broke in Year 9 and neither will say why.",
+      "Nan Ottoline gave the farewell speech for the first village in 1961, and was cut off.",
+      "The water is already coming up through the floors."
+    ],
+    "fallback": {
+      "intro": "Five days until the floodgates close. Lowmoor High is half in boxes, the noticeboards are bare, and the only thing still fully stocked is the vending machine. You have one job this week: give the farewell speech at Friday's Last Assembly. Your notebook was in your bag at lunch. It isn't now.",
+      "areaEnter": [
+        "Monday. The corridors smell of cardboard and floor polish. Somebody has drawn a fish on the water line on the wall.",
+        "Wednesday night. The bass from Rosalind's party shakes dust off the empty shelves. Fairy lights, bare walls, everyone pretending it's normal.",
+        "Friday. The assembly hall is full. The banner says #NEWBEGINNINGS. There is water around your shoes."
+      ],
+      "lowHp": ["Breathe. In for four, out for four. Like Coach said.", "Your face is hot. Everyone is looking. Nobody is looking. Both feel true.", "You could go home. Nobody would blame you. You'd blame you."],
+      "events": ["Somewhere a locker slams and the whole corridor jumps.", "Every phone in the room buzzes at once. A photo of you is going round.", "The goose appears at the end of the corridor. It is watching. It is always watching.", "The lights flicker. Water ticks somewhere behind the walls."]
+    }
+  },
+  "audio": {
+    "mood": "bedroom-pop guitar, lo-fi drums, a cassette hiss; underneath, something like water moving",
+    "synth": { "key": "D", "scale": "lydian", "tempo": 96, "timbre": "bell", "drone": false, "percussion": "electronic", "brightness": 0.7 },
+    "searchTerms": ["bedroom pop instrumental", "lofi indie guitar", "coming of age soundtrack"],
+    "suggestions": ["Phoebe Bridgers - Punisher (instrumental mood)", "Japanese Breakfast - Soft Sounds from Another Planet", "Boards of Canada - Music Has the Right to Children"]
+  }
+}

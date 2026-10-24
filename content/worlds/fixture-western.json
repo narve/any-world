@@ -1,0 +1,633 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "The Rain Broker of Sweetwater",
+    "tagline": "Nine weeks without rain. A land agent keeps the storm corked in a copper jar under the mesa.",
+    "genre": "weird western",
+    "tags": ["western", "weird", "frontier", "drought", "folk magic", "gunplay"],
+    "tone": "sun-bleached, wry, quietly uncanny",
+    "era": "1880s frontier, slightly wrong",
+    "premise": "Sweetwater has not seen a cloud since Absalom Vane of the Copperhead Rainworks Company rode in with a wagon of glass demijohns and a deed to the sky. Now the creek is a crack, the cattle are bones, and the company sells rain by the dipper. Dolores Aguila, travelling postwoman and the last dowser in the territory, has a letter for Vane she intends to deliver in person. Her hazel rod twitches toward the old Lodestone mine, where the stolen weather hums inside a jar the size of a church bell.",
+    "prompt": "a drought town where the rain was stolen",
+    "nonViolent": false
+  },
+  "vocabulary": {
+    "stats": {
+      "str": { "name": "Grit", "abbr": "GRT", "description": "Muscle and stubbornness. Melee punch and how much iron you can haul." },
+      "dex": { "name": "Draw", "abbr": "DRW", "description": "Speed of hand and eye. Aim, dodging and anything with a trigger." },
+      "int": { "name": "Savvy", "abbr": "SAV", "description": "Frontier sense and folk magic. Powers dowsing and rain-craft." },
+      "hp": { "name": "Blood", "abbr": "BLD", "description": "How much you can bleed before the buzzards get interested." },
+      "mp": { "name": "Instinct", "abbr": "INS", "description": "The prickle at the back of the neck. Spent on dowsing and tricks." },
+      "ac": { "name": "Leather", "abbr": "LTH", "description": "Hide, hat brim and luck between you and lead." }
+    },
+    "conflict": "Draw on",
+    "defeated": "put in the dirt",
+    "xp": "Reputation",
+    "levelUp": "Word gets around",
+    "currency": "silver",
+    "lossTitle": "Buried in dry ground",
+    "winTitle": "The sky breaks open",
+    "area": "Stretch"
+  },
+  "palette": {
+    "primary": "#c8743a",
+    "secondary": "#5b7fa3",
+    "accent": "#e8c35a",
+    "danger": "#a8322d",
+    "ui": "#2a1f19",
+    "text": "#f3e6cf"
+  },
+  "damageTypes": [
+    { "id": "physical", "name": "Blunt", "color": "#d9d2c5" },
+    { "id": "lead", "name": "Lead", "color": "#9aa3ad" },
+    { "id": "heat", "name": "Heat", "color": "#ff8a3d" },
+    { "id": "venom", "name": "Venom", "color": "#8fd14f" },
+    { "id": "storm", "name": "Storm", "color": "#7fc8ff" }
+  ],
+  "statuses": [
+    { "id": "parched", "name": "Parched", "description": "Your tongue is leather. You lose a little Blood each turn until you drink.", "harmful": true, "color": "#d8a15a", "perTurn": [{ "type": "damage", "amount": { "base": 1 }, "damageType": "heat" }], "modifiers": [{ "stat": "dex", "amount": -1 }] },
+    { "id": "snakebit", "name": "Snakebit", "description": "Rattler venom crawling up the arm.", "harmful": true, "color": "#8fd14f", "perTurn": [{ "type": "damage", "amount": { "base": 1 }, "damageType": "venom" }], "modifiers": [{ "stat": "str", "amount": -2 }] },
+    { "id": "dust-blind", "name": "Dust-blind", "description": "Grit in both eyes. You can barely see past your own hat.", "harmful": true, "color": "#b89a6a", "modifiers": [{ "stat": "sight", "amount": -4 }], "flags": ["blinded"] },
+    { "id": "rattled", "name": "Rattled", "description": "Spooked clean through. Wants to be anywhere else.", "harmful": true, "color": "#c9b8ff", "flags": ["afraid"] },
+    { "id": "steady-hand", "name": "Steady Hand", "description": "Breath slow, sights true.", "harmful": false, "color": "#e8c35a", "modifiers": [{ "stat": "dex", "amount": 3 }] },
+    { "id": "rain-soaked", "name": "Rain-soaked", "description": "Remembered rain on your skin. Wounds close; you feel ten years younger.", "harmful": false, "color": "#7fc8ff", "perTurn": [{ "type": "heal", "amount": { "base": 2 } }], "flags": ["regenerating"] },
+    { "id": "spurred", "name": "Spurred", "description": "Moving like a jackrabbit with a grudge.", "harmful": false, "color": "#f2e2a0", "flags": ["hasted"] },
+    { "id": "lassoed", "name": "Lassoed", "description": "Rope round the ankles. Not going anywhere.", "harmful": true, "color": "#a07a4a", "flags": ["rooted"] },
+    { "id": "thunderstruck", "name": "Thunderstruck", "description": "Ears ringing, knees gone. Lightning does that.", "harmful": true, "color": "#bfe6ff", "flags": ["stunned"] }
+  ],
+  "resources": [
+    {
+      "id": "rounds",
+      "name": "Rounds",
+      "description": "Cartridges in your belt. Trick shots burn through them; ordinary shooting is assumed covered.",
+      "color": "#c9b27c",
+      "max": 24,
+      "start": 12,
+      "perTurn": 0,
+      "onEmpty": [{ "type": "message", "text": "Your belt loops are empty. Click." }],
+      "emptyIsDeath": false
+    }
+  ],
+  "rules": [
+    {
+      "id": "drought",
+      "name": "Drought",
+      "description": "There is no water to spare. Blood does not come back on its own, and every new stretch of country leaves you parched.",
+      "playerTriggers": [
+        { "on": "on_area_enter", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "parched", "duration": 5 }, { "type": "message", "text": "The heat comes off the ground like a hand on your chest." }] } }
+      ],
+      "switches": { "noNaturalHpRegen": true }
+    },
+    {
+      "id": "dust-storms",
+      "name": "Dust on the Wind",
+      "description": "The air is brown with blown topsoil. Everyone sees a little less far than they should.",
+      "playerTriggers": [],
+      "switches": { "darkness": 0.8 }
+    }
+  ],
+  "verbs": { "talk": true, "sneak": false, "search": true, "persuade": true },
+  "player": {
+    "name": "Dolores Aguila",
+    "title": "Postwoman of the Dry Route, Last Dowser",
+    "description": "Thirty-four, sunburnt, owed money by half the territory. Carries the mail, a Peacemaker, and a hazel rod that has never once lied to her.",
+    "stats": { "str": 11, "dex": 14, "int": 12, "hp": 32, "mp": 14, "ac": 11 },
+    "mpRegenEvery": 4,
+    "hpRegenEvery": 0,
+    "sight": 9,
+    "unarmed": { "name": "Mail sack", "verb": "swings the mail sack at", "damage": { "base": 1, "dice": "1d3" }, "damageType": "physical", "range": 1, "accuracyStat": "str" },
+    "startingItems": [
+      { "item": "peacemaker", "count": 1, "equipped": true, "quick": true },
+      { "item": "postal-duster", "count": 1, "equipped": true, "quick": false },
+      { "item": "hazel-rod", "count": 1, "equipped": false, "quick": true },
+      { "item": "canteen", "count": 1, "equipped": false, "quick": true },
+      { "item": "trick-shot", "count": 1, "equipped": false, "quick": true },
+      { "item": "sarsaparilla", "count": 2, "equipped": false, "quick": true }
+    ],
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.6,
+      "hpPerLevel": 5,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        { "id": "quick-draw", "name": "Quick Draw", "description": "Your hand is on the grip before the thought is finished. +2 Draw.", "modifiers": [{ "stat": "dex", "amount": 2 }], "minLevel": 2 },
+        { "id": "rawhide", "name": "Rawhide", "description": "Tanned by nine weeks of sun. +8 Blood, +1 Leather.", "modifiers": [{ "stat": "hp", "amount": 8 }, { "stat": "ac", "amount": 1 }], "minLevel": 2 },
+        { "id": "far-sight", "name": "Desert Eyes", "description": "You read the horizon like a letter. +2 sight.", "modifiers": [{ "stat": "sight", "amount": 2 }], "minLevel": 2 },
+        { "id": "rain-prayer", "name": "Grandmother's Rain Prayer", "description": "You finally remember the words. Learn Rain Call.", "grantItems": ["rain-call"], "minLevel": 3 },
+        { "id": "blood-from-stone", "name": "Blood from a Stone", "description": "Every time you put someone in the dirt, you find a cartridge on them.", "triggers": [{ "on": "on_kill", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "resource", "resource": "rounds", "amount": { "base": 1 } }] } }], "minLevel": 2 },
+        { "id": "last-stand", "name": "Last Stand", "description": "When your Blood runs low, your hands go perfectly still.", "triggers": [{ "on": "on_low_hp", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "steady-hand", "duration": 10 }] } }], "minLevel": 3 },
+        { "id": "savvy-tongue", "name": "Silver Tongue", "description": "Folks believe you. +2 Savvy, +4 Instinct.", "modifiers": [{ "stat": "int", "amount": 2 }, { "stat": "mp", "amount": 4 }], "minLevel": 2 }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": { "height": 0.92, "build": "slim", "skin": "#b07a52", "top": "#7a5236", "bottom": "#3d4a5c", "accent": "#e8c35a", "hair": "#1f1612", "hairStyle": "braids", "headwear": "cowboy_hat", "outfit": "coat", "holding": "gun" },
+      "parts": [{ "shape": "box", "size": [0.22, 0.18, 0.08], "pos": [-0.22, 0.45, -0.1], "color": "#c9a46a", "material": "cloth", "group": "body" }],
+      "scale": 1,
+      "idle": "sway"
+    }
+  },
+  "actors": [
+    {
+      "id": "dust-coyote", "name": "Dust Coyote", "description": "Ribs like a xylophone, eyes like two lit cigarettes. They hunt in threes and laugh while they do it.",
+      "faction": "hostile", "stats": { "hp": 7, "ac": 11, "str": 9, "dex": 13, "int": 4, "mp": 0 }, "speed": 130, "sight": 8,
+      "attack": { "name": "Snap", "verb": "snaps at", "damage": { "base": 0, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
+      "behaviour": { "type": "pack", "param": 3, "erratic": 0.1 }, "xp": 5,
+      "loot": [{ "item": "sarsaparilla", "chance": 0.05 }],
+      "tags": ["beast", "desert"],
+      "model": { "archetype": "quadruped", "colors": { "primary": "#b58a5a", "secondary": "#e2c9a1", "accent": "#ff9d3b" }, "scale": 0.7, "idle": "bob" }
+    },
+    {
+      "id": "company-deputy", "name": "Company Deputy", "description": "Tin star stamped COPPERHEAD RAINWORKS. Paid in water, and it shows: he is the only plump man in town.",
+      "faction": "hostile", "stats": { "hp": 12, "ac": 12, "str": 12, "dex": 10, "int": 8, "mp": 0 }, "speed": 100, "sight": 7,
+      "attack": { "name": "Billy club", "verb": "clubs", "damage": { "base": 1, "dice": "1d6" }, "damageType": "physical", "range": 1, "accuracyStat": "str" },
+      "abilities": [
+        { "id": "lasso", "name": "Company Lasso", "description": "A rope with the company's knot in it.", "action": { "targeting": { "shape": "single", "range": 4, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "lassoed", "duration": 2 }, { "type": "pull", "distance": 2 }], "vfx": { "kind": "beam", "color": "#a07a4a" } }, "cooldown": 8, "useWhen": "target_in_range" }
+      ],
+      "behaviour": { "type": "chaser", "erratic": 0 }, "xp": 9,
+      "loot": [{ "item": "cartridges", "chance": 0.35 }, { "item": "rain-bead", "chance": 0.15 }],
+      "tags": ["human", "company"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.95, "build": "round", "skin": "#e0b493", "top": "#4b5b3a", "bottom": "#2d2a26", "accent": "#d6b24a", "hair": "#6b4a2b", "hairStyle": "short", "headwear": "fedora", "outfit": "uniform", "holding": "none" }, "scale": 1, "idle": "bob" }
+    },
+    {
+      "id": "claim-jumper", "name": "Claim Jumper", "description": "A rifle, a shovel and nobody's permission. Shoots from far off, then scuttles back behind a rock.",
+      "faction": "hostile", "stats": { "hp": 10, "ac": 11, "str": 10, "dex": 13, "int": 9, "mp": 0 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Long rifle", "verb": "takes a potshot at", "damage": { "base": 1, "dice": "1d6" }, "damageType": "lead", "range": 6, "accuracyStat": "dex" },
+      "behaviour": { "type": "kiter", "param": 4, "erratic": 0 }, "xp": 10,
+      "loot": [{ "item": "cartridges", "chance": 0.5 }, { "item": "dynamite", "chance": 0.2 }],
+      "tags": ["human", "outlaw"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.88, "build": "slim", "skin": "#c69872", "top": "#8a3b2e", "bottom": "#5a4b3a", "accent": "#d9d2c5", "hair": "#3b2a1e", "hairStyle": "long", "headwear": "bandana", "outfit": "rags", "holding": "rifle" }, "scale": 1, "idle": "sway" }
+    },
+    {
+      "id": "mesa-rattler", "name": "Mesa Rattler", "description": "Diamondback the colour of the ground. You will hear it a moment too late.",
+      "faction": "hostile", "stats": { "hp": 6, "ac": 13, "str": 6, "dex": 15, "int": 2, "mp": 0 }, "speed": 110, "sight": 4,
+      "attack": { "name": "Fangs", "verb": "strikes at", "damage": { "base": 1, "dice": "1d3" }, "damageType": "venom", "range": 1, "accuracyStat": "dex" },
+      "triggers": [{ "on": "on_hit", "chance": 0.5, "action": { "targeting": { "shape": "adjacent", "range": 1, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "snakebit", "duration": 5 }] } }],
+      "behaviour": { "type": "ambusher", "param": 2, "erratic": 0 }, "xp": 7,
+      "loot": [{ "item": "antivenom", "chance": 0.25 }],
+      "tags": ["beast", "venomous"],
+      "model": { "archetype": "serpent", "colors": { "primary": "#a88a5c", "secondary": "#5e4a32", "accent": "#e8d8b0" }, "scale": 0.8, "idle": "sway" }
+    },
+    {
+      "id": "bone-buzzard", "name": "Bone Buzzard", "description": "Waits for you to fall over. Gets impatient.",
+      "faction": "hostile", "stats": { "hp": 6, "ac": 12, "str": 7, "dex": 14, "int": 3, "mp": 0 }, "speed": 120, "sight": 10,
+      "attack": { "name": "Beak", "verb": "pecks", "damage": { "base": 0, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
+      "behaviour": { "type": "wanderer", "erratic": 0.3 }, "xp": 5,
+      "tags": ["beast", "flying"],
+      "model": { "archetype": "flier", "colors": { "primary": "#2b2523", "secondary": "#c4473b", "accent": "#e6dccb" }, "scale": 0.7, "idle": "hover" }
+    },
+    {
+      "id": "dust-devil", "name": "Dust Devil", "description": "A whirl of topsoil that remembers being a field. It wants back what the drought took.",
+      "faction": "hostile", "stats": { "hp": 9, "ac": 14, "str": 8, "dex": 12, "int": 5, "mp": 0 }, "speed": 140, "sight": 6,
+      "attack": { "name": "Grit lash", "verb": "scours", "damage": { "base": 0, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
+      "triggers": [{ "on": "on_hit", "chance": 0.4, "action": { "targeting": { "shape": "adjacent", "range": 1, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "dust-blind", "duration": 3 }, { "type": "push", "distance": 1 }] } }],
+      "resistances": [{ "damageType": "lead", "multiplier": 0.5 }, { "damageType": "storm", "multiplier": 2 }],
+      "behaviour": { "type": "wanderer", "erratic": 0.5 }, "xp": 8,
+      "tags": ["spirit", "weather"],
+      "model": { "archetype": "freeform", "parts": [
+        { "shape": "cone", "size": [0.6, 0.9, 0.6], "pos": [0, 0.45, 0], "rot": [180, 0, 0], "color": "#c8a878", "material": "matte", "group": "spin" },
+        { "shape": "torus", "size": [0.5, 0.08, 0.5], "pos": [0, 0.6, 0], "rot": [90, 0, 0], "color": "#e0c89a", "material": "matte", "group": "spin" },
+        { "shape": "torus", "size": [0.3, 0.06, 0.3], "pos": [0, 0.3, 0], "rot": [90, 0, 0], "color": "#a8865a", "material": "matte", "group": "spin" }
+      ], "scale": 1.1, "idle": "spin" }
+    },
+    {
+      "id": "tinplate-prospector", "name": "Tinplate Prospector", "description": "A Rainworks clockwork miner: boiler belly, pickaxe arm, a mouth that is a pressure gauge stuck on DRY.",
+      "faction": "hostile", "stats": { "hp": 16, "ac": 14, "str": 14, "dex": 7, "int": 3, "mp": 0 }, "speed": 80, "sight": 6,
+      "attack": { "name": "Pick arm", "verb": "picks at", "damage": { "base": 1, "dice": "1d8" }, "damageType": "physical", "range": 1, "accuracyStat": "str" },
+      "resistances": [{ "damageType": "lead", "multiplier": 0.75 }, { "damageType": "storm", "multiplier": 1.5 }, { "damageType": "venom", "multiplier": 0 }],
+      "triggers": [{ "on": "on_low_hp", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "transform", "into": "scrap-crawler" }, { "type": "message", "text": "The boiler cracks; something small and angry climbs out of the wreck." }] } }],
+      "behaviour": { "type": "chaser", "erratic": 0 }, "xp": 14,
+      "loot": [{ "item": "cartridges", "chance": 0.3 }],
+      "tags": ["machine", "company"],
+      "model": { "archetype": "robot", "colors": { "primary": "#b9a37e", "secondary": "#6d5a43", "accent": "#ff7b2e" }, "parts": [
+        { "shape": "cylinder", "size": [0.12, 0.25, 0.12], "pos": [0.1, 1.0, 0], "color": "#4a4038", "material": "metal", "group": "head" }
+      ], "scale": 1, "idle": "bob", "light": { "color": "#ff7b2e", "intensity": 0.8, "radius": 2 } }
+    },
+    {
+      "id": "scrap-crawler", "name": "Scrap Crawler", "description": "The governor spring of a dead prospector, scuttling on six bent rivets. Fast and spiteful.",
+      "faction": "hostile", "stats": { "hp": 5, "ac": 12, "str": 6, "dex": 14, "int": 2, "mp": 0 }, "speed": 150, "sight": 5,
+      "attack": { "name": "Rivet nip", "verb": "nips", "damage": { "base": 0, "dice": "1d3" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
+      "behaviour": { "type": "chaser", "erratic": 0.2 }, "xp": 3,
+      "tags": ["machine"],
+      "model": { "archetype": "quadruped", "colors": { "primary": "#8a7660", "secondary": "#4a4038", "accent": "#ff7b2e" }, "scale": 0.4, "idle": "flicker" }
+    },
+    {
+      "id": "lodestone-mole", "name": "Lodestone Mole", "description": "Eyeless, the size of a mule, iron filings bristling on its back. Drags you in like a magnet.",
+      "faction": "hostile", "stats": { "hp": 18, "ac": 11, "str": 15, "dex": 8, "int": 3, "mp": 0 }, "speed": 90, "sight": 5,
+      "attack": { "name": "Shovel claws", "verb": "rakes", "damage": { "base": 2, "dice": "1d6" }, "damageType": "physical", "range": 1, "accuracyStat": "str" },
+      "abilities": [
+        { "id": "lodestone-pull", "name": "Magnetic Hide", "description": "Your gun hand jerks toward its back.", "action": { "targeting": { "shape": "single", "range": 4, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "pull", "distance": 3 }], "vfx": { "kind": "ring", "color": "#9aa3ad" } }, "cooldown": 6, "useWhen": "target_in_range" }
+      ],
+      "behaviour": { "type": "guardian", "param": 5, "erratic": 0 }, "xp": 15,
+      "loot": [{ "item": "rain-bead", "chance": 0.3 }],
+      "tags": ["beast", "underground"],
+      "model": { "archetype": "quadruped", "colors": { "primary": "#3b3330", "secondary": "#e7a8a0", "accent": "#9aa3ad" }, "parts": [
+        { "shape": "cone", "size": [0.08, 0.2, 0.08], "pos": [0, 0.55, 0.1], "color": "#9aa3ad", "material": "metal" },
+        { "shape": "cone", "size": [0.08, 0.2, 0.08], "pos": [0.12, 0.52, -0.05], "color": "#9aa3ad", "material": "metal" },
+        { "shape": "cone", "size": [0.08, 0.2, 0.08], "pos": [-0.12, 0.52, -0.05], "color": "#9aa3ad", "material": "metal" }
+      ], "scale": 1.1, "idle": "bob" }
+    },
+    {
+      "id": "sabine-lark", "name": "Sabine Lark", "description": "Vane's hired gun. Silver hair, mother-of-pearl grips, and a ledger of everyone she has outdrawn. She keeps the mine key on a watch chain.",
+      "faction": "hostile", "stats": { "hp": 26, "ac": 13, "str": 11, "dex": 15, "int": 12, "mp": 6 }, "speed": 110, "sight": 9,
+      "attack": { "name": "Pearl-handled pair", "verb": "fans both guns at", "damage": { "base": 1, "dice": "1d8" }, "damageType": "lead", "range": 5, "accuracyStat": "dex" },
+      "abilities": [
+        { "id": "smoke-and-mirrors", "name": "Smoke and Mirrors", "description": "A flash of powder and she is somewhere else.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "teleport", "mode": "random" }], "vfx": { "kind": "cloud", "color": "#d9d2c5" } }, "cooldown": 12, "useWhen": "low_hp" }
+      ],
+      "behaviour": { "type": "kiter", "param": 4, "erratic": 0 }, "xp": 40, "unique": true,
+      "loot": [{ "item": "lode-key", "chance": 1 }, { "item": "pale-spurs", "chance": 1 }],
+      "npc": { "role": "rival", "personality": "Courteous, bored, deadly. Considers the drought a business opportunity and you a footnote.", "greeting": "Postwoman. Whatever it is, Mr. Vane didn't order it.", "lines": ["You know what water costs now? More than you.", "I liked this town better when it had mud."], "secrets": "She has not been paid in three weeks; Vane pays in promises of rain.", "wants": "To be paid, in silver, before the sky comes back.", "persuadeStat": "int", "persuadeDifficulty": 17 },
+      "tags": ["human", "gunslinger", "boss"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.95, "build": "slim", "skin": "#e8c4a8", "top": "#e9e4da", "bottom": "#2a2a33", "accent": "#d7e3ef", "hair": "#d9d9d9", "hairStyle": "bun", "headwear": "cowboy_hat", "outfit": "suit", "holding": "gun" }, "scale": 1, "idle": "sway" }
+    },
+    {
+      "id": "absalom-vane", "name": "Absalom Vane, the Rain Broker", "description": "Tall as a well-rope, dressed in black oilcloth that has never been wet. Carries a lightning rod as a walking cane and smiles like an invoice.",
+      "faction": "hostile", "stats": { "hp": 52, "ac": 14, "str": 12, "dex": 12, "int": 17, "mp": 30 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Lightning cane", "verb": "cracks the cane across", "damage": { "base": 2, "dice": "1d8" }, "damageType": "storm", "range": 1, "accuracyStat": "int" },
+      "abilities": [
+        { "id": "bottled-bolt", "name": "Bottled Bolt", "description": "He uncorks a thimble of storm.", "action": { "targeting": { "shape": "ray", "range": 7, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 3, "dice": "2d4" }, "damageType": "storm" }, { "type": "apply_status", "status": "thunderstruck", "duration": 1 }], "vfx": { "kind": "bolt", "color": "#bfe6ff" } }, "cost": { "resource": "mp", "amount": 6 }, "cooldown": 5, "useWhen": "target_in_range" },
+        { "id": "call-the-crew", "name": "Call the Crew", "description": "A whistle; the mine answers.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "summon", "actor": "tinplate-prospector", "count": 1, "allied": false }], "vfx": { "kind": "ring", "color": "#ff7b2e" } }, "cooldown": 20, "useWhen": "start_of_fight" },
+        { "id": "drink-the-sky", "name": "Drink the Sky", "description": "He sips from a demijohn of stolen weather.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 8, "dice": "1d6" } }], "vfx": { "kind": "sparkle", "color": "#7fc8ff" } }, "cooldown": 18, "useWhen": "low_hp" }
+      ],
+      "resistances": [{ "damageType": "storm", "multiplier": 0.25 }, { "damageType": "heat", "multiplier": 0.75 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "set_flag", "flag": "vane-down", "value": true }, { "type": "message", "text": "Somewhere above the mesa, thunder clears its throat." }] } }],
+      "behaviour": { "type": "guardian", "param": 6, "erratic": 0 }, "xp": 120, "unique": true,
+      "loot": [{ "item": "thunder-jar", "chance": 1 }],
+      "npc": { "role": "rival", "personality": "Genial, patient, utterly convinced weather is property. Speaks in contract clauses.", "greeting": "Ah, the post. I don't recall ordering rain delivered by hand.", "lines": ["Every drop is accounted for, Miss Aguila.", "The sky was unclaimed. I claimed it. That is all civilization is."], "secrets": "The jar is cracking. If he dies with it uncorked, the storm will go home on its own.", "wants": "The deed to every well in Sweetwater.", "persuadeStat": "int", "persuadeDifficulty": 25 },
+      "tags": ["human", "boss", "company"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 1.15, "build": "slim", "skin": "#d9c2ad", "top": "#14161c", "bottom": "#14161c", "accent": "#7fc8ff", "hair": "#d6d0c4", "hairStyle": "short", "headwear": "top_hat", "outfit": "coat", "holding": "staff" }, "parts": [
+        { "shape": "sphere", "size": [0.1, 0.1, 0.1], "pos": [0.32, 1.12, 0], "color": "#bfe6ff", "material": "glow", "emissive": "#7fc8ff", "group": "hand" }
+      ], "scale": 1.15, "idle": "sway", "light": { "color": "#9fd8ff", "intensity": 1.4, "radius": 3 } }
+    },
+    {
+      "id": "widow-oquendo", "name": "Widow Marisol Oquendo", "description": "Runs the Thirsty Saint cantina with an empty well and a full shotgun. Sells what she has, at fair prices, out of spite toward the company.",
+      "faction": "neutral", "stats": { "hp": 30, "ac": 12, "str": 12, "dex": 12, "int": 14, "mp": 0 }, "speed": 100, "sight": 8,
+      "attack": { "name": "Shotgun", "verb": "blasts", "damage": { "base": 2, "dice": "2d6" }, "damageType": "lead", "range": 3, "accuracyStat": "dex" },
+      "behaviour": { "type": "stationary", "erratic": 0 }, "xp": 0,
+      "npc": { "role": "trader", "personality": "Dry as the creek, warm underneath, swears in three languages. Hates Vane with a craftsman's patience.", "greeting": "If you're buying, sit. If you're company, keep walking.", "lines": ["Sarsaparilla's warm. Everything's warm.", "My husband dug that well. Vane's men put a padlock on it.", "Take dynamite. Mines don't argue with dynamite."], "stock": ["sarsaparilla", "cartridges", "dynamite", "antivenom", "buffalo-coat", "lucky-horseshoe"], "secrets": "Her husband died in the Lodestone mine when the company sealed it with men inside.", "wants": "Vane's padlock off her well.", "persuadeStat": "int", "persuadeDifficulty": 11 },
+      "tags": ["human", "merchant"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.88, "build": "broad", "skin": "#9c6b4a", "top": "#5a1f2b", "bottom": "#1f1a1a", "accent": "#e8c35a", "hair": "#2a1a14", "hairStyle": "bun", "headwear": "none", "outfit": "dress", "holding": "rifle" }, "scale": 1, "idle": "bob" }
+    },
+    {
+      "id": "preacher-weekes", "name": "Preacher Hollis Weekes", "description": "Lost his faith, kept the collar. Now he tends the sick with boiled cactus and stories about the flood that ended the world.",
+      "faction": "friendly", "stats": { "hp": 20, "ac": 10, "str": 9, "dex": 9, "int": 15, "mp": 20 }, "speed": 90, "sight": 7,
+      "behaviour": { "type": "idle", "erratic": 0 }, "xp": 0,
+      "npc": { "role": "healer", "personality": "Gentle, rambling, accidentally profound. Has opinions about Noah.", "greeting": "Sit down before you fall down, child. Let me see that.", "lines": ["The Lord promised never another flood. Didn't say a thing about the opposite.", "Rain's not stolen. Rain's held hostage. There's a difference, and the difference is ransom."], "stock": ["cactus-poultice"], "secrets": "He knows the old Lodestone gallery runs under the mesa to a cistern the company dug.", "wants": "Someone to listen to the end of one sermon.", "persuadeStat": "int", "persuadeDifficulty": 8 },
+      "tags": ["human", "healer"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.93, "build": "average", "skin": "#5e3c2c", "top": "#1d1d22", "bottom": "#1d1d22", "accent": "#f3efe6", "hair": "#cfcfcf", "hairStyle": "short", "headwear": "none", "outfit": "robe", "holding": "book" }, "scale": 1, "idle": "sway" }
+    },
+    {
+      "id": "kid-tobias", "name": "Tobias Ruiz-Hale, Age Eleven", "description": "Sells newspapers to a town that cannot read them anymore. Knows every crack in every wall and who is hiding behind it.",
+      "faction": "friendly", "stats": { "hp": 8, "ac": 13, "str": 5, "dex": 15, "int": 13, "mp": 0 }, "speed": 130, "sight": 9,
+      "behaviour": { "type": "coward", "param": 0.9, "erratic": 0.2 }, "xp": 0,
+      "npc": { "role": "informant", "personality": "Fast-talking, mercenary, terrified of snakes, would die for Widow Oquendo.", "greeting": "Extra, extra! Postwoman back in town! That's news. That's a nickel.", "lines": ["Deputy Crane keeps a rain bead in his boot. Everybody knows.", "Miss Lark's got the mine key. On a chain. Like a pocket watch.", "Don't go in the flats at noon. That's when the devils dance."], "secrets": "He saw Vane fill a jar from a cloud using a copper funnel and a church bell.", "wants": "Silver, or a promise you'll bring back his dog from the flats.", "persuadeStat": "int", "persuadeDifficulty": 9 },
+      "tags": ["human", "child"],
+      "model": { "archetype": "humanoid", "humanoid": { "height": 0.6, "build": "slim", "skin": "#b98a62", "top": "#d8c9a8", "bottom": "#4d3b2a", "accent": "#c4473b", "hair": "#2a1d14", "hairStyle": "short", "headwear": "cap", "outfit": "plain", "holding": "book" }, "scale": 1, "idle": "bob" }
+    }
+  ],
+  "items": [
+    {
+      "id": "peacemaker", "name": "Postal Peacemaker", "kind": "Six-shooter", "description": "Issued by the Territorial Post with a brass plate reading THE MAIL MUST GO THROUGH. It has.",
+      "category": "weapon", "equipSlot": "weapon", "useMode": "passive",
+      "weapon": { "name": "Peacemaker", "verb": "shoots", "damage": { "base": 2, "dice": "1d6" }, "damageType": "lead", "range": 5, "accuracyStat": "dex" },
+      "rarity": "common", "value": 30, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [
+        { "shape": "box", "size": [0.35, 0.07, 0.06], "pos": [0, 0.1, 0], "color": "#7c8590", "material": "metal" },
+        { "shape": "cylinder", "size": [0.09, 0.09, 0.09], "pos": [-0.05, 0.1, 0], "rot": [0, 0, 90], "color": "#5c646d", "material": "metal" },
+        { "shape": "box", "size": [0.08, 0.16, 0.06], "pos": [-0.15, 0.03, 0], "rot": [0, 0, -20], "color": "#7a4b2a", "material": "wood" }
+      ], "idle": "spin" }
+    },
+    {
+      "id": "pick-handle", "name": "Hickory Pick Handle", "kind": "Club", "description": "The pick rusted off years ago. The handle remembers what it was for.",
+      "category": "weapon", "equipSlot": "weapon", "useMode": "passive",
+      "weapon": { "name": "Pick handle", "verb": "cracks", "damage": { "base": 2, "dice": "1d8" }, "damageType": "physical", "range": 1, "accuracyStat": "str" },
+      "requires": [{ "stat": "str", "min": 10 }], "rarity": "common", "value": 8, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.06, 0.6, 0.06], "pos": [0, 0.3, 0], "rot": [0, 0, 30], "color": "#9a6b3e", "material": "wood" }], "idle": "bob" }
+    },
+    {
+      "id": "scattergun", "name": "Coach Scattergun", "kind": "Shotgun", "description": "Sawed short for riding shotgun on the mail coach. Loud enough to scare off weather.",
+      "category": "weapon", "equipSlot": "weapon", "useMode": "passive",
+      "weapon": { "name": "Scattergun", "verb": "blasts", "damage": { "base": 3, "dice": "2d6" }, "damageType": "lead", "range": 3, "accuracyStat": "str" },
+      "requires": [{ "stat": "str", "min": 12 }], "rarity": "uncommon", "value": 60, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [
+        { "shape": "cylinder", "size": [0.05, 0.5, 0.05], "pos": [0.02, 0.1, 0], "rot": [0, 0, 90], "color": "#4a4f57", "material": "metal" },
+        { "shape": "cylinder", "size": [0.05, 0.5, 0.05], "pos": [-0.02, 0.1, 0], "rot": [0, 0, 90], "color": "#4a4f57", "material": "metal" },
+        { "shape": "box", "size": [0.2, 0.08, 0.06], "pos": [-0.3, 0.07, 0], "color": "#6b3f22", "material": "wood" }
+      ], "idle": "spin" }
+    },
+    {
+      "id": "postal-duster", "name": "Postal Duster", "kind": "Coat", "description": "Canvas duster, dyed post-office blue once upon a time. Pockets for letters, pockets for luck.",
+      "category": "armour", "equipSlot": "armour", "useMode": "passive", "armour": 1,
+      "modifiers": [{ "stat": "dex", "amount": 1 }], "rarity": "common", "value": 15, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cone", "size": [0.4, 0.5, 0.2], "pos": [0, 0.25, 0], "color": "#4f6c8a", "material": "cloth" }], "idle": "sway" }
+    },
+    {
+      "id": "buffalo-coat", "name": "Buffalo Coat", "kind": "Heavy coat", "description": "Absurd in this heat. Stops a knife, and most of a bullet.",
+      "category": "armour", "equipSlot": "armour", "useMode": "passive", "armour": 3,
+      "modifiers": [{ "stat": "speed", "amount": -10 }], "requires": [{ "stat": "str", "min": 11 }], "rarity": "uncommon", "value": 70, "knowledge": "clear",
+      "triggers": [{ "on": "on_equip", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "message", "text": "You shrug into the coat. Sweat starts immediately. You feel invincible." }] } }],
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.45, 0.5, 0.25], "pos": [0, 0.25, 0], "color": "#5a3d2b", "material": "cloth" }, { "shape": "box", "size": [0.5, 0.12, 0.28], "pos": [0, 0.5, 0], "color": "#3b281c", "material": "cloth" }], "idle": "none" }
+    },
+    {
+      "id": "lucky-horseshoe", "name": "Lucky Horseshoe", "kind": "Charm", "description": "Off a horse that outran a tornado. Worn on a string, points up so the luck can't run out.",
+      "category": "trinket", "equipSlot": "trinket", "useMode": "passive",
+      "modifiers": [{ "stat": "ac", "amount": 1 }],
+      "triggers": [{ "on": "on_hurt", "chance": 0.2, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 3 } }, { "type": "message", "text": "The horseshoe is warm. That one only grazed you." }] } }],
+      "rarity": "uncommon", "value": 45, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "torus", "size": [0.25, 0.05, 0.25], "pos": [0, 0.15, 0], "rot": [90, 0, 0], "color": "#a9b0b8", "material": "metal" }], "idle": "spin" }
+    },
+    {
+      "id": "pale-spurs", "name": "Sabine's Pale Spurs", "kind": "Spurs", "description": "Silver rowels that ring like a little bell. Whoever wears them is always slightly ahead of themselves.",
+      "category": "trinket", "equipSlot": "trinket", "useMode": "passive",
+      "modifiers": [{ "stat": "speed", "amount": 20 }, { "stat": "dex", "amount": 1 }],
+      "triggers": [{ "on": "on_unequip", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "message", "text": "The spurs stop ringing. The world catches up with you." }] } }],
+      "rarity": "rare", "value": 120, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "torus", "size": [0.18, 0.04, 0.18], "pos": [0, 0.12, 0], "color": "#e3e7ec", "material": "metal", "emissive": "#5b6470" }, { "shape": "cone", "size": [0.06, 0.1, 0.06], "pos": [0.12, 0.12, 0], "color": "#e3e7ec", "material": "metal" }], "idle": "spin" }
+    },
+    {
+      "id": "hazel-rod", "name": "Hazel Dowsing Rod", "kind": "Dowsing rod", "description": "Forked hazel, cut on a wet day forty years ago by your grandmother. It pulls toward water, and toward trouble, which out here is the same thing.",
+      "category": "tool", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "reveal_map", "radius": 14 }, { "type": "message", "text": "The rod twists in your hands and the country unrolls in your head." }], "vfx": { "kind": "ring", "color": "#7fc8ff" } },
+      "cost": { "resource": "mp", "amount": 5 }, "cooldown": 15, "rarity": "unique", "value": 0, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [
+        { "shape": "cylinder", "size": [0.04, 0.4, 0.04], "pos": [0.08, 0.2, 0], "rot": [0, 0, 15], "color": "#b58a52", "material": "wood" },
+        { "shape": "cylinder", "size": [0.04, 0.4, 0.04], "pos": [-0.08, 0.2, 0], "rot": [0, 0, -15], "color": "#b58a52", "material": "wood" }
+      ], "idle": "sway" }
+    },
+    {
+      "id": "trick-shot", "name": "Ricochet Shot", "kind": "Trick", "description": "Bank a bullet off a bell, a rock and a deputy's tin star. Burns three rounds; never misses twice.",
+      "category": "spell", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "single", "range": 7, "radius": 0, "affects": "enemies", "needsLos": false }, "effects": [{ "type": "damage", "amount": { "base": 3, "dice": "2d6", "scale": { "stat": "dex", "factor": 0.2 } }, "damageType": "lead" }], "vfx": { "kind": "bolt", "color": "#f2e2a0" } },
+      "cost": { "resource": "rounds", "amount": 3 }, "cooldown": 3, "rarity": "unique", "value": 0, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "capsule", "size": [0.05, 0.12, 0.05], "pos": [0, 0.1, 0], "color": "#c9b27c", "material": "metal" }], "idle": "spin" }
+    },
+    {
+      "id": "rain-call", "name": "Rain Call", "kind": "Prayer", "description": "Your grandmother's words for asking the sky politely. It answers with a small, local, very wet yes.",
+      "category": "spell", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "area", "range": 0, "radius": 2, "affects": "allies", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 4, "dice": "1d6", "scale": { "stat": "int", "factor": 0.25 } } }, { "type": "remove_status", "status": "parched" }, { "type": "spawn_terrain", "terrain": "mud-wallow", "radius": 1, "duration": 20 }], "vfx": { "kind": "cloud", "color": "#7fc8ff" } },
+      "cost": { "resource": "mp", "amount": 7 }, "cooldown": 6, "rarity": "unique", "value": 0, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "sphere", "size": [0.18, 0.18, 0.18], "pos": [0, 0.3, 0], "color": "#7fc8ff", "material": "glow", "emissive": "#3f88c5" }], "idle": "hover" }
+    },
+    {
+      "id": "canteen", "name": "Army Canteen", "kind": "Canteen", "description": "Dented tin under felt. Three good swallows if you are honest with yourself.",
+      "category": "consumable", "useMode": "charges", "charges": 3,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 2, "dice": "2d4" } }, { "type": "remove_status", "status": "parched" }], "vfx": { "kind": "sparkle", "color": "#7fc8ff" } },
+      "rarity": "common", "value": 20, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.22, 0.08, 0.22], "pos": [0, 0.15, 0], "rot": [90, 0, 0], "color": "#6b7b5a", "material": "cloth" }, { "shape": "cylinder", "size": [0.04, 0.06, 0.04], "pos": [0, 0.29, 0], "color": "#a9b0b8", "material": "metal" }], "idle": "bob" }
+    },
+    {
+      "id": "sarsaparilla", "name": "Warm Sarsaparilla", "kind": "Tonic", "description": "Brown, sweet, fizzless. In this drought it is practically holy water.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 6 } }], "vfx": { "kind": "sparkle", "color": "#a0522d" } },
+      "rarity": "common", "value": 6, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.09, 0.26, 0.09], "pos": [0, 0.13, 0], "color": "#5a2e14", "material": "glass" }], "idle": "bob" }
+    },
+    {
+      "id": "cactus-poultice", "name": "Cactus Poultice", "kind": "Remedy", "description": "The preacher's recipe: boiled prickly pear, spit and scripture. Smells holy and slightly green.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 10, "dice": "1d6" } }, { "type": "remove_status", "status": "all_harmful" }], "vfx": { "kind": "sparkle", "color": "#8fd14f" } },
+      "rarity": "uncommon", "value": 25, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "sphere", "size": [0.2, 0.12, 0.2], "pos": [0, 0.08, 0], "color": "#6ea24a", "material": "cloth" }], "idle": "bob" }
+    },
+    {
+      "id": "antivenom", "name": "Rattler Antivenom", "kind": "Remedy", "description": "A vial labelled in a doctor's hand: FOR SNAKES, NOT FOR LIARS.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "remove_status", "status": "snakebit" }, { "type": "heal", "amount": { "base": 3 } }] },
+      "rarity": "common", "value": 12, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "capsule", "size": [0.06, 0.16, 0.06], "pos": [0, 0.1, 0], "color": "#b8e6a0", "material": "glass" }], "idle": "bob" }
+    },
+    {
+      "id": "cartridges", "name": "Box of .45 Cartridges", "kind": "Ammunition", "description": "Six fat brass promises.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "resource", "resource": "rounds", "amount": { "base": 6 } }] },
+      "rarity": "common", "value": 8, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.2, 0.1, 0.14], "pos": [0, 0.05, 0], "color": "#b33a2a", "material": "cloth" }, { "shape": "box", "size": [0.21, 0.02, 0.15], "pos": [0, 0.1, 0], "color": "#e8c35a", "material": "metal" }], "idle": "none" }
+    },
+    {
+      "id": "dynamite", "name": "Stick of Dynamite", "kind": "Explosive", "description": "Sweating a little. Do not think about that.",
+      "category": "throwable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "area", "range": 5, "radius": 1, "affects": "all", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 4, "dice": "2d6" }, "damageType": "heat" }, { "type": "push", "distance": 1 }, { "type": "noise", "radius": 12 }], "vfx": { "kind": "burst", "color": "#ff8a3d" } },
+      "rarity": "uncommon", "value": 30, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.06, 0.3, 0.06], "pos": [0, 0.15, 0], "rot": [0, 0, 70], "color": "#c4302b", "material": "cloth" }, { "shape": "cylinder", "size": [0.01, 0.08, 0.01], "pos": [0.14, 0.2, 0], "color": "#f2e2a0", "material": "glow", "emissive": "#ffb347" }], "idle": "bob" }
+    },
+    {
+      "id": "rain-bead", "name": "Rain Bead", "kind": "Bead", "description": "A single drop of rain, held round by something. It is cold. It should not still be cold.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "rain-soaked", "duration": 6 }, { "type": "remove_status", "status": "parched" }], "vfx": { "kind": "sparkle", "color": "#7fc8ff" } },
+      "rarity": "uncommon", "value": 40, "knowledge": "vague", "vagueText": "It smells like the morning after a storm. Something in it wants to soak into you.", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "sphere", "size": [0.12, 0.12, 0.12], "pos": [0, 0.12, 0], "color": "#bfe6ff", "material": "glass", "emissive": "#3f88c5" }], "idle": "hover", "light": { "color": "#7fc8ff", "intensity": 0.6, "radius": 1.5 } }
+    },
+    {
+      "id": "snake-oil", "name": "Doc Pettibone's Universal Remedy", "kind": "Patent medicine", "description": "Promises to cure dropsy, drought and disappointment.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 4 } }, { "type": "apply_status", "status": "rattled", "duration": 3 }, { "type": "message", "text": "It tastes of turpentine and regret. You feel better, and also terrified." }] },
+      "rarity": "common", "value": 10, "knowledge": "unknown", "appearanceGroup": "tonic", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.08, 0.22, 0.08], "pos": [0, 0.11, 0], "color": "#8a6a3a", "material": "glass" }, { "shape": "cylinder", "size": [0.03, 0.06, 0.03], "pos": [0, 0.25, 0], "color": "#5a3d2b", "material": "wood" }], "idle": "bob" }
+    },
+    {
+      "id": "jackrabbit-tonic", "name": "Jackrabbit Tonic", "kind": "Patent medicine", "description": "Distilled from something that ran very fast. Effective. Probably illegal in the States.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "spurred", "duration": 12 }, { "type": "apply_status", "status": "steady-hand", "duration": 12 }] },
+      "rarity": "uncommon", "value": 25, "knowledge": "unknown", "appearanceGroup": "tonic", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.08, 0.22, 0.08], "pos": [0, 0.11, 0], "color": "#8a6a3a", "material": "glass" }, { "shape": "cylinder", "size": [0.03, 0.06, 0.03], "pos": [0, 0.25, 0], "color": "#5a3d2b", "material": "wood" }], "idle": "bob" }
+    },
+    {
+      "id": "laudanum", "name": "Bitter Laudanum", "kind": "Patent medicine", "description": "Takes the edge off everything, including your eyesight.",
+      "category": "consumable", "useMode": "consumed", "stackable": true,
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 12 } }, { "type": "apply_status", "status": "dust-blind", "duration": 6 }] },
+      "rarity": "common", "value": 15, "knowledge": "unknown", "appearanceGroup": "tonic", "revealOnUse": "vague", "vagueText": "Heals a great deal, then something goes soft and dim behind your eyes.",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.08, 0.22, 0.08], "pos": [0, 0.11, 0], "color": "#8a6a3a", "material": "glass" }, { "shape": "cylinder", "size": [0.03, 0.06, 0.03], "pos": [0, 0.25, 0], "color": "#5a3d2b", "material": "wood" }], "idle": "bob" }
+    },
+    {
+      "id": "church-bell", "name": "Hand Bell of St. Drizzle", "kind": "Bell", "description": "From the chapel that rang for the last rain. Ring it and anything with a guilty conscience scatters.",
+      "category": "tool", "useMode": "charges", "charges": 2,
+      "onUse": { "targeting": { "shape": "all_visible", "range": 8, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "rattled", "duration": 6 }, { "type": "noise", "radius": 10 }], "vfx": { "kind": "ring", "color": "#e8c35a" } },
+      "rarity": "rare", "value": 50, "knowledge": "vague", "vagueText": "It rings far louder than a bell this size should. Things that hear it seem to lose their nerve.", "revealOnUse": "full",
+      "model": { "archetype": "prop", "parts": [{ "shape": "cone", "size": [0.18, 0.2, 0.18], "pos": [0, 0.12, 0], "color": "#c9a24a", "material": "metal" }, { "shape": "cylinder", "size": [0.03, 0.12, 0.03], "pos": [0, 0.27, 0], "color": "#6b3f22", "material": "wood" }], "idle": "sway" }
+    },
+    {
+      "id": "copper-deed", "name": "The Deed to the Sky", "kind": "Document", "description": "Signed by a territorial judge who has since bought a lake house. Grants the bearer 'all moisture, vapour and precipitation above the Sweetwater basin, in perpetuity'.",
+      "category": "clue", "useMode": "reusable",
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "set_flag", "flag": "read-the-deed", "value": true }, { "type": "grant_xp", "amount": 10 }, { "type": "message", "text": "In the margin someone has written: CISTERN UNDER THE MESA. KEEP JAR UNCORKED ONLY AT NIGHT." }] },
+      "cooldown": 100, "rarity": "unique", "value": 0, "knowledge": "vague", "vagueText": "Legal language so dense it has its own weather. Someone wrote something in the margin.", "revealOnUse": "full",
+      "triggers": [{ "on": "on_pickup", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "counter", "counter": "evidence", "add": 1 }] } }],
+      "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.25, 0.02, 0.32], "pos": [0, 0.02, 0], "color": "#efe2c2", "material": "cloth" }, { "shape": "cylinder", "size": [0.06, 0.02, 0.06], "pos": [0.06, 0.04, -0.1], "color": "#b33a2a", "material": "matte" }], "idle": "bob" }
+    },
+    {
+      "id": "lode-key", "name": "Lodestone Gate Key", "kind": "Key", "description": "Iron, heavy, magnetised so badly it tugs at your belt buckle. Opens the company gate on the old mine.",
+      "category": "key", "useMode": "passive", "rarity": "unique", "value": 0, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [{ "shape": "torus", "size": [0.1, 0.03, 0.1], "pos": [-0.1, 0.1, 0], "color": "#4a4f57", "material": "metal" }, { "shape": "box", "size": [0.22, 0.03, 0.03], "pos": [0.05, 0.1, 0], "color": "#4a4f57", "material": "metal" }], "idle": "spin", "light": { "color": "#e8c35a", "intensity": 0.5, "radius": 1 } }
+    },
+    {
+      "id": "thunder-jar", "name": "The Thunder Jar", "kind": "Demijohn", "description": "A copper-caged glass jar the size of a church bell. Inside, a whole summer storm paces like a cat.",
+      "category": "quest", "useMode": "passive", "passiveWhenCarried": true,
+      "modifiers": [{ "stat": "speed", "amount": -10 }],
+      "triggers": [{ "on": "on_pickup", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "set_flag", "flag": "jar-taken", "value": true }, { "type": "message", "text": "The jar is heavier than it looks. The storm inside presses its face to the glass." }] } }],
+      "rarity": "unique", "value": 0, "knowledge": "clear",
+      "model": { "archetype": "prop", "parts": [
+        { "shape": "sphere", "size": [0.45, 0.5, 0.45], "pos": [0, 0.28, 0], "color": "#9fc6e6", "material": "glass", "emissive": "#3f88c5" },
+        { "shape": "cylinder", "size": [0.14, 0.12, 0.14], "pos": [0, 0.56, 0], "color": "#b87333", "material": "metal" },
+        { "shape": "torus", "size": [0.48, 0.03, 0.48], "pos": [0, 0.28, 0], "rot": [90, 0, 0], "color": "#b87333", "material": "metal" }
+      ], "scale": 1.2, "idle": "pulse", "light": { "color": "#9fd8ff", "intensity": 2, "radius": 4 } }
+    }
+  ],
+  "terrains": [
+    { "id": "saguaro", "name": "Saguaro", "description": "Older than the territory and twice as prickly. Good cover; bad hugging.", "walkable": false, "blocksSight": true, "color": "#4f7a3a", "height": 1.4, "model": { "archetype": "plant", "colors": { "primary": "#4f7a3a", "secondary": "#6e9a52", "accent": "#f2e2a0" }, "idle": "none" } },
+    { "id": "prickly-pear", "name": "Prickly Pear", "description": "Flat paddles of spines. Walking through costs time and skin.", "walkable": true, "blocksSight": false, "moveCost": 2, "onStand": [{ "type": "damage", "amount": { "base": 1 }, "damageType": "physical" }], "color": "#6e9a52", "height": 0.4 },
+    { "id": "dry-well", "name": "Padlocked Well", "description": "Company padlock, company sign. Something glints at the bottom.", "walkable": false, "blocksSight": false, "color": "#8a7a66", "height": 0.6, "interact": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "condition": { "type": "chance", "p": 0.5 }, "effects": [{ "type": "spawn_item", "item": "rain-bead", "count": 1 }, { "type": "message", "text": "You fish a cold bead of rain out of the dark." }] }, "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.8, 0.5, 0.8], "pos": [0, 0.25, 0], "color": "#8a7a66", "material": "stone" }, { "shape": "box", "size": [0.9, 0.05, 0.08], "pos": [0, 0.9, 0], "color": "#6b4a2b", "material": "wood" }], "idle": "none" } },
+    { "id": "mud-wallow", "name": "Fresh Mud", "description": "Actual mud. People in Sweetwater would weep to see it. Slow going, soothing on burns.", "walkable": true, "blocksSight": false, "moveCost": 2, "onStand": [{ "type": "remove_status", "status": "parched" }], "color": "#5a4632", "height": 0 },
+    { "id": "mine-rails", "name": "Mine Rails", "description": "Iron rails worn bright. The company ore carts still run on them, unmanned, at odd hours.", "walkable": true, "blocksSight": false, "color": "#6d6259", "height": 0.05 },
+    { "id": "copper-coil", "name": "Copper Condenser Coil", "description": "Part of Vane's rain still. Crackles. Standing near it makes your hair lift.", "walkable": true, "blocksSight": false, "onStand": [{ "type": "damage", "amount": { "base": 0, "dice": "1d3" }, "damageType": "storm" }], "color": "#b87333", "emissive": "#7fc8ff", "height": 0.3 }
+  ],
+  "unknownAppearances": {
+    "tonic": [
+      { "label": "amber bottle with a galloping horse", "color": "#c98a2e" },
+      { "label": "cobalt vial sealed with red wax", "color": "#2e5ec9" },
+      { "label": "milky flask that smells of anise", "color": "#e8e2d0" },
+      { "label": "green bottle with a skull scratched off", "color": "#4f8a3a" },
+      { "label": "clay jug stamped 'MEDICINAL'", "color": "#a0643a" }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Sweetwater, Main Street",
+      "description": "A one-street town gone the colour of old bone. The cantina is open, the church is not, and the company office has the only awning with fresh paint.",
+      "generator": "town", "size": "medium", "params": { "buildings": 7, "streetWidth": 3 },
+      "floor": { "color": "#cdb38a", "color2": "#b89b70", "material": "stone", "pattern": "sand" },
+      "wall": { "color": "#9a7656", "color2": "#7a5a40", "material": "wood", "height": 1.6, "pattern": "planks" },
+      "lighting": { "ambient": "#ffe2b8", "ambientIntensity": 0.7, "sun": { "color": "#fff1d6", "intensity": 1.6, "elevation": 65 }, "fog": { "color": "#e8d2ac", "density": 0.015 }, "lamps": { "color": "#ffb35c", "intensity": 0.8, "frequency": 0.08, "flicker": true }, "playerLight": 0, "sky": "#e9d7b5" },
+      "actors": [
+        { "actor": "company-deputy", "weight": 30, "min": 2, "max": 4 },
+        { "actor": "dust-coyote", "weight": 15, "min": 0, "max": 3 },
+        { "actor": "mesa-rattler", "weight": 8, "min": 0, "max": 1 }
+      ],
+      "placed": [
+        { "actor": "widow-oquendo", "where": "near_start" },
+        { "actor": "preacher-weekes", "where": "centre" },
+        { "actor": "kid-tobias", "where": "anywhere" }
+      ],
+      "items": [
+        { "item": "sarsaparilla", "weight": 20 }, { "item": "cartridges", "weight": 20 }, { "item": "pick-handle", "weight": 8 },
+        { "item": "snake-oil", "weight": 10 }, { "item": "laudanum", "weight": 8 }, { "item": "antivenom", "weight": 8 }
+      ],
+      "itemCount": 6,
+      "placedItems": [{ "item": "copper-deed", "where": "far" }],
+      "terrain": [{ "terrain": "dry-well", "density": 0.004 }, { "terrain": "prickly-pear", "density": 0.02 }],
+      "transitionName": "Ride out past the dead creek",
+      "transitionModel": { "archetype": "quadruped", "colors": { "primary": "#6b4a2b", "secondary": "#2a1d14", "accent": "#e8c35a" }, "idle": "bob" },
+      "gmNotes": "Introduce the drought, the company's grip on the town and the NPCs. Deputies harass anyone carrying water. Tobias can tell the player that Sabine Lark holds the mine key.",
+      "music": "explore"
+    },
+    {
+      "name": "Dry Creek Flats",
+      "description": "Miles of cracked creek bed and saguaro, where claim jumpers dig for the water table and the dust devils dance at noon. Sabine Lark keeps camp at the far end.",
+      "generator": "open", "size": "large", "params": { "cover": 0.12, "rockiness": 0.3 },
+      "floor": { "color": "#d4b27e", "color2": "#bf9a63", "material": "stone", "pattern": "sand" },
+      "wall": { "color": "#a26a44", "color2": "#8a5536", "material": "stone", "height": 1.2, "pattern": "plain" },
+      "lighting": { "ambient": "#ffd59e", "ambientIntensity": 0.8, "sun": { "color": "#ffe7c2", "intensity": 1.9, "elevation": 75 }, "fog": { "color": "#d9b98a", "density": 0.03 }, "playerLight": 0, "sky": "#f0d6a8" },
+      "actors": [
+        { "actor": "claim-jumper", "weight": 25, "min": 2, "max": 4 },
+        { "actor": "dust-coyote", "weight": 25, "min": 3, "max": 6 },
+        { "actor": "bone-buzzard", "weight": 15, "min": 1, "max": 3 },
+        { "actor": "dust-devil", "weight": 15, "min": 1, "max": 3 },
+        { "actor": "mesa-rattler", "weight": 15, "min": 1, "max": 3 }
+      ],
+      "placed": [{ "actor": "sabine-lark", "where": "far" }],
+      "items": [
+        { "item": "cartridges", "weight": 20 }, { "item": "sarsaparilla", "weight": 15 }, { "item": "dynamite", "weight": 10 },
+        { "item": "antivenom", "weight": 12 }, { "item": "jackrabbit-tonic", "weight": 8 }, { "item": "rain-bead", "weight": 6 },
+        { "item": "scattergun", "weight": 4 }, { "item": "church-bell", "weight": 3 }
+      ],
+      "itemCount": 8,
+      "placedItems": [{ "item": "lode-key", "where": "guarded" }],
+      "terrain": [{ "terrain": "saguaro", "density": 0.05 }, { "terrain": "prickly-pear", "density": 0.04 }],
+      "transitionName": "Unlock the Lodestone mine gate",
+      "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [1, 1.2, 0.15], "pos": [0, 0.6, 0], "color": "#5a3d2b", "material": "wood" }, { "shape": "box", "size": [0.3, 0.2, 0.1], "pos": [0, 0.7, 0.1], "color": "#4a4f57", "material": "metal" }], "idle": "none" },
+      "transitionRequires": { "type": "has_item", "who": "player", "item": "lode-key" },
+      "gmNotes": "Open, bright and dangerous; ranged fights. Sabine can be talked to before she draws. The mine gate will not open without her key.",
+      "music": "tense"
+    },
+    {
+      "name": "Lodestone Upper Galleries",
+      "description": "The company resealed this mine with men still in it. Now tinplate prospectors work it in the dark, and the rails hum toward something deep below.",
+      "generator": "caves", "size": "medium", "params": { "openness": 0.42, "smoothing": 4 },
+      "floor": { "color": "#5a4a3e", "color2": "#4a3d33", "material": "stone", "pattern": "plain" },
+      "wall": { "color": "#3d322a", "color2": "#6d5040", "material": "stone", "height": 1.8, "pattern": "plain" },
+      "lighting": { "ambient": "#6a5a4a", "ambientIntensity": 0.25, "fog": { "color": "#2a211c", "density": 0.05 }, "lamps": { "color": "#ffa04a", "intensity": 1.4, "frequency": 0.05, "flicker": true }, "playerLight": 5 },
+      "actors": [
+        { "actor": "tinplate-prospector", "weight": 30, "min": 2, "max": 4 },
+        { "actor": "lodestone-mole", "weight": 15, "min": 1, "max": 2 },
+        { "actor": "mesa-rattler", "weight": 15, "min": 1, "max": 3 },
+        { "actor": "claim-jumper", "weight": 10, "min": 0, "max": 2 }
+      ],
+      "placed": [],
+      "items": [
+        { "item": "cartridges", "weight": 20 }, { "item": "dynamite", "weight": 12 }, { "item": "rain-bead", "weight": 10 },
+        { "item": "cactus-poultice", "weight": 6 }, { "item": "buffalo-coat", "weight": 4 }, { "item": "lucky-horseshoe", "weight": 4 },
+        { "item": "laudanum", "weight": 8 }, { "item": "jackrabbit-tonic", "weight": 6 }
+      ],
+      "itemCount": 7,
+      "placedItems": [],
+      "terrain": [{ "terrain": "mine-rails", "density": 0.05 }],
+      "transitionName": "Ride an ore cart down the deep shaft",
+      "transitionModel": { "archetype": "vehicle", "colors": { "primary": "#6d6259", "secondary": "#b87333", "accent": "#ffa04a" }, "idle": "none" },
+      "gmNotes": "Claustrophobic. Hint at the sealed-in miners (Widow Oquendo's husband among them). The deeper you go, the cooler and damper the air feels.",
+      "music": "eerie"
+    },
+    {
+      "name": "The Cistern Under the Mesa",
+      "description": "A vaulted cistern the company blasted out of the mesa, ringed with copper coils. In the middle, on a cart of iron, sits the Thunder Jar. Vane is waiting beside it with an umbrella he has never needed.",
+      "generator": "caves", "size": "small", "params": { "openness": 0.6, "smoothing": 5 },
+      "floor": { "color": "#46505a", "color2": "#3a4048", "material": "stone", "pattern": "water" },
+      "wall": { "color": "#2c3036", "color2": "#b87333", "material": "stone", "height": 2.2, "pattern": "plain" },
+      "lighting": { "ambient": "#4a6a8a", "ambientIntensity": 0.3, "fog": { "color": "#1c2633", "density": 0.04 }, "lamps": { "color": "#9fd8ff", "intensity": 2, "frequency": 0.06, "flicker": true }, "playerLight": 4 },
+      "actors": [
+        { "actor": "tinplate-prospector", "weight": 20, "min": 1, "max": 3 },
+        { "actor": "company-deputy", "weight": 20, "min": 1, "max": 3 }
+      ],
+      "placed": [{ "actor": "absalom-vane", "where": "near_exit" }],
+      "items": [{ "item": "rain-bead", "weight": 15 }, { "item": "cartridges", "weight": 15 }, { "item": "cactus-poultice", "weight": 8 }],
+      "itemCount": 4,
+      "placedItems": [{ "item": "thunder-jar", "where": "guarded" }],
+      "terrain": [{ "terrain": "copper-coil", "density": 0.04 }, { "terrain": "mine-rails", "density": 0.02 }],
+      "transitionName": "Climb the cistern ladder into the open sky",
+      "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.08, 2, 0.08], "pos": [-0.25, 1, 0], "color": "#6b4a2b", "material": "wood" }, { "shape": "box", "size": [0.08, 2, 0.08], "pos": [0.25, 1, 0], "color": "#6b4a2b", "material": "wood" }], "idle": "none" },
+      "gmNotes": "Final confrontation. Vane talks first, in contract clauses. Defeating him and holding the jar wins; the storm goes home.",
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Put Absalom Vane in the dirt and take back the Thunder Jar from the cistern under the mesa.",
+    "win": { "type": "all", "of": [{ "type": "actor_defeated", "actor": "absalom-vane" }, { "type": "has_item", "who": "player", "item": "thunder-jar" }] },
+    "winText": "You pull the copper cork. The storm does not explode; it simply leaves, the way a held breath leaves, up the shaft and out over the mesa. By the time you reach Main Street the first drops are making craters in the dust, and Widow Oquendo is standing in the road with her face turned up, laughing.",
+    "lossText": "The buzzards had been patient. Out on the flats your letters scatter, addresses fading in the sun. Somewhere under the mesa, the storm keeps pacing."
+  },
+  "gm": {
+    "persona": "A campfire storyteller who has seen too many droughts: dry, funny, never in a hurry, fond of the people and merciless about the land.",
+    "voice": "Short sentences. Weather similes. Second person. Never says 'magic'; says 'the old way'.",
+    "threads": [
+      "Widow Oquendo's husband was sealed in the Lodestone mine.",
+      "The company sells water by the dipper; everyone owes Vane.",
+      "Tobias's dog went missing on the flats.",
+      "The Thunder Jar is cracking."
+    ],
+    "fallback": {
+      "intro": "Nine weeks without rain. The creek is a scar, the cattle are a rumour, and the Copperhead Rainworks Company sells water by the dipper from behind a padlocked well. You ride into Sweetwater with a sack of mail and one letter that matters: addressed to Absalom Vane, Rain Broker, in your own hand. Your grandmother's hazel rod is twitching toward the old mine.",
+      "areaEnter": [
+        "The heat sits on Main Street like a cat on a chest. Someone in the cantina is singing, badly, about water.",
+        "Out on the flats the horizon wobbles. Shapes at the edge of it might be riders, or rocks, or worse.",
+        "The mine swallows the daylight in one gulp. Somewhere ahead, iron feet keep a steady, tireless rhythm.",
+        "It is cool down here. Damp, even. The air smells of a storm that has been waiting a very long time."
+      ],
+      "lowHp": ["Your vision narrows to the barrel. Breathe.", "Blood in the dust. The buzzards circle lower.", "Your grandmother would tell you to sit down. She would also tell you to finish it."],
+      "events": ["A gust of wind carries, impossibly, the smell of rain.", "Far off, an ore cart rattles along rails with no one pushing it.", "A dust devil spins past and drops a company handbill at your feet: WATER IS PROPERTY.", "Thunder, faint, from underground."]
+    }
+  },
+  "audio": {
+    "mood": "lonesome nylon guitar, heat shimmer, distant thunder that never arrives",
+    "synth": { "key": "E", "scale": "phrygian", "tempo": 72, "timbre": "pluck", "drone": true, "percussion": "soft", "brightness": 0.55 },
+    "searchTerms": ["weird western ambient", "desert guitar drone", "spaghetti western instrumental"],
+    "suggestions": ["Ennio Morricone - The Ecstasy of Gold", "Calexico - Feast of Wire", "Earth - Hex; or Printing in the Infernal Method"]
+  }
+}
