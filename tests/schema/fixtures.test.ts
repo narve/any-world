@@ -12,6 +12,7 @@ import {
   Effect,
   Behaviour,
   ItemDef,
+  AreaPlan,
   type WorldSpecInput,
 } from '../../src/schema';
 
@@ -28,8 +29,8 @@ function errs(w: unknown): string[] {
 }
 
 describe('fixture worlds', () => {
-  it('has the three handcrafted fixtures', () => {
-    expect(files).toEqual(['fixture-ship.json', 'fixture-teen.json', 'fixture-western.json']);
+  it('has the four handcrafted fixtures', () => {
+    expect(files).toEqual(['fixture-dream.json', 'fixture-ship.json', 'fixture-teen.json', 'fixture-western.json']);
   });
 
   for (const f of files) {
@@ -67,8 +68,61 @@ describe('fixture worlds', () => {
         const models = [w.player.model, ...w.actors.map((a) => a.model), ...w.items.map((i) => i.model)];
         for (const m of models) if (m.archetype === 'humanoid') expect(m.humanoid).toBeDefined();
       });
+      it('every area has a backdrop', () => {
+        const w = parsed(json);
+        for (const a of w.areas) expect(a.backdrop, a.name).toBeDefined();
+      });
+      it('every consumable has a flavoured appearance pool (for unknown / GM-hidden consumables)', () => {
+        const w = parsed(json);
+        for (const i of w.items.filter((x) => x.category === 'consumable' && x.knowledge !== 'vague')) {
+          expect(i.appearanceGroup, i.id).toBeDefined();
+          expect(w.unknownAppearances[i.appearanceGroup!]?.length ?? 0, i.id).toBeGreaterThan(0);
+        }
+      });
+      it('appearance labels are unique within the world', () => {
+        const w = parsed(json);
+        const labels = Object.values(w.unknownAppearances).flat().map((x) => x.label.toLowerCase());
+        expect(new Set(labels).size).toBe(labels.length);
+      });
     });
   }
+
+  it('dream fixture is thoroughly non-realistic', () => {
+    const w = parsed(raw('fixture-dream.json'));
+    // one new non-realistic generator per area, at least once each
+    expect(new Set(w.areas.map((a) => a.generator))).toEqual(new Set(['islands', 'organic', 'geometric']));
+    // a different backdrop style on every area
+    const styles = w.areas.map((a) => a.backdrop!.style);
+    expect(new Set(styles).size).toBe(w.areas.length);
+    // abstract surfaces only
+    const abstract = new Set(['gradient', 'grid', 'noise', 'lines', 'none']);
+    for (const a of w.areas) {
+      expect(abstract.has(a.floor.pattern), a.name).toBe(true);
+      expect(abstract.has(a.wall.pattern), a.name).toBe(true);
+    }
+    // no humanoids anywhere
+    const models = [w.player.model, ...w.actors.map((a) => a.model), ...w.items.map((i) => i.model), ...w.terrains.flatMap((t) => (t.model ? [t.model] : []))];
+    expect(models.some((m) => m.archetype === 'humanoid')).toBe(false);
+    expect(w.player.model.archetype).toBe('freeform');
+    // strange custom resources and rule variants
+    expect(w.resources.map((r) => r.id).sort()).toEqual(['afterimage', 'hue']);
+    expect(w.resources.find((r) => r.id === 'hue')!.perTurn).toBeLessThan(0);
+    expect(w.rules.some((r) => r.switches.allConsumablesUnknown)).toBe(true);
+    expect(w.rules.some((r) => r.switches.violenceCounter === 'colours-spilled')).toBe(true);
+    expect(w.rules.some((r) => r.playerTriggers.some((t) => t.action.effects.some((e) => e.type === 'teleport')))).toBe(true);
+    // unusual goal: a pacifist ending (flag from a quest item) OR defeating the boss, and a lose condition on the violence counter
+    expect(w.goal.win.type).toBe('any');
+    expect(w.goal.lose).toEqual({ type: 'counter', counter: 'colours-spilled', cmp: 'gte', value: expect.any(Number) });
+    const brush = w.items.find((i) => i.id === 'last-brushstroke')!;
+    expect(brush.onUse!.effects).toContainEqual({ type: 'set_flag', flag: 'horizon-finished', value: true });
+    // every consumable is hidden by the rule and has a label to hide behind
+    const consumables = w.items.filter((i) => i.category === 'consumable');
+    expect(consumables.length).toBeGreaterThanOrEqual(5);
+    expect(w.unknownAppearances.blot.length).toBeGreaterThanOrEqual(consumables.length);
+    // vocabulary never assumes a person
+    expect(w.vocabulary.stats.hp.name).toBe('Opacity');
+    expect(w.vocabulary.conflict).not.toBe('Attack');
+  });
 
   it('teen fixture is non-violent with renamed conflict and persuasion', () => {
     const w = parsed(raw('fixture-teen.json'));
@@ -146,6 +200,12 @@ describe('fixture worlds', () => {
     expect(archetypes.size).toBeGreaterThanOrEqual(9);
     expect(statusFlags.size).toBeGreaterThanOrEqual(10);
     for (const t of ['all', 'any', 'has_item', 'actor_defeated', 'in_area', 'counter', 'flag', 'chance']) expect(condTypes).toContain(t);
+
+    // M2: non-realistic building blocks (generators are covered above via Generator.options)
+    const patterns = new Set(worlds.flatMap((w) => w.areas.flatMap((a) => [a.floor.pattern, a.wall.pattern])));
+    for (const p of ['gradient', 'grid', 'noise', 'lines', 'none']) expect(patterns, `surface pattern ${p}`).toContain(p);
+    const backdrops = new Set(worlds.flatMap((w) => w.areas.flatMap((a) => (a.backdrop ? [a.backdrop.style] : []))));
+    expect([...backdrops].sort()).toEqual([...AreaPlan.shape.backdrop.unwrap().shape.style.unwrap().options].sort());
   });
 });
 
@@ -225,7 +285,7 @@ describe('validateWorldRefs on broken copies', () => {
     w.unknownAppearances!.tonic = w.unknownAppearances!.tonic.slice(0, 1);
     const e = errs(w);
     expect(e.some((x) => x.includes('(snake-oil): knowledge "unknown" requires an "appearanceGroup"'))).toBe(true);
-    expect(e.some((x) => /unknownAppearances\.tonic: pool has 1 appearance\(s\) but 2 items/.test(x))).toBe(true);
+    expect(e.some((x) => /unknownAppearances\.tonic: pool has 1 appearance\(s\) but 4 items/.test(x))).toBe(true);
   });
 
   it('reports a missing appearance group', () => {

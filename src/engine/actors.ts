@@ -4,6 +4,7 @@ import { type Ctx, actorAt, actorName, emit, isPlayer, log, nextId } from './ctx
 import { side } from './stats';
 import { fireTriggers } from './triggers';
 import { cheb } from './util';
+import { scaledHostileHp } from './difficulty';
 
 export interface SpawnOpts {
   faction?: ActorInstance['faction'];
@@ -35,6 +36,8 @@ export function makeActor(ctx: Ctx, defId: string, pos: Pos, opts: SpawnOpts = {
   if (opts.allyOf) a.allyOf = opts.allyOf;
   else if (a.faction === 'friendly' && def.behaviour.type === 'follower') a.allyOf = ctx.s.player.actorId;
   if (a.allyOf) a.faction = 'friendly';
+  // difficulty: hostiles (not NPCs) are tougher or frailer (engine/difficulty.ts)
+  if (a.faction === 'hostile' && !def.npc) a.hp = a.maxHp = scaledHostileHp(ctx.s, def.stats.hp);
   return a;
 }
 
@@ -92,8 +95,8 @@ export function transformActor(ctx: Ctx, a: ActorInstance, into: string): boolea
     if (!former.includes(a.defId)) former.push(a.defId);
   }
   a.defId = into;
-  a.hp = def.stats.hp;
-  a.maxHp = def.stats.hp;
+  a.hp = a.faction === 'hostile' && !a.allyOf && !def.npc ? scaledHostileHp(ctx.s, def.stats.hp) : def.stats.hp;
+  a.maxHp = a.hp;
   a.mp = def.stats.mp;
   a.maxMp = def.stats.mp;
   a.base = { str: def.stats.str, dex: def.stats.dex, int: def.stats.int, ac: def.stats.ac, speed: def.speed, sight: def.sight };

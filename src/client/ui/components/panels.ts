@@ -64,6 +64,8 @@ export class RulesPanel {
   update(open: boolean, goal: string | undefined, rules: RuleView[], quests: QuestView[]): void {
     this.el.hidden = !open;
     if (!open) return;
+    // what changed during play comes first: new rules, then GM rules, then the world's own
+    rules = [...rules].sort((a, b) => Number(!!b.isNew) - Number(!!a.isNew) || Number(!!b.fromGm) - Number(!!a.fromGm));
     const key = dataKey([goal, rules, quests]);
     if (key === this.key) return;
     this.key = key;
@@ -81,9 +83,16 @@ export class RulesPanel {
               rules.map((r) =>
                 h(
                   'li',
-                  { class: r.fromGm ? 'is-gm' : undefined },
-                  h('div', { class: 'aw-rule-name' }, r.name, r.since ? h('span', { class: 'aw-rule-since' }, r.since) : null),
+                  { class: [r.fromGm && 'is-gm', r.isNew && 'is-new'], dataset: { rule: r.id } },
+                  h(
+                    'div',
+                    { class: 'aw-rule-name' },
+                    h('span', null, r.name),
+                    h('span', { class: ['aw-rule-src', r.fromGm ? 'src-gm' : 'src-world'], title: r.fromGm ? 'Introduced by the game master during play' : 'Part of this world from the start' }, r.fromGm ? 'GM' : 'World'),
+                  ),
+                  r.since ? h('div', { class: 'aw-rule-since' }, r.fromGm ? `since ${r.since}` : r.since) : null,
                   h('div', { class: 'aw-rule-desc' }, r.description),
+                  r.reason ? h('div', { class: 'aw-rule-reason' }, `“${r.reason}”`) : null,
                 ),
               ),
             )
@@ -105,12 +114,21 @@ export class RulesPanel {
   }
 }
 
-/** compact always-visible rules strip (top-right) */
+/** the hover text of a rule pill */
+export function ruleTip(r: RuleView): string {
+  const bits = [`${r.name} — ${r.description}`];
+  if (r.reason) bits.push(`“${r.reason}”`);
+  bits.push(r.fromGm ? `Added by the GM, ${r.since ?? 'during play'}` : 'In force from the start');
+  return bits.join('\n');
+}
+
+/** compact always-visible rules strip (top-right); new rules pulse until the panel is opened */
 export function rulesBadge(rules: RuleView[], onClick: () => void): HTMLElement {
+  const fresh = rules.some((r) => r.isNew);
   return h(
     'button',
-    { type: 'button', class: 'aw-rules-badge', onclick: onClick, 'aria-label': `${rules.length} active rules — open rules (r)` },
-    icon(ICONS.scroll),
-    rules.map((r) => h('span', { class: ['aw-rule-pill', r.fromGm && 'is-gm'], dataset: { tip: `${r.name} — ${r.description}` } }, r.name)),
+    { type: 'button', class: ['aw-rules-badge', fresh && 'has-new'], onclick: onClick, 'aria-label': `${rules.length} active rules${fresh ? ', new rule added' : ''} — open rules (r)` },
+    h('span', { class: 'aw-rules-badge-head' }, icon(ICONS.scroll), h('span', null, 'Rules'), fresh ? h('span', { class: 'aw-rules-new' }, 'new') : null),
+    rules.map((r) => h('span', { class: ['aw-rule-pill', r.fromGm && 'is-gm', r.isNew && 'is-new'], dataset: { tip: ruleTip(r), rule: r.id } }, r.name)),
   );
 }

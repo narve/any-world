@@ -1,0 +1,48 @@
+{
+  "world": "fixture-western",
+  "seed": 13,
+  "steps": 656,
+  "result": "lost put in the dirt by Absalom Vane, the Rain Broker (Storm)",
+  "turn": 784,
+  "area": 3,
+  "level": 4,
+  "keyMismatch": [],
+  "refused": [
+    "step 339 {\"type\":\"attack\",\"targetId\":\"a64\"} log=[\"Dolores Aguila shoots Mesa Rattler but misses.\"]",
+    "step 345 {\"type\":\"attack\",\"targetId\":\"a61\"} log=[\"Dolores Aguila shoots Tinplate Prospector for 3 Lead.\"]",
+    "step 375 {\"type\":\"use\",\"slot\":3,\"target\":{\"x\":35,\"y\":13}} log=[\"Tinplate Prospector takes 11 Lead.\"]",
+    "step 381 {\"type\":\"use\",\"slot\":3,\"target\":{\"x\":40,\"y\":12}} log=[\"Tinplate Prospector takes 9 Lead.\"]",
+    "step 526 {\"type\":\"use\",\"slot\":5} log=[\"Dolores Aguila uses Box of .45 Cartridges.\"]",
+    "step 532 {\"type\":\"attack\",\"targetId\":\"a80\"} log=[\"Dolores Aguila shoots Tinplate Prospector for 3 Lead.\"]",
+    "step 552 {\"type\":\"attack\",\"targetId\":\"a88\"} log=[\"Dolores Aguila shoots Tinplate Prospector for 5 Lead.\"]",
+    "step 582 {\"type\":\"attack\",\"targetId\":\"a78\"} log=[\"Dolores Aguila shoots Tinplate Prospector but misses.\"]",
+    "step 638 {\"type\":\"use\",\"slot\":15} log=[\"Dolores Aguila uses Cactus Poultice.\"]",
+    "step 643 {\"type\":\"use\",\"slot\":2} log=[\"Dolores Aguila uses Army Canteen.\"]",
+    "step 648 {\"type\":\"use\",\"slot\":4} log=[\"Dolores Aguila uses Warm Sarsaparilla.\"]",
+    "step 653 {\"type\":\"use\",\"slot\":7} log=[\"Dolores Aguila uses Rattler Antivenom.\"]"
+  ],
+  "layers": {
+    "narration": 9,
+    "game": 889,
+    "dialogue": 4,
+    "levelup": 3,
+    "choice": 1,
+    "end": 1
+  },
+  "actions": {
+    "use": 50,
+    "move": 726,
+    "attack": 61,
+    "talk": 4,
+    "wait": 2,
+    "pickup": 38,
+    "interact": 4,
+    "transition": 3,
+    "equip": 1
+  },
+  "errors": [],
+  "notes": [
+    "reload ok at turn 241 (layer after reload: game)"
+  ],
+  "stuckAt": []
+}

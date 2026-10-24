@@ -53,8 +53,18 @@ export function actorAt(state: GameState, p: Pos) {
  * actors (except at the destination). null = no route or already there.
  */
 export function travelStep(state: GameState, dest: Pos): Dir | null {
+  const path = travelPath(state, dest);
+  if (!path || !path.length) return null;
+  return dirTo(playerOf(state).pos, path[0]);
+}
+
+/**
+ * The whole click-to-travel route to `dest` (excluding the player's tile, including `dest`), over
+ * explored passable tiles and around other actors. null = no known way; [] = already there.
+ */
+export function travelPath(state: GameState, dest: Pos): Pos[] | null {
   const p = playerOf(state).pos;
-  if (p.x === dest.x && p.y === dest.y) return null;
+  if (p.x === dest.x && p.y === dest.y) return [];
   const map = state.area.map;
   if (dest.x < 0 || dest.y < 0 || dest.x >= map.width || dest.y >= map.height) return null;
   if (seenAt(state, dest.x, dest.y) === 0) return null;
@@ -72,6 +82,5 @@ export function travelStep(state: GameState, dest: Pos): Dir | null {
     const loose = (x: number, y: number) => seenAt(state, x, y) !== 0 && pass(x, y) && (cheb({ x, y }, p) > 1 || !occupied.has(y * map.width + x));
     path = findPath(map.width, map.height, p, dest, loose, { maxNodes: 6000 });
   }
-  if (!path || !path.length) return null;
-  return dirTo(p, path[0]);
+  return path && path.length ? path : null;
 }

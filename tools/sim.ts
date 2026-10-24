@@ -1,0 +1,237 @@
+/**
+ * Bot playthroughs of World Spec files.
+ *
+ *   npm run sim -- --world content/worlds/fixture-ship.json --seeds 100 --bots explorer,cautious
+ *   npm run sim -- --seeds 20                       # every content/worlds/*.json, explorer+cautious
+ *   npm run sim -- --world a.json --json            # machine-readable output
+ *
+ * Options:
+ *   --world <file>      world file (repeatable, or comma separated); default all content/worlds/*.json
+ *   --seeds <n>         seeds per bot (1..n, or --seed-start s for s..s+n-1); default 20
+ *   --bots <list>       explorer,cautious,talker,random; default explorer,cautious
+ *   --max-turns <n>     engine turn cap per run (default 3000; random bot: min(cap, 800))
+ *   --gm                feed scripted GM actions (spawn, offer_choice, add_rule/remove_rule)
+ *   --jobs <n>          parallel worker processes (default: CPUs - 1)
+ *   --exact             step through the public (cloning) step() instead of the in-place fastStep
+ *                       (same results — tests/sim/fast.test.ts checks parity — but ~3× slower)
+ *   --analyse           also print the static balance analysis and verdict per world
+ *   --difficulty <d>    gentle|normal|hard|brutal: the band the games are played at (engine
+ *                       difficulty) and the win-rate target for --analyse (default normal)
+ *   --json              print JSON instead of tables
+ *
+ * Exit code 1 when any run crashed (or a world file is invalid).
+ */
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { fork } from 'node:child_process';
+import { cpus } from 'node:os';
+import { parseWorld } from '../src/schema/refs';
+import type { WorldSpec } from '../src/schema/world';
+import { runGame, summarize, formatSummary, type SimResult, type BotName, BOT_NAMES } from '../src/engine/sim/index';
+import { staticAnalysis, verdictFor, formatAnalysis, DIFFICULTIES, type Difficulty } from '../src/engine/balance/index';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const self = fileURLToPath(import.meta.url);
+
+interface Task {
+  file: string;
+  bot: BotName;
+  seed: number;
+  maxTurns: number;
+  gm: boolean;
+  exact: boolean;
+  difficulty: Difficulty;
+}
+
+const worldCache = new Map<string, WorldSpec>();
+function loadWorld(file: string): WorldSpec {
+  const hit = worldCache.get(file);
+  if (hit) return hit;
+  const r = parseWorld(JSON.parse(readFileSync(file, 'utf8')));
+  if (!r.ok) throw new Error(`${file} is not a valid world:\n  ${r.errors.join('\n  ')}`);
+  worldCache.set(file, r.world);
+  return r.world;
+}
+
+function runTask(t: Task): SimResult {
+  return runGame(loadWorld(t.file), t.seed, t.bot, { maxTurns: t.maxTurns, gm: t.gm, fast: !t.exact, difficulty: t.difficulty });
+}
+
+// ---------------------------------------------------------------------------
+// worker process
+// ---------------------------------------------------------------------------
+
+if (process.env.ANYWORLD_SIM_WORKER === '1') {
+  process.on('message', (msg: { tasks: Task[] }) => {
+    const out: SimResult[] = [];
+    for (const t of msg.tasks) out.push(runTask(t));
+    process.send!({ results: out }, () => process.exit(0));
+  });
+} else {
+  main().catch((e) => {
+    console.error(e instanceof Error ? e.message : e);
+    process.exit(1);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// main
+// ---------------------------------------------------------------------------
+
+function parseArgs(argv: string[]) {
+  const o = {
+    worlds: [] as string[],
+    seeds: 20,
+    seedStart: 1,
+    bots: ['explorer', 'cautious'] as BotName[],
+    maxTurns: 3000,
+    gm: false,
+    exact: false,
+    jobs: Math.max(1, cpus().length - 1),
+    json: false,
+    analyse: false,
+    difficulty: 'normal' as Difficulty,
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    const val = () => {
+      const v = argv[++i];
+      if (v === undefined) throw new Error(`${a} needs a value`);
+      return v;
+    };
+    switch (a) {
+      case '--world':
+      case '--worlds':
+        o.worlds.push(...val().split(',').filter(Boolean));
+        break;
+      case '--seeds':
+        o.seeds = Math.max(1, Number(val()) | 0);
+        break;
+      case '--seed-start':
+        o.seedStart = Number(val()) | 0;
+        break;
+      case '--bots':
+        o.bots = val().split(',').filter(Boolean) as BotName[];
+        for (const b of o.bots) if (!(BOT_NAMES as readonly string[]).includes(b)) throw new Error(`unknown bot "${b}" (known: ${BOT_NAMES.join(', ')})`);
+        break;
+      case '--max-turns':
+        o.maxTurns = Math.max(10, Number(val()) | 0);
+        break;
+      case '--gm':
+        o.gm = true;
+        break;
+      case '--exact':
+        o.exact = true;
+        break;
+      case '--jobs':
+        o.jobs = Math.max(1, Number(val()) | 0);
+        break;
+      case '--json':
+        o.json = true;
+        break;
+      case '--analyse':
+      case '--analyze':
+        o.analyse = true;
+        break;
+      case '--difficulty': {
+        const d = val();
+        if (!(DIFFICULTIES as readonly string[]).includes(d)) throw new Error(`unknown difficulty "${d}" (known: ${DIFFICULTIES.join(', ')})`);
+        o.difficulty = d as Difficulty;
+        break;
+      }
+      case '--help':
+      case '-h':
+        console.log(readFileSync(self, 'utf8').split('*/')[0]);
+        process.exit(0);
+        break;
+      default:
+        throw new Error(`unknown option ${a}`);
+    }
+  }
+  if (!o.worlds.length) {
+    const dir = join(root, 'content', 'worlds');
+    if (existsSync(dir)) o.worlds = readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f) => join(dir, f));
+  }
+  o.worlds = o.worlds.map((w) => resolve(w));
+  return o;
+}
+
+async function runParallel(tasks: Task[], jobs: number): Promise<SimResult[]> {
+  if (jobs <= 1 || tasks.length < 4) return tasks.map(runTask);
+  // interleave so every worker gets a mix of worlds/bots
+  const buckets: Task[][] = Array.from({ length: Math.min(jobs, tasks.length) }, () => []);
+  tasks.forEach((t, i) => buckets[i % buckets.length].push(t));
+  const parts = await Promise.all(
+    buckets.map(
+      (bucket) =>
+        new Promise<SimResult[]>((res, rej) => {
+          const child = fork(self, [], { execArgv: process.execArgv, env: { ...process.env, ANYWORLD_SIM_WORKER: '1' }, stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
+          let got: SimResult[] | null = null;
+          child.on('message', (m: { results: SimResult[] }) => {
+            got = m.results;
+          });
+          child.on('error', rej);
+          child.on('exit', (code) => (got ? res(got) : rej(new Error(`sim worker exited with code ${code} before reporting`))));
+          child.send({ tasks: bucket });
+        }),
+    ),
+  );
+  // back to task order: task i ran in bucket i % B at position floor(i / B)
+  return tasks.map((_, i) => parts[i % parts.length][Math.floor(i / parts.length)]);
+}
+
+async function main(): Promise<void> {
+  const o = parseArgs(process.argv.slice(2));
+  if (!o.worlds.length) throw new Error('no world files (pass --world <file>)');
+  const worlds = new Map<string, WorldSpec>();
+  let bad = 0;
+  for (const f of o.worlds) {
+    try {
+      worlds.set(f, loadWorld(f));
+    } catch (e) {
+      bad++;
+      console.error((e as Error).message);
+    }
+  }
+  const tasks: Task[] = [];
+  for (const [file] of worlds)
+    for (const bot of o.bots)
+      for (let k = 0; k < o.seeds; k++)
+        tasks.push({ file, bot, seed: o.seedStart + k, maxTurns: bot === 'random' ? Math.min(o.maxTurns, 800) : o.maxTurns, gm: o.gm, exact: o.exact, difficulty: o.difficulty });
+  const t0 = Date.now();
+  const results = await runParallel(tasks, o.jobs);
+  const secs = (Date.now() - t0) / 1000;
+  let crashes = 0;
+  const report: unknown[] = [];
+  const text: string[] = [];
+  for (const [file, world] of worlds) {
+    const rs = results.filter((_, i) => tasks[i].file === file);
+    const sums = summarize(rs, world.areas.length);
+    crashes += sums.reduce((n, s) => n + s.crash, 0);
+    const rel = file.startsWith(root) ? file.slice(root.length + 1) : file;
+    // the band the games were really played at (from GameState.difficulty), not just the requested one
+    const played = [...new Set(rs.map((r) => r.difficulty))];
+    const entry: Record<string, unknown> = { file: rel, title: world.meta.title, difficulty: played.length === 1 ? played[0] : played, summaries: sums };
+    text.push(formatSummary(`${rel} — "${world.meta.title}" (${played.join(', ')})`, sums));
+    if (o.analyse) {
+      const sa = staticAnalysis(world);
+      const v = verdictFor(world, sa, sums, o.difficulty);
+      entry.static = sa;
+      entry.verdict = v;
+      text.push(formatAnalysis(sa, v));
+    }
+    const anomalies = rs.flatMap((r) => r.anomalies);
+    if (anomalies.length) {
+      entry.anomalies = anomalies.slice(0, 20);
+      text.push(`  anomalies:\n    ${anomalies.slice(0, 10).join('\n    ')}`);
+    }
+    report.push(entry);
+  }
+  if (o.json) console.log(JSON.stringify({ seconds: secs, runs: results.length, worlds: report }, null, 2));
+  else {
+    console.log(text.join('\n\n'));
+    console.log(`\n${results.length} runs in ${secs.toFixed(1)}s (${o.jobs} jobs)${crashes ? `, ${crashes} CRASHED` : ''}`);
+  }
+  process.exit(crashes || bad ? 1 : 0);
+}

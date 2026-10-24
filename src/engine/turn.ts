@@ -14,6 +14,9 @@ import { fireTriggers } from './triggers';
 import { checkQuests } from './gm';
 import { evalCondition } from './conditions';
 import { heal } from './combat';
+import { switchesOf } from './rules';
+import { lossReason } from './combat';
+import { regenInterval } from './difficulty';
 
 export const ACT_COST = 100;
 const RESOURCE_EMPTY_REPEAT = 5;
@@ -105,7 +108,8 @@ export function endRound(ctx: Ctx): void {
   const p = playerActor(ctx);
   const ps = ctx.world.player;
   if (ps.mpRegenEvery > 0 && s.turn % ps.mpRegenEvery === 0 && p.mp < maxMp(ctx, p)) p.mp += 1;
-  if (ps.hpRegenEvery > 0 && !ctx.ix.switches.noNaturalHpRegen && s.turn % ps.hpRegenEvery === 0) heal(ctx, p, 1);
+  const regenEvery = regenInterval(s, ps.hpRegenEvery);
+  if (regenEvery > 0 && !switchesOf(ctx).noNaturalHpRegen && s.turn % regenEvery === 0) heal(ctx, p, 1);
   if (s.turn % 5 === 0) for (const a of s.area.actors) if (!isPlayer(ctx, a) && a.mp < maxMp(ctx, a)) a.mp += 1;
   // custom resources
   for (const r of ctx.world.resources ?? []) {
@@ -159,7 +163,7 @@ export function checkEnd(ctx: Ctx): void {
   if (s.status !== 'playing') return;
   const p = playerActor(ctx);
   if (p.hp <= 0) {
-    endGame(ctx, 'lost', ctx.world.vocabulary.defeated);
+    endGame(ctx, 'lost', lossReason(ctx));
     return;
   }
   const cc = { self: p };

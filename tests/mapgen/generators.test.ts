@@ -1,49 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { GENERATOR_NAMES, MAP_SIZES, PASSABLE_KINDS, generateArea, renderAscii, seededRng, validateMap } from '../../src/engine/mapgen';
-import type { AreaMap } from '../../src/engine/types';
-import { emptyWorld, makePlan, passableCount, reachable } from './helpers';
+import { GENERATOR_NAMES, MAP_SIZES, generateArea, renderAscii, seededRng, validateMap } from '../../src/engine/mapgen';
+import { OPEN_EDGED, checkMap, emptyWorld, makePlan, passableCount } from './helpers';
 
 const SIZES = ['small', 'medium', 'large'] as const;
 const SEEDS = Array.from({ length: 50 }, (_, i) => i * 7919 + 1);
-
-function checkMap(map: AreaMap, label: string): string[] {
-  const problems: string[] = [];
-  const W = map.width;
-  const H = map.height;
-  const at = (x: number, y: number) => map.tiles[y * W + x];
-  // start / exit
-  if (map.start.x === map.exit.x && map.start.y === map.exit.y) problems.push('start == exit');
-  if (at(map.start.x, map.start.y).kind !== 'start') problems.push('start tile kind');
-  if (at(map.exit.x, map.exit.y).kind !== 'transition') problems.push('exit tile kind');
-  // connectivity: exit reachable and every passable tile reachable
-  const r = reachable(map, map.start);
-  if (!r.has(map.exit.y * W + map.exit.x)) problems.push('exit not reachable');
-  if (r.size !== passableCount(map)) problems.push(`unreachable passable tiles: ${passableCount(map) - r.size}`);
-  // closed border
-  for (let x = 0; x < W; x++) for (const y of [0, H - 1]) if (PASSABLE_KINDS.has(at(x, y).kind) || at(x, y).kind === 'water') problems.push(`border ${x},${y}`);
-  for (let y = 0; y < H; y++) for (const x of [0, W - 1]) if (PASSABLE_KINDS.has(at(x, y).kind) || at(x, y).kind === 'water') problems.push(`border ${x},${y}`);
-  // every passable tile is enclosed: no passable tile touches void
-  for (let y = 1; y < H - 1; y++)
-    for (let x = 1; x < W - 1; x++) {
-      if (!PASSABLE_KINDS.has(at(x, y).kind)) continue;
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (at(x + dx, y + dy).kind === 'void') problems.push(`open tile ${x},${y} touches void`);
-    }
-  // far apart
-  const d = Math.hypot(map.start.x - map.exit.x, map.start.y - map.exit.y);
-  if (d < 0.4 * Math.hypot(W, H)) problems.push(`start/exit too close (${d.toFixed(1)})`);
-  // regions
-  if (map.regions.length < 2) problems.push(`only ${map.regions.length} regions`);
-  map.regions.forEach((rg, i) => {
-    if (rg.id !== i) problems.push(`region id ${rg.id} at index ${i}`);
-    if (rg.size <= 0) problems.push(`region ${i} empty`);
-    const c = at(rg.centre.x, rg.centre.y);
-    if (c.region !== rg.id) problems.push(`region ${i} centre not inside region`);
-  });
-  for (const t of map.tiles) if (t.region !== undefined && (t.region < 0 || t.region >= map.regions.length)) problems.push('tile region out of range');
-  // the playable shape uses a decent share of the map
-  if (passableCount(map) < W * H * 0.15) problems.push(`too little floor (${passableCount(map)})`);
-  return problems.slice(0, 5).map((p) => `${label}: ${p}`);
-}
 
 describe('mapgen generators', () => {
   for (const gen of GENERATOR_NAMES) {
@@ -61,7 +21,7 @@ describe('mapgen generators', () => {
           expect(map.width).toBe(MAP_SIZES[size].width);
           expect(map.height).toBe(MAP_SIZES[size].height);
           problems.push(...validateMap(map).map((p) => `${gen}/${size}/${seed}: ${p}`));
-          const pr = checkMap(map, `${gen}/${size}/${seed}`);
+          const pr = checkMap(map, `${gen}/${size}/${seed}`, OPEN_EDGED.has(gen));
           if (pr.length && problems.length < 3) problems.push(renderAscii(map));
           problems.push(...pr);
         }
@@ -166,6 +126,11 @@ describe('mapgen features', () => {
     const extremes: Record<string, number>[] = [
       { roomCount: 30, rooms: 30, buildings: 40, openness: 0, cover: 0.5, pillarDensity: 1, loops: 0.6, corridorWidth: 4, streetWidth: 5 },
       { roomCount: 2, buildings: 1, openness: 1, pillarDensity: 0, loops: 0, deadEnds: 0, corridorWidth: 1, smoothing: 8, nonsense: 99 },
+      // knobs of the non-realistic generators, at both ends
+      { islandCount: 24, islandSize: 0, bridgeLength: 2, chambers: 16, chamberSize: 0, tubeWidth: 1, curl: 1, wobble: 1, variant: 3, cellSize: 4, frame: 2, symmetry: 4, pillars: 1, doors: 1 },
+      { islandCount: 3, islandSize: 1, bridgeLength: 24, pockets: 1, rims: 1, chambers: 2, chamberSize: 1, tubeWidth: 4, wobble: 0, membranes: 1, nodules: 1, fluid: 1, variant: 0, rings: 8, spokes: 12, symmetry: 1, loops: 1 },
+      { variant: 4, facets: 14, frame: 1, symmetry: 3, rings: 0, tessellation: 2, outcrops: 1, islands: 3, blobs: 2 },
+      { variant: -5, symmetry: 99, rings: -1, cellSize: 99, facets: 0, islandCount: -1, chambers: 1e9, bridgeLength: 0 },
     ];
     for (const gen of GENERATOR_NAMES)
       for (const size of SIZES)

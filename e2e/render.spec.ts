@@ -1,13 +1,13 @@
 /**
  * Renderer visual checks: the model gallery and every area of every fixture world render without
- * console errors; screenshots go to docs/progress/M1/ for review.
+ * console errors; screenshots go to docs/progress/M2/ for review.
  * Run: xvfb-run -a npx playwright test e2e/render.spec.ts
  */
 import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 import { readdirSync, readFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const OUT = 'docs/progress/M1';
+const OUT = 'docs/progress/M2';
 mkdirSync(OUT, { recursive: true });
 
 const worldsDir = join(process.cwd(), 'content/worlds');
@@ -209,7 +209,7 @@ for (const world of FIXTURES) {
     });
     if (!res.skipped) {
       expect(res.doorLowered).toBe(true);
-      expect(res.doorScale).toBeLessThan(0.2);
+      expect(res.doorScale).toBeLessThan(0.3); // a low stub (STUB_HEIGHT), frame still visible
       expect(res.blockersCut).toBe(true);
       await page.waitForTimeout(900); // let the camera glide onto the moved player
       await page.screenshot({ path: `${OUT}/cutaway-door-${world}.png` });

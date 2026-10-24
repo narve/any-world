@@ -1,11 +1,13 @@
 /**
  * GM actions applied to the game state. Every action costs GM_ACTION_COST from the area budget
- * (GM_BUDGET_PER_AREA); actions beyond the budget and actions with invalid references are skipped
- * with a system log entry. Also quests (start, completion, rewards).
+ * (GM_BUDGET_PER_AREA); actions beyond the budget, with invalid references or beyond the rule
+ * limits are skipped with a `gm_skipped` event (diagnostics, not the player's log). Also GM rules
+ * (add_rule / remove_rule, see rules.ts) and quests (start, completion, rewards).
  */
 import type { GmAction, GmLeafAction } from '../schema/gm';
 import type { Effect } from '../schema/world';
 import { GM_ACTION_COST } from '../schema/gm';
+import { RuleVariant } from '../schema/world';
 import type { ActorInstance, PendingChoice, Pos, Quest } from './types';
 import { type Ctx, actorName, emit, findActor, findFreeNear, isAlive, isPlayer, log, playerActor } from './ctx';
 import { spawnActor } from './actors';
@@ -16,9 +18,28 @@ import { grantXp } from './progression';
 import { evalCondition } from './conditions';
 import { side } from './stats';
 import { cheb, dist2 } from './util';
+import { addActiveRule, addRuleRefusal, estimateRuleImpact, removeActiveRule, removeRuleRefusal } from './rules';
+
+/** records a refused GM action (an event for the GM runtime / debugging, never a player log line) */
+export function gmSkip(ctx: Ctx, action: string, reason: string): void {
+  emit(ctx, { type: 'gm_skipped', action, reason });
+}
 
 function skip(ctx: Ctx, a: GmAction, why: string): void {
-  log(ctx, `GM ${a.type} skipped: ${why}`, 'system');
+  gmSkip(ctx, a.type, why);
+}
+
+/**
+ * Whether `type` names a GM action. An own-property check: `in` would also accept inherited keys
+ * such as "constructor" or "toString", whose "cost" is a Function (NaN budget).
+ */
+export function isGmActionType(type: unknown): type is GmAction['type'] {
+  return typeof type === 'string' && Object.hasOwn(GM_ACTION_COST, type);
+}
+
+/** budget cost of one action type (0 for anything that is not a GM action type) */
+function typeCost(type: unknown): number {
+  return isGmActionType(type) ? GM_ACTION_COST[type] : 0;
 }
 
 function nearPos(ctx: Ctx, near: 'player' | 'random' | 'exit'): Pos | null {
@@ -63,7 +84,7 @@ export function optionPrice(actions: readonly GmAction[]): number {
 
 /** budget cost of a list of leaf actions */
 function leafCost(actions: readonly GmAction[]): number {
-  return actions.reduce((n, a) => n + (GM_ACTION_COST[a.type] ?? 0), 0);
+  return actions.reduce((n, a) => n + typeCost(a?.type), 0);
 }
 
 /**
@@ -73,9 +94,10 @@ function leafCost(actions: readonly GmAction[]): number {
  * that spend the budget while the offer is open can never leave a paid option half-applied.
  */
 export function gmActionCost(a: GmAction): number {
-  const base = GM_ACTION_COST[a.type] ?? 0;
+  const base = typeCost(a.type);
   if (a.type !== 'offer_choice') return base;
-  return base + Math.max(0, ...a.options.map((o) => leafCost(o.actions.filter((x) => x.type !== ('offer_choice' as string)))));
+  const options = Array.isArray(a.options) ? a.options : [];
+  return base + Math.max(0, ...options.map((o) => leafCost(offerLeaves(o))));
 }
 
 /** reference check of an effect list (null when every id exists) */
@@ -103,9 +125,39 @@ function leafRefError(ctx: Ctx, a: GmAction): string | null {
       return ix.actors.has(a.actor) ? null : `unknown actor "${a.actor}"`;
     case 'effect':
       return effectRefError(ctx, a.effects);
+    case 'add_rule':
+      return ruleError(ctx, a.rule).error;
     default:
-      return a.type in GM_ACTION_COST ? null : 'unknown type';
+      return isGmActionType(a.type) ? null : 'unknown type';
   }
+}
+
+/**
+ * The actions of an offer option the engine will consider: well-formed leaf actions only (objects
+ * with a known type, no nested offer_choice). Anything else in a GM/LLM response is dropped.
+ */
+function offerLeaves(o: unknown): GmAction[] {
+  const actions = (o as { actions?: unknown })?.actions;
+  if (!Array.isArray(actions)) return [];
+  return actions.filter((x): x is GmAction => !!x && typeof x === 'object' && isGmActionType((x as GmAction).type) && (x as GmAction).type !== 'offer_choice');
+}
+
+/** resource ids an effect may change: hp, mp, the core stats and the world's custom resources */
+const CORE_RESOURCES = new Set(['hp', 'mp', 'str', 'dex', 'int', 'ac', 'speed', 'sight']);
+
+/** validates a GM rule (schema + references); returns the parsed rule or why it is refused */
+function ruleError(ctx: Ctx, raw: unknown): { rule: RuleVariant | null; error: string | null } {
+  const parsed = RuleVariant.safeParse(raw);
+  if (!parsed.success) return { rule: null, error: `malformed rule (${parsed.error.issues[0]?.path.join('.') || 'rule'}: ${parsed.error.issues[0]?.message ?? 'invalid'})` };
+  const rule = parsed.data;
+  for (const tr of rule.playerTriggers) {
+    const err = effectRefError(ctx, tr.action.effects);
+    if (err) return { rule: null, error: err };
+    for (const e of tr.action.effects) {
+      if (e.type === 'resource' && !CORE_RESOURCES.has(e.resource) && !ctx.ix.resources.has(e.resource)) return { rule: null, error: `unknown resource "${e.resource}"` };
+    }
+  }
+  return { rule, error: null };
 }
 
 export interface GmApplyOpts {
@@ -116,11 +168,16 @@ export interface GmApplyOpts {
 export function applyGmList(ctx: Ctx, actions: readonly GmAction[], opts: GmApplyOpts): void {
   for (const a of actions) {
     if (ctx.s.status !== 'playing') return;
-    if (!a || typeof a !== 'object' || !(a.type in GM_ACTION_COST)) {
-      log(ctx, 'GM action skipped: unknown type', 'system');
+    if (!a || typeof a !== 'object' || !isGmActionType(a.type)) {
+      gmSkip(ctx, 'action', 'unknown type');
       continue;
     }
     const cost = gmActionCost(a);
+    // a non-finite cost or budget can only come from malformed input; never let it reach the budget
+    if (!Number.isFinite(cost) || !Number.isFinite(ctx.s.area.gmBudget)) {
+      skip(ctx, a, 'malformed cost');
+      continue;
+    }
     if (opts.charge && cost > ctx.s.area.gmBudget) {
       skip(ctx, a, 'over budget');
       continue;
@@ -262,10 +319,14 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
       // an option is offered whole or not at all: one naming a missing item/actor/status could
       // take the price and fail to deliver, so it is left out
       const options: PendingChoice['options'] = [];
-      for (const o of a.options) {
-        const actions = o.actions.filter((x) => x.type !== ('offer_choice' as string));
+      for (const o of Array.isArray(a.options) ? a.options : []) {
+        if (!o || typeof o !== 'object') continue;
+        const raw = Array.isArray(o.actions) ? o.actions : [];
+        const actions = offerLeaves(o);
+        // an option with an action the engine does not know is left out whole, like a bad reference
+        if (actions.length !== raw.filter((x) => (x as GmAction)?.type !== 'offer_choice').length) continue;
         if (actions.some((x) => leafRefError(ctx, x))) continue;
-        options.push({ label: o.label, actions });
+        options.push({ label: String(o.label ?? ''), actions });
       }
       if (!options.length) return 'no valid options';
       // there is always a way out: a choice whose every option costs currency could otherwise
@@ -273,6 +334,31 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
       if (!options.some((o) => optionPrice(o.actions) === 0)) options.push({ label: DECLINE_LABEL, actions: [], tag: 'decline' });
       ctx.s.pendingChoice = { kind: 'gm_offer', prompt: a.prompt, options };
       log(ctx, a.prompt, 'gm');
+      return null;
+    }
+    case 'add_rule': {
+      const { rule, error } = ruleError(ctx, a.rule);
+      if (!rule) return error ?? 'malformed rule';
+      const refusal = addRuleRefusal(ctx, rule);
+      if (refusal) return refusal;
+      const reason = typeof a.reason === 'string' ? a.reason : '';
+      const entry = addActiveRule(ctx, rule, reason);
+      if (entry.reason) log(ctx, entry.reason, 'gm');
+      const harmful = estimateRuleImpact(ctx.world, rule).harmful;
+      log(ctx, `New rule: ${rule.name}${rule.description ? ` — ${rule.description}` : ''}`, harmful ? 'warning' : 'good');
+      emit(ctx, { type: 'rule_added', id: rule.id, name: rule.name, source: 'gm', ...(entry.reason ? { reason: entry.reason } : {}) });
+      return null;
+    }
+    case 'remove_rule': {
+      if (typeof a.id !== 'string') return 'malformed rule id';
+      const refusal = removeRuleRefusal(ctx, a.id);
+      if (refusal) return refusal;
+      const gone = removeActiveRule(ctx, a.id);
+      if (!gone) return `no rule "${a.id}" in force`;
+      const reason = typeof a.reason === 'string' ? a.reason.trim() : '';
+      if (reason) log(ctx, reason, 'gm');
+      log(ctx, `Rule lifted: ${gone.rule.name}`, 'info');
+      emit(ctx, { type: 'rule_removed', id: gone.rule.id, name: gone.rule.name, ...(reason ? { reason } : {}) });
       return null;
     }
   }

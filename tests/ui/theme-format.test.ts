@@ -7,6 +7,8 @@ import {
   barText,
   cooldownFraction,
   difficultyLabel,
+  toDifficulty,
+  DIFFICULTIES,
   itemGlyph,
   knowledgeLines,
   pct,
@@ -149,9 +151,14 @@ describe('format helpers', () => {
   });
 
   it('slider labels', () => {
-    expect(difficultyLabel(1)).toBe('Gentle');
-    expect(difficultyLabel(5)).toBe('Merciless');
-    expect(difficultyLabel(99)).toBe('Merciless');
+    expect(difficultyLabel(0)).toBe('Gentle');
+    expect(difficultyLabel('gentle')).toBe('Gentle');
+    expect(difficultyLabel(3)).toBe('Brutal');
+    expect(difficultyLabel(99)).toBe('Brutal');
+    expect(difficultyLabel('hard')).toBe('Hard');
+    expect(toDifficulty('nonsense')).toBe('normal');
+    expect(toDifficulty(1)).toBe('normal');
+    expect(DIFFICULTIES).toEqual(['gentle', 'normal', 'hard', 'brutal']);
     expect(weirdnessLabel(0)).toBe('Familiar');
     expect(weirdnessLabel(1)).toBe('Unhinged');
   });

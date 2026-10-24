@@ -4,7 +4,7 @@
  */
 import type { Vocabulary } from '../../schema/world';
 import type { ActorView, ItemView, LogMessage } from '../../engine/types';
-import type { CoreStatKey, RunStatsView, SlotItemView } from './viewmodel';
+import type { CoreStatKey, Difficulty, RunStatsView, SlotItemView, TradeView } from './viewmodel';
 import type { ProviderPreset } from '../../llm/types';
 
 export const UNKNOWN_ITEM_TEXT = 'Unknown — could be anything';
@@ -151,13 +151,37 @@ export function typewriterCount(text: string, elapsedMs: number, charsPerSecond:
 /** base typing speed scaled by settings.animationSpeed; reduce motion → instant */
 export function typewriterSpeed(animationSpeed: number, reduceMotion: boolean): number {
   if (reduceMotion) return Infinity;
-  return 55 * clamp(animationSpeed || 1, 0.25, 4);
+  return 90 * clamp(animationSpeed || 1, 0.25, 4);
 }
 
-export const DIFFICULTY_LABELS = ['Gentle', 'Fair', 'Tough', 'Brutal', 'Merciless'] as const;
+/** the four difficulty levels, easiest first (StartOptions.difficulty) */
+export const DIFFICULTIES: readonly Difficulty[] = ['gentle', 'normal', 'hard', 'brutal'];
 
-export function difficultyLabel(d: number): string {
-  return DIFFICULTY_LABELS[clamp(Math.round(d), 1, 5) - 1];
+const DIFFICULTY_TEXT: Record<Difficulty, { label: string; hint: string }> = {
+  gentle: { label: 'Gentle', hint: 'Forgiving. The GM may not add harsh rules without a counterweight.' },
+  normal: { label: 'Normal', hint: 'Fair but deadly. Permadeath, as intended.' },
+  hard: { label: 'Hard', hint: 'Tougher foes, sharper rules, fewer second chances.' },
+  brutal: { label: 'Brutal', hint: 'Everything bites. The GM is allowed to be cruel.' },
+};
+
+export function isDifficulty(v: unknown): v is Difficulty {
+  return typeof v === 'string' && (DIFFICULTIES as readonly string[]).includes(v);
+}
+
+/** label for a difficulty; numbers are slider positions (0..3, out of range clamps) */
+export function difficultyLabel(d: Difficulty | number): string {
+  return DIFFICULTY_TEXT[toDifficulty(d)].label;
+}
+
+export function difficultyHint(d: Difficulty | number): string {
+  return DIFFICULTY_TEXT[toDifficulty(d)].hint;
+}
+
+/** slider position (0..3) or name → Difficulty ('normal' for anything unreadable) */
+export function toDifficulty(d: unknown): Difficulty {
+  if (isDifficulty(d)) return d;
+  if (typeof d === 'number' && Number.isFinite(d)) return DIFFICULTIES[clamp(Math.round(d), 0, DIFFICULTIES.length - 1)];
+  return 'normal';
 }
 
 export function weirdnessLabel(w: number): string {
@@ -202,3 +226,73 @@ export function presetNotes(p: ProviderPreset | undefined, transport: 'direct' |
   return out;
 }
 
+
+// ---------------------------------------------------------------------------
+// Message log grouping
+// ---------------------------------------------------------------------------
+
+/** one displayed log row: a message and how often it repeated */
+export interface LogGroup {
+  msg: LogMessage;
+  count: number;
+  firstTurn: number;
+  lastTurn: number;
+}
+
+/** how many recent rows a repeat may fold into (periodic ticks interleave: heat, venom, heat…) */
+export const LOG_FOLD_ROWS = 4;
+/** a repeat folds into a row only while it keeps coming (at most this many turns apart) */
+export const LOG_FOLD_TURNS = 3;
+
+function sameLine(a: LogMessage, b: LogMessage): boolean {
+  return a.text === b.text && a.kind === b.kind && a.speaker === b.speaker;
+}
+
+/**
+ * Folds repeated lines: an identical line (text, kind, speaker) within the last few rows and turns
+ * becomes a counter on that row, which moves to the bottom ("takes 1 Heat. ×5"). GM narration and
+ * NPC speech are never folded. Ten turns of a damage-over-time status give one row.
+ */
+export function groupLog(log: readonly LogMessage[]): LogGroup[] {
+  const out: LogGroup[] = [];
+  for (const m of log) {
+    if (m.kind !== 'gm' && m.kind !== 'npc') {
+      let hit = -1;
+      for (let i = out.length - 1; i >= Math.max(0, out.length - LOG_FOLD_ROWS); i--) {
+        const g = out[i];
+        if (sameLine(g.msg, m) && m.turn - g.lastTurn <= LOG_FOLD_TURNS) {
+          hit = i;
+          break;
+        }
+      }
+      if (hit >= 0) {
+        const [g] = out.splice(hit, 1);
+        g.count++;
+        g.lastTurn = m.turn;
+        out.push(g);
+        continue;
+      }
+    }
+    out.push({ msg: m, count: 1, firstTurn: m.turn, lastTurn: m.turn });
+  }
+  return out;
+}
+
+/**
+ * Names untyped harm in engine log lines with the world's word for health: "snips at Ines for 5."
+ * → "snips at Ines for 5 Integrity.", "takes 1." → "takes 1 Integrity.".
+ */
+export function displayLogText(text: string, vocab: Pick<Vocabulary, 'stats'>): string {
+  const hp = vocab.stats.hp.name;
+  return text.replace(/\b(for|takes|loses) (\d+)([.!])$/u, (_m, verb: string, n: string, end: string) => `${verb} ${n} ${hp}${end}`);
+}
+
+/**
+ * Which columns the trade window shows. The Sell column only appears when the trader actually
+ * buys something: a permanent "Nothing they want" column was dead UI, because no trader buys
+ * anything yet (issues/M2-sell-column-dead-ui.md). The Buy column is always shown so an empty shop
+ * still says "Nothing for sale."
+ */
+export function tradeColumns(t: Pick<TradeView, 'sellable'>): { buy: true; sell: boolean } {
+  return { buy: true, sell: t.sellable.length > 0 };
+}

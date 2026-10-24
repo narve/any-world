@@ -9,6 +9,7 @@
  *   Backpack:      i  or  Tab
  *   Look mode:     x            Wait: .  or  Space  (numpad 5)
  *   Transition:    >            Talk: t          Persuade: p (if enabled)
+ *   Use next to you: Enter (consoles, pods, wells… also: walk into it or click it)
  *   Search:        f  (s is WASD south, so search lives on f; only if enabled)
  *   Sneak:         c  (only if enabled)
  *   Camera:        q / e rotate · + / - zoom
@@ -17,6 +18,7 @@
  *             u use · e equip/unequip · q to quick slot · b to backpack · m move (then Enter to place) ·
  *             Del/Backspace drop · Esc / i / Tab close
  *  Dialogue / choices / perk cards: 1-3 pick · ↑↓ focus · Enter confirm · Esc leave (dialogue only)
+ *  Dialogue only: p persuade (if enabled) · t trade (trader NPCs)
  */
 import type { Dir } from '../../engine/types';
 import type { Vocabulary } from '../../schema/world';
@@ -68,8 +70,10 @@ export type UiCommand =
   | { type: 'transition' }
   | { type: 'talk' }
   | { type: 'persuade' }
+  | { type: 'trade' }
   | { type: 'search' }
   | { type: 'sneak' }
+  | { type: 'interact' }
   | { type: 'rotate'; dir: -1 | 1 }
   | { type: 'zoom'; delta: -1 | 1 }
   | { type: 'help' }
@@ -141,6 +145,7 @@ function gameKey(ev: KeyLike, verbs: InputVerbs): UiCommand | null {
   if (di !== null) return di < 8 ? { type: 'slot', index: di } : null;
   const dir = directionOf(ev, 'full');
   if (dir) return { type: 'move', dir };
+  if (ev.key === 'Enter' || ev.code === 'NumpadEnter') return { type: 'interact' };
   switch (ev.key) {
     case '>':
       return { type: 'transition' };
@@ -260,6 +265,13 @@ export function resolveKey(ev: KeyLike, layer: InputLayer, verbs: InputVerbs): U
       if (ev.key === 'Enter') return { type: 'confirm' };
       if (ARROWS[ev.key]) return { type: 'nav', dir: ARROWS[ev.key] };
       if (isHelp(ev)) return { type: 'help' };
+      // the conversation footer's buttons (issues/M2-dialogue-persuade-key.md): the panel ignores
+      // them when the button is not shown (no trader, persuasion off, NPC still answering)
+      if (layer === 'dialogue' && !ev.shiftKey) {
+        const k = lower(ev.key);
+        if (k === 'p' && verbs.persuade) return { type: 'persuade' };
+        if (k === 't') return { type: 'trade' };
+      }
       return null;
     }
   }
@@ -284,6 +296,7 @@ export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, 
       { keys: ['1 – 8'], what: 'Use quick slot' },
       { keys: ['g', ','], what: 'Pick up' },
       { keys: ['>'], what: transitionName },
+      { keys: ['Enter'], what: 'Use something next to you' },
       { keys: ['x'], what: 'Look around (inspect)' },
     ],
   };
@@ -321,7 +334,8 @@ export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, 
       title: 'Mouse',
       rows: [
         { keys: ['Click tile'], what: 'Travel there / pick target' },
-        { keys: ['Hover'], what: 'Inspect' },
+        { keys: ['Click next to you'], what: 'Use it / act on who stands there' },
+        { keys: ['Hover'], what: 'Inspect · shows the route a click takes' },
         { keys: ['Right-click slot'], what: 'Item actions' },
       ],
     },

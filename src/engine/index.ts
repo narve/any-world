@@ -30,7 +30,7 @@ import { enterArea } from './area';
 import { updateFov } from './vision';
 import { doPlayerAction } from './actions';
 import { ACT_COST, checkEnd, runWorld } from './turn';
-import { applyGmList, checkQuests } from './gm';
+import { applyGmList, checkQuests, gmSkip } from './gm';
 import { computeLegalActions } from './legal';
 import { findItemInstance, viewActor, viewItem } from './describe';
 import { fireItemTriggers } from './triggers';
@@ -39,6 +39,8 @@ import { passable } from './ctx';
 import { energyGain, getStat, maxHp, maxMp, sightRadius } from './stats';
 import { xpToNext } from './progression';
 import { transitionFailure } from './area';
+import { isDifficulty } from './difficulty';
+import { initialActiveRules } from './rules';
 
 export interface EngineEnv {
   /** the world spec (defaults to the registered one for state.worldId) */
@@ -113,7 +115,7 @@ export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
       perks: [],
       pendingPerkChoice: null,
       resources: Object.fromEntries((world.resources ?? []).map((r) => [r.id, Math.min(r.start, r.max)])),
-      currency: 0,
+      currency: world.player.startCurrency ?? 0,
       sneaking: false,
     },
     knowledge: initKnowledge(world, rng),
@@ -126,6 +128,8 @@ export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
     nextId: 2,
     stats: { kills: 0, itemsUsed: 0, damageDealt: 0, damageTaken: 0, areasCleared: 0 },
     uniquesSpawned: [],
+    difficulty: isDifficulty(opts.difficulty) ? opts.difficulty : 'normal',
+    activeRules: initialActiveRules(world),
   };
   const ctx: Ctx = { world, ix: indexWorld(world), s, rng, events: [], mapGen: opts.mapGenerator ?? generateArea, depth: 0 };
   // starting items
@@ -189,7 +193,10 @@ export function step(state: GameState, action: PlayerAction, env?: EngineEnv): S
   return finish(ctx, r.tookTurn);
 }
 
-/** applies GM actions within the area's GM budget; invalid references are skipped with a log line */
+/**
+ * applies GM actions within the area's GM budget; refused ones (over budget, invalid references,
+ * rule limits) become `gm_skipped` events and StepResult.gmSkipped, never player log lines
+ */
 export function applyGmActions(state: GameState, actions: GmAction[], env?: EngineEnv): StepResult {
   const world = worldFor(state, env);
   if (state.status !== 'playing') return { state, events: [], tookTurn: false };
@@ -199,11 +206,13 @@ export function applyGmActions(state: GameState, actions: GmAction[], env?: Engi
     try {
       applyGmList(ctx, [a], { charge: true });
     } catch {
-      log(ctx, `GM action skipped: malformed ${String((a as { type?: unknown })?.type ?? '')}`, 'system');
+      gmSkip(ctx, String((a as { type?: unknown })?.type ?? 'action'), 'malformed');
     }
   }
   checkQuests(ctx);
-  return finish(ctx, false);
+  const r = finish(ctx, false);
+  r.gmSkipped = r.events.filter((e): e is Extract<GameEvent, { type: 'gm_skipped' }> => e.type === 'gm_skipped').map((e) => ({ action: e.action, reason: e.reason }));
+  return r;
 }
 
 export function legalActions(state: GameState, env?: EngineEnv): PlayerAction[] {
@@ -305,6 +314,8 @@ export function describeItemDef(state: GameState, defId: string, env?: EngineEnv
 }
 
 export { serialize, deserialize } from './serialize';
+export { DIFFICULTIES, DIFFICULTY_PROFILES, difficultyOf, isDifficulty, type DifficultyProfile } from './difficulty';
+export { estimateRuleImpact, activeRuleEntries, type RuleImpact } from './rules';
 export { registerWorld, getWorld, worldIdOf } from './registry';
 export { createRng, rngFromState, SeededRng } from './rng';
 export { computeFov, hasLos } from './fov';

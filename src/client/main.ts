@@ -4,12 +4,12 @@
  * (demo links, e2e tests) or resumes its autosaved run; `?continue=1` resumes the autosaved run.
  * The address bar always names the run on screen (see boot.ts), so a reload continues it.
  */
-import { createUi, type GameUi, type Settings, type StartView, type UiCallbacks, type UiViewModel, type InspirationPrompt, type DemoWorldView, type SettingsView } from './ui/index';
+import { createUi, type GameUi, type Settings, type StartView, type UiCallbacks, type UiViewModel, type InspirationPrompt, type DemoWorldView, type SettingsView, type StartOptions, type Difficulty } from './ui/index';
 import { DEFAULT_PALETTE, DEFAULT_VOCABULARY } from './ui/index';
 import { Renderer } from './render/index';
 import { listPresets } from '../llm/presets';
 import { bundledWorlds, findWorld, type WorldEntry } from './worlds';
-import { clearRun, loadRun, loadSettings, saveSettings } from './storage';
+import { clearRun, hintsSeen, loadRun, loadSettings, saveSettings } from './storage';
 import { GameSession } from './session';
 import { GameController } from './game-controller';
 import { bootRoute, runUrl } from './boot';
@@ -39,6 +39,8 @@ export class App {
   private settingsOpen = false;
   private screen: 'start' | 'game' = 'start';
   private startError: string | null = null;
+  /** the start screen's last difficulty/weirdness (used for demo runs and "same world again") */
+  private runOptions: { difficulty: Difficulty; weirdness: number } = { difficulty: 'normal', weirdness: 0.4 };
 
   constructor(
     private uiRoot: HTMLElement,
@@ -90,6 +92,7 @@ export class App {
       // start screen offers the recorded worlds
       canGenerate: false,
       providerLabel: null,
+      defaults: { difficulty: this.runOptions.difficulty, weirdness: this.runOptions.weirdness },
     };
   }
 
@@ -138,7 +141,8 @@ export class App {
     document.body.dataset.ready = '1';
   }
 
-  async playWorld(id: string, seed = randomSeed()): Promise<boolean> {
+  async playWorld(id: string, seed = randomSeed(), opts?: Pick<StartOptions, 'difficulty' | 'weirdness'>): Promise<boolean> {
+    if (opts) this.runOptions = { difficulty: opts.difficulty, weirdness: opts.weirdness };
     const entry = findWorld(id);
     if (!entry) {
       this.showStart(`No recorded world called "${id}".`);
@@ -150,7 +154,15 @@ export class App {
   }
 
   private newSession(entry: WorldEntry, seed: number): GameSession {
-    return new GameSession({ world: entry.world, worldId: entry.id, seed, prefs: this.prefs() });
+    return new GameSession({
+      world: entry.world,
+      worldId: entry.id,
+      seed,
+      prefs: this.prefs(),
+      difficulty: this.runOptions.difficulty,
+      weirdness: this.runOptions.weirdness,
+      hints: !hintsSeen(),
+    });
   }
 
   async continueRun(): Promise<boolean> {
@@ -163,7 +175,19 @@ export class App {
     }
     let session: GameSession;
     try {
-      session = new GameSession({ world: entry.world, worldId: entry.id, seed: 0, saved: run.state, gmLog: run.gmLog, prefs: this.prefs() });
+      session = new GameSession({
+        world: entry.world,
+        worldId: entry.id,
+        seed: 0,
+        saved: run.state,
+        gmLog: run.gmLog,
+        prefs: this.prefs(),
+        ...(run.difficulty ? { difficulty: run.difficulty } : {}),
+        ...(run.weirdness !== undefined ? { weirdness: run.weirdness } : {}),
+        ...(run.rules ? { rules: run.rules } : {}),
+        ...(run.hooks ? { hooks: run.hooks } : {}),
+      });
+      this.runOptions = { difficulty: session.difficulty, weirdness: session.weirdness };
     } catch (e) {
       console.warn('[anyworld] saved run is unreadable:', e);
       clearRun();
@@ -198,7 +222,7 @@ export class App {
       onDialogueLeave: () => ctl()?.onDialogueLeave(),
       onTrade: (t) => ctl()?.onTrade(t),
       onDismissNarration: (id) => ctl()?.onDismissNarration(id),
-      onPlayDemo: (id) => void this.playWorld(id),
+      onPlayDemo: (id, opts) => void this.playWorld(id, undefined, opts),
       onContinue: () => void this.continueRun(),
       onStart: () => {
         // canGenerate is false, so the UI opens settings instead of calling this; keep a safe

@@ -3,10 +3,13 @@
  * in try/catch — storage can be missing, full or blocked, and the game must still run.
  */
 import type { LogMessage } from '../engine/types';
-import type { Settings } from './ui/viewmodel';
+import type { Difficulty, Settings } from './ui/viewmodel';
+import type { RuleMemo } from './rules';
+import type { HookTracker } from './gm-director';
 
 const SAVE_KEY = 'anyworld.save.v1';
 const SETTINGS_KEY = 'anyworld.settings.v1';
+const HINTS_KEY = 'anyworld.hints-seen.v1';
 
 export interface SavedRun {
   v: 1;
@@ -23,6 +26,13 @@ export interface SavedRun {
   /** controller-side GM narration lines */
   gmLog: LogMessage[];
   savedAt: number;
+  /** the run's start options (M2; older saves have none) */
+  difficulty?: Difficulty;
+  weirdness?: number;
+  /** what the client remembers about active rules (since-when, GM reasons) */
+  rules?: RuleMemo[];
+  /** GM hook timers */
+  hooks?: HookTracker;
 }
 
 function store(): Storage | null {
@@ -41,6 +51,9 @@ export function loadRun(): SavedRun | null {
     if (!v || v.v !== 1 || typeof v.state !== 'string' || typeof v.worldId !== 'string') return null;
     if (!Array.isArray(v.gmLog)) v.gmLog = [];
     if (v.seed !== undefined && typeof v.seed !== 'number') delete v.seed;
+    if (v.rules !== undefined && !Array.isArray(v.rules)) delete v.rules;
+    if (v.hooks !== undefined && (typeof v.hooks !== 'object' || v.hooks === null || typeof v.hooks.lastHookTurn !== 'number')) delete v.hooks;
+    if (v.weirdness !== undefined && typeof v.weirdness !== 'number') delete v.weirdness;
     return v;
   } catch {
     return null;
@@ -93,6 +106,23 @@ export function loadSettings(transport: 'direct' | 'backend'): Settings {
 export function saveSettings(s: Settings): void {
   try {
     store()?.setItem(SETTINGS_KEY, JSON.stringify(s));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** the first-run hint card has been seen (shown once per browser) */
+export function hintsSeen(): boolean {
+  try {
+    return store()?.getItem(HINTS_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markHintsSeen(): void {
+  try {
+    store()?.setItem(HINTS_KEY, '1');
   } catch {
     /* ignore */
   }

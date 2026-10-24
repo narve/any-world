@@ -51,7 +51,7 @@ export class NarrationCard {
     this.current = n;
     this.el.hidden = false;
     this.el.dataset.kind = n.kind;
-    this.kindEl.textContent = n.kind === 'intro' ? 'Prologue' : n.kind === 'area_enter' ? 'Arrival' : n.kind === 'epitaph' ? 'Epitaph' : '';
+    this.kindEl.textContent = n.kind === 'intro' ? 'Prologue' : n.kind === 'area_enter' ? 'Arrival' : n.kind === 'epitaph' ? 'Epitaph' : n.kind === 'event' ? 'Meanwhile' : '';
     this.titleEl.textContent = n.title ?? '';
     this.titleEl.hidden = !n.title;
     this.speakerEl.textContent = n.speaker ? `— ${n.speaker}` : '';
@@ -73,6 +73,8 @@ export class NarrationCard {
     this.textEl.textContent = '';
     this.textEl.append(text.slice(0, n), h('span', { class: 'aw-narr-rest', 'aria-hidden': 'true' }, text.slice(n)));
     this.btn.textContent = n < text.length ? 'Skip' : 'Continue';
+    // no scrollbar flicker while the text types out (the full text is laid out from the start)
+    this.el.classList.toggle('is-typing', n < text.length);
     if (n < text.length) this.raf = requestAnimationFrame(this.tick);
   };
 

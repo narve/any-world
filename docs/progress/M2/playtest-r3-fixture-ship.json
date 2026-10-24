@@ -1,0 +1,36 @@
+{
+  "world": "fixture-ship",
+  "seed": 11,
+  "steps": 763,
+  "result": "won Reach the bridge, shut down MATRON's Proxy and take the Arrival Log, so the crew can finally vote on landfall.",
+  "turn": 952,
+  "area": 2,
+  "level": 5,
+  "keyMismatch": [],
+  "refused": [
+    "step 752 {\"type\":\"use\",\"slot\":1,\"target\":{\"x\":4,\"y\":12}} log=[\"MATRON's Proxy takes 13 Ion.\"]"
+  ],
+  "layers": {
+    "narration": 8,
+    "game": 996,
+    "dialogue": 5,
+    "levelup": 4,
+    "end": 1
+  },
+  "actions": {
+    "talk": 5,
+    "move": 756,
+    "interact": 7,
+    "use": 49,
+    "pickup": 33,
+    "attack": 32,
+    "wait": 111,
+    "transition": 2,
+    "equip": 1
+  },
+  "errors": [],
+  "notes": [
+    "reload ok at turn 241 (layer after reload: game)"
+  ],
+  "stuckAt": []
+}

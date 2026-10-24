@@ -7,6 +7,10 @@ import { parseWorld } from '../../schema/refs';
 import type { WorldSpec, AreaPlan } from '../../schema/world';
 import type { AreaMap, AreaState, GameState, ActorInstance, FloorItem, ItemKnowledgeState, Pos, Rng, Tile } from '../../engine/types';
 import { TOTAL_SLOTS } from '../../engine/types';
+import { abstractMap, syntheticDreamWorld } from './abstract';
+
+/** name of the dev-only synthetic dream world (used for fixture-dream until that file exists) */
+export const SYNTHETIC_DREAM = 'synthetic-dream';
 
 const raw = import.meta.glob('../../../content/worlds/*.json', { eager: true, import: 'default' }) as Record<string, unknown>;
 
@@ -16,8 +20,12 @@ export function worldNames(): string[] {
     .sort();
 }
 
-export function loadWorld(name: string | null): { name: string; world: WorldSpec } {
+export function loadWorld(name: string | null): { name: string; world: WorldSpec; synthetic?: boolean } {
   const names = worldNames();
+  if (name === SYNTHETIC_DREAM || (name === 'fixture-dream' && !names.includes(name))) {
+    const base = loadWorld(names.find((n) => n.startsWith('fixture-')) ?? names[0]);
+    return { name: SYNTHETIC_DREAM, world: syntheticDreamWorld(base.world), synthetic: true };
+  }
   const pick = name && names.includes(name) ? name : names.find((n) => n.startsWith('fixture-')) ?? names[0];
   const key = Object.keys(raw).find((p) => p.endsWith(`/${pick}.json`))!;
   const res = parseWorld(raw[key]);
@@ -195,20 +203,25 @@ export async function buildDemoState(world: WorldSpec, opts: DemoOptions): Promi
   const plan = world.areas[Math.min(opts.areaIndex, world.areas.length - 1)];
   const rng = devRng(opts.seed * 7919 + opts.areaIndex);
   let map: AreaMap;
-  let usedMapgen = false;
+  let usedMapgen = true;
   let error: string | undefined;
   try {
     const mg = await import('../../engine/mapgen');
-    map = mg.generateArea(plan, world, mg.seededRng ? mg.seededRng(opts.seed + opts.areaIndex * 101) : rng);
+    // layouts mapgen does not know yet get a dev stand-in (see abstract.ts)
+    const known = (mg.GENERATOR_NAMES as readonly string[] | undefined)?.includes(plan.generator) ?? true;
+    const local = known ? null : abstractMap(plan.generator, plan, rng);
+    map = local ?? mg.generateArea(plan, world, mg.seededRng ? mg.seededRng(opts.seed + opts.areaIndex * 101) : rng);
+    if (local) error = `mapgen has no '${plan.generator}' generator yet: dev stand-in layout`;
+    usedMapgen = !local;
     try {
       mg.applyAreaTerrain?.(map, plan, world, rng);
     } catch {
       /* terrain placement optional */
     }
-    usedMapgen = true;
   } catch (e) {
     error = String((e as Error)?.message ?? e);
-    map = localTestMap(plan, world, rng);
+    usedMapgen = false;
+    map = abstractMap(plan.generator, plan, rng) ?? localTestMap(plan, world, rng);
   }
 
   const W = map.width;

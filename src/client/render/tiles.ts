@@ -8,20 +8,49 @@ import type { WorldSpec, AreaPlan, TerrainDef } from '../../schema/world';
 import type { AreaMap, AreaState, TileKind } from '../../engine/types';
 import { getMaterial, setDimmed } from './materials';
 import { patternTexture, glowTexture } from './textures';
-import { col, shade, mixHex, hash2 } from './color';
+import { col, shade, mixHex, hash2, luminance } from './color';
 import { buildModel, animateModel } from './models';
 import { prim } from './models/geom';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { mergeModel } from './models/merge';
+import { towardCamera } from './coords';
+import type { Pos } from '../../engine/types';
+import {
+  STUB_HEIGHT,
+  wallStyleFor,
+  renderedWallHeight,
+  wallProfile,
+  boxWallGeometry,
+  blobWallGeometry,
+  edgeBarGeometry,
+  undersideGeometry,
+  skirtGeometry,
+  floatsOverVoid,
+  isLiquidTerrain,
+  rippleNormalTexture,
+  PatchLayer,
+  type WallStyle,
+  type PatchTile,
+} from './surfaces';
 
-const ORGANIC_GENERATORS = new Set(['caves', 'open']);
 export const FLOOR_KINDS: ReadonlySet<TileKind> = new Set(['floor', 'start', 'door', 'door_open', 'transition']);
-const LOWERED_HEIGHT = 0.14;
 
 /** visibility per tile: 0 unseen, 1 remembered, 2 visible */
 export type SeenArray = ArrayLike<number>;
 
 const REMEMBER = new THREE.Color(0.36, 0.38, 0.48);
+/** liquid terrain surface: matte (no glints) and see-through, like a 'water' floor */
+export const LIQUID_TERRAIN_ROUGHNESS = 0.55;
+export const LIQUID_TERRAIN_OPACITY = 0.72;
+/**
+ * Remembered (out of sight) walls: a darker, neutral body, so they never read as flat blue slabs
+ * of the REMEMBER tint, while their top-edge outline stays close to full brightness (and glows a
+ * little, see WALL_EDGE_GLOW) so corridors keep a crisp shape in the dark.
+ */
+export const REMEMBER_WALL = new THREE.Color(0.27, 0.28, 0.32);
+export const REMEMBER_EDGE = new THREE.Color(0.8, 0.82, 0.9);
+/** emissive share of the wall-edge outline colour (unlit, so it survives a dark backdrop) */
+export const WALL_EDGE_GLOW = 0.35;
 const UP = new THREE.Vector3(0, 1, 0);
 
 interface InstEntry {
@@ -57,8 +86,16 @@ class InstLayer {
   private readonly baseSy: Float32Array;
   private readonly rotY: Float32Array;
   private readonly sxz: Float32Array;
+  /** height profile factor (eased towards profT) */
+  private readonly prof: Float32Array;
+  private readonly profT: Float32Array;
+  private readonly moving = new Set<number>();
 
-  constructor(geo: THREE.BufferGeometry, mat: THREE.Material | THREE.Material[], entries: InstEntry[], name: string) {
+  /** tint multiplied into remembered (seen = 1) instances */
+  private readonly remember: THREE.Color;
+
+  constructor(geo: THREE.BufferGeometry, mat: THREE.Material | THREE.Material[], entries: InstEntry[], name: string, remember: THREE.Color = REMEMBER) {
+    this.remember = remember;
     const n = Math.max(1, entries.length);
     this.mesh = new THREE.InstancedMesh(geo, mat, n);
     this.mesh.name = name;
@@ -72,6 +109,8 @@ class InstLayer {
     this.rotY = new Float32Array(n);
     this.sxz = new Float32Array(n).fill(1);
     this.state = new Uint8Array(n).fill(255);
+    this.prof = new Float32Array(n).fill(1);
+    this.profT = new Float32Array(n).fill(1);
     entries.forEach((e, i) => {
       this.of.set(e.tile, i);
       this.baseSy[i] = e.sy ?? 1;
@@ -92,7 +131,7 @@ class InstLayer {
       this.mesh.setMatrixAt(i, ZERO);
     } else {
       this.v.set(this.pos[i * 3], this.pos[i * 3 + 1], this.pos[i * 3 + 2]);
-      this.s.set(this.sxz[i], this.sy[i] >= 0 ? this.sy[i] : this.baseSy[i], this.sxz[i]);
+      this.s.set(this.sxz[i], this.sy[i] >= 0 ? this.sy[i] : this.baseSy[i] * this.prof[i], this.sxz[i]);
       this.q.setFromAxisAngle(UP, this.rotY[i]);
       this.m.compose(this.v, this.q, this.s);
       this.mesh.setMatrixAt(i, this.m);
@@ -111,8 +150,7 @@ class InstLayer {
 
   private writeColor(i: number): void {
     this.c.setRGB(this.base[i * 3], this.base[i * 3 + 1], this.base[i * 3 + 2]);
-    if (this.state[i] === 1) this.c.multiply(REMEMBER);
-    if (this.sy[i] >= 0) this.c.multiplyScalar(0.55); // lowered (cut-away) stubs read as cut, not as floor
+    if (this.state[i] === 1) this.c.multiply(this.remember);
     this.mesh.setColorAt(i, this.c);
     if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
   }
@@ -133,7 +171,49 @@ class InstLayer {
 
   scaleY(tile: number): number {
     const i = this.of.get(tile);
-    return i === undefined ? 1 : this.sy[i] >= 0 ? this.sy[i] : this.baseSy[i];
+    return i === undefined ? 1 : this.sy[i] >= 0 ? this.sy[i] : this.baseSy[i] * this.prof[i];
+  }
+
+  /** height profile target for an instance (eased in tick); `snap` applies it at once */
+  setProfile(tile: number, f: number, snap = false): void {
+    const i = this.of.get(tile);
+    if (i === undefined) return;
+    this.profT[i] = f;
+    if (snap) {
+      this.prof[i] = f;
+      this.moving.delete(i);
+      if (this.sy[i] < 0) this.write(i);
+    } else if (this.prof[i] !== f) this.moving.add(i);
+  }
+
+  profile(tile: number): number {
+    const i = this.of.get(tile);
+    return i === undefined ? 1 : this.prof[i];
+  }
+
+  /** ease running height profiles; returns true while any is still moving */
+  tick(dt: number): boolean {
+    if (!this.moving.size) return false;
+    const k = 1 - Math.exp(-dt * 8);
+    for (const i of this.moving) {
+      const t = this.profT[i];
+      let p = this.prof[i] + (t - this.prof[i]) * k;
+      if (Math.abs(t - p) < 0.004) {
+        p = t;
+        this.moving.delete(i);
+      }
+      this.prof[i] = p;
+      if (this.sy[i] < 0) this.write(i);
+    }
+    return true;
+  }
+
+  /** set every instance's colour (base) at once, e.g. per-tile tints */
+  setBaseColor(tile: number, c: THREE.Color): void {
+    const i = this.of.get(tile);
+    if (i === undefined) return;
+    this.base.set([c.r, c.g, c.b], i * 3);
+    if (this.state[i] !== 255) this.writeColor(i);
   }
 
   dispose(): void {
@@ -164,15 +244,11 @@ export interface LampView {
 }
 
 /**
- * Generic terrain shape when a TerrainDef has no model: flat patch (h < 0.06), a clump of rounded
- * lumps for low walkable terrain, or a chamfered block for tall / blocking terrain.
+ * Generic terrain shape when a TerrainDef has no model and stands up from the floor (h ≥ 0.06; flat
+ * terrain is a soft PatchLayer): a clump of rounded lumps for low walkable terrain, or a chamfered
+ * block for tall / blocking terrain.
  */
 function genericTerrainGeometry(h: number, walkable: boolean): THREE.BufferGeometry {
-  if (h < 0.06) {
-    const g = new THREE.BoxGeometry(0.9, Math.max(0.02, h), 0.9);
-    g.translate(0, Math.max(0.02, h) / 2 + 0.004, 0);
-    return g;
-  }
   if (walkable && h < 0.8) {
     const lumps: [number, number, number, number][] = [
       [0, 0, 0, 0.42],
@@ -198,6 +274,14 @@ function genericTerrainGeometry(h: number, walkable: boolean): THREE.BufferGeome
   for (let i = 0; i < pos.count; i++) if (pos.getY(i) > 0) pos.setXYZ(i, pos.getX(i) * 0.86, pos.getY(i), pos.getZ(i) * 0.86);
   g.computeVertexNormals();
   g.translate(0, h / 2, 0);
+  // darker towards the floor, lit top: a block reads as a solid object, never as a pit
+  const n = g.getAttribute('normal') as THREE.BufferAttribute;
+  const c = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const v = n.getY(i) > 0.5 ? 1.35 : 0.65 + 0.35 * (pos.getY(i) / h);
+    c.set([v, v, v], i * 3);
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3));
   return g;
 }
 
@@ -209,7 +293,11 @@ export class AreaView {
   readonly group = new THREE.Group();
   readonly width: number;
   readonly height: number;
+  /** rendered wall height (plan.wall.height clamped to MAX_WALL_HEIGHT) */
   readonly wallHeight: number;
+  /** the plan's own wall height (before clamping) */
+  readonly planWallHeight: number;
+  readonly wallStyle: WallStyle;
   readonly plan: AreaPlan;
   readonly world: WorldSpec;
   lamps: LampView[] = [];
@@ -219,10 +307,15 @@ export class AreaView {
   exitPos: THREE.Vector3 | null = null;
 
   private floor: InstLayer | null = null;
-  private water: InstLayer | null = null;
+  private water: PatchLayer | null = null;
+  private waterBed: InstLayer | null = null;
   private walls: InstLayer | null = null;
+  /** walls plus everything that follows their height (outline bars) */
+  private wallLayers: InstLayer[] = [];
+  private underside: InstLayer | null = null;
   private ghost: InstLayer | null = null;
   private terrainLayers: InstLayer[] = [];
+  private patchLayers: PatchLayer[] = [];
   private terrainGroup = new THREE.Group();
   private terrainModels = new Map<number, THREE.Object3D>();
   private tallTerrain = new Set<number>();
@@ -234,7 +327,12 @@ export class AreaView {
   private keys: string[];
   private terrainDefs = new Map<string, TerrainDef>();
   private exitIdx = -1;
-  private waterTex: THREE.Texture | null = null;
+  /** animated normal maps of liquid surfaces */
+  private ripples = new Set<THREE.Texture>();
+  private ownedMats: THREE.Material[] = [];
+  private focusKey = '';
+  /** freeze cosmetic animation (ripples) */
+  reduceMotion = false;
 
   constructor(world: WorldSpec, plan: AreaPlan, area: AreaState) {
     this.world = world;
@@ -242,7 +340,9 @@ export class AreaView {
     const map = area.map;
     this.width = map.width;
     this.height = map.height;
-    this.wallHeight = plan.wall?.height ?? 1.4;
+    this.planWallHeight = plan.wall?.height ?? 1.4;
+    this.wallHeight = renderedWallHeight(plan.wall?.height);
+    this.wallStyle = wallStyleFor(plan.generator);
     this.group.name = 'area';
     this.seen = new Uint8Array(map.width * map.height).fill(255);
     this.keys = map.tiles.map(tileKey);
@@ -269,36 +369,108 @@ export class AreaView {
     return map.tiles[this.idx(x, y)].kind;
   }
 
+  private own<T extends THREE.Material>(m: T): T {
+    m.userData.cached = false;
+    m.userData.owned = true;
+    this.ownedMats.push(m);
+    return m;
+  }
+
+  /** a cached material copied so it can take vertex colours */
+  private vcMat(kind: string | undefined, color: string, map: THREE.Texture | null): THREE.MeshStandardMaterial {
+    const m = getMaterial(kind, map ? '#ffffff' : color, { map }).clone();
+    m.vertexColors = true;
+    return this.own(m);
+  }
+
+  /** chebyshev distance (≤ 4) from every tile to the nearest void tile or the map edge beyond void; 99 = far */
+  private voidDistance(map: AreaMap): Uint8Array {
+    const W = map.width;
+    const H = map.height;
+    const d = new Uint8Array(W * H).fill(99);
+    const q: number[] = [];
+    for (let i = 0; i < W * H; i++)
+      if (map.tiles[i].kind === 'void') {
+        d[i] = 0;
+        q.push(i);
+      }
+    for (let h = 0; h < q.length; h++) {
+      const i = q[h];
+      if (d[i] >= 4) continue;
+      const x = i % W;
+      const y = Math.floor(i / W);
+      for (let oy = -1; oy <= 1; oy++)
+        for (let ox = -1; ox <= 1; ox++) {
+          const nx = x + ox;
+          const ny = y + oy;
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+          const j = ny * W + nx;
+          if (d[j] <= d[i] + 1) continue;
+          d[j] = d[i] + 1;
+          q.push(j);
+        }
+    }
+    return d;
+  }
+
   private buildFloorsAndWalls(map: AreaMap): void {
     const plan = this.plan;
     const fl = plan.floor;
     const wl = plan.wall;
     const H = this.wallHeight;
+    const style = this.wallStyle;
+    const W = map.width;
 
     // --- floors ---
-    const floorTex = patternTexture(fl.pattern ?? 'plain', fl.color, fl.color2, 11);
-    const floorTop = getMaterial(fl.material === 'glow' ? 'matte' : fl.material, floorTex ? '#ffffff' : fl.color, { map: floorTex });
+    const gradient = fl.pattern === 'gradient';
+    const floorTex = gradient ? null : patternTexture(fl.pattern ?? 'plain', fl.color, fl.color2, 11);
+    const floorTop = getMaterial(fl.material === 'glow' ? 'matte' : fl.material, floorTex || gradient ? '#ffffff' : fl.color, {
+      map: floorTex,
+      emissive: fl.material === 'glow' ? shade(fl.color, 0.6) : undefined,
+      emissiveIntensity: fl.material === 'glow' ? 0.35 : undefined,
+    });
     const floorSide = getMaterial('stone', shade(fl.color, 0.55));
     const floorGeo = new THREE.BoxGeometry(1, 0.2, 1);
     floorGeo.translate(0, -0.1, 0);
     const floorEntries: InstEntry[] = [];
-    const waterEntries: InstEntry[] = [];
+    const bedEntries: InstEntry[] = [];
+    const waterTiles: PatchTile[] = [];
     const wallEntries: InstEntry[] = [];
-    const organic = ORGANIC_GENERATORS.has(plan.generator);
+    const edgeEntries: InstEntry[][] = [[], [], [], []];
+    const underEntries: InstEntry[] = [];
+    const voidD = this.voidDistance(map);
+    const floating = floatsOverVoid(plan.generator);
+    const fc1 = col(fl.color);
+    const fc2 = col(fl.color2 ?? shade(fl.color, 0.75));
+    const wc1 = col(wl.color);
+    const wc2 = col(wl.color2 ?? shade(wl.color, 0.8));
+    const isWall = (x: number, y: number) => this.kindAt(map, x, y) === 'wall';
+    // low-frequency blotches for organic colour variation
+    const blotch = (x: number, y: number) => 0.5 + 0.25 * Math.sin(x * 0.55 + Math.sin(y * 0.4) * 1.7) + 0.25 * Math.sin(y * 0.47 - x * 0.21 + 1.1);
+    const tint = (x: number, y: number): THREE.Color => {
+      if (gradient) {
+        const t = Math.max(0, Math.min(1, (x / Math.max(1, W - 1)) * 0.55 + (y / Math.max(1, map.height - 1)) * 0.45 + (blotch(x, y) - 0.5) * 0.25));
+        return fc1.clone().lerp(fc2, t);
+      }
+      return new THREE.Color(1, 1, 1);
+    };
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
         const i = this.idx(x, y);
         const t = map.tiles[i];
+        const vd = voidD[i];
         if (FLOOR_KINDS.has(t.kind)) {
           let j = 0.93 + hash2(x, y) * 0.12;
+          if (style === 'blob') j *= 0.86 + blotch(x, y) * 0.26;
           // soft contact shadow next to walls
           let nearWall = 0;
-          for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (this.kindAt(map, x + ox, y + oy) === 'wall') nearWall++;
+          for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (isWall(x + ox, y + oy)) nearWall++;
           j *= 1 - Math.min(2, nearWall) * 0.07;
-          floorEntries.push({ tile: i, x, y: 0, z: y, color: new THREE.Color(j, j, j) });
+          floorEntries.push({ tile: i, x, y: 0, z: y, color: tint(x, y).multiplyScalar(j), sxz: style === 'crisp' ? 0.94 : 1 });
         } else if (t.kind === 'water') {
-          const j = 0.95 + hash2(x, y, 3) * 0.1;
-          waterEntries.push({ tile: i, x, y: -0.07, z: y, color: new THREE.Color(j, j, j) });
+          const j = 0.75 + hash2(x, y, 3) * 0.1;
+          bedEntries.push({ tile: i, x, y: -0.16, z: y, color: new THREE.Color(j, j, j) });
+          waterTiles.push({ tile: i, x, y });
         } else if (t.kind === 'wall') {
           let exposed = false;
           for (let oy = -1; oy <= 1 && !exposed; oy++)
@@ -310,10 +482,40 @@ export class AreaView {
               }
             }
           if (exposed) {
-            const j = 0.9 + hash2(x, y, 7) * 0.14;
-            const sy = organic ? 0.78 + hash2(x, y, 17) * 0.4 : 1;
-            wallEntries.push({ tile: i, x, y: 0, z: y, color: new THREE.Color(j, j, j), sy });
+            let c: THREE.Color;
+            let sy = 1;
+            let rotY = 0;
+            let sxz = 1;
+            if (style === 'blob') {
+              c = wc1.clone().lerp(wc2, Math.min(1, blotch(x, y) * 0.8 + hash2(x, y, 41) * 0.3)).multiplyScalar(0.9 + hash2(x, y, 7) * 0.2);
+              sy = 0.62 + hash2(x, y, 17) * 0.38;
+              rotY = hash2(x, y, 19) * Math.PI * 2;
+              sxz = 0.9 + hash2(x, y, 23) * 0.16;
+              // ground under the blobs so the gaps between them are not holes
+              floorEntries.push({ tile: i, x, y: 0, z: y, color: tint(x, y).multiplyScalar(0.7) });
+            } else {
+              const j = 0.9 + hash2(x, y, 7) * 0.14;
+              c = new THREE.Color(j, j, j);
+              if (style === 'rough') sy = 0.82 + hash2(x, y, 17) * 0.3;
+            }
+            wallEntries.push({ tile: i, x, y: 0, z: y, color: c, sy, rotY, sxz });
+            if (style !== 'blob') {
+              // outline bars on the top edges that face open ground (N, E, S, W)
+              const dirs: [number, number][] = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+              dirs.forEach(([ox, oy], k) => {
+                const nk = this.kindAt(map, x + ox, y + oy);
+                if (nk !== null && nk !== 'wall') edgeEntries[k].push({ tile: i, x, y: 0, z: y, color: new THREE.Color(1, 1, 1), sy, rotY: -k * (Math.PI / 2) });
+              });
+            }
           }
+        }
+        // floating-platform undersides along void edges
+        if (t.kind !== 'void' && vd <= (floating ? 3 : 1) && (FLOOR_KINDS.has(t.kind) || t.kind === 'water' || (t.kind === 'wall' && wallEntries.at(-1)?.tile === i))) {
+          const j = 0.8 + hash2(x, y, 53) * 0.25;
+          if (floating) {
+            const depth = 0.7 + vd * 0.65 + hash2(x, y, 51) * 0.8;
+            underEntries.push({ tile: i, x, y: -0.2, z: y, color: new THREE.Color(j, j, j), sy: depth, rotY: Math.floor(hash2(x, y, 55) * 4) * (Math.PI / 2), sxz: 0.94 + hash2(x, y, 57) * 0.1 });
+          } else underEntries.push({ tile: i, x, y: -0.2, z: y, color: new THREE.Color(j, j, j), sy: 0.9 });
         }
       }
     }
@@ -321,47 +523,164 @@ export class AreaView {
     this.floor.mesh.receiveShadow = true;
     this.group.add(this.floor.mesh);
 
-    if (waterEntries.length) {
+    if (underEntries.length) {
+      const rock = mixHex(shade(fl.color, 0.6), shade(wl.color, 0.7), 0.5);
+      const glow = plan.backdrop?.color2 ?? plan.lighting?.lamps?.color;
+      const mat = this.own(new THREE.MeshStandardMaterial({ color: col(rock), roughness: 0.95, flatShading: true, vertexColors: true }));
+      if (glow && floating) {
+        mat.emissive = col(glow);
+        mat.emissiveIntensity = 0.12;
+      }
+      this.underside = new InstLayer(floating ? undersideGeometry() : skirtGeometry(), mat, underEntries, 'underside');
+      this.underside.mesh.receiveShadow = true;
+      this.group.add(this.underside.mesh);
+    }
+
+    if (waterTiles.length) {
       const wcol = fl.pattern === 'water' ? fl.color : mixHex('#2d6f93', fl.color, 0.2);
-      const wcol2 = fl.pattern === 'water' ? fl.color2 ?? shade(fl.color, 1.2) : '#4fa3c7';
-      this.waterTex = patternTexture('water', wcol, wcol2, 5);
-      const wmat = getMaterial('glass', this.waterTex ? '#ffffff' : wcol, { map: this.waterTex, opacity: 0.88 });
-      wmat.roughness = 0.15;
-      wmat.metalness = 0.1;
-      wmat.depthWrite = true;
-      const wgeo = new THREE.BoxGeometry(1, 0.14, 1);
-      wgeo.translate(0, -0.07, 0);
-      this.water = new InstLayer(wgeo, wmat, waterEntries, 'water');
-      this.water.mesh.receiveShadow = true;
+      const bed = getMaterial('stone', shade(mixHex(fl.color, wcol, 0.5), 0.55));
+      const bedGeo = new THREE.BoxGeometry(1, 0.2, 1);
+      bedGeo.translate(0, -0.1, 0);
+      this.waterBed = new InstLayer(bedGeo, bed, bedEntries, 'water-bed');
+      this.waterBed.mesh.receiveShadow = true;
+      this.group.add(this.waterBed.mesh);
+      const set = new Set(waterTiles.map((t) => t.tile));
+      this.water = new PatchLayer(waterTiles, (x, y) => x >= 0 && y >= 0 && x < W && y < map.height && set.has(y * W + x), this.liquidMaterial(wcol, 0.84), -0.05, 'water', 0.35);
+      this.water.mesh.renderOrder = 2;
       this.group.add(this.water.mesh);
     }
 
     // --- walls ---
-    const wallTex = patternTexture(wl.pattern ?? 'plain', wl.color, wl.color2, 23);
-    const wallSide = getMaterial(wl.material === 'glow' ? 'matte' : wl.material, wallTex ? '#ffffff' : wl.color, { map: wallTex });
-    const wallTop = getMaterial('matte', shade(mixHex(wl.color, wl.color2 ?? wl.color, 0.25), 0.62));
-    const wallGeo = new THREE.BoxGeometry(1, H, 1);
-    wallGeo.translate(0, H / 2, 0);
-    // tile the side texture vertically so tall walls are not stretched
-    const uv = wallGeo.getAttribute('uv') as THREE.BufferAttribute;
-    const sideVerts = new Set<number>();
-    const index = wallGeo.index!.array as ArrayLike<number>;
-    for (const g of wallGeo.groups) {
-      if (g.materialIndex === 2 || g.materialIndex === 3) continue;
-      for (let k = g.start; k < g.start + g.count; k++) sideVerts.add(index[k]);
+    const wallKind = wl.material === 'glow' ? 'matte' : wl.material;
+    const capColor = this.capColor();
+    let wallGeo: THREE.BufferGeometry;
+    let wallMat: THREE.Material | THREE.Material[];
+    if (style === 'blob') {
+      wallGeo = blobWallGeometry(H);
+      const m = this.own(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.55, metalness: 0.0, vertexColors: true }));
+      if (wl.material === 'glow') {
+        m.emissive = col(wl.color2 ?? wl.color);
+        m.emissiveIntensity = 0.25;
+      }
+      wallMat = m;
+    } else {
+      wallGeo = boxWallGeometry(H);
+      // tall plans keep a deeper base shade instead of extra height
+      if (this.planWallHeight > H + 0.05) {
+        const c = wallGeo.getAttribute('color') as THREE.BufferAttribute;
+        for (let k = 0; k < c.count; k++) if (c.getX(k) < 1) c.setXYZ(k, c.getX(k) * 0.88, c.getY(k) * 0.88, c.getZ(k) * 0.88);
+      }
+      const wallTex = patternTexture(wl.pattern ?? 'plain', wl.color, wl.color2, 23);
+      const side = this.vcMat(wallKind, wl.color, wallTex);
+      if (wl.material === 'glow') {
+        side.emissive = col(wl.color);
+        side.emissiveIntensity = 0.4;
+      }
+      if (style === 'crisp') side.flatShading = true;
+      const top = this.vcMat(style === 'crisp' ? 'matte' : 'matte', capColor, null);
+      top.roughness = 0.7;
+      wallMat = [side, side, top, top, side, side];
     }
-    for (const vi of sideVerts) uv.setY(vi, uv.getY(vi) * H);
-    uv.needsUpdate = true;
-    this.walls = new InstLayer(wallGeo, [wallSide, wallSide, wallTop, wallTop, wallSide, wallSide], wallEntries, 'walls');
+    this.walls = new InstLayer(wallGeo, wallMat, wallEntries, 'walls', REMEMBER_WALL);
     this.walls.mesh.castShadow = true;
     this.walls.mesh.receiveShadow = true;
     this.group.add(this.walls.mesh);
+    this.wallLayers = [this.walls];
+
+    if (style !== 'blob') {
+      let edgeMat: THREE.Material;
+      if (style === 'crisp') {
+        const glowC = wl.color2 && luminance(wl.color2) > luminance(wl.color) ? shade(wl.color2, 1.25) : shade(this.world.palette?.accent ?? '#9be7ff', 1.1);
+        edgeMat = this.own(new THREE.MeshBasicMaterial({ color: col(glowC), toneMapped: false }));
+      } else {
+        const edgeC = shade(capColor, 1.3);
+        edgeMat = this.own(new THREE.MeshStandardMaterial({ color: col(edgeC), roughness: 0.6, emissive: col(edgeC), emissiveIntensity: WALL_EDGE_GLOW }));
+      }
+      const edgeGeo = edgeBarGeometry(H, style === 'crisp' ? 0.045 : 0.05);
+      edgeEntries.forEach((entries, k) => {
+        if (!entries.length) return;
+        const layer = new InstLayer(edgeGeo.clone(), edgeMat, entries, `wall-edges-${k}`, REMEMBER_EDGE);
+        this.group.add(layer.mesh);
+        this.wallLayers.push(layer);
+      });
+      edgeGeo.dispose();
+    }
+
     // translucent full-height copies shown over lowered (cut-away) walls so rooms keep their shape
-    const ghostMat = new THREE.MeshStandardMaterial({ color: col(wl.color), transparent: true, opacity: 0.09, depthWrite: false, roughness: 1 });
-    ghostMat.userData.owned = true;
+    const ghostMat = this.own(new THREE.MeshStandardMaterial({ color: col(wl.color), transparent: true, opacity: 0.12, depthWrite: false, roughness: 1 }));
     this.ghost = new InstLayer(wallGeo.clone(), ghostMat, wallEntries, 'wall-ghosts');
     this.ghost.mesh.renderOrder = 5;
     this.group.add(this.ghost.mesh);
+  }
+
+  /** wall cap: a lighter tone of the wall (color2 leaning), kept apart from the floor's lightness */
+  private capColor(): string {
+    const wl = this.plan.wall;
+    // what the side faces look like on average (line/grid/noise patterns are dominated by color2)
+    const busy = wl.pattern === 'lines' || wl.pattern === 'grid' || wl.pattern === 'noise' || wl.pattern === 'gradient';
+    const side = busy ? mixHex(wl.color, wl.color2 ?? wl.color, 0.45) : wl.color;
+    let cap = shade(mixHex(side, wl.color2 ?? side, 0.3), 1.25);
+    // the cap must read as the lit top of the wall, never as a hole: at least as light as the sides
+    for (let k = 0; k < 4 && luminance(cap) < luminance(side) * 1.08 + 0.02; k++) cap = shade(cap, 1.2);
+    const lf = luminance(this.plan.floor.color);
+    if (Math.abs(luminance(cap) - lf) < 0.08) cap = lf > 0.5 ? shade(cap, 0.75) : shade(cap, 1.3);
+    return cap;
+  }
+
+  /** shiny translucent liquid with drifting ripples */
+  private liquidMaterial(color: string, opacity: number): THREE.MeshStandardMaterial {
+    const ripple = rippleNormalTexture();
+    const m = this.own(
+      new THREE.MeshStandardMaterial({
+        color: col(color),
+        roughness: 0.12,
+        metalness: 0.05,
+        transparent: true,
+        opacity,
+        depthWrite: false,
+        vertexColors: true,
+        emissive: col(shade(color, 0.6)),
+        emissiveIntensity: 0.18,
+      }),
+    );
+    if (ripple) {
+      const r = ripple.clone();
+      r.needsUpdate = true;
+      r.repeat.set(1, 1);
+      m.normalMap = r;
+      m.normalScale = new THREE.Vector2(0.55, 0.55);
+      this.ripples.add(r);
+    }
+    return m;
+  }
+
+  /**
+   * Liquid terrain (puddles, seeps, floods, spills): the same flat surface and ripple-arc pattern as
+   * a 'water' floor, slowly drifting, matte enough that no specular glints sparkle on it, and
+   * translucent so the floor shows through at its soft border.
+   */
+  private flatLiquidMaterial(color: string, emissive?: string): THREE.MeshStandardMaterial {
+    const pat = patternTexture('water', color, shade(color, 0.8), 13);
+    let map: THREE.Texture | null = null;
+    if (pat) {
+      map = pat.clone();
+      map.needsUpdate = true;
+      this.ripples.add(map);
+    }
+    const m = new THREE.MeshStandardMaterial({
+      color: map ? 0xffffff : col(color),
+      map,
+      roughness: LIQUID_TERRAIN_ROUGHNESS,
+      metalness: 0,
+      transparent: true,
+      opacity: LIQUID_TERRAIN_OPACITY,
+      depthWrite: false,
+      vertexColors: true,
+      emissive: col(emissive ?? shade(color, 0.5)),
+      emissiveIntensity: emissive ? 0.3 : 0.1,
+    });
+    m.name = 'liquid-terrain';
+    return this.own(m);
   }
 
   private buildTerrain(map: AreaMap): void {
@@ -370,6 +689,11 @@ export class AreaView {
       l.dispose();
     }
     this.terrainLayers = [];
+    for (const l of this.patchLayers) {
+      this.terrainGroup.remove(l.mesh);
+      l.dispose();
+    }
+    this.patchLayers = [];
     for (const m of this.terrainModels.values()) this.terrainGroup.remove(m);
     this.terrainModels.clear();
     this.tallTerrain.clear();
@@ -385,7 +709,8 @@ export class AreaView {
     for (const [id, tiles] of byDef) {
       const def = this.terrainDefs.get(id);
       const color = def?.color ?? '#7a7a7a';
-      const h = def?.height ?? 0;
+      // tall terrain never towers over the (clamped) walls
+      const h = Math.min(def?.height ?? 0, this.wallHeight + 0.1);
       const tall = !!def && (h >= 0.8 || (def.blocksSight && h >= 0.4));
       if (def?.model) {
         const template = buildModel(def.model, { lights: false });
@@ -431,34 +756,71 @@ export class AreaView {
           if (ls && ls.intensity > 0) this.lightSources.push({ pos: new THREE.Vector3(m.position.x, 0.8, m.position.z), tile: i, ...ls });
           if (tall) this.tallTerrain.add(i);
         }
+      } else if (h < 0.06) {
+        // flat terrain: a soft-edged patch (liquids shine and ripple), never a hard-edged flat quad
+        const set = new Set(tiles);
+        const inside = (x: number, y: number) => x >= 0 && y >= 0 && x < this.width && y < this.height && set.has(y * this.width + x);
+        const ptiles = tiles.map((i) => ({ tile: i, x: i % this.width, y: Math.floor(i / this.width) }));
+        let mat: THREE.Material;
+        if (isLiquidTerrain(def)) {
+          mat = this.patchMaterial(`liquid:${id}`, () => this.flatLiquidMaterial(color, def?.emissive));
+        } else {
+          mat = this.patchMaterial(`patch:${id}`, () => {
+            const tex = patternTexture('noise', color, shade(color, 0.8), 3);
+            const m = new THREE.MeshStandardMaterial({ color: tex ? 0xffffff : col(color), map: tex, roughness: 0.9, transparent: true, opacity: 0.92, depthWrite: false, vertexColors: true });
+            if (def?.emissive) {
+              m.emissive = col(def.emissive);
+              m.emissiveIntensity = 0.45;
+            }
+            return this.own(m);
+          });
+        }
+        const layer = new PatchLayer(ptiles, inside, mat, 0.012 + Math.max(0, h) * 0.5, `terrain:${id}`, 0.5, 0.12);
+        layer.mesh.renderOrder = 1;
+        layer.mesh.receiveShadow = true;
+        this.patchLayers.push(layer);
+        this.terrainGroup.add(layer.mesh);
       } else {
-        const flat = h < 0.06;
         const geo = genericTerrainGeometry(h, def?.walkable !== false);
-        const mat = getMaterial(def?.emissive ? 'matte' : 'stone', color, { emissive: def?.emissive, emissiveIntensity: def?.emissive ? 0.45 : undefined, opacity: flat ? 0.9 : undefined });
+        let mat: THREE.Material = getMaterial(def?.emissive ? 'matte' : 'stone', color, { emissive: def?.emissive, emissiveIntensity: def?.emissive ? 0.45 : undefined });
+        if (geo.getAttribute('color')) {
+          mat = this.patchMaterial(`block:${id}`, () => {
+            const m = (mat as THREE.MeshStandardMaterial).clone();
+            m.vertexColors = true;
+            return this.own(m);
+          });
+        }
         const entries: InstEntry[] = tiles.map((i) => {
           const j = 0.9 + hash2(i, 9) * 0.18;
-          const x = i % this.width;
-          const z = Math.floor(i / this.width);
           return {
             tile: i,
-            x,
+            x: i % this.width,
             y: 0,
-            z,
+            z: Math.floor(i / this.width),
             color: new THREE.Color(j, j, j),
-            sy: flat ? 1 : 0.85 + hash2(i, 21) * 0.3,
-            sxz: flat ? 1 : 0.88 + hash2(i, 22) * 0.16,
-            rotY: flat ? Math.floor(hash2(i, 23) * 4) * (Math.PI / 2) : (hash2(i, 24) - 0.5) * 0.8,
+            sy: 0.85 + hash2(i, 21) * 0.3,
+            sxz: 0.88 + hash2(i, 22) * 0.16,
+            rotY: (hash2(i, 24) - 0.5) * 0.8,
           };
         });
         const layer = new InstLayer(geo, mat, entries, `terrain:${id}`);
-        layer.mesh.castShadow = !flat;
-        if (flat) layer.mesh.renderOrder = 1;
+        layer.mesh.castShadow = true;
         layer.mesh.receiveShadow = true;
         this.terrainLayers.push(layer);
         this.terrainGroup.add(layer.mesh);
         if (tall) for (const i of tiles) this.tallTerrain.add(i);
       }
     }
+  }
+
+  private patchMats = new Map<string, THREE.Material>();
+  private patchMaterial(key: string, make: () => THREE.Material): THREE.Material {
+    let m = this.patchMats.get(key);
+    if (!m) {
+      m = make();
+      this.patchMats.set(key, m);
+    }
+    return m;
   }
 
   private doorOrientation(map: AreaMap, x: number, y: number): 'x' | 'z' {
@@ -480,9 +842,11 @@ export class AreaView {
       const g = new THREE.Group();
       g.position.set(x, 0, y);
       if (this.doorOrientation(map, x, y) === 'z') g.rotation.y = Math.PI / 2;
+      // threshold plate: marks the doorway even when the frame is cut down to a stub
+      g.add(prim('box', [0.96, 0.03, 0.42], [0, 0.015, 0], shade(doorColor, 1.15), { material: wl.material === 'metal' ? 'metal' : 'wood', castShadow: false }));
       // lintel joins the walls above the door
       if (H - doorH > 0.05) g.add(prim('box', [1, H - doorH, 0.9], [0, doorH + (H - doorH) / 2, 0], shade(wl.color, 0.9), { material: wl.material }));
-      for (const s of [-1, 1]) g.add(prim('box', [0.08, doorH, 0.3], [s * 0.46, doorH / 2, 0], shade(doorColor, 0.75), { material: wl.material === 'metal' ? 'metal' : 'wood' }));
+      for (const s of [-1, 1]) g.add(prim('box', [0.1, doorH, 0.34], [s * 0.46, doorH / 2, 0], shade(doorColor, 1.1), { material: wl.material === 'metal' ? 'metal' : 'wood' }));
       const hinge = new THREE.Group();
       hinge.position.set(-0.42, 0, 0);
       const panel = new THREE.Group();
@@ -614,10 +978,13 @@ export class AreaView {
       if (this.seen[i] === s) continue;
       this.seen[i] = s;
       this.floor?.setSeen(i, s);
-      this.water?.setSeen(i, s);
-      this.walls?.setSeen(i, s);
+      this.water?.setSeen(i, s, REMEMBER);
+      this.waterBed?.setSeen(i, s);
+      this.underside?.setSeen(i, s);
+      for (const l of this.wallLayers) l.setSeen(i, s);
       if (this.lowered.has(i)) this.ghost?.setSeen(i, s);
       for (const l of this.terrainLayers) l.setSeen(i, s);
+      for (const l of this.patchLayers) l.setSeen(i, s, REMEMBER);
       const tm = this.terrainModels.get(i);
       if (tm) {
         tm.visible = s > 0;
@@ -686,14 +1053,37 @@ export class AreaView {
   }
 
   private lowerTile(i: number, low: boolean): void {
-    this.walls?.setScaleY(i, low ? LOWERED_HEIGHT / this.wallHeight : -1);
+    for (const l of this.wallLayers) l.setScaleY(i, low ? STUB_HEIGHT / this.wallHeight : -1);
     this.ghost?.setSeen(i, low ? this.seenAt(i) : 0);
     for (const l of this.terrainLayers) l.setScaleY(i, low ? 0.2 : -1);
     const tm = this.terrainModels.get(i);
     if (tm) tm.scale.y = low ? 0.22 : 1;
     const d = this.doors.get(i);
-    if (d) d.obj.scale.y = low ? LOWERED_HEIGHT / this.wallHeight : 1;
+    if (d) d.obj.scale.y = low ? STUB_HEIGHT / this.wallHeight : 1;
     if (i === this.exitIdx && this.exitModel) this.exitModel.scale.y = low ? 0.22 : 1;
+  }
+
+  /**
+   * Height profile around the player: walls more than PROFILE_NEAR rows in front of or behind the
+   * player (camera depth) ease down to PROFILE_FAR of their height, so distant walls never wall off
+   * the view. Cheap to call every frame (only recomputes when the tile or camera step changes).
+   */
+  setFocus(p: Pos, yawStep: number, snap = false): void {
+    const key = `${p.x},${p.y},${yawStep}`;
+    if (key === this.focusKey && !snap) return;
+    const first = this.focusKey === '';
+    this.focusKey = key;
+    const { dx: cx, dy: cy } = towardCamera(yawStep);
+    for (const layer of this.wallLayers)
+      for (const tile of layer.tiles) {
+        const d = ((tile % this.width) - p.x) * cx + (Math.floor(tile / this.width) - p.y) * cy;
+        layer.setProfile(tile, wallProfile(d), snap || first);
+      }
+  }
+
+  /** current height profile factor of a wall tile (1 = full); for tests */
+  wallProfileAt(i: number): number {
+    return this.walls?.profile(i) ?? 1;
   }
 
   /** current y scale of the door frame / transition model on a tile (1 = full height); for tests */
@@ -709,8 +1099,53 @@ export class AreaView {
   }
 
   /** for tests/debugging */
-  inspect(i: number): { floor: number; wall: number; wallScale: number } {
-    return { floor: this.floor?.seenState(i) ?? -1, wall: this.walls?.seenState(i) ?? -1, wallScale: this.walls?.scaleY(i) ?? 1 };
+  inspect(i: number): { floor: number; wall: number; wallScale: number; water: number; underside: number } {
+    return {
+      floor: this.floor?.seenState(i) ?? -1,
+      wall: this.walls?.seenState(i) ?? -1,
+      wallScale: this.walls?.scaleY(i) ?? 1,
+      water: this.water?.seenState(i) ?? -1,
+      underside: this.underside?.seenState(i) ?? -1,
+    };
+  }
+
+  /** layer names and instance/tile counts; for tests and the dev page */
+  /**
+   * Luminance of a remembered wall's cap, its top-edge outline and the remembered floor, from the
+   * materials and remembered tints (lighting aside). For tests: the outline must stand out from the
+   * cap and the cap from the floor. Null when the walls have no outline (blob style).
+   */
+  rememberedContrast(): { cap: number; edge: number; floor: number; edgeVsCap: number; capVsFloor: number } | null {
+    const edges = this.wallLayers.find((l) => l.mesh.name.startsWith('wall-edges'));
+    if (!edges || !this.walls) return null;
+    const mats = this.walls.mesh.material as THREE.Material[] | THREE.Material;
+    const top = (Array.isArray(mats) ? mats[2] : mats) as THREE.MeshStandardMaterial;
+    const em = edges.mesh.material as THREE.MeshStandardMaterial | THREE.MeshBasicMaterial;
+    const lum = (c: THREE.Color) => luminance('#' + c.getHexString());
+    const cap = lum(top.color.clone().multiply(REMEMBER_WALL));
+    let edgeC = em.color.clone().multiply(REMEMBER_EDGE);
+    if ('emissive' in em && em.emissive) edgeC = edgeC.add(em.emissive.clone().multiplyScalar(em.emissiveIntensity));
+    const edge = lum(edgeC);
+    const floor = lum(col(this.plan.floor.color).multiply(REMEMBER));
+    return { cap, edge, floor, edgeVsCap: edge - cap, capVsFloor: cap - floor };
+  }
+
+  /** liquid terrain patches: material and geometry facts, for tests */
+  liquidTerrainInfo(): { name: string; roughness: number; opacity: number; normalMap: boolean; folded: number }[] {
+    const out: { name: string; roughness: number; opacity: number; normalMap: boolean; folded: number }[] = [];
+    for (const l of this.patchLayers) {
+      const m = l.mesh.material as THREE.MeshStandardMaterial;
+      if (m.name !== 'liquid-terrain') continue;
+      out.push({ name: l.mesh.name, roughness: m.roughness, opacity: m.opacity, normalMap: !!m.normalMap, folded: l.foldedTriangles() });
+    }
+    return out;
+  }
+
+  stats(): Record<string, number> {
+    const out: Record<string, number> = {};
+    for (const l of [this.floor, this.waterBed, this.underside, this.ghost, ...this.wallLayers, ...this.terrainLayers]) if (l) out[l.mesh.name] = (out[l.mesh.name] ?? 0) + l.tiles.length;
+    for (const l of [this.water, ...this.patchLayers]) if (l) out[l.mesh.name] = (out[l.mesh.name] ?? 0) + l.of.size;
+    return out;
   }
 
   // -------------------------------------------------------------------------
@@ -781,10 +1216,12 @@ export class AreaView {
         ring.scale.set(k, k, k);
       }
     }
-    if (this.waterTex) {
-      this.waterTex.offset.x = (t * 0.03) % 1;
-      this.waterTex.offset.y = (t * 0.017) % 1;
-    }
+    for (const l of this.wallLayers) l.tick(dt);
+    if (!this.reduceMotion)
+      for (const r of this.ripples) {
+        r.offset.x = (t * 0.045) % 1;
+        r.offset.y = (t * 0.027) % 1;
+      }
     const lampCfg = this.plan.lighting?.lamps;
     for (const l of this.lamps) {
       if (!l.visible) continue;
@@ -799,12 +1236,16 @@ export class AreaView {
   dispose(): void {
     this.floor?.dispose();
     this.water?.dispose();
-    this.walls?.dispose();
-    if (this.ghost) {
-      (this.ghost.mesh.material as THREE.Material).dispose();
-      this.ghost.dispose();
-    }
+    this.waterBed?.dispose();
+    this.underside?.dispose();
+    for (const l of this.wallLayers) l.dispose();
+    this.ghost?.dispose();
     for (const l of this.terrainLayers) l.dispose();
+    for (const l of this.patchLayers) l.dispose();
+    for (const m of this.ownedMats) m.dispose();
+    for (const r of this.ripples) r.dispose();
+    this.ripples.clear();
+    this.ownedMats = [];
     this.group.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh && !(o as THREE.Sprite).isSprite) return;

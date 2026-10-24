@@ -1,0 +1,975 @@
+{
+  "fixture-ship": {
+    "start": 15,
+    "earned": [
+      {
+        "turn": 19,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Pruning Drone takes 14 Ion.",
+          "Pruning Drone is shut down.",
+          "+2 ration chits",
+          "+6 Clearance"
+        ]
+      },
+      {
+        "turn": 26,
+        "area": 0,
+        "delta": 4,
+        "log": [
+          "+4 ration chits",
+          "+8 Clearance",
+          "Ines Varga-Thule takes 1 Spore.",
+          "Spored ends."
+        ]
+      },
+      {
+        "turn": 33,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Pruning Drone is shut down.",
+          "+2 ration chits",
+          "+6 Clearance",
+          "Clearance raised! (2)"
+        ]
+      },
+      {
+        "turn": 92,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Pruning Drone takes 15 Ion.",
+          "Pruning Drone is shut down.",
+          "+2 ration chits",
+          "+6 Clearance"
+        ]
+      },
+      {
+        "turn": 119,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Pruning Drone takes 17 Ion.",
+          "Pruning Drone is shut down.",
+          "+2 ration chits",
+          "+6 Clearance"
+        ]
+      },
+      {
+        "turn": 429,
+        "area": 1,
+        "delta": 3,
+        "log": [
+          "+3 ration chits",
+          "+10 Clearance",
+          "Clearance raised! (3)",
+          "Frosted ends."
+        ]
+      },
+      {
+        "turn": 481,
+        "area": 1,
+        "delta": 15,
+        "log": [
+          "Warden Tal Ostrova takes 1 Cold.",
+          "Warden Tal Ostrova takes 1 Cold.",
+          "Warden Tal Ostrova is shut down.",
+          "+15 ration chits"
+        ]
+      },
+      {
+        "turn": 694,
+        "area": 1,
+        "delta": 6,
+        "log": [
+          "Custodian Unit is shut down.",
+          "+6 ration chits",
+          "+16 Clearance",
+          "Muffled ends."
+        ]
+      }
+    ],
+    "labelPeaks": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1
+    ],
+    "mid": {
+      "cur": 51,
+      "status": "playing",
+      "area": 1,
+      "turn": 705,
+      "hud": "4"
+    },
+    "trader": {
+      "traderIds": [
+        "bosun-kettering",
+        "sister-ula"
+      ],
+      "found": "bosun-kettering",
+      "spawned": false
+    },
+    "talkLayer": "dialogue",
+    "tradeLayer": "trade",
+    "rows": [
+      {
+        "text": "1 O O2 Canister 10 ration chits Buy",
+        "disabled": false
+      },
+      {
+        "text": "2 R Ration Brick 4 ration chits Buy",
+        "disabled": false
+      },
+      {
+        "text": "3 E EMP Puck 25 ration chits Buy",
+        "disabled": false
+      },
+      {
+        "text": "4 R Rivet Pistol 40 ration chits Buy",
+        "disabled": false
+      },
+      {
+        "text": "5 H Hull Pressure Suit 90 ration chits Buy",
+        "disabled": true
+      },
+      {
+        "text": "6 M Mag-Grip Boots 60 ration chits Buy",
+        "disabled": true
+      },
+      {
+        "text": "7 M Moss Poultice 18 ration chits Buy",
+        "disabled": false
+      }
+    ],
+    "cur0": 51,
+    "bought": true,
+    "cur1": 41,
+    "slots0": 14,
+    "slots1": 15,
+    "sold": false,
+    "cur2": 41,
+    "tradeLog": [
+      "Ines Varga-Thule: Muffled.",
+      "Canisters, rations, the odd bit of ordnance. Chits only. Don't tell MATRON.",
+      "-10 ration chits",
+      "Ines Varga-Thule receives O2 Canister.",
+      "My granddad said the ship would arrive in his lifetime. Then my dad said it. Now MATRON says it."
+    ],
+    "errors": []
+  },
+  "fixture-teen": {
+    "start": 25,
+    "earned": [
+      {
+        "turn": 23,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Group Chat Lurker takes 18 Embarrassment.",
+          "Group Chat Lurker is left speechless.",
+          "+2 favours",
+          "+4 Rep"
+        ]
+      },
+      {
+        "turn": 26,
+        "area": 0,
+        "delta": 4,
+        "log": [
+          "Juniper Okafor-Pryce finds the precise word for Hall Monitor for 6 Embarrassment.",
+          "Hall Monitor is left speechless.",
+          "+4 favours",
+          "+10 Rep"
+        ]
+      },
+      {
+        "turn": 65,
+        "area": 0,
+        "delta": 3,
+        "log": [
+          "Senior Prankster is left speechless.",
+          "+3 favours",
+          "+8 Rep",
+          "Glow-up! (2)"
+        ]
+      },
+      {
+        "turn": 123,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Group Chat Lurker takes 17 Embarrassment.",
+          "Group Chat Lurker is left speechless.",
+          "+2 favours",
+          "+4 Rep"
+        ]
+      },
+      {
+        "turn": 185,
+        "area": 0,
+        "delta": 4,
+        "log": [
+          "Hall Monitor takes 18 Embarrassment.",
+          "Hall Monitor is left speechless.",
+          "+4 favours",
+          "+10 Rep"
+        ]
+      },
+      {
+        "turn": 224,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Yearbook Paparazzo takes 17 Embarrassment.",
+          "Yearbook Paparazzo is left speechless.",
+          "+2 favours",
+          "+6 Rep"
+        ]
+      },
+      {
+        "turn": 248,
+        "area": 0,
+        "delta": 3,
+        "log": [
+          "Senior Prankster is left speechless.",
+          "+3 favours",
+          "+8 Rep",
+          "Glow-up! (3)"
+        ]
+      },
+      {
+        "turn": 261,
+        "area": 0,
+        "delta": 3,
+        "log": [
+          "Senior Prankster takes 16 Embarrassment.",
+          "Senior Prankster is left speechless.",
+          "+3 favours",
+          "+8 Rep"
+        ]
+      },
+      {
+        "turn": 370,
+        "area": 1,
+        "delta": 3,
+        "log": [
+          "Juniper Okafor-Pryce finds the precise word for Senior Prankster for 2 Embarrassment.",
+          "Senior Prankster is left speechless.",
+          "+3 favours",
+          "+8 Rep"
+        ]
+      },
+      {
+        "turn": 376,
+        "area": 1,
+        "delta": 4,
+        "log": [
+          "Reservoir Board Surveyor takes 18 Embarrassment.",
+          "Reservoir Board Surveyor is left speechless.",
+          "+4 favours",
+          "+9 Rep"
+        ]
+      },
+      {
+        "turn": 389,
+        "area": 1,
+        "delta": 2,
+        "log": [
+          "Yearbook Paparazzo takes 15 Embarrassment.",
+          "Yearbook Paparazzo is left speechless.",
+          "+2 favours",
+          "+6 Rep"
+        ]
+      },
+      {
+        "turn": 392,
+        "area": 1,
+        "delta": 3,
+        "log": [
+          "Senior Prankster takes 17 Embarrassment.",
+          "Senior Prankster is left speechless.",
+          "+3 favours",
+          "+8 Rep"
+        ]
+      },
+      {
+        "turn": 415,
+        "area": 1,
+        "delta": 2,
+        "log": [
+          "+2 favours",
+          "+4 Rep",
+          "Yearbook Paparazzo snaps a candid of Juniper Okafor-Pryce for 4 Embarrassment.",
+          "Juniper Okafor-Pryce: Flash-blind."
+        ]
+      },
+      {
+        "turn": 418,
+        "area": 1,
+        "delta": 2,
+        "log": [
+          "Yearbook Paparazzo takes 13 Embarrassment.",
+          "Yearbook Paparazzo is left speechless.",
+          "+2 favours",
+          "+6 Rep"
+        ]
+      },
+      {
+        "turn": 449,
+        "area": 1,
+        "delta": 4,
+        "log": [
+          "Reservoir Board Surveyor is left speechless.",
+          "+4 favours",
+          "+9 Rep",
+          "Glow-up! (4)"
+        ]
+      },
+      {
+        "turn": 455,
+        "area": 1,
+        "delta": 3,
+        "log": [
+          "Senior Prankster takes 16 Embarrassment.",
+          "Senior Prankster is left speechless.",
+          "+3 favours",
+          "+8 Rep"
+        ]
+      },
+      {
+        "turn": 460,
+        "area": 1,
+        "delta": 3,
+        "log": [
+          "+3 favours",
+          "+8 Rep",
+          "Rosalind Achterberg turns an old joke on Juniper Okafor-Pryce for 3 Nostalgia.",
+          "Group Chat Lurker screenshots Juniper Okafor-Pryce for 3 Gossip."
+        ]
+      },
+      {
+        "turn": 463,
+        "area": 1,
+        "delta": 2,
+        "log": [
+          "Juniper Okafor-Pryce finds the precise word for Group Chat Lurker for 5 Embarrassment.",
+          "Group Chat Lurker is left speechless.",
+          "+2 favours",
+          "+4 Rep"
+        ]
+      },
+      {
+        "turn": 496,
+        "area": 1,
+        "delta": 2,
+        "log": [
+          "Yearbook Paparazzo is left speechless.",
+          "+2 favours",
+          "+6 Rep",
+          "Glow-up! (5)"
+        ]
+      },
+      {
+        "turn": 595,
+        "area": 2,
+        "delta": 4,
+        "log": [
+          "Reservoir Board Surveyor takes 12 Embarrassment.",
+          "Reservoir Board Surveyor is left speechless.",
+          "+4 favours",
+          "+9 Rep"
+        ]
+      },
+      {
+        "turn": 605,
+        "area": 2,
+        "delta": 4,
+        "log": [
+          "Hall Monitor takes 18 Embarrassment.",
+          "Hall Monitor is left speechless.",
+          "+4 favours",
+          "+10 Rep"
+        ]
+      },
+      {
+        "turn": 619,
+        "area": 2,
+        "delta": 4,
+        "log": [
+          "Hall Monitor takes 13 Embarrassment.",
+          "Hall Monitor is left speechless.",
+          "+4 favours",
+          "+10 Rep"
+        ]
+      },
+      {
+        "turn": 659,
+        "area": 2,
+        "delta": 2,
+        "log": [
+          "Group Chat Lurker takes 18 Embarrassment.",
+          "Group Chat Lurker is left speechless.",
+          "+2 favours",
+          "+4 Rep"
+        ]
+      },
+      {
+        "turn": 669,
+        "area": 2,
+        "delta": 2,
+        "log": [
+          "Group Chat Lurker takes 13 Embarrassment.",
+          "Group Chat Lurker is left speechless.",
+          "+2 favours",
+          "+4 Rep"
+        ]
+      },
+      {
+        "turn": 671,
+        "area": 2,
+        "delta": 2,
+        "log": [
+          "Group Chat Lurker is left speechless.",
+          "+2 favours",
+          "+4 Rep",
+          "Magdalena 'Mags' Calloway gives a withering once-over to Juniper Okafor-Pryce (critical) for 10 Embarrassment."
+        ]
+      }
+    ],
+    "labelPeaks": [
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      1,
+      5,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "mid": {
+      "cur": 96,
+      "status": "playing",
+      "area": 2,
+      "turn": 672,
+      "hud": "3"
+    },
+    "trader": {
+      "traderIds": [
+        "janitor",
+        "coach",
+        "nan-ottoline"
+      ],
+      "found": "nan-ottoline",
+      "spawned": false
+    },
+    "talkLayer": "dialogue",
+    "tradeLayer": "dialogue",
+    "rows": [],
+    "cur0": 96,
+    "bought": false,
+    "cur1": 96,
+    "slots0": 15,
+    "slots1": 15,
+    "sold": false,
+    "cur2": 96,
+    "tradeLog": [
+      "Magdalena 'Mags' Calloway takes 6 Embarrassment.",
+      "Magdalena 'Mags' Calloway gives a withering once-over to Juniper Okafor-Pryce for 8 Embarrassment.",
+      "Juniper Okafor-Pryce uses Perfect Comeback.",
+      "Magdalena 'Mags' Calloway takes 14 Embarrassment.",
+      "The water doesn't care. That's why you have to."
+    ],
+    "errors": []
+  },
+  "fixture-western": {
+    "start": 20,
+    "earned": [
+      {
+        "turn": 12,
+        "area": 0,
+        "delta": 1,
+        "log": [
+          "Dolores Aguila shoots Dust Coyote (critical) for 9 Lead.",
+          "Dust Coyote is put in the dirt.",
+          "+1 silver",
+          "+5 Reputation"
+        ]
+      },
+      {
+        "turn": 15,
+        "area": 0,
+        "delta": 3,
+        "log": [
+          "Company Deputy is put in the dirt.",
+          "+3 silver",
+          "+9 Reputation",
+          "Lassoed ends."
+        ]
+      },
+      {
+        "turn": 79,
+        "area": 0,
+        "delta": 1,
+        "log": [
+          "Dust Coyote takes 12 Lead.",
+          "Dust Coyote is put in the dirt.",
+          "+1 silver",
+          "+5 Reputation"
+        ]
+      },
+      {
+        "turn": 227,
+        "area": 0,
+        "delta": 3,
+        "log": [
+          "Company Deputy is put in the dirt.",
+          "+3 silver",
+          "+9 Reputation",
+          "Word gets around! (2)"
+        ]
+      },
+      {
+        "turn": 290,
+        "area": 0,
+        "delta": 3,
+        "log": [
+          "Company Deputy takes 15 Lead.",
+          "Company Deputy is put in the dirt.",
+          "+3 silver",
+          "+9 Reputation"
+        ]
+      }
+    ],
+    "labelPeaks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      1
+    ],
+    "mid": {
+      "cur": 31,
+      "status": "playing",
+      "area": 1,
+      "turn": 317,
+      "hud": "12"
+    },
+    "trader": {
+      "traderIds": [
+        "widow-oquendo",
+        "preacher-weekes"
+      ],
+      "found": "widow-oquendo",
+      "spawned": true
+    },
+    "talkLayer": "dialogue",
+    "tradeLayer": "trade",
+    "rows": [
+      {
+        "text": "1 W Warm Sarsaparilla 6 silver Buy",
+        "disabled": false
+      },
+      {
+        "text": "2 B Box of .45 Cartridges 8 silver Buy",
+        "disabled": false
+      },
+      {
+        "text": "3 S Stick of Dynamite 30 silver Buy",
+        "disabled": false
+      },
+      {
+        "text": "4 R Rattler Antivenom 12 silver Buy",
+        "disabled": false
+      },
+      {
+        "text": "5 B Buffalo Coat 70 silver Buy",
+        "disabled": true
+      },
+      {
+        "text": "6 L Lucky Horseshoe 45 silver Buy",
+        "disabled": true
+      }
+    ],
+    "cur0": 31,
+    "bought": true,
+    "cur1": 25,
+    "slots0": 12,
+    "slots1": 12,
+    "sold": false,
+    "cur2": 25,
+    "tradeLog": [
+      "Widow Marisol Oquendo appears.",
+      "If you're buying, sit. If you're company, keep walking.",
+      "-6 silver",
+      "Dolores Aguila receives Warm Sarsaparilla.",
+      "My husband dug that well. Vane's men put a padlock on it."
+    ],
+    "errors": []
+  },
+  "fixture-dream": {
+    "start": 20,
+    "earned": [
+      {
+        "turn": 19,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Acute Angle takes 14 Glare.",
+          "Acute Angle is blended away.",
+          "+2 drops of linseed",
+          "+7 Resonance"
+        ]
+      },
+      {
+        "turn": 36,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Ytter scrapes Running Drip for 7.",
+          "Running Drip is blended away.",
+          "+2 drops of linseed",
+          "+4 Resonance"
+        ]
+      },
+      {
+        "turn": 39,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Ytter scrapes Running Drip for 6.",
+          "Running Drip is blended away.",
+          "+2 drops of linseed",
+          "+4 Resonance"
+        ]
+      },
+      {
+        "turn": 49,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Ytter scrapes Running Drip for 8.",
+          "Running Drip is blended away.",
+          "+2 drops of linseed",
+          "+4 Resonance"
+        ]
+      },
+      {
+        "turn": 96,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Ytter scrapes Running Drip for 8.",
+          "Running Drip is blended away.",
+          "+2 drops of linseed",
+          "+4 Resonance"
+        ]
+      },
+      {
+        "turn": 110,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Acute Angle is blended away.",
+          "+2 drops of linseed",
+          "+7 Resonance",
+          "A new hue blooms! (2)"
+        ]
+      },
+      {
+        "turn": 114,
+        "area": 0,
+        "delta": 2,
+        "log": [
+          "Running Drip takes 13 Glare.",
+          "Running Drip is blended away.",
+          "+2 drops of linseed",
+          "+4 Resonance"
+        ]
+      },
+      {
+        "turn": 186,
+        "area": 0,
+        "delta": 1,
+        "log": [
+          "Ytter scrapes Dissonant Moth for 7.",
+          "Dissonant Moth is blended away.",
+          "+1 drops of linseed",
+          "+4 Resonance"
+        ]
+      },
+      {
+        "turn": 244,
+        "area": 1,
+        "delta": 3,
+        "log": [
+          "Möbius Eel is blended away.",
+          "+3 drops of linseed",
+          "+10 Resonance",
+          "Hungry Bloom takes 7 Glare."
+        ]
+      },
+      {
+        "turn": 246,
+        "area": 1,
+        "delta": 2,
+        "log": [
+          "Hungry Bloom takes 7 Glare.",
+          "Hungry Bloom is blended away.",
+          "+2 drops of linseed",
+          "+6 Resonance"
+        ]
+      },
+      {
+        "turn": 268,
+        "area": 1,
+        "delta": 2,
+        "log": [
+          "Hungry Bloom is blended away.",
+          "+2 drops of linseed",
+          "+6 Resonance",
+          "Ytter: Dried Fast."
+        ]
+      },
+      {
+        "turn": 270,
+        "area": 1,
+        "delta": 1,
+        "log": [
+          "Dissonant Moth is blended away.",
+          "+1 drops of linseed",
+          "+4 Resonance",
+          "Dried Fast ends."
+        ]
+      },
+      {
+        "turn": 276,
+        "area": 1,
+        "delta": 2,
+        "log": [
+          "Ytter scrapes Running Drip for 8.",
+          "Running Drip is blended away.",
+          "+2 drops of linseed",
+          "+4 Resonance"
+        ]
+      },
+      {
+        "turn": 291,
+        "area": 1,
+        "delta": 2,
+        "log": [
+          "Ytter scrapes Hungry Bloom for 7.",
+          "Hungry Bloom is blended away.",
+          "+2 drops of linseed",
+          "+6 Resonance"
+        ]
+      },
+      {
+        "turn": 328,
+        "area": 1,
+        "delta": 3,
+        "log": [
+          "Ytter scrapes Möbius Eel for 6.",
+          "Möbius Eel is blended away.",
+          "+3 drops of linseed",
+          "+10 Resonance"
+        ]
+      },
+      {
+        "turn": 368,
+        "area": 2,
+        "delta": 2,
+        "log": [
+          "Ytter scrapes Acute Angle for 5.",
+          "Acute Angle is blended away.",
+          "+2 drops of linseed",
+          "+7 Resonance"
+        ]
+      },
+      {
+        "turn": 378,
+        "area": 2,
+        "delta": 2,
+        "log": [
+          "Acute Angle takes 14 Glare.",
+          "Acute Angle is blended away.",
+          "+2 drops of linseed",
+          "+7 Resonance"
+        ]
+      },
+      {
+        "turn": 439,
+        "area": 3,
+        "delta": 2,
+        "log": [
+          "Acute Angle is blended away.",
+          "+2 drops of linseed",
+          "+7 Resonance",
+          "A new hue blooms! (4)"
+        ]
+      },
+      {
+        "turn": 450,
+        "area": 3,
+        "delta": 2,
+        "log": [
+          "Glazed Through ends.",
+          "The Erasure blanks out Ytter for 12 Solvent.",
+          "Washed to primer",
+          "You thin, and thin, and are a glaze, and are a stain, and are primer. The Erasure smooths you flat with something like kindness. The canvas is very clean now. It is waiting for someone to begin again."
+        ]
+      }
+    ],
+    "labelPeaks": [
+      2,
+      2,
+      3,
+      1,
+      1,
+      1,
+      1,
+      2,
+      2,
+      0,
+      2,
+      1,
+      1,
+      0,
+      1,
+      5,
+      5
+    ],
+    "mid": {
+      "cur": 58,
+      "status": "lost",
+      "area": 3,
+      "turn": 450,
+      "hud": "1"
+    },
+    "trader": {
+      "traderIds": [
+        "old-umber",
+        "the-glazier",
+        "unfinished-sketch"
+      ],
+      "found": "old-umber",
+      "spawned": false
+    },
+    "talkLayer": "dialogue",
+    "tradeLayer": "trade",
+    "rows": [
+      {
+        "text": "1 ? Drop shaped like a question 12 drops of linseed Buy",
+        "disabled": false
+      },
+      {
+        "text": "2 ? Thumbprint in a stranger's hue 10 drops of linseed Buy",
+        "disabled": false
+      },
+      {
+        "text": "3 ? Bead of colour with no colour 20 drops of linseed Buy",
+        "disabled": false
+      },
+      {
+        "text": "4 B Burst of Cadmium Confetti 15 drops of linseed Buy",
+        "disabled": false
+      },
+      {
+        "text": "5 G Gesso Shell 50 drops of linseed Buy",
+        "disabled": false
+      },
+      {
+        "text": "6 M Moiré Loop 40 drops of linseed Buy",
+        "disabled": false
+      }
+    ],
+    "cur0": 58,
+    "bought": true,
+    "cur1": 46,
+    "slots0": 7,
+    "slots1": 7,
+    "sold": false,
+    "cur2": 46,
+    "tradeLog": [
+      "You come to as a swirl of a colour nobody has named, laid down last, still wet. Around you, magenta islands drift over a gradient that goes down forever. At the far edge of everything, a grey rectangle is quietly wiping the painting back to primer. Somewhere the red, the yellow and the blue are hiding. You are fading already. Find a pool of pigment. Then find the primaries.",
+      "Little highlight. You look faded. Got linseed? I have tubes.",
+      "-12 drops of linseed",
+      "Ytter receives drop shaped like a question.",
+      "The grey took my cousin Raw Sienna. Took him right down to the weave."
+    ],
+    "errors": []
+  },
+  "status-labels": {
+    "samples": [
+      1,
+      2,
+      3,
+      3,
+      2,
+      0,
+      0,
+      0,
+      0
+    ],
+    "max": 3
+  }
+}

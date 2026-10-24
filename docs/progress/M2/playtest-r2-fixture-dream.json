@@ -1,0 +1,39 @@
+{
+  "world": "fixture-dream",
+  "seed": 14,
+  "steps": 686,
+  "result": "won Gather the red, yellow and blue primaries and close the horizon at the Vanishing Point with the Last Brushstroke, or unmake the Erasure there. Do not unmake too much of the painting.",
+  "turn": 913,
+  "area": 3,
+  "level": 5,
+  "keyMismatch": [],
+  "refused": [
+    "step 294 {\"type\":\"attack\",\"targetId\":\"a65\"} log=[\"Ytter scrapes Concentric Stare but misses.\"]",
+    "step 297 {\"type\":\"use\",\"slot\":4,\"target\":{\"x\":25,\"y\":15}} log=[\"+9 Resonance\"]",
+    "step 367 {\"type\":\"talk\",\"targetId\":\"a56\"} log=[\"Ah. A fresh stroke. I do not recognise your hue. That means you are new, or you are important.\"]"
+  ],
+  "layers": {
+    "narration": 10,
+    "game": 918,
+    "dialogue": 4,
+    "levelup": 3,
+    "choice": 1,
+    "end": 1
+  },
+  "actions": {
+    "move": 505,
+    "use": 50,
+    "talk": 4,
+    "pickup": 23,
+    "attack": 45,
+    "wait": 283,
+    "transition": 3,
+    "interact": 4,
+    "search": 1
+  },
+  "errors": [],
+  "notes": [
+    "reload ok at turn 242 (layer after reload: game)"
+  ],
+  "stuckAt": []
+}

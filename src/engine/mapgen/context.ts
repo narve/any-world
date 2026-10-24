@@ -22,6 +22,16 @@ export interface GenContext {
   dropBelow: number;
   /** connectivity repair may turn single carved wall tiles into doors (off for natural maps) */
   carveDoors: boolean;
+  /**
+   * Leave the edges of the playable shape open to the void (no wall rim). Used by floating
+   * layouts (islands) whose platforms end in a drop rather than a wall.
+   */
+  openEdges: boolean;
+  /**
+   * Structural, genre-neutral names for generator regions (e.g. "platform", "chamber",
+   * "ring 2"); copied onto AreaMap.regions[].name so discovery hooks can describe them.
+   */
+  regionNames: Map<number, string>;
 }
 
 export function makeContext(plan: Pick<AreaPlan, 'size' | 'params'>, rng: Rng): GenContext {
@@ -35,6 +45,8 @@ export function makeContext(plan: Pick<AreaPlan, 'size' | 'params'>, rng: Rng): 
     voronoi: 0,
     dropBelow: 0,
     carveDoors: true,
+    openEdges: false,
+    regionNames: new Map(),
     param(names, def, lo, hi) {
       for (const n of Array.isArray(names) ? names : [names]) {
         const v = params[n];

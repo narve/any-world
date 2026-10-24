@@ -2,7 +2,7 @@
 import type { Vocabulary } from '../../../schema/world';
 import type { EndView, InspirationPrompt, LoadingView, Settings, SettingsView, StartOptions, StartView, UiCallbacks } from '../viewmodel';
 import { dataKey, h, icon, ICONS, setChildren } from '../dom';
-import { clamp, difficultyLabel, pickCards, presetNotes, runStatLines, weirdnessLabel } from '../format';
+import { clamp, DIFFICULTIES, difficultyHint, difficultyLabel, pickCards, presetNotes, runStatLines, toDifficulty, weirdnessLabel } from '../format';
 import { Modal } from './modals';
 
 const CARD_COUNT = 4;
@@ -18,6 +18,7 @@ export class StartScreen {
   private weird: HTMLInputElement;
   private diffOut: HTMLOutputElement;
   private weirdOut: HTMLOutputElement;
+  private diffHint: HTMLElement;
   private cardsEl: HTMLElement;
   private sideEl: HTMLElement;
   private noteEl: HTMLElement;
@@ -43,7 +44,17 @@ export class StartScreen {
     });
     this.diffOut = h('output', { class: 'aw-range-out', for: 'aw-diff' });
     this.weirdOut = h('output', { class: 'aw-range-out', for: 'aw-weird' });
-    this.diff = h('input', { id: 'aw-diff', type: 'range', min: '1', max: '5', step: '1', value: '2', oninput: () => this.syncOut() });
+    this.diff = h('input', {
+      id: 'aw-diff',
+      type: 'range',
+      min: '0',
+      max: String(DIFFICULTIES.length - 1),
+      step: '1',
+      value: String(DIFFICULTIES.indexOf('normal')),
+      'aria-describedby': 'aw-diff-hint',
+      oninput: () => this.syncOut(),
+    });
+    this.diffHint = h('p', { id: 'aw-diff-hint', class: 'aw-range-hint' });
     this.weird = h('input', { id: 'aw-weird', type: 'range', min: '0', max: '1', step: '0.05', value: '0.4', oninput: () => this.syncOut() });
     this.cardsEl = h('div', { class: 'aw-insp-cards' });
     this.sideEl = h('aside', { class: 'aw-start-side' });
@@ -73,6 +84,7 @@ export class StartScreen {
             h('label', { class: 'aw-range', for: 'aw-diff' }, h('span', null, 'Difficulty'), this.diff, this.diffOut),
             h('label', { class: 'aw-range', for: 'aw-weird' }, h('span', null, 'Weirdness'), this.weird, this.weirdOut),
           ),
+          this.diffHint,
           h(
             'div',
             { class: 'aw-start-actions' },
@@ -99,14 +111,18 @@ export class StartScreen {
   }
 
   private syncOut(): void {
-    this.diffOut.textContent = difficultyLabel(Number(this.diff.value));
+    const d = toDifficulty(Number(this.diff.value));
+    this.diffOut.textContent = difficultyLabel(d);
+    this.diffHint.textContent = difficultyHint(d);
+    this.diff.setAttribute('aria-valuetext', difficultyLabel(d));
     this.weirdOut.textContent = weirdnessLabel(Number(this.weird.value));
+    this.weird.setAttribute('aria-valuetext', weirdnessLabel(Number(this.weird.value)));
   }
 
   options(surprise: boolean): StartOptions {
     return {
       prompt: surprise ? '' : this.textarea.value.trim(),
-      difficulty: clamp(Math.round(Number(this.diff.value)), 1, 5),
+      difficulty: toDifficulty(Number(this.diff.value)),
       weirdness: clamp(Number(this.weird.value), 0, 1),
       surprise,
     };
@@ -148,7 +164,7 @@ export class StartScreen {
             h('span', { class: 'aw-insp-prompt' }, p.prompt),
             p.teaser ? h('span', { class: 'aw-insp-teaser' }, p.teaser) : null,
           ),
-          p.worldId ? h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-insp-demo', onclick: () => this.cb.onPlayDemo?.(p.worldId!) }, icon(ICONS.play), 'Play demo') : null,
+          p.worldId ? h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-insp-demo', onclick: () => this.cb.onPlayDemo?.(p.worldId!, this.options(false)) }, icon(ICONS.play), 'Play demo') : null,
         ),
       ),
     );
@@ -159,7 +175,7 @@ export class StartScreen {
     if (!this.initialised) {
       this.initialised = true;
       if (v.defaults?.prompt) this.textarea.value = v.defaults.prompt;
-      if (v.defaults?.difficulty !== undefined) this.diff.value = String(v.defaults.difficulty);
+      if (v.defaults?.difficulty !== undefined) this.diff.value = String(Math.max(0, DIFFICULTIES.indexOf(toDifficulty(v.defaults.difficulty))));
       if (v.defaults?.weirdness !== undefined) this.weird.value = String(v.defaults.weirdness);
       this.syncOut();
     }
@@ -211,7 +227,7 @@ export class StartScreen {
                   null,
                   h(
                     'button',
-                    { type: 'button', class: 'aw-demo', style: { '--demo': d.color ?? 'var(--c-primary)' }, onclick: () => this.cb.onPlayDemo?.(d.id) },
+                    { type: 'button', class: 'aw-demo', style: { '--demo': d.color ?? 'var(--c-primary)' }, onclick: () => this.cb.onPlayDemo?.(d.id, this.options(false)) },
                     h('span', { class: 'aw-demo-genre' }, d.genre),
                     h('span', { class: 'aw-demo-title' }, d.title),
                     h('span', { class: 'aw-demo-tag' }, d.tagline),
@@ -310,6 +326,14 @@ export class EndScreen {
         { class: 'aw-end-stats', 'aria-label': `${v.playerName}'s run` },
         runStatLines(v.stats, vocab).map((s) => h('div', null, h('dt', null, s.label), h('dd', null, s.value))),
       ),
+      v.difficulty !== undefined || v.weirdness !== undefined
+        ? h(
+            'p',
+            { class: 'aw-end-settings' },
+            v.difficulty !== undefined ? h('span', { class: 'aw-chip tone-muted' }, `Difficulty: ${difficultyLabel(v.difficulty)}`) : null,
+            v.weirdness !== undefined ? h('span', { class: 'aw-chip tone-muted' }, `Weirdness: ${weirdnessLabel(v.weirdness)}`) : null,
+          )
+        : null,
       h(
         'div',
         { class: 'aw-end-actions' },

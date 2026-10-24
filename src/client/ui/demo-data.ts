@@ -333,7 +333,7 @@ export function demoStart(): StartView {
     savedRun: { worldTitle: 'The Rain Broker of Sweetwater', playerName: 'Dolores Aguila', areaName: 'Dry Creek Flats', turn: 214 },
     providerLabel: 'Provider: DeepSeek (direct)',
     canGenerate: true,
-    defaults: { difficulty: 2, weirdness: 0.4 },
+    defaults: { difficulty: 'normal', weirdness: 0.4 },
   };
 }
 

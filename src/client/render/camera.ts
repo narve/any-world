@@ -5,9 +5,24 @@
 import * as THREE from 'three';
 import { yawForStep, normStep } from './coords';
 
-export const CAMERA_PITCH_DEG = 52;
+export const CAMERA_PITCH_DEG = 50;
+export const CAMERA_FOV_DEG = 34;
 export const MIN_DIST = 6;
 export const MAX_DIST = 30;
+/** tiles visible to each side of the player at the default zoom (landscape) */
+export const DEFAULT_HALF_WIDTH = 8.5;
+
+/**
+ * Default camera distance for an aspect ratio: about DEFAULT_HALF_WIDTH tiles to each side of the
+ * player on landscape screens; portrait screens are framed by height instead (≈ 6 tiles above and
+ * below), so phones do not zoom out until the character is a speck.
+ */
+export function defaultDistance(aspect: number, fovDeg = CAMERA_FOV_DEG): number {
+  const tv = Math.tan(((fovDeg / 2) * Math.PI) / 180);
+  const byWidth = DEFAULT_HALF_WIDTH / (tv * Math.max(0.3, aspect));
+  const byHeight = 6.2 / tv;
+  return Math.min(MAX_DIST, Math.max(MIN_DIST, Math.min(byWidth, byHeight * 1.0)));
+}
 
 export class CameraRig {
   readonly camera: THREE.PerspectiveCamera;
@@ -16,17 +31,19 @@ export class CameraRig {
   /** integer step; yaw = -step·90° */
   step = 0;
   yaw = 0;
-  dist = 11.5;
-  distTarget = 11.5;
-  /** the distance the player chose (wheel / setZoom) */
-  userDist = 11.5;
+  dist = defaultDistance(1.6);
+  distTarget = defaultDistance(1.6);
+  /** the distance the player chose (wheel / setZoom); follows the aspect ratio until they zoom */
+  userDist = defaultDistance(1.6);
+  /** true once the player zoomed (or setZoom was called): the aspect ratio no longer picks the zoom */
+  private userZoomed = false;
   /** minimum distance that keeps everything that must be on screen framed (0 = no constraint) */
   frameDist = 0;
   pitch = (CAMERA_PITCH_DEG * Math.PI) / 180;
   private lookOffset = new THREE.Vector3(0, 0.45, 0);
 
   constructor(aspect = 1) {
-    this.camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 200);
+    this.camera = new THREE.PerspectiveCamera(CAMERA_FOV_DEG, aspect, 0.1, 220);
     this.apply();
   }
 
@@ -52,6 +69,7 @@ export class CameraRig {
     const f = Math.exp(Math.max(-2, Math.min(2, delta)) * 0.15);
     // start from what is on screen (which may be auto-framed further out than the player's choice)
     this.userDist = Math.min(MAX_DIST, Math.max(MIN_DIST, this.distTarget * f));
+    this.userZoomed = true;
     // an explicit zoom-in overrides auto framing until the renderer next reframes (next turn)
     if (delta < 0) this.frameDist = 0;
     this.retarget();
@@ -59,6 +77,7 @@ export class CameraRig {
 
   setZoom(dist: number, snap = false): void {
     this.userDist = Math.min(MAX_DIST, Math.max(MIN_DIST, dist));
+    this.userZoomed = true;
     this.retarget();
     if (snap) this.dist = this.distTarget;
   }
@@ -109,6 +128,12 @@ export class CameraRig {
   setAspect(aspect: number): void {
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
+    if (!this.userZoomed) {
+      this.userDist = defaultDistance(aspect, this.camera.fov);
+      this.retarget();
+      this.dist = this.distTarget;
+      this.apply();
+    }
   }
 
   /** true while still moving (useful to keep rendering) */

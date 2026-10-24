@@ -1,0 +1,5724 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "The Fourth Primary",
+    "tagline": "You are one stroke of a colour that does not exist yet. The canvas is being washed back to grey. Finish the horizon before you fade.",
+    "genre": "abstract dream",
+    "tags": [
+      "surreal",
+      "abstract",
+      "dream",
+      "psychedelic",
+      "painterly",
+      "non-euclidean"
+    ],
+    "tone": "luminous, strange, tender, a little feverish",
+    "era": "the moment between two brushstrokes",
+    "premise": "Somewhere a painting was abandoned mid-stroke. Its colours kept living: magenta archipelagos drifting over nothing, a warm underpainting that breathes like an animal, a grid of perspective lines beneath everything. You are Ytter, the last stroke laid down, in a hue no eye has seen. Now a grey solvent called the Erasure is washing the canvas back to primer, and the three primaries have scattered. Gather the red, the yellow and the blue, sink through the layers to the Vanishing Point, and paint the horizon closed.",
+    "prompt": "navigate an abstract painting that is alive, where colour and geometry are the terrain",
+    "nonViolent": false
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Impasto",
+        "abbr": "IMP",
+        "description": "How thickly you are laid on. Weight behind a clash, and how hard you are to push."
+      },
+      "dex": {
+        "name": "Flow",
+        "abbr": "FLW",
+        "description": "How freely you run across the canvas. Precision, evasion, slipping past shapes."
+      },
+      "int": {
+        "name": "Harmony",
+        "abbr": "HRM",
+        "description": "Your sense of which colours belong together. Drives contrasts and charms."
+      },
+      "hp": {
+        "name": "Opacity",
+        "abbr": "OPA",
+        "description": "How much of you is really there. At zero you go fully transparent and are gone."
+      },
+      "mp": {
+        "name": "Wetness",
+        "abbr": "WET",
+        "description": "Paint still workable on your edges. Spent on strokes; it pools back slowly."
+      },
+      "ac": {
+        "name": "Varnish",
+        "abbr": "VRN",
+        "description": "A hard clear layer between you and everything that smears."
+      }
+    },
+    "conflict": "Contrast",
+    "defeated": "blended away",
+    "xp": "Resonance",
+    "levelUp": "A new hue blooms",
+    "currency": "drops of linseed",
+    "lossTitle": "Washed to primer",
+    "winTitle": "The horizon is finished",
+    "area": "Layer"
+  },
+  "palette": {
+    "primary": "#ff4fa3",
+    "secondary": "#2a1b5e",
+    "accent": "#ffd23f",
+    "danger": "#ff5a36",
+    "ui": "#140d2b",
+    "text": "#f6efff"
+  },
+  "damageTypes": [
+    {
+      "id": "physical",
+      "name": "Smudge",
+      "color": "#d8c8f0"
+    },
+    {
+      "id": "glare",
+      "name": "Glare",
+      "color": "#fff4a3"
+    },
+    {
+      "id": "solvent",
+      "name": "Solvent",
+      "color": "#9aa5b1"
+    },
+    {
+      "id": "dissonance",
+      "name": "Dissonance",
+      "color": "#ff4fa3"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "greyed",
+      "name": "Greyed Out",
+      "description": "Your colour has drained to a dull wash. Everything is harder, and the grey keeps eating.",
+      "harmful": true,
+      "color": "#8a8f98",
+      "perTurn": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          },
+          "damageType": "solvent"
+        }
+      ],
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        },
+        {
+          "stat": "int",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "dazzled",
+      "name": "Overexposed",
+      "description": "Pure white has burned the edges off the world.",
+      "harmful": true,
+      "color": "#fff4a3",
+      "flags": [
+        "blinded"
+      ]
+    },
+    {
+      "id": "smeared",
+      "name": "Smeared",
+      "description": "You have been dragged sideways across yourself. Directions are opinions.",
+      "harmful": true,
+      "color": "#ff8fcf",
+      "flags": [
+        "confused"
+      ]
+    },
+    {
+      "id": "dried",
+      "name": "Dried Fast",
+      "description": "Your lower edge has dried onto the canvas. You cannot lift it yet.",
+      "harmful": true,
+      "color": "#c9a66b",
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "flattened",
+      "name": "Flattened",
+      "description": "Pressed into two dimensions for a moment. Nothing moves until you remember depth.",
+      "harmful": true,
+      "color": "#b8b8ff",
+      "flags": [
+        "stunned"
+      ]
+    },
+    {
+      "id": "hushed",
+      "name": "Muted",
+      "description": "Your tones have been knocked back. No strokes will take.",
+      "harmful": true,
+      "color": "#4b3f72",
+      "flags": [
+        "silenced"
+      ]
+    },
+    {
+      "id": "enthralled",
+      "name": "Enthralled",
+      "description": "A perfect complementary pair. You cannot bear to contrast it.",
+      "harmful": true,
+      "color": "#ff4fa3",
+      "flags": [
+        "charmed"
+      ]
+    },
+    {
+      "id": "horror-vacui",
+      "name": "Horror Vacui",
+      "description": "The unpainted white is too close. You must get away from it.",
+      "harmful": true,
+      "color": "#f4f4f4",
+      "flags": [
+        "afraid"
+      ]
+    },
+    {
+      "id": "transparent",
+      "name": "Glazed Through",
+      "description": "A thin glaze: shapes see straight through you to whatever is behind.",
+      "harmful": false,
+      "color": "#7ee8fa",
+      "flags": [
+        "invisible"
+      ]
+    },
+    {
+      "id": "vivid",
+      "name": "Vivid",
+      "description": "Saturated to the edges. Everything else looks slow and muddy.",
+      "harmful": false,
+      "color": "#ffd23f",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 2
+        }
+      ],
+      "flags": [
+        "hasted"
+      ]
+    },
+    {
+      "id": "wet-on-wet",
+      "name": "Wet on Wet",
+      "description": "Fresh paint flowing into your gaps.",
+      "harmful": false,
+      "color": "#66ffcc",
+      "perTurn": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "flags": [
+        "regenerating"
+      ]
+    },
+    {
+      "id": "varnished",
+      "name": "Fixed",
+      "description": "A fresh coat of fixative. Smudges slide off.",
+      "harmful": false,
+      "color": "#c7f9ff",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 3
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "hue",
+      "name": "Saturation",
+      "color": "#ff4fa3",
+      "max": 100,
+      "start": 100,
+      "perTurn": -1,
+      "description": "How much colour you still hold. It fades every turn; wade through pigment or squeeze a tube to bring it back.",
+      "onEmpty": [
+        {
+          "type": "apply_status",
+          "status": "greyed",
+          "duration": 6
+        },
+        {
+          "type": "message",
+          "text": "You are the colour of the primer now. The grey starts to chew."
+        }
+      ],
+      "emptyIsDeath": false
+    },
+    {
+      "id": "afterimage",
+      "name": "Afterimages",
+      "color": "#66ffcc",
+      "max": 6,
+      "start": 1,
+      "perTurn": 0,
+      "description": "Ghosts of the shapes you have blended away, burned into the canvas. Spend them to leave a copy of yourself behind.",
+      "onEmpty": [],
+      "emptyIsDeath": false
+    }
+  ],
+  "rules": [
+    {
+      "id": "drying-time",
+      "name": "Drying Time",
+      "description": "Paint dries. Your Saturation fades every turn. Each new layer is laid down wet and tops you up, and every shape you blend away leaves an afterimage.",
+      "playerTriggers": [
+        {
+          "on": "on_area_enter",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "hue",
+                "amount": {
+                  "base": 25
+                }
+              },
+              {
+                "type": "message",
+                "text": "The new layer is still wet. Colour soaks back into you."
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_kill",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "afterimage",
+                "amount": {
+                  "base": 1
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "switches": {}
+    },
+    {
+      "id": "nothing-named",
+      "name": "Nothing Has a Name Yet",
+      "description": "The Painter never titled anything. Every tube, drop and dollop is a mystery until you try it.",
+      "playerTriggers": [],
+      "switches": {
+        "allConsumablesUnknown": true
+      }
+    },
+    {
+      "id": "canvas-turns",
+      "name": "The Canvas Turns",
+      "description": "Up is only a suggestion here. Now and then the whole canvas is rotated and you land somewhere else. Every shape you unmake leaves a hole the painting remembers.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 40,
+          "chance": 0.35,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "teleport",
+                "mode": "random"
+              },
+              {
+                "type": "message",
+                "text": "The canvas is turned a quarter. You slide, and stop somewhere else."
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#ffd23f"
+            }
+          }
+        }
+      ],
+      "switches": {
+        "violenceCounter": "colours-spilled"
+      }
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": true,
+    "search": true,
+    "persuade": true
+  },
+  "terrains": [
+    {
+      "id": "pigment-pool",
+      "name": "Pool of Pigment",
+      "description": "Undiluted opera rose, ankle deep. Wade in and your colour comes back.",
+      "walkable": true,
+      "blocksSight": false,
+      "moveCost": 1,
+      "onStand": [
+        {
+          "type": "resource",
+          "resource": "hue",
+          "amount": {
+            "base": 4
+          }
+        }
+      ],
+      "color": "#ff4fa3",
+      "height": 0.03,
+      "emissive": "#7a1050"
+    },
+    {
+      "id": "solvent-slick",
+      "name": "Solvent Slick",
+      "description": "A sheen of turpentine. It lifts colour off anything that crosses it.",
+      "walkable": true,
+      "blocksSight": false,
+      "moveCost": 2,
+      "onStand": [
+        {
+          "type": "resource",
+          "resource": "hue",
+          "amount": {
+            "base": -3
+          }
+        }
+      ],
+      "color": "#9aa5b1",
+      "height": 0.01,
+      "emissive": "#2c3440"
+    },
+    {
+      "id": "glare-patch",
+      "name": "Overexposed Patch",
+      "description": "A spot where the white was laid on too thick. Looking at it hurts.",
+      "walkable": true,
+      "blocksSight": false,
+      "moveCost": 1,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "dazzled",
+          "duration": 2
+        }
+      ],
+      "color": "#fffbe0",
+      "height": 0.02,
+      "emissive": "#fff4a3"
+    },
+    {
+      "id": "glaze-pool",
+      "name": "Glaze Pool",
+      "description": "A pool of clear medium. Step through it and you go faintly see-through.",
+      "walkable": true,
+      "blocksSight": false,
+      "moveCost": 1,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "transparent",
+          "duration": 2
+        }
+      ],
+      "color": "#7ee8fa",
+      "height": 0.02,
+      "emissive": "#1d6f80"
+    },
+    {
+      "id": "impasto-ridge",
+      "name": "Impasto Ridge",
+      "description": "A wave of cadmium paint laid on with a knife and left to set. Too thick to see over.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#ffd23f",
+      "height": 1.2,
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.9,
+              0.7,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "color": "#ffd23f"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.5,
+              0.9,
+              0.5
+            ],
+            "pos": [
+              0.15,
+              0.8,
+              0.1
+            ],
+            "color": "#ffb703",
+            "rot": [
+              0,
+              0,
+              -25
+            ]
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.5,
+              0.08,
+              0.5
+            ],
+            "pos": [
+              -0.1,
+              0.5,
+              0
+            ],
+            "color": "#fb8500",
+            "rot": [
+              70,
+              0,
+              0
+            ]
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "sticky-membrane",
+      "name": "Tacky Membrane",
+      "description": "Half-dried skin of paint. It holds on to whatever touches it.",
+      "walkable": true,
+      "blocksSight": false,
+      "moveCost": 2,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "dried",
+          "duration": 1
+        }
+      ],
+      "color": "#ff8fcf",
+      "height": 0.04,
+      "emissive": "#5c1440"
+    },
+    {
+      "id": "eye-orchid",
+      "name": "Eye Orchid",
+      "description": "A bloom with an iris where the pollen should be. Touch it and it sometimes weeps a drop of colour.",
+      "walkable": false,
+      "blocksSight": false,
+      "color": "#c77dff",
+      "height": 0.9,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "tube-of-rose",
+            "count": 1
+          }
+        ],
+        "condition": {
+          "type": "chance",
+          "p": 0.45
+        }
+      },
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#c77dff",
+          "secondary": "#3a0ca3",
+          "accent": "#66ffcc"
+        },
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.85,
+              0
+            ],
+            "color": "#f6efff",
+            "material": "glass"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.85,
+              0.1
+            ],
+            "color": "#3a0ca3",
+            "material": "glow",
+            "emissive": "#66ffcc"
+          }
+        ],
+        "idle": "sway",
+        "light": {
+          "color": "#c77dff",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "perspective-line",
+      "name": "Perspective Line",
+      "description": "A ruled line running to the vanishing point. Travel along it and you arrive before you set off.",
+      "walkable": true,
+      "blocksSight": false,
+      "moveCost": 1,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "vivid",
+          "duration": 1
+        }
+      ],
+      "color": "#00e5ff",
+      "height": 0.01,
+      "emissive": "#00e5ff"
+    },
+    {
+      "id": "floating-prism",
+      "name": "Floating Prism",
+      "description": "A glass prism hanging in nothing. Look through it and the whole layer is split into its colours at once.",
+      "walkable": false,
+      "blocksSight": false,
+      "color": "#c7f9ff",
+      "height": 1.1,
+      "emissive": "#7ee8fa",
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 30
+          },
+          {
+            "type": "set_flag",
+            "flag": "saw-through-prism",
+            "value": true
+          },
+          {
+            "type": "message",
+            "text": "The prism splits the layer into seven bands. For a moment you can see all of it."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#7ee8fa"
+        }
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.5,
+              0.8,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#c7f9ff",
+            "material": "glass",
+            "emissive": "#7ee8fa"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.5,
+              0.5,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "color": "#ff4fa3",
+            "rot": [
+              180,
+              0,
+              0
+            ],
+            "material": "glass",
+            "emissive": "#7a1050"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#c7f9ff",
+          "intensity": 0.9,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "unpainted-gap",
+      "name": "Unpainted Gap",
+      "description": "Bare canvas showing through. There is nothing there to stand on, and it is unbearable to look at.",
+      "walkable": false,
+      "blocksSight": false,
+      "onStand": [],
+      "color": "#f4f4f4",
+      "height": 0,
+      "emissive": "#3a3a3a"
+    }
+  ],
+  "player": {
+    "name": "Ytter",
+    "title": "The Fourth Primary",
+    "description": "The last stroke the Painter laid down, in a hue nobody has a name for: blue that is also gold that is also the inside of an eyelid. You are mostly a swirl. You are entirely awake.",
+    "stats": {
+      "str": 10,
+      "dex": 13,
+      "int": 14,
+      "hp": 26,
+      "mp": 14,
+      "ac": 10
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 9,
+    "sight": 7,
+    "unarmed": {
+      "name": "Bleed",
+      "verb": "bleeds into",
+      "damage": {
+        "base": 0,
+        "dice": "1d3"
+      },
+      "damageType": "physical",
+      "range": 1,
+      "accuracyStat": "dex"
+    },
+    "startingItems": [
+      {
+        "item": "palette-knife",
+        "count": 1,
+        "equipped": true,
+        "quick": true
+      },
+      {
+        "item": "varnish-coat",
+        "count": 1,
+        "equipped": true,
+        "quick": false
+      },
+      {
+        "item": "complementary",
+        "count": 1,
+        "equipped": false,
+        "quick": true
+      },
+      {
+        "item": "leave-afterimage",
+        "count": 1,
+        "equipped": false,
+        "quick": true
+      },
+      {
+        "item": "tube-of-rose",
+        "count": 2,
+        "equipped": false,
+        "quick": true
+      },
+      {
+        "item": "linseed-drop",
+        "count": 1,
+        "equipped": false,
+        "quick": true
+      },
+      {
+        "item": "kaleidoscope",
+        "count": 1,
+        "equipped": false,
+        "quick": true
+      }
+    ],
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.6,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "thick-impasto",
+          "name": "Thick Impasto",
+          "description": "Laid on with a knife. +6 Opacity, +1 Varnish.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 6
+            },
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "loose-wrist",
+          "name": "Loose Wrist",
+          "description": "You stop fighting the brush. +2 Flow.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "colour-theory",
+          "name": "Colour Theory",
+          "description": "You finally see why things clash. +2 Harmony, +4 Wetness.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "mp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "wet-edge",
+          "name": "Keep a Wet Edge",
+          "description": "Your edges stay workable. Recover 2 Saturation every 8 turns.",
+          "triggers": [
+            {
+              "on": "on_turn",
+              "every": 8,
+              "chance": 1,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "hue",
+                    "amount": {
+                      "base": 2
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "persistence-of-vision",
+          "name": "Persistence of Vision",
+          "description": "You linger in the eye. Gain an Afterimage every 25 turns.",
+          "triggers": [
+            {
+              "on": "on_turn",
+              "every": 25,
+              "chance": 1,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "afterimage",
+                    "amount": {
+                      "base": 1
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "sfumato",
+          "name": "Sfumato",
+          "description": "When something smears you, you sometimes go soft and hazy and slip from sight. 30% chance when hurt to turn Glazed Through for 2 turns.",
+          "triggers": [
+            {
+              "on": "on_hurt",
+              "chance": 0.3,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "apply_status",
+                    "status": "transparent",
+                    "duration": 2
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "chiaroscuro",
+          "name": "Chiaroscuro",
+          "description": "You learn to thin yourself to a film. Learn Glaze Over.",
+          "grantItems": [
+            "glaze-over"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "quick-strokes",
+          "name": "Quick Strokes",
+          "description": "Faster across the canvas than paint should be.",
+          "modifiers": [
+            {
+              "stat": "speed",
+              "amount": 15
+            }
+          ],
+          "minLevel": 3
+        }
+      ]
+    },
+    "model": {
+      "archetype": "freeform",
+      "parts": [
+        {
+          "shape": "sphere",
+          "size": [
+            0.32,
+            0.32,
+            0.32
+          ],
+          "pos": [
+            0,
+            0.55,
+            0
+          ],
+          "color": "#3a3aff",
+          "material": "glow",
+          "emissive": "#2a1bff",
+          "group": "body"
+        },
+        {
+          "shape": "torus",
+          "size": [
+            0.5,
+            0.05,
+            0.5
+          ],
+          "pos": [
+            0,
+            0.55,
+            0
+          ],
+          "color": "#ffd23f",
+          "material": "glow",
+          "emissive": "#ffb703",
+          "rot": [
+            75,
+            0,
+            15
+          ],
+          "group": "ring"
+        },
+        {
+          "shape": "torus",
+          "size": [
+            0.42,
+            0.04,
+            0.42
+          ],
+          "pos": [
+            0,
+            0.55,
+            0
+          ],
+          "color": "#ff4fa3",
+          "material": "glow",
+          "emissive": "#ff4fa3",
+          "rot": [
+            -60,
+            30,
+            0
+          ],
+          "group": "ring"
+        },
+        {
+          "shape": "cone",
+          "size": [
+            0.18,
+            0.4,
+            0.18
+          ],
+          "pos": [
+            0,
+            0.22,
+            0
+          ],
+          "color": "#66ffcc",
+          "material": "glass",
+          "rot": [
+            180,
+            0,
+            0
+          ],
+          "group": "tail"
+        },
+        {
+          "shape": "sphere",
+          "size": [
+            0.1,
+            0.1,
+            0.1
+          ],
+          "pos": [
+            0.05,
+            0.62,
+            0.13
+          ],
+          "color": "#ffffff",
+          "material": "glow",
+          "emissive": "#ffffff",
+          "group": "head"
+        }
+      ],
+      "scale": 1,
+      "idle": "hover",
+      "light": {
+        "color": "#8c7dff",
+        "intensity": 0.9,
+        "radius": 2.5
+      }
+    },
+    "startCurrency": 20
+  },
+  "actors": [
+    {
+      "id": "running-drip",
+      "name": "Running Drip",
+      "faction": "hostile",
+      "description": "A bead of magenta that ran down from somewhere above and kept going. It wants to soak into anything it touches. Burst, it leaves a pool behind.",
+      "stats": {
+        "hp": 6,
+        "ac": 9,
+        "str": 7,
+        "dex": 12,
+        "int": 3,
+        "mp": 0
+      },
+      "speed": 120,
+      "sight": 6,
+      "attack": {
+        "name": "Soak",
+        "verb": "soaks into",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "physical",
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "spawn_terrain",
+                "terrain": "pigment-pool",
+                "radius": 0,
+                "duration": 30
+              },
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "solvent",
+          "multiplier": 2
+        }
+      ],
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.25
+      },
+      "xp": 4,
+      "loot": [
+        {
+          "item": "tube-of-rose",
+          "chance": 0.2
+        }
+      ],
+      "persuadeDifficulty": 19,
+      "tags": [
+        "paint",
+        "liquid"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#ff4fa3",
+          "secondary": "#ff8fcf",
+          "accent": "#ffffff"
+        },
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.2,
+              0.3,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#ff4fa3",
+            "material": "glass"
+          }
+        ],
+        "scale": 0.6,
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "grey-wash",
+      "name": "Wash of Grey",
+      "faction": "hostile",
+      "description": "A loose fog of solvent drifting across the canvas. It does not hit; it lifts colour off you and leaves primer behind.",
+      "stats": {
+        "hp": 11,
+        "ac": 8,
+        "str": 6,
+        "dex": 9,
+        "int": 4,
+        "mp": 0
+      },
+      "speed": 80,
+      "sight": 5,
+      "attack": {
+        "name": "Lift",
+        "verb": "lifts the colour off",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "solvent",
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "adjacent",
+              "range": 1,
+              "radius": 0,
+              "affects": "enemies",
+              "needsLos": true
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "hue",
+                "amount": {
+                  "base": -5
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "solvent",
+          "multiplier": 0
+        },
+        {
+          "damageType": "glare",
+          "multiplier": 1.5
+        }
+      ],
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.4
+      },
+      "xp": 5,
+      "loot": [
+        {
+          "item": "turpentine-tear",
+          "chance": 0.25
+        }
+      ],
+      "persuadeDifficulty": 19,
+      "tags": [
+        "solvent",
+        "erasure"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.8,
+              0.25,
+              0.7
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "color": "#9aa5b1",
+            "material": "glass"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.5,
+              0.2,
+              0.5
+            ],
+            "pos": [
+              0.2,
+              0.5,
+              0.1
+            ],
+            "color": "#c0c6cf",
+            "material": "glass"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.45,
+              0.18,
+              0.45
+            ],
+            "pos": [
+              -0.2,
+              0.25,
+              -0.1
+            ],
+            "color": "#7d8590",
+            "material": "glass"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "acute-angle",
+      "name": "Acute Angle",
+      "faction": "hostile",
+      "description": "A triangle that has decided it is sharper than you. It comes point-first.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 10,
+        "dex": 13,
+        "int": 5,
+        "mp": 0
+      },
+      "speed": 110,
+      "sight": 7,
+      "attack": {
+        "name": "Vertex",
+        "verb": "pierces",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "physical",
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "resistances": [
+        {
+          "damageType": "dissonance",
+          "multiplier": 1.5
+        }
+      ],
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.05
+      },
+      "xp": 7,
+      "loot": [
+        {
+          "item": "confetti-burst",
+          "chance": 0.2
+        }
+      ],
+      "persuadeDifficulty": 19,
+      "tags": [
+        "geometry",
+        "shape"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.5,
+              0.7,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#ff5a36",
+            "material": "matte",
+            "rot": [
+              0,
+              0,
+              180
+            ]
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.3,
+              0.4,
+              0.13
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ff5a36",
+            "rot": [
+              0,
+              0,
+              180
+            ]
+          }
+        ],
+        "idle": "spin"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "concentric-stare",
+      "name": "Concentric Stare",
+      "faction": "hostile",
+      "description": "Rings inside rings inside rings, and in the middle an eye. It does not move. It does not need to.",
+      "stats": {
+        "hp": 14,
+        "ac": 11,
+        "str": 4,
+        "dex": 12,
+        "int": 14,
+        "mp": 10
+      },
+      "speed": 90,
+      "sight": 9,
+      "attack": {
+        "name": "Gaze",
+        "verb": "stares through",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "glare",
+        "range": 5,
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "flash",
+          "name": "Overexposure",
+          "description": "Every ring flashes white at once.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 4,
+              "radius": 3,
+              "affects": "enemies",
+              "needsLos": true
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "dazzled",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#ffffff"
+            }
+          },
+          "cost": {
+            "resource": "mp",
+            "amount": 5
+          },
+          "cooldown": 6,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "behaviour": {
+        "type": "stationary",
+        "erratic": 0
+      },
+      "xp": 9,
+      "loot": [
+        {
+          "item": "titanium-white",
+          "chance": 0.3
+        }
+      ],
+      "persuadeDifficulty": 17,
+      "tags": [
+        "geometry",
+        "eye"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.8,
+              0.05,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#00e5ff",
+            "material": "glow",
+            "emissive": "#00e5ff",
+            "rot": [
+              90,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.55,
+              0.05,
+              0.55
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#ff4fa3",
+            "material": "glow",
+            "emissive": "#ff4fa3",
+            "rot": [
+              90,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.32,
+              0.05,
+              0.32
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f",
+            "rot": [
+              90,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.16,
+              0.16,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#14101f",
+            "material": "glass"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#00e5ff",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "dissonant-moth",
+      "name": "Dissonant Moth",
+      "faction": "hostile",
+      "description": "Two wings of clashing colours, orange against violet, beating out of time. It is painful to look at for very long.",
+      "stats": {
+        "hp": 5,
+        "ac": 13,
+        "str": 4,
+        "dex": 15,
+        "int": 6,
+        "mp": 0
+      },
+      "speed": 130,
+      "sight": 8,
+      "attack": {
+        "name": "Clash",
+        "verb": "clashes with",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "dissonance",
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "adjacent",
+              "range": 1,
+              "radius": 0,
+              "affects": "enemies",
+              "needsLos": true
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "smeared",
+                "duration": 2
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_death",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 1
+              }
+            ]
+          }
+        }
+      ],
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.35
+      },
+      "xp": 4,
+      "persuadeDifficulty": 19,
+      "tags": [
+        "flutter",
+        "clash"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#fb8500",
+          "secondary": "#7b2cbf",
+          "accent": "#66ffcc"
+        },
+        "scale": 0.6,
+        "idle": "hover",
+        "light": {
+          "color": "#fb8500",
+          "intensity": 0.4,
+          "radius": 1.2
+        }
+      }
+    },
+    {
+      "id": "mobius-eel",
+      "name": "Möbius Eel",
+      "faction": "hostile",
+      "description": "A ribbon of wet crimson with only one side. It hides in the underpainting and pulls you in by the edge.",
+      "stats": {
+        "hp": 20,
+        "ac": 11,
+        "str": 13,
+        "dex": 12,
+        "int": 5,
+        "mp": 0
+      },
+      "speed": 100,
+      "sight": 6,
+      "attack": {
+        "name": "Coil",
+        "verb": "coils around",
+        "damage": {
+          "base": 3,
+          "dice": "1d6"
+        },
+        "damageType": "physical",
+        "range": 1,
+        "accuracyStat": "str"
+      },
+      "abilities": [
+        {
+          "id": "reel",
+          "name": "Reel In",
+          "description": "The one side of it wraps round you and pulls.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 4,
+              "radius": 0,
+              "affects": "enemies",
+              "needsLos": true
+            },
+            "effects": [
+              {
+                "type": "pull",
+                "distance": 3
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#e63946"
+            }
+          },
+          "cooldown": 5,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "behaviour": {
+        "type": "ambusher",
+        "param": 3,
+        "erratic": 0
+      },
+      "xp": 10,
+      "loot": [
+        {
+          "item": "linseed-drop",
+          "chance": 0.35
+        }
+      ],
+      "persuadeDifficulty": 17,
+      "tags": [
+        "ribbon",
+        "paint"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#e63946",
+          "secondary": "#ff8fcf",
+          "accent": "#ffd23f"
+        },
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.35,
+              0.06,
+              0.35
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#ff8fcf",
+            "material": "glow",
+            "emissive": "#e63946",
+            "rot": [
+              60,
+              0,
+              30
+            ]
+          }
+        ],
+        "idle": "sway"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "hungry-bloom",
+      "name": "Hungry Bloom",
+      "faction": "hostile",
+      "description": "A rooted flower of wet paint that has learned to bite. Where it feeds, the canvas goes tacky.",
+      "stats": {
+        "hp": 15,
+        "ac": 9,
+        "str": 11,
+        "dex": 6,
+        "int": 4,
+        "mp": 0
+      },
+      "speed": 100,
+      "sight": 3,
+      "attack": {
+        "name": "Petal jaw",
+        "verb": "gulps at",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "physical",
+        "range": 1,
+        "accuracyStat": "str"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.4,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "spawn_terrain",
+                "terrain": "sticky-membrane",
+                "radius": 1,
+                "duration": 12
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_death",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "glare",
+          "multiplier": 0.5
+        }
+      ],
+      "behaviour": {
+        "type": "stationary",
+        "erratic": 0
+      },
+      "xp": 6,
+      "loot": [
+        {
+          "item": "linseed-drop",
+          "chance": 0.3
+        }
+      ],
+      "persuadeDifficulty": 17,
+      "tags": [
+        "rooted",
+        "flora"
+      ],
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#ff4fa3",
+          "secondary": "#2d6a4f",
+          "accent": "#ffd23f"
+        },
+        "scale": 0.9,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "perspective-warden",
+      "name": "Perspective Warden",
+      "faction": "hostile",
+      "description": "A stack of cubes drawn in perfect two-point perspective. It guards the lines and corrects anything that stands out of place.",
+      "stats": {
+        "hp": 26,
+        "ac": 14,
+        "str": 14,
+        "dex": 8,
+        "int": 10,
+        "mp": 6
+      },
+      "speed": 90,
+      "sight": 7,
+      "attack": {
+        "name": "Correction",
+        "verb": "corrects",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "physical",
+        "range": 1,
+        "accuracyStat": "str"
+      },
+      "abilities": [
+        {
+          "id": "foreshorten",
+          "name": "Foreshorten",
+          "description": "It squashes you flat into the picture plane.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "radius": 0,
+              "affects": "enemies",
+              "needsLos": true
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "flattened",
+                "duration": 1
+              },
+              {
+                "type": "push",
+                "distance": 2
+              }
+            ],
+            "vfx": {
+              "kind": "slash",
+              "color": "#00e5ff"
+            }
+          },
+          "cost": {
+            "resource": "mp",
+            "amount": 3
+          },
+          "cooldown": 6,
+          "useWhen": "target_in_range"
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "physical",
+          "multiplier": 0.75
+        },
+        {
+          "damageType": "dissonance",
+          "multiplier": 1.5
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5,
+        "erratic": 0
+      },
+      "xp": 14,
+      "loot": [
+        {
+          "item": "fixative-mist",
+          "chance": 0.4
+        }
+      ],
+      "persuadeDifficulty": 18,
+      "tags": [
+        "geometry",
+        "guardian"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.4,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#2a1b5e",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.35,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.58,
+              0
+            ],
+            "color": "#00e5ff",
+            "material": "glass",
+            "rot": [
+              0,
+              45,
+              0
+            ]
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.3,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.92,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#00e5ff",
+          "intensity": 0.6,
+          "radius": 1.8
+        }
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-erasure",
+      "name": "The Erasure",
+      "faction": "hostile",
+      "unique": true,
+      "description": "A hole in the shape of a rectangle, the size of a door, drifting through the painting and leaving bare primer behind. It is not angry. It is tidying up.",
+      "stats": {
+        "hp": 76,
+        "ac": 13,
+        "str": 15,
+        "dex": 10,
+        "int": 16,
+        "mp": 30
+      },
+      "speed": 110,
+      "sight": 9,
+      "attack": {
+        "name": "Blank",
+        "verb": "blanks out",
+        "damage": {
+          "base": 4,
+          "dice": "1d8"
+        },
+        "damageType": "solvent",
+        "range": 1,
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "wash-out",
+          "name": "Wash Out",
+          "description": "A wave of solvent rolls out from it, lifting colour from everything nearby.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 0,
+              "radius": 2,
+              "affects": "enemies",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 3,
+                  "dice": "2d4"
+                },
+                "damageType": "solvent"
+              },
+              {
+                "type": "resource",
+                "resource": "hue",
+                "amount": {
+                  "base": -10
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#9aa5b1"
+            }
+          },
+          "cost": {
+            "resource": "mp",
+            "amount": 8
+          },
+          "cooldown": 3,
+          "useWhen": "target_in_range"
+        },
+        {
+          "id": "tidy",
+          "name": "Tidy Up",
+          "description": "It folds a little of itself into new washes of grey.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "grey-wash",
+                "count": 2,
+                "allied": false
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#c0c6cf"
+            }
+          },
+          "cost": {
+            "resource": "mp",
+            "amount": 10
+          },
+          "cooldown": 12,
+          "useWhen": "start_of_fight"
+        },
+        {
+          "id": "blank-stare",
+          "name": "Bare Canvas",
+          "description": "It shows you the white underneath everything.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 5,
+              "radius": 0,
+              "affects": "enemies",
+              "needsLos": true
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "horror-vacui",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#f4f4f4"
+            }
+          },
+          "cooldown": 9,
+          "useWhen": "low_hp"
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "set_flag",
+                "flag": "erasure-gone",
+                "value": true
+              },
+              {
+                "type": "message",
+                "text": "The rectangle folds in on itself and is gone. Behind it, colour floods into the primer."
+              }
+            ]
+          }
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "solvent",
+          "multiplier": 0
+        },
+        {
+          "damageType": "physical",
+          "multiplier": 0.75
+        },
+        {
+          "damageType": "glare",
+          "multiplier": 1.5
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 6,
+        "erratic": 0
+      },
+      "xp": 120,
+      "npc": {
+        "role": "rival",
+        "personality": "Calm, polite, utterly certain that a blank canvas is the most beautiful thing there is. Speaks like a gallery attendant.",
+        "greeting": "Please do not touch the work. It is being returned to its original condition.",
+        "lines": [
+          "Every colour is a mistake that has not been corrected yet.",
+          "You are very bright. That will not last.",
+          "The Painter left. Someone has to clean up."
+        ],
+        "secrets": "It was the Painter's own doubt, rubbed into the canvas on the last day. It cannot stand to see the horizon finished.",
+        "wants": "A perfectly white canvas, with nothing at all on it.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 24
+      },
+      "tags": [
+        "boss",
+        "erasure",
+        "void"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1,
+              1.6,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#f2efe6",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.7,
+              1.25,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#0a0814",
+            "material": "glass",
+            "emissive": "#14101f"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.9,
+              0.04,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#9aa5b1",
+            "material": "metal",
+            "rot": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.1,
+              0.06,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.72,
+              0
+            ],
+            "color": "#9aa5b1",
+            "material": "metal"
+          }
+        ],
+        "scale": 1.3,
+        "idle": "hover",
+        "light": {
+          "color": "#f4f4f4",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "old-umber",
+      "name": "Old Burnt Umber",
+      "faction": "neutral",
+      "description": "A heap of brown that has been in every painting ever made, usually underneath. It trades in leftovers and gossip.",
+      "stats": {
+        "hp": 30,
+        "ac": 10,
+        "str": 10,
+        "dex": 6,
+        "int": 13,
+        "mp": 0
+      },
+      "speed": 70,
+      "sight": 6,
+      "behaviour": {
+        "type": "stationary",
+        "erratic": 0
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Earthy, unhurried, slightly smug about being in everything. Calls you \"little highlight\".",
+        "greeting": "Little highlight. You look faded. Got linseed? I have tubes.",
+        "lines": [
+          "I was under the Old Masters, you know. Underneath, where it counts.",
+          "Everyone needs brown eventually. Nobody admits it.",
+          "The grey took my cousin Raw Sienna. Took him right down to the weave."
+        ],
+        "stock": [
+          "tube-of-rose",
+          "linseed-drop",
+          "fixative-mist",
+          "confetti-burst",
+          "gesso-shell",
+          "moire-loop"
+        ],
+        "secrets": "He has seen the Underdrawing. It shows the horizon was always meant to be closed by a colour that did not exist yet.",
+        "wants": "To be the first colour laid on the next canvas, for once.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 12
+      },
+      "tags": [
+        "earth",
+        "merchant"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#8a5a44",
+          "secondary": "#5c3d2e",
+          "accent": "#e9c46a"
+        },
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.25,
+              0.06
+            ],
+            "pos": [
+              0.25,
+              0.4,
+              0.1
+            ],
+            "color": "#d8e2ec",
+            "material": "metal",
+            "rot": [
+              0,
+              0,
+              30
+            ]
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.25,
+              0.06
+            ],
+            "pos": [
+              -0.2,
+              0.45,
+              -0.1
+            ],
+            "color": "#d8e2ec",
+            "material": "metal",
+            "rot": [
+              0,
+              0,
+              -40
+            ]
+          }
+        ],
+        "scale": 1.2,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "the-glazier",
+      "name": "The Glazier",
+      "faction": "friendly",
+      "description": "A drifting jellyfish of clear varnish. It lays thin layers over hurt things until they shine again.",
+      "stats": {
+        "hp": 20,
+        "ac": 10,
+        "str": 5,
+        "dex": 12,
+        "int": 15,
+        "mp": 20
+      },
+      "speed": 90,
+      "sight": 7,
+      "abilities": [
+        {
+          "id": "mend-glaze",
+          "name": "Mending Glaze",
+          "description": "A warm layer of fresh medium over a damaged surface.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "radius": 0,
+              "affects": "allies",
+              "needsLos": true
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 4,
+                  "dice": "1d6"
+                }
+              },
+              {
+                "type": "apply_status",
+                "status": "wet-on-wet",
+                "duration": 5
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#66ffcc"
+            }
+          },
+          "cost": {
+            "resource": "mp",
+            "amount": 5
+          },
+          "cooldown": 6,
+          "useWhen": "ally_hurt"
+        }
+      ],
+      "behaviour": {
+        "type": "follower",
+        "param": 2,
+        "erratic": 0.1
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Soft-spoken, endlessly patient, a little transparent about everything. Speaks in layers, each sentence thinner than the last.",
+        "greeting": "Oh. You are cracked along the edge. Hold still... there.",
+        "lines": [
+          "Every layer protects the one beneath it.",
+          "Thin over thick. Always thin over thick.",
+          "I could not stop the grey. I can only make what is left shine."
+        ],
+        "stock": [
+          "fixative-mist",
+          "linseed-drop"
+        ],
+        "secrets": "It knows the Erasure cannot pass through a varnished surface, which is why it never goes near it.",
+        "wants": "A finished painting to glaze, just once, from edge to edge.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 8
+      },
+      "tags": [
+        "varnish",
+        "healer"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.6,
+              0.4,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#c7f9ff",
+            "material": "glass",
+            "emissive": "#1d6f80"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.5,
+              0.04
+            ],
+            "pos": [
+              0.15,
+              0.4,
+              0
+            ],
+            "color": "#7ee8fa",
+            "material": "glass",
+            "group": "tendril"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.45,
+              0.04
+            ],
+            "pos": [
+              -0.15,
+              0.42,
+              0.05
+            ],
+            "color": "#7ee8fa",
+            "material": "glass",
+            "group": "tendril"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.55,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.38,
+              -0.12
+            ],
+            "color": "#7ee8fa",
+            "material": "glass",
+            "group": "tendril"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#7ee8fa",
+          "intensity": 0.8,
+          "radius": 2.2
+        }
+      }
+    },
+    {
+      "id": "unfinished-sketch",
+      "name": "The Unfinished Sketch",
+      "faction": "neutral",
+      "description": "A faint pencil outline of something that was never coloured in. It could have been anything. It would like, very much, to be something.",
+      "stats": {
+        "hp": 12,
+        "ac": 10,
+        "str": 4,
+        "dex": 10,
+        "int": 12,
+        "mp": 0
+      },
+      "speed": 100,
+      "sight": 7,
+      "behaviour": {
+        "type": "wanderer",
+        "param": 3,
+        "erratic": 0.5
+      },
+      "xp": 0,
+      "npc": {
+        "role": "quest_giver",
+        "personality": "Wistful, eager, constantly redrawing its own edges. Asks to be described and then disagrees.",
+        "greeting": "Are you a colour? A real one? Could you... no. Never mind. Unless?",
+        "lines": [
+          "I was going to be a bird. Or a window. The Painter could not decide.",
+          "The red one rolled toward the far edge of this layer. I watched.",
+          "If you find all three primaries, mix a little for me?"
+        ],
+        "stock": [
+          "kaleidoscope",
+          "prism-splinter",
+          "underdrawing"
+        ],
+        "secrets": "It saw the Painter's hand hesitate over the horizon, then put the brush down for the last time.",
+        "wants": "To be filled in with any colour at all.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "sketch",
+        "outline"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.5,
+              0.015,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#3d3d4d",
+            "rot": [
+              90,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.015,
+              0.6,
+              0.015
+            ],
+            "pos": [
+              -0.12,
+              0.3,
+              0
+            ],
+            "color": "#3d3d4d"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.015,
+              0.6,
+              0.015
+            ],
+            "pos": [
+              0.12,
+              0.3,
+              0
+            ],
+            "color": "#3d3d4d"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.015,
+              0.015
+            ],
+            "pos": [
+              0,
+              0.85,
+              0
+            ],
+            "color": "#3d3d4d",
+            "rot": [
+              0,
+              0,
+              15
+            ]
+          }
+        ],
+        "idle": "flicker"
+      }
+    },
+    {
+      "id": "the-signature",
+      "name": "The Signature",
+      "faction": "friendly",
+      "description": "A looping scrawl that slid off the corner of the canvas and has been wandering ever since. It is the only thing here that remembers the Painter.",
+      "stats": {
+        "hp": 14,
+        "ac": 11,
+        "str": 6,
+        "dex": 13,
+        "int": 16,
+        "mp": 0
+      },
+      "speed": 110,
+      "sight": 8,
+      "behaviour": {
+        "type": "idle",
+        "erratic": 0.2
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Grand, flourishing, nostalgic, a little vain. Speaks in long cursive sentences that curl back on themselves.",
+        "greeting": "Ah. A fresh stroke. I do not recognise your hue. That means you are new, or you are important.",
+        "lines": [
+          "The Painter worked at night, by a light that was not the moon. Or so the varnish says.",
+          "Below the warm layer there is a grid. Below the grid, one point everything runs toward.",
+          "A painting is finished when it is signed. Nobody signs a canvas with a hole in its horizon.",
+          "The straight line was the Painter's ruler. Find it, and the grid will let you in."
+        ],
+        "secrets": "The fourth primary — you — was mixed on the last day, from all three primaries and a doubt. That is why the Erasure is afraid of you.",
+        "wants": "To be put back in its corner, under a finished painting.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 14
+      },
+      "tags": [
+        "scrawl",
+        "memory"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#14101f",
+          "secondary": "#2a1b5e",
+          "accent": "#ffd23f"
+        },
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.03,
+              0.3
+            ],
+            "pos": [
+              0.1,
+              0.35,
+              0
+            ],
+            "color": "#14101f",
+            "rot": [
+              80,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.22,
+              0.03,
+              0.22
+            ],
+            "pos": [
+              -0.15,
+              0.35,
+              0
+            ],
+            "color": "#14101f",
+            "rot": [
+              80,
+              0,
+              20
+            ]
+          }
+        ],
+        "scale": 0.9,
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "afterimage-twin",
+      "name": "Your Afterimage",
+      "faction": "friendly",
+      "description": "A flickering copy of you, burned into the canvas. It cannot do much, but shapes cannot tell it from the real thing.",
+      "stats": {
+        "hp": 10,
+        "ac": 12,
+        "str": 8,
+        "dex": 12,
+        "int": 8,
+        "mp": 0
+      },
+      "speed": 110,
+      "sight": 7,
+      "attack": {
+        "name": "Echo",
+        "verb": "echoes against",
+        "damage": {
+          "base": 0,
+          "dice": "1d4"
+        },
+        "damageType": "glare",
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "triggers": [
+        {
+          "on": "on_turn",
+          "every": 12,
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 3
+                },
+                "damageType": "physical"
+              }
+            ]
+          }
+        }
+      ],
+      "behaviour": {
+        "type": "follower",
+        "param": 1,
+        "erratic": 0.2
+      },
+      "xp": 0,
+      "tags": [
+        "afterimage",
+        "ally"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.35,
+              0.35,
+              0.35
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#66ffcc",
+            "material": "glass",
+            "emissive": "#1d806a"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.45,
+              0.04,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#c77dff",
+            "material": "glow",
+            "emissive": "#c77dff",
+            "rot": [
+              70,
+              0,
+              0
+            ]
+          }
+        ],
+        "idle": "flicker",
+        "light": {
+          "color": "#66ffcc",
+          "intensity": 0.5,
+          "radius": 1.5
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "palette-knife",
+      "name": "Palette Knife",
+      "kind": "Edge",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "description": "A thin, flexible blade of something like steel. It scrapes, it spreads, it cuts a shape loose from its background.",
+      "weapon": {
+        "name": "Palette knife",
+        "verb": "scrapes",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "physical",
+        "range": 1,
+        "accuracyStat": "dex"
+      },
+      "rarity": "common",
+      "value": 10,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.06,
+              0.04,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.1,
+              0.05
+            ],
+            "color": "#d8e2ec",
+            "material": "metal",
+            "rot": [
+              0,
+              30,
+              0
+            ]
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.2,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.1,
+              -0.2
+            ],
+            "color": "#8a5a44",
+            "material": "wood",
+            "rot": [
+              90,
+              30,
+              0
+            ]
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "prism-splinter",
+      "name": "Splinter of Prism",
+      "kind": "Refraction",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "description": "A sliver of a floating prism. Point it and it throws a thin, hot beam of pure yellow.",
+      "weapon": {
+        "name": "Prism beam",
+        "verb": "refracts into",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "glare",
+        "range": 5,
+        "accuracyStat": "dex"
+      },
+      "rarity": "uncommon",
+      "value": 45,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.12,
+              0.35,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#c7f9ff",
+            "material": "glass",
+            "emissive": "#fff4a3"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#fff4a3",
+          "intensity": 0.5,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "chord-fork",
+      "name": "Chord Fork",
+      "kind": "Resonator",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "description": "A two-tined fork that rings in a colour instead of a note. Struck against a shape, it plays the one tone that shape cannot bear.",
+      "weapon": {
+        "name": "Clashing tone",
+        "verb": "rings against",
+        "damage": {
+          "base": 1,
+          "dice": "1d8"
+        },
+        "damageType": "dissonance",
+        "range": 1,
+        "accuracyStat": "int"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "adjacent",
+              "range": 1,
+              "radius": 0,
+              "affects": "enemies",
+              "needsLos": true
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "smeared",
+                "duration": 2
+              }
+            ]
+          }
+        }
+      ],
+      "requires": [
+        {
+          "stat": "int",
+          "min": 12
+        }
+      ],
+      "rarity": "rare",
+      "value": 80,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.22,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.03,
+              0.22,
+              0.03
+            ],
+            "pos": [
+              -0.05,
+              0.32,
+              0
+            ],
+            "color": "#ff4fa3",
+            "material": "glow",
+            "emissive": "#ff4fa3"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.03,
+              0.22,
+              0.03
+            ],
+            "pos": [
+              0.05,
+              0.32,
+              0
+            ],
+            "color": "#00e5ff",
+            "material": "glow",
+            "emissive": "#00e5ff"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "varnish-coat",
+      "name": "Coat of Varnish",
+      "kind": "Glaze layer",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "description": "One thin clear coat. It does not stop much, but smudges slide off it.",
+      "rarity": "common",
+      "value": 15,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.1,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#c7f9ff",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "gesso-shell",
+      "name": "Gesso Shell",
+      "kind": "Ground layer",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 4,
+      "description": "A thick chalky shell of primer. Very protective; very hard to move freely in. It is, after all, the colour of nothing.",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 50,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.32,
+              0.22,
+              0.32
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#f2efe6",
+            "material": "stone"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.04,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#d6d1c4",
+            "material": "stone",
+            "rot": [
+              90,
+              0,
+              0
+            ]
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "moire-loop",
+      "name": "Moiré Loop",
+      "kind": "Interference",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "description": "Two fine grids laid over each other at a slight angle. Through it, hidden shapes ripple into view.",
+      "modifiers": [
+        {
+          "stat": "sight",
+          "amount": 2
+        },
+        {
+          "stat": "dex",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 40,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.03,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#00e5ff",
+            "material": "glow",
+            "emissive": "#00e5ff"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.03,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ff4fa3",
+            "material": "glow",
+            "emissive": "#ff4fa3",
+            "rot": [
+              0,
+              0,
+              12
+            ]
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "metronome-seed",
+      "name": "Metronome Seed",
+      "kind": "Pulse",
+      "category": "trinket",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "description": "A seed that ticks. Carried close, its rhythm keeps your colour from settling.",
+      "triggers": [
+        {
+          "on": "on_turn",
+          "every": 10,
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "hue",
+                "amount": {
+                  "base": 3
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "rare",
+      "value": 60,
+      "knowledge": "vague",
+      "vagueText": "It ticks against your edge like a second heartbeat. You feel a little less faded.",
+      "revealOnUse": "none",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.16,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#66ffcc",
+            "material": "glow",
+            "emissive": "#66ffcc"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#66ffcc",
+          "intensity": 0.5,
+          "radius": 1.2
+        }
+      }
+    },
+    {
+      "id": "complementary",
+      "name": "Complementary Contrast",
+      "kind": "Stroke",
+      "category": "spell",
+      "useMode": "reusable",
+      "description": "Lay your colour hard against its opposite. The edge between them burns like a struck match.",
+      "onUse": {
+        "targeting": {
+          "shape": "ray",
+          "range": 6,
+          "radius": 0,
+          "affects": "enemies",
+          "needsLos": true
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "2d4",
+              "scale": {
+                "stat": "int",
+                "factor": 0.25
+              }
+            },
+            "damageType": "glare"
+          }
+        ],
+        "vfx": {
+          "kind": "beam",
+          "color": "#ffd23f"
+        }
+      },
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "cooldown": 1,
+      "rarity": "common",
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.12,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "leave-afterimage",
+      "name": "Leave an Afterimage",
+      "kind": "Stroke",
+      "category": "spell",
+      "useMode": "reusable",
+      "description": "Spend one burned-in ghost to leave a copy of yourself behind, flickering, to draw the shapes away.",
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 2,
+          "radius": 0,
+          "affects": "all",
+          "needsLos": true
+        },
+        "effects": [
+          {
+            "type": "summon",
+            "actor": "afterimage-twin",
+            "count": 1,
+            "allied": true
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#66ffcc"
+        }
+      },
+      "cost": {
+        "resource": "afterimage",
+        "amount": 1
+      },
+      "cooldown": 5,
+      "rarity": "uncommon",
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.12,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#66ffcc",
+            "material": "glow",
+            "emissive": "#66ffcc"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "glaze-over",
+      "name": "Glaze Over",
+      "kind": "Stroke",
+      "category": "spell",
+      "useMode": "reusable",
+      "description": "Thin yourself to a transparent film. Shapes look straight through you for a while.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "transparent",
+            "duration": 6
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#7ee8fa"
+        }
+      },
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "cooldown": 12,
+      "rarity": "rare",
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.12,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#7ee8fa",
+            "material": "glow",
+            "emissive": "#7ee8fa"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "tube-of-rose",
+      "name": "Tube of Opera Rose",
+      "kind": "Tube",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "description": "A squeezed-flat tube with one good curl of magenta left in it. Your Saturation surges.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "hue",
+            "amount": {
+              "base": 40
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ff4fa3"
+        }
+      },
+      "rarity": "common",
+      "value": 12,
+      "knowledge": "clear",
+      "appearanceGroup": "blot",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.2,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#ff4fa3",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.05,
+              0.06,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.23,
+              0
+            ],
+            "color": "#f6efff"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "linseed-drop",
+      "name": "Drop of Linseed",
+      "kind": "Medium",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "description": "A golden bead of oil. It loosens dried edges and fills thin places.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d6"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "common",
+      "value": 10,
+      "knowledge": "clear",
+      "appearanceGroup": "blot",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.12,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#e9c46a",
+            "material": "glow",
+            "emissive": "#e9c46a"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "turpentine-tear",
+      "name": "Turpentine Tear",
+      "kind": "Solvent",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "description": "One clean drop of solvent. It lifts whatever has been smeared onto you, and a little of you with it.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          },
+          {
+            "type": "resource",
+            "resource": "hue",
+            "amount": {
+              "base": -5
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#c7f9ff"
+        }
+      },
+      "rarity": "common",
+      "value": 14,
+      "knowledge": "clear",
+      "appearanceGroup": "blot",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.12,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#c7f9ff",
+            "material": "glow",
+            "emissive": "#c7f9ff"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "fixative-mist",
+      "name": "Fixative Mist",
+      "kind": "Spray",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "description": "A fine cold mist that sets your surface hard.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "varnished",
+            "duration": 12
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#c7f9ff"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 20,
+      "knowledge": "clear",
+      "appearanceGroup": "blot",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.12,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#a2d2ff",
+            "material": "glow",
+            "emissive": "#a2d2ff"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "titanium-white",
+      "name": "Dollop of Titanium White",
+      "kind": "Highlight",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "description": "The brightest thing on the canvas. Dab it on and you glow, lighting the layer around you.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "light",
+            "radius": 6,
+            "duration": 60
+          },
+          {
+            "type": "reveal_map",
+            "radius": 8
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ffffff"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 18,
+      "knowledge": "clear",
+      "appearanceGroup": "blot",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.12,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#ffffff"
+          }
+        ],
+        "idle": "bob",
+        "light": {
+          "color": "#ffffff",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "ivory-black",
+      "name": "Smear of Ivory Black",
+      "kind": "Shadow",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "description": "A colour that swallows the colours around it. Very bad to put on yourself.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d6"
+            },
+            "damageType": "solvent"
+          },
+          {
+            "type": "resource",
+            "resource": "hue",
+            "amount": {
+              "base": -20
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "hushed",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#14101f"
+        }
+      },
+      "rarity": "common",
+      "value": 2,
+      "knowledge": "clear",
+      "appearanceGroup": "blot",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.12,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#14101f",
+            "material": "glow",
+            "emissive": "#14101f"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "confetti-burst",
+      "name": "Burst of Cadmium Confetti",
+      "kind": "Splatter",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "description": "Flick it and it bursts into a thousand flecks of searing yellow.",
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 5,
+          "radius": 1,
+          "affects": "enemies",
+          "needsLos": true
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "2d4"
+            },
+            "damageType": "glare"
+          },
+          {
+            "type": "apply_status",
+            "status": "dazzled",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "common",
+      "value": 15,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.14,
+              0.14,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffb703"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.04,
+              0.04,
+              0.04
+            ],
+            "pos": [
+              0.1,
+              0.18,
+              0
+            ],
+            "color": "#ff4fa3"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.04,
+              0.04,
+              0.04
+            ],
+            "pos": [
+              -0.08,
+              0.2,
+              0.05
+            ],
+            "color": "#00e5ff"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "kaleidoscope",
+      "name": "Kaleidoscope",
+      "kind": "Lens",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 4,
+      "description": "Turn it and a nameless thing falls into its true pattern. The mirrors are cracking; it will not turn forever.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "identify",
+            "scope": "one"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c77dff"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 35,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.07,
+              0.3,
+              0.07
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#c77dff",
+            "material": "metal",
+            "rot": [
+              0,
+              0,
+              80
+            ]
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.15,
+              0.12,
+              0
+            ],
+            "color": "#66ffcc",
+            "material": "glass"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "underdrawing",
+      "name": "The Underdrawing",
+      "kind": "Pentimento",
+      "category": "clue",
+      "useMode": "reusable",
+      "description": "The faint charcoal plan beneath the paint: where every layer was meant to go, and where the horizon was meant to close.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 99
+          },
+          {
+            "type": "set_flag",
+            "flag": "read-underdrawing",
+            "value": true
+          },
+          {
+            "type": "message",
+            "text": "Under the colour, faint lines: a horizon, unfinished, and an arrow down toward one point."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#d8c8f0"
+        }
+      },
+      "cooldown": 40,
+      "rarity": "rare",
+      "value": 0,
+      "knowledge": "vague",
+      "vagueText": "Faint charcoal lines under the paint. It seems to show where things are, if you look properly.",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "plane",
+            "size": [
+              0.4,
+              0.3,
+              0.01
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#d8c8f0",
+            "rot": [
+              -90,
+              0,
+              0
+            ],
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.01,
+              0.01
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#2a1b5e"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "note-red",
+      "name": "The Vermilion Note",
+      "kind": "Primary",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "description": "The first primary, humming hot. Carried, it makes you heavier and harder to wash away.",
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        },
+        {
+          "stat": "hp",
+          "amount": 4
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "counter",
+                "counter": "primaries",
+                "add": 1
+              },
+              {
+                "type": "grant_xp",
+                "amount": 15
+              },
+              {
+                "type": "message",
+                "text": "Red. The canvas around you warms by a degree."
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.22,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#e63946",
+            "material": "glow",
+            "emissive": "#e63946"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#ffb3c1",
+            "material": "glow",
+            "emissive": "#ff4fa3",
+            "rot": [
+              70,
+              0,
+              0
+            ]
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#e63946",
+          "intensity": 1,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "note-yellow",
+      "name": "The Cadmium Note",
+      "kind": "Primary",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "description": "The second primary, bright as a shout. Carried, it quickens you.",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 1
+        },
+        {
+          "stat": "speed",
+          "amount": 5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "counter",
+                "counter": "primaries",
+                "add": 1
+              },
+              {
+                "type": "grant_xp",
+                "amount": 15
+              },
+              {
+                "type": "message",
+                "text": "Yellow. Something far below you brightens."
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.24,
+              0.28,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#fff4a3",
+            "material": "glow",
+            "emissive": "#fff4a3",
+            "rot": [
+              70,
+              0,
+              0
+            ]
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 1,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "note-blue",
+      "name": "The Cobalt Note",
+      "kind": "Primary",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "description": "The third primary, cool and deep. Carried, it clears your sense of what belongs with what.",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        },
+        {
+          "stat": "mp",
+          "amount": 3
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "counter",
+                "counter": "primaries",
+                "add": 1
+              },
+              {
+                "type": "grant_xp",
+                "amount": 15
+              },
+              {
+                "type": "message",
+                "text": "Blue. Now you can see the shape of the horizon you are meant to finish."
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#3a86ff",
+            "material": "glow",
+            "emissive": "#3a86ff",
+            "rot": [
+              45,
+              45,
+              0
+            ]
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#a2d2ff",
+            "material": "glow",
+            "emissive": "#a2d2ff",
+            "rot": [
+              70,
+              0,
+              0
+            ]
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#3a86ff",
+          "intensity": 1,
+          "radius": 2.5
+        }
+      }
+    },
+    {
+      "id": "ruler-line",
+      "name": "The Ruler Line",
+      "kind": "Straight edge",
+      "category": "key",
+      "useMode": "passive",
+      "description": "The only perfectly straight line in the painting. Lay it down and the grid beneath everything opens to you.",
+      "rarity": "unique",
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.03,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#00e5ff",
+            "material": "glow",
+            "emissive": "#00e5ff"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#00e5ff",
+          "intensity": 0.7,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "last-brushstroke",
+      "name": "The Last Brushstroke",
+      "kind": "Unfinished gesture",
+      "category": "quest",
+      "useMode": "reusable",
+      "description": "The stroke the Painter never made, still wet on a brush that is not there. At the Vanishing Point, with all three primaries, it closes the horizon.",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "range": 0,
+          "radius": 0,
+          "affects": "self_only",
+          "needsLos": false
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "horizon-finished",
+            "value": true
+          },
+          {
+            "type": "message",
+            "text": "You drag red, yellow and blue together and lay the last stroke across the Vanishing Point. The horizon closes like an eye."
+          }
+        ],
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "note-red"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "note-yellow"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "note-blue"
+            }
+          ]
+        },
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd23f"
+        }
+      },
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "chance": 1,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "range": 0,
+              "radius": 0,
+              "affects": "self_only",
+              "needsLos": false
+            },
+            "effects": [
+              {
+                "type": "grant_xp",
+                "amount": 20
+              },
+              {
+                "type": "message",
+                "text": "The brush you cannot see is heavy with every colour at once."
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "knowledge": "clear",
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.08,
+              0.5,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "color": "#ff4fa3",
+            "material": "glow",
+            "emissive": "#ff4fa3",
+            "rot": [
+              0,
+              0,
+              30
+            ]
+          },
+          {
+            "shape": "capsule",
+            "size": [
+              0.08,
+              0.5,
+              0.08
+            ],
+            "pos": [
+              0.08,
+              0.35,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f",
+            "rot": [
+              0,
+              0,
+              30
+            ]
+          },
+          {
+            "shape": "capsule",
+            "size": [
+              0.08,
+              0.5,
+              0.08
+            ],
+            "pos": [
+              0.16,
+              0.35,
+              0
+            ],
+            "color": "#3a86ff",
+            "material": "glow",
+            "emissive": "#3a86ff",
+            "rot": [
+              0,
+              0,
+              30
+            ]
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffffff",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "blot": [
+      {
+        "label": "blot that hums in a minor key",
+        "color": "#ff4fa3"
+      },
+      {
+        "label": "bead of colour with no colour",
+        "color": "#e9e4f0"
+      },
+      {
+        "label": "swirl that will not hold still",
+        "color": "#c77dff"
+      },
+      {
+        "label": "drop shaped like a question",
+        "color": "#66ffcc"
+      },
+      {
+        "label": "smudge that smells of oranges",
+        "color": "#fb8500"
+      },
+      {
+        "label": "flake of something cold and blue",
+        "color": "#3a86ff"
+      },
+      {
+        "label": "dot that blinks when watched",
+        "color": "#ffd23f"
+      },
+      {
+        "label": "thumbprint in a stranger's hue",
+        "color": "#8a5a44"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "First Layer: The Loose Archipelago",
+      "description": "Daubs of magenta and violet drift over a gradient that goes down forever. Narrow bridges of dragged paint join them. Bright patches hum where the white was laid on too thick.",
+      "generator": "islands",
+      "size": "medium",
+      "params": {
+        "islands": 9,
+        "bridgeWidth": 1,
+        "roundness": 0.7
+      },
+      "floor": {
+        "color": "#ff8fcf",
+        "color2": "#c77dff",
+        "material": "matte",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#6b4fd8",
+        "color2": "#2a1b5e",
+        "material": "glass",
+        "height": 0.6,
+        "pattern": "gradient"
+      },
+      "lighting": {
+        "ambient": "#ffd6f0",
+        "ambientIntensity": 0.6,
+        "sun": {
+          "color": "#fff0c2",
+          "intensity": 0.9,
+          "elevation": 70
+        },
+        "fog": {
+          "color": "#3b1f6e",
+          "density": 0.012
+        },
+        "lamps": {
+          "color": "#ffd23f",
+          "intensity": 1.4,
+          "frequency": 0.06,
+          "flicker": false
+        },
+        "playerLight": 3,
+        "sky": "#2a1b5e"
+      },
+      "backdrop": {
+        "style": "gradient",
+        "color": "#ff8fcf",
+        "color2": "#2a1b5e",
+        "intensity": 0.6
+      },
+      "actors": [
+        {
+          "actor": "running-drip",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "grey-wash",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "dissonant-moth",
+          "weight": 20,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "acute-angle",
+          "weight": 10,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "old-umber",
+          "where": "near_start"
+        },
+        {
+          "actor": "unfinished-sketch",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "tube-of-rose",
+          "weight": 18
+        },
+        {
+          "item": "linseed-drop",
+          "weight": 12
+        },
+        {
+          "item": "turpentine-tear",
+          "weight": 10
+        },
+        {
+          "item": "ivory-black",
+          "weight": 8
+        },
+        {
+          "item": "confetti-burst",
+          "weight": 10
+        },
+        {
+          "item": "titanium-white",
+          "weight": 6
+        },
+        {
+          "item": "moire-loop",
+          "weight": 3
+        }
+      ],
+      "itemCount": 8,
+      "placedItems": [
+        {
+          "item": "note-red",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "pigment-pool",
+          "density": 0.03
+        },
+        {
+          "terrain": "glare-patch",
+          "density": 0.02
+        },
+        {
+          "terrain": "glaze-pool",
+          "density": 0.015
+        },
+        {
+          "terrain": "impasto-ridge",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Sink through the wet paint",
+      "transitionModel": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.8,
+              0.06,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#ff4fa3",
+            "material": "glow",
+            "emissive": "#ff4fa3",
+            "rot": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.55,
+              0.06,
+              0.55
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#c77dff",
+            "material": "glow",
+            "emissive": "#c77dff"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.06,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.19,
+              0
+            ],
+            "color": "#66ffcc",
+            "material": "glow",
+            "emissive": "#66ffcc"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#ffffff"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#c77dff",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      },
+      "gmNotes": "Introduce Saturation fading and pigment pools. Old Burnt Umber trades tubes; the Unfinished Sketch saw the red primary roll toward the far edge. Nothing here has a name yet; consumables are unknown.",
+      "music": "calm"
+    },
+    {
+      "name": "Second Layer: The Warm Underpainting",
+      "description": "Beneath the first layer the paint is warm and alive: membranes of coral and crimson, tubes that pulse, blooms with eyes. Ribbons of light slide across the dark above.",
+      "generator": "organic",
+      "size": "medium",
+      "params": {
+        "blobs": 8,
+        "tubeWidth": 2,
+        "wobble": 0.6
+      },
+      "floor": {
+        "color": "#ff7a59",
+        "color2": "#b8325a",
+        "material": "skin",
+        "pattern": "lines"
+      },
+      "wall": {
+        "color": "#ffb38a",
+        "color2": "#7a1f4a",
+        "material": "skin",
+        "height": 1.3,
+        "pattern": "none"
+      },
+      "lighting": {
+        "ambient": "#ff9e7a",
+        "ambientIntensity": 0.45,
+        "fog": {
+          "color": "#4a0f2e",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#66ffcc",
+          "intensity": 1.8,
+          "frequency": 0.1,
+          "flicker": true
+        },
+        "playerLight": 3,
+        "sky": "#1a0620"
+      },
+      "backdrop": {
+        "style": "aurora",
+        "color": "#1a0620",
+        "color2": "#66ffcc",
+        "intensity": 0.7
+      },
+      "actors": [
+        {
+          "actor": "running-drip",
+          "weight": 20,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "mobius-eel",
+          "weight": 20,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "hungry-bloom",
+          "weight": 20,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "dissonant-moth",
+          "weight": 15,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "grey-wash",
+          "weight": 15,
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "the-glazier",
+          "where": "near_start"
+        },
+        {
+          "actor": "the-signature",
+          "where": "anywhere"
+        },
+        {
+          "actor": "old-umber",
+          "where": "near_exit"
+        }
+      ],
+      "items": [
+        {
+          "item": "tube-of-rose",
+          "weight": 15
+        },
+        {
+          "item": "linseed-drop",
+          "weight": 12
+        },
+        {
+          "item": "fixative-mist",
+          "weight": 10
+        },
+        {
+          "item": "turpentine-tear",
+          "weight": 10
+        },
+        {
+          "item": "ivory-black",
+          "weight": 6
+        },
+        {
+          "item": "chord-fork",
+          "weight": 3
+        },
+        {
+          "item": "metronome-seed",
+          "weight": 3
+        },
+        {
+          "item": "gesso-shell",
+          "weight": 3
+        }
+      ],
+      "itemCount": 8,
+      "placedItems": [
+        {
+          "item": "note-yellow",
+          "where": "guarded"
+        },
+        {
+          "item": "ruler-line",
+          "where": "far"
+        },
+        {
+          "item": "underdrawing",
+          "where": "anywhere"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "sticky-membrane",
+          "density": 0.04
+        },
+        {
+          "terrain": "pigment-pool",
+          "density": 0.024
+        },
+        {
+          "terrain": "eye-orchid",
+          "density": 0.02
+        },
+        {
+          "terrain": "glaze-pool",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Lay the ruler and fall onto the grid",
+      "transitionModel": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.8,
+              0.06,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#e63946",
+            "material": "glow",
+            "emissive": "#e63946",
+            "rot": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.55,
+              0.06,
+              0.55
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.06,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.19,
+              0
+            ],
+            "color": "#00e5ff",
+            "material": "glow",
+            "emissive": "#00e5ff"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#ffffff"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "ruler-line"
+      },
+      "gmNotes": "The layer is alive and warm, a little bodily. The Glazier heals and follows. The Signature knows about the grid and the Ruler Line, which opens the way down. The yellow primary is guarded by something rooted.",
+      "music": "eerie"
+    },
+    {
+      "name": "Third Layer: The Grid Beneath Everything",
+      "description": "The scaffolding under the painting: an endless tessellation of cyan lines on indigo, every one of them running toward the same point. Prisms hang in the air. Shapes patrol the lines and correct anything out of place.",
+      "generator": "geometric",
+      "size": "medium",
+      "params": {
+        "symmetry": 4,
+        "rings": 0,
+        "tessellation": 1
+      },
+      "floor": {
+        "color": "#0b0b1e",
+        "color2": "#00e5ff",
+        "material": "glass",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#ffd23f",
+        "color2": "#ff4fa3",
+        "material": "glow",
+        "height": 1.4,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#8a7dff",
+        "ambientIntensity": 0.5,
+        "fog": {
+          "color": "#05051a",
+          "density": 0.02
+        },
+        "lamps": {
+          "color": "#00e5ff",
+          "intensity": 1.5,
+          "frequency": 0.08,
+          "flicker": false
+        },
+        "playerLight": 3,
+        "sky": "#05051a"
+      },
+      "backdrop": {
+        "style": "grid",
+        "color": "#0b0b1e",
+        "color2": "#00e5ff",
+        "intensity": 0.5
+      },
+      "actors": [
+        {
+          "actor": "acute-angle",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "concentric-stare",
+          "weight": 20,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "perspective-warden",
+          "weight": 15,
+          "min": 2,
+          "max": 2
+        },
+        {
+          "actor": "grey-wash",
+          "weight": 15,
+          "min": 1,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "the-signature",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "tube-of-rose",
+          "weight": 15
+        },
+        {
+          "item": "linseed-drop",
+          "weight": 12
+        },
+        {
+          "item": "titanium-white",
+          "weight": 10
+        },
+        {
+          "item": "fixative-mist",
+          "weight": 10
+        },
+        {
+          "item": "confetti-burst",
+          "weight": 12
+        },
+        {
+          "item": "prism-splinter",
+          "weight": 4
+        },
+        {
+          "item": "ivory-black",
+          "weight": 5
+        }
+      ],
+      "itemCount": 8,
+      "placedItems": [
+        {
+          "item": "note-blue",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "perspective-line",
+          "density": 0.06
+        },
+        {
+          "terrain": "floating-prism",
+          "density": 0.01
+        },
+        {
+          "terrain": "solvent-slick",
+          "density": 0.03
+        },
+        {
+          "terrain": "pigment-pool",
+          "density": 0.018
+        }
+      ],
+      "transitionName": "Follow the lines to where they meet",
+      "transitionModel": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.8,
+              0.06,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#00e5ff",
+            "material": "glow",
+            "emissive": "#00e5ff",
+            "rot": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.55,
+              0.06,
+              0.55
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.06,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.19,
+              0
+            ],
+            "color": "#ff4fa3",
+            "material": "glow",
+            "emissive": "#ff4fa3"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#ffffff"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      },
+      "gmNotes": "Cold, exact, beautiful. Perspective lines speed you up. The Warden guards the blue primary. The Signature turns up again here, frightened of the grey seeping through the grid from below.",
+      "music": "tense"
+    },
+    {
+      "name": "The Vanishing Point",
+      "description": "Concentric rings closing on a single point where every line in the painting meets. Behind them is static: unpainted canvas, seen too close. The Erasure is waiting at the centre, tidying.",
+      "generator": "geometric",
+      "size": "small",
+      "params": {
+        "symmetry": 8,
+        "rings": 4
+      },
+      "floor": {
+        "color": "#f2efe6",
+        "color2": "#ff4fa3",
+        "material": "matte",
+        "pattern": "gradient"
+      },
+      "wall": {
+        "color": "#2a1b5e",
+        "color2": "#00e5ff",
+        "material": "glass",
+        "height": 1,
+        "pattern": "grid"
+      },
+      "lighting": {
+        "ambient": "#f6efff",
+        "ambientIntensity": 0.55,
+        "fog": {
+          "color": "#1a1530",
+          "density": 0.015
+        },
+        "lamps": {
+          "color": "#ffd23f",
+          "intensity": 1.6,
+          "frequency": 0.08,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "sky": "#0a0814"
+      },
+      "backdrop": {
+        "style": "noise",
+        "color": "#f4f4f4",
+        "color2": "#9aa5b1",
+        "intensity": 0.8
+      },
+      "actors": [
+        {
+          "actor": "grey-wash",
+          "weight": 40,
+          "min": 3,
+          "max": 5
+        },
+        {
+          "actor": "acute-angle",
+          "weight": 20,
+          "min": 1,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "the-erasure",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "tube-of-rose",
+          "weight": 20
+        },
+        {
+          "item": "linseed-drop",
+          "weight": 15
+        },
+        {
+          "item": "fixative-mist",
+          "weight": 10
+        }
+      ],
+      "itemCount": 4,
+      "placedItems": [
+        {
+          "item": "last-brushstroke",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "unpainted-gap",
+          "density": 0.04
+        },
+        {
+          "terrain": "solvent-slick",
+          "density": 0.04
+        },
+        {
+          "terrain": "pigment-pool",
+          "density": 0.018
+        }
+      ],
+      "transitionName": "Step into the point where everything meets",
+      "transitionModel": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.8,
+              0.06,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#f4f4f4",
+            "material": "glow",
+            "emissive": "#f4f4f4",
+            "rot": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.55,
+              0.06,
+              0.55
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ff4fa3",
+            "material": "glow",
+            "emissive": "#ff4fa3"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.06,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.19,
+              0
+            ],
+            "color": "#3a86ff",
+            "material": "glow",
+            "emissive": "#3a86ff"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#ffffff"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff4fa3",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      },
+      "gmNotes": "Final layer. Two endings: unmake the Erasure here, or slip past it, take the Last Brushstroke and use it with all three primaries to close the horizon. Glaze and afterimages make the quiet route possible. Unmaking too many shapes along the way collapses the painting.",
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Gather the red, yellow and blue primaries and close the horizon at the Vanishing Point with the Last Brushstroke, or unmake the Erasure there. Do not unmake too much of the painting.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "flag",
+          "flag": "horizon-finished",
+          "value": true
+        },
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "actor_defeated",
+              "actor": "the-erasure"
+            }
+          ]
+        }
+      ]
+    },
+    "lose": {
+      "type": "counter",
+      "counter": "colours-spilled",
+      "cmp": "gte",
+      "value": 30
+    },
+    "winText": "The horizon closes. Red bleeds into yellow bleeds into blue, and where they meet, a hue nobody has a name for: yours. The grey retreats to the very edge and becomes a frame. Somewhere far outside, in a light that is not the moon, a hand picks up a brush, looks at the canvas for a long time, and signs it.",
+    "lossText": "You thin, and thin, and are a glaze, and are a stain, and are primer. The Erasure smooths you flat with something like kindness. The canvas is very clean now. It is waiting for someone to begin again."
+  },
+  "gm": {
+    "persona": "The painting itself, half-awake and dreaming: synaesthetic, tender, a little feverish. It does not know what a person is and never assumes one.",
+    "voice": "Present tense. Colours have sounds and temperatures; shapes have moods. Short sentences that melt into long ones. Never mentions sky, ground, gravity or bodies as if they were normal.",
+    "threads": [
+      "The Painter left mid-stroke and never came back.",
+      "The Erasure is the Painter's doubt, rubbed into the canvas on the last day.",
+      "The three primaries scattered when the grey arrived.",
+      "You were mixed last, from all three primaries and a doubt.",
+      "Every shape unmade leaves a hole the painting remembers."
+    ],
+    "fallback": {
+      "intro": "You come to as a swirl of a colour nobody has named, laid down last, still wet. Around you, magenta islands drift over a gradient that goes down forever. At the far edge of everything, a grey rectangle is quietly wiping the painting back to primer. Somewhere the red, the yellow and the blue are hiding. You are fading already. Find a pool of pigment. Then find the primaries.",
+      "areaEnter": [
+        "Islands of loose pigment drift and bump. Each one hums a slightly different note. Below them, nothing, in a lovely shade of violet.",
+        "The paint here is warm, and it breathes. Membranes shiver as you pass. Something with an eye in the middle of its petals turns to watch.",
+        "Cold cyan lines run to every horizon at once, all of them aimed at the same place. The shapes here move only along the lines.",
+        "Rings close around a single point. Past them, static, the white of an unpainted canvas seen far too close. The Erasure turns its empty middle toward you."
+      ],
+      "lowHp": [
+        "You can see the weave of the canvas through yourself.",
+        "Thin. Too thin. Glaze, or flee, or fill yourself with colour.",
+        "The grey is very patient."
+      ],
+      "events": [
+        "The whole canvas tilts a quarter turn. Everything slides, and settles, and pretends nothing happened.",
+        "A drip of something bright runs past, upward.",
+        "For a moment every colour on the layer plays a single chord.",
+        "Somewhere behind you, a patch of painting is quietly wiped back to grey.",
+        "A pencil line appears in the air, hesitates, and is rubbed out."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "glassy bell tones in whole-tone clusters, slow swells, colours you can hear",
+    "synth": {
+      "key": "F#",
+      "scale": "whole_tone",
+      "tempo": 66,
+      "timbre": "bell",
+      "drone": true,
+      "percussion": "none",
+      "brightness": 0.75
+    },
+    "searchTerms": [
+      "psychedelic ambient",
+      "dream pop instrumental",
+      "synaesthesia music",
+      "kaleidoscopic ambient"
+    ],
+    "suggestions": [
+      "Boards of Canada - Music Has the Right to Children",
+      "Cocteau Twins - Heaven or Las Vegas",
+      "Susumu Yokota - Sakura",
+      "Julianna Barwick - Nepenthe"
+    ]
+  }
+}

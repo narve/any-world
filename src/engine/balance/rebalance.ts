@@ -1,0 +1,345 @@
+/**
+ * autoRebalance: bounded, schema-respecting adjustments that move a world toward its difficulty
+ * band, then re-validation with parseWorld. It never invents content: it scales numbers, re-weights
+ * spawn tables with items the world already has, and places existing items/actors that a goal or a
+ * transition lock needs but that never appear.
+ *
+ *   too_hard   → hostile hp/damage ×0.7–0.9 (bosses with npc dialogue included), healing items more common (+1 item per area),
+ *                harmful rules softened (rule damage halved, on_turn rules fire less often,
+ *                resource drains −25%), the top killer weakened a bit more
+ *   too_easy   → hostile hp/damage ×1.15–1.6 (more the further above the band), healing less common
+ *   unwinnable → missing goal/lock items and actors placed where they are needed
+ *   broken/ok  → only the unwinnable fixes (soft-locks and crashes need a human or an engine fix)
+ */
+import type { ActorDef, Amount, Condition, Effect, ItemDef, WorldSpec } from '../../schema/world';
+import { parseWorld } from '../../schema/refs';
+import { itemProfile } from '../sim/view';
+import { collectSources, type Sources } from './static';
+import { estimateRuleImpact } from './rules';
+import type { BalanceReport, VerdictResult } from './analyse';
+
+export interface RebalanceResult {
+  world: WorldSpec;
+  changes: string[];
+  /** false when the adjusted world failed validation (the original is returned) */
+  valid: boolean;
+}
+
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
+/** mean of an NdM roll, 0 for no dice */
+function diceMean(dice: string | undefined): number {
+  const m = dice ? /^(\d{1,2})d(\d{1,3})$/.exec(dice) : null;
+  return m ? (Number(m[1]) * (Number(m[2]) + 1)) / 2 : 0;
+}
+
+/**
+ * Scales an amount's expected value (base + dice mean) by `f` and re-splits it, so nothing ever
+ * collapses (issues/M2-sim-tune-cannot-fix-too-easy.md): the dice keep their count and get
+ * round(sides × f) sides (at least 2), and the base absorbs the rounding of the dice, so the new
+ * mean stays as close to the scaled mean as whole numbers allow. A non-zero base keeps its sign and
+ * a magnitude of at least 1 — {base: 1, dice: '1d4'} × 0.35 used to become {base: 0, dice: '1d2'}
+ * and `base` never came back on later upscales — and a zero base only becomes positive. The stat
+ * scale factor is scaled as is.
+ */
+export function scaleAmount(a: Amount, f: number): Amount {
+  const out: Amount = { ...a };
+  const base = a.base ?? 0;
+  const target = (base + diceMean(a.dice)) * f;
+  const hasBase = base !== 0 || a.base !== undefined;
+  const fitBase = (dm: number) => {
+    const b = Math.round(target - dm);
+    return base > 0 ? Math.max(1, b) : base < 0 ? Math.min(-1, b) : Math.max(0, b);
+  };
+  const m = out.dice ? /^(\d{1,2})d(\d{1,3})$/.exec(out.dice) : null;
+  if (m) {
+    const n = Number(m[1]);
+    const ideal = clamp(Math.round(Number(m[2]) * f), 2, 999);
+    // the base's floor can overshoot the target (1 + 3d3 for 6); then a die a side or two off
+    // the proportional size may fit better — the closest mean wins, then the proportional die
+    let best = { sides: ideal, err: Infinity };
+    for (let d = 0; d <= 2; d++)
+      for (const sides of d ? [ideal - d, ideal + d] : [ideal]) {
+        if (sides < 2 || sides > 999) continue;
+        const dm = (n * (sides + 1)) / 2;
+        const err = Math.abs((hasBase ? fitBase(dm) : 0) + dm - target);
+        if (err < best.err - 1e-9) best = { sides, err };
+      }
+    out.dice = `${n}d${best.sides}`;
+  }
+  if (hasBase) out.base = fitBase(diceMean(out.dice));
+  if (out.scale) out.scale = { ...out.scale, factor: Math.round(out.scale.factor * f * 100) / 100 };
+  return out;
+}
+
+/**
+ * Scales a positive stat by `f`, moving it by at least 1 when f ≠ 1 (hp 1 × 1.3 used to stay 1
+ * forever), within [lo, hi].
+ */
+function scaleStat(v: number, f: number, lo: number, hi: number): number {
+  let n = Math.round(v * f);
+  if (f > 1 && n <= v) n = v + 1;
+  if (f < 1 && n >= v) n = v - 1;
+  return clamp(n, lo, hi);
+}
+
+function scaleDamageEffects(effects: Effect[], f: number): Effect[] {
+  return effects.map((e) => (e.type === 'damage' ? { ...e, amount: scaleAmount(e.amount, f) } : e));
+}
+
+/**
+ * Scales every hostile actor's hp and damage — including hostiles with npc dialogue (bosses you
+ * can also talk to are often the deadliest actors in a world). Their persuade DC is left alone, so
+ * talking one down stays exactly as hard as written. Non-hostile actors are never touched.
+ */
+function scaleHostiles(w: WorldSpec, f: number, changes: string[], only?: Set<string>): void {
+  let n = 0;
+  for (const a of w.actors) {
+    if (a.faction !== 'hostile') continue;
+    if (only && !only.has(a.id)) continue;
+    a.stats.hp = scaleStat(a.stats.hp, f, 1, 500);
+    if (a.attack) a.attack = { ...a.attack, damage: scaleAmount(a.attack.damage, f) };
+    a.abilities = a.abilities.map((ab) => {
+      const t = ab.action.targeting.affects;
+      if (t === 'allies' || t === 'self_only') return ab;
+      return { ...ab, action: { ...ab.action, effects: scaleDamageEffects(ab.action.effects, f) } };
+    });
+    n++;
+  }
+  if (n) changes.push(`${only ? [...only].join(', ') : `${n} hostile actors`}: hp and damage ×${f}`);
+}
+
+/** the world's most useful plain healing consumable (for spawn tables) */
+export function bestHealingItem(w: WorldSpec): ItemDef | null {
+  let best: ItemDef | null = null;
+  let score = 0;
+  for (const it of w.items) {
+    const pr = itemProfile(w, it);
+    if (pr.heal <= 0 || pr.selfHarm || pr.offensive || it.useMode === 'passive' || it.rarity === 'unique') continue;
+    // prefer commonly known, consumed heals of moderate size
+    const s = pr.heal * (it.useMode === 'consumed' ? 1 : 0.6) * (it.knowledge === 'unknown' ? 0.6 : 1) * (it.rarity === 'common' ? 1.2 : 1);
+    if (s > score) {
+      score = s;
+      best = it;
+    }
+  }
+  return best;
+}
+
+function addHealing(w: WorldSpec, changes: string[], extraItems: number): void {
+  const heal = bestHealingItem(w);
+  if (!heal) {
+    changes.push('no healing item to add (the world has none)');
+    return;
+  }
+  for (const [i, plan] of w.areas.entries()) {
+    const e = plan.items.find((x) => x.item === heal.id);
+    if (e) e.weight = clamp(Math.round(e.weight * 1.5 + 5), 0, 100);
+    else if (plan.items.length < 16) plan.items.push({ item: heal.id, weight: 15 });
+    plan.itemCount = clamp(plan.itemCount + extraItems, 0, 30);
+    void i;
+  }
+  changes.push(`"${heal.id}" more common in every area${extraItems ? `, +${extraItems} item per area` : ''}`);
+}
+
+function cutHealing(w: WorldSpec, changes: string[]): void {
+  let n = 0;
+  for (const plan of w.areas)
+    for (const e of plan.items) {
+      // an entry the author disabled (weight 0) stays disabled; enabled ones stay enabled (≥ 1)
+      if (e.weight <= 0) continue;
+      const d = w.items.find((x) => x.id === e.item);
+      if (d && itemProfile(w, d).heal > 0) {
+        const next = Math.max(1, Math.round(e.weight * 0.6));
+        if (next === e.weight) continue;
+        e.weight = next;
+        n++;
+      }
+    }
+  if (n) changes.push(`healing items 40% less common (${n} spawn entries)`);
+}
+
+/**
+ * Shrinks a harmful amount by `f` without ever removing it: a base keeps its sign and at least
+ * magnitude 1 (Math.round(-1 * 0.5) is -0, which deleted -1 drains), dice keep at least 2 sides.
+ * Returns an equal amount when it cannot get smaller.
+ */
+export function softenAmount(a: Amount, f: number): Amount {
+  const out: Amount = { ...a };
+  if (out.base) out.base = Math.sign(out.base) * Math.max(1, Math.round(Math.abs(out.base) * f));
+  if (out.dice) {
+    const m = /^(\d{1,2})d(\d{1,3})$/.exec(out.dice);
+    if (m) out.dice = `${Number(m[1])}d${clamp(Math.round(Number(m[2]) * f), 2, 999)}`;
+  }
+  if (out.scale) out.scale = { ...out.scale, factor: Math.round(out.scale.factor * f * 100) / 100 };
+  return out;
+}
+
+function isDrain(e: Effect): e is Extract<Effect, { type: 'damage' | 'resource' }> {
+  return e.type === 'damage' || (e.type === 'resource' && (e.amount.base ?? 0) < 0);
+}
+
+function softenRules(w: WorldSpec, changes: string[]): void {
+  for (const r of w.rules) {
+    const imp = estimateRuleImpact(w, r);
+    if (!imp.harmful || imp.magnitude === 'none') continue;
+    let cutAny = false;
+    let slowerAny = false;
+    r.playerTriggers = r.playerTriggers.map((tr) => {
+      if (!tr.action.effects.some(isDrain)) return tr;
+      let cut = false;
+      const effects = tr.action.effects.map((e) => {
+        if (!isDrain(e)) return e;
+        const amount = softenAmount(e.amount, 0.5);
+        if (JSON.stringify(amount) === JSON.stringify(e.amount)) return e;
+        cut = true;
+        return { ...e, amount };
+      });
+      // on_turn triggers fire less often; when the amounts are already at their minimum (a -1
+      // drain), twice as rarely instead, so the rule is still softened
+      let every = tr.every;
+      if (tr.on === 'on_turn') {
+        const cur = tr.every ?? 1;
+        const next = clamp(Math.ceil(cur * (cut ? 1.5 : 2)), 1, 100);
+        if (next !== cur) {
+          every = next;
+          slowerAny = true;
+        }
+      }
+      if (cut) cutAny = true;
+      return { ...tr, ...(every !== undefined ? { every } : {}), action: { ...tr.action, effects } };
+    });
+    // only report what actually changed
+    const what = [cutAny ? 'harmful trigger effects halved' : '', slowerAny ? 'on_turn slower' : ''].filter(Boolean).join(', ');
+    if (what) changes.push(`rule "${r.id}" softened (${what})`);
+  }
+  for (const res of w.resources) {
+    if (res.perTurn < 0) {
+      res.perTurn = Math.round(res.perTurn * 0.75 * 100) / 100;
+      changes.push(`resource "${res.id}" drains slower (${res.perTurn}/turn)`);
+    }
+  }
+}
+
+/**
+ * The hostile actor behind the most deaths. Death causes read "killed by <label>", where the label
+ * starts with the actor's name but may carry more (a title, the damage type…), so causes are
+ * matched to the hostile with the longest name they start with and tallied per actor.
+ */
+export function topKiller(w: WorldSpec, deathsByCause: Record<string, number>): ActorDef | undefined {
+  const hostiles = w.actors.filter((a) => a.faction === 'hostile').sort((a, b) => b.name.length - a.name.length);
+  const tally = new Map<string, number>();
+  for (const [cause, n] of Object.entries(deathsByCause)) {
+    const label = cause.replace(/^killed by /, '');
+    const a = hostiles.find((h) => label === h.name || label.startsWith(h.name));
+    if (a) tally.set(a.id, (tally.get(a.id) ?? 0) + n);
+  }
+  const top = [...tally.entries()].sort((a, b) => b[1] - a[1])[0];
+  return top ? w.actors.find((a) => a.id === top[0]) : undefined;
+}
+
+// --- feasibility fixes -------------------------------------------------------
+
+type Missing = { kind: 'item' | 'actor'; id: string };
+
+function missing(w: WorldSpec, src: Sources, c: Condition | undefined, limit: number, depth = 0): Missing[] {
+  if (!c || depth > 16) return [];
+  switch (c.type) {
+    case 'all':
+      return c.of.flatMap((x) => missing(w, src, x, limit, depth + 1));
+    case 'any': {
+      const branches = c.of.map((x) => missing(w, src, x, limit, depth + 1));
+      if (branches.some((b) => b.length === 0)) return [];
+      return branches.sort((a, b) => a.length - b.length)[0] ?? [];
+    }
+    case 'has_item': {
+      const at = src.items.get(c.item);
+      return at === undefined || at > limit ? [{ kind: 'item', id: c.item }] : [];
+    }
+    case 'actor_defeated': {
+      const at = src.actors.get(c.actor);
+      return at === undefined || at > limit ? [{ kind: 'actor', id: c.actor }] : [];
+    }
+    default:
+      return [];
+  }
+}
+
+function fixFeasibility(w: WorldSpec, changes: string[]): void {
+  const last = w.areas.length - 1;
+  const place = (m: Missing, area: number) => {
+    const plan = w.areas[area];
+    if (m.kind === 'item') {
+      if (!w.items.some((x) => x.id === m.id)) return;
+      if (plan.placedItems.length >= 6) return changes.push(`could not place "${m.id}" in area ${area + 1} (placedItems full)`);
+      plan.placedItems.push({ item: m.id, where: area === last ? 'guarded' : 'anywhere' });
+      changes.push(`placed missing item "${m.id}" in area ${area + 1}`);
+    } else {
+      if (!w.actors.some((x) => x.id === m.id)) return;
+      if (plan.placed.length >= 6) return changes.push(`could not place "${m.id}" in area ${area + 1} (placed full)`);
+      plan.placed.push({ actor: m.id, where: area === last ? 'near_exit' : 'far' });
+      changes.push(`placed missing actor "${m.id}" in area ${area + 1}`);
+    }
+  };
+  for (let i = 0; i < last; i++) {
+    const src = collectSources(w);
+    for (const m of missing(w, src, w.areas[i].transitionRequires, i)) place(m, i);
+  }
+  const src = collectSources(w);
+  for (const m of missing(w, src, w.goal.win, last)) place(m, last);
+}
+
+// ---------------------------------------------------------------------------
+
+/** hostile scale factor for a too_easy world: 1 + 1.5 × (winRate − band top), within 1.15–1.6 */
+export function tooEasyFactor(winRate: number, hi: number): number {
+  return Math.round(clamp(1 + 1.5 * (winRate - hi), 1.15, 1.6) * 100) / 100;
+}
+
+export function rebalance(world: WorldSpec, report: Pick<BalanceReport, 'verdict' | 'winRate' | 'target' | 'sims'> | VerdictResult): RebalanceResult {
+  const w = structuredClone(world) as WorldSpec;
+  const changes: string[] = [];
+  fixFeasibility(w, changes);
+  const [lo, hi] = report.target;
+  if (report.verdict === 'too_hard') {
+    const f = report.winRate <= 0 ? 0.7 : report.winRate < lo / 2 ? 0.8 : 0.9;
+    scaleHostiles(w, f, changes);
+    addHealing(w, changes, report.winRate < lo / 2 ? 1 : 0);
+    softenRules(w, changes);
+    // the top killer of the explorer takes an extra cut
+    const sims = 'sims' in report ? report.sims : [];
+    const basis = sims.find((s) => s.bot === 'explorer') ?? sims[0];
+    const def = basis ? topKiller(w, basis.deathsByCause) : undefined;
+    if (def) scaleHostiles(w, 0.85, changes, new Set([def.id]));
+  } else if (report.verdict === 'too_easy') {
+    // the further above the band, the harder the push: ×1.15 just above it, up to ×1.6 (a world
+    // the bots win 90%+ of the time under a normal band needs ~×1.6, and ×1.3 per round could not
+    // undo a ×0.35 world in three rounds)
+    const f = tooEasyFactor(report.winRate, hi);
+    scaleHostiles(w, f, changes);
+    cutHealing(w, changes);
+  }
+  if (!changes.length) return { world, changes: ['no changes'], valid: true };
+  const parsed = parseWorld(JSON.parse(JSON.stringify(w)));
+  if (!parsed.ok) return { world, changes: [...changes, `rejected: adjusted world failed validation (${parsed.errors.slice(0, 3).join('; ')})`], valid: false };
+  return { world: parsed.world, changes, valid: true };
+}
+
+/**
+ * Only the feasibility fixes (place missing goal / lock items and actors), re-validated. Returns
+ * the input world itself when nothing was missing.
+ */
+export function feasibilityFixes(world: WorldSpec): RebalanceResult {
+  const w = structuredClone(world) as WorldSpec;
+  const changes: string[] = [];
+  fixFeasibility(w, changes);
+  if (!changes.length) return { world, changes: ['no changes'], valid: true };
+  const parsed = parseWorld(JSON.parse(JSON.stringify(w)));
+  if (!parsed.ok) return { world, changes: [...changes, `rejected: adjusted world failed validation (${parsed.errors.slice(0, 3).join('; ')})`], valid: false };
+  return { world: parsed.world, changes, valid: true };
+}
+
+/** the adjusted world (re-validated); see rebalance() for the change list */
+export function autoRebalance(world: WorldSpec, report: Pick<BalanceReport, 'verdict' | 'winRate' | 'target' | 'sims'> | VerdictResult): WorldSpec {
+  return rebalance(world, report).world;
+}

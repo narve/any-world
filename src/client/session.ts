@@ -7,10 +7,12 @@
  * all of the integration logic unit-testable in node (tests/client/session.test.ts).
  */
 import type { WorldSpec } from '../schema/world';
-import type { ActorInstance, AreaMap, Dir, GameEvent, GameState, LogMessage, PendingChoice, PlayerAction, Pos } from '../engine/types';
-import { createGame, describeActor, describeItemDef, deserialize, legalActions, serialize, step } from '../engine/index';
+import type { GmAction, GmHook } from '../schema/gm';
+import type { ActorInstance, AreaMap, Dir, GameEvent, GameState, LogMessage, NewGameOptions, PendingChoice, PlayerAction, Pos } from '../engine/types';
+import { applyGmActions, createGame, describeActor, describeItem, describeItemDef, deserialize, legalActions, passability, playerSheet, serialize, step } from '../engine/index';
 import type {
   ActorTooltipView,
+  Difficulty,
   GameView,
   NarrationView,
   TileTooltipView,
@@ -18,10 +20,13 @@ import type {
   UiIntent,
   UiViewModel,
 } from './ui/viewmodel';
-import { dialogueMap, endView, gameView, needsTarget, playerOf, themeOf } from './view';
-import { actorAt, cheb, rotateDir, travelStep, visibleHostiles } from './travel';
+import { aimsDirection, dialogueMap, endView, gameView, needsTarget, playerOf, themeOf, wastedRestore } from './view';
+import { actorAt, cheb, dirTo, rotateDir, travelPath, travelStep, visibleHostiles } from './travel';
 import type { SavedRun } from './storage';
 import { explainInvalid } from './invalid';
+import { RuleTracker, type RuleChange, type RuleMemo } from './rules';
+import { drainEngineQueue, gmHooksFor, narrationOf, newHookTracker, type GmContext, type GmHookEvent, type HookTracker } from './gm-director';
+import { isDifficulty } from './ui/format';
 
 const DELTA: Record<Dir, [number, number]> = { n: [0, -1], ne: [1, -1], e: [1, 0], se: [1, 1], s: [0, 1], sw: [-1, 1], w: [-1, 0], nw: [-1, -1] };
 const HISTORY_LIMIT = 12;
@@ -42,6 +47,8 @@ export interface Outcome {
   describe?: { pos: Pos; actor: ActorTooltipView | null; tile: TileTooltipView | null } | null;
   /** a click started click-to-travel: the controller should drive `travelTick()` */
   travel?: boolean;
+  /** rules that came into force or were lifted with this change */
+  rules?: RuleChange[];
 }
 
 function emptyOutcome(): Outcome {
@@ -57,8 +64,30 @@ function merge(a: Outcome, b: Outcome): Outcome {
     camera: b.camera ?? a.camera,
     describe: b.describe !== undefined ? b.describe : a.describe,
     travel: b.travel ?? a.travel,
+    ...(a.rules || b.rules ? { rules: [...(a.rules ?? []), ...(b.rules ?? [])] } : {}),
   };
 }
+
+/** what hovering a tile would do on click (path preview) */
+export interface HoverPreview {
+  pos: Pos;
+  /** walk = travel there; attack = hit/shoot the actor; talk = an NPC; use = interact with the tile;
+   *  self = the player's tile (pick up / take the exit); none = no known way */
+  kind: 'walk' | 'attack' | 'talk' | 'use' | 'self' | 'none';
+  /** the route (excluding the player's tile) for walk / adjacent moves */
+  path: Pos[];
+}
+
+/** a tile next to the player that can be used (terrain interaction or a door) */
+export interface InteractTarget {
+  pos: Pos;
+  name: string;
+  door: boolean;
+}
+
+const FIRST_RUN_HINTS = ['Click a tile to walk there', 'Walk into someone to act on them', 'g picks up · Enter uses things next to you', '? shows every control'];
+/** turn-taking actions before the first-run hints fade */
+const HINT_ACTIONS = 3;
 
 export interface SessionInit {
   world: WorldSpec;
@@ -72,6 +101,14 @@ export interface SessionInit {
   map?: AreaMap;
   /** UI animation preferences carried into the view model */
   prefs?: { animationSpeed: number; reduceMotion: boolean };
+  /** start options (new runs pass them to the engine; resumed runs restore them) */
+  difficulty?: Difficulty;
+  weirdness?: number;
+  /** resumed client memory (SavedRun) */
+  rules?: RuleMemo[];
+  hooks?: HookTracker;
+  /** show the first-run hint card */
+  hints?: boolean;
 }
 
 export class GameSession {
@@ -88,11 +125,26 @@ export class GameSession {
   tradeOpen = false;
   /** camera yaw step 0..3, mirrored from the renderer */
   cameraStep = 0;
+  /** the last direction the player moved (map space): where direction aiming starts */
+  facing: Dir = 's';
+  /** item instance the player was warned would be wasted (a second press uses it anyway) */
+  private wasteWarned: string | null = null;
   prefs: { animationSpeed: number; reduceMotion: boolean };
   /** click-to-travel destination */
   travelDest: Pos | null = null;
+  readonly difficulty: Difficulty;
+  readonly weirdness: number;
+  readonly rules: RuleTracker;
+  hookTracker: HookTracker;
+  /** first-run hints still showing */
+  hintsOn: boolean;
+  private hintActions = 0;
   private travelSeen = new Set<string>();
   private narrationSeq = 0;
+  /** GM moments waiting for the controller (takeHooks) */
+  private hooks: GmHookEvent[] = [];
+  /** the hook the current narration card answers (a GM reply may replace its text) */
+  private narrationHook: { hook: GmHook; area: number } | null = null;
 
   constructor(init: SessionInit) {
     this.world = init.world;
@@ -100,14 +152,32 @@ export class GameSession {
     this.seed = init.seed;
     this.gmLog = init.gmLog ? [...init.gmLog] : [];
     this.prefs = init.prefs ?? { animationSpeed: 1, reduceMotion: false };
+    this.hintsOn = !!init.hints;
     if (init.saved) {
       this.state = deserialize(init.world, init.saved);
       this.narration = null;
     } else {
-      this.state = createGame(init.world, { seed: init.seed, ...(init.map ? { map: init.map } : {}) });
+      // difficulty/weirdness are M2 engine options; an engine without them ignores the fields
+      const opts: NewGameOptions & { difficulty?: Difficulty; weirdness?: number } = {
+        seed: init.seed,
+        ...(init.map ? { map: init.map } : {}),
+        ...(init.difficulty ? { difficulty: init.difficulty } : {}),
+        ...(init.weirdness !== undefined ? { weirdness: init.weirdness } : {}),
+      };
+      this.state = createGame(init.world, opts);
       const m = init.world.meta;
-      this.narration = { id: 'intro', kind: 'intro', title: m.title, text: m.premise || m.tagline };
+      // shown at once; the GM's intro (offline: the same canned line) replaces it when it arrives
+      this.narration = { id: 'intro', kind: 'intro', title: m.title, text: init.world.gm.fallback.intro || m.premise || m.tagline };
+      this.narrationHook = { hook: 'intro', area: this.state.area.index };
     }
+    const st = this.state as GameState & { difficulty?: unknown; weirdness?: unknown };
+    this.difficulty = isDifficulty(st.difficulty) ? st.difficulty : (init.difficulty ?? 'normal');
+    this.weirdness = typeof st.weirdness === 'number' ? st.weirdness : (init.weirdness ?? 0.4);
+    this.rules = new RuleTracker(init.rules);
+    this.rules.prime(this.world, this.state);
+    this.hookTracker = init.hooks ? { ...init.hooks, bossesSeen: [...(init.hooks.bossesSeen ?? [])] } : newHookTracker(this.state.turn);
+    if (!init.saved) this.hooks.push({ hook: 'intro', area: this.state.area.index, turn: this.state.turn });
+    this.state = drainEngineQueue(this.state);
   }
 
   // ---------------------------------------------------------------------------
@@ -124,7 +194,8 @@ export class GameSession {
 
   viewModel(extra: Partial<UiViewModel> = {}): UiViewModel {
     const theme = themeOf(this.world);
-    if (this.ended) return { screen: 'end', theme, end: endView(this.world, this.state), prefs: this.prefs, ...extra };
+    if (this.ended) return { screen: 'end', theme, end: endView(this.world, this.state, undefined, { difficulty: this.difficulty, weirdness: this.weirdness }), prefs: this.prefs, ...extra };
+    const it = this.interactTargets()[0];
     const game = gameView(this.world, this.state, {
       gmLog: this.gmLog,
       narration: this.narration,
@@ -132,13 +203,148 @@ export class GameSession {
       targetingSlot: this.targetingSlot,
       dialogueHistory: this.history,
       tradeOpen: this.tradeOpen,
+      rules: this.rules,
+      hints: this.hintsOn ? FIRST_RUN_HINTS : null,
+      interactHint: it && !it.door ? `Enter: use ${it.name}` : null,
+      ...(this.thumbs ? { thumbs: this.thumbs } : {}),
     });
     return { screen: 'game', theme, game, prefs: this.prefs, ...extra };
   }
 
+  /** item thumbnails (set by the controller when the renderer can draw them) */
+  thumbs?: (defId: string) => string | undefined;
+
   /** tiles the renderer should highlight (look/target cursor) */
   highlights(): Pos[] {
     return this.cursor && this.mode !== 'normal' ? [this.cursor] : [];
+  }
+
+  /**
+   * What a primary click on `pos` would do, for the hover preview (normal mode only): the travel
+   * route, an attack outline on a hostile in reach, "use" on an adjacent usable tile, or none.
+   */
+  preview(pos: Pos | null): HoverPreview | null {
+    if (!pos || this.mode !== 'normal' || this.ended || !this.inBounds(pos)) return null;
+    if (this.state.pendingChoice || this.state.player.pendingPerkChoice) return null;
+    const seen = this.seenAt(pos);
+    if (seen === 0) return { pos, kind: 'none', path: [] };
+    const p = this.player().pos;
+    if (p.x === pos.x && p.y === pos.y) return { pos, kind: 'self', path: [] };
+    const target = seen === 2 ? actorAt(this.state, pos) : undefined;
+    if (target && target.id !== this.state.player.actorId) {
+      const hostile = target.faction === 'hostile' && !target.allyOf;
+      if (hostile && cheb(target.pos, p) > 1 && legalActions(this.state).some((a) => a.type === 'attack' && a.targetId === target.id)) return { pos, kind: 'attack', path: [] };
+      const path = travelPath(this.state, pos);
+      if (!path) return { pos, kind: 'none', path: [] };
+      return { pos, kind: hostile ? 'attack' : 'talk', path };
+    }
+    if (cheb(pos, p) === 1 && this.interactTargets().some((t) => !t.door && t.pos.x === pos.x && t.pos.y === pos.y)) return { pos, kind: 'use', path: [] };
+    const path = travelPath(this.state, pos);
+    return path ? { pos, kind: 'walk', path } : { pos, kind: 'none', path: [] };
+  }
+
+  /** usable tiles next to the player: terrain interactions first, then doors */
+  interactTargets(): InteractTarget[] {
+    if (this.ended) return [];
+    const map = this.state.area.map;
+    const out: InteractTarget[] = [];
+    for (const a of legalActions(this.state)) {
+      if (a.type !== 'interact') continue;
+      const t = map.tiles[a.pos.y * map.width + a.pos.x];
+      const terr = t?.terrain ? this.world.terrains.find((x) => x.id === t.terrain) : undefined;
+      if (terr?.interact && !t.interacted) out.push({ pos: { ...a.pos }, name: terr.name, door: false });
+      else if (t?.kind === 'door') out.push({ pos: { ...a.pos }, name: 'Door', door: true });
+    }
+    return out.sort((a, b) => Number(a.door) - Number(b.door));
+  }
+
+  /** a GM request's context, as a snapshot of now */
+  gmContext(): GmContext {
+    return {
+      world: this.world,
+      state: this.state,
+      difficulty: this.difficulty,
+      weirdness: this.weirdness,
+      recentLog: this.state.log.slice(-12),
+      areaEnteredTurn: this.hookTracker.areaEnteredTurn,
+    };
+  }
+
+  /** GM moments produced since the last call (the controller sends them to the director) */
+  takeHooks(): GmHookEvent[] {
+    return this.hooks.splice(0);
+  }
+
+  /**
+   * Applies a GM answer (engine applyGmActions: budget, references and rule limits are enforced
+   * there). Stale answers — for another area, or after the run ended — are ignored. A narrate
+   * action that answers the hook of the narration card on screen replaces the card's text; event
+   * narration opens a card of its own.
+   */
+  applyGm(actions: GmAction[], meta: { hook?: GmHook; area?: number } = {}): Outcome {
+    const out = emptyOutcome();
+    if (this.ended || !actions.length) return out;
+    if (meta.area !== undefined && meta.area !== this.state.area.index) return out;
+    const before = this.state;
+    let res;
+    try {
+      res = applyGmActions(before, actions);
+    } catch (e) {
+      console.warn('[anyworld] GM actions failed:', e);
+      return out;
+    }
+    out.events = res.events;
+    const text = narrationOf({ actions });
+    if (res.state !== before) {
+      out.changed = true;
+      this.state = res.state;
+      this.afterChange(before, res.events, out);
+    }
+    if (text && meta.hook) {
+      const card = this.narration;
+      const answersCard = !!card && !!this.narrationHook && this.narrationHook.hook === meta.hook && this.narrationHook.area === (meta.area ?? this.state.area.index);
+      if (answersCard && card) this.narration = { ...card, text };
+      else if (meta.hook === 'area_enter' || meta.hook === 'intro') {
+        const plan = this.world.areas[this.state.area.index];
+        this.narration = { id: `gm-${meta.hook}-${++this.narrationSeq}`, kind: meta.hook === 'intro' ? 'intro' : 'area_enter', title: meta.hook === 'intro' ? this.world.meta.title : plan?.name, text };
+        this.narrationHook = { hook: meta.hook, area: this.state.area.index };
+      } else if (meta.hook !== 'low_hp' && !this.state.pendingChoice) {
+        // an event: a short card the next action clears (offers show their own panel instead)
+        this.narration = { id: `gm-event-${++this.narrationSeq}`, kind: 'event', text };
+        this.narrationHook = { hook: meta.hook, area: this.state.area.index };
+      }
+      out.changed = true;
+    }
+    return out;
+  }
+
+  /** bookkeeping after any engine state change: GM hooks, rule changes, engine hook queue */
+  private afterChange(before: GameState, events: GameEvent[], out: Outcome): void {
+    const hooks = gmHooksFor(this.world, before, this.state, events, this.hookTracker);
+    this.state = drainEngineQueue(this.state);
+    this.hooks.push(...hooks);
+    const changes = this.rules.update(this.world, this.state);
+    if (changes.length) {
+      out.rules = [...(out.rules ?? []), ...changes];
+      for (const c of changes) {
+        if (c.kind === 'added') {
+          out.toasts.push({ text: `New rule: ${c.name}`, tone: 'warn' });
+          this.gmLog = [...this.gmLog, { turn: this.state.turn, kind: 'gm', speaker: 'New rule', text: `${c.name} — ${c.reason ? `${c.reason} ` : ''}${c.description}`.trim() }];
+        } else {
+          out.toasts.push({ text: `Rule lifted: ${c.name}`, tone: 'info' });
+          this.gmLog = [...this.gmLog, { turn: this.state.turn, kind: 'gm', speaker: 'Rule lifted', text: c.name }];
+        }
+      }
+    }
+  }
+
+  /** the rules panel was opened: new-rule highlights have been seen */
+  acknowledgeRules(): void {
+    this.rules.acknowledge();
+  }
+
+  dismissHints(): void {
+    this.hintsOn = false;
   }
 
   savedRun(now: number): SavedRun {
@@ -154,6 +360,10 @@ export class GameSession {
       state: serialize(this.state),
       gmLog: this.gmLog,
       savedAt: now,
+      difficulty: this.difficulty,
+      weirdness: this.weirdness,
+      rules: this.rules.toJSON(),
+      hooks: { ...this.hookTracker, bossesSeen: [...this.hookTracker.bossesSeen] },
     };
   }
 
@@ -218,6 +428,8 @@ export class GameSession {
           title = plan?.name ?? 'Ground';
       }
     }
+    let usable: TileTooltipView['usable'];
+    if (terr?.interact) usable = t?.interacted ? 'used' : 'usable';
     if (!visible) description = description ? `${description} (remembered)` : '(remembered)';
     const items = visible
       ? this.state.area.items.filter((fi) => fi.pos.x === pos.x && fi.pos.y === pos.y).map((fi) => {
@@ -225,7 +437,7 @@ export class GameSession {
           return fi.item.count > 1 ? `${v.name} ×${fi.item.count}` : v.name;
         })
       : [];
-    return { title, ...(description ? { description } : {}), ...(items.length ? { items } : {}) };
+    return { title, ...(description ? { description } : {}), ...(items.length ? { items } : {}), ...(usable ? { usable } : {}) };
   }
 
   // ---------------------------------------------------------------------------
@@ -236,6 +448,7 @@ export class GameSession {
   act(action: PlayerAction): Outcome {
     const out = emptyOutcome();
     const before = this.state;
+    this.wasteWarned = null;
     const res = step(before, action);
     for (const e of res.events) if (e.type === 'invalid') out.toasts.push({ text: explainInvalid(this.world, before, action, e.reason), tone: 'warn' });
     out.events = res.events;
@@ -245,6 +458,7 @@ export class GameSession {
     // skipped) and must not stay over the board (issues/M1-narration-covers-player.md); a card
     // this action opens (a new area) stays until the next action
     this.narration = null;
+    this.narrationHook = null;
     const prevChoice = before.pendingChoice;
     this.state = res.state;
     const pc = this.state.pendingChoice;
@@ -262,8 +476,14 @@ export class GameSession {
       this.cancelCursor();
       this.travelDest = null;
       const plan = this.world.areas[this.state.area.index];
-      if (plan) this.narration = { id: `area-${this.state.area.index}-${++this.narrationSeq}`, kind: 'area_enter', title: plan.name, text: plan.description };
+      // shown at once; the GM's arrival line replaces the text when it comes in
+      if (plan) {
+        this.narration = { id: `area-${this.state.area.index}-${++this.narrationSeq}`, kind: 'area_enter', title: plan.name, text: plan.description };
+        this.narrationHook = { hook: 'area_enter', area: this.state.area.index };
+      }
     }
+    this.afterChange(before, res.events, out);
+    if (res.tookTurn && this.hintsOn && ++this.hintActions >= HINT_ACTIONS) this.hintsOn = false;
     if (this.ended) {
       this.cancelCursor();
       this.travelDest = null;
@@ -279,12 +499,34 @@ export class GameSession {
   /** an engine action from the UI: movement keys are screen-relative, so they follow the camera */
   uiAction(action: PlayerAction): Outcome {
     this.travelDest = null;
-    if (action.type === 'move') return this.act({ type: 'move', dir: rotateDir(action.dir, this.cameraStep) });
+    if (action.type === 'move') {
+      const dir = rotateDir(action.dir, this.cameraStep);
+      // bumping a usable tile that can't be walked onto uses it (cryo pods, consoles, wells…)
+      const d = DELTA[dir];
+      const p = this.player().pos;
+      const to = { x: p.x + d[0], y: p.y + d[1] };
+      if (this.inBounds(to) && !actorAt(this.state, to) && !passability(this.state)(to.x, to.y)) {
+        const it = this.interactTargets().find((t) => !t.door && t.pos.x === to.x && t.pos.y === to.y);
+        if (it) return this.act({ type: 'interact', pos: it.pos });
+      }
+      this.facing = dir;
+      return this.act({ type: 'move', dir });
+    }
     if (action.type === 'use' && action.target === undefined) {
       // aimed items always go through targeting, even when activated from a menu
       const it = this.state.player.slots[action.slot];
       const def = it ? this.world.items.find((d) => d.id === it.defId) : undefined;
       if (def && needsTarget(def)) return this.beginTarget(action.slot);
+      // a known restorative whose every vital is already full: warn first, use on a second press
+      // (issues/M2-consumable-wasted-when-full.md)
+      if (it && def && this.wasteWarned !== it.id) {
+        const known = describeItem(this.state, it.id).knowledge === 'clear';
+        const full = known ? wastedRestore(this.world, def, playerSheet(this.state), this.player().statuses) : null;
+        if (full) {
+          this.wasteWarned = it.id;
+          return { ...emptyOutcome(), toasts: [{ text: `${full} is already full — use ${def.name} anyway? (press again)`, tone: 'warn' }] };
+        }
+      }
     }
     return this.act(action);
   }
@@ -330,6 +572,11 @@ export class GameSession {
       case 'open_trade':
         this.tradeOpen = true;
         return emptyOutcome();
+      case 'interact':
+        return this.interact();
+      case 'dismiss_hints':
+        this.hintsOn = false;
+        return emptyOutcome();
       case 'panel':
         if (i.open) this.travelDest = null;
         return emptyOutcome();
@@ -371,6 +618,17 @@ export class GameSession {
     return merge(out, this.act({ type: kind, targetId: id }));
   }
 
+  /** Enter: use the adjacent usable tile (the one under the look cursor first) */
+  private interact(): Outcome {
+    this.travelDest = null;
+    if (this.state.pendingChoice || this.state.player.pendingPerkChoice) return emptyOutcome();
+    const ts = this.interactTargets();
+    const at = this.cursor ? ts.find((t) => t.pos.x === this.cursor!.x && t.pos.y === this.cursor!.y) : undefined;
+    const t = at ?? ts.find((x) => !x.door);
+    if (!t) return { ...emptyOutcome(), toasts: [{ text: 'There is nothing to use right next to you.', tone: 'info' }] };
+    return this.act({ type: 'interact', pos: t.pos });
+  }
+
   private beginTarget(slot: number): Outcome {
     this.travelDest = null;
     const it = this.state.player.slots[slot];
@@ -379,13 +637,58 @@ export class GameSession {
     this.targetingSlot = slot;
     // start on the engine's automatic target (nearest sensible foe in range), else on the player
     const auto = legalActions(this.state).find((a): a is { type: 'use'; slot: number; target?: Pos } => a.type === 'use' && a.slot === slot);
-    this.cursor = auto?.target ? { ...auto.target } : { ...this.player().pos };
+    const p = this.player().pos;
+    if (this.aimingDirection()) {
+      // a direction is needed, so never start on the player: toward the nearest visible foe, else
+      // one step the way the player last moved (issues/M2-direction-target-cursor.md)
+      const t = auto?.target && (auto.target.x !== p.x || auto.target.y !== p.y) ? auto.target : undefined;
+      this.cursor = t ? { ...t } : this.stepFrom(p, this.nearestFoeDir() ?? this.facing);
+    } else this.cursor = auto?.target ? { ...auto.target } : { ...p };
     return { ...emptyOutcome(), describe: { pos: this.cursor, ...this.describeAt(this.cursor) } };
+  }
+
+  /** true while targeting an item aimed by direction (ray, cone) */
+  aimingDirection(): boolean {
+    if (this.mode !== 'target' || this.targetingSlot === undefined) return false;
+    const it = this.state.player.slots[this.targetingSlot];
+    const def = it ? this.world.items.find((d) => d.id === it.defId) : undefined;
+    return !!def && aimsDirection(def);
+  }
+
+  /** while aiming a direction: the player and the cursor, for the overlay's direction marks */
+  aim(): { from: Pos; at: Pos } | null {
+    if (!this.aimingDirection() || !this.cursor) return null;
+    return { from: { ...this.player().pos }, at: { ...this.cursor } };
+  }
+
+  private nearestFoeDir(): Dir | null {
+    const p = this.player().pos;
+    const ids = visibleHostiles(this.state);
+    const foes = this.state.area.actors.filter((a) => ids.has(a.id)).sort((a, b) => cheb(a.pos, p) - cheb(b.pos, p) || a.id.localeCompare(b.id));
+    return foes.length ? dirTo(p, foes[0].pos) : null;
+  }
+
+  /** one tile from `p` in map direction `dir`, clamped to the map (stays put only on a 1x1 map) */
+  private stepFrom(p: Pos, dir: Dir): Pos {
+    const d = DELTA[dir];
+    const next = { x: p.x + d[0], y: p.y + d[1] };
+    if (this.inBounds(next)) return next;
+    for (const k of Object.keys(DELTA) as Dir[]) {
+      const q = { x: p.x + DELTA[k][0], y: p.y + DELTA[k][1] };
+      if (this.inBounds(q)) return q;
+    }
+    return { ...p };
   }
 
   private moveCursor(dir: Dir): Outcome {
     if (this.mode === 'normal' || !this.cursor) return emptyOutcome();
-    const d = DELTA[rotateDir(dir, this.cameraStep)];
+    const md = rotateDir(dir, this.cameraStep);
+    if (this.aimingDirection()) {
+      // arrow keys pick one of the eight directions around the player
+      this.cursor = this.stepFrom(this.player().pos, md);
+      return { ...emptyOutcome(), describe: { pos: this.cursor, ...this.describeAt(this.cursor) } };
+    }
+    const d = DELTA[md];
     const next = { x: this.cursor.x + d[0], y: this.cursor.y + d[1] };
     if (this.inBounds(next)) this.cursor = next;
     return { ...emptyOutcome(), describe: { pos: this.cursor, ...this.describeAt(this.cursor) } };
@@ -433,7 +736,14 @@ export class GameSession {
       // clicking yourself picks up what lies here, or takes the exit when standing on it
       if (this.state.area.items.some((fi) => fi.pos.x === p.x && fi.pos.y === p.y)) return this.act({ type: 'pickup' });
       if (legalActions(this.state).some((a) => a.type === 'transition')) return this.act({ type: 'transition' });
+      const here = this.interactTargets().find((t) => !t.door && t.pos.x === p.x && t.pos.y === p.y);
+      if (here) return this.act({ type: 'interact', pos: here.pos });
       return emptyOutcome();
+    }
+    // an adjacent usable tile (console, pod, well…): use it instead of walking at it
+    if (cheb(pos, p) === 1 && !actorAt(this.state, pos)) {
+      const use = this.interactTargets().find((t) => !t.door && t.pos.x === pos.x && t.pos.y === pos.y);
+      if (use) return this.act({ type: 'interact', pos: use.pos });
     }
     // a visible hostile in weapon range (but not adjacent): shoot it
     const target = actorAt(this.state, pos);
@@ -455,7 +765,7 @@ export class GameSession {
     const d = this.describeAt(pos);
     if (!d.actor && !d.tile) return { ...emptyOutcome(), describe: null };
     // terrain tooltips only in look/target mode; actors and items always
-    if (!d.actor && this.mode === 'normal' && !d.tile?.items?.length) return { ...emptyOutcome(), describe: null };
+    if (!d.actor && this.mode === 'normal' && !d.tile?.items?.length && !d.tile?.usable) return { ...emptyOutcome(), describe: null };
     return { ...emptyOutcome(), describe: { pos, ...d } };
   }
 
@@ -569,7 +879,10 @@ export class GameSession {
   }
 
   dismissNarration(id: string): void {
-    if (this.narration && this.narration.id === id) this.narration = null;
+    if (this.narration && this.narration.id === id) {
+      this.narration = null;
+      this.narrationHook = null;
+    }
   }
 
   setCameraStep(step: number): void {

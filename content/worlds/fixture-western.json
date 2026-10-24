@@ -104,6 +104,7 @@
       { "item": "trick-shot", "count": 1, "equipped": false, "quick": true },
       { "item": "sarsaparilla", "count": 2, "equipped": false, "quick": true }
     ],
+    "startCurrency": 20,
     "growth": {
       "firstLevelXp": 30,
       "curve": 1.6,
@@ -115,8 +116,8 @@
         { "id": "rawhide", "name": "Rawhide", "description": "Tanned by nine weeks of sun. +8 Blood, +1 Leather.", "modifiers": [{ "stat": "hp", "amount": 8 }, { "stat": "ac", "amount": 1 }], "minLevel": 2 },
         { "id": "far-sight", "name": "Desert Eyes", "description": "You read the horizon like a letter. +2 sight.", "modifiers": [{ "stat": "sight", "amount": 2 }], "minLevel": 2 },
         { "id": "rain-prayer", "name": "Grandmother's Rain Prayer", "description": "You finally remember the words. Learn Rain Call.", "grantItems": ["rain-call"], "minLevel": 3 },
-        { "id": "blood-from-stone", "name": "Blood from a Stone", "description": "Every time you put someone in the dirt, you find a cartridge on them.", "triggers": [{ "on": "on_kill", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "resource", "resource": "rounds", "amount": { "base": 1 } }] } }], "minLevel": 2 },
-        { "id": "last-stand", "name": "Last Stand", "description": "When your Blood runs low, your hands go perfectly still.", "triggers": [{ "on": "on_low_hp", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "steady-hand", "duration": 10 }] } }], "minLevel": 3 },
+        { "id": "blood-from-stone", "name": "Blood from a Stone", "description": "Every time you put someone in the dirt, you find a cartridge on them. +1 Rounds per kill.", "triggers": [{ "on": "on_kill", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "resource", "resource": "rounds", "amount": { "base": 1 } }] } }], "minLevel": 2 },
+        { "id": "last-stand", "name": "Last Stand", "description": "When your Blood runs low, your hands go perfectly still. Dropping below 30% Blood gives you Steady Hand for 10 turns.", "triggers": [{ "on": "on_low_hp", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "steady-hand", "duration": 10 }] } }], "minLevel": 3 },
         { "id": "savvy-tongue", "name": "Silver Tongue", "description": "Folks believe you. +2 Savvy, +4 Instinct.", "modifiers": [{ "stat": "int", "amount": 2 }, { "stat": "mp", "amount": 4 }], "minLevel": 2 }
       ]
     },
@@ -132,9 +133,10 @@
     {
       "id": "dust-coyote", "name": "Dust Coyote", "description": "Ribs like a xylophone, eyes like two lit cigarettes. They hunt in threes and laugh while they do it.",
       "faction": "hostile", "stats": { "hp": 7, "ac": 11, "str": 9, "dex": 13, "int": 4, "mp": 0 }, "speed": 130, "sight": 8,
-      "attack": { "name": "Snap", "verb": "snaps at", "damage": { "base": 0, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
+      "attack": { "name": "Snap", "verb": "snaps at", "damage": { "base": 1, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
       "behaviour": { "type": "pack", "param": 3, "erratic": 0.1 }, "xp": 5,
       "loot": [{ "item": "sarsaparilla", "chance": 0.05 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 1 }] } }],
       "tags": ["beast", "desert"],
       "model": { "archetype": "quadruped", "colors": { "primary": "#b58a5a", "secondary": "#e2c9a1", "accent": "#ff9d3b" }, "scale": 0.7, "idle": "bob" }
     },
@@ -147,15 +149,17 @@
       ],
       "behaviour": { "type": "chaser", "erratic": 0 }, "xp": 9,
       "loot": [{ "item": "cartridges", "chance": 0.35 }, { "item": "rain-bead", "chance": 0.15 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 3 }] } }],
       "tags": ["human", "company"],
       "model": { "archetype": "humanoid", "humanoid": { "height": 0.95, "build": "round", "skin": "#e0b493", "top": "#4b5b3a", "bottom": "#2d2a26", "accent": "#d6b24a", "hair": "#6b4a2b", "hairStyle": "short", "headwear": "fedora", "outfit": "uniform", "holding": "none" }, "scale": 1, "idle": "bob" }
     },
     {
       "id": "claim-jumper", "name": "Claim Jumper", "description": "A rifle, a shovel and nobody's permission. Shoots from far off, then scuttles back behind a rock.",
-      "faction": "hostile", "stats": { "hp": 10, "ac": 11, "str": 10, "dex": 13, "int": 9, "mp": 0 }, "speed": 100, "sight": 9,
-      "attack": { "name": "Long rifle", "verb": "takes a potshot at", "damage": { "base": 1, "dice": "1d6" }, "damageType": "lead", "range": 6, "accuracyStat": "dex" },
+      "faction": "hostile", "stats": { "hp": 12, "ac": 11, "str": 10, "dex": 13, "int": 9, "mp": 0 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Long rifle", "verb": "takes a potshot at", "damage": { "base": 2, "dice": "1d6" }, "damageType": "lead", "range": 6, "accuracyStat": "dex" },
       "behaviour": { "type": "kiter", "param": 4, "erratic": 0 }, "xp": 10,
       "loot": [{ "item": "cartridges", "chance": 0.5 }, { "item": "dynamite", "chance": 0.2 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 4 }] } }],
       "tags": ["human", "outlaw"],
       "model": { "archetype": "humanoid", "humanoid": { "height": 0.88, "build": "slim", "skin": "#c69872", "top": "#8a3b2e", "bottom": "#5a4b3a", "accent": "#d9d2c5", "hair": "#3b2a1e", "hairStyle": "long", "headwear": "bandana", "outfit": "rags", "holding": "rifle" }, "scale": 1, "idle": "sway" }
     },
@@ -172,7 +176,7 @@
     {
       "id": "bone-buzzard", "name": "Bone Buzzard", "description": "Waits for you to fall over. Gets impatient.",
       "faction": "hostile", "stats": { "hp": 6, "ac": 12, "str": 7, "dex": 14, "int": 3, "mp": 0 }, "speed": 120, "sight": 10,
-      "attack": { "name": "Beak", "verb": "pecks", "damage": { "base": 0, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
+      "attack": { "name": "Beak", "verb": "pecks", "damage": { "base": 1, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
       "behaviour": { "type": "wanderer", "erratic": 0.3 }, "xp": 5,
       "tags": ["beast", "flying"],
       "model": { "archetype": "flier", "colors": { "primary": "#2b2523", "secondary": "#c4473b", "accent": "#e6dccb" }, "scale": 0.7, "idle": "hover" }
@@ -180,7 +184,7 @@
     {
       "id": "dust-devil", "name": "Dust Devil", "description": "A whirl of topsoil that remembers being a field. It wants back what the drought took.",
       "faction": "hostile", "stats": { "hp": 9, "ac": 14, "str": 8, "dex": 12, "int": 5, "mp": 0 }, "speed": 140, "sight": 6,
-      "attack": { "name": "Grit lash", "verb": "scours", "damage": { "base": 0, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
+      "attack": { "name": "Grit lash", "verb": "scours", "damage": { "base": 1, "dice": "1d4" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
       "triggers": [{ "on": "on_hit", "chance": 0.4, "action": { "targeting": { "shape": "adjacent", "range": 1, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "dust-blind", "duration": 3 }, { "type": "push", "distance": 1 }] } }],
       "resistances": [{ "damageType": "lead", "multiplier": 0.5 }, { "damageType": "storm", "multiplier": 2 }],
       "behaviour": { "type": "wanderer", "erratic": 0.5 }, "xp": 8,
@@ -193,8 +197,8 @@
     },
     {
       "id": "tinplate-prospector", "name": "Tinplate Prospector", "description": "A Rainworks clockwork miner: boiler belly, pickaxe arm, a mouth that is a pressure gauge stuck on DRY.",
-      "faction": "hostile", "stats": { "hp": 16, "ac": 14, "str": 14, "dex": 7, "int": 3, "mp": 0 }, "speed": 80, "sight": 6,
-      "attack": { "name": "Pick arm", "verb": "picks at", "damage": { "base": 1, "dice": "1d8" }, "damageType": "physical", "range": 1, "accuracyStat": "str" },
+      "faction": "hostile", "stats": { "hp": 19, "ac": 14, "str": 14, "dex": 7, "int": 3, "mp": 0 }, "speed": 80, "sight": 6,
+      "attack": { "name": "Pick arm", "verb": "picks at", "damage": { "base": 2, "dice": "1d8" }, "damageType": "physical", "range": 1, "accuracyStat": "str" },
       "resistances": [{ "damageType": "lead", "multiplier": 0.75 }, { "damageType": "storm", "multiplier": 1.5 }, { "damageType": "venom", "multiplier": 0 }],
       "triggers": [{ "on": "on_low_hp", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "transform", "into": "scrap-crawler" }, { "type": "message", "text": "The boiler cracks; something small and angry climbs out of the wreck." }] } }],
       "behaviour": { "type": "chaser", "erratic": 0 }, "xp": 14,
@@ -209,18 +213,20 @@
       "faction": "hostile", "stats": { "hp": 5, "ac": 12, "str": 6, "dex": 14, "int": 2, "mp": 0 }, "speed": 150, "sight": 5,
       "attack": { "name": "Rivet nip", "verb": "nips", "damage": { "base": 0, "dice": "1d3" }, "damageType": "physical", "range": 1, "accuracyStat": "dex" },
       "behaviour": { "type": "chaser", "erratic": 0.2 }, "xp": 3,
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 4 }] } }],
       "tags": ["machine"],
       "model": { "archetype": "quadruped", "colors": { "primary": "#8a7660", "secondary": "#4a4038", "accent": "#ff7b2e" }, "scale": 0.4, "idle": "flicker" }
     },
     {
       "id": "lodestone-mole", "name": "Lodestone Mole", "description": "Eyeless, the size of a mule, iron filings bristling on its back. Drags you in like a magnet.",
       "faction": "hostile", "stats": { "hp": 18, "ac": 11, "str": 15, "dex": 8, "int": 3, "mp": 0 }, "speed": 90, "sight": 5,
-      "attack": { "name": "Shovel claws", "verb": "rakes", "damage": { "base": 2, "dice": "1d6" }, "damageType": "physical", "range": 1, "accuracyStat": "str" },
+      "attack": { "name": "Shovel claws", "verb": "rakes", "damage": { "base": 3, "dice": "1d6" }, "damageType": "physical", "range": 1, "accuracyStat": "str" },
       "abilities": [
         { "id": "lodestone-pull", "name": "Magnetic Hide", "description": "Your gun hand jerks toward its back.", "action": { "targeting": { "shape": "single", "range": 4, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "pull", "distance": 3 }], "vfx": { "kind": "ring", "color": "#9aa3ad" } }, "cooldown": 6, "useWhen": "target_in_range" }
       ],
       "behaviour": { "type": "guardian", "param": 5, "erratic": 0 }, "xp": 15,
       "loot": [{ "item": "rain-bead", "chance": 0.3 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 3 }] } }],
       "tags": ["beast", "underground"],
       "model": { "archetype": "quadruped", "colors": { "primary": "#3b3330", "secondary": "#e7a8a0", "accent": "#9aa3ad" }, "parts": [
         { "shape": "cone", "size": [0.08, 0.2, 0.08], "pos": [0, 0.55, 0.1], "color": "#9aa3ad", "material": "metal" },
@@ -238,13 +244,14 @@
       "behaviour": { "type": "kiter", "param": 4, "erratic": 0 }, "xp": 40, "unique": true,
       "loot": [{ "item": "lode-key", "chance": 1 }, { "item": "pale-spurs", "chance": 1 }],
       "npc": { "role": "rival", "personality": "Courteous, bored, deadly. Considers the drought a business opportunity and you a footnote.", "greeting": "Postwoman. Whatever it is, Mr. Vane didn't order it.", "lines": ["You know what water costs now? More than you.", "I liked this town better when it had mud."], "secrets": "She has not been paid in three weeks; Vane pays in promises of rain.", "wants": "To be paid, in silver, before the sky comes back.", "persuadeStat": "int", "persuadeDifficulty": 17 },
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 20 }] } }],
       "tags": ["human", "gunslinger", "boss"],
       "model": { "archetype": "humanoid", "humanoid": { "height": 0.95, "build": "slim", "skin": "#e8c4a8", "top": "#e9e4da", "bottom": "#2a2a33", "accent": "#d7e3ef", "hair": "#d9d9d9", "hairStyle": "bun", "headwear": "cowboy_hat", "outfit": "suit", "holding": "gun" }, "scale": 1, "idle": "sway" }
     },
     {
       "id": "absalom-vane", "name": "Absalom Vane, the Rain Broker", "description": "Tall as a well-rope, dressed in black oilcloth that has never been wet. Carries a lightning rod as a walking cane and smiles like an invoice.",
-      "faction": "hostile", "stats": { "hp": 52, "ac": 14, "str": 12, "dex": 12, "int": 17, "mp": 30 }, "speed": 100, "sight": 9,
-      "attack": { "name": "Lightning cane", "verb": "cracks the cane across", "damage": { "base": 2, "dice": "1d8" }, "damageType": "storm", "range": 1, "accuracyStat": "int" },
+      "faction": "hostile", "stats": { "hp": 66, "ac": 14, "str": 12, "dex": 12, "int": 17, "mp": 30 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Lightning cane", "verb": "cracks the cane across", "damage": { "base": 3, "dice": "1d8" }, "damageType": "storm", "range": 1, "accuracyStat": "int" },
       "abilities": [
         { "id": "bottled-bolt", "name": "Bottled Bolt", "description": "He uncorks a thimble of storm.", "action": { "targeting": { "shape": "ray", "range": 7, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 3, "dice": "2d4" }, "damageType": "storm" }, { "type": "apply_status", "status": "thunderstruck", "duration": 1 }], "vfx": { "kind": "bolt", "color": "#bfe6ff" } }, "cost": { "resource": "mp", "amount": 6 }, "cooldown": 5, "useWhen": "target_in_range" },
         { "id": "call-the-crew", "name": "Call the Crew", "description": "A whistle; the mine answers.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "summon", "actor": "tinplate-prospector", "count": 1, "allied": false }], "vfx": { "kind": "ring", "color": "#ff7b2e" } }, "cooldown": 20, "useWhen": "start_of_fight" },
@@ -373,35 +380,35 @@
       "id": "canteen", "name": "Army Canteen", "kind": "Canteen", "description": "Dented tin under felt. Three good swallows if you are honest with yourself.",
       "category": "consumable", "useMode": "charges", "charges": 3,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 2, "dice": "2d4" } }, { "type": "remove_status", "status": "parched" }], "vfx": { "kind": "sparkle", "color": "#7fc8ff" } },
-      "rarity": "common", "value": 20, "knowledge": "clear",
+      "rarity": "common", "value": 20, "knowledge": "clear", "appearanceGroup": "parcel",
       "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.22, 0.08, 0.22], "pos": [0, 0.15, 0], "rot": [90, 0, 0], "color": "#6b7b5a", "material": "cloth" }, { "shape": "cylinder", "size": [0.04, 0.06, 0.04], "pos": [0, 0.29, 0], "color": "#a9b0b8", "material": "metal" }], "idle": "bob" }
     },
     {
       "id": "sarsaparilla", "name": "Warm Sarsaparilla", "kind": "Tonic", "description": "Brown, sweet, fizzless. In this drought it is practically holy water.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 6 } }], "vfx": { "kind": "sparkle", "color": "#a0522d" } },
-      "rarity": "common", "value": 6, "knowledge": "clear",
+      "rarity": "common", "value": 6, "knowledge": "clear", "appearanceGroup": "tonic",
       "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.09, 0.26, 0.09], "pos": [0, 0.13, 0], "color": "#5a2e14", "material": "glass" }], "idle": "bob" }
     },
     {
       "id": "cactus-poultice", "name": "Cactus Poultice", "kind": "Remedy", "description": "The preacher's recipe: boiled prickly pear, spit and scripture. Smells holy and slightly green.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 10, "dice": "1d6" } }, { "type": "remove_status", "status": "all_harmful" }], "vfx": { "kind": "sparkle", "color": "#8fd14f" } },
-      "rarity": "uncommon", "value": 25, "knowledge": "clear",
+      "rarity": "uncommon", "value": 25, "knowledge": "clear", "appearanceGroup": "parcel",
       "model": { "archetype": "prop", "parts": [{ "shape": "sphere", "size": [0.2, 0.12, 0.2], "pos": [0, 0.08, 0], "color": "#6ea24a", "material": "cloth" }], "idle": "bob" }
     },
     {
       "id": "antivenom", "name": "Rattler Antivenom", "kind": "Remedy", "description": "A vial labelled in a doctor's hand: FOR SNAKES, NOT FOR LIARS.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "remove_status", "status": "snakebit" }, { "type": "heal", "amount": { "base": 3 } }] },
-      "rarity": "common", "value": 12, "knowledge": "clear",
+      "rarity": "common", "value": 12, "knowledge": "clear", "appearanceGroup": "tonic",
       "model": { "archetype": "prop", "parts": [{ "shape": "capsule", "size": [0.06, 0.16, 0.06], "pos": [0, 0.1, 0], "color": "#b8e6a0", "material": "glass" }], "idle": "bob" }
     },
     {
       "id": "cartridges", "name": "Box of .45 Cartridges", "kind": "Ammunition", "description": "Six fat brass promises.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "resource", "resource": "rounds", "amount": { "base": 6 } }] },
-      "rarity": "common", "value": 8, "knowledge": "clear",
+      "rarity": "common", "value": 8, "knowledge": "clear", "appearanceGroup": "parcel",
       "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.2, 0.1, 0.14], "pos": [0, 0.05, 0], "color": "#b33a2a", "material": "cloth" }, { "shape": "box", "size": [0.21, 0.02, 0.15], "pos": [0, 0.1, 0], "color": "#e8c35a", "material": "metal" }], "idle": "none" }
     },
     {
@@ -486,7 +493,16 @@
       { "label": "cobalt vial sealed with red wax", "color": "#2e5ec9" },
       { "label": "milky flask that smells of anise", "color": "#e8e2d0" },
       { "label": "green bottle with a skull scratched off", "color": "#4f8a3a" },
-      { "label": "clay jug stamped 'MEDICINAL'", "color": "#a0643a" }
+      { "label": "clay jug stamped 'MEDICINAL'", "color": "#a0643a" },
+      { "label": "brown bottle with a swollen cork", "color": "#6b4226" },
+      { "label": "tiny vial in a doctor's hand", "color": "#d9e4dd" }
+    ],
+    "parcel": [
+      { "label": "canvas bundle tied with twine", "color": "#c2a878" },
+      { "label": "tin with a rusted lid", "color": "#8a7f72" },
+      { "label": "waxed-paper packet", "color": "#e8dcc0" },
+      { "label": "sweat-stained leather pouch", "color": "#7a5235" },
+      { "label": "felt-wrapped something, sloshing", "color": "#5b6b4a" }
     ]
   },
   "areas": [
@@ -508,8 +524,8 @@
         { "actor": "kid-tobias", "where": "anywhere" }
       ],
       "items": [
-        { "item": "sarsaparilla", "weight": 20 }, { "item": "cartridges", "weight": 20 }, { "item": "pick-handle", "weight": 8 },
-        { "item": "snake-oil", "weight": 10 }, { "item": "laudanum", "weight": 8 }, { "item": "antivenom", "weight": 8 }
+        { "item": "sarsaparilla", "weight": 8 }, { "item": "cartridges", "weight": 20 }, { "item": "pick-handle", "weight": 8 },
+        { "item": "snake-oil", "weight": 5 }, { "item": "laudanum", "weight": 3 }, { "item": "antivenom", "weight": 8 }
       ],
       "itemCount": 6,
       "placedItems": [{ "item": "copper-deed", "where": "far" }],
@@ -517,6 +533,7 @@
       "transitionName": "Ride out past the dead creek",
       "transitionModel": { "archetype": "quadruped", "colors": { "primary": "#6b4a2b", "secondary": "#2a1d14", "accent": "#e8c35a" }, "idle": "bob" },
       "gmNotes": "Introduce the drought, the company's grip on the town and the NPCs. Deputies harass anyone carrying water. Tobias can tell the player that Sabine Lark holds the mine key.",
+      "backdrop": { "style": "gradient", "color": "#f3d9a4", "color2": "#8fb8d8", "intensity": 0.4 },
       "music": "explore"
     },
     {
@@ -535,7 +552,7 @@
       ],
       "placed": [{ "actor": "sabine-lark", "where": "far" }],
       "items": [
-        { "item": "cartridges", "weight": 20 }, { "item": "sarsaparilla", "weight": 15 }, { "item": "dynamite", "weight": 10 },
+        { "item": "cartridges", "weight": 20 }, { "item": "sarsaparilla", "weight": 10 }, { "item": "dynamite", "weight": 10 },
         { "item": "antivenom", "weight": 12 }, { "item": "jackrabbit-tonic", "weight": 8 }, { "item": "rain-bead", "weight": 6 },
         { "item": "scattergun", "weight": 4 }, { "item": "church-bell", "weight": 3 }
       ],
@@ -546,6 +563,7 @@
       "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [1, 1.2, 0.15], "pos": [0, 0.6, 0], "color": "#5a3d2b", "material": "wood" }, { "shape": "box", "size": [0.3, 0.2, 0.1], "pos": [0, 0.7, 0.1], "color": "#4a4f57", "material": "metal" }], "idle": "none" },
       "transitionRequires": { "type": "has_item", "who": "player", "item": "lode-key" },
       "gmNotes": "Open, bright and dangerous; ranged fights. Sabine can be talked to before she draws. The mine gate will not open without her key.",
+      "backdrop": { "style": "clouds", "color": "#f0d6a8", "color2": "#fff3dc", "intensity": 0.3 },
       "music": "tense"
     },
     {
@@ -561,7 +579,7 @@
         { "actor": "mesa-rattler", "weight": 15, "min": 1, "max": 3 },
         { "actor": "claim-jumper", "weight": 10, "min": 0, "max": 2 }
       ],
-      "placed": [],
+      "placed": [{ "actor": "widow-oquendo", "where": "near_start" }],
       "items": [
         { "item": "cartridges", "weight": 20 }, { "item": "dynamite", "weight": 12 }, { "item": "rain-bead", "weight": 10 },
         { "item": "cactus-poultice", "weight": 6 }, { "item": "buffalo-coat", "weight": 4 }, { "item": "lucky-horseshoe", "weight": 4 },
@@ -573,6 +591,7 @@
       "transitionName": "Ride an ore cart down the deep shaft",
       "transitionModel": { "archetype": "vehicle", "colors": { "primary": "#6d6259", "secondary": "#b87333", "accent": "#ffa04a" }, "idle": "none" },
       "gmNotes": "Claustrophobic. Hint at the sealed-in miners (Widow Oquendo's husband among them). The deeper you go, the cooler and damper the air feels.",
+      "backdrop": { "style": "abyss", "color": "#120d0a", "color2": "#3d2a1e", "intensity": 0.4 },
       "music": "eerie"
     },
     {
@@ -594,6 +613,7 @@
       "transitionName": "Climb the cistern ladder into the open sky",
       "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.08, 2, 0.08], "pos": [-0.25, 1, 0], "color": "#6b4a2b", "material": "wood" }, { "shape": "box", "size": [0.08, 2, 0.08], "pos": [0.25, 1, 0], "color": "#6b4a2b", "material": "wood" }], "idle": "none" },
       "gmNotes": "Final confrontation. Vane talks first, in contract clauses. Defeating him and holding the jar wins; the storm goes home.",
+      "backdrop": { "style": "abyss", "color": "#0a1018", "color2": "#1c2633", "intensity": 0.5 },
       "music": "boss"
     }
   ],

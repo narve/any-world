@@ -2,7 +2,7 @@
  * Pure builders: GameState + WorldSpec (+ controller-side extras) → the UI view model. No DOM, no
  * renderer, so everything here is unit-tested in node (tests/client/view.test.ts).
  */
-import type { WorldSpec, ItemDef, Perk } from '../schema/world';
+import type { WorldSpec, ItemDef, Perk, Effect } from '../schema/world';
 import type { GameState, ItemView, LogMessage, PendingChoice } from '../engine/types';
 import { TOTAL_SLOTS } from '../engine/types';
 import {
@@ -12,8 +12,10 @@ import {
   transitionBlocker,
   type PlayerSheet,
 } from '../engine/index';
+import { activeRulesOf, type RuleTracker } from './rules';
 import type {
   ChoiceView,
+  DangerView,
   DialogueView,
   EndView,
   GameView,
@@ -28,6 +30,11 @@ import type {
   ThemeView,
   TradeView,
 } from './ui/viewmodel';
+
+/** HP below this fraction is dangerous */
+export const HP_DANGER = 0.3;
+/** a custom resource below this fraction is low */
+export const RESOURCE_DANGER = 0.25;
 
 /** durability every item starts with when the durability rule is on (engine DEFAULT_DURABILITY) */
 const MAX_DURABILITY = 40;
@@ -52,11 +59,94 @@ function equipSlotOf(def: ItemDef): SlotItemView['equipSlot'] {
   return undefined;
 }
 
+/**
+ * XP shown on the player card. While a perk choice is open the engine holds further level-ups, so
+ * the stored xp can exceed the current threshold ("175 / 38"). The bar is clamped to the threshold
+ * and the queued level-ups are counted instead (issues/M2-xp-bar-overflow.md). Thresholds after the
+ * first follow the engine's curve (engine/progression.ts xpToNext).
+ */
+export function xpProgress(
+  world: WorldSpec,
+  level: number,
+  xp: number,
+  need: number,
+): { xpInLevel: number; xpForLevel: number; pendingLevels?: number } {
+  const g = world.player.growth;
+  const threshold = (lv: number) => Math.max(1, Math.round(g.firstLevelXp * Math.pow(g.curve, Math.max(0, lv - 1))));
+  const first = Math.max(1, need);
+  if (xp < first) return { xpInLevel: Math.max(0, xp), xpForLevel: first };
+  let left = xp;
+  let lv = level;
+  let pending = 0;
+  let next = first;
+  while (left >= next && pending < 100) {
+    left -= next;
+    pending += 1;
+    lv += 1;
+    next = threshold(lv);
+  }
+  return { xpInLevel: first, xpForLevel: first, pendingLevels: pending };
+}
+
 /** activating this item asks the player for a target tile */
 export function needsTarget(def: ItemDef): boolean {
   const u = def.onUse;
   if (!u || def.useMode === 'passive') return false;
   return POSITIONAL.has(u.targeting.shape) && u.targeting.affects !== 'self_only';
+}
+
+/** the item is aimed by direction (a ray or cone from the user), not at a tile */
+export function aimsDirection(def: ItemDef): boolean {
+  const t = def.onUse?.targeting;
+  return !!t && needsTarget(def) && (t.shape === 'ray' || t.shape === 'cone');
+}
+
+/**
+ * When using `def` now would do nothing because everything it restores is already full, the name of
+ * the full vital(s) ("O2", "Health and O2"); else null. Only for items that purely restore (heal /
+ * positive resource / message effects, and cures for conditions the user does not have, aimed at
+ * the user) — anything with another effect may still be wanted
+ * (issues/M2-consumable-wasted-when-full.md).
+ */
+export function wastedRestore(world: WorldSpec, def: ItemDef, sheet: PlayerSheet, statuses: readonly { id: string }[] = []): string | null {
+  const u = def.onUse;
+  if (!u || def.useMode === 'passive' || u.condition) return null;
+  if (!(u.targeting.affects === 'self_only' || u.targeting.shape === 'self')) return null;
+  const names: string[] = [];
+  const add = (n: string) => {
+    if (!names.includes(n)) names.push(n);
+  };
+  let restores = false;
+  const harmful = new Set(world.statuses.filter((x) => x.harmful).map((x) => x.id));
+  for (const e of u.effects) {
+    if (e.type === 'message') continue;
+    if (e.type === 'remove_status') {
+      const cures = e.status === 'all_harmful' ? statuses.some((x) => harmful.has(x.id)) : statuses.some((x) => x.id === e.status);
+      if (cures) return null;
+      continue;
+    }
+    if (e.type === 'heal' && positive(e.amount)) {
+      restores = true;
+      if (sheet.hp < sheet.maxHp) return null;
+      add(world.vocabulary.stats.hp.name);
+      continue;
+    }
+    if (e.type === 'resource' && positive(e.amount)) {
+      restores = true;
+      if (e.resource === 'mp') {
+        if (sheet.maxMp <= 0 || sheet.mp < sheet.maxMp) return null;
+        add(world.vocabulary.stats.mp.name);
+        continue;
+      }
+      const r = sheet.resources.find((x) => x.id === e.resource);
+      if (!r || r.value < r.max) return null;
+      add(world.resources.find((x) => x.id === e.resource)?.name ?? e.resource);
+      continue;
+    }
+    return null;
+  }
+  if (!restores) return null;
+  return names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0];
 }
 
 export function hudView(world: WorldSpec, state: GameState, sheet: PlayerSheet): HudView {
@@ -89,11 +179,11 @@ export function hudView(world: WorldSpec, state: GameState, sheet: PlayerSheet):
     mp: sheet.maxMp > 0 ? { value: sheet.mp, max: sheet.maxMp } : null,
     resources: world.resources.map((r) => {
       const v = sheet.resources.find((x) => x.id === r.id);
-      return { id: r.id, label: r.name, description: r.description, value: v?.value ?? 0, max: r.max, color: r.color };
+      const value = v?.value ?? 0;
+      return { id: r.id, label: r.name, description: r.description, value, max: r.max, color: r.color, ...(value < r.max * RESOURCE_DANGER ? { low: true } : {}) };
     }),
     level: state.player.level,
-    xpInLevel: sheet.xp,
-    xpForLevel: sheet.xpToNext,
+    ...xpProgress(world, state.player.level, sheet.xp, sheet.xpToNext),
     currency: state.player.currency,
     statuses,
     areaName: plan?.name ?? '',
@@ -102,7 +192,56 @@ export function hudView(world: WorldSpec, state: GameState, sheet: PlayerSheet):
     turn: state.turn,
     sneaking: state.player.sneaking,
     speed: sheet.speed >= 115 ? 'fast' : sheet.speed <= 85 ? 'slow' : 'normal',
+    danger: dangerOf(world, state, sheet),
   };
+}
+
+/** does running out of this resource hurt (onEmpty damage, a damaging harmful status, or death)? */
+function emptyHurts(world: WorldSpec, r: WorldSpec['resources'][number]): boolean {
+  if (r.emptyIsDeath) return true;
+  const statuses = new Map(world.statuses.map((s) => [s.id, s]));
+  return r.onEmpty.some((e) => {
+    if (e.type === 'damage') return true;
+    if (e.type !== 'apply_status') return false;
+    const st = statuses.get(e.status);
+    return !!st && st.harmful && st.perTurn.some((x) => x.type === 'damage' || (x.type === 'resource' && x.resource === 'hp'));
+  });
+}
+
+/** low and empty vitals, most urgent first (slot is filled in by gameView) */
+export function dangerOf(world: WorldSpec, state: GameState, sheet: PlayerSheet): DangerView[] {
+  const out: DangerView[] = [];
+  const hp = world.vocabulary.stats.hp;
+  if (sheet.maxHp > 0 && sheet.hp < sheet.maxHp * HP_DANGER) {
+    out.push({ id: 'hp', label: hp.name, color: world.palette.danger, level: sheet.hp <= 0 ? 'empty' : 'low', draining: true });
+  }
+  for (const r of world.resources) {
+    const v = state.player.resources[r.id] ?? 0;
+    if (v >= r.max * RESOURCE_DANGER) continue;
+    const empty = v <= 0;
+    // only vitals: something that hurts when empty, or drains by itself
+    if (!emptyHurts(world, r) && !(r.perTurn < 0)) continue;
+    out.push({ id: r.id, label: r.name, color: r.color, level: empty ? 'empty' : 'low', draining: empty && emptyHurts(world, r) });
+  }
+  return out.sort((a, b) => Number(b.draining) - Number(a.draining) || (a.level === b.level ? 0 : a.level === 'empty' ? -1 : 1));
+}
+
+function positive(a: { base?: number; dice?: string }): boolean {
+  return (a.base ?? 0) > 0 || (!!a.dice && (a.base ?? 0) >= 0);
+}
+
+/** vitals an item's use restores ('hp', 'mp', resource ids) — from its definition */
+export function restoresOf(def: ItemDef): string[] {
+  const u = def.onUse;
+  if (!u || def.useMode === 'passive') return [];
+  if (!(u.targeting.affects === 'self_only' || u.targeting.shape === 'self')) return [];
+  const out = new Set<string>();
+  const visit = (e: Effect) => {
+    if (e.type === 'heal' && positive(e.amount)) out.add('hp');
+    if (e.type === 'resource' && positive(e.amount)) out.add(e.resource);
+  };
+  u.effects.forEach(visit);
+  return [...out];
 }
 
 export function slotViews(world: WorldSpec, state: GameState, views: (ItemView | null)[]): (SlotItemView | null)[] {
@@ -123,7 +262,13 @@ export function slotViews(world: WorldSpec, state: GameState, views: (ItemView |
       const es = equipSlotOf(def);
       if (es) sv.equipSlot = es;
       sv.needsTarget = needsTarget(def);
+      if (aimsDirection(def)) sv.aimsDirection = true;
       sv.rarity = def.rarity;
+      // what it restores is only shown when the player knows what it does
+      if (v.knowledge === 'clear') {
+        const r = restoresOf(def);
+        if (r.length) sv.restores = r;
+      }
     }
     if (it.cooldown) sv.cooldown = it.cooldown;
     if (it.durability !== undefined) {
@@ -250,8 +395,58 @@ function fallbackItemView(label: string): ItemView {
   return { name: label, kind: '', description: '', knowledge: 'clear', effectLines: [], notes: [], count: 1, equipped: false, usable: false, color: '#888888' };
 }
 
-export function rulesView(world: WorldSpec): RuleView[] {
-  return world.rules.map((r) => ({ id: r.id, name: r.name, description: r.description, since: 'from the start' }));
+/** "from the start" or "<Area word> N, turn T" */
+export function sinceLabel(world: WorldSpec, area?: number, turn?: number): string {
+  if (turn === undefined) return 'from the start';
+  const where = area !== undefined ? `${world.vocabulary.area} ${area + 1}, ` : '';
+  return `${where}turn ${turn}`;
+}
+
+/** the rules in force (world + GM), with since-when and the GM's reason */
+export function rulesView(world: WorldSpec, state?: GameState, tracker?: RuleTracker): RuleView[] {
+  if (!state) return world.rules.map((r) => ({ id: r.id, name: r.name, description: r.description, since: 'from the start' }));
+  return activeRulesOf(world, state).map((r) => {
+    const memo = tracker?.memoFor(r.rule.id);
+    const turn = r.sinceTurn ?? memo?.sinceTurn;
+    const area = r.sinceArea ?? memo?.sinceArea;
+    const reason = r.reason ?? memo?.reason;
+    const v: RuleView = { id: r.rule.id, name: r.rule.name, description: r.rule.description, since: sinceLabel(world, area, turn) };
+    if (r.source === 'gm') v.fromGm = true;
+    if (reason) v.reason = reason;
+    if (memo?.newUntil !== undefined && memo.newUntil >= state.turn) v.isNew = true;
+    return v;
+  });
+}
+
+/**
+ * The objective under the area banner, in two parts: the goal (the open thread if there is one,
+ * else the world goal) and where to go next in this area. They are shown on separate lines so the
+ * actionable hint is never the part an ellipsis hides (issues/M2-objective-hint-truncated.md).
+ */
+export function objectiveParts(world: WorldSpec, state: GameState, canTransition: boolean): { goal: string; hint: string | null } {
+  const quest = state.quests.find((q) => q.status === 'active');
+  const goal = quest ? quest.title : world.goal.summary;
+  const plan = world.areas[state.area.index];
+  const last = state.area.index >= world.areas.length - 1;
+  if (!plan || last) return { goal, hint: null };
+  if (canTransition) return { goal, hint: `Press > to ${lowerFirst(plan.transitionName)}` };
+  const ex = state.area.map.exit;
+  const seen = (state.area.seen as ArrayLike<number>)[ex.y * state.area.map.width + ex.x] ?? 0;
+  return { goal, hint: seen ? `The way on (${plan.transitionName}) is marked on the map` : `Find the way on from ${plan.name}` };
+}
+
+function objectiveFields(o: { goal: string; hint: string | null }): Pick<GameView, 'objective' | 'objectiveHint'> {
+  return o.hint ? { objective: o.goal, objectiveHint: o.hint } : { objective: o.goal };
+}
+
+/** the objective as one line (goal — hint), e.g. for logs and tooltips */
+export function objectiveOf(world: WorldSpec, state: GameState, canTransition: boolean): string {
+  const { goal, hint } = objectiveParts(world, state, canTransition);
+  return hint ? `${goal} — ${lowerFirst(hint)}` : goal;
+}
+
+function lowerFirst(s: string): string {
+  return s && s[0] === s[0].toUpperCase() && s.slice(1, 2) !== s.slice(1, 2).toUpperCase() ? s[0].toLowerCase() + s.slice(1) : s;
 }
 
 export function questsView(state: GameState): QuestView[] {
@@ -281,6 +476,11 @@ export interface GameViewExtras {
   dialogueHistory: { who: 'npc' | 'player'; text: string }[];
   tradeOpen: boolean;
   busy?: string | null;
+  rules?: RuleTracker;
+  hints?: string[] | null;
+  interactHint?: string | null;
+  /** item thumbnails by def id (renderer), used for known items only */
+  thumbs?: (defId: string) => string | undefined;
 }
 
 export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras): GameView {
@@ -291,28 +491,50 @@ export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras):
   // panels while a level-up is pending; they reappear once a perk is picked
   const levelUp = levelUpView(world, state);
   const trade = !levelUp && x.tradeOpen ? tradeView(world, state) : null;
+  const hud = hudView(world, state, sheet);
+  const slots = slotViews(world, state, describeInventory(state));
+  // a quick-slot item that answers a current danger glows ("press 3")
+  for (const d of hud.danger ?? []) {
+    const i = slots.findIndex((sv, idx) => idx < 8 && !!sv?.restores?.includes(d.id) && !(sv.cooldown && sv.cooldown > 0));
+    if (i >= 0) {
+      d.slot = i;
+      slots[i] = { ...slots[i]!, urgent: true };
+    }
+  }
+  if (x.thumbs) {
+    for (let i = 0; i < slots.length; i++) {
+      const sv = slots[i];
+      if (!sv || sv.knowledge === 'unknown') continue;
+      const t = x.thumbs(sv.defId);
+      if (t) slots[i] = { ...sv, thumb: t };
+    }
+  }
+  const canTransition = transitionBlocker(state) === null;
   return {
-    hud: hudView(world, state, sheet),
+    hud,
     log: mergedLog(state, x.gmLog),
-    slots: slotViews(world, state, describeInventory(state)),
+    slots,
     narration: x.narration,
     dialogue: trade || levelUp ? null : dialogueView(world, state, x.dialogueHistory),
     choice: levelUp ? null : choiceView(world, state),
     levelUp,
     trade,
-    rules: rulesView(world),
+    rules: rulesView(world, state, x.rules),
     quests: questsView(state),
     verbs: { talk: !!world.verbs.talk, sneak: !!world.verbs.sneak, search: !!world.verbs.search, persuade: !!world.verbs.persuade },
     transitionName: plan?.transitionName ?? 'Move on',
-    canTransition: transitionBlocker(state) === null,
+    canTransition,
     goalSummary: world.goal.summary,
     mode: x.mode,
     targetingSlot: x.targetingSlot,
     busy: x.busy ?? null,
+    ...objectiveFields(objectiveParts(world, state, canTransition)),
+    hints: x.hints ?? null,
+    interactHint: x.interactHint ?? null,
   };
 }
 
-export function endView(world: WorldSpec, state: GameState, epitaph?: string): EndView {
+export function endView(world: WorldSpec, state: GameState, epitaph?: string, run?: { difficulty?: EndView['difficulty']; weirdness?: number }): EndView {
   const won = state.status === 'won';
   return {
     result: won ? 'won' : 'lost',
@@ -331,5 +553,7 @@ export function endView(world: WorldSpec, state: GameState, epitaph?: string): E
       areaCount: world.areas.length,
       level: state.player.level,
     },
+    ...(run?.difficulty ? { difficulty: run.difficulty } : {}),
+    ...(run?.weirdness !== undefined ? { weirdness: run.weirdness } : {}),
   };
 }

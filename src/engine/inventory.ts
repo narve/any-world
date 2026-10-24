@@ -12,6 +12,7 @@ import { fireItemTriggers } from './triggers';
 import { type Obs, POSITIONAL_SHAPES, changeResource, isActorEffect, resolveTargets, runAction } from './effects';
 import { knowledgeOf, learnFromUse } from './knowledge';
 import { samePos, tileAt } from './util';
+import { switchesOf } from './rules';
 
 export const DEFAULT_DURABILITY = 40;
 
@@ -47,7 +48,7 @@ export function makeItem(ctx: Ctx, defId: string, count = 1): ItemInstance | nul
   if (!def) return null;
   const it: ItemInstance = { id: nextId(ctx, 'i'), defId, count: Math.max(1, Math.floor(count)) };
   if (def.useMode === 'charges') it.charges = def.charges ?? 1;
-  if (ctx.ix.switches.durability && (def.weapon || typeof def.armour === 'number')) it.durability = DEFAULT_DURABILITY;
+  if (switchesOf(ctx).durability && (def.weapon || typeof def.armour === 'number')) it.durability = DEFAULT_DURABILITY;
   return it;
 }
 
@@ -175,7 +176,7 @@ export function removeFromSlot(ctx: Ctx, slot: number, count = 1): void {
 
 /** durability loss for an equipped item (no-op unless the durability rule is on) */
 export function damageEquipped(ctx: Ctx, slot: number | null): void {
-  if (!ctx.ix.switches.durability || slot === null) return;
+  if (!switchesOf(ctx).durability || slot === null) return;
   const it = ctx.s.player.slots[slot];
   if (!it || typeof it.durability !== 'number') return;
   it.durability -= 1;

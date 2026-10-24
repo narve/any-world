@@ -1,0 +1,37 @@
+{
+  "world": "fixture-teen",
+  "seed": 12,
+  "steps": 475,
+  "result": "lost left speechless by Group Chat Lurker (Gossip)",
+  "turn": 708,
+  "area": 2,
+  "level": 4,
+  "keyMismatch": [],
+  "refused": [
+    "step 270 {\"type\":\"talk\",\"targetId\":\"a42\"} log=[\"Looking for something? You always did leave things lying around.\"]",
+    "step 381 {\"type\":\"talk\",\"targetId\":\"a70\"} log=[\"You're the one with the speech. Good. Read me the first line. No, louder.\"]",
+    "step 414 {\"type\":\"talk\",\"targetId\":\"a71\"} log=[\"OKAFOR-PRYCE! Water bottle. Deep breath. Tell Coach.\"]"
+  ],
+  "layers": {
+    "narration": 7,
+    "game": 708,
+    "dialogue": 6,
+    "levelup": 3,
+    "choice": 1,
+    "end": 1
+  },
+  "actions": {
+    "use": 54,
+    "talk": 6,
+    "move": 561,
+    "pickup": 38,
+    "interact": 35,
+    "attack": 12,
+    "transition": 2
+  },
+  "errors": [],
+  "notes": [
+    "reload ok at turn 241 (layer after reload: game)"
+  ],
+  "stuckAt": []
+}

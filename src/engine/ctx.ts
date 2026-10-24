@@ -11,6 +11,7 @@ import type {
   Perk,
   CustomResource,
   DamageType,
+  RuleVariant,
 } from '../schema/world';
 import type { ActorInstance, GameEvent, GameState, LogMessage, MapGenerator, Pos, Tile } from './types';
 import type { SeededRng } from './rng';
@@ -35,14 +36,14 @@ export interface WorldIndex {
   damageTypes: Map<string, DamageType>;
   perks: Map<string, Perk>;
   resources: Map<string, CustomResource>;
+  /** switches of the world's starting rules (the live ones: `switchesOf(ctx)` in rules.ts) */
   switches: Switches;
 }
 
 const indexCache = new WeakMap<WorldSpec, WorldIndex>();
 
-export function indexWorld(world: WorldSpec): WorldIndex {
-  const hit = indexCache.get(world);
-  if (hit) return hit;
+/** the engine switches of a list of rules (all on when any rule sets them; darkness: the darkest) */
+export function computeSwitches(rules: readonly RuleVariant[]): Switches {
   const sw: Switches = {
     durability: false,
     noNaturalHpRegen: false,
@@ -51,7 +52,7 @@ export function indexWorld(world: WorldSpec): WorldIndex {
     darkness: 1,
     permadeathMercy: false,
   };
-  for (const r of world.rules ?? []) {
+  for (const r of rules) {
     const s = r.switches ?? {};
     if (s.durability) sw.durability = true;
     if (s.noNaturalHpRegen) sw.noNaturalHpRegen = true;
@@ -61,6 +62,13 @@ export function indexWorld(world: WorldSpec): WorldIndex {
     if (s.violenceCounter && !sw.violenceCounter) sw.violenceCounter = s.violenceCounter;
     if (s.permadeathMercy) sw.permadeathMercy = true;
   }
+  return sw;
+}
+
+export function indexWorld(world: WorldSpec): WorldIndex {
+  const hit = indexCache.get(world);
+  if (hit) return hit;
+  const sw = computeSwitches(world.rules ?? []);
   const ix: WorldIndex = {
     items: new Map(world.items.map((i) => [i.id, i])),
     actors: new Map(world.actors.map((a) => [a.id, a])),
@@ -84,6 +92,11 @@ export interface Ctx {
   mapGen: MapGenerator;
   /** trigger recursion depth guard */
   depth: number;
+  /**
+   * cached switches of the rules in force (rules.ts switchesOf); cleared when the GM adds or
+   * removes a rule. Contexts built without it compute it on first use.
+   */
+  sw?: Switches;
 }
 
 export const MAX_LOG = 300;

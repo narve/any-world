@@ -2,6 +2,7 @@
 import type { ItemDef, StatusDef } from '../schema/world';
 import type { ActorInstance, ItemInstance } from './types';
 import { type Ctx, isPlayer } from './ctx';
+import { switchesOf } from './rules';
 
 export type Side = 'P' | 'H' | 'N' | 'F';
 
@@ -76,7 +77,7 @@ export function maxMp(ctx: Ctx, a: ActorInstance): number {
 export function sightRadius(ctx: Ctx, a: ActorInstance): number {
   if (hasFlag(ctx, a, 'blinded')) return 1;
   let v = a.base.sight + modSum(ctx, a, 'sight');
-  v = Math.round(v * ctx.ix.switches.darkness);
+  v = Math.round(v * switchesOf(ctx).darkness);
   let light = 0;
   for (const m of a.tempMods) if (m.stat === 'light') light = Math.max(light, m.amount);
   return Math.max(1, v, light);

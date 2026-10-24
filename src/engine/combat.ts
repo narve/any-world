@@ -26,6 +26,8 @@ import { damageEquipped, dropItemAt } from './inventory';
 import { cap, cheb } from './util';
 import { withinRadius } from './fov';
 import { playerSeesTile } from './vision';
+import { switchesOf } from './rules';
+import { profileOf } from './difficulty';
 
 export interface AttackInfo {
   attack: Attack;
@@ -156,6 +158,9 @@ export function dealDamage(ctx: Ctx, target: ActorInstance, raw: number, damageT
   if (!opts.raw && !isPlayer(ctx, target)) {
     for (const r of actorDef(ctx, target)?.resistances ?? []) if (r.damageType === damageType) mult *= r.multiplier;
   }
+  const src0 = findActor(ctx, sourceId);
+  // difficulty: hostiles hit the player's side harder or softer (engine/difficulty.ts)
+  if (src0 && src0 !== target && side(ctx, src0) === 'H' && side(ctx, target) === 'P') mult *= profileOf(ctx.s).hostileDamage;
   let dmg = raw * mult;
   dmg = mult <= 0 ? 0 : Math.max(1, Math.round(dmg));
   const tName = actorName(ctx, target);
@@ -165,9 +170,10 @@ export function dealDamage(ctx: Ctx, target: ActorInstance, raw: number, damageT
   }
   target.hp -= dmg;
   emit(ctx, sourceId ? { type: 'damaged', actorId: target.id, amount: dmg, damageType, sourceId } : { type: 'damaged', actorId: target.id, amount: dmg, damageType });
-  const src = findActor(ctx, sourceId);
+  const src = src0;
   if (isPlayer(ctx, target)) {
     ctx.s.stats.damageTaken += dmg;
+    ctx.s.lastHarm = src && src !== target ? { by: actorName(ctx, src), damageType, turn: ctx.s.turn } : { damageType, turn: ctx.s.turn };
     damageEquipped(ctx, ctx.s.player.equipped.armour);
   } else if (src && isPlayer(ctx, src)) {
     ctx.s.stats.damageDealt += dmg;
@@ -252,12 +258,12 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
   const byPlayerSide = !!killer && side(ctx, killer) === 'P';
   if (byPlayerSide && def) {
     ctx.s.stats.kills += 1;
-    const vc = ctx.ix.switches.violenceCounter;
+    const vc = switchesOf(ctx).violenceCounter;
     if (vc) ctx.s.counters[vc] = (ctx.s.counters[vc] ?? 0) + 1;
     if (def.xp > 0) grantXp(ctx, def.xp);
   }
   if (killer && isAlive(ctx, killer)) fireTriggers(ctx, killer, 'on_kill', { other: victim, pos: victim.pos });
-  if (def && !ctx.ix.switches.noLoot) {
+  if (def && !switchesOf(ctx).noLoot) {
     for (const l of def.loot) {
       if (ctx.rng.chance(l.chance) && ctx.ix.items.has(l.item)) dropItemAt(ctx, l.item, 1, victim.pos);
     }
@@ -266,7 +272,7 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
 
 function killPlayer(ctx: Ctx, killerId: string | undefined): void {
   const p = playerActor(ctx);
-  if (ctx.ix.switches.permadeathMercy && !ctx.s.mercyUsed) {
+  if (switchesOf(ctx).permadeathMercy && !ctx.s.mercyUsed) {
     ctx.s.mercyUsed = true;
     p.hp = Math.max(1, Math.ceil(maxHp(ctx, p) / 2));
     p.ai.lowHp = false;
@@ -278,5 +284,19 @@ function killPlayer(ctx: Ctx, killerId: string | undefined): void {
   const k = findActor(ctx, killerId);
   const killer = k && k !== p ? k : undefined;
   emit(ctx, killer ? { type: 'died', actorId: p.id, defId: p.defId, killerId: killer.id } : { type: 'died', actorId: p.id, defId: p.defId });
-  endGame(ctx, 'lost', killer ? `${ctx.world.vocabulary.defeated} by ${actorName(ctx, killer)}` : ctx.world.vocabulary.defeated);
+  endGame(ctx, 'lost', lossReason(ctx, killer));
+}
+
+/**
+ * The loss line for a player who ran out of hp: the defeat word, who did it and with what, e.g.
+ * "put in the dirt by Mesa Rattler (Lead)". Uses the killer when known, else the last harm the
+ * player took (a status, a rule, terrain or an attacker that has since left).
+ */
+export function lossReason(ctx: Ctx, killer?: ActorInstance): string {
+  const v = ctx.world.vocabulary.defeated;
+  const h = ctx.s.lastHarm;
+  const by = killer ? actorName(ctx, killer) : h?.by;
+  // the damage kind when the world names it (an unnamed built-in 'physical' says nothing)
+  const what = h && ctx.ix.damageTypes.has(h.damageType) ? ` (${damageTypeName(ctx, h.damageType)})` : '';
+  return `${v}${by ? ` by ${by}` : ''}${what}`;
 }

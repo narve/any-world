@@ -29,8 +29,16 @@ export interface UiContext {
 // Glyphs & slots
 // ---------------------------------------------------------------------------
 
-export function glyph(item: Pick<ItemView, 'name' | 'knowledge' | 'color'> & { glyph?: string }, size: 'sm' | 'md' | 'lg' = 'md'): HTMLElement {
+export function glyph(item: Pick<ItemView, 'name' | 'knowledge' | 'color'> & { glyph?: string; thumb?: string }, size: 'sm' | 'md' | 'lg' = 'md'): HTMLElement {
   const color = item.color || '#888888';
+  // a rendered model thumbnail when the renderer provides one (never for unknown items)
+  if (item.thumb && item.knowledge !== 'unknown') {
+    return h(
+      'span',
+      { class: ['aw-glyph', `aw-glyph-${size}`, 'has-thumb'], style: { '--item': color }, 'aria-hidden': 'true' },
+      h('img', { src: item.thumb, alt: '', draggable: 'false' }),
+    );
+  }
   return h(
     'span',
     {
@@ -78,6 +86,7 @@ export function slotButton(index: number, item: SlotItemView | null | undefined,
         opts.grabbed && 'is-grabbed',
         opts.dropTarget && 'is-drop',
         cd > 0 && 'is-cooling',
+        item?.urgent && 'is-urgent',
       ],
       dataset: { slot: index },
       draggable: item ? 'true' : undefined,
@@ -89,7 +98,8 @@ export function slotButton(index: number, item: SlotItemView | null | undefined,
     cd > 0
       ? h('span', { class: 'aw-slot-cd', style: { '--cd': cd.toFixed(3) }, 'aria-hidden': 'true' }, h('span', null, String(item?.cooldown ?? '')))
       : null,
-    item?.equipped ? h('span', { class: 'aw-slot-eq', 'aria-hidden': 'true' }, 'E') : null,
+    item?.equipped ? h('span', { class: 'aw-slot-eq', 'aria-hidden': 'true', title: 'Equipped' }, 'E') : null,
+    item?.urgent && key ? h('span', { class: 'aw-slot-urgent', 'aria-hidden': 'true' }, `press ${key}`) : null,
     item?.durability !== undefined && item.maxDurability
       ? h('span', { class: 'aw-slot-dur', style: { '--wear': pct(item.durability, item.maxDurability) + '%' }, 'aria-hidden': 'true' })
       : null,
@@ -103,10 +113,11 @@ export function slotButton(index: number, item: SlotItemView | null | undefined,
 
 export function bar(b: BarView, opts: { compact?: boolean } = {}): HTMLElement {
   const p = pct(b.value, b.max);
+  const low = b.low ?? (b.id === 'hp' && p < 30);
   return h(
     'div',
     {
-      class: ['aw-bar', opts.compact && 'is-compact', p <= 30 && b.id === 'hp' && 'is-low'],
+      class: ['aw-bar', opts.compact && 'is-compact', low && 'is-low', low && b.value <= 0 && 'is-empty'],
       dataset: { tip: b.description ? `${b.label} — ${b.description}` : b.label, bar: b.id },
       role: 'meter',
       'aria-label': b.label,
@@ -115,7 +126,8 @@ export function bar(b: BarView, opts: { compact?: boolean } = {}): HTMLElement {
       'aria-valuenow': String(Math.round(b.value)),
       tabindex: '0',
     },
-    h('span', { class: 'aw-bar-label' }, b.abbr ?? b.label),
+    // a low vital shows its full name (no abbreviation to decode while in trouble)
+    h('span', { class: 'aw-bar-label' }, low ? b.label : (b.abbr ?? b.label)),
     h('span', { class: 'aw-bar-track' }, h('span', { class: 'aw-bar-fill', style: { width: `${p}%`, '--bar': b.color } })),
     h('span', { class: 'aw-bar-value' }, barText(b.value, b.max)),
   );
@@ -216,14 +228,47 @@ export function tileCard(t: TileTooltipView): HTMLElement {
   return h(
     'div',
     { class: ['aw-card', 'aw-tile-card'] },
-    h('div', { class: 'aw-card-title' }, t.title),
+    h('div', { class: 'aw-card-head' }, h('div', { class: 'aw-card-title' }, t.title), t.usable ? plainChip(t.usable === 'usable' ? 'Usable' : 'Used up', t.usable === 'usable' ? 'good' : 'muted') : null),
     t.description ? h('p', { class: 'aw-card-desc' }, t.description) : null,
     t.items?.length ? h('ul', { class: 'aw-tile-items' }, t.items.map((i) => h('li', null, i))) : null,
+    t.usable === 'usable' ? h('div', { class: 'aw-card-hint' }, 'Walk into it, click it, or press Enter next to it') : null,
   );
 }
 
 // ---------------------------------------------------------------------------
 // Floating tooltip
+
+/** gap between the anchor point and the card */
+const TIP_GAP = 18;
+
+/**
+ * Pure placement of a tooltip card of size `size` near `at` inside `box`: by default below-right;
+ * with `avoid`, on the side of `at` facing away from it (vertically and horizontally), so a card
+ * about a target never covers the player. Always clamped into the box.
+ */
+export function placeTooltip(
+  at: { x: number; y: number },
+  size: { w: number; h: number },
+  box: { w: number; h: number },
+  avoid: { x: number; y: number } | null,
+): { px: number; py: number } {
+  let right = true;
+  let below = true;
+  if (avoid) {
+    if (Math.abs(avoid.y - at.y) > 4) below = avoid.y < at.y;
+    if (Math.abs(avoid.x - at.x) > 4) right = avoid.x < at.x;
+  }
+  let px = right ? at.x + TIP_GAP : at.x - size.w - TIP_GAP;
+  let py = below ? at.y + TIP_GAP : at.y - size.h - TIP_GAP;
+  // flip when there is no room on the preferred side
+  if (px + size.w > box.w - 8) px = at.x - size.w - TIP_GAP;
+  if (px < 8) px = at.x + TIP_GAP;
+  if (py + size.h > box.h - 8) py = at.y - size.h - TIP_GAP;
+  if (py < 8) py = at.y + TIP_GAP;
+  px = Math.max(8, Math.min(box.w - size.w - 8, px));
+  py = Math.max(8, Math.min(box.h - size.h - 8, py));
+  return { px, py };
+}
 // ---------------------------------------------------------------------------
 
 /**
@@ -296,25 +341,30 @@ export class Tooltip {
     this.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
   }
 
-  /** show at a viewport point (used for map hover); pinned until hideAt() */
-  showAt(content: Node, x: number, y: number): void {
+  /**
+   * Show at a viewport point (map hover); pinned until hideAt(). With `avoid` (the player's screen
+   * position) the card goes on the side of the point away from it, so it never lands on the player.
+   */
+  showAt(content: Node, x: number, y: number, avoid?: { x: number; y: number } | null): void {
     this.pinned = true;
     this.owner = null;
     this.fill(content, false);
     const rootR = this.root.getBoundingClientRect();
     const tw = this.el.offsetWidth;
     const th = this.el.offsetHeight;
-    let px = x - rootR.left + 16;
-    let py = y - rootR.top + 16;
-    if (px + tw > rootR.width - 8) px = x - rootR.left - tw - 16;
-    if (py + th > rootR.height - 8) py = y - rootR.top - th - 16;
-    px = Math.max(8, px);
-    py = Math.max(8, py);
+    const { px, py } = placeTooltip({ x: x - rootR.left, y: y - rootR.top }, { w: tw, h: th }, { w: rootR.width, h: rootR.height }, avoid ? { x: avoid.x - rootR.left, y: avoid.y - rootR.top } : null);
     this.el.style.transform = `translate(${Math.round(px)}px, ${Math.round(py)}px)`;
   }
 
   hideAt(): void {
     this.pinned = false;
+    this.hide();
+  }
+
+  /** forget the hovered element too (its element may be about to leave the DOM) */
+  clear(): void {
+    this.pinned = false;
+    this.owner = null;
     this.hide();
   }
 

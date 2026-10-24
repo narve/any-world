@@ -347,3 +347,109 @@ describe('area transitions', () => {
     expect(n.title).toBe(ship.areas[1].name);
   });
 });
+
+describe('terrain interaction from the UI (audit: interact unreachable)', () => {
+  function consoleRoom() {
+    const map = roomMap(12, 9);
+    map.tiles[4 * 12 + 6] = { kind: 'floor', terrain: 'bridge-console', region: 0 };
+    const s = new GameSession({ world: ship, worldId: 'fixture-test', seed: 2, map });
+    onlyKeep(s, []);
+    teleport(s, { x: 5, y: 4 });
+    return s;
+  }
+
+  it('bumping a usable tile that blocks movement uses it', () => {
+    const s = consoleRoom();
+    expect(s.interactTargets().map((t) => t.name)).toEqual([ship.terrains.find((t) => t.id === 'bridge-console')!.name]);
+    const out = s.uiAction({ type: 'move', dir: 'e' });
+    expect(out.changed).toBe(true);
+    expect(P(s)).toEqual({ x: 5, y: 4 });
+    expect(s.state.area.map.tiles[4 * 12 + 6].interacted).toBe(true);
+    expect(s.state.flags['saw-orbit-trace']).toBe(true);
+    // used up: the tooltip says so and it no longer offers itself
+    expect(s.describeAt({ x: 6, y: 4 }).tile?.usable).toBe('used');
+    expect(s.interactTargets()).toEqual([]);
+  });
+
+  it('Enter (interact intent) and a click on the adjacent tile use it too', () => {
+    const a = consoleRoom();
+    expect(a.describeAt({ x: 6, y: 4 }).tile?.usable).toBe('usable');
+    expect(a.viewModel().game!.interactHint).toMatch(/^Enter: use /);
+    a.intent({ type: 'interact' });
+    expect(a.state.flags['saw-orbit-trace']).toBe(true);
+
+    const b = consoleRoom();
+    const out = b.intent({ type: 'click_tile', pos: { x: 6, y: 4 }, button: 'primary' });
+    expect(out.travel).toBeUndefined();
+    expect(b.state.flags['saw-orbit-trace']).toBe(true);
+
+    const c = consoleRoom();
+    teleport(c, { x: 2, y: 2 });
+    expect(c.intent({ type: 'interact' }).toasts[0]?.text).toMatch(/nothing to use/i);
+  });
+
+  it('the hover preview tells what a click does', () => {
+    const s = consoleRoom();
+    expect(s.preview({ x: 6, y: 4 })?.kind).toBe('use');
+    const walk = s.preview({ x: 2, y: 2 })!;
+    expect(walk.kind).toBe('walk');
+    expect(walk.path[walk.path.length - 1]).toEqual({ x: 2, y: 2 });
+    expect(walk.path.length).toBe(3);
+    expect(s.preview({ x: 0, y: 0 })?.kind).toBe('none'); // a wall
+    expect(s.preview({ x: 5, y: 4 })?.kind).toBe('self');
+    s.intent({ type: 'look', on: true });
+    expect(s.preview({ x: 2, y: 2 })).toBeNull(); // look mode has its own cursor
+  });
+});
+
+describe('hostile hover preview', () => {
+  it('outlines a hostile as an attack target', () => {
+    const s = session(western, 1, roomMap(14, 10));
+    const hostile = western.actors.find((a) => !a.npc && a.faction === 'hostile')!;
+    onlyKeep(s, []);
+    teleport(s, { x: 4, y: 5 });
+    // placed after the FOV refresh, so it has no turn to move
+    const st = structuredClone(s.state) as GameState;
+    const pl = st.area.actors.find((a) => a.id === st.player.actorId)!;
+    st.area.actors.push({ ...structuredClone(pl), id: 'a777', defId: hostile.id, faction: 'hostile', pos: { x: 6, y: 5 } });
+    s.state = st;
+    expect(s.preview({ x: 6, y: 5 })?.kind).toBe('attack');
+  });
+});
+
+describe('start options', () => {
+  it('carries difficulty and weirdness into saves and the end screen', () => {
+    const s = new GameSession({ world: western, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10), difficulty: 'hard', weirdness: 0.8 });
+    expect(s.difficulty).toBe('hard');
+    const saved = s.savedRun(0);
+    expect(saved.difficulty).toBe('hard');
+    expect(saved.weirdness).toBe(0.8);
+    const resumed = new GameSession({ world: western, worldId: 'fixture-test', seed: 0, saved: saved.state, gmLog: saved.gmLog, difficulty: saved.difficulty, weirdness: saved.weirdness, rules: saved.rules, hooks: saved.hooks });
+    expect(resumed.difficulty).toBe('hard');
+    expect(resumed.takeHooks()).toEqual([]); // no second intro on resume
+    const st = structuredClone(resumed.state) as GameState;
+    st.status = 'lost';
+    resumed.state = st;
+    expect(resumed.viewModel().end).toMatchObject({ difficulty: 'hard', weirdness: 0.8 });
+  });
+});
+
+describe('first-run hints', () => {
+  it('show until three turns are taken or they are dismissed', () => {
+    const s = new GameSession({ world: western, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10), hints: true });
+    expect(s.viewModel().game!.hints?.length).toBeGreaterThan(0);
+    s.act({ type: 'wait' });
+    s.act({ type: 'wait' });
+    expect(s.viewModel().game!.hints).not.toBeNull();
+    s.act({ type: 'wait' });
+    expect(s.viewModel().game!.hints).toBeNull();
+    const t = new GameSession({ world: western, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10), hints: true });
+    t.intent({ type: 'dismiss_hints' });
+    expect(t.viewModel().game!.hints).toBeNull();
+  });
+
+  it('show an objective line', () => {
+    const s = session();
+    expect(s.viewModel().game!.objective).toContain(western.goal.summary);
+  });
+});

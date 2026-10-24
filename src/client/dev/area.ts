@@ -2,11 +2,15 @@
 /**
  * Dev page: renders one generated area of a fixture world with its lighting, actors and items.
  *   /dev/area.html?world=fixture-western&area=0&seed=1&step=0&zoom=13&demo=1
+ *   /dev/area.html?world=fixture-dream&area=0          (synthetic dream world until content/worlds has it)
+ *   /dev/area.html?world=fixture-western&backdrop=starfield&bd=0b0820&bd2=a98bff&bi=0.7&gen=islands
+ *   &still=1 freezes cosmetic motion (reduce motion); see applyOverrides for every override.
  * window.__dev exposes { renderer, state, demo(), move(dx,dy) } for e2e tests.
  */
 import { Renderer } from '../render';
 import { loadWorld, buildDemoState, isOpaqueTile, simpleFov } from './fixtures';
 import type { GameEvent, GameState, Pos } from '../../engine/types';
+import type { WorldSpec, AreaPlan } from '../../schema/world';
 
 declare global {
   interface Window {
@@ -22,7 +26,9 @@ declare global {
 
 async function main() {
   const q = new URLSearchParams(location.search);
-  const { name, world } = loadWorld(q.get('world'));
+  const loaded = loadWorld(q.get('world'));
+  const name = loaded.name;
+  const world = applyOverrides(loaded.world, q);
   const areaIndex = Math.max(0, Math.min(world.areas.length - 1, Number(q.get('area') ?? 0) || 0));
   const seed = Number(q.get('seed') ?? 1) || 1;
   const plan = world.areas[areaIndex];
@@ -31,7 +37,8 @@ async function main() {
   document.title = `${plan.name} — ${world.meta.title}`;
   document.getElementById('title')!.textContent = `${world.meta.title} · ${plan.name}`;
   const sub = document.getElementById('sub')!;
-  sub.textContent = `${name} · ${plan.generator} ${state.area.map.width}×${state.area.map.height} · ${usedMapgen ? 'mapgen' : 'local test map'}`;
+  const bd = plan.backdrop ? ` · backdrop ${plan.backdrop.style}` : '';
+  sub.textContent = `${name} · ${plan.generator} ${state.area.map.width}×${state.area.map.height} · ${usedMapgen ? 'mapgen' : 'dev layout'}${bd}`;
   if (error) {
     const e = document.createElement('p');
     e.className = 'err';
@@ -40,7 +47,7 @@ async function main() {
   }
 
   const view = document.getElementById('view')!;
-  const r = new Renderer(view);
+  const r = new Renderer(view, { reduceMotion: q.get('still') === '1' ? true : undefined });
   r.setWorld(world);
   r.setArea(state.area);
   const step = Number(q.get('step') ?? 0) | 0;
@@ -143,6 +150,37 @@ async function main() {
   await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
   window.__dev.ready = true;
   document.body.dataset.ready = '1';
+}
+
+/**
+ * Query overrides for trying looks on any world/area:
+ *   backdrop=<style>&bd=<hex>&bd2=<hex>&bi=<0..1>   AreaPlan.backdrop
+ *   gen=<generator>                                 AreaPlan.generator (dev layouts for islands/organic/geometric)
+ *   fp=<pattern>&wp=<pattern>                       floor / wall SurfaceStyle.pattern
+ *   wh=<height>                                     wall height
+ */
+function applyOverrides(world: WorldSpec, q: URLSearchParams): WorldSpec {
+  const keys = ['backdrop', 'gen', 'fp', 'wp', 'wh'];
+  if (!keys.some((k) => q.has(k))) return world;
+  const hex = (v: string | null) => (v ? (v.startsWith('#') ? v : `#${v}`) : undefined);
+  const areas = world.areas.map((a) => {
+    const p: AreaPlan = structuredClone(a);
+    const style = q.get('backdrop');
+    if (style === 'none') p.backdrop = undefined;
+    else if (style)
+      p.backdrop = {
+        style: style as NonNullable<AreaPlan['backdrop']>['style'],
+        color: hex(q.get('bd')) ?? p.backdrop?.color ?? p.lighting.sky ?? '#101828',
+        color2: hex(q.get('bd2')) ?? p.backdrop?.color2,
+        intensity: q.has('bi') ? Number(q.get('bi')) : p.backdrop?.intensity ?? 0.6,
+      };
+    if (q.get('gen')) p.generator = q.get('gen') as AreaPlan['generator'];
+    if (q.get('fp')) p.floor = { ...p.floor, pattern: q.get('fp') as AreaPlan['floor']['pattern'] };
+    if (q.get('wp')) p.wall = { ...p.wall, pattern: q.get('wp') as AreaPlan['wall']['pattern'] };
+    if (q.get('wh')) p.wall = { ...p.wall, height: Number(q.get('wh')) };
+    return p;
+  });
+  return { ...world, areas };
 }
 
 main().catch((e) => {

@@ -55,6 +55,24 @@ export interface BarView {
   value: number;
   max: number;
   color: string;
+  /** below the danger threshold: the bar pulses in the warn colour and shows its full name */
+  low?: boolean;
+}
+
+/**
+ * A vital that is low or empty (HP under 30 %, a resource under 25 %): the HUD warns, a screen-edge
+ * vignette appears while it drains health, and hotbar items that restore it glow.
+ */
+export interface DangerView {
+  /** 'hp' or a custom resource id */
+  id: string;
+  label: string;
+  color: string;
+  level: 'low' | 'empty';
+  /** losing health because of it (an empty resource with harmful onEmpty, or HP itself) */
+  draining: boolean;
+  /** quick slot (0-based) holding an item that restores it, if any */
+  slot?: number;
 }
 
 export interface StatusChipView {
@@ -81,6 +99,8 @@ export interface HudView {
   /** xp gathered since the current level began, and needed for the next */
   xpInLevel: number;
   xpForLevel: number;
+  /** level-ups already earned but held back until the open perk choice is made */
+  pendingLevels?: number;
   currency: number;
   statuses: StatusChipView[];
   areaName: string;
@@ -91,6 +111,8 @@ export interface HudView {
   sneaking: boolean;
   /** derived from speed: shown as a chip, never as a number */
   speed: 'fast' | 'normal' | 'slow';
+  /** low/empty vitals, most urgent first (empty = none) */
+  danger?: DangerView[];
 }
 
 // ---------------------------------------------------------------------------
@@ -112,10 +134,18 @@ export interface SlotItemView extends ItemView {
   maxDurability?: number;
   /** activating it needs a target tile/actor (the integrator runs targeting) */
   needsTarget?: boolean;
+  /** it is aimed by direction (ray / cone): targeting picks one of eight directions */
+  aimsDirection?: boolean;
   /** optional custom glyph (single character); default is the name's initial or '?' */
   glyph?: string;
   /** rarity hint for border colour */
   rarity?: 'common' | 'uncommon' | 'rare' | 'unique';
+  /** rendered thumbnail (data URL) of the item's model; never set for unknown items */
+  thumb?: string;
+  /** vitals this item is known to restore ('hp', 'mp' or a resource id) */
+  restores?: string[];
+  /** glow + hint: the item answers a current danger ("press 3") */
+  urgent?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -196,10 +226,14 @@ export interface RuleView {
   id: string;
   name: string;
   description: string;
-  /** "from the start", "since turn 140" */
+  /** "from the start", "Deck 2, turn 140" */
   since?: string;
   /** introduced by the GM during play */
   fromGm?: boolean;
+  /** the GM's in-story announcement */
+  reason?: string;
+  /** added recently: highlighted until seen */
+  isNew?: boolean;
 }
 
 export interface QuestView {
@@ -223,6 +257,8 @@ export interface TileTooltipView {
   description?: string;
   /** items lying here */
   items?: string[];
+  /** the tile can be used (walk into it, click it or press Enter next to it), or is used up */
+  usable?: 'usable' | 'used';
 }
 
 export interface GameView {
@@ -249,6 +285,14 @@ export interface GameView {
   targetingSlot?: number;
   /** busy indicator (e.g. waiting for the GM) */
   busy?: string | null;
+  /** one-line objective under the area banner ("Find the way out of Main Street") */
+  objective?: string;
+  /** where to go next in this area; shown on its own line under `objective`, never truncated */
+  objectiveHint?: string | null;
+  /** first-run hint lines (null/absent hides the card) */
+  hints?: string[] | null;
+  /** an adjacent tile that can be used (Enter / click) — shown as a key hint */
+  interactHint?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -287,13 +331,14 @@ export interface StartView {
   providerLabel?: string | null;
   /** false when no LLM is configured: create buttons show a hint and open settings */
   canGenerate: boolean;
-  defaults?: { prompt?: string; difficulty?: number; weirdness?: number };
+  defaults?: { prompt?: string; difficulty?: Difficulty; weirdness?: number };
 }
+
+export type Difficulty = 'gentle' | 'normal' | 'hard' | 'brutal';
 
 export interface StartOptions {
   prompt: string;
-  /** 1 (gentle) .. 5 (merciless) */
-  difficulty: number;
+  difficulty: Difficulty;
   /** 0 (familiar) .. 1 (unhinged) */
   weirdness: number;
   /** true for "Surprise me" (prompt is ignored / empty) */
@@ -340,6 +385,9 @@ export interface EndView {
   epitaph?: string;
   playerName: string;
   stats: RunStatsView;
+  /** the run's settings, shown under the stats */
+  difficulty?: Difficulty;
+  weirdness?: number;
 }
 
 export interface Settings {
@@ -401,6 +449,10 @@ export type UiIntent =
   | { type: 'click_tile'; pos: Pos; button: 'primary' | 'secondary' }
   /** mouse: hover a tile (null = left the map) */
   | { type: 'hover_tile'; pos: Pos | null }
+  /** use an adjacent usable tile (Enter): the integrator picks the tile */
+  | { type: 'interact' }
+  /** the first-run hint card was closed */
+  | { type: 'dismiss_hints' }
   /** open the trade panel from dialogue */
   | { type: 'open_trade'; npcId: string }
   /** the backpack / help / rules panels were opened or closed (pause hints, audio ducks…) */
@@ -415,7 +467,8 @@ export interface UiCallbacks {
   onAction(action: PlayerAction): void;
   onIntent?(intent: UiIntent): void;
   onStart?(opts: StartOptions): void;
-  onPlayDemo?(worldId: string): void;
+  /** play a recorded world; `opts` carries the start screen's difficulty/weirdness */
+  onPlayDemo?(worldId: string, opts?: StartOptions): void;
   onContinue?(): void;
   onSettings?(settings: Settings): void;
   /** open/close the settings dialog (the controller sets vm.settings) */

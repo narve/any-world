@@ -6,7 +6,59 @@ import * as THREE from 'three';
 import type { WorldSpec, ModelSpec } from '../../schema/world';
 import type { ActorInstance, Faction, Pos } from '../../engine/types';
 import { buildModel, animateModel, modelHeight, type Motion } from './models';
-import { col } from './color';
+import { col, luminance, mixHex } from './color';
+
+/** every actor model is drawn a little larger than its spec so it reads at the default zoom */
+export const ACTOR_SCALE = 1.12;
+/** small creatures are scaled up to at least this height (tiles) */
+export const MIN_ACTOR_HEIGHT = 0.55;
+/** outline thickness (world units) around actor silhouettes */
+export const OUTLINE = 0.022;
+
+/** Scale for a model of natural height `h` (already including its spec scale). */
+export function actorScaleFor(h: number): number {
+  const k = ACTOR_SCALE;
+  return h * k < MIN_ACTOR_HEIGHT ? MIN_ACTOR_HEIGHT / Math.max(0.05, h) : k;
+}
+
+/**
+ * True when a model's main colour would melt into the floor (similar lightness): such actors get a
+ * thicker, brighter outline and a stronger rim light.
+ */
+export function lowContrast(modelColor: string | undefined, floorColor: string | undefined): boolean {
+  if (!modelColor || !floorColor) return false;
+  return Math.abs(luminance(modelColor) - luminance(floorColor)) < 0.16;
+}
+
+/** outline colour per faction: the faction colour, a little deeper so it frames rather than glows */
+function outlineColor(f: Faction | 'ally', strong: boolean): string {
+  return mixHex(FACTION_COLORS[f], '#000000', strong ? 0.1 : 0.45);
+}
+
+/** shared rim-light uniform (view-space fresnel, stronger from above); its strength follows the area's darkness */
+const RIM = { value: new THREE.Color(0.22, 0.22, 0.24) };
+
+function addRim(m: THREE.Material): void {
+  const std = m as THREE.MeshStandardMaterial;
+  if (!std.isMeshStandardMaterial) return;
+  std.onBeforeCompile = (shader) => {
+    shader.uniforms.uRim = RIM;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform vec3 uRim;')
+      .replace(
+        '#include <emissivemap_fragment>',
+        `#include <emissivemap_fragment>
+        {
+          vec3 vdir = normalize(vViewPosition);
+          float fres = pow(1.0 - clamp(abs(dot(normal, vdir)), 0.0, 1.0), 2.5);
+          vec3 upV = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+          float top = 0.45 + 0.55 * max(0.0, dot(normal, upV));
+          totalEmissiveRadiance += uRim * fres * top;
+        }`,
+      );
+  };
+  std.customProgramCacheKey = () => 'actor-rim';
+}
 
 export const FACTION_COLORS: Record<Faction | 'ally', string> = {
   player: '#7fe3ff',
@@ -27,6 +79,7 @@ const DEFAULT_MODEL: ModelSpec = {
 const TMPQ = new THREE.Quaternion();
 const WHITE = new THREE.Color(1, 1, 1);
 let ringGeo: THREE.RingGeometry | null = null;
+let pulseGeo: THREE.RingGeometry | null = null;
 let discGeo: THREE.CircleGeometry | null = null;
 let barGeo: THREE.PlaneGeometry | null = null;
 
@@ -82,6 +135,12 @@ export interface ActorView {
   model: THREE.Object3D;
   ring: THREE.Mesh;
   ringMat: THREE.MeshBasicMaterial;
+  /** player only: an expanding, fading second ring */
+  pulse?: THREE.Mesh;
+  /** silhouette outline meshes (inverted hulls in the faction colour) */
+  outlines: THREE.Mesh[];
+  /** low contrast against the floor: stronger outline */
+  lowContrast: boolean;
   hp: HpBar;
   height: number;
   faction: Faction | 'ally';
@@ -107,6 +166,9 @@ export class ActorLayer {
   private world: WorldSpec;
   /** emissive floor (fraction of each material's base colour) so actors stay readable in dark areas */
   lightFloor = 0;
+  /** floor colour of the current area (for the automatic contrast lift) */
+  groundColor: string | undefined;
+  private outlineMats = new Map<string, THREE.MeshBasicMaterial>();
 
   constructor(world: WorldSpec) {
     this.world = world;
@@ -144,6 +206,7 @@ export class ActorLayer {
       // lifted towards white so dark clothing / skin still reads as a silhouette, not a hole
       c.userData.floorBase = glows ? null : std.color.clone().lerp(WHITE, 0.3);
       ActorLayer.applyFloor(c, this.lightFloor);
+      addRim(c);
       this.ownMats.set(src, c);
     }
     return c;
@@ -163,6 +226,8 @@ export class ActorLayer {
    */
   setLightFloor(k: number): void {
     this.lightFloor = Math.max(0, Math.min(1, k));
+    const r = 0.16 + this.lightFloor * 0.9;
+    RIM.value.setRGB(r, r, r * 1.08);
     for (const m of this.ownMats.values()) ActorLayer.applyFloor(m, this.lightFloor);
     for (const v of this.views.values()) for (const m of v.fadeMats ?? []) ActorLayer.applyFloor(m, this.lightFloor);
   }
@@ -182,6 +247,11 @@ export class ActorLayer {
     model.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) o.castShadow = true;
     });
+    const natural = modelHeight(tpl);
+    model.scale.multiplyScalar(actorScaleFor(natural));
+    const faction0 = ActorLayer.factionOf(a, isPlayer);
+    const weak = !isPlayer && lowContrast(this.spec(a.defId).colors?.primary, this.groundColor);
+    const outlines = this.addOutlines(model, faction0, weak);
     const root = new THREE.Group();
     root.name = `actor:${a.id}`;
     root.position.set(a.pos.x, 0, a.pos.y);
@@ -189,23 +259,34 @@ export class ActorLayer {
     inner.add(model);
     root.add(inner);
 
-    ringGeo ??= new THREE.RingGeometry(0.33, 0.43, 36);
-    discGeo ??= new THREE.CircleGeometry(0.33, 28);
-    const faction = ActorLayer.factionOf(a, isPlayer);
-    // the faction ring is a status marker: fog and tone mapping must not darken it in dim areas
-    const ringMat = new THREE.MeshBasicMaterial({ color: col(FACTION_COLORS[faction]), transparent: true, opacity: isPlayer ? 0.9 : 0.65, depthWrite: false, fog: false, toneMapped: false });
+    ringGeo ??= new THREE.RingGeometry(0.34, 0.45, 40);
+    discGeo ??= new THREE.CircleGeometry(0.34, 28);
+    const faction = faction0;
+    // the faction ring is a status marker: fog and tone mapping must not darken it in dim areas; it
+    // sits above floor decals (patches, liquids) so terrain never covers it
+    const ringMat = new THREE.MeshBasicMaterial({ color: col(FACTION_COLORS[faction]), transparent: true, opacity: isPlayer ? 1 : 0.72, depthWrite: false, fog: false, toneMapped: false });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = -Math.PI / 2;
-    ring.position.y = 0.015;
-    ring.renderOrder = 2;
+    ring.position.y = 0.045;
+    ring.renderOrder = 4;
     // soft dark disc grounds the model (contact shadow)
     const disc = new THREE.Mesh(discGeo, new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false }));
     disc.renderOrder = 1;
     disc.position.set(0, 0, -0.002); // ring-local: just below the ring
     ring.add(disc);
     root.add(ring);
+    let pulse: THREE.Mesh | undefined;
+    if (isPlayer) {
+      pulseGeo ??= new THREE.RingGeometry(0.42, 0.47, 40);
+      pulse = new THREE.Mesh(pulseGeo, new THREE.MeshBasicMaterial({ color: col(FACTION_COLORS.player), transparent: true, opacity: 0.5, depthWrite: false, fog: false, toneMapped: false }));
+      pulse.rotation.x = -Math.PI / 2;
+      pulse.position.y = 0.05;
+      pulse.renderOrder = 4;
+      pulse.name = 'player-pulse';
+      root.add(pulse);
+    }
 
-    const height = modelHeight(tpl);
+    const height = natural * actorScaleFor(natural);
     const hp = new HpBar();
     hp.group.position.y = Math.min(2.6, height + 0.22);
     root.add(hp.group);
@@ -219,6 +300,9 @@ export class ActorLayer {
       model,
       ring,
       ringMat,
+      pulse,
+      outlines,
+      lowContrast: weak,
       hp,
       height,
       faction,
@@ -239,6 +323,62 @@ export class ActorLayer {
     if (v.faction === f) return;
     v.faction = f;
     v.ringMat.color.set(FACTION_COLORS[f]);
+    const m = this.outlineMat(f, v.lowContrast);
+    for (const o of v.outlines) if (!(o.material as THREE.Material).userData.fade) o.material = m;
+  }
+
+  private outlineMat(f: Faction | 'ally', strong: boolean): THREE.MeshBasicMaterial {
+    const key = `${f}|${strong}`;
+    let m = this.outlineMats.get(key);
+    if (!m) {
+      m = new THREE.MeshBasicMaterial({ color: col(outlineColor(f, strong)), side: THREE.BackSide, fog: false, toneMapped: false });
+      m.userData.outline = true;
+      this.outlineMats.set(key, m);
+    }
+    return m;
+  }
+
+  /**
+   * Inverted-hull outlines: a back-face copy of every mesh, grown by OUTLINE world units around its
+   * own centre, in the faction colour. Children of the meshes they outline, so animation carries them.
+   */
+  private addOutlines(model: THREE.Object3D, f: Faction | 'ally', strong: boolean): THREE.Mesh[] {
+    const out: THREE.Mesh[] = [];
+    const meshes: THREE.Mesh[] = [];
+    model.updateMatrixWorld(true);
+    model.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh && !m.userData.outline) meshes.push(m);
+    });
+    const mat = this.outlineMat(f, strong);
+    const t = OUTLINE * (strong ? 1.6 : 1);
+    const ws = new THREE.Vector3();
+    const size = new THREE.Vector3();
+    const centre = new THREE.Vector3();
+    for (const m of meshes) {
+      const mm = (Array.isArray(m.material) ? m.material[0] : m.material) as THREE.MeshStandardMaterial;
+      // see-through parts (glass, glows) are not outlined
+      if (mm?.transparent && (mm.opacity ?? 1) < 0.9) continue;
+      const g = m.geometry;
+      if (!g.boundingBox) g.computeBoundingBox();
+      g.boundingBox!.getSize(size);
+      g.boundingBox!.getCenter(centre);
+      m.getWorldScale(ws);
+      const sx = 1 + (2 * t) / Math.max(0.02, size.x * Math.abs(ws.x));
+      const sy = 1 + (2 * t) / Math.max(0.02, size.y * Math.abs(ws.y));
+      const sz = 1 + (2 * t) / Math.max(0.02, size.z * Math.abs(ws.z));
+      const o = new THREE.Mesh(g, mat);
+      o.userData.outline = true;
+      o.userData.noDim = true;
+      o.castShadow = false;
+      o.receiveShadow = false;
+      o.scale.set(sx, sy, sz);
+      o.position.set(centre.x * (1 - sx), centre.y * (1 - sy), centre.z * (1 - sz));
+      o.renderOrder = -1;
+      m.add(o);
+      out.push(o);
+    }
+    return out;
   }
 
   /** Make a view's materials fadeable (clones them once). */
@@ -256,7 +396,9 @@ export class ActorLayer {
           c = src.clone();
           c.userData.floorBase = src.userData.floorBase ? (src.userData.floorBase as THREE.Color).clone() : null;
           c.userData.baseOpacity = (src as THREE.MeshStandardMaterial).opacity ?? 1;
+          c.userData.fade = true;
           c.transparent = true;
+          if (!src.userData.outline) addRim(c);
           map.set(src, c);
           v.fadeMats!.push(c);
         }
@@ -264,7 +406,7 @@ export class ActorLayer {
       });
     }
     for (const m of v.fadeMats) m.opacity = (m.userData.baseOpacity ?? 1) * o;
-    v.ringMat.opacity = (v.isPlayer ? 0.9 : 0.65) * o;
+    v.ringMat.opacity = (v.isPlayer ? 1 : 0.72) * o;
   }
 
   remove(id: string): void {
@@ -273,6 +415,7 @@ export class ActorLayer {
     this.group.remove(v.root);
     v.hp.dispose();
     v.ringMat.dispose();
+    if (v.pulse) (v.pulse.material as THREE.Material).dispose();
     v.ring.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m !== v.ring && m.isMesh) (m.material as THREE.Material).dispose();
@@ -287,8 +430,14 @@ export class ActorLayer {
       animateModel(v.model, t, v.motion);
       if (v.hp.group.visible) v.hp.group.quaternion.copy(camera.quaternion).premultiply(TMPQ.copy(v.root.quaternion).invert());
       if (v.isPlayer) {
-        const k = 1 + Math.sin(t * 3) * 0.04;
+        const k = 1 + Math.sin(t * 3) * 0.05;
         v.ring.scale.set(k, k, k);
+        if (v.pulse) {
+          const p = (t * 0.7) % 1;
+          const s = 1 + p * 0.55;
+          v.pulse.scale.set(s, s, s);
+          (v.pulse.material as THREE.MeshBasicMaterial).opacity = 0.55 * (1 - p) * v.opacity;
+        }
       }
     }
   }
@@ -298,6 +447,8 @@ export class ActorLayer {
     this.templates.clear();
     for (const m of this.ownMats.values()) m.dispose();
     this.ownMats.clear();
+    for (const m of this.outlineMats.values()) m.dispose();
+    this.outlineMats.clear();
   }
 }
 

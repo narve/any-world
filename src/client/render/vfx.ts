@@ -288,10 +288,15 @@ export class VfxLayer {
     }
   }
 
-  /** Floating text (damage numbers, misses, status names). */
-  text(at: V3, text: string, color: string, delay = 0, opts: { size?: number; rise?: number; duration?: number } = {}): void {
+  /**
+   * Floating text (damage numbers, misses, status names). With `follow`, the text stays over that
+   * object (an actor's root) while it plays: `at` only gives the height, and x/z track the object
+   * every frame, so a label never lingers on a tile the actor has already walked away from. It is
+   * also hidden while the followed object is hidden.
+   */
+  text(at: V3, text: string, color: string, delay = 0, opts: { size?: number; rise?: number; duration?: number; follow?: THREE.Object3D } = {}): THREE.Sprite | null {
     const tt = textTexture(text, color, { size: 56 });
-    if (!tt) return;
+    if (!tt) return null;
     const mat = new THREE.SpriteMaterial({ map: tt.tex, transparent: true, depthTest: false, depthWrite: false });
     const s = new THREE.Sprite(mat);
     const h = (opts.size ?? 1) * 0.36;
@@ -304,12 +309,21 @@ export class VfxLayer {
     this.group.add(s);
     const rise = opts.rise ?? 0.7;
     const y0 = at.y;
+    const follow = opts.follow;
+    const track = () => {
+      if (!follow) return;
+      s.position.x = follow.position.x + jitter;
+      s.position.z = follow.position.z;
+    };
+    track();
     this.anim.add({
       delay,
       duration: opts.duration ?? 950,
       blocking: false,
       start: () => (s.visible = true),
       update: (k) => {
+        track();
+        if (follow) s.visible = follow.visible;
         s.position.y = y0 + ease.outCubic(k) * rise;
         const pop = k < 0.15 ? 0.7 + (k / 0.15) * 0.45 : 1.15 - Math.min(0.15, (k - 0.15) * 0.5);
         s.scale.set(h * tt.aspect * pop, h * pop, 1);
@@ -321,6 +335,7 @@ export class VfxLayer {
         mat.dispose();
       },
     });
+    return s;
   }
 
   clear(): void {

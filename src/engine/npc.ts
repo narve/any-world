@@ -48,7 +48,9 @@ export function doTalk(ctx: Ctx, targetId: string): ActionOutcome {
   if (friendly) {
     switch (npc.role) {
       case 'trader':
-        for (const id of npc.stock.slice(0, 4)) {
+        // the whole stock (the schema caps it at 8): any menu paging is the view's job, cutting
+        // the list here left most authored goods unbuyable
+        for (const id of npc.stock) {
           const it = ctx.ix.items.get(id);
           if (!it) continue;
           const actions: GmAction[] = [];
@@ -97,7 +99,7 @@ export function doPersuade(ctx: Ctx, targetId: string): ActionOutcome {
   const def = actorDef(ctx, a);
   if (!def) return invalid('no one there');
   const stat = def.npc?.persuadeStat ?? 'int';
-  let dc = def.npc?.persuadeDifficulty ?? clamp(10 + Math.floor(def.stats.hp / 6) + (def.unique ? 5 : 0), 8, 25);
+  let dc = def.npc?.persuadeDifficulty ?? def.persuadeDifficulty ?? clamp(10 + Math.floor(def.stats.hp / 6) + (def.unique ? 5 : 0), 8, 25);
   if (a.faction === 'hostile') dc += 2;
   const pl = playerActor(ctx);
   const roll = ctx.rng.int(1, 20);

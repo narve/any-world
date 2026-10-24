@@ -1,5 +1,5 @@
 /**
- * Triggers. The player's live triggers come from world rules, chosen perks, equipped items and
+ * Triggers. The player's live triggers come from the rules in force (rules.ts), chosen perks, equipped items and
  * passiveWhenCarried items; other actors use their ActorDef triggers. Item-specific events
  * (on_pickup / on_equip / on_unequip) fire only that item's triggers via `fireItemTriggers`.
  */
@@ -8,6 +8,7 @@ import type { ActorInstance, Pos } from './types';
 import { type Ctx, isPlayer } from './ctx';
 import { activeItems } from './stats';
 import { runAction } from './effects';
+import { activeRuleVariants } from './rules';
 
 export interface TriggerCtx {
   other?: ActorInstance | null;
@@ -20,7 +21,7 @@ const MAX_DEPTH = 6;
 export function triggersFor(ctx: Ctx, holder: ActorInstance): Trigger[] {
   if (isPlayer(ctx, holder)) {
     const out: Trigger[] = [];
-    for (const r of ctx.world.rules ?? []) out.push(...r.playerTriggers);
+    for (const r of activeRuleVariants(ctx)) out.push(...(r.playerTriggers ?? []));
     for (const id of ctx.s.player.perks) {
       const p = ctx.ix.perks.get(id);
       if (p) out.push(...p.triggers);

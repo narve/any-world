@@ -1,0 +1,34 @@
+{
+  "world": "fixture-dream",
+  "seed": 14,
+  "steps": 313,
+  "result": "lost blended away by The Erasure (Solvent)",
+  "turn": 538,
+  "area": 3,
+  "level": 4,
+  "keyMismatch": [],
+  "refused": [],
+  "layers": {
+    "narration": 10,
+    "game": 544,
+    "dialogue": 5,
+    "levelup": 3,
+    "choice": 1,
+    "end": 1
+  },
+  "actions": {
+    "move": 357,
+    "use": 42,
+    "talk": 5,
+    "pickup": 18,
+    "attack": 35,
+    "wait": 79,
+    "transition": 3,
+    "interact": 5
+  },
+  "errors": [],
+  "notes": [
+    "reload ok at turn 242 (layer after reload: game)"
+  ],
+  "stuckAt": []
+}

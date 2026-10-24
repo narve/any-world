@@ -1543,6 +1543,10 @@ body {
   gap: 16px;
 }
 
+.aw-trade-cols.aw-trade-cols-single {
+  grid-template-columns: 1fr;
+}
+
 .aw-trade-cols h3 {
   margin: 0 0 6px;
   font-size: 12px;
@@ -2438,4 +2442,613 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
   }
+}
+
+/* ======================================================================== */
+/* M2 client additions                                                      */
+/* ======================================================================== */
+
+/* HUD bars: one shared label column sized to the longest name (no "Batt…") */
+.aw-bars {
+  grid-template-columns: minmax(34px, max-content) 1fr auto;
+  column-gap: 8px;
+}
+
+.aw-bars > .aw-bar {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+
+.aw-bars .aw-bar-label {
+  max-width: 120px;
+}
+
+.aw-bar.is-low .aw-bar-label {
+  color: color-mix(in srgb, var(--c-accent) 55%, var(--c-danger));
+}
+
+.aw-bar.is-low .aw-bar-track {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-danger) 70%, transparent), 0 0 8px rgba(var(--c-danger-rgb), 0.45);
+}
+
+.aw-bar.is-low .aw-bar-fill {
+  --bar: color-mix(in srgb, var(--c-accent) 45%, var(--c-danger)) !important;
+}
+
+.aw-bar.is-empty .aw-bar-track {
+  animation: aw-danger-pulse calc(1s / var(--anim-speed)) ease-in-out infinite;
+}
+
+@keyframes aw-danger-pulse {
+  50% {
+    box-shadow: inset 0 0 0 1px var(--c-danger), 0 0 14px rgba(var(--c-danger-rgb), 0.8);
+  }
+}
+
+.aw-danger {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.aw-danger-row {
+  --danger: var(--c-danger);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 55%, transparent);
+  color: var(--c-text);
+}
+
+.aw-danger-row.is-empty {
+  animation: aw-danger-row calc(1.1s / var(--anim-speed)) ease-in-out infinite;
+}
+
+@keyframes aw-danger-row {
+  50% {
+    background: color-mix(in srgb, var(--danger) 32%, transparent);
+  }
+}
+
+.aw-danger-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
+}
+
+.aw-danger-key {
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--c-panel-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* screen-edge vignette in the colour of whatever drains health */
+.aw-vignette {
+  --vignette: var(--c-danger);
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 90px 10px color-mix(in srgb, var(--vignette) 55%, transparent);
+  animation: aw-vignette calc(1.6s / var(--anim-speed)) ease-in-out infinite;
+}
+
+.aw-vignette[data-level='low'] {
+  box-shadow: inset 0 0 70px 4px color-mix(in srgb, var(--vignette) 35%, transparent);
+}
+
+@keyframes aw-vignette {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* hotbar: an item that answers a current danger */
+.aw-slot.is-urgent {
+  box-shadow: 0 0 0 2px var(--c-accent), 0 0 16px rgba(var(--c-accent-rgb), 0.75);
+  animation: aw-urgent calc(1.2s / var(--anim-speed)) ease-in-out infinite;
+}
+
+@keyframes aw-urgent {
+  50% {
+    box-shadow: 0 0 0 2px var(--c-accent), 0 0 4px rgba(var(--c-accent-rgb), 0.3);
+  }
+}
+
+.aw-slot-urgent {
+  position: absolute;
+  left: 50%;
+  top: -20px;
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* rendered item thumbnails */
+.aw-glyph.has-thumb {
+  padding: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--item) 35%, var(--c-panel-3)), var(--c-panel));
+}
+
+.aw-glyph.has-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* plain tooltips may hold several lines */
+.aw-tooltip.is-plain {
+  white-space: pre-line;
+}
+
+/* rules panel & badge ------------------------------------------------------ */
+
+.aw-rules-badge-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aw-rules-new {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.aw-rules-badge.has-new {
+  border-color: var(--c-accent);
+  animation: aw-rule-flash calc(1.4s / var(--anim-speed)) ease-in-out 4;
+}
+
+@keyframes aw-rule-flash {
+  50% {
+    box-shadow: 0 0 0 3px rgba(var(--c-accent-rgb), 0.5), 0 0 24px rgba(var(--c-accent-rgb), 0.6);
+  }
+}
+
+.aw-rule-pill.is-new {
+  background: rgba(var(--c-accent-rgb), 0.35);
+  animation: aw-rule-in calc(600ms / var(--anim-speed)) ease-out;
+}
+
+@keyframes aw-rule-in {
+  from {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+}
+
+.aw-rule-src {
+  flex: none;
+  align-self: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--c-panel-3);
+  color: var(--c-muted);
+}
+
+.aw-rule-src.src-gm {
+  background: rgba(var(--c-accent-rgb), 0.25);
+  color: var(--c-text);
+}
+
+.aw-rule-list li > .aw-rule-since {
+  display: block;
+  margin: 1px 0 3px;
+}
+
+.aw-rule-reason {
+  margin-top: 4px;
+  font-family: var(--font-story);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--c-text);
+}
+
+.aw-rule-list li.is-new {
+  animation: aw-rule-in calc(600ms / var(--anim-speed)) ease-out, aw-rule-glow calc(1.4s / var(--anim-speed)) ease-in-out 3;
+}
+
+@keyframes aw-rule-glow {
+  50% {
+    background: rgba(var(--c-accent-rgb), 0.18);
+  }
+}
+
+/* log: small by default, expands only on its toggle ----------------------- */
+
+.aw-log-list {
+  height: 108px;
+}
+
+.aw-log.is-expanded .aw-log-list {
+  height: min(360px, 46vh);
+}
+
+.aw-log {
+  transition: opacity calc(250ms / var(--anim-speed));
+}
+
+.aw-log.is-obscuring {
+  opacity: 0.4;
+}
+
+.aw-log.is-obscuring:hover {
+  opacity: 1;
+}
+
+.aw-log-count {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--c-panel-3);
+  color: var(--c-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-style: normal;
+}
+
+/* narration: paragraphs, no scrollbar while typing ------------------------ */
+
+.aw-narration {
+  max-height: min(46%, 440px);
+}
+
+.aw-narration.is-typing {
+  overflow: hidden;
+}
+
+.aw-narr-text {
+  white-space: pre-line;
+}
+
+/* objective strip, interact hint, first-run hints --------------------------- */
+
+.aw-objective {
+  max-width: min(640px, 52vw);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(var(--c-panel-rgb), 0.78);
+  border: 1px solid var(--c-border);
+  backdrop-filter: blur(6px);
+  color: var(--c-text);
+  font-size: 13px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aw-objective::before {
+  content: '◆';
+  margin-right: 8px;
+  color: var(--c-accent);
+  font-size: 10px;
+}
+
+.aw-interact-hint {
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(var(--c-accent-rgb), 0.2);
+  border: 1px solid rgba(var(--c-accent-rgb), 0.6);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.aw-hints {
+  margin-bottom: 8px;
+  padding: 8px 10px 8px 12px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(var(--c-accent-rgb), 0.55);
+  background: rgba(var(--c-panel-rgb), 0.9);
+  box-shadow: 0 8px 24px var(--c-shadow);
+  font-size: 13px;
+  pointer-events: auto;
+  animation: aw-fade calc(400ms / var(--anim-speed)) ease-out;
+}
+
+.aw-hints-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+.aw-hints-close {
+  width: 22px;
+  height: 22px;
+}
+
+.aw-hints ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+
+.aw-hints li {
+  margin: 2px 0;
+}
+
+/* dialogue docks beside the action so the speaker stays visible ------------ */
+
+.aw-modal.no-backdrop.dock-right,
+.aw-modal.no-backdrop.dock-left {
+  align-items: center;
+  padding: 72px var(--gap) calc(var(--slot) + 40px);
+}
+
+.aw-modal.no-backdrop.dock-right {
+  justify-items: end;
+}
+
+.aw-modal.no-backdrop.dock-left {
+  justify-items: start;
+}
+
+.aw-modal.no-backdrop.dock-right .aw-dialogue,
+.aw-modal.no-backdrop.dock-left .aw-dialogue {
+  width: min(420px, 38vw);
+  max-height: 100%;
+}
+
+/* map overlay (hover outline, route dots, exit marker) --------------------- */
+
+.aw-map-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.aw-map-overlay .ov-hover {
+  fill: rgba(255, 209, 102, 0.12);
+  stroke: #ffd166;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.aw-map-overlay .ov-hover.kind-attack {
+  fill: rgba(255, 90, 80, 0.16);
+  stroke: #ff5a50;
+}
+
+.aw-map-overlay .ov-hover.kind-talk {
+  fill: rgba(120, 200, 255, 0.14);
+  stroke: #78c8ff;
+}
+
+.aw-map-overlay .ov-hover.kind-use {
+  fill: rgba(110, 230, 160, 0.16);
+  stroke: #6ee6a0;
+}
+
+.aw-map-overlay .ov-hover.kind-self {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-dasharray: 4 3;
+}
+
+.aw-map-overlay .ov-hover.kind-none {
+  fill: rgba(0, 0, 0, 0.18);
+  stroke: rgba(200, 200, 200, 0.45);
+  stroke-dasharray: 3 3;
+}
+
+.aw-map-overlay .ov-cross {
+  stroke: rgba(230, 230, 230, 0.6);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.aw-map-overlay .ov-dots circle {
+  fill: #ffd166;
+  stroke: rgba(0, 0, 0, 0.45);
+  stroke-width: 1;
+}
+
+.aw-map-overlay[data-kind='attack'] .ov-dots circle {
+  fill: #ff8a80;
+}
+
+.aw-map-overlay[data-kind='talk'] .ov-dots circle {
+  fill: #9bd6ff;
+}
+
+.aw-map-overlay .ov-dots circle[hidden] {
+  display: none;
+}
+
+.aw-map-overlay .ov-exit {
+  fill: rgba(110, 230, 160, 0.1);
+  stroke: rgba(110, 230, 160, 0.85);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  animation: ov-march 1.4s linear infinite;
+}
+
+@keyframes ov-march {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.aw-map-overlay .ov-exit-arrow path {
+  fill: #6ee6a0;
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 1.5;
+}
+
+.aw-map-overlay .ov-exit-label {
+  fill: #e8fff2;
+  font: 600 11px var(--font-ui, sans-serif);
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.75);
+  stroke-width: 3px;
+}
+
+.aw-map-overlay .ov-speaker {
+  fill: none;
+  stroke: #9bd6ff;
+  stroke-width: 2.5;
+  animation: ov-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ov-pulse {
+  50% {
+    stroke-opacity: 0.35;
+    stroke-width: 4;
+  }
+}
+
+/* start / end screen --------------------------------------------------------- */
+
+.aw-range-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.aw-end-settings {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+/* M2 fixes after screenshot review */
+.aw-bar {
+  grid-template-columns: minmax(38px, max-content) 1fr auto;
+}
+
+.aw-bar-label {
+  max-width: 120px;
+}
+
+.aw-objective {
+  white-space: normal;
+  border-radius: 12px;
+  pointer-events: auto;
+}
+
+/* goal (clamped) + the 'where to go' hint on its own line, never truncated
+   (issues/M2-objective-hint-truncated.md) */
+.aw-objective:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.aw-objective::before {
+  display: none;
+}
+
+.aw-objective-goal {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aw-objective-goal::before {
+  content: '◆';
+  margin-right: 8px;
+  color: var(--c-accent);
+  font-size: 10px;
+}
+
+.aw-objective-hint {
+  max-width: 100%;
+  color: var(--c-accent);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.aw-narration {
+  top: 13%;
+}
+
+.aw-end-settings {
+  margin: 12px 0 20px;
+}
+
+/* perk cards: the keyboard selection (focus) is a solid ring + "selected" mark; mouse hover only lifts */
+.aw-perk:hover:not(:focus-visible) {
+  border-color: var(--c-border-strong);
+}
+
+.aw-perk:focus-visible {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px rgba(var(--c-accent-rgb), 0.55), 0 10px 24px var(--c-shadow);
+  background: linear-gradient(180deg, rgba(var(--c-accent-rgb), 0.16), var(--c-panel-2));
+}
+
+.aw-perk:focus-visible::after {
+  content: '▶ selected';
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--c-accent);
+}
+
+/* queued level-ups on the player card (issues/M2-xp-bar-overflow.md) */
+.aw-xp-pending {
+  grid-column: 1 / -1;
+  justify-self: end;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(var(--c-accent-rgb), 0.22);
+  border: 1px solid rgba(var(--c-accent-rgb), 0.6);
+  color: var(--c-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* direction choices around the player while aiming a ray/cone item
+   (issues/M2-direction-target-cursor.md) */
+.aw-map-overlay .ov-dirs path {
+  fill: rgba(255, 255, 255, 0.35);
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 1px;
+}
+
+.aw-map-overlay .ov-dirs path.is-on {
+  fill: #ff6b5a;
+  stroke: #fff;
 }

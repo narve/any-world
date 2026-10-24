@@ -1,0 +1,46 @@
+{
+  "world": "fixture-teen",
+  "seed": 12,
+  "steps": 475,
+  "result": "lost left speechless by Magdalena 'Mags' Calloway (Embarrassment)",
+  "turn": 702,
+  "area": 2,
+  "level": 4,
+  "keyMismatch": [],
+  "refused": [
+    "step 260 {\"type\":\"talk\",\"targetId\":\"a44\"} log=[\"Looking for something? You always did leave things lying around.\"]",
+    "step 370 {\"type\":\"talk\",\"targetId\":\"a72\"} log=[\"You're the one with the speech. Good. Read me the first line. No, louder.\"]",
+    "step 411 {\"type\":\"use\",\"slot\":9} log=[\"Juniper Okafor-Pryce uses Group Text Blast.\"]",
+    "step 433 {\"type\":\"talk\",\"targetId\":\"a73\"} log=[\"OKAFOR-PRYCE! Water bottle. Deep breath. Tell Coach.\"]",
+    "step 453 {\"type\":\"use\",\"slot\":1,\"target\":{\"x\":26,\"y\":17}} log=[\"+4 Rep\"]",
+    "step 455 {\"type\":\"use\",\"slot\":4} log=[\"Offline ends.\"]",
+    "step 457 {\"type\":\"use\",\"slot\":5,\"target\":{\"x\":27,\"y\":17}} log=[\"Magdalena 'Mags' Calloway takes 9 Embarrassment.\"]",
+    "step 459 {\"type\":\"use\",\"slot\":1,\"target\":{\"x\":27,\"y\":17}} log=[\"Magdalena 'Mags' Calloway takes 12 Embarrassment.\"]",
+    "step 461 {\"type\":\"attack\",\"targetId\":\"a71\"} log=[\"Juniper Okafor-Pryce finds the precise word for Magdalena 'Mags' Calloway but misses.\"]",
+    "step 463 {\"type\":\"use\",\"slot\":1,\"target\":{\"x\":27,\"y\":17}} log=[\"Magdalena 'Mags' Calloway takes 14 Embarrassment.\"]",
+    "step 465 {\"type\":\"use\",\"slot\":4} log=[\"Juniper Okafor-Pryce uses Secret Admirer Note.\"]",
+    "step 467 {\"type\":\"attack\",\"targetId\":\"a71\"} log=[\"Juniper Okafor-Pryce finds the precise word for Magdalena 'Mags' Calloway for 5 Embarrassment.\"]"
+  ],
+  "layers": {
+    "narration": 6,
+    "game": 710,
+    "dialogue": 5,
+    "levelup": 3,
+    "choice": 1,
+    "end": 1
+  },
+  "actions": {
+    "use": 60,
+    "talk": 5,
+    "move": 550,
+    "pickup": 41,
+    "interact": 35,
+    "attack": 17,
+    "transition": 2
+  },
+  "errors": [],
+  "notes": [
+    "reload ok at turn 244 (layer after reload: game)"
+  ],
+  "stuckAt": []
+}

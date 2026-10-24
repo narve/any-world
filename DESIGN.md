@@ -297,6 +297,33 @@ The engine offers a vocabulary the AI combines. Examples:
 - Keyboard: arrow keys, WASD or vi-keys to move/attack, 1–8 for the quick-access slots, and single
   keys for inventory, pick-up, inspect, wait and descend.
 - Mouse: click to travel or target, hover to inspect.
+- **Touch (requirement, see §6b):** tap a tile to walk there along a path, which stops when something
+  appears. Tap an adjacent enemy or NPC to attack or talk. Long-press inspects. Pinch zooms, and
+  two-finger twist or a button rotates the camera. The 8 quick slots are an on-screen bar, and
+  context buttons (pick up, talk, exit, wait, search) appear when they are relevant.
+
+## 6b. Mobile and responsive (requirement)
+
+The game must be fully playable on a **standard iPhone (Safari, ~390×844 pt) and a high-end Android
+phone (Chrome, ~412×915)**, in portrait and preferably landscape, as well as on tablets and desktop.
+
+- **Layout:** the HTML overlay is responsive. On phones the map takes most of the screen; the log and
+  GM narration collapse into a small ticker that expands on tap; the backpack, inspect view, dialogue
+  and rules open as bottom sheets. Respect safe areas (notch, home bar) with `env(safe-area-inset-*)`.
+  Tap targets are at least 44 px. There is no hover-only information.
+- **Input:** touch as described in §6. Keyboard and mouse keep working, and the input layer
+  maps all of them to the same `PlayerAction`s.
+- **Performance:** aim for 60 fps, with a minimum of 30 fps, on those phones. Cap the device pixel
+  ratio (around 2), use cheap shadows or none on mobile, use instancing/merged geometry for tiles, and
+  add a quality setting (auto/low/high). Keep the first load small: code-split three.js and the dev
+  pages, and lazy-load audio.
+- **Platform details:** audio starts only after the first tap (iOS rule). Saves go to localStorage /
+  IndexedDB. Stop pull-to-refresh, double-tap zoom and text selection on the game canvas. Recover
+  from a lost WebGL context (the phone may lock or switch apps mid-run). It can be installed as a PWA
+  (add to home screen) if time permits.
+- **Testing:** Playwright device emulation (iPhone and Pixel profiles, touch events, portrait and
+  landscape) for e2e and screenshot review. The sandbox has no real phones, so real-device feel and
+  frame rate must be confirmed by a human; the retrospective will say so.
 
 ## 7. Tech
 
@@ -309,10 +336,30 @@ The engine offers a vocabulary the AI combines. Examples:
 - Tests: Vitest for the engine, bot playthroughs over many seeds and world specs, and
   Playwright for visual and end-to-end checks with screenshots.
 
+## 7b. Languages (requirement)
+
+The whole game must be playable in more than one language, at least **English and Norwegian (bokmål)**.
+This covers both the UI and everything the AI writes: world names, descriptions, items, NPC dialogue,
+GM narration and the log.
+
+- **UI:** every string comes from a message catalog (`src/client/i18n/<lang>.ts`, keyed messages with
+  plural and variable support). There are no hard-coded strings in components. The language picker is
+  in settings and on the start screen, and defaults to the browser language.
+- **Engine messages:** the engine emits structured log events (key + params). It never emits finished
+  English sentences ("takes 1 Heat"). The client renders them through the catalog, and genre words still
+  come from the world's `vocabulary`.
+- **AI content:** `WorldMeta.language` (BCP-47, e.g. `nb`, `en`) is chosen when the run is created. The
+  world, GM and dialogue prompts tell the model to write all player-facing text in that language. Ids
+  stay ASCII and the instructions themselves stay in English. A recorded world is in one language; demo
+  worlds may get translated copies.
+- **Prompt library:** entries can carry translations, and inspiration prompts are shown in the UI language.
+- **Adding a language** means adding a catalog file and nothing else, and it must be testable: a CI check
+  fails on missing keys.
+
 ## 8. Out of scope for v1
 
-Multiplayer, mobile/touch, progression between runs, and
-AI-generated images/textures.
+Progression between runs and AI-generated images/textures (mobile and touch are now required, see §6b). Multiplayer is out of scope
+for v1 too; see §12.
 
 ## 9. Development process (the AI-driven experiment)
 
@@ -368,7 +415,26 @@ v1 is done when all of these hold. Each one is checked by automated tests or an 
    mode.
 10. A README covers setup, API keys and the firewall/allow-list note, plus the experiment
    documents from §9.
+11. **Languages:** the full UI works in English and Norwegian, with no missing catalog keys. A
+   world generated (or agent-generated) with `language: "nb"` plays entirely in Norwegian, including
+   the GM, dialogue and log.
+12. **Mobile:** a full run can be played by touch alone in emulated iPhone and Pixel viewports
+   (portrait and landscape) with no overlapping or cut-off UI. Screenshots are reviewed, and a
+   performance budget is checked (draw calls and triangles per frame, bundle size).
 
 ## 11. Open questions
 
 - See the conversation. Answers get folded into the sections above.
+
+## 12. Possible future requirements (not v1, but don't block them)
+
+- **Sharing generated worlds.** A World Spec is already self-contained JSON, so a run can be
+  reproduced from spec + seed. Possible features: export/import a world file, a "share" link or code
+  (compressed spec, or an id on the backend), a "play this world" entry on the start screen, and
+  optionally a public gallery. Shared worlds must be re-validated on import (untrusted input) and keep
+  their `language`. v1 keeps specs versioned (`specVersion`) and loadable from a file.
+- **Multiplayer.** Options include co-op in the same world (turn-based, simultaneous or round-robin
+  turns) and asynchronous play (same world + seed, compare results or ghosts). The deterministic,
+  pure engine makes lockstep or server-authoritative play feasible later. The GM would need to address
+  several players. v1 avoids assuming exactly one player where it is cheap to avoid (e.g. the GM
+  context and win conditions), but does not build any of this.

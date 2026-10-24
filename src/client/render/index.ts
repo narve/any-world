@@ -23,6 +23,7 @@
  *   r.zoom(delta: number): void                        // delta > 0 zooms out (wheel deltaY / 100 works)
  *   r.screenToTile(clientX: number, clientY: number): Pos | null   // viewport coords (MouseEvent.clientX/Y)
  *   r.highlightTiles(positions: Pos[], color?: string): void       // [] clears
+ *   r.setReduceMotion(on: boolean): void               // freeze cosmetic motion (backdrop, ripples)
  *   r.resize(): void                                   // also automatic via ResizeObserver
  *   r.dispose(): void
  *
@@ -43,6 +44,8 @@ import { facingAngle, inBounds, worldToTile } from './coords';
 import { col } from './color';
 import { clearMaterialCache } from './materials';
 import { clearTextureCache } from './textures';
+import { Backdrop } from './backdrop';
+import { disposeSurfaceTextures } from './surfaces';
 
 export { buildModel, animateModel } from './models';
 export type { ModelSpecIn } from './models';
@@ -54,6 +57,11 @@ export interface RendererOptions {
   maxPixelRatio?: number;
   /** shadows from the sun (default true) */
   shadows?: boolean;
+  /**
+   * Freeze purely cosmetic motion (backdrop drift, water ripples). Default: the OS
+   * `prefers-reduced-motion` setting. Change later with setReduceMotion().
+   */
+  reduceMotion?: boolean;
 }
 
 const MOVE_MS = 120;
@@ -68,6 +76,8 @@ export class Renderer {
   readonly lights = new LightRig();
   readonly anim = new Animator();
   readonly vfx: VfxLayer;
+  readonly backdrop = new Backdrop();
+  private reduceMotion = false;
 
   private container: HTMLElement;
   private world: WorldSpec | null = null;
@@ -108,8 +118,9 @@ export class Renderer {
 
     this.rig = new CameraRig(1);
     this.vfx = new VfxLayer(this.anim);
-    this.scene.add(this.lights.group, this.vfx.group);
+    this.scene.add(this.lights.group, this.vfx.group, this.backdrop.mesh);
     this.scene.background = new THREE.Color('#101014');
+    this.setReduceMotion(opts.reduceMotion ?? prefersReducedMotion());
 
     this.resize();
     if (typeof ResizeObserver !== 'undefined') {
@@ -157,8 +168,15 @@ export class Renderer {
     this.scene.add(this.area.group);
     this.areaIndex = area.index;
     this.lights.configure(plan.lighting, this.scene);
+    const bg = this.backdrop.configure(plan.backdrop);
+    if (bg) {
+      this.lights.background = col(bg);
+      this.scene.background = this.lights.background;
+    }
+    this.area.reduceMotion = this.reduceMotion;
     this.lights.setSightRadius(0);
     this.actors?.setLightFloor(this.lights.actorLightFloor);
+    if (this.actors) this.actors.groundColor = plan.floor?.color;
     this.rig.setFrameDist(0);
     this.cutKey = '';
     // snap the camera onto the player (or the map start) so the area doesn't swoop in
@@ -167,6 +185,30 @@ export class Renderer {
     this.focus.set(p.x, 0, p.y);
     this.rig.follow(this.focus, true);
     this.rig.settle();
+    this.area.setFocus(p, this.rig.yawStep, true);
+  }
+
+  /** Freeze (true) or resume cosmetic motion: backdrop animation and liquid ripples. */
+  setReduceMotion(on: boolean): void {
+    this.reduceMotion = on;
+    this.backdrop.reduceMotion = on;
+    if (this.area) this.area.reduceMotion = on;
+  }
+
+  /** The current area's backdrop parameters (null = plain background colour); for tests/dev pages. */
+  /** remembered wall / outline / floor luminance of the current area (see AreaView.rememberedContrast); for tests */
+  rememberedWallContrast(): ReturnType<AreaView['rememberedContrast']> {
+    return this.area?.rememberedContrast() ?? null;
+  }
+
+  /** liquid terrain patches of the current area; for tests */
+  liquidTerrainInfo(): ReturnType<AreaView['liquidTerrainInfo']> {
+    return this.area?.liquidTerrainInfo() ?? [];
+  }
+
+  get backdropInfo(): { style: string; color: string; color2: string; intensity: number } | null {
+    const p = this.backdrop.params;
+    return p ? { style: p.style, color: p.color, color2: p.color2, intensity: p.intensity } : null;
   }
 
   private clearArea(): void {
@@ -232,7 +274,7 @@ export class Renderer {
     const say = (v: ActorView, text: string, color: string, at: number, opts: { size?: number; rise?: number; duration?: number; lift?: number } = {}) => {
       const k = textCount.get(v.id) ?? 0;
       textCount.set(v.id, k + 1);
-      this.vfx.text(headPos(v).add(new THREE.Vector3(0, k * 0.3 + (opts.lift ?? 0), 0)), text, color, at + k * 90, opts);
+      this.vfx.text(headPos(v).add(new THREE.Vector3(0, k * 0.3 + (opts.lift ?? 0), 0)), text, color, at + k * 90, { ...opts, follow: v.root });
     };
     const moved = new Set<string>();
     const dying = new Set<string>();
@@ -583,6 +625,7 @@ export class Renderer {
 
   private updateCutaway(p: Pos): void {
     if (!this.area) return;
+    this.area.setFocus(p, this.rig.yawStep);
     // actors standing next to the player (the ones being fought or talked to) get a wedge cleared;
     // every other actor the engine reports as visible has the walls on its line to the camera
     // lowered (the engine's line of sight is top-down, the camera's is not)
@@ -713,15 +756,71 @@ export class Renderer {
    * Reads in the same task as the draw, so it works without preserveDrawingBuffer. For tests.
    */
   samplePixel(x: number, y: number): string {
+    return this.samplePixels([[x, y]])[0];
+  }
+
+  /** samplePixel for many points from one rendered frame. For tests. */
+  samplePixels(points: readonly (readonly [number, number])[]): string[] {
     this.renderNow();
     const canvas = this.gl.domElement;
     const rect = canvas.getBoundingClientRect();
-    const px = Math.floor(((x - rect.left) / Math.max(1, rect.width)) * canvas.width);
-    const py = Math.floor(((y - rect.top) / Math.max(1, rect.height)) * canvas.height);
     const ctx = this.gl.getContext();
     const buf = new Uint8Array(4);
-    ctx.readPixels(px, canvas.height - 1 - py, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, buf);
-    return '#' + [buf[0], buf[1], buf[2]].map((n) => n.toString(16).padStart(2, '0')).join('');
+    return points.map(([x, y]) => {
+      const px = Math.max(0, Math.min(canvas.width - 1, Math.floor(((x - rect.left) / Math.max(1, rect.width)) * canvas.width)));
+      const py = Math.max(0, Math.min(canvas.height - 1, Math.floor(((y - rect.top) / Math.max(1, rect.height)) * canvas.height)));
+      ctx.readPixels(px, canvas.height - 1 - py, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, buf);
+      return '#' + [buf[0], buf[1], buf[2]].map((n) => n.toString(16).padStart(2, '0')).join('');
+    });
+  }
+
+  /**
+   * Fraction (0..1) of the viewport covered by scene objects whose name matches `names` (walls by
+   * default), measured by rendering only those objects on a black background. For tests.
+   */
+  coverage(names: RegExp = /^(walls|wall-edges)/): number {
+    const LAYER = 30;
+    const tagged: THREE.Object3D[] = [];
+    this.scene.traverse((o) => {
+      if (names.test(o.name)) {
+        o.layers.enable(LAYER);
+        tagged.push(o);
+      }
+    });
+    const cam = this.rig.camera;
+    const mask = cam.layers.mask;
+    const bg = this.scene.background;
+    const fog = this.scene.fog;
+    cam.layers.set(LAYER);
+    this.scene.background = new THREE.Color(0, 0, 0);
+    this.scene.fog = null;
+    // lights are filtered by layer too: draw the tagged objects flat white
+    const flat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    this.scene.overrideMaterial = flat;
+    const tm = this.gl.toneMapping;
+    let lit = 0;
+    let total = 0;
+    try {
+      this.gl.render(this.scene, cam);
+      const ctx = this.gl.getContext();
+      const w = ctx.drawingBufferWidth;
+      const h = ctx.drawingBufferHeight;
+      const buf = new Uint8Array(w * h * 4);
+      ctx.readPixels(0, 0, w, h, ctx.RGBA, ctx.UNSIGNED_BYTE, buf);
+      for (let i = 0; i < w * h; i += 7) {
+        total++;
+        if (buf[i * 4] + buf[i * 4 + 1] + buf[i * 4 + 2] > 6) lit++;
+      }
+    } finally {
+      cam.layers.mask = mask;
+      this.scene.background = bg;
+      this.scene.fog = fog;
+      this.scene.overrideMaterial = null;
+      flat.dispose();
+      this.gl.toneMapping = tm;
+      for (const o of tagged) o.layers.disable(LAYER);
+    }
+    return total ? lit / total : 0;
   }
 
   dispose(): void {
@@ -735,8 +834,10 @@ export class Renderer {
     this.vfx.clear();
     this.gl.dispose();
     this.gl.domElement.remove();
+    this.backdrop.dispose();
     clearMaterialCache();
     clearTextureCache();
+    disposeSurfaceTextures();
   }
 
   // ---------------------------------------------------------------------------
@@ -779,8 +880,17 @@ export class Renderer {
     if (reqs.length > 1) reqs.sort((a, b) => a.pos.distanceToSquared(this.focus) - b.pos.distanceToSquared(this.focus));
     this.lights.update(t, this.focus, this.rig.camera.position, this.area?.lamps ?? [], reqs);
     this.lights.updateFog(this.rig.dist);
+    this.backdrop.update(dt, this.rig.camera);
 
     this.gl.render(this.scene, this.rig.camera);
+  }
+}
+
+function prefersReducedMotion(): boolean {
+  try {
+    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
   }
 }
 

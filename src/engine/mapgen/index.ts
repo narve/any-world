@@ -6,7 +6,10 @@
  *    (every passable tile is in one 4-connected component);
  *  - start and exit are far apart (≥ 40% of the map diagonal whenever the shape allows);
  *  - no passable tile on the map border; tiles outside the playable shape are 'void';
- *  - rooms / buildings / zones are numbered in `regions` (tile.region) with centre + size;
+ *  - open tiles are rimmed by wall, except for floating layouts (islands) whose platforms
+ *    end directly at the void;
+ *  - rooms / buildings / zones are numbered in `regions` (tile.region) with centre + size, and
+ *    the newer generators give them structural names ("platform", "chamber", "ring 2");
  *  - lamps (tile.lamp) according to plan.lighting.lamps.frequency.
  * Custom terrain (plan.terrain) is NOT applied here — call applyAreaTerrain / scatterTerrain.
  */
@@ -19,7 +22,10 @@ import { genArena } from './generators/arena';
 import { genBuilding } from './generators/building';
 import { genCaves } from './generators/caves';
 import { genMaze } from './generators/maze';
+import { genGeometric } from './generators/geometric';
+import { genIslands } from './generators/islands';
 import { genOpen } from './generators/open';
+import { genOrganic } from './generators/organic';
 import { genRooms } from './generators/rooms';
 import { genShip } from './generators/ship';
 import { genTown } from './generators/town';
@@ -35,6 +41,9 @@ const GENERATORS: Record<GeneratorName, (ctx: GenContext) => void> = {
   ship: genShip,
   maze: genMaze,
   arena: genArena,
+  islands: genIslands,
+  organic: genOrganic,
+  geometric: genGeometric,
 };
 
 export const GENERATOR_NAMES = Object.keys(GENERATORS) as GeneratorName[];
@@ -66,6 +75,8 @@ function generateOnce(plan: AreaPlan, rng: Rng): AreaMap {
     dropBelow: ctx.dropBelow,
     voronoi: ctx.voronoi,
     doors: ctx.carveDoors,
+    openEdges: ctx.openEdges,
+    regionNames: ctx.regionNames,
   });
 }
 

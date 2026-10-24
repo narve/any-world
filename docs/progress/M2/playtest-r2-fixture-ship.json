@@ -1,0 +1,41 @@
+{
+  "world": "fixture-ship",
+  "seed": 11,
+  "steps": 921,
+  "result": "won Reach the bridge, shut down MATRON's Proxy and take the Arrival Log, so the crew can finally vote on landfall.",
+  "turn": 1092,
+  "area": 2,
+  "level": 5,
+  "keyMismatch": [],
+  "refused": [
+    "step 533 {\"type\":\"use\",\"slot\":2} log=[\"Ines Varga-Thule uses O2 Canister.\"]",
+    "step 728 {\"type\":\"talk\",\"targetId\":\"a38\"} log=[\"...burn complete. Periapsis nominal. Is it morning? It should be morning by now.\"]",
+    "step 849 {\"type\":\"use\",\"slot\":1,\"target\":{\"x\":11,\"y\":14}} log=[\"Sleepwalker takes 9 Ion.\"]",
+    "step 897 {\"type\":\"interact\",\"pos\":{\"x\":21,\"y\":10}} log=[\"Round and round and round. You have been going round for thirty-eight years.\"]",
+    "step 905 {\"type\":\"use\",\"slot\":1,\"target\":{\"x\":29,\"y\":8}} log=[\"MATRON's Proxy takes 14 Ion.\"]",
+    "step 913 {\"type\":\"use\",\"slot\":11,\"target\":{\"x\":27,\"y\":9}} log=[\"Custodian Unit takes 11 Ion.\"]"
+  ],
+  "layers": {
+    "narration": 9,
+    "game": 1154,
+    "dialogue": 4,
+    "levelup": 4,
+    "end": 1
+  },
+  "actions": {
+    "talk": 4,
+    "move": 901,
+    "interact": 8,
+    "use": 51,
+    "pickup": 39,
+    "attack": 33,
+    "wait": 115,
+    "transition": 2,
+    "equip": 1
+  },
+  "errors": [],
+  "notes": [
+    "reload ok at turn 240 (layer after reload: game)"
+  ],
+  "stuckAt": []
+}

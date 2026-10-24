@@ -1,0 +1,822 @@
+{
+  "ship-start-slots": [
+    {
+      "i": 0,
+      "def": "pruning-hook",
+      "count": 1,
+      "eq": true
+    },
+    {
+      "i": 1,
+      "def": "arc-weld",
+      "count": 1,
+      "eq": false
+    },
+    {
+      "i": 2,
+      "def": "o2-canister",
+      "count": 2,
+      "eq": false
+    },
+    {
+      "i": 3,
+      "def": "ration-brick",
+      "count": 2,
+      "eq": false
+    },
+    {
+      "i": 4,
+      "def": "signal-flare",
+      "count": 1,
+      "charges": 3,
+      "eq": false
+    },
+    null,
+    null,
+    null,
+    {
+      "i": 8,
+      "def": "moss-vest",
+      "count": 1,
+      "eq": true
+    },
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "consumed-o2": {
+    "before": {
+      "i": 2,
+      "def": "o2-canister",
+      "count": 2,
+      "eq": false
+    },
+    "after": {
+      "i": 2,
+      "def": "o2-canister",
+      "count": 2,
+      "eq": false
+    },
+    "log": [
+      "The deck scrubbers hiss. Your tank gauge climbs.",
+      "Year 211 of the voyage, third shift. The cloisters breathe around you, moss on every trellis, grow-lamps humming. This morning you found a leaf rooted in red soil, and the ship carries no red soil. MATRON says landfall is a hundred years away. Your suit tank is full. The ducts lead up, toward the bridge."
+    ],
+    "layer": "game",
+    "toast": "O2 is already full — use O2 Canister anyway? (press again)",
+    "startCurrency": 15
+  },
+  "charges-flare": {
+    "layer": "game",
+    "before": {
+      "i": 4,
+      "def": "signal-flare",
+      "count": 1,
+      "charges": 3,
+      "eq": false
+    },
+    "after": {
+      "i": 4,
+      "def": "signal-flare",
+      "count": 1,
+      "charges": 2,
+      "eq": false
+    },
+    "log": [
+      "The deck scrubbers hiss. Your tank gauge climbs.",
+      "Year 211 of the voyage, third shift. The cloisters breathe around you, moss on every trellis, grow-lamps humming. This morning you found a leaf rooted in red soil, and the ship carries no red soil. MATRON says landfall is a hundred years away. Your suit tank is full. The ducts lead up, toward the bridge.",
+      "Ines Varga-Thule uses Signal Flare."
+    ]
+  },
+  "weld-cursor": {
+    "banner": "Aim Arc Weld — arrow keys pick a direction (or click) · Enter confirm · Esc cancel",
+    "player": {
+      "x": 40,
+      "y": 17
+    },
+    "cursor": {
+      "x": 40,
+      "y": 18
+    }
+  },
+  "reusable-weld": {
+    "layer": "target",
+    "weld1": {
+      "res": {
+        "oxygen": 118
+      },
+      "log": [
+        "Year 211 of the voyage, third shift. The cloisters breathe around you, moss on every trellis, grow-lamps humming. This morning you found a leaf rooted in red soil, and the ship carries no red soil. MATRON says landfall is a hundred years away. Your suit tank is full. The ducts lead up, toward the bridge.",
+        "Ines Varga-Thule uses Signal Flare.",
+        "Ines Varga-Thule uses Arc Weld."
+      ],
+      "turn": 2
+    },
+    "weld2": {
+      "log": [
+        "Ines Varga-Thule uses Signal Flare.",
+        "Ines Varga-Thule uses Arc Weld."
+      ],
+      "turn": 2,
+      "toast": "Arc Weld is ready in 2 turns"
+    },
+    "slot": {
+      "i": 1,
+      "def": "arc-weld",
+      "count": 1,
+      "eq": false,
+      "cd": 2
+    }
+  },
+  "backpack-layer": "backpack",
+  "given": {
+    "vestIdx": 5,
+    "ampIdx": 6
+  },
+  "backpack-slot-buttons": 28,
+  "vest-menu": [
+    "Useu",
+    "Equipe",
+    "To backpackb",
+    "Move…m",
+    "DropDel"
+  ],
+  "vest-equipped": true,
+  "unknown-inspect": "?\nFrosted unstriped ampoule\nAmpoule\nUnknown\n\nYou don't know what this does.\n\nUnknown — could be anything\n\nUse\nu\nTo backpack\nb\nMove…\nm\nDrop\nDel",
+  "unknown-used": {
+    "label": "Useu",
+    "log": [
+      "Ines Varga-Thule equips Moss-knit Vest.",
+      "Ines Varga-Thule uses frosted unstriped ampoule.",
+      "Ines Varga-Thule: Stimmed.",
+      "The frosted unstriped ampoule is Combat Stim Ampoule."
+    ],
+    "layer": "backpack"
+  },
+  "bosun": {
+    "id": "a9",
+    "pos": {
+      "x": 22,
+      "y": 17
+    }
+  },
+  "talk-layer": "dialogue",
+  "talk-options": [
+    "",
+    "1Ask what they know",
+    "Tradet",
+    "LeaveEsc"
+  ],
+  "t-in-dialogue": {
+    "layer": "trade",
+    "currencyBeforeGmGift": 55
+  },
+  "trade-layer": "trade",
+  "trade-text": "Old Bosun Kettering\nYou have 55 ration chits\nCanisters, rations, the odd bit of ordnance. Chits only. Don't tell MATRON.\nBUY\n1\nO\nO2 Canister\n10 ration chits\nBuy\n2\nR\nRation Brick\n4 ration chits\nBuy\n3\nE\nEMP Puck\n25 ration chits\nBuy\n4\nR\nRivet Pistol\n40 ration chits\nBuy\nSELL\n\nNothing they want.\n\nDone\nEsc",
+  "trade-buy": {
+    "cur0": 55,
+    "cur1": 45,
+    "log": [
+      "-10 ration chits",
+      "Ines Varga-Thule receives O2 Canister.",
+      "My granddad said the ship would arrive in his lifetime. Then my dad said it. Now MATRON says it."
+    ]
+  },
+  "persuade": {
+    "before": "dialogue",
+    "layer": "dialogue",
+    "log": [
+      "Ines Varga-Thule receives O2 Canister.",
+      "My granddad said the ship would arrive in his lifetime. Then my dad said it. Now MATRON says it.",
+      "My granddad said the ship would arrive in his lifetime. Then my dad said it. Now MATRON says it."
+    ]
+  },
+  "rules-layer": "rules",
+  "gm-add-rule": {
+    "activeRules": [
+      {
+        "rule": {
+          "id": "thin-air",
+          "name": "Thin Air",
+          "description": "Every deck's air is rationed. Your suit tank drains each turn; each new deck's scrubbers top it up a little.",
+          "playerTriggers": [
+            {
+              "on": "on_area_enter",
+              "chance": 1,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "oxygen",
+                    "amount": {
+                      "base": 40
+                    }
+                  },
+                  {
+                    "type": "message",
+                    "text": "The deck scrubbers hiss. Your tank gauge climbs."
+                  }
+                ]
+              }
+            },
+            {
+              "on": "on_resource_empty",
+              "chance": 1,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "message",
+                    "text": "Find moss. Find a canister. Find anything."
+                  }
+                ]
+              }
+            }
+          ],
+          "switches": {}
+        },
+        "source": "world",
+        "since": {
+          "area": 0,
+          "turn": 0
+        }
+      },
+      {
+        "rule": {
+          "id": "old-ship",
+          "name": "Two Hundred Years of Wear",
+          "description": "Everything aboard is older than your grandparents. Tools and plating wear out with use, and the running lights are dimmed to save power.",
+          "playerTriggers": [],
+          "switches": {
+            "durability": true,
+            "darkness": 0.75
+          }
+        },
+        "source": "world",
+        "since": {
+          "area": 0,
+          "turn": 0
+        }
+      },
+      {
+        "rule": {
+          "id": "matron-listening",
+          "name": "MATRON Is Listening",
+          "description": "The ship talks to you. Every so often it says your name, loudly, and things in the dark turn to look.",
+          "playerTriggers": [
+            {
+              "on": "on_turn",
+              "chance": 0.5,
+              "every": 45,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "noise",
+                    "radius": 10
+                  },
+                  {
+                    "type": "message",
+                    "text": "MATRON: 'Ines. You are out of your bunk. Please return to your bunk.'"
+                  }
+                ]
+              }
+            }
+          ],
+          "switches": {
+            "permadeathMercy": false
+          }
+        },
+        "source": "world",
+        "since": {
+          "area": 0,
+          "turn": 0
+        }
+      }
+    ],
+    "log": [
+      "Ines Varga-Thule receives O2 Canister.",
+      "My granddad said the ship would arrive in his lifetime. Then my dad said it. Now MATRON says it.",
+      "My granddad said the ship would arrive in his lifetime. Then my dad said it. Now MATRON says it."
+    ]
+  },
+  "rules-panel-after-gm": "RULES & GOALS\nGOAL\n\nReach the bridge, shut down MATRON's Proxy and take the Arrival Log, so the crew can finally vote on landfall.\n\nACTIVE RULES (3)\nThin Air\nWORLD\nfrom the start\nEvery deck's air is rationed. Your suit tank drains each turn; each new deck's scrubbers top it up a little.\nTwo Hundred Years of Wear\nWORLD\nfrom the start\nEverything aboard is older than your grandparents. Tools and plating wear out with use, and the running lights are dimmed to save power.\nMATRON Is Listening\nWORLD\nfrom the start\nThe ship talks to you. Every so often it says your name, loudly, and things in the dark turn to look.",
+  "gm-second-rule": {
+    "n0": 3,
+    "n1": 3,
+    "log": [
+      "Ines Varga-Thule receives O2 Canister.",
+      "My granddad said the ship would arrive in his lifetime. Then my dad said it. Now MATRON says it.",
+      "My granddad said the ship would arrive in his lifetime. Then my dad said it. Now MATRON says it."
+    ]
+  },
+  "ship-errors": [],
+  "difficulty": {
+    "gentle": {
+      "difficulty": "gentle",
+      "engineDifficulty": "gentle",
+      "hostileMaxHp": [
+        5,
+        5,
+        9,
+        4,
+        9,
+        9,
+        5,
+        5
+      ],
+      "world": "fixture-dream",
+      "url": "http://localhost:5173/?world=fixture-dream&seed=3564301167",
+      "playerHp": 26,
+      "hostiles": 8,
+      "hostileHp": 51,
+      "items": 9
+    },
+    "brutal": {
+      "difficulty": "brutal",
+      "engineDifficulty": "brutal",
+      "hostileMaxHp": [
+        8,
+        8,
+        14,
+        7,
+        7,
+        7,
+        16,
+        8
+      ],
+      "world": "fixture-dream",
+      "url": "http://localhost:5173/?world=fixture-dream&seed=1546173692",
+      "playerHp": 26,
+      "hostiles": 8,
+      "hostileHp": 75,
+      "items": 9
+    }
+  },
+  "levelup-info": {
+    "xp": "+2 levels",
+    "pending": "+2 levels",
+    "cards": [
+      {
+        "text": "1\nRead the Room\nYou notice who's about to say something. +2 sight.\n+2 Sight",
+        "chips": 0
+      },
+      {
+        "text": "2\nThick Skin\nYou've heard worse. From your own brother. +6 Composure, +1 Poise.\n+6 Composure\n+1 Poise",
+        "chips": 0
+      },
+      {
+        "text": "3\nPower Saver Mode\nYou finally turned off background refresh. Each new day starts with extra charge: +6 Battery on entering a new day.",
+        "chips": 0
+      }
+    ]
+  },
+  "levelup-mouse": {
+    "layer": "levelup",
+    "cards": 3,
+    "before": {
+      "lvl": 2,
+      "perks": []
+    },
+    "after": {
+      "lvl": 4,
+      "perks": [
+        "thick-skin",
+        "last-word"
+      ],
+      "layer": "levelup"
+    }
+  },
+  "reload-in-dialogue": {
+    "dl": "game",
+    "st0": {
+      "turn": 0,
+      "url": "http://localhost:5173/?world=fixture-teen&seed=31"
+    },
+    "st1": {
+      "turn": 0,
+      "layer": "game",
+      "url": "http://localhost:5173/?world=fixture-teen&seed=31"
+    }
+  },
+  "gm-add-rule-fresh": {
+    "activeRules": [
+      {
+        "rule": {
+          "id": "long-memory",
+          "name": "Small Town, Long Memory",
+          "description": "Every time you leave someone speechless, the group chat hears about it. Lowmoor keeps score.",
+          "playerTriggers": [
+            {
+              "on": "on_kill",
+              "chance": 1,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "counter",
+                    "counter": "gossip",
+                    "add": 1
+                  }
+                ]
+              }
+            },
+            {
+              "on": "on_resource_empty",
+              "chance": 1,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "message",
+                    "text": "Without your phone, the hallways feel twice as long."
+                  }
+                ]
+              }
+            }
+          ],
+          "switches": {
+            "violenceCounter": "gossip"
+          }
+        },
+        "source": "world",
+        "since": {
+          "area": 0,
+          "turn": 0
+        }
+      },
+      {
+        "rule": {
+          "id": "rising-water",
+          "name": "The Water's Coming",
+          "description": "The reservoir is already seeping up through the floors. Every day, and every so often, a little more of Lowmoor goes wet.",
+          "playerTriggers": [
+            {
+              "on": "on_area_enter",
+              "chance": 1,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "spawn_terrain",
+                    "terrain": "seep-water",
+                    "radius": 2,
+                    "duration": 60
+                  },
+                  {
+                    "type": "message",
+                    "text": "There is water on the floor again. Nobody mentions it."
+                  }
+                ]
+              }
+            },
+            {
+              "on": "on_turn",
+              "chance": 0.6,
+              "every": 60,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "range": 0,
+                  "radius": 0,
+                  "affects": "self_only",
+                  "needsLos": false
+                },
+                "effects": [
+                  {
+                    "type": "spawn_terrain",
+                    "terrain": "seep-water",
+                    "radius": 1,
+                    "duration": 40
+                  }
+                ]
+              }
+            }
+          ],
+          "switches": {}
+        },
+        "source": "world",
+        "since": {
+          "area": 0,
+          "turn": 0
+        }
+      },
+      {
+        "rule": {
+          "id": "detention",
+          "name": "Three Strikes",
+          "description": "Hall monitors are writing people up for anything. Collect three detention slips and you are sent home for the week, and the week is all there is.",
+          "playerTriggers": [],
+          "switches": {
+            "noLoot": false
+          }
+        },
+        "source": "world",
+        "since": {
+          "area": 0,
+          "turn": 0
+        }
+      },
+      {
+        "rule": {
+          "id": "pt-rain",
+          "name": "Endless Drizzle",
+          "description": "It will not stop raining. Everyone moves a little slower.",
+          "playerTriggers": [],
+          "switches": {
+            "darkness": 0.7
+          }
+        },
+        "source": "gm",
+        "since": {
+          "area": 0,
+          "turn": 0
+        },
+        "reason": "The reservoir is rising."
+      }
+    ],
+    "log": [
+      "The reservoir is rising.",
+      "New rule: Endless Drizzle — It will not stop raining. Everyone moves a little slower."
+    ],
+    "badge": "RulesnewSmall Town, Long MemoryThe Water's ComingThree StrikesEndless Drizzle"
+  },
+  "teen-rules-panel": "servoir is rising.”\nSmall Town, Long Memory\nWORLD\nfrom the start\nEvery time you leave someone speechless, the group chat hears about it. Lowmoor keeps score.\nThe Water's Coming\nWORLD\nfrom the start\nThe reservoir is already seeping up through the floors. Every day, and every so often, a little more of Lowmoor goes wet.\nThree Strikes\nWORLD\nfrom the start\nHall monitors are writing people up for anything. Collect three detention slips and you are sent home for the week, and the week is all there is.",
+  "click-walk": {
+    "tgt": {
+      "tile": {
+        "x": 2,
+        "y": 25
+      },
+      "sc": {
+        "x": 640,
+        "y": 221.7086093721657
+      },
+      "from": {
+        "x": 2,
+        "y": 29
+      }
+    },
+    "walked": {
+      "x": 2,
+      "y": 25
+    }
+  },
+  "teen-npc": "janitor",
+  "persuade-teen": {
+    "npc": "janitor",
+    "l1": "dialogue",
+    "after": {
+      "layer": "game",
+      "log": [
+        "The reservoir is rising.",
+        "New rule: Endless Drizzle — It will not stop raining. Everyone moves a little slower.",
+        "Ah. Okafor-Pryce. You'll want the lost-and-found. Everybody wants the lost-and-found this week.",
+        "Mr. Abernathy-Oyelaran warms to you."
+      ],
+      "turn": 8
+    }
+  },
+  "persuade-teen-click": {
+    "hasBtn": false,
+    "layer": "game",
+    "log": [
+      "New rule: Endless Drizzle — It will not stop raining. Everyone moves a little slower.",
+      "Ah. Okafor-Pryce. You'll want the lost-and-found. Everybody wants the lost-and-found this week.",
+      "Mr. Abernathy-Oyelaran warms to you."
+    ]
+  },
+  "reload-in-dialogue-2": {
+    "st0": {
+      "turn": 8,
+      "layer": "dialogue",
+      "pos": {
+        "x": 6,
+        "y": 25
+      }
+    },
+    "st1": {
+      "turn": 8,
+      "layer": "dialogue",
+      "pos": {
+        "x": 6,
+        "y": 25
+      },
+      "rules": [
+        {
+          "rule": {
+            "id": "long-memory",
+            "name": "Small Town, Long Memory",
+            "description": "Every time you leave someone speechless, the group chat hears about it. Lowmoor keeps score.",
+            "playerTriggers": [
+              {
+                "on": "on_kill",
+                "chance": 1,
+                "action": {
+                  "targeting": {
+                    "shape": "self",
+                    "range": 0,
+                    "radius": 0,
+                    "affects": "self_only",
+                    "needsLos": false
+                  },
+                  "effects": [
+                    {
+                      "type": "counter",
+                      "counter": "gossip",
+                      "add": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "on": "on_resource_empty",
+                "chance": 1,
+                "action": {
+                  "targeting": {
+                    "shape": "self",
+                    "range": 0,
+                    "radius": 0,
+                    "affects": "self_only",
+                    "needsLos": false
+                  },
+                  "effects": [
+                    {
+                      "type": "message",
+                      "text": "Without your phone, the hallways feel twice as long."
+                    }
+                  ]
+                }
+              }
+            ],
+            "switches": {
+              "violenceCounter": "gossip"
+            }
+          },
+          "source": "world",
+          "since": {
+            "area": 0,
+            "turn": 0
+          }
+        },
+        {
+          "rule": {
+            "id": "rising-water",
+            "name": "The Water's Coming",
+            "description": "The reservoir is already seeping up through the floors. Every day, and every so often, a little more of Lowmoor goes wet.",
+            "playerTriggers": [
+              {
+                "on": "on_area_enter",
+                "chance": 1,
+                "action": {
+                  "targeting": {
+                    "shape": "self",
+                    "range": 0,
+                    "radius": 0,
+                    "affects": "self_only",
+                    "needsLos": false
+                  },
+                  "effects": [
+                    {
+                      "type": "spawn_terrain",
+                      "terrain": "seep-water",
+                      "radius": 2,
+                      "duration": 60
+                    },
+                    {
+                      "type": "message",
+                      "text": "There is water on the floor again. Nobody mentions it."
+                    }
+                  ]
+                }
+              },
+              {
+                "on": "on_turn",
+                "chance": 0.6,
+                "every": 60,
+                "action": {
+                  "targeting": {
+                    "shape": "self",
+                    "range": 0,
+                    "radius": 0,
+                    "affects": "self_only",
+                    "needsLos": false
+                  },
+                  "effects": [
+                    {
+                      "type": "spawn_terrain",
+                      "terrain": "seep-water",
+                      "radius": 1,
+                      "duration": 40
+                    }
+                  ]
+                }
+              }
+            ],
+            "switches": {}
+          },
+          "source": "world",
+          "since": {
+            "area": 0,
+            "turn": 0
+          }
+        },
+        {
+          "rule": {
+            "id": "detention",
+            "name": "Three Strikes",
+            "description": "Hall monitors are writing people up for anything. Collect three detention slips and you are sent home for the week, and the week is all there is.",
+            "playerTriggers": [],
+            "switches": {
+              "noLoot": false
+            }
+          },
+          "source": "world",
+          "since": {
+            "area": 0,
+            "turn": 0
+          }
+        },
+        {
+          "rule": {
+            "id": "pt-rain",
+            "name": "Endless Drizzle",
+            "description": "It will not stop raining. Everyone moves a little slower.",
+            "playerTriggers": [],
+            "switches": {
+              "darkness": 0.7
+            }
+          },
+          "source": "gm",
+          "since": {
+            "area": 0,
+            "turn": 0
+          },
+          "reason": "The reservoir is rising."
+        }
+      ]
+    }
+  },
+  "death": {
+    "layer": "end",
+    "status": "lost",
+    "reason": "put in the dirt (Heat)"
+  },
+  "death-restart": {
+    "layer": "game",
+    "turn": 0,
+    "hp": 32
+  }
+}

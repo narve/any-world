@@ -13,8 +13,8 @@
  *   describeActor(state, actorInstanceId): ActorView
  *   serialize(state): string / deserialize(world, json): GameState
  */
-import type { WorldSpec, Effect, Condition, Knowledge } from '../schema/world';
-import type { GmAction } from '../schema/gm';
+import type { WorldSpec, Effect, Condition, Knowledge, RuleVariant } from '../schema/world';
+import type { GmAction, Difficulty } from '../schema/gm';
 
 export type Dir = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 export interface Pos { x: number; y: number }
@@ -155,6 +155,21 @@ export interface AreaState {
   discoveredRegions: number[];
   /** GM budget remaining for this area */
   gmBudget: number;
+  /** rules the GM added in this area (at most MAX_GM_RULES_PER_AREA; absent = 0) */
+  gmRulesAdded?: number;
+  /** rules the GM retired in this area (at most MAX_GM_RULES_PER_AREA; absent = 0) */
+  gmRulesRemoved?: number;
+}
+
+/** one rule in force (GameState.activeRules) */
+export interface ActiveRuleEntry {
+  rule: RuleVariant;
+  /** a starting rule of the world, or one the GM added during play */
+  source: 'world' | 'gm';
+  /** when it came into force (world rules: area 0, turn 0) */
+  since: { area: number; turn: number };
+  /** the GM's in-story announcement */
+  reason?: string;
 }
 
 export interface Quest {
@@ -199,6 +214,20 @@ export interface GameState {
   uniquesSpawned?: string[];
   /** permadeathMercy rule already saved the player once */
   mercyUsed?: boolean;
+  /** difficulty band of the run (absent in older saves = 'normal'), see engine/difficulty.ts */
+  difficulty?: Difficulty;
+  /**
+   * The rules in force: the world's starting rules plus GM-added ones, minus retired ones
+   * (engine/rules.ts). Absent in older saves, which play with the world's rules.
+   */
+  activeRules?: ActiveRuleEntry[];
+  /**
+   * Harm (estimateRuleImpact hpPer100) of the helpful world rules the GM has retired this run.
+   * Counts toward the difficulty's ruleHarmTotal together with the GM-added rules (rules.ts).
+   */
+  gmRetiredHarm?: number;
+  /** the last harm the player took (for the loss reason): who and what kind */
+  lastHarm?: { by?: string; damageType: string; turn: number };
 }
 
 export interface PendingChoice {
@@ -257,13 +286,22 @@ export type GameEvent =
   | { type: 'game_over'; result: 'won' | 'lost'; reason: string }
   | { type: 'message'; text: string; kind: LogMessage['kind'] }
   | { type: 'noise'; pos: Pos; radius: number }
-  | { type: 'invalid'; reason: string };
+  | { type: 'invalid'; reason: string }
+  | { type: 'rule_added'; id: string; name: string; source: 'gm'; reason?: string }
+  | { type: 'rule_removed'; id: string; name: string; reason?: string }
+  /**
+   * A GM action the engine refused (over budget, unknown reference, rule limits…). Diagnostics for
+   * the GM runtime, debugging and the simulator; never written to the player's log.
+   */
+  | { type: 'gm_skipped'; action: string; reason: string };
 
 export interface StepResult {
   state: GameState;
   events: GameEvent[];
   /** true if the action consumed a turn */
   tookTurn: boolean;
+  /** applyGmActions: the GM actions refused in this call (same as the gm_skipped events) */
+  gmSkipped?: { action: string; reason: string }[];
 }
 
 export interface NewGameOptions {
@@ -272,6 +310,8 @@ export interface NewGameOptions {
   map?: AreaMap;
   /** optional map generator override, used for this createGame call (tests, tools) */
   mapGenerator?: MapGenerator;
+  /** difficulty band (default 'normal'); stored in GameState.difficulty, see engine/difficulty.ts */
+  difficulty?: Difficulty;
 }
 
 /** generator contract (src/engine/mapgen) */
@@ -318,4 +358,4 @@ export interface ActorView {
   isNpc: boolean;
 }
 
-export type { Effect, Condition, GmAction };
+export type { Effect, Condition, GmAction, Difficulty };

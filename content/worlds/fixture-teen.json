@@ -106,7 +106,7 @@
     "description": "Sixteen. Knows the name of every family on every street, which turns out to be a superpower nobody asked for. Has a speech to give.",
     "stats": { "str": 10, "dex": 12, "int": 14, "hp": 26, "mp": 16, "ac": 11 },
     "mpRegenEvery": 4,
-    "hpRegenEvery": 6,
+    "hpRegenEvery": 8,
     "sight": 8,
     "unarmed": { "name": "Awkward joke", "verb": "makes an awkward joke at", "damage": { "base": 0, "dice": "1d3" }, "damageType": "embarrassment", "range": 1, "accuracyStat": "int" },
     "startingItems": [
@@ -117,6 +117,7 @@
       { "item": "iced-tea", "count": 2, "equipped": false, "quick": true },
       { "item": "power-bank", "count": 1, "equipped": false, "quick": false }
     ],
+    "startCurrency": 25,
     "growth": {
       "firstLevelXp": 25,
       "curve": 1.5,
@@ -129,9 +130,9 @@
         { "id": "main-character", "name": "Main Character Energy", "description": "You walk like there's a soundtrack. +2 Presence.", "modifiers": [{ "stat": "str", "amount": 2 }], "minLevel": 2 },
         { "id": "read-the-room", "name": "Read the Room", "description": "You notice who's about to say something. +2 sight.", "modifiers": [{ "stat": "sight", "amount": 2 }], "minLevel": 2 },
         { "id": "pep-talker", "name": "Pep Talker", "description": "Coach's speeches finally rubbed off. Learn Pep Talk.", "grantItems": ["pep-talk"], "minLevel": 3 },
-        { "id": "unbothered", "name": "Unbothered", "description": "Sometimes it just rolls off.", "triggers": [{ "on": "on_hurt", "chance": 0.25, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "remove_status", "status": "all_harmful" }] } }], "minLevel": 2 },
-        { "id": "last-word", "name": "Last Word", "description": "Getting the last word feels incredible. Recover a little Composure every time.", "triggers": [{ "on": "on_kill", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 3 } }] } }], "minLevel": 2 },
-        { "id": "power-saver", "name": "Power Saver Mode", "description": "You finally turned off background refresh. Each new day starts with extra charge.", "triggers": [{ "on": "on_area_enter", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "resource", "resource": "battery", "amount": { "base": 6 } }] } }], "minLevel": 2 }
+        { "id": "unbothered", "name": "Unbothered", "description": "Sometimes it just rolls off. 25% chance to shake off every harmful condition whenever you are hurt.", "triggers": [{ "on": "on_hurt", "chance": 0.25, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "remove_status", "status": "all_harmful" }] } }], "minLevel": 2 },
+        { "id": "last-word", "name": "Last Word", "description": "Getting the last word feels incredible. Recover 3 Composure every time you win a confrontation.", "triggers": [{ "on": "on_kill", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 3 } }] } }], "minLevel": 2 },
+        { "id": "power-saver", "name": "Power Saver Mode", "description": "You finally turned off background refresh. Each new day starts with extra charge: +6 Battery on entering a new day.", "triggers": [{ "on": "on_area_enter", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "resource", "resource": "battery", "amount": { "base": 6 } }] } }], "minLevel": 2 }
       ]
     },
     "model": {
@@ -144,18 +145,19 @@
   "actors": [
     {
       "id": "group-chat-lurker", "name": "Group Chat Lurker", "description": "Never says anything to your face. Screenshots everything. Travels in threes.",
-      "faction": "hostile", "stats": { "hp": 6, "ac": 10, "str": 7, "dex": 12, "int": 10, "mp": 0 }, "speed": 100, "sight": 8,
-      "attack": { "name": "Screenshot", "verb": "screenshots", "damage": { "base": 0, "dice": "1d4" }, "damageType": "gossip", "range": 3, "accuracyStat": "dex" },
+      "faction": "hostile", "stats": { "hp": 8, "ac": 10, "str": 7, "dex": 12, "int": 10, "mp": 0 }, "speed": 100, "sight": 8,
+      "attack": { "name": "Screenshot", "verb": "screenshots", "damage": { "base": 1, "dice": "1d4" }, "damageType": "gossip", "range": 3, "accuracyStat": "dex" },
       "behaviour": { "type": "pack", "param": 3, "erratic": 0.1 }, "xp": 4,
       "loot": [{ "item": "power-bank", "chance": 0.15 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 2 }] } }],
       "tags": ["student", "online"],
       "model": { "archetype": "humanoid", "humanoid": { "height": 0.78, "build": "slim", "skin": "#e8b996", "top": "#5c677d", "bottom": "#22223b", "accent": "#06d6a0", "hair": "#6b4226", "hairStyle": "long", "headwear": "hood", "outfit": "plain", "holding": "phone" }, "scale": 1, "idle": "sway", "light": { "color": "#9ad1ff", "intensity": 0.4, "radius": 1 } }
     },
     {
       "id": "senior-prankster", "name": "Senior Prankster", "description": "Graduating into a town that won't exist. Has decided nothing matters, loudly, at you.",
-      "faction": "hostile", "stats": { "hp": 11, "ac": 10, "str": 13, "dex": 11, "int": 8, "mp": 0 }, "speed": 110, "sight": 7,
-      "attack": { "name": "Loud impression", "verb": "does a loud impression of", "damage": { "base": 1, "dice": "1d6" }, "damageType": "embarrassment", "range": 1, "accuracyStat": "str" },
-      "triggers": [{ "on": "on_hit", "chance": 0.3, "action": { "targeting": { "shape": "adjacent", "range": 1, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "flustered", "duration": 3 }] } }],
+      "faction": "hostile", "stats": { "hp": 16, "ac": 10, "str": 13, "dex": 11, "int": 8, "mp": 0 }, "speed": 110, "sight": 7,
+      "attack": { "name": "Loud impression", "verb": "does a loud impression of", "damage": { "base": 2, "dice": "1d6" }, "damageType": "embarrassment", "range": 1, "accuracyStat": "str" },
+      "triggers": [{ "on": "on_hit", "chance": 0.3, "action": { "targeting": { "shape": "adjacent", "range": 1, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "flustered", "duration": 3 }] } }, { "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 3 }] } }],
       "behaviour": { "type": "chaser", "erratic": 0.15 }, "xp": 8,
       "loot": [{ "item": "inside-joke", "chance": 0.3 }, { "item": "energy-drink", "chance": 0.2 }],
       "tags": ["student", "senior"],
@@ -164,12 +166,13 @@
     {
       "id": "hall-monitor", "name": "Hall Monitor", "description": "Sash, clipboard, absolute certainty. Has been waiting four years for authority and this is the last week to use it.",
       "faction": "hostile", "stats": { "hp": 12, "ac": 12, "str": 10, "dex": 9, "int": 12, "mp": 0 }, "speed": 90, "sight": 8,
-      "attack": { "name": "Rules recital", "verb": "recites the rules at", "damage": { "base": 1, "dice": "1d4" }, "damageType": "guilt", "range": 2, "accuracyStat": "int" },
+      "attack": { "name": "Rules recital", "verb": "recites the rules at", "damage": { "base": 2, "dice": "1d4" }, "damageType": "guilt", "range": 2, "accuracyStat": "int" },
       "abilities": [
         { "id": "write-up", "name": "Write-Up", "description": "Tears off a pink slip with your name already on it.", "action": { "targeting": { "shape": "single", "range": 2, "radius": 0, "affects": "enemies", "needsLos": true }, "condition": { "type": "chance", "p": 0.35 }, "effects": [{ "type": "counter", "counter": "detentions", "add": 1 }, { "type": "apply_status", "status": "grounded", "duration": 2 }, { "type": "message", "text": "A detention slip. That's one more." }], "vfx": { "kind": "slash", "color": "#ff8fab" } }, "cooldown": 30, "useWhen": "target_in_range" }
       ],
       "behaviour": { "type": "guardian", "param": 6, "erratic": 0 }, "xp": 10,
       "loot": [{ "item": "detention-eraser", "chance": 0.25 }, { "item": "hall-pass", "chance": 0.15 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 4 }] } }],
       "tags": ["student", "authority"],
       "model": { "archetype": "humanoid", "humanoid": { "height": 0.85, "build": "average", "skin": "#f1c9a5", "top": "#fdf6ec", "bottom": "#264653", "accent": "#ef476f", "hair": "#d4a373", "hairStyle": "bun", "headwear": "none", "outfit": "uniform", "holding": "book" }, "parts": [{ "shape": "box", "size": [0.08, 0.5, 0.03], "pos": [0.05, 0.6, 0.1], "rot": [0, 0, 35], "color": "#ef476f", "material": "cloth" }], "scale": 1, "idle": "none" }
     },
@@ -179,14 +182,15 @@
       "attack": { "name": "Buyout pitch", "verb": "delivers a buyout pitch to", "damage": { "base": 1, "dice": "1d6" }, "damageType": "guilt", "range": 4, "accuracyStat": "int" },
       "behaviour": { "type": "kiter", "param": 3, "erratic": 0 }, "xp": 9,
       "loot": [{ "item": "power-bank", "chance": 0.3 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 4 }] } }],
       "tags": ["adult", "company"],
       "model": { "archetype": "humanoid", "humanoid": { "height": 1.0, "build": "average", "skin": "#d8a07c", "top": "#ff9f1c", "bottom": "#3d405b", "accent": "#e9ff70", "hair": "#4a4e69", "hairStyle": "short", "headwear": "helmet", "outfit": "uniform", "holding": "tool" }, "scale": 1, "idle": "sway" }
     },
     {
       "id": "yearbook-paparazzo", "name": "Yearbook Paparazzo", "description": "Waits behind doors with a camera. Has never taken a flattering photo in their life and considers this artistic integrity.",
       "faction": "hostile", "stats": { "hp": 7, "ac": 12, "str": 7, "dex": 14, "int": 11, "mp": 0 }, "speed": 110, "sight": 9,
-      "attack": { "name": "Candid shot", "verb": "snaps a candid of", "damage": { "base": 0, "dice": "1d4" }, "damageType": "embarrassment", "range": 3, "accuracyStat": "dex" },
-      "triggers": [{ "on": "on_hit", "chance": 0.4, "action": { "targeting": { "shape": "single", "range": 3, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "camera-flash", "duration": 3 }], "vfx": { "kind": "burst", "color": "#ffffff" } } }],
+      "attack": { "name": "Candid shot", "verb": "snaps a candid of", "damage": { "base": 1, "dice": "1d4" }, "damageType": "embarrassment", "range": 3, "accuracyStat": "dex" },
+      "triggers": [{ "on": "on_hit", "chance": 0.4, "action": { "targeting": { "shape": "single", "range": 3, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "camera-flash", "duration": 3 }], "vfx": { "kind": "burst", "color": "#ffffff" } } }, { "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 2 }] } }],
       "behaviour": { "type": "ambusher", "param": 3, "erratic": 0 }, "xp": 6,
       "loot": [{ "item": "polaroid", "chance": 0.2 }],
       "tags": ["student", "yearbook"],
@@ -219,8 +223,8 @@
     },
     {
       "id": "mags-calloway", "name": "Magdalena 'Mags' Calloway", "description": "Head girl, debate champion, daughter of the Reservoir Board chair. She has a sponsor, a slideshow and a hashtag: #NewBeginnings. She will not be interrupted.",
-      "faction": "hostile", "stats": { "hp": 45, "ac": 14, "str": 13, "dex": 12, "int": 16, "mp": 24 }, "speed": 100, "sight": 9,
-      "attack": { "name": "Withering once-over", "verb": "gives a withering once-over to", "damage": { "base": 2, "dice": "1d6" }, "damageType": "embarrassment", "range": 2, "accuracyStat": "int" },
+      "faction": "hostile", "stats": { "hp": 62, "ac": 14, "str": 13, "dex": 12, "int": 16, "mp": 24 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Withering once-over", "verb": "gives a withering once-over to", "damage": { "base": 3, "dice": "1d8" }, "damageType": "embarrassment", "range": 2, "accuracyStat": "int" },
       "abilities": [
         { "id": "devastating-read", "name": "Devastating Read", "description": "A paragraph-long takedown, delivered at microphone volume.", "action": { "targeting": { "shape": "ray", "range": 6, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 3, "dice": "2d4" }, "damageType": "embarrassment" }, { "type": "apply_status", "status": "mortified", "duration": 1 }], "vfx": { "kind": "beam", "color": "#ff6fa8" } }, "cost": { "resource": "mp", "amount": 6 }, "cooldown": 5, "useWhen": "target_in_range" },
         { "id": "rally-the-squad", "name": "Rally the Squad", "description": "Three phones light up at once.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "summon", "actor": "group-chat-lurker", "count": 2, "allied": false }], "vfx": { "kind": "sparkle", "color": "#9ad1ff" } }, "cooldown": 20, "useWhen": "start_of_fight" },
@@ -358,14 +362,14 @@
       "id": "power-bank", "name": "Power Bank", "kind": "Charger", "description": "Somebody's sticker-covered brick of borrowed electricity.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "resource", "resource": "battery", "amount": { "base": 8 } }, { "type": "remove_status", "status": "offline" }] },
-      "rarity": "common", "value": 8, "knowledge": "clear",
+      "rarity": "common", "value": 8, "knowledge": "clear", "appearanceGroup": "lostfound",
       "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.12, 0.04, 0.2], "pos": [0, 0.03, 0], "color": "#ffd166", "material": "matte" }], "idle": "bob" }
     },
     {
       "id": "iced-tea", "name": "Vending Machine Iced Tea", "kind": "Drink", "description": "Peach flavour. The vending machine is the only thing in school still fully stocked.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 6 } }], "vfx": { "kind": "sparkle", "color": "#f4a261" } },
-      "rarity": "common", "value": 4, "knowledge": "clear",
+      "rarity": "common", "value": 4, "knowledge": "clear", "appearanceGroup": "snack",
       "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.09, 0.2, 0.09], "pos": [0, 0.1, 0], "color": "#f4a261", "material": "metal" }], "idle": "bob" }
     },
     {
@@ -386,7 +390,7 @@
       "id": "detention-eraser", "name": "The Janitor's Special Eraser", "kind": "Eraser", "description": "Grey, pumice-hard, rumoured to remove anything from any official form.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "counter", "counter": "detentions", "add": -1 }, { "type": "message", "text": "One detention slip, gently erased into history." }] },
-      "rarity": "rare", "value": 30, "knowledge": "clear",
+      "rarity": "rare", "value": 30, "knowledge": "clear", "appearanceGroup": "lostfound",
       "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.14, 0.05, 0.08], "pos": [0, 0.03, 0], "color": "#8d99ae", "material": "matte" }], "idle": "bob" }
     },
     {
@@ -476,6 +480,12 @@
       { "label": "note folded into a triangle", "color": "#ffc8dd" },
       { "label": "note folded into a tiny star", "color": "#bde0fe" },
       { "label": "sticky note with just a heart", "color": "#ffafcc" }
+    ],
+    "lostfound": [
+      { "label": "something from the lost-and-found box", "color": "#a3c4bc" },
+      { "label": "sticker-covered mystery object", "color": "#ffafcc" },
+      { "label": "grey lump in a sandwich bag", "color": "#adb5bd" },
+      { "label": "thing wrapped in a gym sock", "color": "#f1faee" }
     ]
   },
   "areas": [
@@ -488,20 +498,19 @@
       "lighting": { "ambient": "#eef6ff", "ambientIntensity": 0.8, "fog": { "color": "#dfe9f0", "density": 0.01 }, "lamps": { "color": "#e8f6ff", "intensity": 1.0, "frequency": 0.1, "flicker": true }, "playerLight": 0 },
       "actors": [
         { "actor": "group-chat-lurker", "weight": 30, "min": 2, "max": 5 },
-        { "actor": "senior-prankster", "weight": 20, "min": 1, "max": 3 },
-        { "actor": "hall-monitor", "weight": 15, "min": 1, "max": 2 },
+        { "actor": "senior-prankster", "weight": 20, "min": 2, "max": 3 },
+        { "actor": "hall-monitor", "weight": 15, "min": 1, "max": 3 },
         { "actor": "yearbook-paparazzo", "weight": 10, "min": 0, "max": 2 },
         { "actor": "bio-goose", "weight": 5, "min": 0, "max": 1 }
       ],
       "placed": [
         { "actor": "janitor", "where": "near_start" },
-        { "actor": "coach", "where": "centre" },
         { "actor": "theo", "where": "anywhere" }
       ],
       "items": [
-        { "item": "iced-tea", "weight": 20 }, { "item": "power-bank", "weight": 15 }, { "item": "inside-joke", "weight": 12 },
-        { "item": "cafeteria-cookie", "weight": 10 }, { "item": "energy-drink", "weight": 8 }, { "item": "gas-station-sushi", "weight": 6 },
-        { "item": "admirer-note", "weight": 5 }, { "item": "burn-book-page", "weight": 5 }, { "item": "group-text", "weight": 4 }
+        { "item": "iced-tea", "weight": 8 }, { "item": "power-bank", "weight": 15 }, { "item": "inside-joke", "weight": 12 },
+        { "item": "cafeteria-cookie", "weight": 5 }, { "item": "energy-drink", "weight": 8 }, { "item": "gas-station-sushi", "weight": 6 },
+        { "item": "admirer-note", "weight": 2 }, { "item": "burn-book-page", "weight": 5 }, { "item": "group-text", "weight": 4 }
       ],
       "itemCount": 7,
       "placedItems": [{ "item": "old-yearbook", "where": "far" }],
@@ -509,6 +518,7 @@
       "transitionName": "The bell rings. Survive until Wednesday.",
       "transitionModel": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.4, 0.15, 0.4], "pos": [0, 1.4, 0], "rot": [90, 0, 0], "color": "#e63946", "material": "metal" }, { "shape": "box", "size": [0.9, 1.6, 0.1], "pos": [0, 0.8, 0], "color": "#adb5bd", "material": "metal" }], "idle": "none" },
       "gmNotes": "Establish the week: boxes, water stains, everyone leaving. Theo knows Rosalind has the notebook and is having a party on Wednesday. The janitor trades lost property for favours. Hall monitors give detention slips; three means going home.",
+      "backdrop": { "style": "color", "color": "#dfe9f0", "intensity": 0.2 },
       "music": "upbeat"
     },
     {
@@ -520,18 +530,18 @@
       "lighting": { "ambient": "#5a4a7a", "ambientIntensity": 0.35, "fog": { "color": "#2d1e3e", "density": 0.02 }, "lamps": { "color": "#ffb3c6", "intensity": 1.6, "frequency": 0.12, "flicker": false }, "playerLight": 3 },
       "actors": [
         { "actor": "group-chat-lurker", "weight": 25, "min": 2, "max": 5 },
-        { "actor": "senior-prankster", "weight": 25, "min": 2, "max": 4 },
+        { "actor": "senior-prankster", "weight": 25, "min": 2, "max": 5 },
         { "actor": "yearbook-paparazzo", "weight": 20, "min": 1, "max": 3 },
-        { "actor": "dam-surveyor", "weight": 10, "min": 0, "max": 2 }
+        { "actor": "dam-surveyor", "weight": 10, "min": 1, "max": 2 }
       ],
       "placed": [
         { "actor": "rosalind", "where": "far" },
         { "actor": "priya", "where": "near_start" }
       ],
       "items": [
-        { "item": "iced-tea", "weight": 15 }, { "item": "power-bank", "weight": 12 }, { "item": "inside-joke", "weight": 12 },
-        { "item": "energy-drink", "weight": 10 }, { "item": "cafeteria-cookie", "weight": 8 }, { "item": "polaroid", "weight": 8 },
-        { "item": "admirer-note", "weight": 6 }, { "item": "burn-book-page", "weight": 6 }, { "item": "mixtape", "weight": 4 },
+        { "item": "iced-tea", "weight": 10 }, { "item": "power-bank", "weight": 12 }, { "item": "inside-joke", "weight": 12 },
+        { "item": "energy-drink", "weight": 10 }, { "item": "cafeteria-cookie", "weight": 5 }, { "item": "polaroid", "weight": 8 },
+        { "item": "admirer-note", "weight": 3 }, { "item": "burn-book-page", "weight": 6 }, { "item": "mixtape", "weight": 4 },
         { "item": "permanent-marker", "weight": 3 }, { "item": "hall-pass", "weight": 2 }
       ],
       "itemCount": 8,
@@ -541,6 +551,7 @@
       "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.9, 1.8, 0.1], "pos": [0, 0.9, 0], "color": "#6d597a", "material": "wood" }, { "shape": "sphere", "size": [0.08, 0.08, 0.08], "pos": [0.3, 0.9, 0.08], "color": "#ffd166", "material": "metal" }], "idle": "none" },
       "transitionRequires": { "type": "has_item", "who": "player", "item": "speech-notebook" },
       "gmNotes": "Party energy curdled by goodbyes. Rosalind can be talked down rather than out-argued; when she cracks, she hands the notebook back and becomes friendly. Priya tags along and helps.",
+      "backdrop": { "style": "color", "color": "#2d1e3e", "intensity": 0.3 },
       "music": "tense"
     },
     {
@@ -559,7 +570,8 @@
       "placed": [
         { "actor": "mags-calloway", "where": "near_exit" },
         { "actor": "nan-ottoline", "where": "near_start" },
-        { "actor": "coach", "where": "anywhere" }
+        { "actor": "coach", "where": "anywhere" },
+        { "actor": "janitor", "where": "centre" }
       ],
       "items": [{ "item": "iced-tea", "weight": 15 }, { "item": "power-bank", "weight": 10 }, { "item": "polaroid", "weight": 8 }, { "item": "detention-eraser", "weight": 4 }],
       "itemCount": 4,
@@ -567,6 +579,7 @@
       "terrain": [{ "terrain": "spotlight", "density": 0.03 }, { "terrain": "seep-water", "density": 0.04 }],
       "transitionName": "Walk out into the rain",
       "gmNotes": "Final confrontation, verbal. Mags is not a villain; she is scared. Leaving her speechless and then giving the speech (using the notebook) wins. Nan Ottoline wants the old village named too.",
+      "backdrop": { "style": "color", "color": "#1b2a41", "intensity": 0.3 },
       "music": "boss"
     }
   ],

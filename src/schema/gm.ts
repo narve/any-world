@@ -4,7 +4,7 @@
  * and are budgeted by the engine (see GM_ACTION_COST).
  */
 import { z } from 'zod';
-import { Id, Effect, Condition, Color } from './world';
+import { Id, Effect, Condition, Color, RuleVariant } from './world';
 
 const leafActions = [
   z.object({ type: z.literal('narrate'), text: z.string().max(600) }),
@@ -28,6 +28,12 @@ const leafActions = [
   z.object({ type: z.literal('currency'), amount: z.number().int().min(-500).max(500) }),
   z.object({ type: z.literal('grant_xp'), amount: z.number().int().min(1).max(200) }),
   z.object({ type: z.literal('mood'), music: z.enum(['explore', 'tense', 'calm', 'eerie', 'boss', 'upbeat']), tint: Color.optional() }),
+  /**
+   * GM invents a new rule mid-run (M2). Engine enforces: max MAX_ACTIVE_RULES active, max one GM rule
+   * per area, power impact vs difficulty (see engine/rules.ts). `reason` is the in-story announcement.
+   */
+  z.object({ type: z.literal('add_rule'), rule: RuleVariant, reason: z.string().max(300) }),
+  z.object({ type: z.literal('remove_rule'), id: Id, reason: z.string().max(300) }),
 ] as const;
 
 /** actions allowed inside offer_choice options (anything but offer_choice). */
@@ -71,8 +77,19 @@ export const GM_ACTION_COST: Record<GmAction['type'], number> = {
   start_quest: 2,
   offer_choice: 1,
   trade: 0,
+  add_rule: 4,
+  remove_rule: 2,
 };
+export const MAX_ACTIVE_RULES = 5;
+export const MAX_GM_RULES_PER_AREA = 1;
 export const GM_BUDGET_PER_AREA = 10;
+
+/**
+ * Difficulty of a run (start-screen slider, NewGameOptions.difficulty). The engine scales hostile
+ * actors and natural regeneration by it and limits the harm of GM rules (engine/difficulty.ts).
+ */
+export const Difficulty = z.enum(['gentle', 'normal', 'hard', 'brutal']);
+export type Difficulty = z.infer<typeof Difficulty>;
 
 /** what the GM returns for any hook. */
 export const GmResponse = z.object({

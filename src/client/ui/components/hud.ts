@@ -29,6 +29,16 @@ export class Hud {
       { id: 'xp', label: `${vocab.xp} — level ${v.level}`, abbr: `Lv ${v.level}`, value: v.xpInLevel, max: v.xpForLevel, color: 'var(--c-accent)' },
       { compact: true },
     );
+    if (v.pendingLevels) {
+      const n = v.pendingLevels;
+      xpBar.append(
+        h(
+          'span',
+          { class: 'aw-xp-pending', dataset: { tip: `${n} more level${n === 1 ? '' : 's'} earned — they come one at a time after each choice` } },
+          `+${n} level${n === 1 ? '' : 's'}`,
+        ),
+      );
+    }
 
     const stats = h(
       'div',
@@ -54,6 +64,21 @@ export class Hud {
         h('div', { class: 'aw-hud-names' }, h('div', { class: 'aw-hud-name' }, v.playerName), h('div', { class: 'aw-hud-title' }, v.playerTitle)),
       ),
       h('div', { class: 'aw-bars' }, bars),
+      v.danger?.length
+        ? h(
+            'div',
+            { class: 'aw-danger', role: 'alert' },
+            v.danger.map((d) =>
+              h(
+                'div',
+                { class: ['aw-danger-row', `is-${d.level}`], style: { '--danger': d.color } },
+                h('span', { class: 'aw-danger-dot', 'aria-hidden': 'true' }),
+                h('span', null, `${d.label} ${d.level === 'empty' ? 'empty' : 'low'}${d.draining && d.id !== 'hp' ? ` — losing ${hpS.name}` : ''}`),
+                d.slot !== undefined ? h('kbd', { class: 'aw-danger-key', title: `Quick slot ${d.slot + 1}` }, `press ${d.slot + 1}`) : null,
+              ),
+            ),
+          )
+        : null,
       xpBar,
       stats,
       v.statuses.length ? h('div', { class: 'aw-chips', 'aria-label': 'Conditions' }, v.statuses.map(statusChip)) : null,

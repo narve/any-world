@@ -10,7 +10,7 @@
  */
 import type { PlayerAction } from '../../engine/types';
 import type { ActorTooltipView, GameView, SlotItemView, TileTooltipView, UiCallbacks, UiIntent, UiViewModel } from './viewmodel';
-import { dataKey, h } from './dom';
+import { dataKey, h, icon, ICONS, setChildren } from './dom';
 import { applyTheme } from './theme';
 import { DEFAULT_VOCABULARY } from './format';
 import { attachKeyboard, computeLayer, type InputLayer, type InputVerbs, type KeyboardBinding, type UiCommand } from './input';
@@ -29,9 +29,24 @@ import { EndScreen, LoadingScreen, SettingsDialog, StartScreen } from './compone
 export interface GameUi {
   readonly root: HTMLElement;
   render(vm: UiViewModel): void;
-  /** hover/look tooltip for an actor at viewport coords; null hides */
-  showActorTooltip(actor: ActorTooltipView | null, at?: { x: number; y: number }): void;
-  showTileTooltip(tile: TileTooltipView | null, at?: { x: number; y: number }): void;
+  /**
+   * hover/look tooltip for an actor at viewport coords; null hides. `avoid` (the player's screen
+   * position) puts the card on the far side of the target so it never covers the player.
+   */
+  showActorTooltip(actor: ActorTooltipView | null, at?: { x: number; y: number }, avoid?: { x: number; y: number } | null): void;
+  showTileTooltip(tile: TileTooltipView | null, at?: { x: number; y: number }, avoid?: { x: number; y: number } | null): void;
+  /**
+   * Where the conversation partner stands on screen: the dialogue panel docks on the side away from
+   * the speaker and the player (null = default placement).
+   */
+  placeDialogue(at: { speaker: { x: number; y: number } | null; player: { x: number; y: number } } | null): void;
+  /** fade the log while it covers the player or someone next to them */
+  setLogObscuring(on: boolean): void;
+  /**
+   * viewport rectangles of the panels that sit over the map (for overlap checks): the log, and
+   * every visible HUD panel (player card, top strip, rules, log, hotbar) in `hud`
+   */
+  panelRects(): { log: DOMRect | null; hud: DOMRect[] };
   hideTooltip(): void;
   setBackpackOpen(open: boolean): void;
   /** short transient notice */
@@ -69,6 +84,12 @@ class UiRoot implements GameUi {
   private modeBanner: HTMLElement;
   private busyEl: HTMLElement;
   private rulesBadgeWrap: HTMLElement;
+  private objectiveEl: HTMLElement;
+  private interactEl: HTMLElement;
+  private hintsEl: HTMLElement;
+  private hintsKey = '';
+  private vignette: HTMLElement;
+  private dialogueSide: 'left' | 'right' | null = null;
   private toasts: HTMLElement;
   private toastEls = new Map<number, HTMLElement>();
   private toastStack = new ToastStack({ onChange: (e, l) => this.renderToasts(e, l) });
@@ -146,17 +167,22 @@ class UiRoot implements GameUi {
 
     this.modeBanner = h('div', { class: 'aw-mode-banner', role: 'status', hidden: true });
     this.busyEl = h('div', { class: 'aw-busy', role: 'status', hidden: true });
-    this.stripWrap = h('div', { class: 'aw-top-centre' }, this.hud.strip, this.modeBanner, this.busyEl);
+    this.objectiveEl = h('div', { class: 'aw-objective', role: 'status', hidden: true });
+    this.interactEl = h('div', { class: 'aw-interact-hint', hidden: true });
+    this.hintsEl = h('aside', { class: 'aw-hints', 'aria-label': 'First steps', hidden: true });
+    this.vignette = h('div', { class: 'aw-vignette', 'aria-hidden': 'true', hidden: true });
+    this.stripWrap = h('div', { class: 'aw-top-centre' }, this.hud.strip, this.objectiveEl, this.modeBanner, this.busyEl, this.interactEl);
     this.rulesBadgeWrap = h('div', { class: 'aw-top-right' });
     this.toasts = h('div', { class: 'aw-toasts', 'aria-live': 'polite' });
 
     this.gameEl = h(
       'div',
       { class: 'aw-game', hidden: true },
+      this.vignette,
       h('div', { class: 'aw-top-left' }, this.hud.panel),
       this.stripWrap,
       h('div', { class: 'aw-top-right-col' }, this.rulesBadgeWrap, this.rules.el),
-      h('div', { class: 'aw-bottom-left' }, this.log.el),
+      h('div', { class: 'aw-bottom-left' }, this.hintsEl, this.log.el),
       h('div', { class: 'aw-bottom-centre' }, this.hotbar.el),
       this.narration.el,
       this.backpack.el,
@@ -222,7 +248,8 @@ class UiRoot implements GameUi {
   private renderGame(g: GameView): void {
     const ctx = this.ctxValue;
     this.hud.update(g.hud, ctx);
-    this.log.update(g.log);
+    this.log.update(g.log, ctx.vocab);
+    this.renderAids(g);
     this.narration.update(g.narration);
     this.hotbar.update(g.slots, g.mode === 'target' ? (g.targetingSlot ?? null) : null);
     this.backpack.update(g.slots, this.bp);
@@ -249,7 +276,9 @@ class UiRoot implements GameUi {
     } else if (g.mode === 'target') {
       const it = g.targetingSlot !== undefined ? g.slots[g.targetingSlot] : null;
       this.modeBanner.hidden = false;
-      this.modeBanner.textContent = `Choose a target${it ? ` for ${it.name}` : ''} — arrows or click · Enter confirm · Esc cancel`;
+      this.modeBanner.textContent = it?.aimsDirection
+        ? `Aim ${it.name} — arrow keys pick a direction (or click) · Enter confirm · Esc cancel`
+        : `Choose a target${it ? ` for ${it.name}` : ''} — arrows or click · Enter confirm · Esc cancel`;
     } else {
       this.modeBanner.hidden = true;
     }
@@ -260,6 +289,47 @@ class UiRoot implements GameUi {
     this.gameEl.classList.toggle('can-transition', g.canTransition);
   }
 
+  /** objective line, interact hint, first-run hints and the danger vignette */
+  private renderAids(g: GameView): void {
+    const obj = g.objective ?? '';
+    const hint = g.objectiveHint ?? '';
+    this.objectiveEl.hidden = (!obj && !hint) || g.mode !== 'normal';
+    const full = obj && hint ? `${obj} — ${hint}` : obj || hint;
+    if (this.objectiveEl.dataset.tip !== full) {
+      // the goal may be clamped; the hint has its own line so it is never the part cut off
+      // (issues/M2-objective-hint-truncated.md)
+      setChildren(
+        this.objectiveEl,
+        obj ? h('span', { class: 'aw-objective-goal' }, obj) : null,
+        hint ? h('span', { class: 'aw-objective-hint' }, hint) : null,
+      );
+      this.objectiveEl.dataset.tip = full;
+    }
+    const ih = g.interactHint ?? '';
+    this.interactEl.hidden = !ih;
+    if (this.interactEl.textContent !== ih) this.interactEl.textContent = ih;
+
+    const hk = dataKey(g.hints ?? null);
+    if (hk !== this.hintsKey) {
+      this.hintsKey = hk;
+      const hints = g.hints ?? [];
+      this.hintsEl.hidden = !hints.length;
+      setChildren(
+        this.hintsEl,
+        h('div', { class: 'aw-hints-head' }, h('span', null, 'First steps'), h('button', { type: 'button', class: 'aw-icon-btn aw-hints-close', 'aria-label': 'Hide hints', onclick: () => this.intent({ type: 'dismiss_hints' }) }, icon(ICONS.close))),
+        h('ul', null, hints.map((t) => h('li', null, t))),
+      );
+    }
+
+    // screen-edge vignette in the colour of whatever is draining health
+    const drain = (g.hud.danger ?? []).find((d) => d.draining);
+    this.vignette.hidden = !drain;
+    if (drain) {
+      this.vignette.style.setProperty('--vignette', drain.color);
+      this.vignette.dataset.level = drain.level;
+    }
+  }
+
   private rerenderGame(): void {
     if (this.vm?.screen === 'game' && this.vm.game) this.renderGame(this.vm.game);
   }
@@ -268,16 +338,51 @@ class UiRoot implements GameUi {
   // public helpers
   // -------------------------------------------------------------------------
 
-  showActorTooltip(actor: ActorTooltipView | null, at?: { x: number; y: number }): void {
+  showActorTooltip(actor: ActorTooltipView | null, at?: { x: number; y: number }, avoid?: { x: number; y: number } | null): void {
     if (!actor || !at) return this.tooltip.hideAt();
     const verbs = this.vm?.game?.verbs;
     const hint = actor.isNpc && verbs?.talk && actor.faction !== 'hostile' ? 'Walk into them or press t to talk' : undefined;
-    this.tooltip.showAt(actorCard(actor, this.ctxValue, hint), at.x, at.y);
+    this.tooltip.showAt(actorCard(actor, this.ctxValue, hint), at.x, at.y, avoid);
   }
 
-  showTileTooltip(tile: TileTooltipView | null, at?: { x: number; y: number }): void {
+  showTileTooltip(tile: TileTooltipView | null, at?: { x: number; y: number }, avoid?: { x: number; y: number } | null): void {
     if (!tile || !at) return this.tooltip.hideAt();
-    this.tooltip.showAt(tileCard(tile), at.x, at.y);
+    this.tooltip.showAt(tileCard(tile), at.x, at.y, avoid);
+  }
+
+  placeDialogue(at: { speaker: { x: number; y: number } | null; player: { x: number; y: number } } | null): void {
+    let side: 'left' | 'right' | null = null;
+    if (at) {
+      const w = this.root.getBoundingClientRect().width || window.innerWidth;
+      // dock on the half of the screen that holds neither the speaker nor the player
+      const xs = [at.player.x, ...(at.speaker ? [at.speaker.x] : [])];
+      const mid = xs.reduce((a, b) => a + b, 0) / xs.length;
+      side = mid > w * 0.5 ? 'left' : 'right';
+    }
+    if (side === this.dialogueSide) return;
+    this.dialogueSide = side;
+    for (const el of [this.dialogue.el, this.trade.el]) {
+      el.classList.toggle('dock-left', side === 'left');
+      el.classList.toggle('dock-right', side === 'right');
+    }
+  }
+
+  setLogObscuring(on: boolean): void {
+    this.log.setObscuring(on);
+  }
+
+  panelRects(): { log: DOMRect | null; hud: DOMRect[] } {
+    if (this.gameEl.hidden) return { log: null, hud: [] };
+    const hud: DOMRect[] = [];
+    for (const corner of this.gameEl.querySelectorAll<HTMLElement>(':scope > .aw-top-left, :scope > .aw-top-centre, :scope > .aw-top-right-col, :scope > .aw-bottom-left, :scope > .aw-bottom-centre')) {
+      // the corner wrappers can be wider than what they show; measure their visible children
+      for (const child of Array.from(corner.children) as HTMLElement[]) {
+        if (child.hidden) continue;
+        const rc = child.getBoundingClientRect();
+        if (rc.width > 0 && rc.height > 0) hud.push(rc);
+      }
+    }
+    return { log: this.log.el.getBoundingClientRect(), hud };
   }
 
   hideTooltip(): void {
@@ -387,6 +492,8 @@ class UiRoot implements GameUi {
 
   private setRulesOpen(open: boolean): void {
     this.rulesOpen = open;
+    // the badge (and the pill the mouse may be on) is replaced by the panel
+    this.tooltip.clear();
     if (open && this.bp.open) this.bp = { ...this.bp, open: false, grabbed: null, menuIndex: null };
     this.intent({ type: 'panel', panel: 'rules', open });
     this.rerenderGame();
@@ -515,6 +622,8 @@ class UiRoot implements GameUi {
         if (cmd.type === 'close') this.cb.onDialogueLeave?.();
         else if (cmd.type === 'option') this.dialogue.option(cmd.index);
         else if (cmd.type === 'nav') this.dialogue.modal.moveFocus(cmd.dir === 'n' || cmd.dir === 'w' ? -1 : 1);
+        else if (cmd.type === 'persuade') this.dialogue.persuade();
+        else if (cmd.type === 'trade') this.dialogue.trade();
         else if (cmd.type === 'help') this.setHelpOpen(true);
         return;
       case 'menu':
@@ -584,6 +693,8 @@ class UiRoot implements GameUi {
         return this.act({ type: 'toggle_sneak' });
       case 'rules':
         return this.setRulesOpen(true);
+      case 'interact':
+        return this.intent({ type: 'interact' });
       case 'close':
         if (this.narration.visible) this.narration.skip();
         return;

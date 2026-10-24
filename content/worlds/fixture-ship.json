@@ -115,6 +115,7 @@
       { "item": "ration-brick", "count": 2, "equipped": false, "quick": true },
       { "item": "signal-flare", "count": 1, "equipped": false, "quick": true }
     ],
+    "startCurrency": 15,
     "growth": {
       "firstLevelXp": 30,
       "curve": 1.6,
@@ -128,8 +129,8 @@
         { "id": "engineers-recall", "name": "Engineer's Recall", "description": "Your mother's schematics come back to you. +2 Recall, +4 Charge.", "modifiers": [{ "stat": "int", "amount": 2 }, { "stat": "mp", "amount": 4 }], "minLevel": 2 },
         { "id": "hull-legs", "name": "Hull Legs", "description": "You move through the ship like it's your own skin. Faster.", "modifiers": [{ "stat": "speed", "amount": 15 }], "minLevel": 3 },
         { "id": "overclocker", "name": "Overclocker", "description": "You learn to push the suit past its rating. Learn Overclock.", "grantItems": ["overclock"], "minLevel": 3 },
-        { "id": "scavenger", "name": "Scavenger", "description": "Shut-down machines sometimes leave a spare canister.", "triggers": [{ "on": "on_kill", "chance": 0.3, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "spawn_item", "item": "o2-canister", "count": 1 }] } }], "minLevel": 2 },
-        { "id": "spore-lungs", "name": "Spore-Lungs", "description": "Years in the cloisters. Sometimes your body just coughs the spores out.", "triggers": [{ "on": "on_hurt", "chance": 0.4, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "remove_status", "status": "spored" }] } }], "minLevel": 2 }
+        { "id": "scavenger", "name": "Scavenger", "description": "Shut-down machines sometimes leave a spare canister. 30% chance that a kill drops an O2 canister.", "triggers": [{ "on": "on_kill", "chance": 0.3, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "spawn_item", "item": "o2-canister", "count": 1 }] } }], "minLevel": 2 },
+        { "id": "spore-lungs", "name": "Spore-Lungs", "description": "Years in the cloisters. Sometimes your body just coughs the spores out. 40% chance to cure Spored whenever you are hurt.", "triggers": [{ "on": "on_hurt", "chance": 0.4, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "remove_status", "status": "spored" }] } }], "minLevel": 2 }
       ]
     },
     "model": {
@@ -149,6 +150,7 @@
       "resistances": [{ "damageType": "spore", "multiplier": 0 }, { "damageType": "ion", "multiplier": 1.5 }],
       "behaviour": { "type": "wanderer", "erratic": 0.2 }, "xp": 6,
       "loot": [{ "item": "o2-canister", "chance": 0.3 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 2 }] } }],
       "tags": ["machine", "garden"],
       "model": { "archetype": "robot", "colors": { "primary": "#d4d9dc", "secondary": "#3f6e57", "accent": "#f2c14e" }, "parts": [{ "shape": "torus", "size": [0.35, 0.06, 0.35], "pos": [0, 0.18, 0], "rot": [0, 0, 90], "color": "#2b3a42", "material": "metal" }], "scale": 0.7, "idle": "hover" }
     },
@@ -179,6 +181,7 @@
       ],
       "resistances": [{ "damageType": "cold", "multiplier": 0.25 }],
       "behaviour": { "type": "ambusher", "param": 3, "erratic": 0 }, "xp": 10,
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 3 }] } }],
       "tags": ["beast", "ducts"],
       "model": { "archetype": "serpent", "colors": { "primary": "#e9e3d5", "secondary": "#b8a99a", "accent": "#7df9ff" }, "scale": 1, "idle": "sway", "light": { "color": "#7df9ff", "intensity": 0.4, "radius": 1 } }
     },
@@ -190,7 +193,7 @@
         { "id": "exhale", "name": "Exhale", "description": "A slow green breath in a wide cone.", "action": { "targeting": { "shape": "cone", "range": 3, "radius": 3, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "spored", "duration": 3 }], "vfx": { "kind": "cloud", "color": "#b5e48c" } }, "cost": { "resource": "mp", "amount": 3 }, "cooldown": 6, "useWhen": "target_in_range" }
       ],
       "resistances": [{ "damageType": "spore", "multiplier": 0 }, { "damageType": "cold", "multiplier": 1.5 }],
-      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "spawn_terrain", "terrain": "moss-bed", "radius": 1 }] } }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "spawn_terrain", "terrain": "moss-bed", "radius": 1 }, { "type": "currency", "amount": 4 }] } }],
       "behaviour": { "type": "stationary", "erratic": 0 }, "xp": 8,
       "tags": ["plant", "garden"],
       "model": { "archetype": "blob", "colors": { "primary": "#5fb58a", "secondary": "#2d6a4f", "accent": "#d8f3dc" }, "parts": [{ "shape": "sphere", "size": [0.12, 0.12, 0.12], "pos": [0.15, 0.4, 0.1], "color": "#d8f3dc", "material": "glow", "emissive": "#b5e48c" }, { "shape": "sphere", "size": [0.1, 0.1, 0.1], "pos": [-0.12, 0.35, -0.05], "color": "#d8f3dc", "material": "glow", "emissive": "#b5e48c" }], "scale": 1, "idle": "pulse", "light": { "color": "#b5e48c", "intensity": 0.7, "radius": 2 } }
@@ -213,6 +216,7 @@
       "resistances": [{ "damageType": "physical", "multiplier": 0.75 }, { "damageType": "ion", "multiplier": 1.5 }, { "damageType": "spore", "multiplier": 0 }],
       "behaviour": { "type": "guardian", "param": 6, "erratic": 0 }, "xp": 16,
       "loot": [{ "item": "o2-canister", "chance": 0.4 }, { "item": "emp-puck", "chance": 0.25 }],
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 6 }] } }],
       "tags": ["machine", "matron"],
       "model": { "archetype": "robot", "colors": { "primary": "#e4e7eb", "secondary": "#2b4c6f", "accent": "#e4572e" }, "parts": [{ "shape": "sphere", "size": [0.12, 0.12, 0.12], "pos": [0, 0.7, 0.2], "color": "#e4572e", "material": "glow", "emissive": "#e4572e", "group": "head" }], "scale": 1, "idle": "none", "light": { "color": "#e4572e", "intensity": 0.6, "radius": 1.5 } }
     },
@@ -227,6 +231,7 @@
       "behaviour": { "type": "kiter", "param": 4, "erratic": 0 }, "xp": 40, "unique": true,
       "loot": [{ "item": "bridge-keycard", "chance": 1 }, { "item": "hush-wrap", "chance": 1 }],
       "npc": { "role": "rival", "personality": "Calm, sorrowful, precise. Speaks to you like a nurse to a patient. Would rather not hurt you.", "greeting": "Moss-tender. You're a long way from the cloisters. Let me walk you back.", "lines": ["Some doors stay closed for good reasons.", "MATRON has kept four thousand people alive for two centuries. Have you?", "If I give you the card, I can't take it back."], "secrets": "She has seen the planet through the bridge shutters. She is afraid of it.", "wants": "To be told the crew can survive the truth.", "persuadeStat": "int", "persuadeDifficulty": 18 },
+      "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 15 }] } }],
       "tags": ["human", "warden", "boss"],
       "model": { "archetype": "humanoid", "humanoid": { "height": 0.96, "build": "slim", "skin": "#8c5a3c", "top": "#6c757d", "bottom": "#343a40", "accent": "#e4572e", "hair": "#c0c0c0", "hairStyle": "short", "headwear": "none", "outfit": "uniform", "holding": "gun" }, "scale": 1, "idle": "sway" }
     },
@@ -364,21 +369,21 @@
       "id": "o2-canister", "name": "O2 Canister", "kind": "Canister", "description": "Blue-banded steel, cold to the touch. Thirty-five breaths' worth.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "resource", "resource": "oxygen", "amount": { "base": 35 } }, { "type": "remove_status", "status": "hypoxic" }], "vfx": { "kind": "cloud", "color": "#8fe3ff" } },
-      "rarity": "common", "value": 10, "knowledge": "clear",
+      "rarity": "common", "value": 10, "knowledge": "clear", "appearanceGroup": "supply",
       "model": { "archetype": "prop", "parts": [{ "shape": "capsule", "size": [0.1, 0.3, 0.1], "pos": [0, 0.15, 0], "color": "#dfe7ec", "material": "metal" }, { "shape": "cylinder", "size": [0.105, 0.04, 0.105], "pos": [0, 0.2, 0], "color": "#2b8cd6", "material": "matte" }], "idle": "bob" }
     },
     {
       "id": "ration-brick", "name": "Ration Brick", "kind": "Food", "description": "Pressed algae and soy, flavoured 'Tuesday'. Nobody knows what Tuesday tastes like.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 5 } }] },
-      "rarity": "common", "value": 4, "knowledge": "clear",
+      "rarity": "common", "value": 4, "knowledge": "clear", "appearanceGroup": "supply",
       "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.16, 0.06, 0.1], "pos": [0, 0.04, 0], "color": "#7a8b5a", "material": "matte" }], "idle": "bob" }
     },
     {
       "id": "moss-poultice", "name": "Moss Poultice", "kind": "Remedy", "description": "Living cloister moss in a gel pack. Pressed to a wound, it gets to work.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
       "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 6 } }, { "type": "apply_status", "status": "mending", "duration": 8 }, { "type": "remove_status", "status": "spored" }], "vfx": { "kind": "sparkle", "color": "#5fb58a" } },
-      "rarity": "uncommon", "value": 18, "knowledge": "clear",
+      "rarity": "uncommon", "value": 18, "knowledge": "clear", "appearanceGroup": "supply",
       "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.16, 0.04, 0.16], "pos": [0, 0.03, 0], "color": "#5fb58a", "material": "glass", "emissive": "#2d6a4f" }], "idle": "bob" }
     },
     {
@@ -488,6 +493,13 @@
       { "label": "cracked amber shard", "color": "#f2c14e" },
       { "label": "smoky shard etched with a tree", "color": "#6c757d" },
       { "label": "rose-gold shard warm to the touch", "color": "#f7a8a0" }
+    ],
+    "supply": [
+      { "label": "dented can with the label scraped off", "color": "#8fa3ad" },
+      { "label": "vacuum pouch stamped with a deck number", "color": "#c8d6cf" },
+      { "label": "blue-banded cylinder, frosted over", "color": "#4ea8de" },
+      { "label": "crinkled foil packet, still sealed", "color": "#d9d4c7" },
+      { "label": "gel pack with something green inside", "color": "#5fb58a" }
     ]
   },
   "areas": [
@@ -520,6 +532,7 @@
       "transitionName": "Pry open the ventilation trunk",
       "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.9, 0.9, 0.15], "pos": [0, 0.45, 0], "color": "#5c6770", "material": "metal" }, { "shape": "box", "size": [0.8, 0.05, 0.16], "pos": [0, 0.3, 0.01], "color": "#2b3a42", "material": "metal" }, { "shape": "box", "size": [0.8, 0.05, 0.16], "pos": [0, 0.6, 0.01], "color": "#2b3a42", "material": "metal" }], "idle": "none" },
       "gmNotes": "Introduce the moss, the breathing, MATRON's voice. Pell has heard the bridge shutters are kept closed; Bosun sells canisters. The leaf from elsewhere is the first clue.",
+      "backdrop": { "style": "color", "color": "#1d2e25", "intensity": 0.2 },
       "music": "calm"
     },
     {
@@ -537,7 +550,8 @@
       ],
       "placed": [
         { "actor": "warden-ostrova", "where": "far" },
-        { "actor": "navigator-amsel", "where": "anywhere" }
+        { "actor": "navigator-amsel", "where": "anywhere" },
+        { "actor": "bosun-kettering", "where": "near_exit" }
       ],
       "items": [
         { "item": "o2-canister", "weight": 30 }, { "item": "ration-brick", "weight": 10 }, { "item": "emp-puck", "weight": 10 },
@@ -552,6 +566,7 @@
       "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [1, 1.8, 0.2], "pos": [0, 0.9, 0], "color": "#2b4c6f", "material": "metal" }, { "shape": "box", "size": [0.15, 0.2, 0.05], "pos": [0.35, 1.0, 0.12], "color": "#e4572e", "material": "glow", "emissive": "#e4572e" }], "idle": "none", "light": { "color": "#e4572e", "intensity": 0.6, "radius": 1.5 } },
       "transitionRequires": { "type": "has_item", "who": "player", "item": "bridge-keycard" },
       "gmNotes": "Dark and tense; reward sneaking past rather than fighting. Amsel the navigator dreams about the orbit burn. Ostrova can be talked to; she has the keycard and believes she is protecting everyone.",
+      "backdrop": { "style": "abyss", "color": "#05080c", "color2": "#1c2f3f", "intensity": 0.4 },
       "music": "eerie"
     },
     {
@@ -573,6 +588,7 @@
       "transitionName": "Open the shutters onto the world below",
       "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [1.6, 2.2, 0.1], "pos": [0, 1.1, 0], "color": "#415a77", "material": "metal" }, { "shape": "box", "size": [1.4, 0.04, 0.12], "pos": [0, 1.1, 0], "color": "#8fe3ff", "material": "glow", "emissive": "#8fe3ff" }], "idle": "none", "light": { "color": "#8fe3ff", "intensity": 1, "radius": 3 } },
       "gmNotes": "Final confrontation. MATRON speaks through the Proxy, maternal and reasonable. Holding the Arrival Log and shutting down the Proxy wins: the crew gets its vote.",
+      "backdrop": { "style": "starfield", "color": "#050a14", "color2": "#8fe3ff", "intensity": 0.35 },
       "music": "boss"
     }
   ],

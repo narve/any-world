@@ -306,7 +306,10 @@ describe('GM actions', () => {
     expect(r2.state.area.gmBudget).toBe(0);
     const r3 = applyGmActions(r2.state, [{ type: 'grant_xp', amount: 5 }, { type: 'narrate', text: 'free' }], env(w));
     expect(r3.state.player.xp).toBe(0);
-    expect(r3.state.log.some((l) => l.kind === 'system' && l.text.includes('over budget'))).toBe(true);
+    expect(r3.gmSkipped).toEqual([{ action: 'grant_xp', reason: 'over budget' }]);
+    expect(r3.events).toContainEqual({ type: 'gm_skipped', action: 'grant_xp', reason: 'over budget' });
+    // refused GM actions are diagnostics, never lines in the player's log
+    expect(r3.state.log.some((l) => l.text.includes('skipped') || l.text.includes('over budget'))).toBe(false);
     expect(r3.state.log.some((l) => l.text === 'free')).toBe(true);
   });
 
@@ -342,7 +345,7 @@ describe('GM actions', () => {
     expect(st.area.gmBudget).toBe(budget);
   });
 
-  it('invalid references are skipped with a log entry', () => {
+  it('invalid references are skipped (gm_skipped, not the player log)', () => {
     const w = testWorld();
     const s = newGame(w);
     const r = applyGmActions(s, [
@@ -353,7 +356,9 @@ describe('GM actions', () => {
       { type: 'reveal_item', item: 'zzz', level: 'clear' },
       { type: 'bogus' } as unknown as GmAction,
     ], env(w));
-    expect(r.state.log.filter((l) => l.kind === 'system' && l.text.includes('skipped'))).toHaveLength(6);
+    expect(r.gmSkipped).toHaveLength(6);
+    expect(r.gmSkipped!.map((x) => x.action)).toEqual(['spawn', 'give_item', 'say', 'effect', 'reveal_item', 'action']);
+    expect(r.state.log.some((l) => /skipped|unknown/.test(l.text))).toBe(false);
     expect(r.state.area.gmBudget).toBe(GM_BUDGET_PER_AREA);
   });
 });

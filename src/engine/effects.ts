@@ -579,6 +579,12 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
       obs.push({ kind: 'xp', self: true, amount: e.amount });
       return;
     }
+    case 'currency': {
+      // paid to the player whoever the effect lands on (like grant_xp): currency is player state
+      ctx.s.player.currency += e.amount;
+      log(ctx, `+${e.amount} ${ctx.world.vocabulary.currency}`, 'loot');
+      return;
+    }
     case 'set_flag':
       ctx.s.flags[e.flag] = e.value;
       return;

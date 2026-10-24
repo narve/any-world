@@ -8,10 +8,18 @@
  *   --params k=v,k=v   generator knobs (e.g. roomCount=12,openness=0.3)
  *   --lamps <0..1>     lamp frequency (default 0.08)
  *   --regions          show region ids on floor tiles
+ *   --names            list the regions (id, name, size, centre) under the map
  *   --terrain          also scatter the area's terrain (with --world)
  *   --stats            print timing and region/door counts
  *
  * Legend: # wall  . floor  + door  < start  > exit  ~ water  * lamp  (space) void
+ * (islands platforms end directly at the void unless params rims=1)
+ *
+ * Generator knobs are documented at the top of each file in src/engine/mapgen/generators/.
+ * Examples:
+ *   npx tsx tools/mapgen-ascii.ts islands 3 large --params islandCount=14,pockets=1 --regions --names
+ *   npx tsx tools/mapgen-ascii.ts organic 5 medium --params chambers=4,curl=1,membranes=1
+ *   npx tsx tools/mapgen-ascii.ts geometric 7 medium --params variant=0,rings=4,spokes=8
  */
 import { readFileSync } from 'node:fs';
 import type { AreaPlan, WorldSpec } from '../src/schema/world';
@@ -26,7 +34,7 @@ const opt = (name: string): string | undefined => {
 const positional: string[] = [];
 for (let i = 0; i < args.length; i++) {
   if (args[i].startsWith('--')) {
-    if (!['--regions', '--terrain', '--stats', '--help'].includes(args[i])) i++;
+    if (!['--regions', '--names', '--terrain', '--stats', '--help'].includes(args[i])) i++;
     continue;
   }
   positional.push(args[i]);
@@ -98,6 +106,9 @@ for (const job of jobs) {
   if (flag('--terrain') && world) applyAreaTerrain(map, job.plan, world, rng);
   console.log(`== ${job.label}`);
   console.log(renderAscii(map, { regions: flag('--regions') }));
+  if (flag('--names'))
+    for (const r of map.regions)
+      console.log(`  region ${r.id.toString(36)}: ${r.name ?? '(unnamed)'} — ${r.size} tiles, centre ${r.centre.x},${r.centre.y}`);
   if (flag('--stats')) {
     const doors = map.tiles.filter((t) => t.kind === 'door').length;
     const lampsN = map.tiles.filter((t) => t.lamp).length;

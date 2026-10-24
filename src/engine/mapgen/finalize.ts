@@ -238,7 +238,7 @@ export function fillRegionsVoronoi(g: Grid, rng: Rng, tilesPerRegion = 90): void
 }
 
 /** Region table from tile tags; ids are compacted to 0..n-1 in id order. */
-export function buildRegions(g: Grid): AreaMap['regions'] {
+export function buildRegions(g: Grid, names?: ReadonlyMap<number, string>): AreaMap['regions'] {
   const ROOMY: ReadonlySet<TileKind> = new Set<TileKind>(['floor', 'start', 'transition']);
   const sums = new Map<number, { sx: number; sy: number; n: number; tiles: number[] }>();
   for (let i = 0; i < g.tiles.length; i++) {
@@ -280,7 +280,10 @@ export function buildRegions(g: Grid): AreaMap['regions'] {
       }
     }
     const cx = best % g.w;
-    regions.push({ id: k, centre: { x: cx, y: (best - cx) / g.w }, size: s.n });
+    const name = names?.get(old);
+    const region: AreaMap['regions'][number] = { id: k, centre: { x: cx, y: (best - cx) / g.w }, size: s.n };
+    if (name) region.name = name;
+    regions.push(region);
   });
   for (const t of g.tiles) if (t.region !== undefined) t.region = remap.get(t.region);
   return regions;
@@ -384,17 +387,30 @@ export function placeLamps(g: Grid, frequency: number, rng: Rng): void {
 }
 
 /** Runs all shared post-processing and returns the finished map. */
-export function finalize(g: Grid, rng: Rng, opts: { lampFrequency: number; dropBelow?: number; voronoi?: number; doors?: boolean }): AreaMap {
+export function finalize(
+  g: Grid,
+  rng: Rng,
+  opts: {
+    lampFrequency: number;
+    dropBelow?: number;
+    voronoi?: number;
+    doors?: boolean;
+    /** keep void directly next to open tiles (no wall rim) — floating layouts */
+    openEdges?: boolean;
+    /** generator region id → structural name */
+    regionNames?: ReadonlyMap<number, string>;
+  },
+): AreaMap {
   closeBorder(g);
   connectAll(g, { dropBelow: opts.dropBelow, doors: opts.doors });
-  wallify(g);
+  if (!opts.openEdges) wallify(g);
   closeBorder(g);
   voidOutside(g);
   if (opts.voronoi) fillRegionsVoronoi(g, rng, opts.voronoi);
   const { start, exit } = chooseStartExit(g, rng);
   g.set(start.x, start.y, 'start');
   g.set(exit.x, exit.y, 'transition');
-  const regions = buildRegions(g);
+  const regions = buildRegions(g, opts.regionNames);
   placeLamps(g, opts.lampFrequency, rng);
   return { width: g.w, height: g.h, tiles: g.tiles, start, exit, regions };
 }

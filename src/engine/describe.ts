@@ -74,6 +74,8 @@ export function effectLine(ctx: Ctx, e: Effect): string | null {
       return `Makes noise (radius ${e.radius})`;
     case 'grant_xp':
       return `+${e.amount} ${ctx.world.vocabulary.xp}`;
+    case 'currency':
+      return `+${e.amount} ${ctx.world.vocabulary.currency}`;
     case 'change_faction':
       return `Makes the target ${e.faction}`;
     default:

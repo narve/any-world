@@ -5,6 +5,7 @@
 import type { ChoiceView, DialogueView, LevelUpView, TradeIntent, TradeView } from '../viewmodel';
 import { dataKey, focusables, h, icon, ICONS, setChildren, trapFocus } from '../dom';
 import { glyph, itemCard, type Tooltip, type UiContext } from './common';
+import { tradeColumns } from '../format';
 
 export class Modal {
   readonly el: HTMLElement;
@@ -112,7 +113,7 @@ export class DialoguePanel {
         'footer',
         { class: 'aw-dlg-foot' },
         d.canPersuade ? h('button', { type: 'button', class: 'aw-btn aw-btn-small', disabled: d.pending, onclick: () => this.handlers.persuade(d.npcId) }, 'Persuade', h('kbd', null, 'p')) : null,
-        d.canTrade ? h('button', { type: 'button', class: 'aw-btn aw-btn-small', disabled: d.pending, onclick: () => this.handlers.trade(d.npcId) }, 'Trade') : null,
+        d.canTrade ? h('button', { type: 'button', class: 'aw-btn aw-btn-small', disabled: d.pending, onclick: () => this.handlers.trade(d.npcId) }, 'Trade', h('kbd', null, 't')) : null,
         h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost', 'data-autofocus': opts.length === 0 ? true : undefined, onclick: () => this.handlers.leave() }, 'Leave', h('kbd', null, 'Esc')),
       ),
     );
@@ -123,6 +124,22 @@ export class DialoguePanel {
     const d = this.view;
     if (!d || d.pending || i < 0 || i >= d.options.length) return;
     this.handlers.reply(i, d.options[i]);
+  }
+
+  /** keyboard 'p': same as the Persuade button (only while it is shown and enabled) */
+  persuade(): boolean {
+    const d = this.view;
+    if (!d || d.pending || !d.canPersuade) return false;
+    this.handlers.persuade(d.npcId);
+    return true;
+  }
+
+  /** keyboard 't': same as the Trade button */
+  trade(): boolean {
+    const d = this.view;
+    if (!d || d.pending || !d.canTrade) return false;
+    this.handlers.trade(d.npcId);
+    return true;
   }
 }
 
@@ -225,6 +242,7 @@ export class TradePanel {
     if (!t) return this.modal.hide();
     if (!this.modal.show([t, this.ctx().vocab.currency])) return;
     const cur = this.ctx().vocab.currency;
+    const cols = tradeColumns(t);
     const row = (name: Node, price: number, label: string, onClick: () => void, disabled: boolean, keyHint?: string, tipNode?: () => Node) => {
       const b = h(
         'button',
@@ -249,7 +267,7 @@ export class TradePanel {
       t.greeting ? h('blockquote', { class: 'aw-dlg-reply' }, t.greeting) : null,
       h(
         'div',
-        { class: 'aw-trade-cols' },
+        { class: cols.sell ? 'aw-trade-cols' : 'aw-trade-cols aw-trade-cols-single' },
         h(
           'section',
           null,
@@ -268,16 +286,16 @@ export class TradePanel {
               )
             : h('p', { class: 'aw-muted' }, 'Nothing for sale.'),
         ),
-        h(
-          'section',
-          null,
-          h('h3', null, 'Sell'),
-          t.sellable.length
-            ? t.sellable.map((s) =>
+        cols.sell
+          ? h(
+              'section',
+              null,
+              h('h3', null, 'Sell'),
+              t.sellable.map((s) =>
                 row(h('span', { class: 'aw-trade-name' }, glyph(s.item, 'sm'), s.item.name), s.price, 'Sell', () => this.emit({ type: 'sell', slot: s.slot }), false, undefined, () => itemCard(s.item, this.ctx())),
-              )
-            : h('p', { class: 'aw-muted' }, 'Nothing they want.'),
-        ),
+              ),
+            )
+          : null,
       ),
       h('footer', { class: 'aw-dlg-foot' }, h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost', 'data-autofocus': true, onclick: () => this.emit({ type: 'close' }) }, 'Done', h('kbd', null, 'Esc'))),
     );

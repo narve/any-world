@@ -6,6 +6,7 @@ import { parseWorld } from '../../schema/refs';
 import type { WorldSpec } from '../../schema/world';
 import type { AreaMap, AreaState, Tile } from '../../engine/types';
 import { AreaView } from './tiles';
+import { renderedWallHeight, MAX_WALL_HEIGHT, STUB_HEIGHT } from './surfaces';
 import { cutawayTiles } from './cutaway';
 import { ItemLayer } from './items';
 import { ActorLayer } from './actors';
@@ -60,7 +61,9 @@ describe('AreaView', () => {
     expect(names).toContain('water');
     expect(names).toContain('transition');
     expect(v.lamps.length).toBe(1);
-    expect(v.wallHeight).toBe(plan.wall.height);
+    expect(v.planWallHeight).toBe(plan.wall.height);
+    expect(v.wallHeight).toBe(renderedWallHeight(plan.wall.height));
+    expect(v.wallHeight).toBeLessThanOrEqual(MAX_WALL_HEIGHT);
     const walls = v.group.getObjectByName('walls') as THREE.InstancedMesh;
     expect(walls.count).toBeGreaterThan(20);
     const floors = v.group.getObjectByName('floor') as THREE.InstancedMesh;
@@ -102,7 +105,8 @@ describe('AreaView', () => {
     const set = cutawayTiles({ width: 9, height: 7, isTall: (i) => v.isTall(i) }, { x: 2, y: 5 }, 0, { depth: 2 });
     expect(set.has(idx(2, 6))).toBe(true);
     v.setCutaway(set);
-    expect(v.inspect(idx(2, 6)).wallScale).toBeLessThan(0.2);
+    // a low stub (STUB_HEIGHT tiles), not a flat slab
+    expect(v.inspect(idx(2, 6)).wallScale * v.wallHeight).toBeCloseTo(STUB_HEIGHT);
     expect(v.inspect(idx(2, 0)).wallScale).toBe(1);
     v.setCutaway(new Set());
     expect(v.inspect(idx(2, 6)).wallScale).toBe(1);
@@ -121,7 +125,7 @@ describe('AreaView', () => {
     const set = cutawayTiles({ width: 9, height: 7, isTall: (i) => v.isTall(i) }, { x: 4, y: 5 }, 0, { depth: 2 });
     expect(set.has(door)).toBe(true);
     v.setCutaway(set);
-    expect(v.propScaleY(door)).toBeLessThan(0.2);
+    expect(v.propScaleY(door)).toBeLessThan(0.3);
     v.setCutaway(new Set());
     expect(v.propScaleY(door)).toBe(1);
     // player north of the closed door, camera rotated so the door lies between them and the camera

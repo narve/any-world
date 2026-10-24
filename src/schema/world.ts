@@ -149,6 +149,8 @@ export const Effect = z.discriminatedUnion('type', [
   z.object({ type: z.literal('light'), radius: z.number().int().min(1).max(10), duration: z.number().int().min(1).max(500) }),
   z.object({ type: z.literal('noise'), radius: z.number().int().min(1).max(20) }),
   z.object({ type: z.literal('grant_xp'), amount: z.number().int().min(1) }),
+  /** pays the player in the world's currency (M2), e.g. from an on_kill rule, a loot item or a quest token. */
+  z.object({ type: z.literal('currency'), amount: z.number().int().min(1).max(100) }),
   z.object({ type: z.literal('set_flag'), flag: Id, value: z.boolean().default(true) }),
   z.object({ type: z.literal('counter'), counter: Id, add: z.number() }),
   z.object({ type: z.literal('change_faction'), faction: z.enum(['hostile', 'neutral', 'friendly']) }),
@@ -426,6 +428,8 @@ export const ActorDef = z.object({
   /** boss / named unique — spawned once. */
   unique: z.boolean().default(false),
   npc: NpcSpec.optional(),
+  /** persuade check target for an actor without an npc block (M2). Without it the engine derives one from hp. */
+  persuadeDifficulty: z.number().int().min(1).max(30).optional(),
   /** tags help the GM and the balance checker ("undead", "student", "robot"). */
   tags: z.array(z.string().max(20)).max(6).default([]),
   model: ModelSpec,
@@ -489,6 +493,8 @@ export const PlayerSpec = z.object({
   startingItems: z
     .array(z.object({ item: Id, count: z.number().int().min(1).max(20).default(1), equipped: z.boolean().default(false), quick: z.boolean().default(true) }))
     .max(10),
+  /** currency in hand at the start of a run (M2), so traders are usable without a GM handing out money. */
+  startCurrency: z.number().int().min(0).max(9999).optional(),
   growth: z.object({
     /** xp needed for level 2; each further level multiplies by `curve`. */
     firstLevelXp: z.number().int().min(5).max(500).default(30),
@@ -507,7 +513,13 @@ export type PlayerSpec = z.infer<typeof PlayerSpec>;
 // Areas
 // ---------------------------------------------------------------------------
 
-export const Generator = z.enum(['rooms', 'caves', 'open', 'town', 'building', 'ship', 'maze', 'arena']);
+export const Generator = z.enum([
+  'rooms', 'caves', 'open', 'town', 'building', 'ship', 'maze', 'arena',
+  // non-realistic layouts (M2)
+  'islands',   // floating platforms over a void, joined by narrow bridges
+  'organic',   // membranes, blobs and tubes — insides of creatures, dream-flesh, coral
+  'geometric', // abstract symmetric patterns, concentric rings, tessellations
+]);
 export type Generator = z.infer<typeof Generator>;
 
 export const Lighting = z.object({
@@ -531,7 +543,13 @@ export const SurfaceStyle = z.object({
   /** wall height in tiles (only for walls). */
   height: z.number().min(0.2).max(3).optional(),
   /** surface pattern hint. */
-  pattern: z.enum(['plain', 'tiles', 'planks', 'grass', 'metal_plates', 'cobble', 'carpet', 'sand', 'water', 'snow']).default('plain'),
+  pattern: z
+    .enum([
+      'plain', 'tiles', 'planks', 'grass', 'metal_plates', 'cobble', 'carpet', 'sand', 'water', 'snow',
+      // abstract (M2)
+      'gradient', 'grid', 'noise', 'lines', 'none',
+    ])
+    .default('plain'),
 });
 
 export const AreaPlan = z.object({
@@ -560,6 +578,16 @@ export const AreaPlan = z.object({
   transitionRequires: Condition.optional(),
   /** notes for the GM about this area. */
   gmNotes: z.string().max(400).default(''),
+  /** what is drawn beyond the map / in void tiles (M2). Default: plain sky/ambient colour. */
+  backdrop: z
+    .object({
+      style: z.enum(['color', 'gradient', 'starfield', 'clouds', 'abyss', 'aurora', 'grid', 'noise']).default('color'),
+      color: Color,
+      color2: Color.optional(),
+      /** 0..1 how busy/animated */
+      intensity: z.number().min(0).max(1).default(0.5),
+    })
+    .optional(),
   music: z.enum(['explore', 'tense', 'calm', 'eerie', 'boss', 'upbeat']).default('explore'),
 });
 export type AreaPlan = z.infer<typeof AreaPlan>;

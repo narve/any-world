@@ -1,13 +1,13 @@
 /**
  * The playable game at `/` (issues/M1-missing-main-controller.md): the start screen lists the
  * recorded worlds, a demo starts a run, a few turns are played with the keyboard and mouse, and the
- * end screen leads back into a new run. Screenshots go to docs/progress/M1/.
+ * end screen leads back into a new run. Screenshots go to docs/progress/M2/play-*.png.
  * Run: xvfb-run -a npx playwright test e2e/play.spec.ts
  */
 import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
-const OUT = 'docs/progress/M1';
+const OUT = 'docs/progress/M2';
 mkdirSync(OUT, { recursive: true });
 
 function collectErrors(page: Page): string[] {
@@ -56,7 +56,7 @@ test('start screen lists the demo worlds and a demo starts a playable run', asyn
   await waitReady(page);
   await expect(page.locator('.aw-start')).toBeVisible();
   const demos = page.locator('.aw-demo');
-  await expect(demos).toHaveCount(3);
+  expect(await demos.count()).toBeGreaterThanOrEqual(3);
   await page.screenshot({ path: `${OUT}/play-00-start.png` });
 
   await demos.first().click();

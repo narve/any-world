@@ -89,3 +89,25 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   `remove_rule {id}`. Engine keeps `state.activeRules` (world rules + GM rules, max 5), at most one
   new GM rule per area, power-impact estimate vs difficulty (refuse/require counterweight). Add a UI
   "Rules" panel. The GM prompt gets the active rules and difficulty.
+- **Clearer controls & goals** (user playtest of M1, Lowmoor): pressing a hotbar key on an already-equipped
+  passive item (starting Thesaurus, "E" badge) opens the backpack inspect view — by design, but it reads as a
+  bug. Fix: equipped item → small inline tooltip/toast ("Equipped as your Comeback — bump into rivals to use
+  it"), never a surprise backpack; explain the E badge. Add an always-visible **goal tracker** (world goal
+  summary + current step/quest, e.g. "Get your speech notebook back from Rosalind"), contextual key hints
+  (near NPC: "T talk", on item: "G pick up", at exit: "> Walk home…", locked exit: why), and a short
+  first-run onboarding card per world (how to win, how conflict works here). High priority, first in M3.
+
+## Backlog added during M2 (user)
+
+- **Languages (requirement, at least Norwegian):** see DESIGN §7b and DoD #11. This is scheduled in the
+  chained M3–M5 workflow. M3 adds `WorldMeta.language` and makes the world/GM/dialogue prompts
+  language-aware, and the agents-as-provider produce at least 2 Norwegian demo worlds. M4 adds the UI
+  message catalog (en + nb), a language picker, engine log events as key + params instead of English
+  sentences, a missing-key test, and translated prompt-library entries.
+- **Future, not v1:** sharing generated worlds and multiplayer (DESIGN §12). v1 only keeps the door open:
+  versioned specs that can be exported and imported, and no unnecessary single-player assumptions.
+- **Mobile & responsive (requirement):** see DESIGN §6b and DoD #12. This is scheduled in the chained
+  workflow. M3 starts with the controls & goals work, which is designed touch-first (context buttons
+  double as the key hints). M4 adds the responsive layout and bottom sheets, touch input, the mobile
+  render quality tier and performance budget, and Playwright device projects (iPhone and Pixel,
+  portrait and landscape). M5 runs a touch-only playthrough with bots driving tap input.
