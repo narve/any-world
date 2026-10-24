@@ -111,3 +111,7 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   double as the key hints). M4 adds the responsive layout and bottom sheets, touch input, the mobile
   render quality tier and performance budget, and Playwright device projects (iPhone and Pixel,
   portrait and landscape). M5 runs a touch-only playthrough with bots driving tap input.
+- **Priority note (user, during M3):** fun and fluent gameplay matters more than exact balance or fairness
+  (DESIGN §2.5). Reviewers and fixers should treat balance bands as guard rails, report flow/fun problems
+  (friction, waiting, confusing moments, dead ends, boring stretches) as major issues, and not burn
+  rounds fine-tuning win rates. For future multiplayer, avoid waiting; occasionally missed turns are OK.

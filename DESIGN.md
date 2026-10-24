@@ -26,6 +26,12 @@ introduces events. The engine guarantees the game stays playable and fair.
    simulated playthroughs by bots.
 4. **Graphics serve readability.** The aim is a good-looking low-poly 3D world, but you should
    always be able to tell what is on screen and what will happen.
+5. **Fun and fluent beats exact (owner's priority).** Exact balance, fairness and rules
+   precision are secondary. Moment-to-moment flow, surprise, readability and fun come first.
+   When they conflict, choose flow: no fiddly confirmations, no long animations, no dead ends,
+   and generous fallbacks. Balance targets (win-rate bands, bot sims) are guard rails against
+   broken or absurd worlds, not things to optimise. Don't spend effort polishing numbers when
+   the same effort could make play smoother or more fun.
 
 ## 3. Genre and gameplay
 
@@ -438,3 +444,7 @@ v1 is done when all of these hold. Each one is checked by automated tests or an 
   pure engine makes lockstep or server-authoritative play feasible later. The GM would need to address
   several players. v1 avoids assuming exactly one player where it is cheap to avoid (e.g. the GM
   context and win conditions), but does not build any of this.
+  **Owner's priority for multiplayer: waiting is bad.** Prefer designs where nobody waits for
+  others, such as simultaneous turns with a short timer, async/independent turns, or real-time-ish
+  ticks. Occasionally missing a turn or having an action resolve imperfectly is acceptable. Fluency
+  matters more than strict turn fairness.
