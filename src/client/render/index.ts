@@ -61,6 +61,7 @@ import { Backdrop } from './backdrop';
 import { disposeSurfaceTextures } from './surfaces';
 import { AdaptiveQuality, FpsMeter, QUALITY_PROFILES, browserDeviceHints, initialTier, isMobileDevice, type DeviceHints, type QualityProfile, type QualitySetting, type QualityTier } from './quality';
 import type { ViewInsets } from './camera';
+import { missLabel } from '../i18n/engine-text';
 
 export { buildModel, animateModel } from './models';
 export type { ModelSpecIn } from './models';
@@ -420,7 +421,7 @@ export class Renderer {
           impactAt.set(t.id, impact);
           lastImpact = impact;
           if (!ev.hit) {
-            say(t, 'miss', '#d8d8e0', impact, { size: 0.75 });
+            say(t, missLabel(), '#d8d8e0', impact, { size: 0.75 });
           } else {
             if (!damagedIds.has(t.id) && ev.damage > 0) say(t, `${ev.damage}`, color, impact);
             this.knockback(t, dir, impact);

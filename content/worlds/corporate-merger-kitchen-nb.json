@@ -1,0 +1,3737 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Nøytral grunn: kjøkkenet i tredje",
+    "tagline": "Halberd & Pike Mutual blir spist levende av Greyline Assurance. Kjøkkenet er det siste stedet ingen eier. Du eier yoghurtkartet.",
+    "genre": "kontorsatire",
+    "tags": [
+      "kontor",
+      "satire",
+      "næringsliv",
+      "ikke-voldelig",
+      "surrealistisk",
+      "sladder"
+    ],
+    "tone": "tørr, smålig, underlig øm",
+    "era": "en lysrørsbelyst nåtid, mandag til fredag",
+    "premise": "Halberd & Pike Mutual, et mellomstort forsikringsselskap med beige teppe og en visjon fra 1987, blir slukt av Greyline Assurance. Hvert møterom er annektert, hver pult ommerket. Bare kjøkkenet i tredje etasje er nøytral grunn, takket være en gammel brannvernparagraf ingen tør å prøve. Pip Okonedo-Marsh, vikar fra byrå, har brukt seks uker på å lære seg hvem som eier hvilken merket yoghurt. Det er den mest verdifulle etterretningen i bygget. Fredag klokka fire avgjør allmøtet hvilke avdelinger som overlever integrasjonen. Pip har tenkt å ha noe å si.",
+    "prompt": "Et mellomstort forsikringsselskap blir slukt av konkurrenten, og den eneste nøytrale grunnen som er igjen, er kjøkkenet i tredje etasje. Du er vikaren som vet hvem som eier hvilken merket yoghurt – bytt sladder, forfalsk møteinnkallinger og avgjør hvilken avdeling som overlever fredagens allmøte.",
+    "nonViolent": true,
+    "language": "nb"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Albuer",
+        "abbr": "ALB",
+        "description": "Å komme seg gjennom en full korridor og først i mikrobølgekøen."
+      },
+      "dex": {
+        "name": "Diskresjon",
+        "abbr": "DIS",
+        "description": "Å være et sted uten å bli lagt merke til. Å unngå blikkontakt og oppgaver."
+      },
+      "int": {
+        "name": "Sladder",
+        "abbr": "SLA",
+        "description": "Å vite hvem, hva og hvems. Gir kraft til hver smarte kommentar."
+      },
+      "hp": {
+        "name": "Fatning",
+        "abbr": "FAT",
+        "description": "Hvor lenge du klarer å holde smilet. På null leverer du inn adgangskortet og går hjem."
+      },
+      "mp": {
+        "name": "Velvilje",
+        "abbr": "VEL",
+        "description": "Tjenester folk fortsatt føler de skylder deg. Brukes på sosiale manøvrer."
+      },
+      "ac": {
+        "name": "Teflon",
+        "abbr": "TEF",
+        "description": "Hvor godt skylda preller av deg."
+      }
+    },
+    "conflict": "Motsi",
+    "defeated": "satt på sidelinja",
+    "xp": "Innflytelse",
+    "levelUp": "Kontrakten forlenget",
+    "currency": "kjeks",
+    "lossTitle": "Kontrakten din ble ikke fornyet",
+    "winTitle": "Forslaget er vedtatt",
+    "area": "Etasje"
+  },
+  "palette": {
+    "primary": "#2f8f83",
+    "secondary": "#e8dcc0",
+    "accent": "#f2b134",
+    "danger": "#d9534f",
+    "ui": "#22303a",
+    "text": "#f7f3ea"
+  },
+  "damageTypes": [
+    {
+      "id": "snark",
+      "name": "Spydighet",
+      "color": "#f2b134"
+    },
+    {
+      "id": "red-tape",
+      "name": "Byråkrati",
+      "color": "#d9534f"
+    },
+    {
+      "id": "spin",
+      "name": "Spinn",
+      "color": "#9b7fe0"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "double-booked",
+      "name": "Dobbeltbooket",
+      "description": "To møter samtidig. Du står stivfrossen i gangen og prøver å finne ut hvilket du skal droppe.",
+      "harmful": true,
+      "color": "#5b8def",
+      "flags": [
+        "stunned"
+      ]
+    },
+    {
+      "id": "decaf",
+      "name": "Koffeinfri",
+      "description": "Tom for koffein. Øynene glir litt igjen, og replikkene kommer for sent.",
+      "harmful": true,
+      "color": "#8a6f55",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        },
+        {
+          "stat": "int",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "queasy",
+      "name": "Kvalm",
+      "description": "Den yoghurten var ikke din, og den var ikke fersk.",
+      "harmful": true,
+      "color": "#9bbf4a",
+      "perTurn": [
+        {
+          "type": "damage",
+          "amount": {
+            "base": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "jittery",
+      "name": "Skjelven",
+      "description": "Trippel espresso. Alt går fort og er litt for høyt.",
+      "harmful": false,
+      "color": "#c0783a",
+      "flags": [
+        "hasted"
+      ],
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "out-of-office",
+      "name": "Fraværende",
+      "description": "Et autosvar går foran deg. Ingen ser deg med mindre du går rett i dem.",
+      "harmful": false,
+      "color": "#b7c4cf",
+      "flags": [
+        "invisible"
+      ]
+    },
+    {
+      "id": "cultured",
+      "name": "Kulturell",
+      "description": "Levende probiotiske kulturer. Fatningen din strikker seg sammen igjen.",
+      "harmful": false,
+      "color": "#f4e9d0",
+      "flags": [
+        "regenerating"
+      ],
+      "perTurn": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cc-d",
+      "name": "På kopi på alt",
+      "description": "Førti uleste tråder i hodet. Vanskelig å unngå noe som helst.",
+      "harmful": true,
+      "color": "#e06c9f",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "flustered",
+      "name": "Satt ut",
+      "description": "Avslørt i full offentlighet. Du vil ut av samtalen. Nå.",
+      "harmful": true,
+      "color": "#ff9b85",
+      "flags": [
+        "afraid"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "caffeine",
+      "name": "Koffein",
+      "description": "Det som holder vikaren oppreist. Renner sakte ut; kaffe fyller på. Tom betyr Koffeinfri.",
+      "color": "#7a4a2a",
+      "max": 10,
+      "start": 8,
+      "onEmpty": [
+        {
+          "type": "apply_status",
+          "status": "decaf",
+          "duration": 30
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "neutral-ground",
+      "name": "Nøytral grunn",
+      "description": "Kjøkkenbelegget er nøytralt etter brannvernparagrafen: hver runde du avslutter på en belegg-rute, får du tilbake 1 Fatning.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 1,
+          "action": {
+            "condition": {
+              "type": "on_terrain",
+              "who": "player",
+              "terrain": "kitchen-lino"
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "caffeine-economy",
+      "name": "Koffeinøkonomi",
+      "description": "Du mister 1 Koffein hver 25. runde. På null blir du Koffeinfri (−2 Diskresjon, −2 Sladder) til du drikker noe. Kaffemaskiner og kaffe fyller på.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 25,
+          "action": {
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "caffeine",
+                "amount": {
+                  "base": -1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "on": "on_resource_empty",
+          "action": {
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "decaf",
+                "duration": 30
+              },
+              {
+                "type": "message",
+                "text": "Øyelokkene dine sender en formell klage. Du går på koffeinfritt."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Pip Okonedo-Marsh",
+    "title": "Byråvikar, uke seks",
+    "description": "Nøkkelbåndet sier BESØKENDE. Sennepsgul cardigan, en telefon full av skjermbilder og et mentalt kart over hver merket boks i kjøleskapet i tredje.",
+    "stats": {
+      "str": 10,
+      "dex": 12,
+      "int": 14,
+      "hp": 32,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 8,
+    "sight": 8,
+    "unarmed": {
+      "name": "Talende taushet",
+      "verb": "lar en taushet henge over",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "snark",
+      "accuracyStat": "int"
+    },
+    "startingItems": [
+      {
+        "item": "laminated-lanyard",
+        "equipped": true
+      },
+      {
+        "item": "deniability-cardigan",
+        "equipped": true
+      },
+      {
+        "item": "builders-tea",
+        "count": 2
+      },
+      {
+        "item": "filter-coffee",
+        "count": 1
+      },
+      {
+        "item": "label-maker"
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "thick-skin",
+          "name": "Tykk hud",
+          "description": "Du har overlevd tre omorganiseringer og et nissevenn-arrangement. +4 Fatning.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "ear-to-the-wall",
+          "name": "Øret mot veggen",
+          "description": "Hver tynn skillevegg er en podkast. +2 Sladder.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "hot-desker",
+          "name": "Frisitter",
+          "description": "Ingen fast plass, ingen fast blink. +1 Diskresjon, +1 Teflon.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 1
+            },
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "small-talk-perk",
+          "name": "Småprat som våpen",
+          "description": "Lær Småprat: en kommentar om helgen som får noen til å vakle.",
+          "grantItems": [
+            "small-talk"
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "circle-back-perk",
+          "name": "Vi tar den senere",
+          "description": "Lær Vi tar den senere: skyv alle i nærheten unna og gjør dem nervøse.",
+          "grantItems": [
+            "circle-back"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "biscuit-diplomacy",
+          "name": "Kjeksdiplomati",
+          "description": "Hver rival du setter på sidelinja, legger igjen 2 kjeks på pulten, av respekt.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "effects": [
+                  {
+                    "type": "currency",
+                    "amount": 2
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "stairwell-breather",
+          "name": "Pusterom i trappa",
+          "description": "Når Fatningen blir lav, tar du nitti sekunder i trappeoppgangen og får tilbake 8 Fatning (av og til).",
+          "triggers": [
+            {
+              "on": "on_low_hp",
+              "chance": 0.6,
+              "action": {
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 8
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "iron-stomach",
+          "name": "Jernmage",
+          "description": "+2 Albuer og +3 Fatning. Ingenting i det kjøleskapet kan skade deg nå.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            },
+            {
+              "stat": "hp",
+              "amount": 3
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "corner-office-voice",
+          "name": "Hjørnekontor-stemme",
+          "description": "Du har lært å snakke som en direktør. +2 Sladder, +1 Teflon.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            },
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.85,
+        "build": "slim",
+        "skin": "#8d5a3b",
+        "top": "#d9a21b",
+        "bottom": "#2b3440",
+        "accent": "#3fb7a8",
+        "hair": "#1b1410",
+        "hairStyle": "bun",
+        "outfit": "plain",
+        "holding": "phone"
+      },
+      "idle": "bob"
+    }
+  },
+  "actors": [
+    {
+      "id": "greyline-consultant",
+      "name": "Greyline-konsulent",
+      "description": "Grå fleecevest, grå laptop, grått smil. Her for å «forstå arbeidsflyten deres» og så slette den.",
+      "stats": {
+        "hp": 7,
+        "ac": 11,
+        "str": 10,
+        "dex": 11,
+        "int": 11
+      },
+      "attack": {
+        "name": "Synergispørsmål",
+        "verb": "spør om jobben til",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "snark"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "shortbread",
+          "chance": 0.25
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "greyline"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "average",
+          "skin": "#e0b48f",
+          "top": "#5d646b",
+          "bottom": "#2c2f33",
+          "accent": "#9aa3ab",
+          "hair": "#3b2a1d",
+          "hairStyle": "short",
+          "outfit": "suit",
+          "holding": "book"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "post-it-swarm",
+      "name": "Passiv-aggressiv post-it",
+      "description": "En flokk gule lapper: «NOEN av oss vasker koppene sine :)». De flagrer i flokk og stikker med tegnsetting.",
+      "stats": {
+        "hp": 5,
+        "ac": 12,
+        "str": 6,
+        "dex": 14,
+        "int": 6
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Smilefjes",
+        "verb": "legger en lapp til",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "snark"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "xp": 4,
+      "tags": [
+        "paper"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.02,
+              0.32
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "rot": [
+              15,
+              20,
+              0
+            ],
+            "color": "#ffe14d",
+            "material": "matte",
+            "group": "wing"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.28,
+              0.02,
+              0.28
+            ],
+            "pos": [
+              0.18,
+              0.62,
+              0.1
+            ],
+            "rot": [
+              -20,
+              50,
+              10
+            ],
+            "color": "#ffd21f",
+            "material": "matte",
+            "group": "wing"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.02,
+              0.26
+            ],
+            "pos": [
+              -0.16,
+              0.7,
+              -0.08
+            ],
+            "rot": [
+              25,
+              -30,
+              -10
+            ],
+            "color": "#fff07a",
+            "material": "matte",
+            "group": "wing"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.14,
+              0.03,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.47,
+              0.02
+            ],
+            "rot": [
+              15,
+              20,
+              0
+            ],
+            "color": "#1c1c1c",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "reply-all-chain",
+      "name": "Svar alle-kjede",
+      "description": "En tråd som ikke vil dø, glidende langs gulvlisten, der hvert ledd er nok et «Vennligst fjern meg fra denne listen».",
+      "stats": {
+        "hp": 9,
+        "ac": 10,
+        "str": 9,
+        "dex": 10,
+        "int": 8
+      },
+      "attack": {
+        "name": "Svar alle",
+        "verb": "trykker «svar alle» mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "red-tape"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.25,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "cc-d",
+                "duration": 4
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "email"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#3c78d8",
+          "secondary": "#ffffff",
+          "accent": "#ff5a5a"
+        },
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "microwave-queue-bully",
+      "name": "Mikrobølgekø-vakt",
+      "description": "Har stått vakt ved mikroen siden fiskehendelsen i 2019. Lar deg ikke varme opp noe uten en høring.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 12,
+        "dex": 9,
+        "int": 10
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Foredrag om fiskehendelsen",
+        "verb": "holder foredrag for",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "snark",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "loot": [
+        {
+          "item": "builders-tea",
+          "chance": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "halberd"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "round",
+          "skin": "#c98e6b",
+          "top": "#7a2f3b",
+          "bottom": "#3a3a3a",
+          "accent": "#ffffff",
+          "hair": "#c8c8c8",
+          "hairStyle": "short",
+          "outfit": "plain",
+          "holding": "bottle"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "circular-reference",
+      "name": "Sirkelreferanse",
+      "description": "En rød logikksløyfe som viser til seg selv til den viser til deg. Ruller gjennom cellene og blinker med en varseltrekant.",
+      "stats": {
+        "hp": 11,
+        "ac": 11,
+        "str": 11,
+        "dex": 10,
+        "int": 12
+      },
+      "attack": {
+        "name": "Tilbake til start",
+        "verb": "går i loop rundt",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "red-tape"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.35
+      },
+      "loot": [
+        {
+          "item": "filter-coffee",
+          "chance": 0.3
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "spreadsheet"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#d83a3a",
+          "secondary": "#ffd2d2",
+          "accent": "#ffffff"
+        },
+        "idle": "pulse",
+        "light": {
+          "color": "#ff5050",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "merged-cell",
+      "name": "Sammenslått celle",
+      "description": "Tolv avdelinger slått sammen til én grå blokk, og den har ikke sluttet å vokse. Treg, tung og umulig å sortere.",
+      "stats": {
+        "hp": 15,
+        "ac": 12,
+        "str": 14,
+        "dex": 7,
+        "int": 6
+      },
+      "speed": 75,
+      "attack": {
+        "name": "Konsolider",
+        "verb": "konsoliderer",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "red-tape",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 10,
+      "tags": [
+        "spreadsheet"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#6e7781",
+          "secondary": "#c7ced6",
+          "accent": "#2f8f83"
+        },
+        "scale": 1.2,
+        "idle": "none"
+      }
+    },
+    {
+      "id": "ref-error",
+      "name": "#REF!-feil",
+      "description": "En svevende død lenke som driver mot deg i rare vinkler. Den peker på ting som ikke finnes lenger, og får deg til å tvile på om du gjør det.",
+      "stats": {
+        "hp": 8,
+        "ac": 12,
+        "str": 7,
+        "dex": 14,
+        "int": 12
+      },
+      "attack": {
+        "name": "Død lenke",
+        "verb": "peker anklagende på",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "spin",
+        "range": 3,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.3
+      },
+      "xp": 8,
+      "tags": [
+        "spreadsheet"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#ff2e63",
+          "secondary": "#252a34",
+          "accent": "#ffffff"
+        },
+        "scale": 0.7,
+        "idle": "hover",
+        "light": {
+          "color": "#ff2e63",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "pivot-table",
+      "name": "Pivottabell",
+      "description": "Et elitesammendrag av hva alle er verdt, som snur seg om sin egen akse for å vise avdelingen din i verst mulig lys.",
+      "stats": {
+        "hp": 18,
+        "ac": 13,
+        "str": 13,
+        "dex": 11,
+        "int": 14
+      },
+      "attack": {
+        "name": "Omformuler",
+        "verb": "omformulerer",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "spin",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "pivot-bad-light",
+          "name": "I et dårlig lys",
+          "description": "Vrir på tallene så du ser slurvete ut.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 4,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "flustered",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#9b7fe0"
+            }
+          },
+          "cooldown": 9
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "loot": [
+        {
+          "item": "triple-espresso",
+          "chance": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 24,
+      "tags": [
+        "spreadsheet",
+        "elite"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              0.08,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#2f8f83",
+            "material": "glass",
+            "emissive": "#1f5f57"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.15,
+              0.6,
+              0.15
+            ],
+            "pos": [
+              -0.25,
+              0.65,
+              0
+            ],
+            "color": "#f2b134",
+            "material": "glow"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.15,
+              0.9,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#e8dcc0",
+            "material": "glow"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.15,
+              0.4,
+              0.15
+            ],
+            "pos": [
+              0.25,
+              0.55,
+              0
+            ],
+            "color": "#d9534f",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "rumour-mill",
+      "name": "Ryktesmie",
+      "description": "En drueklase av hviskende munner på en krypende ranke. Den spytter halvsannheter tvers over rommet og sleper seg etter alle som protesterer.",
+      "stats": {
+        "hp": 12,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 13
+      },
+      "attack": {
+        "name": "Halvsannhet",
+        "verb": "sprer en halvsannhet om",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "spin",
+        "range": 4,
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 3
+      },
+      "loot": [
+        {
+          "item": "shortbread",
+          "chance": 0.35
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "grapevine"
+      ],
+      "model": {
+        "archetype": "plant",
+        "colors": {
+          "primary": "#7cc36b",
+          "secondary": "#b14a8f",
+          "accent": "#ffe0f0"
+        },
+        "idle": "sway"
+      },
+      "speed": 70
+    },
+    {
+      "id": "watercooler-whisper",
+      "name": "Vannkjølerhvisk",
+      "description": "Et kaldt trekk som høres ut som navnet ditt. Venter i svingene på ranken og lener seg tett inntil.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 10,
+        "dex": 14,
+        "int": 11
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Har du hørt",
+        "verb": "hvisker om",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "spin"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "grapevine"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#bfe9ff",
+          "secondary": "#5ab0e0",
+          "accent": "#ffffff"
+        },
+        "idle": "hover",
+        "light": {
+          "color": "#bfe9ff",
+          "intensity": 0.7,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "hr-liaison",
+      "name": "HR-kontakt for integrasjon",
+      "description": "Nøkkelbånd med tre adgangskort og begge logoene. Snakker utelukkende i kalenderinvitasjoner og godtar aldri et avslag.",
+      "stats": {
+        "hp": 20,
+        "ac": 13,
+        "str": 11,
+        "dex": 12,
+        "int": 14
+      },
+      "attack": {
+        "name": "Kjapt møte",
+        "verb": "booker et kjapt møte med",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "red-tape",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "calendar-ambush",
+          "name": "Kalenderbakhold",
+          "description": "Sender en innkalling som kolliderer med alt du hadde planlagt.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 4,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "double-booked",
+                "duration": 1
+              }
+            ],
+            "vfx": {
+              "kind": "bolt",
+              "color": "#5b8def"
+            }
+          },
+          "cooldown": 10
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "calendar-invite",
+          "chance": 0.6
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 20,
+      "tags": [
+        "greyline",
+        "elite"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "slim",
+          "skin": "#f0c8a8",
+          "top": "#f4f4f4",
+          "bottom": "#3d4b6b",
+          "accent": "#e06c9f",
+          "hair": "#b8562f",
+          "hairStyle": "long",
+          "outfit": "suit",
+          "holding": "phone"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "odile-greaves",
+      "name": "Odile Greaves, integrasjonsdirektør",
+      "description": "Kremfarget maktdress, rødpenn, intet etternavn på yoghurten, bare initialene O.G. Hun har allerede laget fredagens lysbildeserie. Avdelingen din er på lysbilde 41.",
+      "stats": {
+        "hp": 56,
+        "ac": 13,
+        "str": 13,
+        "dex": 12,
+        "int": 16
+      },
+      "attack": {
+        "name": "Rødpenn",
+        "verb": "retter med rødpenn på",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "red-tape",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "synergy-deck",
+          "name": "Synergipresentasjon",
+          "description": "Klikker seg gjennom førti lysbilder mot deg på under ett minutt.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "radius": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 1,
+                  "dice": "1d6"
+                },
+                "damageType": "spin"
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#f2b134"
+            }
+          },
+          "cooldown": 6
+        },
+        {
+          "id": "restructure",
+          "name": "Omstrukturer",
+          "description": "Kaller inn to konsulenter fra gangen for å «støtte overgangen».",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only"
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "greyline-consultant",
+                "count": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#9aa3ab"
+            }
+          },
+          "cooldown": 25,
+          "useWhen": "low_hp"
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 6
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Polert, tålmodig, svakt underholdt. Tror oppriktig at konsolidering er godhet. Var selv vikar i Halberd & Pike i 1998 og har aldri nevnt det.",
+        "greeting": "Å. Vikaren. Nydelig cardigan. Sett deg, dette tar bare førtien lysbilder.",
+        "lines": [
+          "Ingen mister jobben. Noen får en mulighet et annet sted.",
+          "Jeg har sett timelistene dine. Du er veldig mye på det kjøkkenet.",
+          "La oss ta dette på tomannshånd. For godt."
+        ],
+        "secrets": "Hun begynte som vikar i Halberd i 1998 og har fortsatt yoghurten sin i kjøleskapet i tredje, merket O.G. Greylines styre vil selge skadeavdelingene i begge selskapene til et skallselskap på mandag; hun har ikke bestemt seg for om hun skal stoppe det.",
+        "wants": "En ren fusjon uten overraskelser på allmøtet. I hemmelighet: at noen fra det gamle selskapet beviser at det var verdt å redde.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 17
+      },
+      "tags": [
+        "greyline",
+        "boss"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1,
+          "build": "slim",
+          "skin": "#d8a988",
+          "top": "#efe6d2",
+          "bottom": "#efe6d2",
+          "accent": "#c0262d",
+          "hair": "#e8e8e8",
+          "hairStyle": "bun",
+          "outfit": "suit",
+          "holding": "wand"
+        },
+        "scale": 1.1,
+        "idle": "bob",
+        "light": {
+          "color": "#ffe7b0",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "maureen-facilities",
+      "name": "Maureen fra Drift",
+      "description": "Vokter av kjøleskapet, oppvaskturnusen og den eneste fungerende nøkkelen til rekvisitaskapet. Har overlevd fire administrerende direktører.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "str": 12,
+        "dex": 10,
+        "int": 13
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Rask, uanfektet, handler bare i kjeks. Elsker litt sladder, men innrømmer det aldri. Kaller alle «vennen».",
+        "greeting": "Se opp for gulvet, vennen, jeg har nettopp vasket. Er du ute etter noe fra skapet?",
+        "lines": [
+          "Fredag er rydde-kjøleskapet-dag. Alt umerket havner i søpla. Alt merket leser jeg.",
+          "Greyline-gjengen setter melka si på øverste hylle. Frekt.",
+          "Kjeks på forskudd. Jeg tar ikke faktura."
+        ],
+        "stock": [
+          "builders-tea",
+          "filter-coffee",
+          "heavy-stapler",
+          "hi-vis-vest",
+          "out-of-office",
+          "calendar-invite"
+        ],
+        "secrets": "Yoghurten merket O.G. tilhører integrasjonsdirektøren, som sniker seg hit opp klokka sju om morgenen. Brikken til branndøra ligger i frakkelomma til mikrobølgekø-vakta, eller deromkring.",
+        "wants": "At noen, hvem som helst, endelig vasker fellesskoppene. Og å beholde jobben forbi fredag.",
+        "persuadeDifficulty": 11
+      },
+      "tags": [
+        "halberd",
+        "npc"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "round",
+          "skin": "#e9c2a6",
+          "top": "#3a7bd5",
+          "bottom": "#2d2d2d",
+          "accent": "#f2b134",
+          "hair": "#9c5b3a",
+          "hairStyle": "short",
+          "outfit": "uniform",
+          "holding": "tool"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "dev-it",
+      "name": "Dev fra IT",
+      "description": "Bor inne i integrasjonsregnearket nå. Har ikke sett dagslys siden fusjonen ble kunngjort. Bruker hodetelefonene som rustning.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 24,
+        "ac": 11,
+        "str": 8,
+        "dex": 12,
+        "int": 16
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Snakker fort, søvnløs, konspiratorisk. Forklarer alt med for mange forkortelser og ber så om unnskyldning.",
+        "greeting": "Å, gudskjelov, et ansikt. Ingen har åpnet fane fire på flere uker. Pass deg for sirkelreferansene, de biter.",
+        "lines": [
+          "Hver avdeling er en rad. Hver rad har en sletteknapp. Jeg har sett hvem som har redigeringstilgang.",
+          "Pivottabellen skjuler en kolonne som heter PROSJEKT YOGHURT. Jeg får ikke vist den. Kanskje du får det.",
+          "Ser du en #REF!, ikke se rett på den."
+        ],
+        "secrets": "Det finnes en skjult kolonne i integrasjonsarket: begge skadeavdelingene skal selges til et skallselskap. Ryktet om det har lekket ut i jungeltelegrafen under bygget.",
+        "wants": "Kaffe. Ordentlig kaffe. Og at noen tar backup av regnearket før Greyline sletter de gamle fanene.",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "halberd",
+        "npc"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "slim",
+          "skin": "#a86b45",
+          "top": "#2b2b2b",
+          "bottom": "#41556b",
+          "accent": "#3fb7a8",
+          "hair": "#111111",
+          "hairStyle": "mohawk",
+          "headwear": "headphones",
+          "outfit": "plain",
+          "holding": "tool"
+        },
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "carol-payroll",
+      "name": "Carol fra Lønn",
+      "description": "Har en skuff med nødforsyninger og husker hvert lønnstillegg siden 1994. Sitter av en eller annen grunn her nede i jungeltelegrafen og strikker.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 26,
+        "ac": 11,
+        "str": 9,
+        "dex": 10,
+        "int": 14
+      },
+      "behaviour": {
+        "type": "idle"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Varm, rolig og knusende godt informert. Gir folk mat. Gjentar aldri et rykte med mindre det er sant.",
+        "greeting": "Sett deg, vennen min, du ser grå ut. Ta en kjeks. Så, hva har du hørt?",
+        "lines": [
+          "Alle havner her nede til slutt. Jungeltelegrafen går under hver etasje.",
+          "Jeg har samlet inn til avskjedsgaver for elleve stykker denne måneden. Jeg samler ikke inn til din.",
+          "Odile? Hun var vikar en gang. Satt ved pulten din."
+        ],
+        "secrets": "Odile Greaves var vikar i Halberd & Pike i 1998, og det var Carol som lærte henne opp. Carol vet navnet på skallselskapet fra en testkjøring av lønna.",
+        "wants": "At skadeavdelingen overlever, mest fordi de alltid husker bursdagen hennes.",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "halberd",
+        "npc"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "build": "round",
+          "skin": "#5e3b2a",
+          "top": "#c0583a",
+          "bottom": "#4a3f35",
+          "accent": "#f4e9d0",
+          "hair": "#d9d9d9",
+          "hairStyle": "braids",
+          "outfit": "dress",
+          "holding": "none"
+        },
+        "idle": "bob"
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "laminated-lanyard",
+      "name": "Laminert nøkkelbånd",
+      "kind": "Besøkspass",
+      "description": "Et BESØKENDE-nøkkelbånd svingt med vilje. Det smeller mot folks trygghetsfølelse.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Nøkkelbåndsmell",
+        "verb": "smeller et nøkkelbånd mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "snark",
+        "accuracyStat": "dex"
+      },
+      "value": 5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.4,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#2f8f83",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.28,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glass"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "heavy-stapler",
+      "name": "Tung stiftemaskin",
+      "kind": "Pultartilleri",
+      "description": "Støpejern, 1970-tallet, tilhører Skade. Slått i pulten avslutter den diskusjoner.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Slag i pulten",
+        "verb": "slår stiftemaskinen ned ved",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "physical",
+        "accuracyStat": "str"
+      },
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.12,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#b02a2a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.06,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#222222",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "laser-pointer",
+      "name": "Presentasjonsklikker",
+      "kind": "Laserpeker",
+      "description": "Den røde prikken vandrer til den som snakker tull, og blir der til de slutter.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Rød prikk",
+        "verb": "retter rød prikk mot",
+        "damage": {
+          "dice": "1d5"
+        },
+        "damageType": "snark",
+        "range": 5,
+        "accuracyStat": "dex"
+      },
+      "rarity": "uncommon",
+      "value": 25,
+      "knowledge": "vague",
+      "vagueText": "Virker tvers over rommet. Ikke like kraftfullt som å stå der selv.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.07,
+              0.35,
+              0.07
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              80
+            ],
+            "color": "#1c1c1c",
+            "material": "metal",
+            "emissive": "#ff2020"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff2020",
+          "intensity": 0.6,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "deniability-cardigan",
+      "name": "Cardigan med troverdig uskyld",
+      "kind": "Strikkeplagg",
+      "description": "Sennepsgul, nuppete, enorme lommer. Ingenting som skjer i nærheten av den, er noen gang helt bærerens skyld.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.12,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#d9a21b",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "hi-vis-vest",
+      "name": "Brannvernvest",
+      "kind": "Autoritetsvest",
+      "description": "Ingen krangler med en brannvernleder. Ingen sjekker engang om du er det.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 3,
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 35,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.12,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#c8ff1a",
+            "material": "cloth",
+            "emissive": "#4a6000"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.52,
+              0.04,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#e0e0e0",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "eotm-pin",
+      "name": "Månedens medarbeider-pin",
+      "kind": "Emaljemerke",
+      "description": "Mars 2011. Ikke din. Folk retter seg fortsatt opp når de ser den.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        },
+        {
+          "stat": "ac",
+          "amount": 1
+        }
+      ],
+      "rarity": "rare",
+      "value": 40,
+      "knowledge": "vague",
+      "vagueText": "Svakt offisiell. Folk ser ut til å høre på den som bærer den.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.25,
+              0.04,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#f2b134",
+            "material": "metal",
+            "emissive": "#5a3e00"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "builders-tea",
+      "name": "Kraftig te",
+      "kind": "Krus",
+      "description": "Sterk nok til at skjeen står. To sukkerbiter. Tredje etasjes universelle våpenhvile.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c98a4a"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.22,
+              0.26,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.19,
+              0.02,
+              0.19
+            ],
+            "pos": [
+              0,
+              0.26,
+              0
+            ],
+            "color": "#9c5b2a",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "shortbread",
+      "name": "Smørkjeks fra boks",
+      "kind": "Kjeks",
+      "description": "Fra den rutete boksen ingen innrømmer å ha tatt med. Smøraktig, beroligende, litt dvask.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5,
+              "dice": "1d3"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4d58d"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.28,
+              0.06,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#f4d58d",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "filter-coffee",
+      "name": "Traktekaffe",
+      "kind": "Kannebunn",
+      "description": "Fra kanna som har stått på platen siden ni. Bitter, men den virker.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "caffeine",
+            "amount": {
+              "base": 5
+            }
+          },
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "decaf"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#7a4a2a"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.2,
+              0.24,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#2f8f83",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.17,
+              0.02,
+              0.17
+            ],
+            "pos": [
+              0,
+              0.24,
+              0
+            ],
+            "color": "#3a2214",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "triple-espresso",
+      "name": "Trippel espresso",
+      "kind": "Bitteliten kopp",
+      "description": "Fra Greyline-maskinen med berøringsskjerm. Ingen vet hva den gjør med et menneske.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "caffeine",
+            "amount": {
+              "base": 10
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "decaf"
+          },
+          {
+            "type": "apply_status",
+            "status": "jittery",
+            "duration": 12
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#c0783a"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 20,
+      "knowledge": "vague",
+      "vagueText": "Nesten svart, nesten fast. Du blir veldig våken og veldig rask en stund.",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.13,
+              0.12,
+              0.13
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.11,
+              0.02,
+              0.11
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#1a0e08",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "yoghurt-greek",
+      "name": "Merket yoghurt",
+      "kind": "Yoghurtbeger",
+      "description": "Tykk gresk yoghurt. Hele lunsjen til noen. Dypt oppkvikkende og dypt stjålet.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 9,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffffff"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "yoghurt",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.2,
+              0.22,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#f7f3ea",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.21,
+              0.02,
+              0.21
+            ],
+            "pos": [
+              0,
+              0.23,
+              0
+            ],
+            "color": "#3a7bd5",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "yoghurt-expired",
+      "name": "Utgått yoghurt",
+      "kind": "Yoghurtbeger",
+      "description": "Best før forrige direktør. Bruser litt når den åpnes. Ikke gjør det.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "queasy",
+            "duration": 4
+          },
+          {
+            "type": "resource",
+            "resource": "caffeine",
+            "amount": {
+              "base": 2
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#9bbf4a"
+        }
+      },
+      "value": 1,
+      "knowledge": "unknown",
+      "appearanceGroup": "yoghurt",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.2,
+              0.22,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#e8efd0",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.21,
+              0.03,
+              0.21
+            ],
+            "pos": [
+              0,
+              0.24,
+              0
+            ],
+            "color": "#9bbf4a",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "yoghurt-probiotic",
+      "name": "Probiotisk shot",
+      "kind": "Yoghurtbeger",
+      "description": "Levende kulturer fra helseskuffen. Fatningen din begynner stille å reparere seg selv.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 3
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "cultured",
+            "duration": 10
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4e9d0"
+        }
+      },
+      "value": 16,
+      "knowledge": "unknown",
+      "appearanceGroup": "yoghurt",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.14,
+              0.26,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#ffd0dc",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "calendar-invite",
+      "name": "Forfalsket møteinnkalling",
+      "kind": "Møteinnkalling",
+      "description": "Et hastemøte, «bare et kjapt et», i et rom som ikke finnes. Mottakeren fryser mens de leter etter det.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "double-booked",
+            "duration": 2
+          },
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "red-tape"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#5b8def"
+        }
+      },
+      "value": 14,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.02,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              10,
+              20,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.03,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.12,
+              -0.08
+            ],
+            "rot": [
+              10,
+              20,
+              0
+            ],
+            "color": "#5b8def",
+            "material": "glow"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "out-of-office",
+      "name": "Fraværsmelding",
+      "kind": "Autosvar",
+      "description": "«Jeg er for tiden borte fra pulten.» Festet på brystet gjør den det sant for alle som ser på.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "out-of-office",
+            "duration": 10
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#b7c4cf"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.02,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#b7c4cf",
+            "material": "glass",
+            "emissive": "#40505c"
+          }
+        ],
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "label-maker",
+      "name": "Merkemaskin",
+      "kind": "Kontorverktøy",
+      "description": "Skriver små, sikre sannheter på tape. Rett den mot et mysterium, så forteller den deg hva det er.",
+      "category": "tool",
+      "useMode": "reusable",
+      "cooldown": 30,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "identify",
+            "scope": "one"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f2b134"
+        }
+      },
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.1,
+              0.32
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#f2b134",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.02,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#1c1c1c",
+            "material": "glass"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "small-talk",
+      "name": "Småprat",
+      "kind": "Sosialt grep",
+      "description": "«Skal du gjøre noe hyggelig i helgen?», spurt med en slik presisjon at mottakeren trenger et øyeblikk.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 3
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.3
+              }
+            },
+            "damageType": "snark"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#f2b134"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#f2b134",
+            "material": "glow"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "circle-back",
+      "name": "Vi tar den senere",
+      "kind": "Sosialt grep",
+      "description": "«Den tar vi senere.» Alle i nærheten trekker seg unna, usikre på hva de sa ja til.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "cooldown": 6,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 0,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "push",
+            "distance": 2
+          },
+          {
+            "type": "apply_status",
+            "status": "flustered",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#2f8f83"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.3,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#2f8f83",
+            "material": "glow"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "rumour-parking",
+      "name": "Rykte: Parkeringsavgiften",
+      "kind": "Sladder (bekreftet)",
+      "description": "Greyline vil ta betalt av Halberd-ansatte for parkeringsplassen. Når du har det, svarer du raskere.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ffe14d",
+            "material": "glow"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffe14d",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "rumour-yoghurt",
+      "name": "Rykte: Prosjekt Yoghurt",
+      "kind": "Sladder (bekreftet)",
+      "description": "En skjult regnearkkolonne: begge skadeavdelingene selges til et skallselskap på mandag. Den egentlige fusjonen.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#7cf2c5",
+            "material": "glow"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#7cf2c5",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "rumour-og",
+      "name": "Rykte: Hvem O.G. var",
+      "kind": "Sladder (bekreftet)",
+      "description": "Integrasjonsdirektøren begynte her som vikar i 1998. Ved pulten din. Med stiftemaskinen din.",
+      "category": "clue",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#ff9bd2",
+            "material": "glow"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ff9bd2",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "fire-door-fob",
+      "name": "Brikke til branndøra",
+      "kind": "Adgangsbrikke",
+      "description": "Åpner branndøra i tredje. På den andre siden ligger visstnok integrasjonsregnearket. Drift har sluttet å spørre.",
+      "category": "key",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.12,
+              0.2,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#d9534f",
+            "material": "matte",
+            "emissive": "#5a1010"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff6060",
+          "intensity": 0.6,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "blank-all-hands",
+      "name": "Tom innkalling til allmøte",
+      "kind": "Møteinnkalling",
+      "description": "Fredag kl. 16, agendaen fortsatt tom. Ha alle tre ryktene, og bruk den så i styrerommet for å skrive agendaen selv.",
+      "category": "quest",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "rumour-parking"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "rumour-yoghurt"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "rumour-og"
+            }
+          ]
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "agenda-forged"
+          },
+          {
+            "type": "message",
+            "text": "Sak én på agendaen: Prosjekt Yoghurt. Sendt til alle ansatte i begge selskapene, med «svar alle» slått på."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#f2b134"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.32,
+              0.02,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow",
+            "emissive": "#f2b134"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#f2b134",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "kitchen-lino",
+      "name": "Kjøkkenbelegg",
+      "description": "Kremhvite og blågrønne ruter. Nøytral grunn etter brannvernparagrafen; stå her og pust.",
+      "color": "#9fd8c8",
+      "emissive": "#1f5a4c"
+    },
+    {
+      "id": "coffee-machine",
+      "name": "Kaffemaskin",
+      "description": "En bønne-til-kopp-maskin som durer på en tralle. Undersøk den for å få en kopp.",
+      "color": "#3a2214",
+      "height": 0.6,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "caffeine",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "decaf"
+          },
+          {
+            "type": "message",
+            "text": "Maskinen kverner, hveser og gir deg noe brunt. Det får duge."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c98a4a"
+        }
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.6,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#2b2b2b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.12,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.45,
+              0.21
+            ],
+            "color": "#3fb7a8",
+            "material": "glow"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "spilled-coffee",
+      "name": "Sølt kaffe",
+      "description": "En klissete brun dam. Noen kommer til å sende e-post om dette.",
+      "color": "#6b4428",
+      "moveCost": 2
+    },
+    {
+      "id": "vine-curtain",
+      "name": "Rankeforheng",
+      "description": "Hengende ranker som mumler navn. Du kan presse deg gjennom, men ikke se forbi.",
+      "color": "#5c2a6a",
+      "blocksSight": true,
+      "height": 1.1,
+      "emissive": "#2a0f30"
+    }
+  ],
+  "unknownAppearances": {
+    "yoghurt": [
+      {
+        "label": "Yoghurt merket «KAREN – IKKE RØR»",
+        "color": "#ffffff"
+      },
+      {
+        "label": "Yoghurt merket «Dave (Skade)»",
+        "color": "#ffe0a0"
+      },
+      {
+        "label": "Umerket yoghurt med surt fjes",
+        "color": "#d0e8ff"
+      },
+      {
+        "label": "Yoghurt merket «O.G.»",
+        "color": "#ffd0dc"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Tredje etasje: Felleskjøkkenet",
+      "description": "Det siste nøytrale rommet i bygget, og korridorene på hver side. Kremhvitt belegg, et durende kjøleskap, to mikroer og Greyline-konsulenter som sirkler rundt vannkokeren.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 2,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#c9c2ae",
+        "color2": "#b3ab95",
+        "material": "stone",
+        "pattern": "carpet"
+      },
+      "wall": {
+        "color": "#d9d3c3",
+        "color2": "#c4bca8",
+        "material": "stone",
+        "height": 1.4,
+        "pattern": "plain"
+      },
+      "lighting": {
+        "ambient": "#eef3ff",
+        "ambientIntensity": 0.7,
+        "lamps": {
+          "color": "#f2f7ff",
+          "intensity": 1.2,
+          "frequency": 0.3,
+          "flicker": true
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "greyline-consultant",
+          "weight": 30,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "post-it-swarm",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "actor": "reply-all-chain",
+          "weight": 20,
+          "max": 3
+        },
+        {
+          "actor": "microwave-queue-bully",
+          "weight": 8,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "maureen-facilities",
+          "where": "near_start"
+        },
+        {
+          "actor": "microwave-queue-bully",
+          "where": "near_exit"
+        }
+      ],
+      "items": [
+        {
+          "item": "builders-tea",
+          "weight": 25
+        },
+        {
+          "item": "shortbread",
+          "weight": 20
+        },
+        {
+          "item": "filter-coffee",
+          "weight": 20
+        },
+        {
+          "item": "yoghurt-greek",
+          "weight": 12
+        },
+        {
+          "item": "yoghurt-expired",
+          "weight": 8
+        },
+        {
+          "item": "yoghurt-probiotic",
+          "weight": 8
+        },
+        {
+          "item": "calendar-invite",
+          "weight": 10
+        },
+        {
+          "item": "heavy-stapler",
+          "weight": 4
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "fire-door-fob",
+          "where": "guarded"
+        },
+        {
+          "item": "rumour-parking",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "kitchen-lino",
+          "density": 0.05
+        },
+        {
+          "terrain": "coffee-machine",
+          "density": 0.01
+        },
+        {
+          "terrain": "spilled-coffee",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Dra kortet ved branndøra",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.4,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#b02a2a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.15,
+              0.04
+            ],
+            "pos": [
+              0,
+              1.2,
+              0.09
+            ],
+            "color": "#3cff7a",
+            "material": "glow"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#3cff7a",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "fire-door-fob"
+      },
+      "gmNotes": "Revirkomedie: Greyline-konsulenter patruljerer, Halberd-ansatte vokter mikroen. Maureen bytter mot kjeks. Brikken er bevoktet nær utgangen. Yoghurtmerkene er ledetråder til hvem som spiser hvor. Hold det smålig og konkret.",
+      "music": "upbeat",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#3b4250",
+        "color2": "#1d2229",
+        "intensity": 0.5
+      }
+    },
+    {
+      "name": "Fane fire: Integrasjonsregnearket",
+      "description": "Bak branndøra er det ingen trappeoppgang, bare et endeløst blekt rutenett av celler som henger i hvitt tomrom. Avdelinger er rader. Noen blir slettet mens du ser på.",
+      "generator": "geometric",
+      "size": "medium",
+      "params": {
+        "variant": 0,
+        "symmetry": 2,
+        "rings": 4,
+        "spokes": 6,
+        "loops": 0.6,
+        "doors": 0.5,
+        "pillars": 0.2
+      },
+      "floor": {
+        "color": "#eef5ec",
+        "color2": "#a9cfa4",
+        "material": "glass",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#2f6f4f",
+        "color2": "#1d4a34",
+        "material": "glass",
+        "height": 1,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#f4fff4",
+        "ambientIntensity": 0.9,
+        "fog": {
+          "color": "#e9f6ea",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#7cf2c5",
+          "intensity": 0.8,
+          "frequency": 0.2
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "circular-reference",
+          "weight": 30,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "merged-cell",
+          "weight": 15,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "ref-error",
+          "weight": 25,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "post-it-swarm",
+          "weight": 15,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "dev-it",
+          "where": "near_start"
+        },
+        {
+          "actor": "pivot-table",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "builders-tea",
+          "weight": 30
+        },
+        {
+          "item": "filter-coffee",
+          "weight": 20
+        },
+        {
+          "item": "shortbread",
+          "weight": 25
+        },
+        {
+          "item": "yoghurt-greek",
+          "weight": 10
+        },
+        {
+          "item": "yoghurt-expired",
+          "weight": 6
+        },
+        {
+          "item": "triple-espresso",
+          "weight": 8
+        },
+        {
+          "item": "laser-pointer",
+          "weight": 5
+        },
+        {
+          "item": "out-of-office",
+          "weight": 8
+        },
+        {
+          "item": "calendar-invite",
+          "weight": 8
+        }
+      ],
+      "itemCount": 9,
+      "placedItems": [
+        {
+          "item": "rumour-yoghurt",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "kitchen-lino",
+          "density": 0.02
+        },
+        {
+          "terrain": "coffee-machine",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Ctrl+End ned i jungeltelegrafen",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.9,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#217346",
+            "material": "glass",
+            "emissive": "#0f3a22"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.06,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.95,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "glow"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#7cf2c5",
+          "intensity": 1,
+          "radius": 2.5
+        }
+      },
+      "backdrop": {
+        "style": "grid",
+        "color": "#f6fbf6",
+        "color2": "#9fc59a",
+        "intensity": 0.6
+      },
+      "gmNotes": "Ikke-realistisk: innsiden av det delte integrasjonsarket. Intet tak, ingen tyngdekraft verdt å nevne. Dev fra IT vet om den skjulte PROSJEKT YOGHURT-kolonnen, som Pivottabellen vokter. Lappene med kjøkkenbelegg her er der noen limte inn kjøkkenet ved en feil.",
+      "music": "eerie"
+    },
+    {
+      "name": "Jungeltelegrafen",
+      "description": "Under hver etasje går jungeltelegrafen: varme, lilla tunneler av mumlende ranker der hvert rykte i bygget havner til slutt, fortsatt hviskende. Det lukter posesuppe.",
+      "generator": "organic",
+      "size": "medium",
+      "params": {
+        "chambers": 8,
+        "chamberSize": 0.6,
+        "tubeWidth": 2,
+        "curl": 0.5,
+        "loops": 0.4,
+        "wobble": 0.6,
+        "nodules": 0.4,
+        "fluid": 0.2,
+        "membranes": 0.3
+      },
+      "floor": {
+        "color": "#4a2b52",
+        "color2": "#6a3a70",
+        "material": "skin",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#7a3c78",
+        "color2": "#a85a9a",
+        "material": "skin",
+        "height": 1.3,
+        "pattern": "noise"
+      },
+      "lighting": {
+        "ambient": "#c9a0d8",
+        "ambientIntensity": 0.6,
+        "fog": {
+          "color": "#3a1f40",
+          "density": 0.05
+        },
+        "lamps": {
+          "color": "#ffb0e0",
+          "intensity": 1.4,
+          "frequency": 0.35,
+          "flicker": true
+        },
+        "playerLight": 4
+      },
+      "actors": [
+        {
+          "actor": "rumour-mill",
+          "weight": 25,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "watercooler-whisper",
+          "weight": 30,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "reply-all-chain",
+          "weight": 15,
+          "max": 3
+        },
+        {
+          "actor": "greyline-consultant",
+          "weight": 15,
+          "max": 3
+        },
+        {
+          "actor": "hr-liaison",
+          "weight": 8,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "carol-payroll",
+          "where": "centre"
+        },
+        {
+          "actor": "hr-liaison",
+          "where": "near_exit"
+        }
+      ],
+      "items": [
+        {
+          "item": "builders-tea",
+          "weight": 30
+        },
+        {
+          "item": "shortbread",
+          "weight": 25
+        },
+        {
+          "item": "filter-coffee",
+          "weight": 18
+        },
+        {
+          "item": "yoghurt-probiotic",
+          "weight": 10
+        },
+        {
+          "item": "yoghurt-greek",
+          "weight": 8
+        },
+        {
+          "item": "yoghurt-expired",
+          "weight": 6
+        },
+        {
+          "item": "out-of-office",
+          "weight": 8
+        },
+        {
+          "item": "eotm-pin",
+          "weight": 4
+        },
+        {
+          "item": "hi-vis-vest",
+          "weight": 5
+        }
+      ],
+      "itemCount": 8,
+      "placedItems": [
+        {
+          "item": "rumour-og",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "vine-curtain",
+          "density": 0.04
+        },
+        {
+          "terrain": "kitchen-lino",
+          "density": 0.02
+        },
+        {
+          "terrain": "coffee-machine",
+          "density": 0.008
+        }
+      ],
+      "transitionName": "Klatre opp matheisen til styrerommet",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              1.2,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#8a6a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.8,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.65,
+              0.41
+            ],
+            "color": "#2b2b2b",
+            "material": "metal"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffd08a",
+          "intensity": 1,
+          "radius": 2
+        }
+      },
+      "backdrop": {
+        "style": "noise",
+        "color": "#2a1230",
+        "color2": "#5a2a60",
+        "intensity": 0.5
+      },
+      "gmNotes": "Organisk og nært. Ryktene lever her. Carol fra Lønn helbreder og vet at Odile var vikar. HR-kontakten vokter matheisen opp til fredagens styrerom. La hviskingen si spillerens navn.",
+      "music": "tense"
+    },
+    {
+      "name": "Styrerom 9, fredag kl. 16",
+      "description": "Allmøtet. Marineblått teppe, et bord på lengde med en buss, begge logoene på skjermen og to hundre stoler vendt mot kvinnen med rødpennen.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.25,
+        "sideRooms": 0.4
+      },
+      "floor": {
+        "color": "#2a3550",
+        "color2": "#1f2a44",
+        "material": "cloth",
+        "pattern": "carpet"
+      },
+      "wall": {
+        "color": "#6b4a2e",
+        "color2": "#4a3220",
+        "material": "wood",
+        "height": 1.6,
+        "pattern": "planks"
+      },
+      "lighting": {
+        "ambient": "#dfe6ff",
+        "ambientIntensity": 0.7,
+        "lamps": {
+          "color": "#ffe7b0",
+          "intensity": 1.6,
+          "frequency": 0.25
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "greyline-consultant",
+          "weight": 40,
+          "min": 2,
+          "max": 3
+        },
+        {
+          "actor": "post-it-swarm",
+          "weight": 20,
+          "max": 3
+        },
+        {
+          "actor": "ref-error",
+          "weight": 20,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "odile-greaves",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "builders-tea",
+          "weight": 40
+        },
+        {
+          "item": "filter-coffee",
+          "weight": 20
+        },
+        {
+          "item": "shortbread",
+          "weight": 30
+        },
+        {
+          "item": "calendar-invite",
+          "weight": 15
+        }
+      ],
+      "itemCount": 7,
+      "placedItems": [
+        {
+          "item": "blank-all-hands",
+          "where": "near_start"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "kitchen-lino",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Forlat allmøtet",
+      "gmNotes": "Finale. Odile kan argumenteres ned (Motsi) eller omgås: med alle tre ryktene vil bruk av den tomme allmøteinnkallingen her forfalske agendaen og vinne. Hvis spilleren snakker med henne, er hun sliten og nysgjerrig, ikke grusom.",
+      "music": "boss",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#1a2030",
+        "color2": "#0b0e16",
+        "intensity": 0.5
+      }
+    }
+  ],
+  "goal": {
+    "summary": "Avgjør fredagens allmøte: argumenter ned integrasjonsdirektør Odile Greaves, eller ta med alle tre ryktene til styrerommet og bruk den tomme innkallingen til å skrive om agendaen.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "actor_defeated",
+          "actor": "odile-greaves"
+        },
+        {
+          "type": "flag",
+          "flag": "agenda-forged"
+        }
+      ]
+    },
+    "winText": "Lysbildeserien stopper på lysbilde 41. Noen spør om Prosjekt Yoghurt, og rommet blir stille, så høylytt. Innen mandag er skallselskapet avlyst, Skade overlever, og kontrakten din er forlenget på ubestemt tid. Maureen legger en boks smørkjeks på pulten din. Den er ikke merket. Den trenger ikke å være det.",
+    "lossText": "Du leverer tilbake BESØKENDE-båndet i resepsjonen. På fredag går allmøtet nøyaktig etter planen, alle førtien lysbilder. På mandag åpner en annens vikar kjøleskapet og finner yoghurten din, fortsatt merket.",
+    "labels": {
+      "agenda-forged": "Allmøteagendaen er skrevet om"
+    }
+  },
+  "gm": {
+    "persona": "Kjøleskapet i tredje etasje: durende, kaldt, innviet i hvert merke og hver lunsj i tjue år, og veldig, veldig smålig på vegne av stamgjestene sine.",
+    "voice": "Tørr og fortrolig, som en melding over høyttaleranlegget skrevet av noen som har sett for mye. Korte setninger. En og annen kompressordur.",
+    "threads": [
+      "Hvem eier yoghurten merket O.G., og hvorfor står den alltid her klokka sju?",
+      "Prosjekt Yoghurt: den skjulte kolonnen i integrasjonsarket.",
+      "Maureens korstog for koppene og oppvaskturnusen.",
+      "Hver avdeling som en rad som kan slettes.",
+      "Fredag kl. 16 rykker nærmere for hver etasje."
+    ],
+    "fallback": {
+      "intro": "Mandag, 08.58. Halberd & Pike Mutual har fire dager igjen å leve. Greyline Assurance har tatt møterommene, parkeringsplassen og de gode stolene. Bare kjøkkenet i tredje er nøytral grunn, og jeg er kjøleskapet. Jeg har fulgt med på deg i seks uker, vikar. Du vet hvem som eier hvilken yoghurt. Det gjør deg til det farligste mennesket i bygget. Fredagens allmøte avgjør hvem som overlever. Gå og avgjør det.",
+      "areaEnter": [
+        "Felleskjøkkenet. Belegg i ruter, en dryppende kran, en vannkoker med publikum. Står du på belegget, kan ingen røre deg – offisielt.",
+        "Branndøra åpner seg mot hvitt. Ikke en trappeoppgang: et regneark, rader helt til horisonten. Et sted blir en celle slettet, og navnet ditt står i den.",
+        "Ned i jungeltelegrafen nå. Varmt, lilla, mumlende. Hvert rykte i bygget havner her, og noen av dem handler om deg.",
+        "Styrerom 9. Fredag, kl. 16. To hundre stoler. Én rødpenn. Lysbildeserien er allerede lastet inn."
+      ],
+      "lowHp": [
+        "Smilet ditt stivner i munnvikene. Finn litt belegg. Finn litt te.",
+        "Fatningen frynses. Noen, et sted, skriver allerede avskjedskortet ditt.",
+        "Pust. Kjeks. Pust."
+      ],
+      "events": [
+        "En mikro piper tre ganger. Ingen henter maten.",
+        "En e-post kommer inn: «Påminnelse: vennligst merk ALLE varer i kjøleskapet.»",
+        "Et sted gir et lysrør opp.",
+        "Kjøleskapet durer litt høyere. Det betyr at det er på din side."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Lys, litt skjev kontormusikk over durende lysrør og en nervøs, tikkende klokke.",
+    "synth": {
+      "key": "F",
+      "scale": "lydian",
+      "tempo": 104,
+      "timbre": "pluck",
+      "drone": true,
+      "percussion": "electronic",
+      "brightness": 0.6
+    },
+    "searchTerms": [
+      "elevator muzak",
+      "office ambience",
+      "quirky corporate"
+    ],
+    "suggestions": [
+      "bossanova-heismusikk, litt ustemt",
+      "marimba-ventemusikk"
+    ]
+  }
+}

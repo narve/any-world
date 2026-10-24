@@ -1,0 +1,4005 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Hver paragraf binder",
+    "tagline": "Island, 1004. Si fram hele loven etter hukommelsen på Alltinget – og alt du sier høyt, blir sant.",
+    "genre": "vikingsaga",
+    "tags": [
+      "saga",
+      "rettssak",
+      "island",
+      "hukommelse",
+      "politikk",
+      "ikke-voldelig"
+    ],
+    "tone": "anspent, lun og midtsommerlys",
+    "era": "Island, fristatstiden, sommeren 1004",
+    "premise": "Hallbjørn Gråtunge, Islands lovsigemann i tretti somrer, satte et fiskebein i halsen en uke før Alltinget. Loven ble aldri skrevet ned: den levde i hodet hans, og nå i ditt. Tre ætter vil ha sin egen versjon husket. Mosfell-ætta vil flytte grensesteinene, Hvalfjord-ætta vil ha hver eneste strandet hval, og Hof-ætta vil ha de gamle gudene tilbake i offentligheten. På Lovberget blir hver paragraf du sier bindende – og mesteren din, viser det seg, har solgt paragrafer i årevis.",
+    "prompt": "Island, 1004. Mesteren din, lovsigemannen, er død, og som læregutten hans må du si fram hele loven etter hukommelsen på Alltinget – men tre mektige ætter vil ha hver sin versjon husket, og hver paragraf du sier høyt, blir bindende. Vinn stemmer, ikke tvekamper.",
+    "nonViolent": true,
+    "language": "nb"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Tyngde",
+        "abbr": "TYN",
+        "description": "Hvor mye plass du tar når du snakker. Gir vekt til en gjendrivelse."
+      },
+      "dex": {
+        "name": "Vidd",
+        "abbr": "VID",
+        "description": "Kvikke svar. Hjelper deg å få inn et poeng og vri deg unna et hånord."
+      },
+      "int": {
+        "name": "Minne",
+        "abbr": "MIN",
+        "description": "Hvor mye av loven du kan. Gir kraft til paragrafer du sier fram, og til overtalelse."
+      },
+      "hp": {
+        "name": "Anseelse",
+        "abbr": "ANS",
+        "description": "Ditt gode navn på tinget. På null blir du overdøvet, og loven går til en annen."
+      },
+      "mp": {
+        "name": "Pust",
+        "abbr": "PUS",
+        "description": "Å si fram lov koster pust. Den kommer sakte tilbake mellom talene."
+      },
+      "ac": {
+        "name": "Fatning",
+        "abbr": "FAT",
+        "description": "Hvor vanskelig det er å bringe deg ut av fatning."
+      }
+    },
+    "conflict": "Gjendriv",
+    "defeated": "nedstemt",
+    "xp": "Ry",
+    "levelUp": "Navnet ditt vokser",
+    "currency": "alen vadmel",
+    "lossTitle": "Overdøvet",
+    "winTitle": "Loven er sagt",
+    "area": "Dag"
+  },
+  "palette": {
+    "primary": "#7a9a5c",
+    "secondary": "#3b4a5a",
+    "accent": "#e0b04a",
+    "danger": "#c0472f",
+    "ui": "#1c242c",
+    "text": "#efe9dc"
+  },
+  "damageTypes": [
+    {
+      "id": "argument",
+      "name": "Argument",
+      "color": "#e0b04a"
+    },
+    {
+      "id": "scorn",
+      "name": "Forakt",
+      "color": "#c0472f"
+    },
+    {
+      "id": "forgetting",
+      "name": "Glemsel",
+      "color": "#8fa8c8"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "outlawed",
+      "name": "Fredløs",
+      "description": "Erklært utenfor loven. De viker unna alle og glemmer å passe seg.",
+      "harmful": true,
+      "color": "#8b2e2e",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": -2
+        }
+      ],
+      "flags": [
+        "afraid"
+      ]
+    },
+    {
+      "id": "thing-peace",
+      "name": "Tingfred",
+      "description": "Tingfreden er lyst. Ingen får heve stemmen.",
+      "harmful": true,
+      "color": "#d8e6f0",
+      "flags": [
+        "stunned"
+      ]
+    },
+    {
+      "id": "tongue-tied",
+      "name": "Mållaus",
+      "description": "En paragraf om taushet binder deg. Du kan ikke si fram lov.",
+      "harmful": true,
+      "color": "#6c6f7a",
+      "flags": [
+        "silenced"
+      ]
+    },
+    {
+      "id": "oath-bound",
+      "name": "Edsbundet",
+      "description": "Du sverget å stå på ditt. Du kan ikke flytte deg, men ingenting rokker deg.",
+      "harmful": false,
+      "color": "#b08d57",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 3
+        }
+      ],
+      "flags": [
+        "rooted"
+      ]
+    },
+    {
+      "id": "ale-bold",
+      "name": "Ølmodig",
+      "description": "Midtsommerøl. Høyere, modigere og litt tregere i oppfatningen.",
+      "harmful": false,
+      "color": "#d9a441",
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 2
+        },
+        {
+          "stat": "dex",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "retching",
+      "name": "Brekninger",
+      "description": "Noen kastet råtten hai. Vanskelig å argumentere mens du brekker deg.",
+      "harmful": true,
+      "color": "#9aa24a",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ],
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "word-lost",
+      "name": "Ordløs",
+      "description": "En ravn tok et ord ut av minnet ditt. Du finner det snart igjen.",
+      "harmful": true,
+      "color": "#8fa8c8",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": -2
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "every-clause-binds",
+      "name": "Hver paragraf binder",
+      "description": "Halvglemte paragrafer er ukjente til du sier dem, og når de først er sagt, er de lov – på godt og vondt. Hver motstander du stemmer ned, blir presedens og gir deg 1 Anseelse tilbake.",
+      "playerTriggers": [
+        {
+          "on": "on_kill",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 1
+                }
+              },
+              {
+                "type": "counter",
+                "counter": "precedents",
+                "add": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "family-runners",
+      "name": "De tre ættenes løpegutter",
+      "description": "Ættene betaler gutter for å løpe mellom budene. Av og til roper en av dem ut hvor du er, og alle som hører det, kommer for å krangle.",
+      "playerTriggers": [
+        {
+          "on": "on_turn",
+          "every": 40,
+          "chance": 0.5,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "noise",
+                "radius": 10
+              },
+              {
+                "type": "message",
+                "text": "En barbeint løpegutt roper navnet ditt og peker. Hoder snur seg."
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Steinunn Hallsdóttir",
+    "title": "Læregutt hos lovsigemannen",
+    "description": "Tjue vintrer gammel. I ni somrer fulgte du Hallbjørn fra bod til bod og mimet loven etter ham. Nå er staven hans din, og Berget også.",
+    "stats": {
+      "str": 10,
+      "dex": 11,
+      "int": 14,
+      "hp": 28,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 10,
+    "sight": 8,
+    "unarmed": {
+      "name": "Pekefinger",
+      "verb": "peker anklagende på",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "argument",
+      "accuracyStat": "int"
+    },
+    "startingItems": [
+      {
+        "item": "speaking-staff",
+        "equipped": true
+      },
+      {
+        "item": "wadmal-cloak",
+        "equipped": true
+      },
+      {
+        "item": "clause-rebuttal"
+      },
+      {
+        "item": "skyr-bowl",
+        "count": 2
+      },
+      {
+        "item": "stockfish",
+        "count": 1
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 30,
+      "curve": 1.55,
+      "hpPerLevel": 4,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "long-memory",
+          "name": "Langt minne",
+          "description": "Du husker paragrafen mesteren din hoppet over i 997. +2 Minne.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "booming-voice",
+          "name": "Buldrende stemme",
+          "description": "Du lærer å snakke fra magen, som en skipper i storm. +2 Tyngde.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "quick-retort",
+          "name": "Kvikt svar",
+          "description": "Du svarer før de er ferdige. +2 Vidd.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "deep-lungs",
+          "name": "Dype lunger",
+          "description": "Ni somrer med lovsigelse i vinden. +4 Pust.",
+          "modifiers": [
+            {
+              "stat": "mp",
+              "amount": 4
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "good-name",
+          "name": "Et godt navn",
+          "description": "Folk begynner å si navnet ditt før Hallbjørns. +5 Anseelse.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 5
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "perk-outlawry",
+          "name": "Fredløshetsparagrafen",
+          "description": "Du husker hele ordlyden om mindre fredløshet. Gir deg Paragrafen om fredløshet.",
+          "grantItems": [
+            "clause-outlawry"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "perk-thing-peace",
+          "name": "Tingfredsparagrafen",
+          "description": "Du husker ordene som får en folkemengde til å tie. Gir deg Paragrafen om tingfred.",
+          "grantItems": [
+            "clause-thing-peace"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "perk-witnesses",
+          "name": "Vitner kalles inn",
+          "description": "Du vet hvilke gamle menn som vil sverge for deg. Gir deg Paragrafen om vitner.",
+          "grantItems": [
+            "clause-witnesses"
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "crowd-favourite",
+          "name": "Mengdens yndling",
+          "description": "Når du stemmer ned noen, hender det at mengden jubler deg opp igjen (helbreder 3).",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "chance": 0.5,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 3
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "unshakable",
+          "name": "Lovsigemannens ro",
+          "description": "Du står like stille som Berget. +1 Fatning.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.85,
+        "build": "slim",
+        "skin": "#f0cfae",
+        "top": "#5f7f9a",
+        "bottom": "#4a3f35",
+        "accent": "#e0b04a",
+        "hair": "#d0823a",
+        "hairStyle": "braids",
+        "headwear": "none",
+        "outfit": "robe",
+        "holding": "staff"
+      },
+      "idle": "bob",
+      "light": {
+        "color": "#ffe2a8",
+        "intensity": 0.4,
+        "radius": 2
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "booth-heckler",
+      "name": "Bodbrøler",
+      "description": "En gårdsgutt betalt i øl for å overdøve alle som høres ut som om de kan loven.",
+      "stats": {
+        "hp": 7,
+        "ac": 10,
+        "str": 10,
+        "dex": 10,
+        "int": 6
+      },
+      "attack": {
+        "name": "Hånord",
+        "verb": "håner",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "scorn"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.15
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "stockfish",
+          "chance": 0.2
+        }
+      ],
+      "xp": 5,
+      "persuadeDifficulty": 10,
+      "tags": [
+        "crowd"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "broad",
+          "skin": "#e6b894",
+          "top": "#8a6a4a",
+          "bottom": "#5a4632",
+          "hair": "#3a2a1a",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "rags",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "boundary-reeve",
+      "name": "Mosfells grensevokter",
+      "description": "Bærer en sekk grensesteiner og vet nøyaktig hvor hver av dem burde ha stått.",
+      "stats": {
+        "hp": 11,
+        "ac": 12,
+        "str": 12,
+        "dex": 9,
+        "int": 9
+      },
+      "attack": {
+        "name": "Vis til en grense",
+        "verb": "viser grensestein mot",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "argument"
+      },
+      "behaviour": {
+        "type": "guardian",
+        "param": 4
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 4
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "knot-mead-debts",
+          "chance": 0.25
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "mosfell"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "broad",
+          "skin": "#e9c3a0",
+          "top": "#a0522d",
+          "bottom": "#3a2a1a",
+          "accent": "#a7c957",
+          "hair": "#7a5230",
+          "hairStyle": "long",
+          "headwear": "hood",
+          "outfit": "coat",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "hof-satirist",
+      "name": "Hof-ættas nidskald",
+      "description": "En skald for de gamle gudene. Dikter et spottevers om deg tvers over vollen, i perfekt versemål.",
+      "stats": {
+        "hp": 7,
+        "ac": 11,
+        "str": 7,
+        "dex": 13,
+        "int": 12
+      },
+      "attack": {
+        "name": "Spottevers",
+        "verb": "lager nidvers om",
+        "damage": {
+          "dice": "1d4"
+        },
+        "damageType": "scorn",
+        "range": 4,
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.1
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "knot-insulting-verse",
+          "chance": 0.3
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "hof"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#f2d6bb",
+          "top": "#7a2e3a",
+          "bottom": "#3b2a2e",
+          "accent": "#e0b04a",
+          "hair": "#e8d9a8",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "robe",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "oath-helper",
+      "name": "Hvalfjords edshjelper",
+      "description": "En av tolv menn som sverger på alt Hvalfjord-ætta sier. De kommer aldri alene.",
+      "stats": {
+        "hp": 8,
+        "ac": 11,
+        "str": 11,
+        "dex": 10,
+        "int": 7
+      },
+      "attack": {
+        "name": "Sverg imot",
+        "verb": "sverger mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "argument"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "skyr-bowl",
+          "chance": 0.15
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "whalefjord"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#dcb08c",
+          "top": "#2f5f8a",
+          "bottom": "#d8d2c0",
+          "accent": "#c0d8e8",
+          "hair": "#1f1f1f",
+          "hairStyle": "short",
+          "headwear": "helmet",
+          "outfit": "uniform",
+          "holding": "shield"
+        }
+      }
+    },
+    {
+      "id": "clause-raven",
+      "name": "Paragrafetende ravn",
+      "description": "Odins ravner er borte; dette er de sultne fetterne deres. De plukker ord ut av minnet ditt som mark fra torva.",
+      "stats": {
+        "hp": 6,
+        "ac": 12,
+        "str": 6,
+        "dex": 15,
+        "int": 5
+      },
+      "speed": 130,
+      "attack": {
+        "name": "Hakk et ord",
+        "verb": "napper et ord fra",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "forgetting",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "word-lost",
+                "duration": 6
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "knot-strayed-sheep",
+          "chance": 0.2
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "bird"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#181a20",
+          "secondary": "#3a3f4a",
+          "accent": "#f0e6c8"
+        },
+        "scale": 0.7,
+        "idle": "hover",
+        "light": {
+          "color": "#f0e6c8",
+          "intensity": 0.4,
+          "radius": 1
+        }
+      }
+    },
+    {
+      "id": "rift-echo",
+      "name": "Ekko av en død lovsigemann",
+      "description": "En lovsigemann fra 930 som fortsatt sier fram lov i gjå. Han gjentar alt du sier, litt feil og høyere.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 9,
+        "dex": 10,
+        "int": 13
+      },
+      "attack": {
+        "name": "Feil gjentakelse",
+        "verb": "gjentar feil etter",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "forgetting",
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "loot": [
+        {
+          "item": "knot-hasty-oaths",
+          "chance": 0.25
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "echo"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "capsule",
+            "size": [
+              0.45,
+              0.9,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#bcd8f0",
+            "material": "glass",
+            "emissive": "#5f8fbf"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.3,
+              0.3
+            ],
+            "pos": [
+              0,
+              1.15,
+              0
+            ],
+            "color": "#e6f2ff",
+            "material": "glass",
+            "emissive": "#8fb8e0"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.5,
+              0.06,
+              0.5
+            ],
+            "pos": [
+              0,
+              1.15,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "glow",
+            "emissive": "#e0b04a",
+            "group": "ring"
+          }
+        ],
+        "idle": "flicker",
+        "light": {
+          "color": "#8fb8e0",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "blusterer",
+      "name": "Leid storkjeft",
+      "description": "En bersærk ættene hentet for å provosere fram en tvekamp. Han får ikke slå deg, så han roper veldig nær ansiktet ditt.",
+      "stats": {
+        "hp": 20,
+        "ac": 12,
+        "str": 15,
+        "dex": 9,
+        "int": 6
+      },
+      "attack": {
+        "name": "Brøl",
+        "verb": "brøler mot",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "scorn",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 8
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "midsummer-ale",
+          "chance": 0.5
+        }
+      ],
+      "xp": 18,
+      "tags": [
+        "elite"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.1,
+          "build": "broad",
+          "skin": "#e2b48e",
+          "top": "#5a3b2a",
+          "bottom": "#3a2a20",
+          "accent": "#c0472f",
+          "hair": "#b0502a",
+          "hairStyle": "mohawk",
+          "headwear": "horned_helmet",
+          "outfit": "armour",
+          "holding": "axe"
+        },
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "misremembered-clause",
+      "name": "Feilhusket paragraf",
+      "description": "En bautastein med en lov som aldri ble vedtatt. Den glir mot deg og insisterer på at den ble det.",
+      "stats": {
+        "hp": 14,
+        "ac": 13,
+        "str": 12,
+        "dex": 8,
+        "int": 10
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Motsi",
+        "verb": "motsier",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "argument",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "loot": [
+        {
+          "item": "knot-night-silence",
+          "chance": 0.25
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "memory"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              1.1,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#9a9488",
+            "material": "stone"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.34,
+              0.06,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.85,
+              0.12
+            ],
+            "color": "#ff6a4a",
+            "material": "glow",
+            "emissive": "#ff6a4a"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.06,
+              0.4,
+              0.02
+            ],
+            "pos": [
+              -0.08,
+              0.55,
+              0.12
+            ],
+            "color": "#ff6a4a",
+            "material": "glow",
+            "emissive": "#ff6a4a"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.06,
+              0.02
+            ],
+            "pos": [
+              0.06,
+              0.4,
+              0.12
+            ],
+            "color": "#ff6a4a",
+            "material": "glow",
+            "emissive": "#ff6a4a"
+          }
+        ],
+        "idle": "sway",
+        "light": {
+          "color": "#ff6a4a",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "forgotten-precedent",
+      "name": "Glemt presedens",
+      "description": "En dom fra en sak ingen husker, kveilet i mørket som et tau av gullruner. Den biter den som tråkker på den.",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 10,
+        "dex": 13,
+        "int": 8
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Gammel dom",
+        "verb": "viser en gammel dom mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "forgetting"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "angelica-root",
+          "chance": 0.3
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "memory"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#e0b04a",
+          "secondary": "#6a4a1a",
+          "accent": "#fff2c0"
+        },
+        "idle": "sway",
+        "light": {
+          "color": "#e0b04a",
+          "intensity": 0.5,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "grey-silence",
+      "name": "Den grå tausheten",
+      "description": "Den delen av Hallbjørns minne som fiskebeinet tok. Der den driver, stopper ordene rett og slett.",
+      "stats": {
+        "hp": 22,
+        "ac": 12,
+        "str": 12,
+        "dex": 10,
+        "int": 14,
+        "mp": 20
+      },
+      "speed": 80,
+      "attack": {
+        "name": "Sluk ord",
+        "verb": "sluker ordene til",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "forgetting",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "hush",
+          "name": "Hysj",
+          "description": "Alt i nærheten blir stille. Neste paragraf dør i halsen din.",
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "tongue-tied",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#9aa0aa"
+            }
+          },
+          "cooldown": 10
+        }
+      ],
+      "behaviour": {
+        "type": "guardian",
+        "param": 5
+      },
+      "loot": [
+        {
+          "item": "angelica-root",
+          "chance": 0.5
+        }
+      ],
+      "xp": 24,
+      "tags": [
+        "elite",
+        "memory"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#8c9099",
+          "secondary": "#5a5e66",
+          "accent": "#d8dce4"
+        },
+        "scale": 1.3,
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "thorgunna",
+      "name": "Torgunna Vidkjeft",
+      "description": "Kandidaten alle tre ættene ble enige om, fordi hver av dem tror de eier henne. Hennes versjon av loven har plass til alle bestikkelser.",
+      "stats": {
+        "hp": 70,
+        "ac": 13,
+        "str": 14,
+        "dex": 11,
+        "int": 15,
+        "mp": 30
+      },
+      "attack": {
+        "name": "Hennes versjon",
+        "verb": "sier sin versjon mot",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "argument",
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "call-oath-helpers",
+          "name": "Kall inn edshjelperne",
+          "description": "Hun løfter en hånd, og to Hvalfjord-menn sverger på at hun har rett.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "oath-helper",
+                "count": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#2f5f8a"
+            }
+          },
+          "cooldown": 14,
+          "useWhen": "start_of_fight"
+        },
+        {
+          "id": "wall-of-precedent",
+          "name": "Mur av presedens",
+          "description": "Tretti år med dommer, alle på en gang, rett i fjeset.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "radius": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 1,
+                  "dice": "1d6"
+                },
+                "damageType": "scorn"
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#c0472f"
+            }
+          },
+          "cooldown": 6
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 120,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Varm, kvikk og fullstendig føyelig. Er enig med alle i første setning og med ingen i den tredje. Kaller deg «lillesøster».",
+        "greeting": "Lillesøster. Du ser trett ut. La meg si loven i år, så kan du si den neste år, når du har vokst inn i staven.",
+        "lines": [
+          "Hver ætt får en paragraf. Er det ikke slik fred ser ut?",
+          "Mesteren din solgte også paragrafer, vet du. Jeg selger dem bare åpenlyst.",
+          "Si ett feil ord her oppe, og det binder deg like hardt som det binder dem."
+        ],
+        "secrets": "Hun kan Hallbjørns regnskap over solgte paragrafer utenat og har tenkt å si fram alle sammen som lov.",
+        "wants": "Å bli lovsigemann på livstid, med alle tre ættene i gjeld til seg.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 19
+      },
+      "tags": [
+        "boss"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.05,
+          "build": "round",
+          "skin": "#f0c9a4",
+          "top": "#8a2a4a",
+          "bottom": "#2f5f8a",
+          "accent": "#a7c957",
+          "hair": "#f2e2b0",
+          "hairStyle": "bun",
+          "headwear": "crown",
+          "outfit": "dress",
+          "holding": "staff"
+        },
+        "scale": 1.2,
+        "light": {
+          "color": "#ffd9a0",
+          "intensity": 0.6,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "gudrun-skyr",
+      "name": "Gudrun Skyrkone",
+      "description": "Driver den travleste matboden på tinget. Hun hører hver avtale og selger til alle tre ættene.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 14,
+        "ac": 10,
+        "str": 10,
+        "dex": 9,
+        "int": 12
+      },
+      "speed": 60,
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Rask, nysgjerrig og snill på en praktisk måte. Bedømmer folk etter hva de bestiller.",
+        "greeting": "Hallbjørns jente! Spis noe. Ingen hører på en lovsigemann som har høyere mage enn stemme.",
+        "lines": [
+          "Mosfell-mennene spiser stående. Det betyr at de er bekymret.",
+          "Hvalfjord betaler i hvalkjøtt. Jeg tar imot det, men jeg klager.",
+          "Mesteren din skyldte meg for tre somrer med skyr. Jeg glemmer det hvis du vinner."
+        ],
+        "stock": [
+          "skyr-bowl",
+          "stockfish",
+          "midsummer-ale",
+          "angelica-root",
+          "rotten-shark",
+          "bearskin-cloak",
+          "tally-stick"
+        ],
+        "secrets": "Hallbjørn møtte noen fra hver ætt i boden hennes, sent, hver sommer. Hun trodde det var kjærlighetsaffærer.",
+        "wants": "En paragraf som lar kvinner eie boder på tinget, helt og fullt.",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "trader"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#f2d0b0",
+          "top": "#c9b48a",
+          "bottom": "#6a5a40",
+          "accent": "#ffffff",
+          "hair": "#a05a2a",
+          "hairStyle": "bun",
+          "headwear": "bandana",
+          "outfit": "dress",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "asa-widow",
+      "name": "Åsa, Hallbjørns enke",
+      "description": "Hun giftet seg med lovsigemannen og brukte tretti somrer på å høre ham øve i søvne.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 12,
+        "ac": 10,
+        "str": 7,
+        "dex": 8,
+        "int": 15
+      },
+      "speed": 60,
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Tørr, sørgende, usentimental. Snakker i korte setninger og kaster aldri bort et ord.",
+        "greeting": "Du har staven hans. Bra. Ikke la dem få stemmen hans også.",
+        "lines": [
+          "Han snakket i søvne. Ikke om loven. Om priser.",
+          "Mosfell-ætta gjemmer edsringen sin der grensevokterne står tettest.",
+          "Gå ned i gjå. Han sa alltid at loven ekkoer sannere der."
+        ],
+        "secrets": "Hun vet at Hallbjørn holdt en knutesnor over hver paragraf han endret, og for hvem. Han sa han gjemte den «der han oppbevarte loven».",
+        "wants": "At navnet hans blir renvasket – eller, hvis det ikke går, at sannheten kommer fram uansett.",
+        "persuadeDifficulty": 9
+      },
+      "tags": [
+        "lore"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.8,
+          "build": "slim",
+          "skin": "#efd8c4",
+          "top": "#2a2a30",
+          "bottom": "#2a2a30",
+          "accent": "#c0c0c0",
+          "hair": "#d8d8d8",
+          "hairStyle": "bun",
+          "headwear": "hood",
+          "outfit": "dress",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "brother-kolskegg",
+      "name": "Bror Kolskjegg",
+      "description": "En irskutdannet prest som kom til Island med den nye troen for fire somrer siden og ble i gjå fordi akustikken er hellig.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 14,
+        "ac": 10,
+        "str": 9,
+        "dex": 9,
+        "int": 13
+      },
+      "speed": 60,
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Mild, snakkesalig og like begeistret for islandsk lov som for Skriften. Blander latin og norrønt.",
+        "greeting": "Pax tibi, lille lovsigemann. Sett deg. La meg smøre litt salve på stoltheten din.",
+        "lines": [
+          "Loven ble sagt her før Kristus kom, og den skal sies etterpå. Det gleder meg.",
+          "Hvalfjord-mennene har ringen sin dypt nede i gjå, under ravnene.",
+          "En halvhusket paragraf er en halvt bedt bønn. Pass på hvilke du fullfører."
+        ],
+        "secrets": "Han hørte Hallbjørns siste skriftemål. Mesteren ba om tilgivelse for «knutene».",
+        "wants": "Å høre hele loven sagt fram én gang, ærlig, før han dør.",
+        "persuadeDifficulty": 8
+      },
+      "tags": [
+        "healer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "average",
+          "skin": "#f4dcc8",
+          "top": "#6a4a2a",
+          "bottom": "#6a4a2a",
+          "accent": "#f0f0e0",
+          "hair": "#8a6a4a",
+          "hairStyle": "none",
+          "headwear": "hood",
+          "outfit": "robe",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "hallbjorn-memory",
+      "name": "Hallbjørn, slik han husket seg selv",
+      "description": "Mesteren din inne i sitt eget minne: yngre, høyere og ærligere enn han noen gang var.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 10,
+        "str": 10,
+        "dex": 10,
+        "int": 18
+      },
+      "speed": 60,
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Storslått, angrende, en født skuespiller. Snakker til deg som en yndlingselev og til seg selv som en tiltalt.",
+        "greeting": "Steinunn. Du kom helt hit inn. Da vet du at loven ikke står i steinene. Det gjorde den aldri.",
+        "lines": [
+          "Hver paragraf jeg endret, knyttet jeg inn i en snor. En lovsigemann må huske løgnene sine aller best.",
+          "Hof-ættas ring er her et sted. Jeg passet på den for dem. Mot betaling.",
+          "Si den sanne loven, så er de bundet av den, alle tre. Til og med jeg."
+        ],
+        "secrets": "Lovknuten har den sanne loven og hver endring. Sagt fram på Lovberget med alle tre ættenes edsringer i hånden binder den dem til den ærlige versjonen.",
+        "wants": "Å bli tilgitt, noe han vet at han ikke fortjener.",
+        "persuadeDifficulty": 12
+      },
+      "tags": [
+        "lore",
+        "memory"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.1,
+          "build": "broad",
+          "skin": "#e8d6c0",
+          "top": "#c9d8e8",
+          "bottom": "#7a8a9a",
+          "accent": "#e0b04a",
+          "hair": "#f4f4f4",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "robe",
+          "holding": "staff"
+        },
+        "idle": "hover",
+        "light": {
+          "color": "#e0c88a",
+          "intensity": 0.9,
+          "radius": 3
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "speaking-staff",
+      "name": "Hallbjørns talestav",
+      "kind": "Lovsigemannsstav",
+      "description": "Asketre slitt glatt der mesteren din holdt den i tretti somrer. Dunket mot berget får den folk til å stoppe og lytte.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Gjendrivelse",
+        "verb": "gjendriver",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "argument",
+        "accuracyStat": "int"
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              1.1,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#b08d57",
+            "material": "wood"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.12,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "metal"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "wadmal-cloak",
+      "name": "Grå vadmelskappe",
+      "kind": "Kappe",
+      "description": "Hjemmevevd, fet og varm. Fornærmelser glir litt av den.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.5,
+              0.6,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#8a8f96",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "bearskin-cloak",
+      "name": "Bjørneskinn fra en blakk gode",
+      "kind": "Pelskappe",
+      "description": "En høvding tapte det i terningspill i fjor sommer. Med det på ser du ut som en som aldri har tapt noe.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 32,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.6,
+              0.6,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#5a3a22",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.22,
+              0.18,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.62,
+              0
+            ],
+            "color": "#3a2414",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "tally-stick",
+      "name": "Karvestokk med presedenser",
+      "kind": "Karvestokk",
+      "description": "Hvert hakk er en dom. Når du drar tommelen langs den, husker du rekkefølgen på ting.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        },
+        {
+          "stat": "mp",
+          "amount": 2
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 28,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.06,
+              0.5,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              15
+            ],
+            "color": "#d8c09a",
+            "material": "wood"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "skyr-bowl",
+      "name": "Bolle med skyr",
+      "kind": "Mat",
+      "description": "Tykk, sur og kald fra kilden. Vanskelig å føle seg fornærmet med full mage.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f4f4ec"
+        }
+      },
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.3,
+              0.12,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#7a5a3a",
+            "material": "wood"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.26,
+              0.08,
+              0.26
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#f4f4ec",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "stockfish",
+      "name": "Tørrfisk",
+      "kind": "Mat",
+      "description": "Vindtørket torsk, hard som en planke. Å tygge på den gir deg tid til å tenke.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8dcc0"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.04,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              0,
+              30,
+              0
+            ],
+            "color": "#d8c8a0",
+            "material": "matte"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.12,
+              0.04,
+              0.14
+            ],
+            "pos": [
+              0.22,
+              0.05,
+              0.1
+            ],
+            "rot": [
+              0,
+              30,
+              0
+            ],
+            "color": "#c8b890",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "midsummer-ale",
+      "name": "Horn med midtsommerøl",
+      "kind": "Øl",
+      "description": "Brygget til tinget av en gård som ikke brygger til noe annet.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "ale-bold",
+            "duration": 12
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#d9a441"
+        }
+      },
+      "value": 14,
+      "knowledge": "vague",
+      "vagueText": "Sterkt midtsommerøl. Det varmer og løsner tunga, i begge retninger.",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.14,
+              0.4,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              160
+            ],
+            "color": "#e8dcc0",
+            "material": "matte"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.16,
+              0.03,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#b08d57",
+            "material": "metal"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "angelica-root",
+      "name": "Kvannerot",
+      "kind": "Urt",
+      "description": "Skalder tygger den før et langt kvad. Åpner brystet og renser halsen.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#a7c957"
+        }
+      },
+      "value": 14,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.05,
+              0.35,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.17,
+              0
+            ],
+            "color": "#a7c957",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.12,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.36,
+              0
+            ],
+            "color": "#e8f0c0",
+            "material": "matte"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "rotten-shark",
+      "name": "Bit av råtten hai",
+      "kind": "Kasteskyts",
+      "description": "Nedgravd i månedsvis, hengt i månedsvis. Kastet på en motstander avslutter den krangelen en stund.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "scorn"
+          },
+          {
+            "type": "apply_status",
+            "status": "retching",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#c8c890"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.14,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#e0dcb0",
+            "material": "matte"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "clause-rebuttal",
+      "name": "Paragrafen om gjendrivelse",
+      "kind": "Paragraf å si fram",
+      "description": "«Taler en mann usant på tinget, kan enhver mann svare ham.» Du svarer, fra inntil 5 ruter unna.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 3
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.15
+              }
+            },
+            "damageType": "argument"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#e0b04a"
+        }
+      },
+      "value": 0,
+      "rarity": "unique",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.05,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "glow",
+            "emissive": "#e0b04a"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "clause-outlawry",
+      "name": "Paragrafen om fredløshet",
+      "kind": "Paragraf å si fram",
+      "description": "Du erklærer en motstander utenfor loven. De mister motet og glemmer å passe seg en stund.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 5
+      },
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "scorn"
+          },
+          {
+            "type": "apply_status",
+            "status": "outlawed",
+            "duration": 6
+          }
+        ],
+        "vfx": {
+          "kind": "beam",
+          "color": "#8b2e2e"
+        }
+      },
+      "value": 0,
+      "rarity": "rare",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.05,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#c0472f",
+            "material": "glow",
+            "emissive": "#c0472f"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "clause-thing-peace",
+      "name": "Paragrafen om tingfred",
+      "kind": "Paragraf å si fram",
+      "description": "Tingets eldgamle fred. Alle innen 2 ruter fra deg tier i 2 runder.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 6
+      },
+      "cooldown": 8,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 0,
+          "radius": 2,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "thing-peace",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#d8e6f0"
+        }
+      },
+      "value": 0,
+      "rarity": "rare",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.05,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#d8e6f0",
+            "material": "glow",
+            "emissive": "#d8e6f0"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "clause-witnesses",
+      "name": "Paragrafen om vitner",
+      "kind": "Paragraf å si fram",
+      "description": "Du kaller inn gamle menn som så mesteren lære deg opp. Gir tilbake 6–9 Anseelse og fjerner skadelige virkninger.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 6
+      },
+      "cooldown": 10,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f0e6c8"
+        }
+      },
+      "value": 0,
+      "rarity": "rare",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.05,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#f0e6c8",
+            "material": "glow",
+            "emissive": "#f0e6c8"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "knot-mead-debts",
+      "name": "Paragrafen om mjødgjeld",
+      "kind": "Knutesnor",
+      "description": "«Gjeld i mjød betales i mjød.» Sagt høyt gjør den deg tilfreds som et fullt beger (gir Anseelse tilbake).",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e0b04a"
+        }
+      },
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#c0472f",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "knot-strayed-sheep",
+      "name": "Paragrafen om bortkomne sauer",
+      "kind": "Knutesnor",
+      "description": "«Den som finner en bortkommen sau, må vite hvor hver kve er.» Sagt høyt ligger hele dagens grunn åpen for deg.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "reveal_map",
+            "radius": 99
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#a7c957"
+        }
+      },
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#a7c957",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "knot-insulting-verse",
+      "name": "Paragrafen om nidvers",
+      "kind": "Knutesnor",
+      "description": "«Et vers som håner en mann rett i ansiktet, er en krenkelse mot ham.» Sagt høyt vender den hvert hånord du ser tilbake mot den som sa det.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "all_visible",
+          "range": 8,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2,
+              "dice": "1d4"
+            },
+            "damageType": "scorn"
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#c0472f"
+        }
+      },
+      "value": 14,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#7a2e3a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "knot-night-silence",
+      "name": "Paragrafen om nattestillhet",
+      "kind": "Knutesnor",
+      "description": "«Ingen mann skal si fram lov etter at sola rører havet.» Sagt høyt binder den deg også: du kan ikke si fram lov på en stund.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "tongue-tied",
+            "duration": 8
+          },
+          {
+            "type": "message",
+            "text": "Paragrafen er lov i det øyeblikket du sier den. Halsen snører seg sammen om den neste."
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#6c6f7a"
+        }
+      },
+      "value": 4,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#2a2a30",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "knot-hasty-oaths",
+      "name": "Paragrafen om forhastede eder",
+      "kind": "Knutesnor",
+      "description": "«En ed sverget stående må holdes stående.» Sagt høyt kan du ikke flytte deg i 4 runder, men ingenting rokker deg (+3 Fatning).",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "status": "oath-bound",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#b08d57"
+        }
+      },
+      "value": 8,
+      "knowledge": "unknown",
+      "appearanceGroup": "knot-cords",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.05,
+              0.24
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c8a070",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.08,
+              0.08,
+              0.08
+            ],
+            "pos": [
+              0.1,
+              0.05,
+              0
+            ],
+            "color": "#2f5f8a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "bob"
+      }
+    },
+    {
+      "id": "mosfell-ring",
+      "name": "Mosfell-ættas edsring",
+      "kind": "Ættens edsring",
+      "description": "En tung sølvring som hver Mosfell-mann sverger på. Den som holder den på Berget, taler med deres stemmer. En av tre som trengs til Lovknuten.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.08,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#d8dce0",
+            "material": "metal",
+            "emissive": "#4a7a3a"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#a7c957",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "whalefjord-ring",
+      "name": "Hvalfjord-ættas edsring",
+      "kind": "Ættens edsring",
+      "description": "Hvalbein innfattet i sølv, med en svak lukt av hav. Bærer Hvalfjords stemmer. En av tre som trengs til Lovknuten.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.08,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#f0ead8",
+            "material": "metal",
+            "emissive": "#2f5f8a"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#8fc0e8",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "hof-ring",
+      "name": "Hof-ættas edsring",
+      "kind": "Ættens edsring",
+      "description": "Hovringen, en gang farget rød av blot. Den bærer Hofs stemmer. En av tre som trengs til Lovknuten.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": 1
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.3,
+              0.08,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "metal",
+            "emissive": "#7a2e3a"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#ff9a6a",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "law-knot",
+      "name": "Hallbjørns lovknute",
+      "kind": "Knutesnor",
+      "description": "Den sanne loven og hver paragraf mesteren din solgte, knyttet inn i én snor. Si den fram i tre deler på Lovberget, med alle tre edsringene, for å binde ættene.",
+      "category": "quest",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "mosfell-ring"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "whalefjord-ring"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "hof-ring"
+            }
+          ]
+        },
+        "effects": [
+          {
+            "type": "counter",
+            "counter": "thirds-recited",
+            "add": 1
+          },
+          {
+            "type": "noise",
+            "radius": 12
+          },
+          {
+            "type": "message",
+            "text": "Du sier fram en tredjedel av loven fra knutene og nevner hver paragraf som ble solgt, og til hvem. Mengden nedenfor blir stille. Det blir ikke Torgunna."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#e0b04a"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.4,
+              0.06,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "cloth",
+            "emissive": "#7a5a1a"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0.18,
+              0.1,
+              0
+            ],
+            "color": "#c0472f",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              -0.18,
+              0.1,
+              0
+            ],
+            "color": "#2f5f8a",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.1,
+              0.18
+            ],
+            "color": "#4a7a3a",
+            "material": "cloth"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#e0b04a",
+          "intensity": 1,
+          "radius": 2
+        }
+      },
+      "cooldown": 12
+    }
+  ],
+  "terrains": [
+    {
+      "id": "rift-water",
+      "name": "Gjåvann",
+      "description": "Brevann så klart at du bommer på dybden. Tregt og kaldt å vasse i.",
+      "moveCost": 2,
+      "color": "#3d8fb6",
+      "emissive": "#123a50"
+    },
+    {
+      "id": "booth-hearth",
+      "name": "Bodgrue",
+      "description": "Et kokebål i en torvbod. Noen har latt fisk ligge på steinene.",
+      "walkable": false,
+      "color": "#5a3a22",
+      "height": 0.4,
+      "emissive": "#ff8a3a",
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "chance",
+          "p": 0.5
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "stockfish"
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.7,
+              0.15,
+              0.7
+            ],
+            "pos": [
+              0,
+              0.07,
+              0
+            ],
+            "color": "#4a4a4a",
+            "material": "stone"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.35,
+              0.45,
+              0.35
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "color": "#ff8a3a",
+            "material": "glow",
+            "emissive": "#ff8a3a"
+          }
+        ],
+        "idle": "flicker",
+        "light": {
+          "color": "#ff9a4a",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "speaking-stone",
+      "name": "Ekkostein",
+      "description": "En basaltsøyle der lovsigere har øvd. Snakk inn i den, så svarer gjå med et ord du hadde mistet.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#2e3138",
+      "height": 1.6,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 5
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "word-lost"
+          },
+          {
+            "type": "message",
+            "text": "Gjå sier det tilbake til deg, klarere enn du sa det."
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.6,
+              1.6,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#3a3e46",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.62,
+              0.05,
+              0.62
+            ],
+            "pos": [
+              0,
+              1.2,
+              0
+            ],
+            "color": "#8fb8e0",
+            "material": "glow",
+            "emissive": "#8fb8e0"
+          }
+        ],
+        "idle": "none"
+      }
+    },
+    {
+      "id": "memory-glyph",
+      "name": "Husket rune",
+      "description": "En rune mesteren din kunne utenat, glødende i gulvet i minnet hans. Å stå på den roer pusten.",
+      "color": "#e0b04a",
+      "emissive": "#a07a20",
+      "onStand": [
+        {
+          "type": "resource",
+          "resource": "mp",
+          "amount": {
+            "base": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "forgotten-gap",
+      "name": "Glemt hull",
+      "description": "Ingenting. Denne delen glemte han helt.",
+      "walkable": false,
+      "color": "#0a0a14",
+      "height": 0
+    },
+    {
+      "id": "law-cairn",
+      "name": "Varde av gamle dommer",
+      "description": "Steiner stablet av tidligere lovsigemenn. Bak en av dem er det gjemt noe.",
+      "walkable": false,
+      "color": "#8a8478",
+      "height": 0.9,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "chance",
+          "p": 0.6
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "skyr-bowl"
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.7,
+              0.4,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#8a8478",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.5,
+              0.3,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#9a948a",
+            "material": "stone"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.3,
+              0.2,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.72,
+              0
+            ],
+            "color": "#aaa49a",
+            "material": "stone"
+          }
+        ],
+        "idle": "none"
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "knot-cords": [
+      {
+        "label": "Snor med tre røde knuter",
+        "color": "#c0472f"
+      },
+      {
+        "label": "Flettet snor av tagl",
+        "color": "#5a3a22"
+      },
+      {
+        "label": "Snor med en beinperle",
+        "color": "#f0e6c8"
+      },
+      {
+        "label": "Stram, blå snor",
+        "color": "#2f5f8a"
+      },
+      {
+        "label": "Snor knyttet venstrehendt",
+        "color": "#a7c957"
+      },
+      {
+        "label": "Frynsete, grå snor",
+        "color": "#8a8f96"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Første dag: Budene på Tingvellir",
+      "description": "En grønn slette under en sol som ikke vil gå ned, full av torvboder, matos og menn fra alle kanter av Island som krangler om sauer.",
+      "generator": "town",
+      "size": "medium",
+      "params": {
+        "buildings": 14,
+        "streetWidth": 3,
+        "crossStreets": 2
+      },
+      "floor": {
+        "color": "#6f8f45",
+        "color2": "#86a352",
+        "material": "stone",
+        "pattern": "grass"
+      },
+      "wall": {
+        "color": "#7a6548",
+        "color2": "#5d6b3a",
+        "material": "stone",
+        "height": 1,
+        "pattern": "noise"
+      },
+      "lighting": {
+        "ambient": "#d8e2ee",
+        "ambientIntensity": 0.65,
+        "sun": {
+          "color": "#ffd9a0",
+          "intensity": 1.3,
+          "elevation": 14
+        },
+        "lamps": {
+          "color": "#ff9a4a",
+          "intensity": 0.8,
+          "frequency": 0.15,
+          "flicker": true
+        },
+        "playerLight": 3,
+        "sky": "#b8cfe2"
+      },
+      "actors": [
+        {
+          "actor": "booth-heckler",
+          "weight": 10,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "boundary-reeve",
+          "weight": 6,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "hof-satirist",
+          "weight": 5,
+          "max": 2
+        },
+        {
+          "actor": "oath-helper",
+          "weight": 4,
+          "max": 3
+        }
+      ],
+      "placed": [
+        {
+          "actor": "gudrun-skyr",
+          "where": "near_start"
+        },
+        {
+          "actor": "asa-widow",
+          "where": "anywhere"
+        }
+      ],
+      "items": [
+        {
+          "item": "skyr-bowl",
+          "weight": 10
+        },
+        {
+          "item": "stockfish",
+          "weight": 10
+        },
+        {
+          "item": "midsummer-ale",
+          "weight": 4
+        },
+        {
+          "item": "angelica-root",
+          "weight": 5
+        },
+        {
+          "item": "rotten-shark",
+          "weight": 5
+        },
+        {
+          "item": "knot-mead-debts",
+          "weight": 4
+        },
+        {
+          "item": "knot-strayed-sheep",
+          "weight": 3
+        },
+        {
+          "item": "knot-hasty-oaths",
+          "weight": 3
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "mosfell-ring",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "booth-hearth",
+          "density": 0.01
+        },
+        {
+          "terrain": "rift-water",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Vis Mosfell-ringen og gå ned i gjå",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.1,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#2e3138",
+            "material": "stone"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              1.4,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#b08d57",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.3,
+              0.04
+            ],
+            "pos": [
+              0,
+              1.2,
+              0
+            ],
+            "color": "#c0472f",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffd9a0",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Midtsommer, tingets første dag. Folkemengder, røyk, sladder. Bodbrølerne er betalt av alle tre ættene. Åsa vet om Lovknuten. Mosfells edsring voktes av grensevoktere; Mosfell-mennene sperrer stien til gjå til spilleren har den. Hold det lyst og høylytt.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#b8cfe2",
+        "color2": "#f2d6a8",
+        "intensity": 0.6
+      },
+      "music": "explore",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "mosfell-ring"
+      }
+    },
+    {
+      "name": "Andre dag: Allmannagjå",
+      "description": "En sprekk i verden der to kontinenter glir fra hverandre. Svarte basaltvegger, tåke fra brevannet og ravner som har lært å spise ord.",
+      "generator": "caves",
+      "size": "medium",
+      "params": {
+        "openness": 0.5,
+        "smoothing": 5,
+        "pools": 0.5
+      },
+      "floor": {
+        "color": "#5a6068",
+        "color2": "#6f7f52",
+        "material": "stone",
+        "pattern": "cobble"
+      },
+      "wall": {
+        "color": "#2a2d34",
+        "color2": "#3a3f48",
+        "material": "stone",
+        "height": 2.4,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#a8b8cc",
+        "ambientIntensity": 0.55,
+        "sun": {
+          "color": "#e8eef8",
+          "intensity": 0.7,
+          "elevation": 30
+        },
+        "fog": {
+          "color": "#aab8c8",
+          "density": 0.04
+        },
+        "lamps": {
+          "color": "#8fb8e0",
+          "intensity": 0.6,
+          "frequency": 0.08
+        },
+        "playerLight": 4,
+        "sky": "#c8d4e0"
+      },
+      "actors": [
+        {
+          "actor": "clause-raven",
+          "weight": 9,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "rift-echo",
+          "weight": 6,
+          "max": 3
+        },
+        {
+          "actor": "oath-helper",
+          "weight": 6,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "actor": "booth-heckler",
+          "weight": 4,
+          "max": 2
+        },
+        {
+          "actor": "blusterer",
+          "weight": 3,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "brother-kolskegg",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "skyr-bowl",
+          "weight": 9
+        },
+        {
+          "item": "stockfish",
+          "weight": 8
+        },
+        {
+          "item": "angelica-root",
+          "weight": 6
+        },
+        {
+          "item": "midsummer-ale",
+          "weight": 4
+        },
+        {
+          "item": "rotten-shark",
+          "weight": 4
+        },
+        {
+          "item": "knot-insulting-verse",
+          "weight": 4
+        },
+        {
+          "item": "knot-night-silence",
+          "weight": 3
+        },
+        {
+          "item": "knot-strayed-sheep",
+          "weight": 3
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "whalefjord-ring",
+          "where": "guarded"
+        },
+        {
+          "item": "tally-stick",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "rift-water",
+          "density": 0.04
+        },
+        {
+          "terrain": "speaking-stone",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Vis Hvalfjord-ringen og gå inn i minnet hans",
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.9,
+              0.08,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              0
+            ],
+            "color": "#e0b04a",
+            "material": "glow",
+            "emissive": "#e0b04a"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.4,
+              0.4,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#c9d8e8",
+            "material": "glass",
+            "emissive": "#8fb8e0"
+          }
+        ],
+        "idle": "spin",
+        "light": {
+          "color": "#e0b04a",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Gjå der loven ekkoer. Ravner stjeler ord (Ordløs). Ekkoer av gamle lovsigemenn siterer spilleren feil. Bror Kolskjegg hørte Hallbjørns siste skriftemål om «knutene». Hvalfjords edshjelpere vokter ringen sin dypt i gjå. Utgangen åpnes bare med Hvalfjord-ringen.",
+      "backdrop": {
+        "style": "clouds",
+        "color": "#c8d4e0",
+        "color2": "#8a9aaa",
+        "intensity": 0.5
+      },
+      "music": "tense",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "whalefjord-ring"
+      }
+    },
+    {
+      "name": "Tredje dag: Inne i Hallbjørns minne",
+      "description": "Ingen grunn, ingen himmel. Loven slik mesteren din bar den: ringer av hugget stein som svever i mørket, gullruner i gulvet og hull der han valgte å glemme.",
+      "generator": "geometric",
+      "size": "medium",
+      "params": {
+        "variant": 0,
+        "symmetry": 3,
+        "rings": 5,
+        "spokes": 6,
+        "cellSize": 7,
+        "loops": 0.4,
+        "pillars": 0.3,
+        "doors": 0.3
+      },
+      "floor": {
+        "color": "#2a2440",
+        "color2": "#3a3258",
+        "material": "stone",
+        "pattern": "grid"
+      },
+      "wall": {
+        "color": "#9a9488",
+        "color2": "#c8c0b0",
+        "material": "stone",
+        "height": 1.8,
+        "pattern": "lines"
+      },
+      "lighting": {
+        "ambient": "#8a7ac8",
+        "ambientIntensity": 0.6,
+        "fog": {
+          "color": "#1a1430",
+          "density": 0.03
+        },
+        "lamps": {
+          "color": "#e0b04a",
+          "intensity": 1.1,
+          "frequency": 0.12
+        },
+        "playerLight": 5
+      },
+      "actors": [
+        {
+          "actor": "misremembered-clause",
+          "weight": 9,
+          "min": 2,
+          "max": 4
+        },
+        {
+          "actor": "forgotten-precedent",
+          "weight": 7,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "rift-echo",
+          "weight": 4,
+          "max": 2
+        },
+        {
+          "actor": "grey-silence",
+          "weight": 3,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "hallbjorn-memory",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "skyr-bowl",
+          "weight": 8
+        },
+        {
+          "item": "knot-mead-debts",
+          "weight": 6
+        },
+        {
+          "item": "angelica-root",
+          "weight": 6
+        },
+        {
+          "item": "stockfish",
+          "weight": 5
+        },
+        {
+          "item": "knot-insulting-verse",
+          "weight": 4
+        },
+        {
+          "item": "knot-hasty-oaths",
+          "weight": 3
+        },
+        {
+          "item": "knot-night-silence",
+          "weight": 3
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "hof-ring",
+          "where": "guarded"
+        },
+        {
+          "item": "law-knot",
+          "where": "far"
+        },
+        {
+          "item": "bearskin-cloak",
+          "where": "anywhere"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "memory-glyph",
+          "density": 0.03
+        },
+        {
+          "terrain": "forgotten-gap",
+          "density": 0.03
+        }
+      ],
+      "transitionName": "Ta knuten og Hof-ringen opp på Lovberget",
+      "transitionRequires": {
+        "type": "all",
+        "of": [
+          {
+            "type": "has_item",
+            "who": "player",
+            "item": "law-knot"
+          },
+          {
+            "type": "has_item",
+            "who": "player",
+            "item": "hof-ring"
+          }
+        ]
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.8,
+              1.2,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#ffe2a8",
+            "material": "glow",
+            "emissive": "#e0b04a"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ffe2a8",
+          "intensity": 1.5,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Ikke-realistisk: innsiden av en død manns minne. Feilhuskede paragrafer er lover han fant på for bestikkelser. Hallbjørns minne-jeg tilstår. Lovknuten ligger langt fra starten; Hof-ringen er bevoktet. Utgangen åpnes bare med Lovknuten og Hof-ringen. Uhyggelig, stille, gull på fiolett.",
+      "backdrop": {
+        "style": "abyss",
+        "color": "#120c24",
+        "color2": "#3a2a6a",
+        "intensity": 0.7
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "Siste dag: Lovberget",
+      "description": "En hylle av lavastein over sletta, med hele tinget samlet nedenfor. Vinden bærer hvert ord til hvert øre. Torgunna har allerede begynt å tale.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.25,
+        "sideRooms": 0.3
+      },
+      "floor": {
+        "color": "#4a4440",
+        "color2": "#6a7a4a",
+        "material": "stone",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#2a2622",
+        "color2": "#4a4440",
+        "material": "stone",
+        "height": 1.4,
+        "pattern": "noise"
+      },
+      "lighting": {
+        "ambient": "#e8dcc8",
+        "ambientIntensity": 0.7,
+        "sun": {
+          "color": "#ffcf8a",
+          "intensity": 1.5,
+          "elevation": 10
+        },
+        "lamps": {
+          "color": "#ff9a4a",
+          "intensity": 0.6,
+          "frequency": 0.06,
+          "flicker": true
+        },
+        "playerLight": 3,
+        "sky": "#f2c890"
+      },
+      "actors": [
+        {
+          "actor": "booth-heckler",
+          "weight": 6,
+          "max": 3
+        },
+        {
+          "actor": "oath-helper",
+          "weight": 4,
+          "max": 3
+        },
+        {
+          "actor": "hof-satirist",
+          "weight": 4,
+          "max": 2
+        },
+        {
+          "actor": "boundary-reeve",
+          "weight": 3,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "thorgunna",
+          "where": "centre"
+        }
+      ],
+      "items": [
+        {
+          "item": "skyr-bowl",
+          "weight": 10
+        },
+        {
+          "item": "midsummer-ale",
+          "weight": 5
+        },
+        {
+          "item": "angelica-root",
+          "weight": 5
+        },
+        {
+          "item": "stockfish",
+          "weight": 5
+        }
+      ],
+      "itemCount": 4,
+      "terrain": [
+        {
+          "terrain": "law-cairn",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Gå ned fra Berget",
+      "gmNotes": "Finalen. Torgunna har alle tre ættene i ryggen. To veier: stem henne ned, eller bær Lovknuten og alle tre edsringene og si fram den sanne loven (bruk Lovknuten). Vind, larm fra mengden, midnattssola lavt over horisonten.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#f2c890",
+        "color2": "#5a7aa8",
+        "intensity": 0.7
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Nå Lovberget og vinn loven: stem ned Torgunna Vidkjeft, eller hold alle tre edsringene og si fram Hallbjørns lovknute der i tre deler.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "counter",
+          "counter": "thirds-recited",
+          "cmp": "gte",
+          "value": 3
+        },
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "actor_defeated",
+              "actor": "thorgunna"
+            }
+          ]
+        }
+      ]
+    },
+    "winText": "Den siste paragrafen forlater munnen din, og sletta blir stille. Så begynner noen i Mosfell-budene å le, noen i Hvalfjord banner, og de gamle mennene nikker. Det er sagt. Det binder. De neste tre somrene kommer Islands lov til å høres ut som deg.",
+    "lossText": "Stemmen din sprekker på Berget. Mengden snur seg bort midt i en paragraf, og Torgunna tar over der du slapp, i sin versjon. Innen kvelden er den lov, og ingen husker at det noen gang var annerledes.",
+    "labels": {
+      "thirds-recited": "Tredjedeler av Lovknuten sagt fram"
+    }
+  },
+  "gm": {
+    "persona": "Loven selv: hver paragraf sagt på Berget siden 930, uskrevet, husket, litt forfengelig, og nå talende gjennom det eneste mennesket som fortsatt kan hele.",
+    "voice": "Avmålt og tørr, som en lovsigelse. Begynner setninger med «Det er sagt i loven at …» og slutter med et lunt faktum. Korte linjer. Roper aldri.",
+    "threads": [
+      "Hallbjørn solgte paragrafer til alle tre ættene og knyttet hvert salg inn i en knutesnor.",
+      "Alt som sies høyt, blir bindende, også ved et uhell.",
+      "Ravnene i gjå spiser ord, og minnet har hull.",
+      "Den nye kristne troen og de gamle gudene har delt tinget med uro siden år 1000.",
+      "Midnattssola går aldri helt ned mens tinget varer."
+    ],
+    "fallback": {
+      "intro": "Det er sagt i loven at lovsigemannen sier fram en tredjedel av loven fra Berget hver sommer. Hallbjørn Gråtunge satte et fiskebein i halsen for åtte dager siden, med to tredjedeler usagt. Du er læregutten hans, og du har resten. Mosfell-ætta, Hvalfjord-ætta og Hof-ætta har hver sin idé om hva du husker. Her oppe er alt du sier høyt, lov.",
+      "areaEnter": [
+        "Det er sagt i loven at tinget varer i to uker. Budene er fulle, sola står lavt, og hver ætt har sendt noen for å rope.",
+        "Det er sagt i loven at Allmannagjå ikke tilhører noen. Ravnene er uenige. Pass på ordene dine: de er sultne.",
+        "Her finnes ingen lov, bare en mann som husker den. Gullruner, grå hull. Et sted i mørket knyttet han løgnene sine inn i en snor.",
+        "Det er sagt i loven at lovsigemannen taler fra Berget og at alle skal lytte. Den har ikke Torgunna hørt."
+      ],
+      "lowHp": [
+        "Anseelsen din glipper. Folk begynner å snakke i munnen på deg.",
+        "Pust. Spis noe. En lovsigemann som besvimer, blir husket for besvimelsen.",
+        "Det er sagt i loven at en taler kan hvile. Ingen sa at de ville vente."
+      ],
+      "events": [
+        "En løpegutt roper navnet ditt tvers over budene.",
+        "Et sted ler en ættens eldste av minnet etter mesteren din.",
+        "Midnattssola rører åsene og går ikke ned.",
+        "En ravn lander i nærheten med et halvt ord i nebbet."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Kald vind over en folkerik slette, en lav drone som en lovsigelse som holdes, og klimpring som høres ut som en lyre stemt av en jurist.",
+    "synth": {
+      "key": "D",
+      "scale": "dorian",
+      "tempo": 66,
+      "timbre": "string",
+      "drone": true,
+      "percussion": "soft",
+      "brightness": 0.45
+    },
+    "searchTerms": [
+      "icelandic folk drone",
+      "nordic lyre",
+      "viking ambient",
+      "rimur chant"
+    ],
+    "suggestions": [
+      "Rimur-aktig kvedning over en cellodrone",
+      "Hardingfele, langsomt"
+    ]
+  }
+}

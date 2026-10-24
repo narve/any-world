@@ -16,6 +16,7 @@ import {
 import { activeRulesOf, type RuleTracker } from './rules';
 import { contextActions, goalView } from './guide';
 import { listJoin, t, tx } from './i18n/index';
+import { dialogueOptionLabel, npcRoleLabel } from './i18n/engine-text';
 import type {
   ChoiceView,
   DangerView,
@@ -325,10 +326,10 @@ export function dialogueView(
   return {
     npcId: pc.speakerId ?? '',
     npcName: def?.name ?? t('common.someone'),
-    npcTitle: def?.npc ? def.npc.role.replace('_', ' ') : undefined,
+    npcTitle: def?.npc ? npcRoleLabel(def.npc.role) : undefined,
     portraitColor: def?.model.humanoid?.top ?? def?.model.colors?.primary ?? world.palette.accent,
     reply: pc.prompt,
-    options: m.labels,
+    options: m.engineIndex.map((i) => dialogueOptionLabel(pc.options[i]!)),
     pending: false,
     canPersuade: !!world.verbs.persuade && !!npc && !npc.allyOf,
     canTrade: m.buy.length > 0 || m.sell.length > 0,
@@ -341,7 +342,7 @@ export function choiceView(world: WorldSpec, state: GameState): ChoiceView | nul
   if (!pc || pc.kind !== 'gm_offer') return null;
   const npc = pc.speakerId ? state.area.actors.find((a) => a.id === pc.speakerId) : undefined;
   const def = npc ? world.actors.find((d) => d.id === npc.defId) : undefined;
-  return { prompt: pc.prompt, speaker: def?.name, options: pc.options.map((o) => ({ label: o.label })) };
+  return { prompt: pc.prompt, speaker: def?.name, options: pc.options.map((o) => ({ label: dialogueOptionLabel(o) })) };
 }
 
 function statLabel(world: WorldSpec, stat: string): string {

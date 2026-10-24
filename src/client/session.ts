@@ -30,6 +30,8 @@ import { drainEngineQueue, gmHooksFor, narrationOf, newHookTracker, type GmConte
 import { isDifficulty } from './ui/format';
 import { onboardingView } from './guide';
 import { t as tr } from './i18n/index';
+import { withPromptLog } from './i18n/prompt-log';
+import { audioCueFor, type AudioCue, type AudioUpdate } from './audio-cues';
 
 const DELTA: Record<Dir, [number, number]> = { n: [0, -1], ne: [1, -1], e: [1, 0], se: [1, 1], s: [0, 1], sw: [-1, 1], w: [-1, 0], nw: [-1, -1] };
 const HISTORY_LIMIT = 12;
@@ -154,6 +156,13 @@ export class GameSession {
   private hooks: GmHookEvent[] = [];
   /** the hook the current narration card answers (a GM reply may replace its text) */
   private narrationHook: { hook: GmHook; area: number } | null = null;
+  /**
+   * Audio (M4): called after every engine state change with its events and the music situation.
+   * The app shell sets it; a listener that throws never breaks the run.
+   */
+  audioListener: ((update: AudioUpdate) => void) | null = null;
+  /** GM actions being applied (applyGm), passed on with the next audio update */
+  private pendingGmActions: readonly GmAction[] | null = null;
 
   constructor(init: SessionInit) {
     this.world = init.world;
@@ -279,12 +288,14 @@ export class GameSession {
 
   /** a GM request's context, as a snapshot of now */
   gmContext(): GmContext {
+    // the prompt sees engine log lines in the world's language (the live state is not touched)
+    const state = withPromptLog(this.state, this.world);
     return {
       world: this.world,
-      state: this.state,
+      state,
       difficulty: this.difficulty,
       weirdness: this.weirdness,
-      recentLog: this.state.log.slice(-12),
+      recentLog: state.log.slice(-12),
       areaEnteredTurn: this.hookTracker.areaEnteredTurn,
     };
   }
@@ -314,11 +325,13 @@ export class GameSession {
     }
     out.events = res.events;
     const text = narrationOf({ actions });
+    this.pendingGmActions = actions;
     if (res.state !== before) {
       out.changed = true;
       this.state = res.state;
       this.afterChange(before, res.events, out);
-    }
+    } else this.emitAudio(res.events); // e.g. a lone `mood` action: no state change, but the music changes
+
     if (text && meta.hook) {
       const card = this.narration;
       const answersCard = !!card && !!this.narrationHook && this.narrationHook.hook === meta.hook && this.narrationHook.area === (meta.area ?? this.state.area.index);
@@ -335,6 +348,22 @@ export class GameSession {
       out.changed = true;
     }
     return out;
+  }
+
+  /** the audio situation right now, without sound effects (run start, resume, settings change) */
+  audioCue(): AudioCue {
+    return audioCueFor(this.world, this.state);
+  }
+
+  private emitAudio(events: readonly GameEvent[]): void {
+    const gmActions = this.pendingGmActions;
+    this.pendingGmActions = null;
+    if (!this.audioListener) return;
+    try {
+      this.audioListener({ events, playerId: this.state.player.actorId, cue: audioCueFor(this.world, this.state), ...(gmActions?.length ? { gmActions } : {}) });
+    } catch (e) {
+      console.warn('[anyworld] audio listener failed:', e);
+    }
   }
 
   /** bookkeeping after any engine state change: GM hooks, rule changes, engine hook queue */
@@ -355,6 +384,7 @@ export class GameSession {
         }
       }
     }
+    this.emitAudio(events);
   }
 
   /** the rules panel was opened: new-rule highlights have been seen */

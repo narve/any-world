@@ -80,26 +80,52 @@ export function clearRun(): void {
 export function defaultSettings(transport: 'direct' | 'backend'): Settings {
   return {
     provider: { preset: 'anthropic', transport },
-    audio: { volume: 0.6, muted: false },
+    audio: { volume: 0.6, muted: false, soundcloud: false },
     animationSpeed: 1,
     reduceMotion: false,
+    quality: 'auto',
+    gm: true,
   };
 }
 
-export function loadSettings(transport: 'direct' | 'backend'): Settings {
+const QUALITIES = ['auto', 'low', 'high'] as const;
+const TRANSPORTS = ['direct', 'backend'] as const;
+
+/**
+ * The stored settings over the defaults, with every field checked: a hand-edited or old entry
+ * never breaks the start screen. `transports` are the transports this build allows (a static
+ * build has no backend, so a stored "backend" falls back to the build's default).
+ */
+export function normalizeSettings(v: unknown, transport: 'direct' | 'backend', transports: readonly ('direct' | 'backend')[] = TRANSPORTS): Settings {
   const d = defaultSettings(transport);
+  if (!v || typeof v !== 'object') return d;
+  const o = v as Partial<Settings> & { provider?: Partial<Settings['provider']>; audio?: Partial<Settings['audio']> };
+  const p: Partial<Settings['provider']> = o.provider && typeof o.provider === 'object' ? o.provider : {};
+  const str = (x: unknown): string | undefined => (typeof x === 'string' && x.trim() ? x : undefined);
+  const tr = (TRANSPORTS as readonly string[]).includes(p.transport as string) && transports.includes(p.transport as 'direct' | 'backend') ? (p.transport as 'direct' | 'backend') : transport;
+  const provider: Settings['provider'] = { preset: str(p.preset) ?? d.provider.preset, transport: tr };
+  if (str(p.model)) provider.model = p.model;
+  if (str(p.baseUrl)) provider.baseUrl = p.baseUrl;
+  if (str(p.apiKey)) provider.apiKey = p.apiKey;
+  const a: Partial<Settings['audio']> = o.audio && typeof o.audio === 'object' ? o.audio : {};
+  const vol = typeof a.volume === 'number' && Number.isFinite(a.volume) ? Math.min(1, Math.max(0, a.volume)) : d.audio.volume;
+  return {
+    provider,
+    audio: { volume: vol, muted: !!a.muted, soundcloud: !!a.soundcloud },
+    animationSpeed: typeof o.animationSpeed === 'number' && Number.isFinite(o.animationSpeed) ? Math.min(3, Math.max(0.5, o.animationSpeed)) : 1,
+    reduceMotion: !!o.reduceMotion,
+    quality: (QUALITIES as readonly string[]).includes(o.quality as string) ? (o.quality as Settings['quality']) : 'auto',
+    gm: o.gm !== false,
+  };
+}
+
+export function loadSettings(transport: 'direct' | 'backend', transports?: readonly ('direct' | 'backend')[]): Settings {
   try {
     const txt = store()?.getItem(SETTINGS_KEY);
-    if (!txt) return d;
-    const v = JSON.parse(txt) as Partial<Settings>;
-    return {
-      provider: { ...d.provider, ...(v.provider ?? {}) },
-      audio: { ...d.audio, ...(v.audio ?? {}) },
-      animationSpeed: typeof v.animationSpeed === 'number' ? Math.min(3, Math.max(0.5, v.animationSpeed)) : 1,
-      reduceMotion: !!v.reduceMotion,
-    };
+    if (!txt) return defaultSettings(transport);
+    return normalizeSettings(JSON.parse(txt), transport, transports);
   } catch {
-    return d;
+    return defaultSettings(transport);
   }
 }
 
@@ -150,7 +176,13 @@ export interface StoredWorld {
   /** the WorldSpec JSON as generated (validated again with parseWorld when read) */
   world: unknown;
   savedAt: number;
+  /** how it got here (M4); older entries are AI-made */
+  source?: 'generated' | 'imported';
+  /** a bundled world this one was copied from (offline demo generator): its recordings voice the GM */
+  origin?: string;
 }
+
+export type StoredWorldMeta = Pick<StoredWorld, 'source' | 'origin'>;
 
 export function loadGeneratedWorlds(): StoredWorld[] {
   try {
@@ -166,10 +198,11 @@ export function loadGeneratedWorlds(): StoredWorld[] {
  * Stores a generated world (replacing one with the same id). When storage is full the oldest worlds
  * are dropped until it fits; returns false when even the world alone does not fit.
  */
-export function saveGeneratedWorld(id: string, world: unknown, now = Date.now()): boolean {
+export function saveGeneratedWorld(id: string, world: unknown, now = Date.now(), meta: StoredWorldMeta = {}): boolean {
   const s = store();
   if (!s) return false;
-  let list = [...loadGeneratedWorlds().filter((w) => w.id !== id), { id, world, savedAt: now }].slice(-MAX_GENERATED_WORLDS);
+  const entry: StoredWorld = { id, world, savedAt: now, ...(meta.source ? { source: meta.source } : {}), ...(meta.origin ? { origin: meta.origin } : {}) };
+  let list = [...loadGeneratedWorlds().filter((w) => w.id !== id), entry].slice(-MAX_GENERATED_WORLDS);
   while (list.length) {
     try {
       s.setItem(WORLDS_KEY, JSON.stringify(list));
@@ -179,4 +212,19 @@ export function saveGeneratedWorld(id: string, world: unknown, now = Date.now())
     }
   }
   return false;
+}
+
+/** drops a stored world; returns false when it was not there (or storage failed) */
+export function forgetGeneratedWorld(id: string): boolean {
+  const s = store();
+  if (!s) return false;
+  const list = loadGeneratedWorlds();
+  const next = list.filter((w) => w.id !== id);
+  if (next.length === list.length) return false;
+  try {
+    s.setItem(WORLDS_KEY, JSON.stringify(next));
+    return true;
+  } catch {
+    return false;
+  }
 }

@@ -8,7 +8,8 @@
 import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 
-const OUT = 'docs/progress/M2';
+// committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 
 function collectErrors(page: Page): string[] {

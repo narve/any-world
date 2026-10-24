@@ -346,9 +346,9 @@ export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, 
 }
 
 /** the hotbar badges and marks, explained (help overlay legend) */
-export function slotLegend(): { mark: string; what: string }[] {
+export function slotLegend(): { mark: string; what: string; equipped?: boolean }[] {
   return [
-    { mark: 'E', what: t('legend.equipped') },
+    { mark: t('slot.badge.e'), what: t('legend.equipped'), equipped: true },
     { mark: '1', what: t('legend.key') },
     { mark: '×3', what: t('legend.stack') },
     { mark: '2/3', what: t('legend.charges') },

@@ -9,7 +9,8 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 
-const OUT = 'docs/progress/M3';
+// committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M3' : 'test-results/shots/M3';
 mkdirSync(OUT, { recursive: true });
 const teen = readFileSync('content/worlds/fixture-teen.json', 'utf8');
 

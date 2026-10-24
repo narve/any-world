@@ -8,6 +8,7 @@ import type { GameState, PlayerAction } from '../engine/types';
 import type { StatusDef, WorldSpec } from '../schema/world';
 import { listJoin, t } from './i18n/index';
 import { lockedReason } from './guide';
+import { engineReason } from './i18n/engine-text';
 
 type Flag = StatusDef['flags'][number];
 
@@ -36,10 +37,11 @@ function describeHold(h: Holding[]): string {
 
 /**
  * The message to show for an engine `invalid` event caused by `action`. Returns the engine's
- * reason (capitalised) when there is nothing more specific to say.
+ * reason in the UI language (engineReason: catalog key, else capitalised) when there is nothing
+ * more specific to say.
  */
 export function explainInvalid(world: WorldSpec, state: GameState, action: PlayerAction, reason: string): string {
-  const fallback = reason ? reason.charAt(0).toUpperCase() + reason.slice(1) : reason;
+  const fallback = engineReason(reason);
   const mentions = (h: Holding[]) => h.some((x) => reason.toLowerCase().includes(x.name.toLowerCase()));
 
   if (action.type === 'move' && /move/i.test(reason)) {

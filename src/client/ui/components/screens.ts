@@ -1,10 +1,46 @@
 /** Full-screen views: start, loading, end; and the settings dialog. */
 import type { Vocabulary } from '../../../schema/world';
-import type { EndView, InspirationPrompt, LoadingView, Settings, SettingsView, StartOptions, StartView, UiCallbacks, UiViewModel } from '../viewmodel';
+import type { EndView, InspirationPrompt, LoadingView, RecentWorldView, Settings, SettingsView, StartOptions, StartView, UiCallbacks, UiViewModel } from '../viewmodel';
 import { dataKey, h, icon, ICONS, setChildren } from '../dom';
 import { baseLang, clamp, DIFFICULTIES, difficultyHint, difficultyLabel, groupByLanguage, languageEndonym, pickInspiration, presetNotes, runStatLines, toDifficulty, weirdnessLabel } from '../format';
 import { Modal } from './modals';
 import { getLanguage, t } from '../../i18n/index';
+import { tagLabel } from '../../i18n/tags';
+import '../../styles/shell.css';
+
+/** icons only the shell screens use (24×24 strokes, like dom.ts ICONS) */
+const SHELL_ICONS = {
+  download: ['M12 4v11', 'M7 10l5 5 5-5', 'M5 20h14'],
+  upload: ['M12 20V9', 'M7 14l5-5 5 5', 'M5 4h14'],
+  trash: ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 13h10l1-13'],
+  ok: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M8 12l3 3 5-6'],
+  info: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M12 11v6', 'M12 7h.01'],
+} as const;
+
+/** how many theme tags the inspiration filter offers */
+const TAG_CHIPS = 8;
+
+/** the language and theme filter of the inspiration cards; 'all' / null = no filter */
+export interface InspirationFilter {
+  language: string;
+  tag: string | null;
+}
+
+/** prompts that pass the filter (pure; exported for tests) */
+export function filterInspiration<T extends Pick<InspirationPrompt, 'language' | 'tags'>>(list: readonly T[], f: InspirationFilter): T[] {
+  return list.filter((p) => (f.language === 'all' || baseLang(p.language) === f.language) && (!f.tag || (p.tags ?? []).includes(f.tag)));
+}
+
+/** the most common tags (ties alphabetical), for the filter chips (pure; exported for tests) */
+export function topTags(list: readonly Pick<InspirationPrompt, 'tags'>[], n: number): string[] {
+  const count = new Map<string, number>();
+  for (const p of list) for (const tag of new Set(p.tags ?? [])) count.set(tag, (count.get(tag) ?? 0) + 1);
+  return [...count.entries()]
+    .filter(([, c]) => c > 1)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, n)
+    .map(([tag]) => tag);
+}
 
 type LanguageVm = UiViewModel['language'];
 
@@ -19,6 +55,9 @@ export function languagePicker(lang: LanguageVm, onPick: ((code: string) => void
 }
 
 const CARD_COUNT = 4;
+
+/** the offline demo generator's preset id (modes.ts OFFLINE_PRESET) */
+const OFFLINE_PRESET_ID = 'mock';
 
 // ---------------------------------------------------------------------------
 // Start screen
@@ -43,6 +82,9 @@ export class StartScreen {
   private langKey = '';
   /** the inspiration card last copied into the prompt box (its language goes with it while unedited) */
   private filled: { prompt: string; language: string } | null = null;
+  private filter: InspirationFilter = { language: 'all', tag: null };
+  private filterEl: HTMLElement;
+  private fileInput: HTMLInputElement;
 
   constructor(private cb: UiCallbacks, private rand: () => number = Math.random) {
     this.langEl = h('div', { class: 'aw-start-lang' });
@@ -75,6 +117,16 @@ export class StartScreen {
     this.diffHint = h('p', { id: 'aw-diff-hint', class: 'aw-range-hint' });
     this.weird = h('input', { id: 'aw-weird', type: 'range', min: '0', max: '1', step: '0.05', value: '0.4', oninput: () => this.syncOut() });
     this.cardsEl = h('div', { class: 'aw-insp-cards' });
+    this.filterEl = h('div', { class: 'aw-insp-filters' });
+    this.fileInput = h('input', {
+      type: 'file',
+      id: 'aw-import-file',
+      class: 'aw-sr',
+      accept: '.json,application/json',
+      tabindex: '-1',
+      'aria-hidden': 'true',
+      onchange: () => void this.readImport(),
+    });
     this.sideEl = h('aside', { class: 'aw-start-side' });
     this.noteEl = h('p', { class: 'aw-start-note' });
 
@@ -120,11 +172,13 @@ export class StartScreen {
               h('h2', null, t('start.inspiration')),
               h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost', onclick: () => this.shuffle(), 'aria-label': t('start.shuffleAria') }, icon(ICONS.shuffle), t('start.shuffle')),
             ),
+            this.filterEl,
             this.cardsEl,
           ),
         ),
         this.sideEl,
       ),
+      this.fileInput,
     );
     this.syncOut();
   }
@@ -160,12 +214,75 @@ export class StartScreen {
 
   shuffle(): void {
     if (!this.view) return;
-    this.cards = pickInspiration(this.view.prompts, CARD_COUNT, getLanguage(), this.rand);
+    this.cards = pickInspiration(filterInspiration(this.view.prompts, this.filter), CARD_COUNT, getLanguage(), this.rand);
     this.renderCards();
+  }
+
+  private setFilter(f: Partial<InspirationFilter>): void {
+    this.filter = { ...this.filter, ...f };
+    this.renderFilters();
+    this.shuffle();
+  }
+
+  /** language select + theme chips over the inspiration cards */
+  private renderFilters(): void {
+    const prompts = this.view?.prompts ?? [];
+    const langs = [...new Set(prompts.map((p) => baseLang(p.language)))].sort();
+    const inLang = filterInspiration(prompts, { language: this.filter.language, tag: null });
+    const tags = topTags(inLang, TAG_CHIPS);
+    if (this.filter.tag && !tags.includes(this.filter.tag)) tags.push(this.filter.tag);
+    setChildren(
+      this.filterEl,
+      langs.length > 1
+        ? h(
+            'select',
+            {
+              id: 'aw-insp-lang',
+              class: 'aw-insp-lang',
+              'aria-label': t('start.filterLanguage'),
+              onchange: (e: Event) => this.setFilter({ language: (e.target as HTMLSelectElement).value }),
+            },
+            h('option', { value: 'all', selected: this.filter.language === 'all' }, t('start.filterAllLanguages')),
+            langs.map((l) => h('option', { value: l, selected: this.filter.language === l, lang: l }, languageEndonym(l))),
+          )
+        : null,
+      tags.length
+        ? h(
+            'div',
+            { class: 'aw-insp-tags', role: 'group', 'aria-label': t('start.filterTags') },
+            tags.map((tag) =>
+              h(
+                'button',
+                {
+                  type: 'button',
+                  class: ['aw-tag-chip', this.filter.tag === tag && 'is-on'],
+                  'aria-pressed': String(this.filter.tag === tag),
+                  dataset: { tag },
+                  onclick: () => this.setFilter({ tag: this.filter.tag === tag ? null : tag }),
+                },
+                tagLabel(tag, getLanguage()),
+              ),
+            ),
+          )
+        : null,
+    );
   }
 
   private renderCards(): void {
     const ui = baseLang(getLanguage());
+    if (!this.cards.length) {
+      setChildren(
+        this.cardsEl,
+        h(
+          'p',
+          { class: 'aw-insp-empty aw-muted' },
+          t('start.noMatches'),
+          ' ',
+          h('button', { type: 'button', class: 'aw-link', onclick: () => this.setFilter({ language: 'all', tag: null }) }, t('start.clearFilter')),
+        ),
+      );
+      return;
+    }
     setChildren(
       this.cardsEl,
       this.cards.map((p) =>
@@ -213,14 +330,27 @@ export class StartScreen {
       if (v.defaults?.weirdness !== undefined) this.weird.value = String(v.defaults.weirdness);
       this.syncOut();
     }
-    const key = dataKey([v.prompts, v.demos, v.savedRun, v.providerLabel, v.canGenerate]);
+    const key = dataKey([v.prompts, v.demos, v.savedRun, v.providerLabel, v.canGenerate, v.providerStatus, v.recent, v.canImport]);
     if (key === this.listKey) return;
     const promptsChanged = dataKey(v.prompts) !== dataKey(JSON.parse(this.listKey || '[[]]')[0]);
     this.listKey = key;
-    if (promptsChanged || !this.cards.length) this.shuffle();
+    if (promptsChanged || !this.cards.length) {
+      this.renderFilters();
+      this.shuffle();
+    }
 
     this.noteEl.textContent = '';
-    if (!v.canGenerate) {
+    delete this.noteEl.dataset.tone;
+    if (v.providerStatus) {
+      const st = v.providerStatus;
+      this.noteEl.dataset.tone = st.tone;
+      this.noteEl.append(
+        icon(st.tone === 'ok' ? SHELL_ICONS.ok : st.tone === 'warn' ? ICONS.alert : SHELL_ICONS.info),
+        h('span', { class: 'aw-status-text' }, st.text),
+        ...(st.detail ? [h('span', { class: 'aw-status-detail aw-muted' }, st.detail)] : []),
+        h('button', { type: 'button', class: 'aw-link', onclick: () => this.cb.onOpenSettings?.(true) }, v.canGenerate ? t('start.change') : t('start.openSettings')),
+      );
+    } else if (!v.canGenerate) {
       this.noteEl.append(
         icon(ICONS.alert),
         h('span', null, t('start.noProvider')),
@@ -248,6 +378,7 @@ export class StartScreen {
             ),
           )
         : null,
+      v.recent?.length || v.canImport ? this.recentSection(v) : null,
       h(
         'section',
         { class: 'aw-demos' },
@@ -256,6 +387,83 @@ export class StartScreen {
         v.demos.length ? this.demoGroups(v) : h('p', { class: 'aw-muted' }, t('start.noDemos')),
       ),
     );
+  }
+
+  /** worlds kept in this browser (AI-made or imported): play, save as a file, forget; plus import */
+  private recentSection(v: StartView): HTMLElement {
+    const recent = v.recent ?? [];
+    const ui = baseLang(getLanguage());
+    const item = (w: RecentWorldView) =>
+      h(
+        'li',
+        { class: 'aw-recent-item' },
+        h(
+          'button',
+          {
+            type: 'button',
+            class: 'aw-recent-play',
+            lang: baseLang(w.language),
+            dataset: { world: w.id },
+            style: { '--demo': w.color ?? 'var(--c-accent)' },
+            onclick: () => this.cb.onPlayDemo?.(w.id, this.options(false)),
+          },
+          h(
+            'span',
+            { class: 'aw-demo-genre' },
+            w.genre,
+            ' · ',
+            w.source === 'imported' ? t('start.recentImported') : t('start.recentGenerated'),
+            baseLang(w.language) !== ui ? h('span', { class: 'aw-lang-badge' }, baseLang(w.language).toUpperCase()) : null,
+          ),
+          h('span', { class: 'aw-demo-title' }, w.title),
+          h('span', { class: 'aw-demo-tag' }, w.tagline),
+        ),
+        h(
+          'div',
+          { class: 'aw-recent-tools' },
+          this.cb.onExportWorld
+            ? h(
+                'button',
+                { type: 'button', class: 'aw-icon-btn aw-recent-export', 'aria-label': t('start.exportAria', { title: w.title }), dataset: { tip: t('start.export') }, onclick: () => this.cb.onExportWorld?.(w.id) },
+                icon(SHELL_ICONS.download),
+              )
+            : null,
+          this.cb.onForgetWorld
+            ? h(
+                'button',
+                { type: 'button', class: 'aw-icon-btn aw-recent-forget', 'aria-label': t('start.forgetAria', { title: w.title }), dataset: { tip: t('start.forget') }, onclick: () => this.cb.onForgetWorld?.(w.id) },
+                icon(SHELL_ICONS.trash),
+              )
+            : null,
+        ),
+      );
+    return h(
+      'section',
+      { class: 'aw-recent' },
+      h(
+        'div',
+        { class: 'aw-recent-head' },
+        h('h2', null, t('start.recent')),
+        v.canImport
+          ? h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost aw-import-btn', onclick: () => this.fileInput.click() }, icon(SHELL_ICONS.upload), t('start.import'))
+          : null,
+      ),
+      h('p', { class: 'aw-muted aw-small' }, recent.length ? t('start.recentSub') : t('start.importHint')),
+      recent.length ? h('ul', { class: 'aw-demo-list aw-recent-list' }, recent.map(item)) : null,
+    );
+  }
+
+  private async readImport(): Promise<void> {
+    const file = this.fileInput.files?.[0];
+    this.fileInput.value = '';
+    if (!file) return;
+    let text: string;
+    try {
+      text = await file.text();
+    } catch {
+      text = '';
+    }
+    this.cb.onImportWorld?.({ name: file.name, text });
   }
 
   /** the demo list, one labelled group per world language (no headings while there is only one) */
@@ -445,10 +653,20 @@ export class SettingsDialog {
     if (!v || !d) return;
     const active = document.activeElement as HTMLElement | null;
     const activeId = active && this.modal.card.contains(active) ? active.id : null;
+    const offline = d.provider.preset === OFFLINE_PRESET_ID;
+    // the world's music panel (mood, SoundCloud links / player) is filled in by the app
+    const musicHost = v.music ? h('div', { class: 'aw-music-host', id: 'aw-set-music' }) : null;
     const preset = v.presets.find((p) => p.id === d.provider.preset);
     const transports = v.transports ?? ['direct', 'backend'];
     const field = (label: string, id: string, input: HTMLElement, hint?: Node | string | null) =>
       h('div', { class: 'aw-field' }, h('label', { for: id }, label), input, hint ? h('div', { class: 'aw-field-hint' }, hint) : null);
+    const check = (id: string, checked: boolean, label: string, onChange: (on: boolean) => void, hint?: string) =>
+      h(
+        'div',
+        { class: 'aw-field' },
+        h('label', { class: 'aw-check' }, h('input', { type: 'checkbox', id, checked, onchange: (e: Event) => onChange((e.target as HTMLInputElement).checked) }), label),
+        hint ? h('div', { class: 'aw-field-hint' }, hint) : null,
+      );
 
     const presetSel = h(
       'select',
@@ -460,13 +678,15 @@ export class SettingsDialog {
             const id = (e.target as HTMLSelectElement).value;
             s.provider.preset = id;
             const p = v.presets.find((x) => x.id === id);
-            s.provider.model = p?.defaultModel ?? s.provider.model;
-            if (p) s.provider.baseUrl = undefined;
+            s.provider.model = p?.defaultModel ?? (id === OFFLINE_PRESET_ID ? undefined : s.provider.model);
+            if (p || id === OFFLINE_PRESET_ID) s.provider.baseUrl = undefined;
+            if (id === OFFLINE_PRESET_ID) s.provider.transport = transports.includes('direct') ? 'direct' : s.provider.transport;
             if (p && !p.cors && transports.includes('backend')) s.provider.transport = 'backend';
           }, true),
       },
+      v.offlineDemo ? h('option', { value: OFFLINE_PRESET_ID, selected: offline }, t('settings.mockPreset')) : null,
       v.presets.map((p) => h('option', { value: p.id, selected: p.id === d.provider.preset }, `${p.label} — ${p.region}`)),
-      h('option', { value: 'custom', selected: d.provider.preset === 'custom' }, t('settings.custom')),
+      v.presets.some((p) => p.id === 'custom') ? null : h('option', { value: 'custom', selected: d.provider.preset === 'custom' }, t('settings.custom')),
     );
     const models = preset?.models?.length ? preset.models : null;
     const modelInput = models
@@ -503,8 +723,41 @@ export class SettingsDialog {
         ),
       ),
     );
-    const notes = presetNotes(preset, d.provider.transport);
-    const keyDisabled = d.provider.transport === 'backend';
+    const notes = offline ? [{ text: t('settings.note.mock'), warn: false }] : presetNotes(preset, d.provider.transport);
+    const backend = d.provider.transport === 'backend';
+    const serverLine =
+      backend && !offline && v.serverPresets !== undefined
+        ? h(
+            'p',
+            { class: ['aw-server-line', v.serverPresets === null && 'is-warn'], id: 'aw-set-server' },
+            v.serverPresets === null
+              ? t('settings.server.unreachable')
+              : v.serverPresets.filter((id) => id !== OFFLINE_PRESET_ID).length
+                ? t('settings.server.has', { list: v.serverPresets.filter((id) => id !== OFFLINE_PRESET_ID).map((id) => v.presets.find((p) => p.id === id)?.label ?? id).join(', ') })
+                : t('settings.server.none'),
+          )
+        : null;
+    const keyNeeded = !backend && !offline && (preset ? preset.needsKey : true);
+    const keyInput = h('input', {
+      id: 'aw-set-key',
+      type: 'password',
+      class: 'aw-input',
+      autocomplete: 'off',
+      spellcheck: 'false',
+      disabled: backend,
+      value: backend ? '' : (d.provider.apiKey ?? ''),
+      placeholder: backend ? t('settings.keyServer') : preset && !preset.needsKey ? t('settings.keyNotNeeded') : 'sk-…',
+      oninput: (e: Event) => this.set((s) => (s.provider.apiKey = (e.target as HTMLInputElement).value || undefined)),
+    });
+    const keyWarn = !backend && !offline ? h('div', { class: 'aw-key-warn', role: 'note', id: 'aw-set-keywarn' }, icon(ICONS.alert), h('span', null, t('settings.keyWarnDirect'))) : null;
+    const keyRow = h(
+      'div',
+      { class: 'aw-key-row' },
+      keyInput,
+      !backend && d.provider.apiKey
+        ? h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost', id: 'aw-set-clearkey', onclick: () => this.set((s) => delete s.provider.apiKey, true) }, t('settings.clearKey'))
+        : null,
+    );
     const volume = h('input', {
       id: 'aw-set-volume',
       type: 'range',
@@ -527,6 +780,11 @@ export class SettingsDialog {
       },
     });
     const speedOut = h('output', { class: 'aw-range-out' }, `${d.animationSpeed}×`);
+    const quality = h(
+      'select',
+      { id: 'aw-set-quality', onchange: (e: Event) => this.set((s) => (s.quality = (e.target as HTMLSelectElement).value as Settings['quality'])) },
+      (['auto', 'low', 'high'] as const).map((q) => h('option', { value: q, selected: (d.quality ?? 'auto') === q }, t(`settings.quality.${q}` as const))),
+    );
     const langPick = languagePicker(this.lang, this.cb.onLanguage ? (c) => this.cb.onLanguage?.(c) : undefined, 'aw-set-lang');
 
     setChildren(
@@ -550,7 +808,7 @@ export class SettingsDialog {
           null,
           h('legend', null, t('settings.provider')),
           field(t('settings.providerLabel'), 'aw-set-preset', presetSel, h('ul', { class: 'aw-notes-list' }, notes.map((n) => h('li', { class: n.warn ? 'is-warn' : undefined }, n.text)))),
-          d.provider.preset === 'custom'
+          !offline && d.provider.preset === 'custom'
             ? field(
                 t('settings.baseUrl'),
                 'aw-set-baseurl',
@@ -564,52 +822,37 @@ export class SettingsDialog {
                 }),
               )
             : null,
-          field(t('settings.model'), 'aw-set-model', modelInput),
-          h('div', { class: 'aw-field' }, h('span', { class: 'aw-field-label' }, t('settings.transport')), transportRadios),
-          field(
-            t('settings.apiKey'),
-            'aw-set-key',
-            h('input', {
-              id: 'aw-set-key',
-              type: 'password',
-              class: 'aw-input',
-              autocomplete: 'off',
-              spellcheck: 'false',
-              disabled: keyDisabled,
-              value: d.provider.apiKey ?? '',
-              placeholder: keyDisabled ? t('settings.keyServer') : preset && !preset.needsKey ? t('settings.keyNotNeeded') : 'sk-…',
-              oninput: (e: Event) => this.set((s) => (s.provider.apiKey = (e.target as HTMLInputElement).value || undefined)),
-            }),
-            t('settings.keyHint'),
-          ),
+          offline ? null : field(t('settings.model'), 'aw-set-model', modelInput),
+          offline ? null : h('div', { class: 'aw-field' }, h('span', { class: 'aw-field-label' }, t('settings.transport')), transportRadios, serverLine),
+          offline ? null : field(keyNeeded ? t('settings.apiKey') : t('settings.apiKeyOptional'), 'aw-set-key', keyRow, keyWarn),
+          check('aw-set-gm', d.gm !== false, t('settings.gm'), (on) => this.set((s) => (s.gm = on)), t('settings.gmHint')),
         ),
         h(
           'fieldset',
           null,
-          h('legend', null, t('settings.audioMotion')),
+          h('legend', null, t('settings.audio')),
           h('div', { class: 'aw-field aw-field-row' }, h('label', { for: 'aw-set-volume' }, t('settings.volume')), volume),
-          h(
-            'label',
-            { class: 'aw-check' },
-            h('input', { type: 'checkbox', id: 'aw-set-mute', checked: d.audio.muted, onchange: (e: Event) => this.set((s) => (s.audio.muted = (e.target as HTMLInputElement).checked)) }),
-            t('settings.mute'),
-          ),
+          check('aw-set-mute', d.audio.muted, t('settings.mute'), (on) => this.set((s) => (s.audio.muted = on))),
+          check('aw-set-soundcloud', !!d.audio.soundcloud, t('settings.soundcloud'), (on) => this.set((s) => (s.audio.soundcloud = on)), t('settings.soundcloudHint')),
+          musicHost,
+        ),
+        h(
+          'fieldset',
+          null,
+          h('legend', null, t('settings.display')),
+          field(t('settings.quality'), 'aw-set-quality', quality, t('settings.qualityHint')),
           h('div', { class: 'aw-field aw-field-row' }, h('label', { for: 'aw-set-speed' }, t('settings.animSpeed')), speed, speedOut),
-          h(
-            'label',
-            { class: 'aw-check' },
-            h('input', { type: 'checkbox', id: 'aw-set-reduce', checked: d.reduceMotion, onchange: (e: Event) => this.set((s) => (s.reduceMotion = (e.target as HTMLInputElement).checked)) }),
-            t('settings.reduceMotion'),
-          ),
+          check('aw-set-reduce', d.reduceMotion, t('settings.reduceMotion'), (on) => this.set((s) => (s.reduceMotion = on))),
         ),
         h(
           'footer',
           { class: 'aw-dlg-foot' },
           h('button', { type: 'button', class: 'aw-btn aw-btn-ghost', onclick: () => this.cb.onOpenSettings?.(false) }, t('common.cancel')),
-          h('button', { type: 'submit', class: 'aw-btn aw-btn-primary' }, t('common.save')),
+          h('button', { type: 'submit', class: 'aw-btn aw-btn-primary', id: 'aw-set-save' }, t('common.save')),
         ),
       ),
     );
+    if (musicHost) this.cb.onMountMusic?.(musicHost);
     if (focus) this.modal.focusFirst();
     else if (activeId) document.getElementById(activeId)?.focus({ preventScroll: true });
   }

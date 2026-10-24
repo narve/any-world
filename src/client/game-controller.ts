@@ -13,15 +13,21 @@
 import type { Dir, PlayerAction, Pos } from '../engine/types';
 import type { Renderer } from './render/index';
 import type { GameUi, TradeIntent, UiIntent, UiViewModel } from './ui/index';
-import { attachPointer } from './ui/index';
+import { attachMapInput, tapDecision, type TapDecision } from './ui/touch-input';
+import { coverInsets, isCompact, sameInsets, type Insets } from './ui/layout';
+import { legalActions } from '../engine/index';
 import type { GameSession, Outcome } from './session';
 import { clearRun, markOnboardingSeen, saveRun } from './storage';
 import { GmRunner, OfflineGmDirector, type GmDirector, type GmResult } from './gm-director';
 import { MapOverlay } from './map-overlay';
 import type { LlmDialogue } from '../llm/gm-runtime';
 import { voiceTurn } from './ai';
+import { withPromptLog } from './i18n/prompt-log';
 
 const TRAVEL_STEP_MS = 70;
+/** map directions and their (dx, dy) */
+const DIR_DELTA: Record<Dir, [number, number]> = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0], ne: [1, -1], nw: [-1, -1], se: [1, 1], sw: [-1, 1] };
+const DIRS = Object.keys(DIR_DELTA) as Dir[];
 /** GM answers waiting for the player to finish a choice are kept at most this long (turns) */
 const HOLD_TURNS = 30;
 
@@ -59,6 +65,7 @@ export class GameController {
   private raf = 0;
   private thumbCache = new Map<string, string | null>();
   private voiceAbort: AbortController | null = null;
+  private insets: Insets | null = null;
 
   constructor(
     readonly session: GameSession,
@@ -81,11 +88,34 @@ export class GameController {
     renderer.setWorld(this.session.world);
     renderer.setArea(this.session.state.area);
     this.session.setCameraStep(renderer.cameraStep);
-    const pointer = attachPointer(
-      this.host.canvasHost,
-      (x, y) => renderer.screenToTile(x, y),
-      (i) => this.onIntent(i),
-    );
+    // mouse, pen and touch on the map: one input layer (ui/touch-input.ts)
+    const pointer = attachMapInput(this.host.canvasHost, {
+      pick: (x, y) => (typeof renderer.pick === 'function' ? renderer.pick(x, y) : renderer.screenToTile(x, y)),
+      hover: (pos) => this.onIntent({ type: 'hover_tile', pos }),
+      click: (pos, button) => this.onIntent({ type: 'click_tile', pos, button }),
+      tap: (pos) => this.onTap(pos),
+      longPress: (pos) => this.onLongPress(pos),
+      touchStart: () => {
+        // a new touch on the map closes whatever card the last long press opened
+        this.lastHover = null;
+        this.host.ui.hideTooltip();
+      },
+      camera: {
+        zoomBy: (f) => renderer.zoomBy(f),
+        rotateStep: (d) => {
+          renderer.rotateStep(d);
+          this.session.setCameraStep(renderer.cameraStep);
+        },
+      },
+      gesture: (on) => {
+        if (on) this.stopTravel();
+      },
+      blocked: () => this.host.ui.isBlocking(),
+    });
+    // the overlay covers parts of the map on phones: keep the player centred in the rest
+    this.host.ui.onLayoutChange(() => this.updateInsets());
+    const onResize = () => this.updateInsets();
+    window.addEventListener('resize', onResize);
     const onWheel = (e: WheelEvent) => {
       if (this.host.ui.isBlocking()) return;
       e.preventDefault();
@@ -101,11 +131,14 @@ export class GameController {
     this.overlay.setAvoid(() => this.host.ui.panelRects().hud);
     this.disposers.push(
       () => pointer.detach(),
+      () => window.removeEventListener('resize', onResize),
+      () => this.host.ui.onLayoutChange(null),
       () => this.host.canvasHost.removeEventListener('wheel', onWheel),
       () => window.removeEventListener('keydown', onKey, true),
       () => this.overlay?.dispose(),
     );
     this.render();
+    this.updateInsets();
     await renderer.sync(this.session.state, []);
     renderer.rig.settle();
     this.autosave();
@@ -156,6 +189,90 @@ export class GameController {
     }
     if (i.type === 'dismiss_onboarding' && i.forever) markOnboardingSeen(this.session.worldId);
     this.apply(this.session.intent(i));
+  }
+
+  /**
+   * A tap on the map (touch): next to the player, a non-hostile NPC is talked to and a hostile is
+   * attacked; anywhere else the player walks there (click-to-travel stops when a hostile comes into
+   * view, the player is hurt or something needs a decision). Look / target mode: the tap places the
+   * cursor like a click.
+   */
+  onTap(pos: Pos): void {
+    if (this.disposed) return;
+    this.host.ui.hideTooltip();
+    const s = this.session;
+    if (s.mode !== 'normal' || s.ended || s.state.pendingChoice || s.state.player.pendingPerkChoice) {
+      this.onIntent({ type: 'click_tile', pos, button: 'primary' });
+      return;
+    }
+    const d = this.tapMeaning(pos);
+    if (d.kind === 'travel') {
+      this.stopTravel();
+      const out = s.intent({ type: 'click_tile', pos, button: 'primary' });
+      // next to the player with no way to walk onto it (a closed door, a lever in the wall…): a tap
+      // bumps it, like pressing the arrow key would
+      const me = s.player().pos;
+      const dx = pos.x - me.x;
+      const dy = pos.y - me.y;
+      if (!out.changed && !out.travel && Math.max(Math.abs(dx), Math.abs(dy)) === 1) {
+        const dir = DIRS.find((k) => DIR_DELTA[k][0] === dx && DIR_DELTA[k][1] === dy);
+        if (dir && legalActions(s.state).some((a) => a.type === 'move' && a.dir === dir)) {
+          this.apply(s.act({ type: 'move', dir }));
+          return;
+        }
+      }
+      this.apply(out);
+      return;
+    }
+    this.stopTravel();
+    this.apply(s.uiAction(d.kind === 'talk' ? { type: 'talk', targetId: d.targetId } : { type: 'attack', targetId: d.targetId }));
+  }
+
+  /** long press on the map (touch): inspect the tile, like a right click */
+  onLongPress(pos: Pos): void {
+    if (this.disposed) return;
+    this.lastHover = pos;
+    this.onIntent({ type: 'click_tile', pos, button: 'secondary' });
+  }
+
+  /** what a tap on `pos` means for the current state (talk / attack an adjacent actor, or travel) */
+  tapMeaning(pos: Pos): TapDecision {
+    const st = this.session.state;
+    const pid = st.player.actorId;
+    const a = st.area.actors.find((x) => x.hp > 0 && x.id !== pid && x.pos.x === pos.x && x.pos.y === pos.y);
+    const seen = (st.area.seen as ArrayLike<number>)[pos.y * st.area.map.width + pos.x] ?? 0;
+    if (!a || seen < 2) return { kind: 'travel' };
+    const legal = legalActions(st);
+    return tapDecision(pos, {
+      player: this.session.player().pos,
+      actor: {
+        id: a.id,
+        hostile: a.faction === 'hostile',
+        canTalk: legal.some((x) => x.type === 'talk' && x.targetId === a.id),
+        canAttack: legal.some((x) => x.type === 'attack' && x.targetId === a.id),
+      },
+    });
+  }
+
+  /** viewport insets for the renderer from the panels that cover the map (phones) */
+  updateInsets(): void {
+    if (this.disposed) return;
+    const r = this.host.renderer;
+    if (typeof r.setViewportInsets !== 'function') return;
+    const w = window.innerWidth;
+    const hgt = window.innerHeight;
+    // phones: the HUD rows / side columns are bands that really hide the map; on tablets and
+    // desktops the panels sit in corners and the camera keeps its own framing (safe areas only)
+    const compact = isCompact(this.host.ui.layoutMode());
+    const ins = compact ? coverInsets(this.host.ui.panelRects().hud, w, hgt, { bandShare: 0.4, safe: safeAreaInsets() }) : coverInsets([], w, hgt, { safe: safeAreaInsets() });
+    if (sameInsets(this.insets, ins)) return;
+    this.insets = ins;
+    r.setViewportInsets(ins);
+  }
+
+  /** what the renderer was last told the overlay covers (tests) */
+  get viewportInsets(): Insets | null {
+    return this.insets ? { ...this.insets } : null;
   }
 
   onDialogueReply(index: number): void {
@@ -211,7 +328,7 @@ export class GameController {
     const ac = new AbortController();
     this.voiceAbort = ac;
     const s = this.session;
-    void voiceTurn(dialogue, req, { world: s.world, state: s.state, difficulty: s.difficulty, signal: ac.signal }).then((r) => {
+    void voiceTurn(dialogue, req, { world: s.world, state: withPromptLog(s.state, s.world), difficulty: s.difficulty, signal: ac.signal }).then((r) => {
       if (!r || this.disposed || ac.signal.aborted) return;
       const out = s.setVoice(req.token, r.response);
       if (s.voiceLine() === null && !out.changed) return;
@@ -428,4 +545,17 @@ export class GameController {
   get hovered(): Pos | null {
     return this.lastHover;
   }
+}
+
+/** the device's safe-area insets (notch, home bar) in CSS px, read from env() via a probe element */
+function safeAreaInsets(): Partial<Insets> {
+  if (typeof document === 'undefined' || !document.body) return {};
+  const probe = document.createElement('div');
+  probe.style.cssText =
+    'position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)';
+  document.body.appendChild(probe);
+  const cs = getComputedStyle(probe);
+  const out = { top: parseFloat(cs.paddingTop) || 0, right: parseFloat(cs.paddingRight) || 0, bottom: parseFloat(cs.paddingBottom) || 0, left: parseFloat(cs.paddingLeft) || 0 };
+  probe.remove();
+  return out;
 }

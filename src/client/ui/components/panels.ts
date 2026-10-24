@@ -12,6 +12,8 @@ export class HelpOverlay {
     private close: () => void,
     /** reopen this world's onboarding card (absent outside a run) */
     private howToPlay?: () => void,
+    /** M4: open settings (volume, music panel, language, quality) from inside a run */
+    private openSettings?: () => void,
   ) {}
 
   get el(): HTMLElement {
@@ -42,6 +44,23 @@ export class HelpOverlay {
               t('help.howToPlay'),
             )
           : null,
+        this.openSettings
+          ? h(
+              'button',
+              {
+                type: 'button',
+                class: 'aw-btn aw-btn-small aw-help-settings',
+                id: 'aw-help-settings',
+                onclick: () => {
+                  this.close();
+                  this.openSettings?.();
+                },
+              },
+              icon(ICONS.gear),
+              ' ',
+              t('help.settings'),
+            )
+          : null,
         h('button', { type: 'button', class: 'aw-icon-btn', 'aria-label': t('help.closeAria'), 'data-autofocus': true, onclick: () => this.close() }, icon(ICONS.close)),
       ),
       h(
@@ -66,7 +85,7 @@ export class HelpOverlay {
           h(
             'dl',
             null,
-            slotLegend().map((l) => [h('dt', null, h('span', { class: ['aw-legend-mark', l.mark === 'E' && 'is-eq'] }, l.mark)), h('dd', null, l.what)]),
+            slotLegend().map((l) => [h('dt', null, h('span', { class: ['aw-legend-mark', l.equipped && 'is-eq'] }, l.mark)), h('dd', null, l.what)]),
           ),
         ),
       ),

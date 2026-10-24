@@ -10,7 +10,7 @@
  */
 import type { PlayerAction } from '../../engine/types';
 import type { ActorTooltipView, ContextActionView, GameView, SlotItemView, TileTooltipView, UiCallbacks, UiIntent, UiViewModel } from './viewmodel';
-import { dataKey, h } from './dom';
+import { dataKey, h, icon, ICONS } from './dom';
 import { applyTheme } from './theme';
 import { defaultVocabulary } from './format';
 import { attachKeyboard, computeLayer, type InputLayer, type InputVerbs, type KeyboardBinding, type UiCommand } from './input';
@@ -19,6 +19,7 @@ import { initialInputMode, nextInputMode, type InputMode } from './onboarding';
 import { ContextBar, GoalTracker, OnboardingCard, SlotTip } from './components/guide';
 import { t } from '../i18n/index';
 import { actorCard, tileCard, Tooltip, type UiContext } from './components/common';
+import { isCompact, layoutFor, type LayoutMode } from './layout';
 import { Hud } from './components/hud';
 import { MessageLog } from './components/log';
 import { NarrationCard } from './components/narration';
@@ -60,6 +61,10 @@ export interface GameUi {
   inputMode(): InputMode;
   /** true while a panel/modal is consuming input */
   isBlocking(): boolean;
+  /** the responsive layout in effect (DESIGN §6b): phones get bottom sheets and a ticker log */
+  layoutMode(): LayoutMode;
+  /** called after the layout or the panels' sizes may have changed (viewport insets) */
+  onLayoutChange(cb: (() => void) | null): void;
   destroy(): void;
 }
 
@@ -117,6 +122,12 @@ class UiRoot implements GameUi {
   private end: EndScreen;
   private settings: SettingsDialog;
 
+  private mapTools: HTMLElement;
+  private layoutValue: LayoutMode = 'desktop';
+  private layoutCb: (() => void) | null = null;
+  private layoutRaf = 0;
+  private resizeObs: ResizeObserver | null = null;
+
   private bp: BackpackState = { open: false, cursor: 0, grabbed: null, menuIndex: null };
   private helpOpen = false;
   private rulesOpen = false;
@@ -168,6 +179,7 @@ class UiRoot implements GameUi {
     this.help = new HelpOverlay(
       () => this.setHelpOpen(false),
       () => this.vm?.screen === 'game' && this.intent({ type: 'show_onboarding' }),
+      () => cb.onOpenSettings?.(true),
     );
     this.rules = new RulesPanel(() => this.setRulesOpen(false));
     this.start = new StartScreen(cb, opts.rand);
@@ -178,6 +190,12 @@ class UiRoot implements GameUi {
     this.modeBanner = h('div', { class: 'aw-mode-banner', role: 'status', hidden: true });
     this.busyEl = h('div', { class: 'aw-busy', role: 'status', hidden: true });
     this.goal = new GoalTracker({
+      // phones: the open goal hangs over the map; it may use the room down to the screen's bottom
+      toggled: (on) => {
+        if (!on) return;
+        const r = this.goal.el.getBoundingClientRect();
+        this.goal.el.style.setProperty('--goal-room', `${Math.max(64, Math.floor((window.innerHeight || r.bottom) - r.bottom - 8))}px`);
+      },
       howToPlay: () => {
         this.goal.setExpanded(false);
         this.intent({ type: 'show_onboarding' });
@@ -190,6 +208,13 @@ class UiRoot implements GameUi {
     this.stripWrap = h('div', { class: 'aw-top-centre' }, this.hud.strip, this.goal.el, this.modeBanner, this.busyEl);
     this.rulesBadgeWrap = h('div', { class: 'aw-top-right' });
     this.toasts = h('div', { class: 'aw-toasts', 'aria-live': 'polite' });
+    // camera buttons over the map edge (touch: a twist needs two hands, a button needs one thumb)
+    this.mapTools = h(
+      'div',
+      { class: 'aw-map-tools', role: 'toolbar', 'aria-label': t('help.rotate') },
+      h('button', { type: 'button', class: 'aw-icon-btn aw-map-btn', dataset: { cam: 'left' }, 'aria-label': `${t('help.rotate')} ⟲`, onclick: () => this.intent({ type: 'rotate_camera', dir: -1 }) }, icon(ICONS.rotateLeft)),
+      h('button', { type: 'button', class: 'aw-icon-btn aw-map-btn', dataset: { cam: 'right' }, 'aria-label': `${t('help.rotate')} ⟳`, onclick: () => this.intent({ type: 'rotate_camera', dir: 1 }) }, icon(ICONS.rotateRight)),
+    );
 
     this.gameEl = h(
       'div',
@@ -200,6 +225,7 @@ class UiRoot implements GameUi {
       h('div', { class: 'aw-top-right-col' }, this.rulesBadgeWrap, this.rules.el),
       h('div', { class: 'aw-bottom-left' }, this.log.el),
       h('div', { class: 'aw-bottom-centre' }, this.ctxBar.el, this.hotbar.el),
+      this.mapTools,
       this.onboard.el,
       this.narration.el,
       this.backpack.el,
@@ -231,6 +257,47 @@ class UiRoot implements GameUi {
       },
       { signal },
     );
+
+    // phones: the HUD shows its stats on tap, the log ticker opens on tap (no hover-only info)
+    this.hud.panel.addEventListener('click', (e) => {
+      if (!isCompact(this.layoutValue)) return;
+      const was = this.hud.panel.classList.contains('is-expanded');
+      // in the open card, a stat or chip explains itself (tooltip) instead of closing the card
+      if (was && (e.target as Element | null)?.closest?.('[data-tip]')) return;
+      const on = !was;
+      this.hud.panel.classList.toggle('is-expanded', on);
+      this.hud.panel.setAttribute('aria-expanded', String(on));
+      this.layoutChanged();
+    });
+    this.log.el.addEventListener('click', (e) => {
+      if (!isCompact(this.layoutValue)) return;
+      if ((e.target as Element | null)?.closest?.('.aw-log-toggle')) return;
+      this.log.setExpanded(!this.log.isExpanded);
+    });
+    window.addEventListener(
+      'pointerdown',
+      (e: PointerEvent) => {
+        if (!isCompact(this.layoutValue)) return;
+        const target = e.target as Node | null;
+        // a map card shown as a sheet closes on the next touch anywhere
+        if (this.tooltip.el.classList.contains('is-sheet') && this.tooltip.el.classList.contains('is-visible')) this.tooltip.hideAt();
+        if (this.log.isExpanded && !(target && this.log.el.contains(target))) this.log.setExpanded(false);
+        if (this.hud.panel.classList.contains('is-expanded') && !(target && this.hud.panel.contains(target))) {
+          this.hud.panel.classList.remove('is-expanded');
+          this.hud.panel.setAttribute('aria-expanded', 'false');
+          this.layoutChanged();
+        }
+      },
+      { capture: true, signal },
+    );
+    this.updateLayout();
+    window.addEventListener('resize', () => this.updateLayout(), { signal });
+    window.addEventListener('orientationchange', () => this.updateLayout(), { signal });
+    if (typeof ResizeObserver === 'function') {
+      // panel sizes change with content (statuses, a wrapped goal line): re-measure the insets
+      this.resizeObs = new ResizeObserver(() => this.layoutChanged());
+      for (const el of [this.hud.panel, this.stripWrap, this.goal.el, this.log.el, this.ctxBar.el, this.hotbar.el, this.rulesBadgeWrap]) this.resizeObs.observe(el);
+    }
 
     this.kb = attachKeyboard(
       () => this.layer(),
@@ -363,6 +430,40 @@ class UiRoot implements GameUi {
     return this.mode;
   }
 
+  layoutMode(): LayoutMode {
+    return this.layoutValue;
+  }
+
+  onLayoutChange(cb: (() => void) | null): void {
+    this.layoutCb = cb;
+  }
+
+  /** re-derive the layout from the viewport (resize, rotation) */
+  private updateLayout(): void {
+    const w = window.innerWidth || this.root.clientWidth;
+    const hgt = window.innerHeight || this.root.clientHeight;
+    const next = layoutFor(w, hgt);
+    if (next !== this.layoutValue || this.root.dataset.layout !== next) {
+      this.layoutValue = next;
+      this.root.dataset.layout = next;
+      if (!isCompact(next)) {
+        this.hud.panel.classList.remove('is-expanded');
+        this.hud.panel.removeAttribute('aria-expanded');
+      }
+    }
+    this.layoutChanged();
+  }
+
+  /** tell the controller (once per frame) that panel rectangles may have moved */
+  private layoutChanged(): void {
+    if (this.layoutRaf || !this.layoutCb) return;
+    const run = () => {
+      this.layoutRaf = 0;
+      this.layoutCb?.();
+    };
+    this.layoutRaf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame(run) : (setTimeout(run, 16) as unknown as number);
+  }
+
   /** a context bar button: the same as its key */
   private runContext(a: ContextActionView, el: HTMLElement): void {
     this.slotTip.hide();
@@ -405,11 +506,13 @@ class UiRoot implements GameUi {
     if (!actor || !at) return this.tooltip.hideAt();
     const verbs = this.vm?.game?.verbs;
     const hint = actor.isNpc && verbs?.talk && actor.faction !== 'hostile' ? (this.mode === 'touch' ? t('actor.talkHintTouch') : t('actor.talkHint')) : undefined;
+    this.tooltip.setSheet(isCompact(this.layoutValue));
     this.tooltip.showAt(actorCard(actor, this.ctxValue, hint), at.x, at.y, avoid);
   }
 
   showTileTooltip(tile: TileTooltipView | null, at?: { x: number; y: number }, avoid?: { x: number; y: number } | null): void {
     if (!tile || !at) return this.tooltip.hideAt();
+    this.tooltip.setSheet(isCompact(this.layoutValue));
     this.tooltip.showAt(tileCard(tile), at.x, at.y, avoid);
   }
 
@@ -439,11 +542,20 @@ class UiRoot implements GameUi {
     const hud: DOMRect[] = [];
     for (const corner of this.gameEl.querySelectorAll<HTMLElement>(':scope > .aw-top-left, :scope > .aw-top-centre, :scope > .aw-top-right-col, :scope > .aw-bottom-left, :scope > .aw-bottom-centre')) {
       // the corner wrappers can be wider than what they show; measure their visible children
+      // (on phones the hotbar is laid out as its parts: slots and tools)
       for (const child of Array.from(corner.children) as HTMLElement[]) {
         if (child.hidden) continue;
-        const rc = child.getBoundingClientRect();
-        if (rc.width > 0 && rc.height > 0) hud.push(rc);
+        const parts = getComputedStyle(child).display === 'contents' ? (Array.from(child.children) as HTMLElement[]) : [child];
+        for (const part of parts) {
+          if (part.hidden) continue;
+          const rc = part.getBoundingClientRect();
+          if (rc.width > 0 && rc.height > 0) hud.push(rc);
+        }
       }
+    }
+    if (!this.mapTools.hidden) {
+      const rc = this.mapTools.getBoundingClientRect();
+      if (rc.width > 0 && rc.height > 0) hud.push(rc);
     }
     return { log: this.log.el.getBoundingClientRect(), hud };
   }
@@ -528,6 +640,8 @@ class UiRoot implements GameUi {
   destroy(): void {
     this.kb.detach();
     this.inputAbort.abort();
+    this.resizeObs?.disconnect();
+    this.layoutCb = null;
     this.slotTip.hide();
     this.tooltip.dispose();
     this.toastStack.clear();

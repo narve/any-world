@@ -1,0 +1,220 @@
+/*
+ * App-shell additions (M4): inspiration filters, "Your worlds" (recent / imported), the provider
+ * status line, and the settings dialog's key warning and server line. Imported by
+ * ui/components/screens.ts; uses the theme variables from ui.css.
+ */
+
+/* provider status line */
+.aw-start-note[data-tone] {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border);
+  background: rgba(var(--c-panel-rgb), 0.6);
+  line-height: 1.4;
+}
+
+.aw-start-note[data-tone] > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.aw-start-note[data-tone='ok'] > svg {
+  color: var(--c-good);
+}
+
+.aw-start-note[data-tone='warn'] {
+  border-color: rgba(var(--c-danger-rgb), 0.55);
+}
+
+.aw-start-note[data-tone='warn'] > svg {
+  color: var(--c-danger);
+}
+
+.aw-start-note[data-tone='demo'] > svg {
+  color: var(--c-accent);
+}
+
+.aw-status-detail {
+  font-size: 12px;
+}
+
+/* the start screen's language picker sits under the tagline: as wide as its text */
+.aw-ui .aw-start-lang select.aw-lang-select {
+  width: auto;
+  min-width: 160px;
+  min-height: 40px;
+}
+
+/* inspiration filters */
+.aw-insp-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 10px;
+}
+
+.aw-insp-filters:empty {
+  display: none;
+}
+
+.aw-ui select.aw-insp-lang {
+  width: auto;
+  min-height: 32px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.aw-insp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.aw-tag-chip {
+  min-height: 32px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: transparent;
+  color: var(--c-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color var(--dur), background var(--dur), color var(--dur);
+}
+
+.aw-tag-chip:hover {
+  border-color: var(--c-border-strong);
+  color: var(--c-text);
+}
+
+.aw-tag-chip.is-on {
+  border-color: var(--c-accent);
+  background: rgba(var(--c-accent-rgb), 0.16);
+  color: var(--c-text);
+}
+
+.aw-insp-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 13px;
+}
+
+/* your worlds */
+.aw-recent-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.aw-recent-head h2 {
+  margin: 0;
+}
+
+.aw-recent > .aw-small {
+  margin: 0 0 8px;
+}
+
+.aw-recent-item {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.aw-recent-play {
+  --demo: var(--c-accent);
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--demo);
+  background: rgba(var(--c-panel-rgb), 0.75);
+  color: var(--c-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur), background var(--dur);
+}
+
+.aw-recent-play:hover {
+  background: var(--c-panel-3);
+}
+
+.aw-recent-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aw-recent-tools .aw-icon-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* settings dialog */
+.aw-key-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.aw-key-row .aw-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.aw-key-warn {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(var(--c-danger-rgb), 0.5);
+  background: rgba(var(--c-danger-rgb), 0.1);
+  color: var(--c-text);
+  line-height: 1.4;
+}
+
+.aw-key-warn > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--c-danger);
+}
+
+.aw-server-line {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.aw-server-line.is-warn {
+  color: var(--c-danger);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .aw-recent-tools {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .aw-recent-item {
+    flex-wrap: wrap;
+  }
+
+  .aw-recent-item .aw-recent-play {
+    flex-basis: 100%;
+  }
+
+  .aw-tag-chip {
+    min-height: 36px;
+  }
+}

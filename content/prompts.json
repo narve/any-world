@@ -14,7 +14,15 @@
       ],
       "teaser": "A merger, a shared fridge, and one temp who knows everyone's yoghurt.",
       "nonViolent": true,
-      "worldId": "corporate-merger-kitchen"
+      "worldId": "corporate-merger-kitchen",
+      "translations": {
+        "nb": {
+          "genre": "kontorsatire",
+          "prompt": "Et mellomstort forsikringsselskap blir slukt av konkurrenten, og den eneste nøytrale grunnen som er igjen, er kjøkkenet i tredje etasje. Du er vikaren som vet hvem som eier hvilken merket yoghurt – bytt sladder, forfalsk møteinnkallinger og avgjør hvilken avdeling som overlever fredagens allmøte.",
+          "teaser": "En fusjon, et felles kjøleskap og én vikar som kjenner alles yoghurt.",
+          "worldId": "corporate-merger-kitchen-nb"
+        }
+      }
     },
     {
       "id": "deep-sea-whale-fall",
@@ -29,7 +37,14 @@
       ],
       "teaser": "A whale carcass at 3,000 metres that is growing, not shrinking.",
       "nonViolent": false,
-      "worldId": "deep-sea-whale-fall"
+      "worldId": "deep-sea-whale-fall",
+      "translations": {
+        "nb": {
+          "genre": "dyphavsoverlevelse",
+          "prompt": "Et forskningshabitat er forankret ved et hvalkadaver på 3000 meters dyp, og kadaveret vokser fortere enn noe klarer å spise det. Rasjoner lampebatteriene, tyd mønstrene til beinormene, og finn ut hvilket besetningsmedlem som sluttet å sende prøver til overflaten – og hvorfor.",
+          "teaser": "Et hvalkadaver på 3000 meter som vokser i stedet for å krympe."
+        }
+      }
     },
     {
       "id": "viking-lawspeaker-althing",
@@ -45,7 +60,15 @@
       ],
       "teaser": "Recite the whole law from memory; every clause you speak becomes binding.",
       "nonViolent": true,
-      "worldId": "viking-lawspeaker-althing"
+      "worldId": "viking-lawspeaker-althing",
+      "translations": {
+        "nb": {
+          "genre": "vikingsaga",
+          "prompt": "Island, 1004. Mesteren din, lovsigemannen, er død, og som læregutten hans må du si fram hele loven etter hukommelsen på Alltinget – men tre mektige ætter vil ha hver sin versjon husket, og hver paragraf du sier høyt, blir bindende. Vinn stemmer, ikke tvekamper.",
+          "teaser": "Si fram hele loven etter hukommelsen – hver paragraf du sier, blir bindende.",
+          "worldId": "viking-lawspeaker-althing-nb"
+        }
+      }
     },
     {
       "id": "detective-sugar-hotel",
@@ -60,7 +83,14 @@
       ],
       "teaser": "A missing pastry chef left a sugar model of the hotel with one extra room.",
       "nonViolent": true,
-      "worldId": "detective-sugar-hotel"
+      "worldId": "detective-sugar-hotel",
+      "translations": {
+        "nb": {
+          "genre": "detektiv",
+          "prompt": "På et storslått alpehotell som er nedsnødd i lavsesongen, har konditoren forsvunnet og etterlatt en halvferdig sukkermodell av bygget – nøyaktig ned til et rom ingen vil innrømme at finnes. Avhør den lille staben, sammenlign modellen med de virkelige korridorene, og pek ut den skyldige før snøen smelter.",
+          "teaser": "En forsvunnet konditor etterlot en sukkermodell av hotellet med ett rom for mye."
+        }
+      }
     },
     {
       "id": "abstract-yellow-triangle",
@@ -76,7 +106,14 @@
       ],
       "teaser": "A small yellow triangle racing the painter's brush to the signature.",
       "nonViolent": true,
-      "worldId": "abstract-yellow-triangle"
+      "worldId": "abstract-yellow-triangle",
+      "translations": {
+        "nb": {
+          "genre": "abstrakt kunstreise",
+          "prompt": "Du er en liten gul trekant som har sluppet løs i et uferdig abstrakt maleri. Farger er stemninger, linjer er korridorer, og maleren kommer stadig tilbake for å male over hele områder. Nå fram til signaturen i nederste hjørne før du blir fernisert fast.",
+          "teaser": "En liten gul trekant i kappløp med malerpenselen mot signaturen."
+        }
+      }
     },
     {
       "id": "alien-twilight-migration",
@@ -92,7 +129,14 @@
       ],
       "teaser": "An entire biosphere walking west to stay in the twilight.",
       "nonViolent": false,
-      "worldId": "alien-twilight-migration"
+      "worldId": "alien-twilight-migration",
+      "translations": {
+        "nb": {
+          "genre": "fremmed økologi",
+          "prompt": "På en klode med bundet rotasjon vandrer hele biosfæren sakte vestover for å holde seg i skumringsbeltet. Du er pollenbud på ryggen av en flokk lavbeitere på størrelse med hus – lær hvilke «rovdyr» som egentlig er symbionter, og hindre at vandringen splittes ved glasskløften.",
+          "teaser": "En hel biosfære som vandrer vestover for å bli i skumringen."
+        }
+      }
     },
     {
       "id": "cyberpunk-rooftop-yams",
@@ -108,7 +152,14 @@
       ],
       "teaser": "Megacorps own the weather; the rooftop co-op still grows real yams.",
       "nonViolent": true,
-      "worldId": "cyberpunk-rooftop-yams"
+      "worldId": "cyberpunk-rooftop-yams",
+      "translations": {
+        "nb": {
+          "genre": "cyberpunk (sol og fellesskap)",
+          "prompt": "Lagos, 2071: megaselskapene eier været, men takhage-andelslaget dyrker fortsatt ekte yams. I løpet av natten har noen tatt patent på bestemorens frøsort. Hack vanningsdronene, forhandle med duesyndikatet, og få frøene tilbake før regnkontrakten går ut.",
+          "teaser": "Megaselskapene eier været; takhagelaget dyrker fortsatt ekte yams."
+        }
+      }
     },
     {
       "id": "folk-horror-scarecrow-wedding",
@@ -124,7 +175,14 @@
       ],
       "teaser": "This year the banns name you as the scarecrow's bride.",
       "nonViolent": false,
-      "worldId": "folk-horror-scarecrow-wedding"
+      "worldId": "folk-horror-scarecrow-wedding",
+      "translations": {
+        "nb": {
+          "genre": "folkehorror",
+          "prompt": "Hver sjuende sommer gifter sognet Hollin Moss bort sitt eldste fugleskremsel til en levende landsbyboer, og i år er det ditt navn som lyses til ekteskap. Presten er snill, kakene er utmerkede, og byggen lener seg allerede mot kirken. Finn en vei ut av bryllupet – eller et bedre parti for fugleskremselet.",
+          "teaser": "I år er det du som skal gifte deg med fugleskremselet."
+        }
+      }
     },
     {
       "id": "heist-silent-vault",
@@ -140,7 +198,14 @@
       ],
       "teaser": "Steal the last recording of an extinct bird during a live string quartet.",
       "nonViolent": true,
-      "worldId": "heist-silent-vault"
+      "worldId": "heist-silent-vault",
+      "translations": {
+        "nb": {
+          "genre": "kupp",
+          "prompt": "Et museum i Wien har det eneste opptaket av lyden fra en utdødd fugl, innelåst bak gulv som slår alarm ved alt som er høyere enn en hvisking. Sett sammen et lag – en døv låsesmed, en pensjonert operasufflør og en svært rolig katt – og stjel det under en direktesendt strykekvartett.",
+          "teaser": "Stjel det siste opptaket av en utdødd fugl under en strykekvartett."
+        }
+      }
     },
     {
       "id": "microscopic-root-nodule",
@@ -156,7 +221,14 @@
       ],
       "teaser": "A bacterium with a molecular passport, bargaining its way into a pea root.",
       "nonViolent": true,
-      "worldId": "microscopic-root-nodule"
+      "worldId": "microscopic-root-nodule",
+      "translations": {
+        "nb": {
+          "genre": "mikroskopisk",
+          "prompt": "Du er en enslig nitrogenfikserende bakterie som forhandler om innpass i roten på en erteplante. Immunceller sjekker det molekylære passet ditt, en rivaliserende stamme lyver om papirene sine, og inne i rotknollen venter en hel økonomi som bytter sukker mot nitrogen.",
+          "teaser": "En bakterie med molekylært pass forhandler seg inn i en erterot."
+        }
+      }
     },
     {
       "id": "fantasy-retired-mimic",
@@ -172,7 +244,14 @@
       ],
       "teaser": "Forty years as the break-room armchair, now first on the redundancy list.",
       "nonViolent": false,
-      "worldId": "fantasy-retired-mimic"
+      "worldId": "fantasy-retired-mimic",
+      "translations": {
+        "nb": {
+          "genre": "fantasy (hulesatire)",
+          "prompt": "Du er en mimiker som har tilbrakt førti behagelige år som lenestolen på pauserommet i et fangehull. Den nye ledelsen vil gjøre stedet «eventyrervennlig», og du er det første møbelet på oppsigelseslista. Bevis hva du er verdt for nissefagforeningen – eller snik deg ut forkledd som bagasje.",
+          "teaser": "Førti år som lenestol på pauserommet, nå først på oppsigelseslista."
+        }
+      }
     },
     {
       "id": "western-assayer-scales",
@@ -187,7 +266,14 @@
         "frontier"
       ],
       "teaser": "Pure silver, says the assay — weighed on scales the claim-owner paid for.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "westernnoir",
+          "prompt": "Dry Fork, Nevada, 1878. Prøvekontoret sverger på at det nye funnet er rent sølv, men vekta til prøvetakeren er kjøpt på kreditt fra mannen som eier funnet. Du er bankens stille kontorist med en gullsmedlupe og to uker på deg før diligensen kommer med investorene.",
+          "teaser": "Rent sølv, sier prøven – veid på en vekt funneieren har betalt for."
+        }
+      }
     },
     {
       "id": "teen-debate-ferry",
@@ -202,7 +288,14 @@
         "betrayal"
       ],
       "teaser": "Twelve teens, one trophy, and the motion: delete the group chat.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "ungdomsdrama",
+          "prompt": "Debattleir om sommeren på en ombygd bilferje: tolv tenåringer, ett trofé og et forslag ingen vil argumentere for – «Denne forsamlingen vil slette gruppechatten.» Bygg allianser, overlev talentkvelden, og finn ut hvem som lekker alles øvingstaler.",
+          "teaser": "Tolv tenåringer, ett trofé og forslaget: slett gruppechatten."
+        }
+      }
     },
     {
       "id": "psychedelic-unfelt-museum",
@@ -217,7 +310,14 @@
         "shifting"
       ],
       "teaser": "A museum of feelings nobody got around to having.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "psykedelisk drøm",
+          "prompt": "Du våkner i et feberdrømmuseum der hver utstilling er en følelse noen glemte å ha. Salene stokker seg om hver gang du blunker, vaktene er laget av déjà vu, og ditt eget tapte minne er lånt ut til en annens drøm.",
+          "teaser": "Et museum for følelser ingen fikk tid til å ha."
+        }
+      }
     },
     {
       "id": "cosy-lighthouse-bakery",
@@ -232,7 +332,14 @@
         "slice-of-life"
       ],
       "teaser": "An inherited bakery, a crooked lighthouse, a slightly sentient sourdough.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "koselig hverdag",
+          "prompt": "Du har arvet tantens bakeri inne i et skjevt fyrtårn på en øy ferja besøker to ganger i uka. Hver øyboer har en fast bestilling, en hemmelighet og en mening om den hundre år gamle surdeigsstarteren din, som kanskje er litt bevisst.",
+          "teaser": "Et arvet bakeri, et skjevt fyrtårn og en surdeig som kanskje tenker."
+        }
+      }
     },
     {
       "id": "kafka-grauwinkel-permit",
@@ -247,7 +354,14 @@
         "satire"
       ],
       "teaser": "To get the exit permit, you must already hold the exit permit.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "byråkrati / kafkaesk",
+          "prompt": "Du trenger en tillatelse for å forlate byen Grauwinkel, men tillatelseskontoret tar bare imot søkere som allerede har en. Saksbehandlerne er alltid høflige, kønumrene er i sjutallssystemet, og et sted i arkivet i underkjelleren ligger det opprinnelige skjemaet som startet alt.",
+          "teaser": "For å få utreisetillatelsen må du allerede ha utreisetillatelsen."
+        }
+      }
     },
     {
       "id": "sports-prairie-curling",
@@ -262,7 +376,14 @@
         "small-town"
       ],
       "teaser": "Save a bankrupt curling club with retirees and perfect ice.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "sport",
+          "prompt": "En curlingklubb på landet i Manitoba er én turnering unna konkurs, og skipperen har nettopp brukket håndleddet. Du kjører isbehandlingsmaskinen og kjenner banen bedre enn noen – les isen, tren et lag av sta pensjonister, og spill ut byklubbens sponsede innleide stjerner.",
+          "teaser": "Redd en konkurstruet curlingklubb med pensjonister og perfekt is."
+        }
+      }
     },
     {
       "id": "mythic-river-advocate",
@@ -277,7 +398,14 @@
         "india"
       ],
       "teaser": "The river god is suing the city, and you're his lawyer.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "mytisk",
+          "prompt": "Elveguden i Yamuna har saksøkt byen for ulovlig inntrenging, og som det eneste mennesket som hører vannet snakke, er du oppnevnt som hans advokat. Samle vitneforklaringer fra skilpadder, badetrapper og druknede tempelklokker før monsunhøringen.",
+          "teaser": "Elveguden saksøker byen, og du er advokaten hans."
+        }
+      }
     },
     {
       "id": "music-missing-bass-line",
@@ -292,7 +420,14 @@
         "puzzle"
       ],
       "teaser": "A lone grace note searching a fugue for its missing bass line.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "musikk som verden",
+          "prompt": "Verden er en fuge i fire stemmer, og basslinjen er borte. Gå langs notelinjene som en ensom forslagsnote, klatre i tonartskifter som om de var stup, og lokk de dissonante akkordene – de biter – tilbake til oppløsning før sluttkadensen lukker stykket for godt.",
+          "teaser": "En ensom forslagsnote leter etter fugens forsvunne basslinje."
+        }
+      }
     },
     {
       "id": "giant-shoulder-pilgrimage",
@@ -307,7 +442,14 @@
         "weather"
       ],
       "teaser": "Your village lives on a sleeping giant who has started to dream.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "mytisk / kroppsverden",
+          "prompt": "Landsbyen din ligger på skulderen til en sovende kjempe som har begynt å drømme. Dra på pilegrimsferd nedover armen til den åpne håndflaten, der kjempens feber blir til vær, og avgjør om kjempen bør vekkes.",
+          "teaser": "Landsbyen din ligger på en sovende kjempe som har begynt å drømme."
+        }
+      }
     },
     {
       "id": "fantasy-lich-tax-audit",
@@ -322,7 +464,14 @@
         "investigation"
       ],
       "teaser": "Six hundred years of unpaid property tax, and one junior auditor.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "fantasy (byråkratisk komedie)",
+          "prompt": "Lichen i Ombervault har ikke betalt eiendomsskatt på seks hundre år, og du er den ferske kongelige revisoren som sendes inn med en protokoll og en lykt. De udøde ansatte fører nitid regnskap; problemet er at lichens regnskapsfører har vært død hele tiden, han også.",
+          "teaser": "Seks hundre år med ubetalt eiendomsskatt og én fersk revisor."
+        }
+      }
     },
     {
       "id": "polar-ice-core-radio",
@@ -337,7 +486,14 @@
         "mystery"
       ],
       "teaser": "An 800,000-year-old air bubble, and a radio that only plays tomorrow.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "polarthriller",
+          "prompt": "Overvintring i Antarktis: ni mennesker, ingen fly før i august. Iskjernen dere boret ut forrige uke inneholdt en luftboble som var 800 000 år gammel, og siden den ble åpnet, tar radioen bare inn én stasjon – deres egen, som sender morgendagen.",
+          "teaser": "En 800 000 år gammel luftboble og en radio som bare spiller i morgen."
+        }
+      }
     },
     {
       "id": "historical-quarantine-apothecary",
@@ -352,7 +508,14 @@
         "secrets"
       ],
       "teaser": "The only person who sees inside every sealed house.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "historisk etterforskning",
+          "prompt": "Firenze, 1630, i karantene. Som apotekerens datter leverer du medisiner gjennom en luke i hver dør, og det gjør deg til den eneste som ser inn i hvert eneste forseglede hus. Noen bruker leveransene dine til å smugle beskjeder, og helserådet vil ha et navn.",
+          "teaser": "Den eneste som ser inn i hvert forseglede hus."
+        }
+      }
     },
     {
       "id": "cartoon-inkwell-noir",
@@ -367,7 +530,14 @@
         "surreal"
       ],
       "teaser": "Someone is erasing the background characters of a rubber-hose city.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "tegneserienoir",
+          "prompt": "Inkwell City er en svart-hvit tegnefilmby med gummiarmer der tyngdekraften bare virker når noen ser ned. Du er en trefingret privatdetektiv som er hyret for å finne ut hvem som visker ut bakgrunnsfigurene – én flekk om gangen.",
+          "teaser": "Noen visker ut bakgrunnsfigurene i en tegnefilmby."
+        }
+      }
     },
     {
       "id": "first-contact-by-scent",
@@ -382,7 +552,14 @@
         "persuasion"
       ],
       "teaser": "The aliens speak in smells, and the ventilation is failing.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "diplomatisk science fiction",
+          "prompt": "Du er tolk ved menneskehetens første kontakt, men de besøkende snakker bare med lukt – og ventilasjonen i forhandlingsrommet svikter. Bland fraser fra et sett med parfymer, hindre at delegatene tar lunsjen for en krigserklæring, og få en avtale underskrevet.",
+          "teaser": "Romvesenene snakker med lukt, og ventilasjonen svikter."
+        }
+      }
     },
     {
       "id": "night-train-1961",
@@ -397,13 +574,20 @@
         "social"
       ],
       "teaser": "A sleeper train, a microfilm, and a border at dawn.",
-      "nonViolent": true
+      "nonViolent": true,
+      "translations": {
+        "nb": {
+          "genre": "spionasje fra den kalde krigen",
+          "prompt": "Det siste sovetoget fra Bucuresti til Wien, 1961. Et sted om bord er en mikrofilm sydd inn i en barnebamse, og tre etterretningstjenester har bestilt hver sin kupé. Du er kelneren i spisevogna som ser alle til frokost – få filmen over grensen uten at noen merker at du har valgt side.",
+          "teaser": "Et sovetog, en mikrofilm og en grense ved daggry."
+        }
+      }
     },
     {
       "id": "nb-nordisk-noir-tromso",
       "prompt": "Tromsø i mørketida. En russisk tråler ligger til kai med lasterommet fullt av is, men mannskapet er sporløst borte – og den eneste som ville snakke med deg, en pensjonert los, ble funnet i snøen ved Ishavskatedralen i morges. Du er den nye etterforskeren fra Oslo, og ingen her stoler på deg.",
       "language": "nb",
-      "genre": "nordic noir",
+      "genre": "nordisk noir",
       "tags": [
         "noir",
         "norway",
@@ -419,7 +603,7 @@
       "id": "nb-russetid-bussen",
       "prompt": "Det er tre uker igjen til 17. mai, og russebussen dere har spart til i to år henger i en tynn tråd: bussjefen har brukt pengene på et lydanlegg ingen har sett, og kjæresten din er den eneste som vet hvor det står. Hold gjengen samlet, ikke dump eksamen, og bestem deg for hvem du egentlig er lojal mot.",
       "language": "nb",
-      "genre": "teen drama",
+      "genre": "ungdomsdrama",
       "tags": [
         "teen",
         "russ",
@@ -435,7 +619,7 @@
       "id": "nb-troll-direktoratet",
       "prompt": "Trollene under Dovre har fått sitt eget direktorat, og du er det første mennesket som har søkt om å bygge hytte på trollgrunn. Skjemaene må være ferdig utfylt før sola står opp, saksbehandleren har tre hoder som er hjertens uenige, og klagefristen er hundre år.",
       "language": "nb",
-      "genre": "folklore bureaucracy",
+      "genre": "folkeeventyr-byråkrati",
       "tags": [
         "troll",
         "folklore",
@@ -451,7 +635,7 @@
       "id": "nb-fjordbygda-fjellet",
       "prompt": "I en liten fjordbygd på Vestlandet har fergen sluttet å gå etter at fjellet begynte å sige. Bygda må velge: flytte alle sammen, eller bli og satse. Du er den nye læreren, og hver eneste familie vil ha deg på sin side før bygdemøtet på torsdag.",
       "language": "nb",
-      "genre": "village drama",
+      "genre": "bygdedrama",
       "tags": [
         "norway",
         "fjord",
@@ -466,7 +650,7 @@
       "id": "nb-hurtigruten-dagboka",
       "prompt": "Hurtigruten nordover fra Bergen, midt i januar. Ved hvert anløp kommer det om bord én passasjer som ikke står på listen, og i lugar 313 ligger en dagbok som beskriver neste havn før dere har kommet fram. Finn ut hvem som skriver i den før dere når Kirkenes.",
       "language": "nb",
-      "genre": "mystery",
+      "genre": "mysterium",
       "tags": [
         "hurtigruten",
         "norway",
@@ -481,7 +665,7 @@
       "id": "nb-paaskekrim-vidda",
       "prompt": "Påskeferie på en hytte på Hardangervidda, uten strøm og med seks søskenbarn som ikke har snakket sammen siden arveoppgjøret. Bestemors nye testament er gjemt et sted i hytta, og uværet har stengt løypene. Kvikk Lunsj, appelsiner og mistanker – en skikkelig påskekrim.",
       "language": "nb",
-      "genre": "cosy mystery (påskekrim)",
+      "genre": "koselig påskekrim",
       "tags": [
         "påskekrim",
         "cabin",
@@ -491,6 +675,39 @@
       ],
       "teaser": "Uvær på vidda, seks søskenbarn og et forsvunnet testament.",
       "nonViolent": true
+    },
+    {
+      "id": "viking-lawspeaker-althing-nb",
+      "prompt": "Island, 1004. Mesteren din, lovsigemannen, er død, og som læregutten hans må du si fram hele loven etter hukommelsen på Alltinget – men tre mektige ætter vil ha hver sin versjon husket, og hver paragraf du sier høyt, blir bindende. Vinn stemmer, ikke tvekamper.",
+      "language": "nb",
+      "genre": "vikingsaga",
+      "tags": [
+        "viking",
+        "historical",
+        "politics",
+        "persuasion",
+        "memory"
+      ],
+      "teaser": "Si fram hele loven etter hukommelsen – hver paragraf du sier, blir bindende.",
+      "nonViolent": true,
+      "worldId": "viking-lawspeaker-althing-nb",
+      "translationOf": "viking-lawspeaker-althing"
+    },
+    {
+      "id": "corporate-merger-kitchen-nb",
+      "prompt": "Et mellomstort forsikringsselskap blir slukt av konkurrenten, og den eneste nøytrale grunnen som er igjen, er kjøkkenet i tredje etasje. Du er vikaren som vet hvem som eier hvilken merket yoghurt – bytt sladder, forfalsk møteinnkallinger og avgjør hvilken avdeling som overlever fredagens allmøte.",
+      "language": "nb",
+      "genre": "kontorsatire",
+      "tags": [
+        "corporate",
+        "satire",
+        "social",
+        "persuasion"
+      ],
+      "teaser": "En fusjon, et felles kjøleskap og én vikar som kjenner alles yoghurt.",
+      "nonViolent": true,
+      "worldId": "corporate-merger-kitchen-nb",
+      "translationOf": "corporate-merger-kitchen"
     },
     {
       "id": "fixture-western",
@@ -505,7 +722,14 @@
       ],
       "teaser": "The rain was stolen, and someone is selling it back by the barrel.",
       "nonViolent": false,
-      "worldId": "fixture-western"
+      "worldId": "fixture-western",
+      "translations": {
+        "nb": {
+          "genre": "rar western",
+          "prompt": "En tørkerammet grenseby der noen har stjålet selve regnet – og selger det tilbake fat for fat. Spor opp regnmegleren gjennom de tørre kløftene før den siste brønnen går tom.",
+          "teaser": "Regnet er stjålet, og noen selger det tilbake fat for fat."
+        }
+      }
     },
     {
       "id": "fixture-ship",
@@ -520,7 +744,14 @@
       ],
       "teaser": "Two hundred years out, and the ship is keeping a secret.",
       "nonViolent": false,
-      "worldId": "fixture-ship"
+      "worldId": "fixture-ship",
+      "translations": {
+        "nb": {
+          "genre": "generasjonsskip-mysterium",
+          "prompt": "Et generasjonsskip to hundre år ut på reisen, der noe holdes skjult for mannskapet. Gå gjennom dekkene ingen besøker lenger, og finn ut hva skipet har holdt hemmelig.",
+          "teaser": "To hundre år ute, og skipet bærer på en hemmelighet."
+        }
+      }
     },
     {
       "id": "fixture-teen",
@@ -535,7 +766,14 @@
       ],
       "teaser": "The last week of school before the whole town goes under.",
       "nonViolent": true,
-      "worldId": "fixture-teen"
+      "worldId": "fixture-teen",
+      "translations": {
+        "nb": {
+          "genre": "sosialt ungdomsdrama",
+          "prompt": "Den siste skoleuka før byen settes under vann for et nytt magasin. Alle skal flytte, ingen sier hva de mener, og noen har tatt notatboka med talen din.",
+          "teaser": "Den siste skoleuka før hele byen havner under vann."
+        }
+      }
     },
     {
       "id": "fixture-dream",
@@ -550,7 +788,14 @@
       ],
       "teaser": "A living painting short one primary colour.",
       "nonViolent": false,
-      "worldId": "fixture-dream"
+      "worldId": "fixture-dream",
+      "translations": {
+        "nb": {
+          "genre": "abstrakt drøm",
+          "prompt": "Finn veien gjennom et levende abstrakt maleri, der farger og geometri er terrenget og en manglende fjerde primærfarge er den eneste veien ut.",
+          "teaser": "Et levende maleri som mangler én primærfarge."
+        }
+      }
     }
   ]
 }

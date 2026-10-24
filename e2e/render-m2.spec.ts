@@ -7,7 +7,8 @@ import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 import { mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const OUT = 'docs/progress/M2';
+// committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 
 const worlds = readdirSync(join(process.cwd(), 'content/worlds'))

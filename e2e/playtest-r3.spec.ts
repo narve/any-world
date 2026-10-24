@@ -12,7 +12,8 @@ import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 
 const ROUND = process.env.PLAYTEST_ROUND ?? '3';
-const OUT = 'docs/progress/M2';
+// committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 const shot = (page: Page, name: string) => page.screenshot({ path: `${OUT}/playtest-r${ROUND}-econ-${name}.png` });
 const FACTS = `${OUT}/playtest-r${ROUND}-econ.json`;

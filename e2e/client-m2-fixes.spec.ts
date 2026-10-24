@@ -6,7 +6,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
-const OUT = 'docs/progress/M2';
+// committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 const shot = (page: Page, name: string) => page.screenshot({ path: `${OUT}/client-fix-${name}.png` });
 const layer = (page: Page) => page.evaluate(() => window.__anyworld?.ui.layer() ?? 'none');

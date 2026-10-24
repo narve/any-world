@@ -147,6 +147,12 @@ export interface GenerationRequest {
   surpriseSeed?: number;
 }
 
+/** loading-screen lines of the offline demo generator for the stages that would talk to an AI */
+const OFFLINE_STAGE_KEYS: Partial<Record<GenerateStage, 'gen.progress.offlineRequest' | 'gen.progress.offlineReceived'>> = {
+  request: 'gen.progress.offlineRequest',
+  received: 'gen.progress.offlineReceived',
+};
+
 /**
  * One world generation with its loading-screen view. `view()` is rebuilt from the progress events;
  * `run()` resolves the world or rejects with a WorldGenerationError (the view then shows it).
@@ -164,7 +170,14 @@ export class WorldGeneration {
   constructor(
     private readonly provider: LLMProvider,
     private readonly req: GenerationRequest,
-    private readonly opts: { balancer?: Balancer; balance?: GenerateWorldOptions['balance']; onChange?: () => void; timeoutMs?: number } = {},
+    private readonly opts: {
+      balancer?: Balancer;
+      balance?: GenerateWorldOptions['balance'];
+      onChange?: () => void;
+      timeoutMs?: number;
+      /** the offline demo generator: no AI is asked, so the request steps say so */
+      offline?: boolean;
+    } = {},
   ) {}
 
   get signal(): AbortSignal {
@@ -191,7 +204,8 @@ export class WorldGeneration {
   progress(p: GenerateProgress): void {
     if (p.title) this.title = p.title;
     if (p.tagline) this.tagline = p.tagline;
-    const label = tx(p.key, p.params, p.message);
+    const offlineKey = this.opts.offline ? OFFLINE_STAGE_KEYS[p.stage] : undefined;
+    const label = offlineKey ? t(offlineKey) : tx(p.key, p.params, p.message);
     const last = this.steps[this.steps.length - 1];
     if (last && last.stage === p.stage) {
       last.label = label;

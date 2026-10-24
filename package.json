@@ -9,6 +9,7 @@
     "dev:client": "vite",
     "build": "vite build",
     "build:static": "vite build --mode static",
+    "serve:static": "tsx server/serve-static.ts",
     "start": "NODE_ENV=production tsx server/index.ts",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run",

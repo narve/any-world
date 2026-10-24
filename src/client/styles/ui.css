@@ -3201,7 +3201,8 @@ body {
 }
 
 .aw-goal-actions .aw-btn,
-.aw-help-howto {
+.aw-help-howto,
+.aw-help-settings {
   min-height: 44px;
 }
 
@@ -3548,6 +3549,27 @@ body {
   margin-right: 8px;
 }
 
+.aw-help-settings {
+  margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* without the how-to button, the settings button takes the push to the right */
+.aw-panel-head > h2 + .aw-help-settings {
+  margin-left: auto;
+}
+
+/* the world's music panel inside the settings dialog's audio section */
+.aw-music-host:empty {
+  display: none;
+}
+
+.aw-music-host {
+  margin-top: 8px;
+}
+
 .aw-start-lang {
   display: flex;
   align-items: center;
@@ -3555,258 +3577,6 @@ body {
 
 .aw-lang-select {
   min-height: 36px;
-}
-
-/* ------------------------------------------------------------------------ */
-/* phones (DESIGN §6b): the map gets the middle, HUD on top, actions below   */
-/* ------------------------------------------------------------------------ */
-
-@media (max-width: 640px) {
-  :root {
-    --gap: 8px;
-    --slot: 42px;
-  }
-
-  .aw-game {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto 1fr auto auto;
-    padding: max(var(--gap), env(safe-area-inset-top)) max(var(--gap), env(safe-area-inset-right)) max(var(--gap), env(safe-area-inset-bottom))
-      max(var(--gap), env(safe-area-inset-left));
-    gap: 6px;
-  }
-
-  .aw-top-left {
-    grid-area: 1 / 1;
-    margin-right: 96px;
-    min-width: 0;
-  }
-
-  .aw-hud {
-    padding: 8px 10px;
-    gap: 5px;
-  }
-
-  .aw-hud .aw-portrait {
-    width: 22px;
-    height: 22px;
-  }
-
-  .aw-hud-name {
-    font-size: 13px;
-  }
-
-  .aw-hud-title,
-  .aw-hud .aw-bar.is-compact {
-    display: none;
-  }
-
-  .aw-bars {
-    gap: 2px;
-  }
-
-  .aw-hud .aw-bar {
-    font-size: 11px;
-  }
-
-  .aw-stats {
-    gap: 4px;
-  }
-
-  .aw-stat {
-    flex-direction: row;
-    justify-content: center;
-    align-items: baseline;
-    gap: 4px;
-    padding: 1px 4px;
-  }
-
-  .aw-stat-abbr {
-    font-size: 9px;
-  }
-
-  .aw-stat-val {
-    font-size: 13px;
-  }
-
-  .aw-onboard {
-    max-height: 64vh;
-  }
-
-  .aw-top-right-col {
-    position: absolute;
-    top: max(var(--gap), env(safe-area-inset-top));
-    right: max(var(--gap), env(safe-area-inset-right));
-    grid-area: auto;
-    max-width: 88px;
-  }
-
-  .aw-rules-badge {
-    min-height: 44px;
-  }
-
-  .aw-rules-badge .aw-rule-pill {
-    display: none;
-  }
-
-  .aw-rules .aw-rules-body {
-    max-height: 60vh;
-  }
-
-  .aw-top-right-col .aw-rules {
-    position: fixed;
-    left: var(--gap);
-    right: var(--gap);
-    top: 64px;
-    width: auto;
-  }
-
-  .aw-top-centre {
-    grid-area: 2 / 1;
-    justify-self: stretch;
-    align-items: stretch;
-  }
-
-  .aw-strip {
-    justify-content: center;
-    flex-wrap: wrap;
-    font-size: 12px;
-  }
-
-  .aw-goal {
-    width: 100%;
-  }
-
-  .aw-goal-body {
-    max-height: 48vh;
-  }
-
-  .aw-bottom-left {
-    grid-area: 4 / 1;
-    align-self: end;
-  }
-
-  .aw-log-list {
-    height: 46px;
-  }
-
-  .aw-log.is-expanded .aw-log-list {
-    height: 34vh;
-  }
-
-  .aw-bottom-centre {
-    grid-area: 5 / 1;
-    justify-self: stretch;
-    align-items: stretch;
-  }
-
-  .aw-ctx {
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-
-  .aw-ctx::-webkit-scrollbar {
-    display: none;
-  }
-
-  .aw-ctx-btn {
-    flex: none;
-    max-width: 78vw;
-  }
-
-  .aw-hotbar {
-    display: grid;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
-    gap: 3px;
-    padding: 5px;
-    width: 100%;
-  }
-
-  .aw-hotbar-slots {
-    display: contents;
-  }
-
-  .aw-hotbar .aw-slot {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1;
-    min-height: 40px;
-  }
-
-  .aw-hotbar-tools {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    flex-direction: row;
-    justify-content: flex-end;
-    padding: 0 0 3px;
-    border-left: 0;
-    border-bottom: 1px solid var(--c-border);
-    gap: 4px;
-  }
-
-  .aw-hotbar-tools .aw-icon-btn {
-    width: 44px;
-    height: 32px;
-  }
-
-  .aw-toasts {
-    bottom: calc(var(--slot) + 150px);
-    width: calc(100% - 2 * var(--gap));
-  }
-
-  .aw-toast {
-    text-align: center;
-  }
-
-  /* the onboarding card and narration are bottom sheets */
-  .aw-onboard {
-    position: fixed;
-    top: auto;
-    left: max(var(--gap), env(safe-area-inset-left));
-    right: max(var(--gap), env(safe-area-inset-right));
-    bottom: max(var(--gap), env(safe-area-inset-bottom));
-    width: auto;
-    max-height: 64vh;
-    z-index: 30;
-  }
-
-  .aw-game.has-onboarding .aw-bottom-centre,
-  .aw-game.has-onboarding .aw-bottom-left {
-    visibility: hidden;
-  }
-
-  .aw-narration {
-    top: auto;
-    bottom: max(var(--gap), env(safe-area-inset-bottom));
-    max-height: 56vh;
-  }
-
-  /* dialogue and trade are bottom sheets on phones, whatever side they would dock to */
-  .aw-modal.no-backdrop,
-  .aw-modal.no-backdrop.dock-right,
-  .aw-modal.no-backdrop.dock-left {
-    justify-items: stretch;
-    align-items: end;
-    padding: var(--gap) max(var(--gap), env(safe-area-inset-right)) max(var(--gap), env(safe-area-inset-bottom)) max(var(--gap), env(safe-area-inset-left));
-  }
-
-  .aw-modal.no-backdrop .aw-dialogue,
-  .aw-modal.no-backdrop.dock-right .aw-dialogue,
-  .aw-modal.no-backdrop.dock-left .aw-dialogue {
-    width: 100%;
-    max-height: 62vh;
-  }
-
-  .aw-modal-card {
-    max-height: calc(100vh - 2 * var(--gap));
-  }
-
-  .aw-option,
-  .aw-dlg-foot .aw-btn {
-    min-height: 44px;
-  }
 }
 
 /* start screen: demo worlds grouped by language, language badge on inspiration cards */
@@ -3840,4 +3610,932 @@ body {
   border: 1px solid currentColor;
   font-size: 10px;
   letter-spacing: 0.06em;
+}
+
+/* ======================================================================== */
+/* M4 responsive & touch (DESIGN §6, §6b)                                    */
+/*                                                                          */
+/* The UI root carries data-layout (ui/layout.ts): phone-portrait (≤640 px   */
+/* wide), phone-landscape (≤500 px tall), tablet, desktop. On phones the     */
+/* corner wrappers dissolve (display: contents) and the game screen is one   */
+/* grid: compact HUD and goal on top, the map in the middle, log ticker,     */
+/* context buttons and the hotbar under the thumb. Panels open as bottom     */
+/* sheets. Every tap target is ≥ 44 px; nothing is hover-only.               */
+/* ======================================================================== */
+
+html,
+body {
+  overscroll-behavior: none;
+}
+
+#game-canvas {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.aw-ui {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.aw-ui :is(button, .aw-panel, .aw-modal, .aw-goal, .aw-strip, .aw-narration) {
+  touch-action: manipulation;
+}
+
+.aw-game {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.aw-game :is(input, textarea) {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* camera buttons at the map's edge (touch) -------------------------------- */
+
+.aw-map-tools {
+  position: absolute;
+  right: max(var(--gap), env(safe-area-inset-right));
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.aw-ui:not([data-input='touch']) .aw-map-tools {
+  display: none;
+}
+
+.aw-icon-btn.aw-map-btn {
+  pointer-events: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--c-text);
+  background: rgba(var(--c-panel-rgb), 0.7);
+  border: 1px solid var(--c-border);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 12px var(--c-shadow);
+}
+
+.aw-map-btn .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* tablets: a touch-sized hotbar and panel buttons -------------------------- */
+
+.aw-ui[data-layout='tablet'][data-input='touch'] {
+  --slot: 48px;
+}
+
+.aw-ui[data-input='touch'] .aw-hotbar-tools .aw-icon-btn {
+  width: 44px;
+  height: 44px;
+}
+
+.aw-ui[data-layout='tablet'][data-input='touch'] .aw-hotbar-tools {
+  flex-direction: row;
+}
+
+.aw-ui[data-input='touch'] .aw-rules-badge {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.aw-ui[data-input='touch'] .aw-log-toggle {
+  width: 44px;
+  height: 44px;
+  top: 0;
+  right: 0;
+}
+
+.aw-ui[data-input='touch'] .aw-log-list {
+  padding-right: 40px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* phones (both orientations)                                               */
+/* ------------------------------------------------------------------------ */
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) {
+  --gap: 6px;
+  --slot: 44px;
+  --safe-t: max(6px, env(safe-area-inset-top));
+  --safe-r: max(6px, env(safe-area-inset-right));
+  --safe-b: max(6px, env(safe-area-inset-bottom));
+  --safe-l: max(6px, env(safe-area-inset-left));
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game {
+  gap: 0;
+  padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) :is(.aw-top-left, .aw-top-centre, .aw-top-right-col, .aw-bottom-left, .aw-bottom-centre, .aw-hotbar) {
+  display: contents;
+}
+
+/* the context bar's "Move on" button replaces the exit pill */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-top-centre[data-exit]::after {
+  display: none;
+}
+
+/* HUD: name and bars; tap for title, level, stats and conditions */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud {
+  grid-area: hud;
+  align-self: start;
+  min-width: 0;
+  padding: 6px 8px;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud.is-expanded {
+  z-index: 8;
+  border-color: rgba(var(--c-accent-rgb), 0.6);
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud:not(.is-expanded) :is(.aw-hud-title, .aw-stats, .aw-bar.is-compact) {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud-head {
+  gap: 6px;
+  min-width: 0;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud .aw-portrait {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud-names {
+  min-width: 0;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud-name {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud .aw-bars {
+  gap: 2px;
+  column-gap: 6px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud .aw-bar {
+  font-size: 10px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud .aw-bar-track {
+  height: 7px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud .aw-bar-value {
+  min-width: 38px;
+  font-size: 10px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hud .aw-danger {
+  font-size: 11px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-stats {
+  gap: 4px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-stat {
+  flex-direction: row;
+  justify-content: center;
+  align-items: baseline;
+  gap: 4px;
+  min-height: 32px;
+  padding: 1px 4px;
+}
+
+/* rules badge: an icon-sized button in the top-right corner */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-top-right {
+  grid-area: badge;
+  align-self: start;
+  justify-self: end;
+  margin-left: 6px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-rules-badge {
+  min-height: 44px;
+  min-width: 44px;
+  justify-content: center;
+  padding: 4px 8px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-rules-badge .aw-rule-pill,
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-rules-badge-head > span:not(.aw-rules-new) {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-rules-badge-head .icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* status strip: one small line */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-strip {
+  grid-area: strip;
+  align-self: start;
+  justify-self: center;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: nowrap;
+  align-items: center;
+  overflow: hidden;
+  gap: 6px;
+  padding: 2px 10px;
+  font-size: 11px;
+  box-shadow: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-strip-area {
+  min-width: 0;
+  overflow: hidden;
+  align-items: center;
+  gap: 5px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-strip-label {
+  font-size: 9px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) :is(.aw-strip-turn, .aw-strip-money) {
+  font-size: 10px;
+}
+
+/* goal tracker: the next step on one line; tap to open the full goal over the map */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal {
+  grid-area: goal;
+  align-self: start;
+  position: relative;
+  width: auto;
+  min-width: 0;
+  box-shadow: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal-head {
+  min-height: 44px;
+  padding: 4px 10px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal:not(.is-expanded) :is(.aw-goal-summary, .aw-goal-step-detail) {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal:not(.is-expanded) .aw-goal-step {
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal:not(.is-expanded) .aw-goal-step-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal-more {
+  grid-row: 1;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal.is-expanded {
+  z-index: 9;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal.is-expanded .aw-goal-body {
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  top: calc(100% - 6px);
+  /* --goal-room: the space under the goal's head down to the screen's bottom (ui.ts) */
+  max-height: min(52vh, var(--goal-room, 52vh));
+  overflow: auto;
+  padding: 10px 12px 12px;
+  border-radius: 0 0 12px 12px;
+  border: 1px solid rgba(var(--c-accent-rgb), 0.7);
+  border-top: 0;
+  background: rgba(var(--c-panel-rgb), 0.97);
+  box-shadow: 0 14px 30px var(--c-shadow);
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal-actions .aw-btn {
+  min-height: 44px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) :is(.aw-mode-banner, .aw-busy) {
+  grid-area: banner;
+  align-self: start;
+  justify-self: center;
+  margin-top: 4px;
+  max-width: 100%;
+  padding: 3px 12px;
+  font-size: 12px;
+}
+
+/* map area: the camera buttons sit on its right edge */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-map-tools {
+  position: static;
+  grid-area: map;
+  transform: none;
+  justify-self: end;
+  align-self: center;
+  margin: 0 2px;
+}
+
+/* the log becomes a ticker: the newest line(s); tap to read more */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log {
+  grid-area: log;
+  align-self: end;
+  min-width: 0;
+  min-height: 44px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log-toggle {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log:not(.is-expanded) .aw-log-list {
+  width: 100%;
+  height: auto;
+  max-height: 34px;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  font-size: 12px;
+  line-height: 17px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log:not(.is-expanded) .aw-log-row {
+  flex: none;
+  padding: 0;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log:not(.is-expanded) .log-gm {
+  padding: 0 0 0 6px;
+  border-left-width: 2px;
+  font-size: 12px;
+  background: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log:not(.is-expanded) .log-gm .aw-log-speaker {
+  display: inline;
+  margin-right: 6px;
+  font-size: 9px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log.is-obscuring {
+  opacity: 1;
+}
+
+/* expanded: a bottom sheet over the hotbar */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log.is-expanded {
+  position: fixed;
+  left: var(--safe-l);
+  right: var(--safe-r);
+  bottom: 0;
+  z-index: 26;
+  display: block;
+  width: auto;
+  margin: 0;
+  padding: 14px 12px calc(12px + env(safe-area-inset-bottom));
+  border-radius: 16px 16px 0 0;
+  background: rgba(var(--c-panel-rgb), 0.97);
+  animation: aw-sheet-in calc(220ms / var(--anim-speed)) ease-out;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log.is-expanded .aw-log-list {
+  height: min(52vh, 420px);
+  padding: 0;
+}
+
+/* context buttons and quick slots */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-ctx {
+  grid-area: ctx;
+  min-width: 0;
+  max-width: none;
+  scrollbar-width: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-ctx::-webkit-scrollbar {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-ctx-btn {
+  flex: none;
+  padding: 0 12px;
+  box-shadow: 0 2px 8px var(--c-shadow);
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-ctx-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hotbar-slots {
+  grid-area: slots;
+  display: grid;
+  gap: 3px;
+  padding: 3px;
+  pointer-events: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border);
+  background: rgba(var(--c-panel-rgb), 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hotbar .aw-slot {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hotbar-tools {
+  grid-area: tools;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-self: end;
+  gap: 2px;
+  padding: 0;
+  margin-left: 6px;
+  border: 0;
+  pointer-events: auto;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hotbar-tools .aw-icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--c-text);
+  background: rgba(var(--c-panel-rgb), 0.82);
+  border: 1px solid var(--c-border);
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-toasts {
+  width: min(92vw, 420px);
+}
+
+/* bottom sheets: backpack, rules & threads, map inspect, choices, perks, help, dialogue, trade */
+@keyframes aw-sheet-in {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+  }
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) :is(.aw-backpack, .aw-top-right-col .aw-rules) {
+  position: fixed;
+  left: var(--safe-l);
+  right: var(--safe-r);
+  top: auto;
+  bottom: 0;
+  width: auto;
+  max-width: none;
+  max-height: 80vh;
+  transform: none;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+  border-radius: 16px 16px 0 0;
+  background: rgba(var(--c-panel-rgb), 0.97);
+  box-shadow: 0 -12px 40px var(--c-shadow);
+  z-index: 25;
+  animation: aw-sheet-in calc(220ms / var(--anim-speed)) ease-out;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) :is(.aw-backpack, .aw-rules, .aw-game .aw-modal-card, .aw-log.is-expanded)::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: -4px auto 8px;
+  border-radius: 2px;
+  background: var(--c-border-strong);
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) :is(.aw-backpack, .aw-rules) .aw-panel-head .aw-icon-btn {
+  width: 44px;
+  height: 44px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-rules .aw-rules-body {
+  max-height: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-bp-body {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) :is(.aw-bp-quick, .aw-bp-grid) {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-backpack .aw-slot {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  min-height: 40px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-bp-actions .aw-btn {
+  min-height: 44px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']):not([data-input='keyboard']) .aw-bp-hint {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-tooltip.is-sheet {
+  position: fixed;
+  transform: none !important;
+  top: var(--safe-t);
+  left: max(var(--safe-l), calc(50% - 200px));
+  right: max(var(--safe-r), calc(50% - 200px));
+  width: auto;
+  max-width: none;
+  max-height: 46vh;
+  overflow: hidden;
+  border-radius: 14px;
+  z-index: 45;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game .aw-modal,
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game .aw-modal.no-backdrop,
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game .aw-modal.no-backdrop:is(.dock-left, .dock-right) {
+  place-items: end stretch;
+  justify-items: stretch;
+  align-items: end;
+  padding: var(--safe-t) var(--safe-r) 0 var(--safe-l);
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game .aw-modal-card,
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game .aw-modal.no-backdrop:is(.dock-left, .dock-right) .aw-dialogue {
+  width: 100%;
+  max-width: none;
+  max-height: 80vh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+  border-radius: 16px 16px 0 0;
+  animation: aw-sheet-in calc(220ms / var(--anim-speed)) ease-out;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game :is(.aw-option, .aw-perk, .aw-dlg-foot .aw-btn, .aw-trade-act, .aw-modal-card .aw-btn) {
+  min-height: 44px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game .aw-modal-card .aw-panel-head .aw-icon-btn {
+  width: 44px;
+  height: 44px;
+}
+
+/* GM narration and the onboarding card: bottom sheets too */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-narration {
+  top: auto;
+  bottom: var(--safe-b);
+  left: var(--safe-l);
+  right: var(--safe-r);
+  width: auto;
+  transform: none;
+  max-height: 52vh;
+  z-index: 24;
+  animation: aw-sheet-in calc(300ms / var(--anim-speed)) ease-out;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-narr-btn {
+  min-height: 44px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-onboard {
+  position: fixed;
+  top: auto;
+  left: var(--safe-l);
+  right: var(--safe-r);
+  bottom: var(--safe-b);
+  width: auto;
+  max-height: 70vh;
+  z-index: 30;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-onboard :is(.aw-btn, .aw-icon-btn) {
+  min-height: 44px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game.has-onboarding :is(.aw-log, .aw-ctx, .aw-hotbar-slots, .aw-hotbar-tools, .aw-map-tools) {
+  visibility: hidden;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-slot-tip {
+  max-width: calc(100vw - 2 * var(--gap));
+}
+
+/* ------------------------------------------------------------------------ */
+/* phone, portrait                                                          */
+/* ------------------------------------------------------------------------ */
+
+.aw-ui[data-layout='phone-portrait'] .aw-game {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas:
+    'hud badge'
+    'strip strip'
+    'goal goal'
+    'banner banner'
+    'map map'
+    'log tools'
+    'ctx ctx'
+    'slots slots';
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-strip,
+.aw-ui[data-layout='phone-portrait'] .aw-goal {
+  margin-top: 4px;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-goal {
+  justify-self: stretch;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-log {
+  margin-top: 6px;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-hotbar-tools {
+  margin-top: 6px;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-ctx {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  overflow-x: auto;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 0 0 1px;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-ctx-btn {
+  max-width: 72vw;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-hotbar-slots {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  margin-top: 6px;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-toasts {
+  bottom: calc(var(--safe-b) + 170px);
+}
+
+/* ------------------------------------------------------------------------ */
+/* phone, landscape: HUD + goal + log on the left, buttons + slots on the   */
+/* right, the map in between                                                 */
+/* ------------------------------------------------------------------------ */
+
+.aw-ui[data-layout='phone-landscape'] .aw-game {
+  grid-template-columns: minmax(160px, 28vw) minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'hud strip ctx'
+    'goal banner ctx'
+    'log map ctx'
+    'log map slots';
+}
+
+/* the rules badge shares the top row of the map column with the status strip */
+.aw-ui[data-layout='phone-landscape'] .aw-top-right {
+  grid-area: strip;
+  margin-left: 0;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-strip {
+  justify-self: start;
+  max-width: calc(100% - 56px);
+}
+
+/* camera buttons in the map's bottom-left corner, panel buttons up its right edge */
+.aw-ui[data-layout='phone-landscape'] .aw-map-tools {
+  flex-direction: row;
+  justify-self: start;
+  align-self: end;
+  margin: 0 0 0 6px;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-hotbar-tools {
+  grid-area: map;
+  flex-direction: column;
+  justify-self: end;
+  align-self: end;
+  gap: 6px;
+  margin: 0 2px;
+}
+
+/* the full goal opens over the map, wider than the left column */
+.aw-ui[data-layout='phone-landscape'] .aw-goal.is-expanded .aw-goal-body {
+  right: auto;
+  width: min(440px, 62vw);
+  border-radius: 0 12px 12px 12px;
+  border-top: 1px solid rgba(var(--c-accent-rgb), 0.7);
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-goal {
+  margin-top: 4px;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-strip {
+  margin: 0 6px;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-log {
+  margin-top: 6px;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-log:not(.is-expanded) .aw-log-list {
+  max-height: 68px;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-log:not(.is-expanded) .aw-log-row {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-ctx {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  align-self: stretch;
+  gap: 6px;
+  margin: 0 0 0 6px;
+  width: 191px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-ctx > :first-child {
+  /* bottom-aligned without justify-content: flex-end, which would push overflow out of reach */
+  margin-top: auto;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-ctx-btn {
+  flex: none;
+  width: 100%;
+  max-width: none;
+  justify-content: center;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-hotbar-slots {
+  grid-template-columns: repeat(4, 44px);
+  margin: 6px 0 0 6px;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-hotbar .aw-slot {
+  aspect-ratio: auto;
+  height: 44px;
+}
+
+.aw-ui[data-layout='phone-landscape'] :is(.aw-backpack, .aw-top-right-col .aw-rules, .aw-game .aw-modal-card) {
+  max-height: 92vh;
+  left: max(var(--safe-l), calc(50% - 360px));
+  right: max(var(--safe-r), calc(50% - 360px));
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-game .aw-modal {
+  justify-items: center;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-game .aw-modal-card,
+.aw-ui[data-layout='phone-landscape'] .aw-game .aw-modal.no-backdrop:is(.dock-left, .dock-right) .aw-dialogue {
+  width: min(720px, 100%);
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-bp-body {
+  grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+}
+
+.aw-ui[data-layout='phone-landscape'] :is(.aw-bp-quick, .aw-bp-grid) {
+  grid-template-columns: repeat(8, minmax(0, 40px));
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-narration,
+.aw-ui[data-layout='phone-landscape'] .aw-onboard {
+  left: max(var(--safe-l), calc(50% - 340px));
+  right: max(var(--safe-r), calc(50% - 340px));
+  max-height: 86vh;
+}
+
+/* toasts in the map column, under the status strip (never over the HUD or the buttons) */
+.aw-ui[data-layout='phone-landscape'] .aw-toasts {
+  bottom: auto;
+  top: calc(var(--safe-t) + 34px);
+  left: calc(var(--safe-l) + max(160px, 28vw) + 8px);
+  right: calc(var(--safe-r) + 205px);
+  width: auto;
+  transform: none;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-toast {
+  font-size: 12px;
+}
+
+/* portrait ticker rows: one line, the text itself is cut with an ellipsis (nothing pokes past the
+   screen edge, not even invisibly) */
+.aw-ui[data-layout='phone-portrait'] .aw-log:not(.is-expanded) .aw-log-row {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-log:not(.is-expanded) .aw-log-row > :not(.aw-log-text) {
+  flex: none;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-log:not(.is-expanded) .aw-log-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* tablets: the top-centre column never grows past its grid cell (HUD and rules stay clear) */
+.aw-ui[data-layout='tablet'] .aw-top-centre {
+  justify-self: stretch;
+}
+
+.aw-ui[data-layout='tablet'] .aw-goal {
+  width: 100%;
+}
+
+/* tablets in portrait: the panel buttons sit in a row above the quick slots */
+@media (orientation: portrait) {
+  .aw-ui[data-layout='tablet'] {
+    --slot: 46px;
+  }
+
+  .aw-ui[data-layout='tablet'] .aw-hotbar {
+    flex-wrap: wrap-reverse;
+    justify-content: center;
+    row-gap: 4px;
+  }
+
+  .aw-ui[data-layout='tablet'] .aw-hotbar-tools {
+    flex-basis: 100%;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding: 0;
+    border-left: 0;
+  }
+}
+
+/* landscape: the open goal's head stays short so its body has room below it */
+.aw-ui[data-layout='phone-landscape'] .aw-goal.is-expanded .aw-goal-step-detail {
+  display: none;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-goal.is-expanded :is(.aw-goal-summary, .aw-goal-step-text) {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
 }

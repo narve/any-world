@@ -7,6 +7,16 @@ import { z } from 'zod';
 
 const Id = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, 'lowercase ASCII id').max(64);
 
+/** a library entry in another language (DESIGN §7b: inspiration is shown in the UI language) */
+export const PromptTranslation = z.object({
+  prompt: z.string().min(20).max(500),
+  teaser: z.string().min(5).max(120),
+  genre: z.string().min(2).max(40).optional(),
+  /** a recorded world written in this language (a translated copy of `worldId`) */
+  worldId: Id.optional(),
+});
+export type PromptTranslation = z.infer<typeof PromptTranslation>;
+
 export const PromptEntry = z.object({
   id: Id,
   /** the player prompt, verbatim (what the world request sends) */
@@ -22,6 +32,10 @@ export const PromptEntry = z.object({
   nonViolent: z.boolean(),
   /** id of the recorded world (content/worlds/<worldId>.json), when there is one */
   worldId: Id.optional(),
+  /** the same prompt in other languages, keyed by base language code ("nb") */
+  translations: z.record(z.string().regex(/^[a-z]{2,3}$/), PromptTranslation).optional(),
+  /** this entry is a translated copy of the entry with this id (shown instead of it, never beside it) */
+  translationOf: Id.optional(),
 });
 export type PromptEntry = z.infer<typeof PromptEntry>;
 

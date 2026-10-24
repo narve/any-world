@@ -8,7 +8,6 @@ import type { ItemView } from '../../../engine/types';
 import { h, type Child } from '../dom';
 import {
   barText,
-  capitalize,
   cooldownFraction,
   factionLabel,
   itemGlyph,
@@ -178,7 +177,7 @@ export function itemCard(item: ItemView | SlotItemView, ctx: UiContext, extra?: 
         'div',
         { class: 'aw-card-titles' },
         h('div', { class: 'aw-card-title' }, item.name),
-        h('div', { class: 'aw-card-sub' }, [item.kind, slotItem.rarity && slotItem.rarity !== 'common' ? capitalize(slotItem.rarity) : null].filter(Boolean).join(' · ')),
+        h('div', { class: 'aw-card-sub' }, [item.kind, slotItem.rarity && slotItem.rarity !== 'common' ? t(`item.rarity.${slotItem.rarity}`) : null].filter(Boolean).join(' · ')),
       ),
       h('span', { class: ['aw-kbadge', `k-${item.knowledge}`] }, knowledgeBadge(item.knowledge)),
     ),
@@ -276,6 +275,9 @@ export function placeTooltip(
  * One floating tooltip element. Elements with `data-tip` get a plain text tip on hover/focus;
  * richer content is registered through `register(el, () => Node)`.
  */
+/** how long a tapped tip stays up (touch) */
+export const TAP_TIP_MS = 3500;
+
 export class Tooltip {
   readonly el: HTMLElement;
   private rich = new WeakMap<Element, () => Node | null>();
@@ -304,6 +306,37 @@ export class Tooltip {
     // keyboard focus shows the tip; focus from a tap or click does not
     root.addEventListener('focusin', (e) => !this.recentTouch() && (e.target as Element | null)?.matches?.(':focus-visible') !== false && this.onOver(e), { signal });
     root.addEventListener('focusout', () => this.hideOwned(), { signal });
+    // touch has no hover: tapping something that only explains itself (a stat, a money count, a
+    // rule pill) shows its tip for a few seconds. Buttons keep their own tap action.
+    root.addEventListener(
+      'click',
+      (e) => {
+        if (!this.recentTouch() || this.pinned) return;
+        const el = this.find(e.target);
+        if (!el || el.closest('button, a, input, select, textarea, [role="button"]')) return;
+        const make = this.rich.get(el);
+        const content = make ? make() : document.createTextNode((el as HTMLElement).dataset.tip ?? '');
+        if (!content) return;
+        this.owner = el;
+        this.showNear(el, content, !make);
+        if (this.tapTimer) clearTimeout(this.tapTimer);
+        this.tapTimer = setTimeout(() => {
+          this.tapTimer = null;
+          if (this.owner === el) this.hideOwned();
+        }, TAP_TIP_MS);
+      },
+      { signal },
+    );
+  }
+
+  private tapTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Phones: map cards (long-press inspect) dock as a bottom sheet instead of floating next to the
+   * tile, where a thumb or the edge of a small screen would hide them.
+   */
+  setSheet(on: boolean): void {
+    this.el.classList.toggle('is-sheet', on);
   }
 
   private recentTouch(): boolean {
@@ -313,6 +346,7 @@ export class Tooltip {
   /** stop listening on the root (the UI is being rebuilt) */
   dispose(): void {
     this.abort.abort();
+    if (this.tapTimer) clearTimeout(this.tapTimer);
     this.el.remove();
   }
 
@@ -354,6 +388,7 @@ export class Tooltip {
   }
 
   showNear(anchor: Element, content: Node, plain = false): void {
+    this.el.classList.remove('is-sheet');
     this.fill(content, plain);
     const r = anchor.getBoundingClientRect();
     const rootR = this.root.getBoundingClientRect();

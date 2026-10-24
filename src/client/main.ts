@@ -14,12 +14,17 @@ import { fetchServerPresets } from '../llm/transport';
 import type { LLMProvider } from '../llm/types';
 import { workerBalancer } from '../llm/balance-worker';
 import { loadBundledRecordings, recordedWorldKeys } from '../llm/recordings-bundle';
-import { bundledWorlds, findWorld, generatedWorlds, rememberWorld, type WorldEntry } from './worlds';
+import { findStoredWorld, forgetWorld, generatedWorlds, hasWorld, loadBundledWorld, loadWorld, recordingsKey, rememberWorld, worldIndex, worldTitle, type WorldEntry } from './worlds';
 import { providerFromSettings, providerLabel, runAi, WorldGeneration } from './ai';
 import { clearRun, loadRun, loadSettings, onboardingSeen, saveSettings } from './storage';
+import { demoGenerator, generationHint, OFFLINE_PRESET, pickDemoWorld, providerProblem, problemText, providerStatus, type ServerState } from './modes';
+import { exportWorldFile, parseWorldFile } from './world-file';
+import { AudioBridge } from './audio-bridge';
+import type { RecentWorldView, WorldFileInput } from './ui/viewmodel';
+import { tx } from './i18n/index';
 import { availableLanguages, getLanguage, setLanguage, t } from './i18n/index';
 import { GameSession } from './session';
-import { inspirationPrompts, promptLibrary } from './prompts';
+import { demoWorldsFor, localizedInspiration, promptLibrary } from './prompts';
 import { GameController } from './game-controller';
 import { bootRoute, runUrl } from './boot';
 
@@ -31,6 +36,8 @@ declare global {
 }
 
 const DEFAULT_TRANSPORT: 'direct' | 'backend' = typeof __ANYWORLD_DEFAULT_TRANSPORT__ !== 'undefined' ? __ANYWORLD_DEFAULT_TRANSPORT__ : 'backend';
+/** a static (browser-only) build has no backend to talk to */
+const TRANSPORTS: ('direct' | 'backend')[] = DEFAULT_TRANSPORT === 'direct' ? ['direct'] : ['direct', 'backend'];
 
 function randomSeed(): number {
   // UI-side randomness is fine here; the engine only ever sees the resulting seed
@@ -47,8 +54,12 @@ export class App {
   private settings: Settings;
   private settingsOpen = false;
   private screen: 'start' | 'loading' | 'game' = 'start';
-  /** presets the backend says it can serve (null until asked, or when it cannot be reached) */
-  private serverConfigured: Set<string> | null = null;
+  /** what the backend said about the presets it can serve */
+  private server: ServerState = { kind: 'unknown' };
+  /** advice shown under a failed world generation (modes.ts generationHint) */
+  private genHint: string | null = null;
+  /** the audio engine over the run lifecycle (lazy, optional) */
+  readonly audio: AudioBridge;
   private generation: WorldGeneration | null = null;
   private lastStart: StartOptions | null = null;
   private startError: string | null = null;
@@ -59,7 +70,8 @@ export class App {
     private uiRoot: HTMLElement,
     private canvasHost: HTMLElement,
   ) {
-    this.settings = loadSettings(DEFAULT_TRANSPORT);
+    this.settings = loadSettings(DEFAULT_TRANSPORT, TRANSPORTS);
+    this.audio = new AudioBridge(this.settings.audio);
     document.documentElement.lang = getLanguage();
     this.ui = createUi(uiRoot, this.callbacks());
     void this.refreshServerPresets();
@@ -68,19 +80,31 @@ export class App {
 
   /** asks the backend which presets it holds keys for (backend transport only) */
   private async refreshServerPresets(): Promise<void> {
-    if (this.settings.provider.transport !== 'backend') return;
+    if (!TRANSPORTS.includes('backend')) return;
     try {
-      const list = await fetchServerPresets();
-      this.serverConfigured = new Set(list.filter((p) => p.configured).map((p) => p.id));
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 8000);
+      const list = await fetchServerPresets('', { signal: ctl.signal }).finally(() => clearTimeout(timer));
+      this.server = { kind: 'ok', configured: new Set(list.filter((p) => p.configured).map((p) => p.id)) };
     } catch {
-      this.serverConfigured = null;
+      this.server = { kind: 'unreachable' };
     }
     if (this.screen === 'start') this.render();
   }
 
-  /** the LLM the settings give, or null (demo worlds only) */
+  private serverConfigured(): ReadonlySet<string> | null {
+    return this.server.kind === 'ok' ? this.server.configured : null;
+  }
+
+  /** the LLM the settings give for play (GM and NPC voice), or null (demo/offline GM) */
   provider(): LLMProvider | null {
-    return providerFromSettings(this.settings.provider, this.serverConfigured);
+    if (this.settings.provider.preset === OFFLINE_PRESET) return null;
+    return providerFromSettings(this.settings.provider, this.serverConfigured());
+  }
+
+  /** worlds can be created: a working provider, or the offline demo generator */
+  canGenerate(): boolean {
+    return this.settings.provider.preset === OFFLINE_PRESET ? worldIndex().length > 0 : !!this.provider();
   }
 
   /** the UI language picker (start screen, settings) */
@@ -105,7 +129,10 @@ export class App {
     return {
       presets: [...listPresets()],
       current: this.settings,
-      transports: DEFAULT_TRANSPORT === 'direct' ? ['direct'] : ['direct', 'backend'],
+      transports: TRANSPORTS,
+      offlineDemo: true,
+      music: this.screen === 'game',
+      ...(TRANSPORTS.includes('backend') ? { serverPresets: this.server.kind === 'ok' ? [...this.server.configured] : this.server.kind === 'unreachable' ? null : [] } : {}),
     };
   }
 
@@ -114,23 +141,40 @@ export class App {
   }
 
   startView(): StartView {
-    const worlds = bundledWorlds();
-    const demos: DemoWorldView[] = worlds.map((w) => ({
+    const worlds = worldIndex();
+    const lang = getLanguage();
+    const demos: DemoWorldView[] = demoWorldsFor(worlds, promptLibrary(), lang).map((w) => ({
       id: w.id,
-      title: w.world.meta.title,
-      tagline: w.world.meta.tagline,
-      genre: w.world.meta.genre,
-      color: w.world.palette.primary,
-      language: w.world.meta.language || 'en',
+      title: w.meta.title,
+      tagline: w.meta.tagline,
+      genre: w.meta.genre,
+      ...(w.color ? { color: w.color } : {}),
+      language: w.meta.language || 'en',
     }));
-    const prompts: InspirationPrompt[] = inspirationPrompts(promptLibrary(), new Set(worlds.map((w) => w.id)));
+    const prompts: InspirationPrompt[] = localizedInspiration(promptLibrary(), new Set(worlds.map((w) => w.id)), lang);
     const saved = loadRun();
+    const canGenerate = this.canGenerate();
+    const recent: RecentWorldView[] = generatedWorlds()
+      .reverse()
+      .map((w) => ({
+        id: w.id,
+        title: w.world.meta.title,
+        tagline: w.world.meta.tagline,
+        genre: w.world.meta.genre,
+        color: w.world.palette.primary,
+        language: w.world.meta.language || 'en',
+        source: w.source ?? 'generated',
+        savedAt: w.savedAt ?? 0,
+      }));
     return {
       prompts,
       demos,
-      savedRun: saved && findWorld(saved.worldId) ? { worldTitle: saved.worldTitle, playerName: saved.playerName, areaName: saved.areaName, turn: saved.turn } : null,
-      canGenerate: !!this.provider(),
+      savedRun: saved && hasWorld(saved.worldId) ? { worldTitle: saved.worldTitle, playerName: saved.playerName, areaName: saved.areaName, turn: saved.turn } : null,
+      canGenerate,
       providerLabel: this.provider() ? providerLabel(this.settings.provider) : null,
+      providerStatus: providerStatus(this.settings.provider, this.server, canGenerate, { gm: this.settings.gm }),
+      recent,
+      canImport: true,
       defaults: { difficulty: this.runOptions.difficulty, weirdness: this.runOptions.weirdness },
     };
   }
@@ -141,10 +185,11 @@ export class App {
       return;
     }
     if (this.screen === 'loading' && this.generation) {
+      const view = this.generation.view();
       this.ui.render({
         screen: 'loading',
         theme: { palette: DEFAULT_PALETTE, vocabulary: defaultVocabulary() },
-        loading: this.generation.view(),
+        loading: view.error && this.genHint ? { ...view, error: withHint(view.error, this.genHint) } : view,
         settings: this.settingsView(),
         prefs: this.prefs(),
         language: this.languageView(),
@@ -174,22 +219,24 @@ export class App {
   private async ensureRenderer(): Promise<Renderer> {
     if (!this.renderer) {
       const { Renderer } = await loadRenderer();
-      this.renderer ??= new Renderer(this.canvasHost);
+      this.renderer ??= new Renderer(this.canvasHost, { quality: this.settings.quality ?? 'auto', reduceMotion: this.settings.reduceMotion || undefined });
     }
     return this.renderer;
   }
 
-  private async launch(session: GameSession): Promise<void> {
+  private async launch(session: GameSession, entry: WorldEntry): Promise<void> {
     this.controller?.dispose();
     const renderer = await this.ensureRenderer();
     this.canvasHost.hidden = false;
     this.screen = 'game';
     const app = this;
     const ai = await runAi({
-      provider: this.provider(),
-      worldId: session.worldId,
+      // GM off: no AI calls in play; the recorded/offline GM answers instead
+      provider: this.settings.gm === false ? null : this.provider(),
+      worldId: recordingsKey(entry),
       loadRecordings: async (id) => (recordedWorldKeys().includes(id) ? loadBundledRecordings(id) : []),
     });
+    session.audioListener = (u) => this.audio.update(u);
     this.controller = new GameController(session, {
       ...(ai.director ? { director: ai.director } : {}),
       dialogue: ai.dialogue,
@@ -204,19 +251,20 @@ export class App {
     });
     // keep the address bar on this run: reloading resumes it (boot.ts) instead of starting over
     setAddress(runUrl(session.worldId, session.state.seed));
+    void this.audio.startRun(session.world, session.state.area.index);
     await this.controller.start();
     document.body.dataset.ready = '1';
   }
 
   async playWorld(id: string, seed = randomSeed(), opts?: Pick<StartOptions, 'difficulty' | 'weirdness'>): Promise<boolean> {
     if (opts) this.runOptions = { difficulty: opts.difficulty, weirdness: opts.weirdness };
-    const entry = findWorld(id);
+    const entry = await loadWorld(id);
     if (!entry) {
       this.showStart(t('app.noWorld', { id }));
       return false;
     }
     clearRun();
-    await this.launch(this.newSession(entry, seed));
+    await this.launch(this.newSession(entry, seed), entry);
     return true;
   }
 
@@ -234,7 +282,7 @@ export class App {
 
   async continueRun(): Promise<boolean> {
     const run = loadRun();
-    const entry = run ? findWorld(run.worldId) : undefined;
+    const entry = run ? await loadWorld(run.worldId) : undefined;
     if (!run || !entry) {
       clearRun();
       this.showStart(t('app.savedMissing'));
@@ -262,7 +310,7 @@ export class App {
       this.showStart(t('app.savedBroken'));
       return false;
     }
-    await this.launch(session);
+    await this.launch(session, entry);
     return true;
   }
 
@@ -272,12 +320,25 @@ export class App {
    * screen with Try again / Back.
    */
   async createWorld(opts: StartOptions): Promise<boolean> {
-    const provider = this.provider();
+    const language = opts.language ?? getLanguage();
+    const surpriseSeed = randomSeed();
+    let provider: LLMProvider | null;
+    let origin: string | undefined;
+    if (this.settings.provider.preset === OFFLINE_PRESET) {
+      // offline demo: "create" a recorded world that fits; the pipeline (validation, bots) runs for real
+      const pick = pickDemoWorld(worldIndex(), { prompt: opts.surprise ? '' : opts.prompt, language, seed: surpriseSeed }, promptLibrary());
+      const full = pick ? await loadBundledWorld(pick.id) : undefined;
+      provider = full ? demoGenerator(full.id, full.world, { latencyMs: 250 }) : null;
+      origin = full?.id;
+    } else provider = this.provider();
     if (!provider) {
+      const problem = providerProblem(this.settings.provider, this.server);
+      if (problem) this.ui.toast(problemText(problem), 'warn');
       this.settingsOpen = true;
       this.render();
       return false;
     }
+    this.genHint = null;
     this.lastStart = opts;
     this.runOptions = { difficulty: opts.difficulty, weirdness: opts.weirdness };
     this.generation?.cancel();
@@ -290,17 +351,18 @@ export class App {
         surprise: opts.surprise || !opts.prompt.trim(),
         difficulty: opts.difficulty,
         weirdness: opts.weirdness,
-        language: opts.language ?? getLanguage(),
+        language,
         recentWorlds: generatedWorlds()
           .slice(-5)
           .map((w) => w.world.meta.title),
-        surpriseSeed: randomSeed(),
+        surpriseSeed,
       },
       {
         balancer: workerBalancer(() => new Worker(new URL('../llm/balance-worker.ts', import.meta.url), { type: 'module' })),
         onChange: () => {
           if (this.generation === gen && this.screen === 'loading') this.render();
         },
+        offline: this.settings.provider.preset === OFFLINE_PRESET,
       },
     );
     this.generation = gen;
@@ -312,19 +374,24 @@ export class App {
       world = await gen.run();
     } catch (e) {
       console.warn('[anyworld] world generation failed:', e);
+      if (this.generation === gen) {
+        this.genHint = generationHint(e, this.settings.provider);
+        this.render();
+      }
       return false;
     }
     if (this.generation !== gen || gen.signal.aborted) return false;
     this.generation = null;
-    const entry = rememberWorld(world, randomSeed());
+    const entry = rememberWorld(world, randomSeed(), { source: 'generated', ...(origin ? { origin } : {}) });
     clearRun();
-    await this.launch(this.newSession(entry, randomSeed()));
+    await this.launch(this.newSession(entry, randomSeed()), entry);
     return true;
   }
 
   showStart(error?: string): void {
     this.generation?.cancel();
     this.generation = null;
+    this.audio.stopRun();
     setAddress(location.pathname);
     this.controller?.dispose();
     this.controller = null;
@@ -333,6 +400,59 @@ export class App {
     this.startError = error ?? null;
     this.render();
     document.body.dataset.ready = '1';
+  }
+
+  // ---------------------------------------------------------------------------
+  // world files (DESIGN §12: export / import)
+  // ---------------------------------------------------------------------------
+
+  /** saves a world as `<title>.anyworld.json` (a browser download) */
+  async exportWorld(id: string): Promise<boolean> {
+    const entry = await loadWorld(id);
+    if (!entry) {
+      this.ui.toast(t('app.noWorld', { id }), 'warn');
+      return false;
+    }
+    const file = exportWorldFile(entry.world);
+    try {
+      const url = URL.createObjectURL(new Blob([file.text], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.filename;
+      a.rel = 'noopener';
+      document.body.append(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (e) {
+      console.warn('[anyworld] world export failed:', e);
+      this.ui.toast(t('world.export.failed'), 'warn');
+      return false;
+    }
+    this.ui.toast(t('world.export.ok', { file: file.filename }), 'info');
+    return true;
+  }
+
+  /** validates a world file and keeps it under "Your worlds"; returns the new id */
+  importWorld(file: WorldFileInput): string | null {
+    const r = parseWorldFile(file.text);
+    if (!r.ok) {
+      console.warn(`[anyworld] world import of ${file.name} failed:`, r.kind, r.details);
+      this.ui.toast(tx(r.key, { details: r.details.slice(0, 2).join('; ') }, r.kind), 'warn');
+      return null;
+    }
+    const entry = rememberWorld(r.world, randomSeed(), { source: 'imported' });
+    this.ui.toast(t('world.import.ok', { title: r.world.meta.title }), 'info');
+    if (this.screen === 'start') this.render();
+    return entry.id;
+  }
+
+  forgetWorld(id: string): boolean {
+    const entry = findStoredWorld(id);
+    if (!entry?.generated || !forgetWorld(id)) return false;
+    this.ui.toast(t('world.forgotten', { title: entry.world.meta.title }), 'info');
+    if (this.screen === 'start') this.render();
+    return true;
   }
 
   // ---------------------------------------------------------------------------
@@ -351,16 +471,23 @@ export class App {
       onPlayDemo: (id, opts) => void this.playWorld(id, undefined, opts),
       onContinue: () => void this.continueRun(),
       onStart: (opts) => {
-        if (this.provider()) void this.createWorld(opts);
-        else this.ui.toast(t('app.noGenerator'), 'info');
+        if (this.canGenerate()) void this.createWorld(opts);
+        else {
+          const problem = providerProblem(this.settings.provider, this.server);
+          this.ui.toast(problem ? problemText(problem) : t('app.noGenerator'), 'info');
+        }
       },
       onOpenSettings: (open) => {
         this.settingsOpen = open;
         this.render();
       },
       onSettings: (s) => {
+        const before = this.settings;
         this.settings = s;
         saveSettings(s);
+        this.audio.applySettings(s.audio);
+        this.renderer?.setQuality(s.quality ?? 'auto');
+        if (s.reduceMotion !== before.reduceMotion) this.renderer?.setReduceMotion(s.reduceMotion);
         if (this.controller) this.controller.session.prefs = this.prefs();
         this.settingsOpen = false;
         this.render();
@@ -374,11 +501,37 @@ export class App {
       onCancelLoading: () => this.showStart(),
       onRetryLoading: () => (this.lastStart ? void this.createWorld(this.lastStart) : this.showStart()),
       onLanguage: (code) => this.setLanguage(code),
+      onExportWorld: (id) => void this.exportWorld(id),
+      onImportWorld: (file) => void this.importWorld(file),
+      onForgetWorld: (id) => void this.forgetWorld(id),
+      onMountMusic: (host) => void this.audio.mountPanel(host),
     };
   }
 }
 
+/**
+ * Phone platform details (DESIGN §6b): draw under the notch / home bar (the CSS keeps content inside
+ * env(safe-area-inset-*)), no page pinch-zoom or double-tap zoom while playing (the map has its own
+ * pinch), no pull-to-refresh (CSS overscroll-behavior).
+ */
+function setupMobile(): void {
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+  const want = 'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content';
+  if (meta && meta.content !== want) meta.content = want;
+  // iOS Safari ignores user-scalable=no; its own pinch gesture events must be cancelled instead
+  // (only in a run: the start screen and settings stay zoomable for reading)
+  const stop = (e: Event) => {
+    if (document.getElementById('ui-root')?.dataset.screen === 'game') e.preventDefault();
+  };
+  document.addEventListener('gesturestart', stop, { passive: false });
+  document.addEventListener('gesturechange', stop, { passive: false });
+  // double-tap zoom is off through CSS (touch-action: manipulation on the overlay, none on the map).
+  // Audio is unlocked by the audio module's own first-gesture hook, which AudioBridge installs when
+  // the lazily loaded module arrives (so the audio chunk is not fetched on the start screen).
+}
+
 async function boot(): Promise<void> {
+  setupMobile();
   const uiRoot = document.getElementById('ui-root');
   const canvasHost = document.getElementById('game-canvas');
   if (!uiRoot || !canvasHost) throw new Error('index.html is missing #ui-root or #game-canvas');
@@ -387,10 +540,16 @@ async function boot(): Promise<void> {
   // never clear the autosaved run on boot: a reloaded or reopened link resumes it, and a link to
   // another world opens the start screen (Continue / pick a world) instead of discarding it
   const saved = loadRun();
-  const route = bootRoute(location.search, saved && findWorld(saved.worldId) ? saved : null, (id) => findWorld(id)?.world.meta.title);
+  const route = bootRoute(location.search, saved && hasWorld(saved.worldId) ? saved : null, worldTitle);
   if (route.kind === 'new') await app.playWorld(route.worldId, route.seed);
   else if (route.kind === 'continue') await app.continueRun();
   else app.showStart(route.notice);
+}
+
+/** puts a failure hint after the error itself, before the generic "try again or play a demo" line */
+function withHint(error: string, hint: string): string {
+  const tail = t('gen.errorHint');
+  return error.endsWith(tail) ? `${error.slice(0, -tail.length).trimEnd()} ${hint} ${tail}` : `${error} ${hint}`;
 }
 
 function setAddress(url: string): void {

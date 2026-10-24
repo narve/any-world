@@ -1,6 +1,18 @@
 import { defineConfig } from 'vite';
 
-// `vite build --mode static` produces a browser-only build (direct LLM transport by default).
+/**
+ * Two builds from one client (DESIGN §4.4):
+ *   - `vite build`               → dist/client, served by the Node backend (`npm start`); backend transport by default.
+ *   - `vite build --mode static` → dist/static, browser-only: relative asset paths (host it anywhere, e.g. GitHub
+ *                                   Pages or a sub-folder) and direct transport by default (the browser calls the LLM).
+ * Dev: `npm run dev` runs the API (server/dev.ts) and this dev server together. Ports come from the environment so
+ * several dev servers can run side by side: ANYWORLD_CLIENT_PORT (5173) and ANYWORLD_API_PORT (8787, the /api proxy).
+ */
+function envPort(name: string, fallback: number): number {
+  const n = Number(process.env[name]);
+  return Number.isInteger(n) && n > 0 && n < 65536 ? n : fallback;
+}
+
 export default defineConfig(({ mode }) => ({
   root: 'src/client',
   publicDir: '../../public',
@@ -14,7 +26,11 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
-    proxy: { '/api': 'http://localhost:8787' },
+    port: envPort('ANYWORLD_CLIENT_PORT', 5173),
+    proxy: { '/api': `http://localhost:${envPort('ANYWORLD_API_PORT', 8787)}` },
+  },
+  preview: {
+    host: '0.0.0.0',
+    port: envPort('ANYWORLD_CLIENT_PORT', 4173),
   },
 }));

@@ -13,7 +13,8 @@
 import { test, expect, devices, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
-const OUT = 'docs/progress/M3';
+// committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M3' : 'test-results/shots/M3';
 mkdirSync(OUT, { recursive: true });
 const BASE = process.env.M3_UX_BASE;
 const shot = (page: Page, name: string) => page.screenshot({ path: `${OUT}/client-${name}.png` });

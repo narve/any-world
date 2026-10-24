@@ -7,7 +7,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync, readFileSync, readdirSync } from 'node:fs';
 
-const OUT = 'docs/progress/M3';
+// committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M3' : 'test-results/shots/M3';
 mkdirSync(OUT, { recursive: true });
 
 const WORLDS = readdirSync('content/worlds')
@@ -17,6 +18,21 @@ const WORLDS = readdirSync('content/worlds')
 const LANG: Record<string, string> = Object.fromEntries(
   WORLDS.map((id) => [id, (JSON.parse(readFileSync(`content/worlds/${id}.json`, 'utf8')).meta.language as string | undefined) ?? 'en']),
 );
+/**
+ * M4: a recorded world and its translated copy (prompts.json `translations[lang].worldId`) are one
+ * world on the start screen: the copy is listed in its language's UI, the original otherwise.
+ */
+const COPY_OF: Record<string, { of: string; language: string }> = {};
+for (const e of (JSON.parse(readFileSync('content/prompts.json', 'utf8')) as { prompts: { worldId?: string; translations?: Record<string, { worldId?: string }> }[] }).prompts) {
+  for (const [language, tr] of Object.entries(e.translations ?? {})) if (e.worldId && tr.worldId) COPY_OF[tr.worldId] = { of: e.worldId, language };
+}
+/** the worlds listed with UI language `ui` */
+const listedFor = (ui: string) =>
+  WORLDS.filter((id) => {
+    const copy = COPY_OF[id];
+    if (copy) return copy.language === ui;
+    return !Object.entries(COPY_OF).some(([c, x]) => x.of === id && x.language === ui && WORLDS.includes(c));
+  });
 
 /** page errors and console errors, minus the /api calls that fail without a backend */
 function collectErrors(page: Page): string[] {
@@ -71,9 +87,10 @@ test('start screen: every recorded world, grouped by language; library inspirati
   expect(await groups.nth(1).getAttribute('data-lang')).toBe('nb');
   await expect(groups.nth(1).locator('.aw-demo-lang')).toContainText(/bokmål/i);
 
-  // every bundled world is listed exactly once, in its language's group
+  // every bundled world is listed exactly once, in its language's group (a translated copy stands
+  // in for its original only in its own language's UI)
   const listed = await page.locator('.aw-demo').evaluateAll((els) => els.map((e) => ({ id: (e as HTMLElement).dataset.world!, lang: e.getAttribute('lang') ?? '' })));
-  expect(listed.map((d) => d.id).sort()).toEqual(WORLDS);
+  expect(listed.map((d) => d.id).sort()).toEqual(listedFor('en'));
   for (const d of listed) expect(d.lang, d.id).toBe(LANG[d.id]!.split('-')[0]);
 
   // inspiration: four cards from the library, in the UI language
@@ -106,6 +123,9 @@ for (const id of WORLDS) {
   test(`demo world ${id} starts from the start screen and plays`, async ({ page }) => {
     const errors = collectErrors(page);
     await prepare(page);
+    // a translated copy is offered in its own language's UI
+    const ui = COPY_OF[id]?.language;
+    if (ui) await page.addInitScript((l) => localStorage.setItem('anyworld.lang.v1', l), ui);
     await page.goto('/');
     await waitReady(page);
     await page.locator(`.aw-demo[data-world="${id}"]`).click();
