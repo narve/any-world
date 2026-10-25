@@ -229,7 +229,8 @@ export class StartScreen {
   }
 
   private create(surprise: boolean): void {
-    if (this.view && !this.view.canGenerate) {
+    // with no AI, "Surprise me" still works: the app plays a random demo world (main.ts onStart)
+    if (!surprise && this.view && !this.view.canGenerate) {
       this.cb.onOpenSettings?.(true);
       return;
     }
