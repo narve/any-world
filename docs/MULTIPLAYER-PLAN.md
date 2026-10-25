@@ -6,10 +6,11 @@ reachable from the internet.
 
 ## 1. What we build
 
-- **Co-op, 2–4 players, one shared run** in one world (recorded, imported or AI-made). No PvP in the
+- **Co-op, 2–8 players (up to 12 as a room option), one shared run** in one world (recorded, imported or AI-made). No PvP in the
   first version.
 - **No waiting.** Turns are simultaneous with a short deadline: the server advances the world when every
-  connected player has acted, or 1.5 s after the first action, whichever comes first. A player who has not
+  connected player has acted, or a deadline after the first action, whichever comes first. The host picks
+  the deadline per room, 1–5 s (default 2 s). A player who has not
   acted simply waits that turn. A player in a menu, a dialogue or a trade never holds up the others.
 - **Joining:** the host creates a room and shares a link (`…/?room=K7QX`). Players pick a name and a
   colour; no accounts. Late joiners appear next to the host at the next turn.
@@ -39,7 +40,24 @@ browser (each player)                         home laptop (Node 22, systemd)
   snapshot. Fog of war is a client view (cheating is possible but harmless in co-op).
 - **Persistence:** each room's world, seed and input log in `/var/lib/anyworld/rooms/<id>.json`. A
   restart replays the log; players reconnect with a token kept in their browser.
-- **Limits:** 10 rooms, 4 players per room, idle rooms closed after 2 hours.
+- **Limits:** 10 rooms, 8 players per room by default (`MAX_PLAYERS`, up to 12), idle rooms closed after
+  2 hours.
+
+### How many players?
+
+The server and network are not the limit: lockstep sends a few hundred bytes per turn, and the engine
+steps a turn in well under a millisecond, so a laptop could run dozens. The limits are in the game:
+
+- **Map space:** areas are sized for one player. With 8 or more, rooms and corridors jam. The world
+  generator and the map generators get a party size, and areas grow by about 15% per extra player.
+- **Turns:** the more players, the more turns end on the deadline rather than when everyone has acted.
+  That is fine (no waiting), but with 10 or more the world mostly moves on the clock.
+- **Screen:** the camera frames the local player. Name tags, chat bubbles and the turn indicator become
+  crowded with many players on one screen, and phones show fewer of them.
+- **Balance:** hostile numbers and health scale with party size. This is tested by bots up to 12.
+- **GM:** the game master's context grows per player, which makes it slower and costlier.
+
+Plan: design and test for 8; allow up to 12 as an option, tested with bots and a smoke test in the browser.
 
 ## 3. Work, in milestones
 
@@ -74,6 +92,13 @@ once and does not depend on the rest.
    - **Cloudflare Tunnel (to use dv8.no):** move the DNS for `dv8.no` to Cloudflare (free plan; the
      whole domain), install `cloudflared`, and route `play.dv8.no` to `http://localhost:8787`. It
      supports WebSockets, and Cloudflare Access can put a login in front if wanted.
+   - **Plain WireGuard (owner's likely choice):** WireGuard connects devices that hold a config. On its
+     own it is a private network: each player needs the WireGuard app and a config from the owner (fine
+     for a few friends, not for open links). For public links, run a small VPS with a public IP as a
+     relay. The laptop keeps a WireGuard tunnel to the VPS (`PersistentKeepalive`, so no router setup at
+     home). On the VPS, Caddy serves `play.dv8.no` with automatic HTTPS and proxies (WebSockets
+     included) through the tunnel to `10.x.x.2:8787`. DNS: an A record for `play.dv8.no` pointing to
+     the VPS. This is the do-it-yourself version of what Tailscale Funnel and Cloudflare Tunnel provide.
    - Router port-forward with Caddy and dynamic DNS also works, but it exposes the home IP and fails
      behind CGNAT. Not recommended.
 5. **Updates:** `scripts/deploy.sh` (MP0) runs git pull, `npm ci`, the build and a service restart.
@@ -101,7 +126,9 @@ A good combination: GitHub Pages at `anyworld.dv8.no` stays the always-on offlin
 
 ## 6. Decisions for the owner
 
-1. Funnel (`…ts.net`, ready in minutes) or Cloudflare Tunnel with `dv8.no` (needs the DNS moved)?
-2. Co-op only, as planned, or also a competitive mode later?
-3. Party size limit (4 planned) and turn deadline (1.5 s planned)?
-4. Start with MP0 now (hosting, host code, optional split hosting) before the multiplayer work?
+Decided (2026-10-25): co-op only; party of 8 by default (12 as an option); turn deadline 1–5 s chosen
+per room (default 2 s). Exposure: to be decided, probably WireGuard (see §4).
+
+Open:
+1. Exposure: WireGuard with a small public relay (VPS), or WireGuard only for invited devices?
+2. Start with MP0 now (hosting, host code, optional split hosting) before the multiplayer work?
