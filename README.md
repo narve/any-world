@@ -22,7 +22,7 @@ never wait for the AI. With no AI at all, the 18 recorded demo worlds play with 
 
 ## Quick start
 
-You need Node.js 22 or newer.
+You need Node.js 22.23.4+, 24.22.1+ or 26.12.1+ (releases with the CVE-2026-111497 fix; see [docs/HOSTING.md](docs/HOSTING.md)).
 
 ```bash
 npm install
@@ -103,6 +103,12 @@ free port.
 Models differ in what structured output they support. A shared layer validates every answer against the
 schema, repairs it with error feedback and retries. World creation also play-tests the world with bots
 and rebalances it. Small local models often struggle to write a whole world.
+
+### Hosting it yourself
+
+To run the server on your own machine and reach it from the internet (systemd service, access code,
+tunnels, pages hosted elsewhere), see [docs/HOSTING.md](docs/HOSTING.md). The server needs a Node.js
+release with the CVE-2026-111497 (HTTP2Shell) fix: 22.23.4+, 24.22.1+ or 26.12.1+.
 
 ### Firewall / allow-list
 

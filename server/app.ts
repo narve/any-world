@@ -4,8 +4,12 @@
  *   GET  /api/presets  which presets this server can serve (never keys)
  *   GET  /api/health
  *   everything else    dist/client static files with SPA fallback (when staticDir is set)
+ * Optional (MP0, home hosting): ANYWORLD_HOST_CODE makes POST /api/llm (real providers, not the
+ * recorded "mock") require the header X-AnyWorld-Code, so strangers cannot spend the server's keys;
+ * ALLOWED_ORIGINS (comma-separated) lets pages hosted elsewhere (e.g. GitHub Pages) call /api (CORS).
  */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { isIP } from 'node:net';
 import { z } from 'zod';
 import { PRESETS, getPreset } from '../src/llm/presets';
@@ -46,6 +50,36 @@ export interface AppOptions {
   log?: (line: string) => void;
   /** max cached upstream providers (one per preset+model, LRU-evicted); default LLM_MAX_CACHED_PROVIDERS or 64 */
   maxCachedProviders?: number;
+  /** access code for AI calls (header X-AnyWorld-Code); default env ANYWORLD_HOST_CODE; empty = no code */
+  hostCode?: string;
+  /** origins allowed to call /api from another site (CORS); default env ALLOWED_ORIGINS, comma-separated */
+  allowedOrigins?: string[];
+}
+
+/** the header that carries the host access code */
+export const HOST_CODE_HEADER = 'x-anyworld-code';
+
+/** constant-time comparison of two codes (hashed first, so lengths do not leak either) */
+export function codeMatches(given: string | undefined, expected: string): boolean {
+  const a = createHash('sha256').update(given ?? '').digest();
+  const b = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
+/** ALLOWED_ORIGINS → normalized origins ("https://x.github.io"); entries that are not origins are dropped */
+export function parseAllowedOrigins(v: string | undefined): string[] {
+  return (v ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .flatMap((o) => {
+      try {
+        const u = new URL(o);
+        return u.protocol === 'https:' || u.protocol === 'http:' ? [u.origin] : [];
+      } catch {
+        return [];
+      }
+    });
 }
 
 /** positive integer from an env var, or undefined (unset / invalid) */
@@ -191,6 +225,8 @@ export function createApp(opts: AppOptions = {}): App {
   const trustHops =
     opts.trustProxy === undefined ? parseTrustProxy(env.TRUST_PROXY) : opts.trustProxy === true ? 1 : opts.trustProxy === false ? 0 : Math.max(0, Math.floor(opts.trustProxy));
   const upstream = upstreamOptions(env, opts.upstream);
+  const hostCode = (opts.hostCode ?? env.ANYWORLD_HOST_CODE ?? '').trim();
+  const allowedOrigins = new Set(opts.allowedOrigins ?? parseAllowedOrigins(env.ALLOWED_ORIGINS));
   const secrets = (): string[] => PRESETS.map((p) => (p.envKey ? env[p.envKey] ?? '' : '')).filter(Boolean);
   /** cached per preset+model; LRU-capped so open presets cannot grow server memory without bound */
   const providers = new Map<string, LLMProvider>();
@@ -277,6 +313,14 @@ export function createApp(opts: AppOptions = {}): App {
       throw new HttpError(400, 'bad_request', `Invalid request: ${msg}`);
     }
     const body = parsed.data;
+    // the recorded "mock" preset costs nothing and stays open; real providers need the code when one is set
+    if (hostCode && body.preset !== 'mock') {
+      const given = req.headers[HOST_CODE_HEADER];
+      if (!codeMatches(typeof given === 'string' ? given.trim() : undefined, hostCode)) {
+        log(`[llm] ${body.preset} refused: ${given ? 'wrong' : 'missing'} access code (${ip})`);
+        throw new HttpError(401, 'auth', given ? 'Wrong server access code' : 'This server needs an access code (Settings → Server access code)');
+      }
+    }
     const request = { ...body.request, maxTokens: Math.min(body.request.maxTokens ?? maxOut, maxOut) };
 
     const ac = new AbortController();
@@ -312,6 +356,8 @@ export function createApp(opts: AppOptions = {}): App {
 
   function presetsInfo() {
     return {
+      /** true: POST /api/llm with a real provider needs the X-AnyWorld-Code header */
+      codeRequired: !!hostCode,
       /** clients waiting on /api/llm should allow at least this long (the server answers 504 after it) */
       upstreamTimeoutMs: upstream.totalTimeoutMs,
       presets: [
@@ -348,6 +394,22 @@ export function createApp(opts: AppOptions = {}): App {
       }
       path = url.pathname;
       if (path.startsWith('/api/')) {
+        // CORS for pages hosted elsewhere: only listed origins get the allow headers
+        const origin = typeof req.headers.origin === 'string' ? req.headers.origin : '';
+        if (origin && allowedOrigins.has(origin)) {
+          res.setHeader('access-control-allow-origin', origin);
+          res.setHeader('vary', 'origin');
+        }
+        if (req.method === 'OPTIONS') {
+          if (!origin || !allowedOrigins.has(origin)) throw new HttpError(403, 'bad_request', 'Origin not allowed');
+          res.writeHead(204, {
+            'access-control-allow-methods': 'GET, POST, OPTIONS',
+            'access-control-allow-headers': `content-type, ${HOST_CODE_HEADER}`,
+            'access-control-max-age': '600',
+          });
+          res.end();
+          return;
+        }
         if (path === '/api/health') {
           if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET' });
           return sendJson(res, 200, { ok: true, uptimeS: Math.round(process.uptime()), configured: configuredPresets() });

@@ -1,0 +1,38 @@
+# AnyWorld game server (docs/HOSTING.md).
+# Install: sudo cp deploy/anyworld.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#          sudo systemctl enable --now anyworld
+[Unit]
+Description=AnyWorld game server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=anyworld
+Group=anyworld
+WorkingDirectory=/opt/anyworld
+# keys, access code and port; mode 600, owned by root (see deploy/anyworld.env.example)
+EnvironmentFile=/etc/anyworld.env
+Environment=NODE_ENV=production
+Environment=HOME=/var/lib/anyworld
+ExecStart=/usr/bin/env npm start
+Restart=always
+RestartSec=3
+
+# hardening: the service can read the app and write only its own state directory
+StateDirectory=anyworld
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictNamespaces=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target

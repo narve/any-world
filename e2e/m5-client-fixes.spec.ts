@@ -10,7 +10,8 @@
 import { test, expect, devices, type Page, type CDPSession } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
-const OUT = 'docs/progress/M5';
+// review screenshots go to test-results; SHOTS_TO_DOCS=1 writes the committed milestone copies
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M5' : 'test-results/shots/m5-client-fixes';
 mkdirSync(OUT, { recursive: true });
 if (process.env.M5_BASE) test.use({ baseURL: process.env.M5_BASE });
 

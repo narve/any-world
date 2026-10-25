@@ -605,3 +605,119 @@ test.describe('production server (npm start)', () => {
     expect(errors).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// MP0: a home server with an access code (ANYWORLD_HOST_CODE)
+// ---------------------------------------------------------------------------
+
+test.describe('backend with an access code (MP0)', () => {
+  const CODE_PORT = PORT + 1;
+  const CODE_BASE = `http://localhost:${CODE_PORT}`;
+  const CODE = 'otter-lantern-42';
+  /** pages hosted apart from the server (GitHub Pages style) */
+  const SPLIT_PORT = PORT + 2;
+  const SPLIT_ORIGIN = `http://localhost:${SPLIT_PORT}`;
+  let dev: ChildProcess | null = null;
+  let llm: Awaited<ReturnType<typeof startFakeLlm>> | null = null;
+  let log = '';
+
+  test.beforeAll(async () => {
+    test.setTimeout(120000);
+    llm = await startFakeLlm();
+    dev = spawn('npx', ['tsx', 'server/dev.ts'], {
+      env: { ...process.env, PORT: '0', ANYWORLD_CLIENT_PORT: String(CODE_PORT), OLLAMA_BASE_URL: llm.url, OLLAMA_MODEL: 'fake-model', ANYWORLD_HOST_CODE: CODE, ALLOWED_ORIGINS: SPLIT_ORIGIN, NO_PROXY: '*', no_proxy: '*' },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
+    });
+    dev.stdout?.on('data', (d) => (log += String(d)));
+    dev.stderr?.on('data', (d) => (log += String(d)));
+    const t0 = Date.now();
+    for (;;) {
+      try {
+        if ((await fetch(`${CODE_BASE}/api/health`)).ok) break;
+      } catch {
+        /* not up yet */
+      }
+      if (Date.now() - t0 > 90000) throw new Error(`dev server did not start:\n${log}`);
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  });
+
+  test.afterAll(async () => {
+    if (dev?.pid) {
+      try {
+        process.kill(-dev.pid, 'SIGTERM');
+      } catch {
+        dev.kill('SIGTERM');
+      }
+    }
+    await llm?.close();
+  });
+
+  test('no code: demo worlds only; a wrong code is explained; the right code creates worlds', async ({ page }) => {
+    const errors = collectErrors(page, [/401 \(Unauthorized\)/]);
+    expect((await (await fetch(`${CODE_BASE}/api/presets`)).json()).codeRequired).toBe(true);
+    await prepare(page, { provider: { preset: 'ollama', transport: 'backend' }, audio: { volume: 0.6, muted: true }, animationSpeed: 1, reduceMotion: false });
+    await page.goto(`${CODE_BASE}/`);
+    await waitReady(page);
+    const note = page.locator('.aw-start-note');
+    await expect(note).toContainText('access code');
+    await expect(note).toHaveAttribute('data-tone', 'warn');
+
+    // without the code "Surprise me" still plays: a recorded demo world, no AI call
+    await page.getByRole('button', { name: 'Surprise me' }).click();
+    await waitGame(page);
+    expect(await page.evaluate(() => window.__anyworld!.controller!.session.worldId)).not.toMatch(/^gen-/);
+    expect(llm!.calls()).toBe(0);
+    await backToStart(page);
+
+    // a wrong code: the server refuses, the loading screen says why
+    await openSettings(page);
+    await page.locator('#aw-set-code').fill('wrong-code');
+    await saveSettings(page);
+    await page.locator('#aw-prompt').fill('A lighthouse that keeps the sea away');
+    await page.getByRole('button', { name: 'Create world' }).click();
+    await expect(page.locator('.aw-loading')).toContainText('access code', { timeout: 30000 });
+    expect(llm!.calls()).toBe(0);
+    await page.evaluate(() => window.__anyworld!.showStart());
+
+    // the right code: the world is made by the (fake) AI through the server
+    await openSettings(page);
+    await page.locator('#aw-set-code').fill(CODE);
+    await saveSettings(page);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('anyworld.settings.v1') ?? '{}').accessCode)).toBe(CODE);
+    await expect(note).not.toContainText('access code');
+    await page.getByRole('button', { name: 'Create world' }).click();
+    await waitGame(page);
+    expect(await page.evaluate(() => window.__anyworld!.controller!.session.worldId)).toMatch(/^gen-/);
+    expect(llm!.calls()).toBeGreaterThan(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('pages hosted elsewhere call the home server (ANYWORLD_SERVER_URL + ALLOWED_ORIGINS)', async ({ page }) => {
+    test.setTimeout(240000);
+    execSync(`npx vite build --mode static --outDir ../../dist/static-split`, {
+      stdio: 'pipe',
+      timeout: 200000,
+      env: { ...process.env, ANYWORLD_SERVER_URL: CODE_BASE },
+    });
+    const pages = await startStaticServer({ dir: 'dist/static-split', port: SPLIT_PORT, host: '127.0.0.1' });
+    try {
+      const errors = collectErrors(page, [/401 \(Unauthorized\)/]);
+      const before = llm!.calls();
+      await prepare(page, { provider: { preset: 'ollama', transport: 'backend' }, audio: { volume: 0.6, muted: true }, animationSpeed: 1, reduceMotion: false, accessCode: CODE });
+      await page.goto(`${SPLIT_ORIGIN}/`);
+      await waitReady(page);
+      // the server answered across origins (CORS): it lists the fake provider as ready
+      await expect(page.locator('.aw-start-note')).toHaveAttribute('data-tone', 'ok');
+      await page.locator('#aw-prompt').fill('A lighthouse that keeps the sea away');
+      await page.getByRole('button', { name: 'Create world' }).click();
+      await waitGame(page);
+      expect(await page.evaluate(() => window.__anyworld!.controller!.session.worldId)).toMatch(/^gen-/);
+      expect(llm!.calls()).toBeGreaterThan(before);
+      expect(errors).toEqual([]);
+    } finally {
+      await pages.close();
+    }
+  });
+});

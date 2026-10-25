@@ -52,7 +52,13 @@ describe('agent-provider', () => {
   it('a valid world: VALID, then recorded (with the requested language)', () => {
     const dir = tmp();
     const r = tsx(['tools/agent-provider.ts', '--purpose', 'world', '--response', 'content/worlds/fixture-western.json', '--language', 'nb', '--prompt', 'a rain broker', '--no-balance', '--record', '--worlds-dir', dir, '--id', 'w1']);
-    expect(r.stderr).toBe('');
+    // Node's own runtime warnings (e.g. "(node:123) [UNDICI-EHPA] … EnvHttpProxyAgent is experimental"
+    // when NODE_USE_ENV_PROXY is set by a sandbox proxy) are not output of the tool
+    const ownStderr = r.stderr
+      .split('\n')
+      .filter((l) => l.trim() && !/^\(node:\d+\) \[[A-Z0-9_-]+\] Warning:/.test(l) && !l.includes('node --trace-warnings'))
+      .join('\n');
+    expect(ownStderr).toBe('');
     expect(r.status).toBe(0);
     expect(r.stdout).toContain('VALID: "The Rain Broker of Sweetwater" (weird western, nb)');
     const saved = JSON.parse(readFileSync(join(dir, 'w1.json'), 'utf8'));

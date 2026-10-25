@@ -23,7 +23,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # .nvmrc pins a release with the CVE-2026-111497 (HTTP2Shell) fix
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run build:static

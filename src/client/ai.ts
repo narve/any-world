@@ -12,7 +12,7 @@
  * Kept free of DOM and Vite specifics except for the injected loaders, so it runs under vitest.
  */
 import type { LLMProvider, ProviderConfig } from '../llm/types';
-import { createProvider } from '../llm/transport';
+import { createProvider, type CreateProviderOptions } from '../llm/transport';
 import { getPreset } from '../llm/presets';
 import type { Recording } from '../llm/mock';
 import { LlmDialogue, LlmGmDirector, createDemoGm, type DialogueTurnResult } from '../llm/gm-runtime';
@@ -36,7 +36,7 @@ export const DEMO_GM_TIMEOUT_MS = 8000;
  * recordings), an unknown preset, a direct preset without its key, or a backend preset the server
  * did not list as configured (`serverConfigured` null = not known yet: assume it is not).
  */
-export function providerFromSettings(cfg: ProviderConfig, serverConfigured: ReadonlySet<string> | null): LLMProvider | null {
+export function providerFromSettings(cfg: ProviderConfig, serverConfigured: ReadonlySet<string> | null, opts: CreateProviderOptions = {}): LLMProvider | null {
   if (!cfg || cfg.preset === 'mock') return null;
   const preset = getPreset(cfg.preset);
   if (cfg.transport === 'backend') {
@@ -47,7 +47,7 @@ export function providerFromSettings(cfg: ProviderConfig, serverConfigured: Read
     if (cfg.preset === 'custom' && !cfg.baseUrl) return null;
   }
   try {
-    return createProvider(cfg);
+    return createProvider(cfg, opts);
   } catch {
     return null;
   }

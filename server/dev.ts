@@ -3,10 +3,12 @@
  * Ports: API from PORT (8787), client from ANYWORLD_CLIENT_PORT (5173). PORT=0 picks a free API port;
  * the proxy always points at the port the API actually bound.
  */
+import { assertSafeNode } from './node-check';
 import { createServer as createViteServer } from 'vite';
 import { startServer } from './index';
 
 async function main(): Promise<void> {
+  assertSafeNode();
   const api = await startServer();
   console.log(`[dev] API on http://localhost:${api.port}`);
   console.log(`[dev] LLM presets available: ${api.configuredPresets().join(', ')}`);

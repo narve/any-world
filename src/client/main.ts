@@ -10,7 +10,7 @@ import { defaultVocabulary, localizedPreset } from './ui/format';
 import type { Renderer } from './render/index';
 import { loadRenderer, preloadRenderer } from './render/lazy';
 import { listPresets } from '../llm/presets';
-import { fetchServerPresets } from '../llm/transport';
+import { fetchServerInfo } from '../llm/transport';
 import type { LLMProvider } from '../llm/types';
 import { workerBalancer } from '../llm/balance-worker';
 import { loadBundledRecordings, recordedWorldKeys } from '../llm/recordings-bundle';
@@ -35,8 +35,12 @@ declare global {
   }
 }
 
-const DEFAULT_TRANSPORT: 'direct' | 'backend' = typeof __ANYWORLD_DEFAULT_TRANSPORT__ !== 'undefined' ? __ANYWORLD_DEFAULT_TRANSPORT__ : 'backend';
-/** a static (browser-only) build has no backend to talk to */
+/** the server's origin when the page is hosted elsewhere (build: ANYWORLD_SERVER_URL); '' = same origin */
+const SERVER_URL: string = typeof __ANYWORLD_SERVER__ !== 'undefined' ? __ANYWORLD_SERVER__ : '';
+const BUILD_TRANSPORT: 'direct' | 'backend' = typeof __ANYWORLD_DEFAULT_TRANSPORT__ !== 'undefined' ? __ANYWORLD_DEFAULT_TRANSPORT__ : 'backend';
+/** a static build pointed at a server (SERVER_URL) uses it like the backend build does */
+const DEFAULT_TRANSPORT: 'direct' | 'backend' = SERVER_URL ? 'backend' : BUILD_TRANSPORT;
+/** a static (browser-only) build with no server has no backend to talk to */
 const TRANSPORTS: ('direct' | 'backend')[] = DEFAULT_TRANSPORT === 'direct' ? ['direct'] : ['direct', 'backend'];
 
 function randomSeed(): number {
@@ -84,8 +88,8 @@ export class App {
     try {
       const ctl = new AbortController();
       const timer = setTimeout(() => ctl.abort(), 8000);
-      const list = await fetchServerPresets('', { signal: ctl.signal }).finally(() => clearTimeout(timer));
-      this.server = { kind: 'ok', configured: new Set(list.filter((p) => p.configured).map((p) => p.id)) };
+      const info = await fetchServerInfo(SERVER_URL, { signal: ctl.signal }).finally(() => clearTimeout(timer));
+      this.server = { kind: 'ok', configured: new Set(info.presets.filter((p) => p.configured).map((p) => p.id)), codeRequired: info.codeRequired };
     } catch {
       this.server = { kind: 'unreachable' };
     }
@@ -99,7 +103,10 @@ export class App {
   /** the LLM the settings give for play (GM and NPC voice), or null (demo/offline GM) */
   provider(): LLMProvider | null {
     if (this.settings.provider.preset === OFFLINE_PRESET) return null;
-    return providerFromSettings(activeProvider(this.settings), this.serverConfigured());
+    const cfg = activeProvider(this.settings);
+    const code = this.settings.accessCode?.trim();
+    if (cfg.transport === 'backend' && this.server.kind === 'ok' && this.server.codeRequired && !code) return null;
+    return providerFromSettings(cfg, this.serverConfigured(), { backendUrl: SERVER_URL, ...(code ? { backendHeaders: { 'x-anyworld-code': code } } : {}) });
   }
 
   /** worlds can be created: a working provider, or the offline demo generator */
@@ -134,6 +141,7 @@ export class App {
       offlineDemo: true,
       music: this.screen === 'game',
       ...(TRANSPORTS.includes('backend') ? { serverPresets: this.server.kind === 'ok' ? [...this.server.configured] : this.server.kind === 'unreachable' ? null : [] } : {}),
+      ...(this.server.kind === 'ok' && this.server.codeRequired ? { codeRequired: true } : {}),
     };
   }
 
@@ -173,7 +181,7 @@ export class App {
       savedRun: saved && hasWorld(saved.worldId) ? { worldTitle: saved.worldTitle, playerName: saved.playerName, areaName: saved.areaName, turn: saved.turn } : null,
       canGenerate,
       providerLabel: this.provider() ? providerLabel(this.settings.provider) : null,
-      providerStatus: providerStatus(activeProvider(this.settings), this.server, canGenerate, { gm: this.settings.gm }),
+      providerStatus: providerStatus(activeProvider(this.settings), this.server, canGenerate, { gm: this.settings.gm, accessCode: this.settings.accessCode }),
       recent,
       canImport: true,
       defaults: { difficulty: this.runOptions.difficulty, weirdness: this.runOptions.weirdness },
@@ -333,7 +341,7 @@ export class App {
       origin = full?.id;
     } else provider = this.provider();
     if (!provider) {
-      const problem = providerProblem(activeProvider(this.settings), this.server);
+      const problem = providerProblem(activeProvider(this.settings), this.server, this.settings.accessCode);
       if (problem) this.ui.toast(problemText(problem), 'warn');
       this.settingsOpen = true;
       this.render();
@@ -487,7 +495,7 @@ export class App {
         }
         if (this.canGenerate()) void this.createWorld(opts);
         else {
-          const problem = providerProblem(activeProvider(this.settings), this.server);
+          const problem = providerProblem(activeProvider(this.settings), this.server, this.settings.accessCode);
           this.ui.toast(problem ? problemText(problem) : t('app.noGenerator'), 'info');
         }
       },

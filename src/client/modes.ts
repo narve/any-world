@@ -25,25 +25,30 @@ import { normalizeLanguage, t } from './i18n/index';
 export const OFFLINE_PRESET = 'mock';
 
 /** what the backend said about its presets: unknown (not asked yet), unreachable, or the configured ids */
-export type ServerState = { kind: 'unknown' } | { kind: 'unreachable' } | { kind: 'ok'; configured: ReadonlySet<string> };
+export type ServerState = { kind: 'unknown' } | { kind: 'unreachable' } | { kind: 'ok'; configured: ReadonlySet<string>; codeRequired?: boolean };
 
 /** why the configured provider cannot be used right now (null = it can) */
 export type ProviderProblem =
   | { kind: 'server_unreachable' }
   | { kind: 'server_no_key'; preset: ProviderPreset }
+  | { kind: 'server_code' }
   | { kind: 'missing_key'; preset: ProviderPreset }
   | { kind: 'missing_base_url' }
   | { kind: 'cors'; preset: ProviderPreset }
   | { kind: 'unknown_preset'; id: string };
 
-/** the problem with a provider config, if any (the direct-mode CORS problem is reported, not fatal) */
-export function providerProblem(cfg: ProviderConfig, server: ServerState): ProviderProblem | null {
+/**
+ * The problem with a provider config, if any (the direct-mode CORS problem is reported, not fatal).
+ * `accessCode`: the code the player entered for a server that asks for one (ANYWORLD_HOST_CODE).
+ */
+export function providerProblem(cfg: ProviderConfig, server: ServerState, accessCode?: string): ProviderProblem | null {
   if (cfg.preset === OFFLINE_PRESET) return null;
   const preset = getPreset(cfg.preset);
   if (cfg.transport === 'backend') {
     if (server.kind === 'unreachable') return { kind: 'server_unreachable' };
     if (!preset) return { kind: 'unknown_preset', id: cfg.preset };
     if (server.kind === 'ok' && !server.configured.has(cfg.preset)) return { kind: 'server_no_key', preset };
+    if (server.kind === 'ok' && server.codeRequired && !accessCode?.trim()) return { kind: 'server_code' };
     return null;
   }
   if (cfg.preset === 'custom') return cfg.baseUrl?.trim() ? null : { kind: 'missing_base_url' };
@@ -60,6 +65,8 @@ export function problemText(p: ProviderProblem): string {
       return t('status.serverUnreachable');
     case 'server_no_key':
       return t('status.serverNoKey', { name: p.preset.label, env: p.preset.envKey ?? p.preset.baseUrlEnv ?? `${p.preset.id.toUpperCase()}_API_KEY` });
+    case 'server_code':
+      return t('status.serverCode');
     case 'missing_key':
       return t('status.missingKey', { name: p.preset.label });
     case 'missing_base_url':
@@ -75,10 +82,10 @@ export function problemText(p: ProviderProblem): string {
  * The start screen's provider line. `canGenerate` is whether a provider was built from the settings
  * (ai.ts providerFromSettings, or the offline demo generator).
  */
-export function providerStatus(cfg: ProviderConfig, server: ServerState, canGenerate: boolean, opts: { gm?: boolean } = {}): ProviderStatusView {
+export function providerStatus(cfg: ProviderConfig, server: ServerState, canGenerate: boolean, opts: { gm?: boolean; accessCode?: string } = {}): ProviderStatusView {
   const gmOff = opts.gm === false ? t('status.gmOff') : undefined;
   if (cfg.preset === OFFLINE_PRESET) return { tone: 'demo', text: t('status.offlineGenerator'), ...(gmOff ? { detail: gmOff } : {}) };
-  const problem = providerProblem(cfg, server);
+  const problem = providerProblem(cfg, server, opts.accessCode);
   const name = getPreset(cfg.preset)?.label ?? (cfg.preset === 'custom' ? t('settings.custom') : cfg.preset);
   if (canGenerate) {
     const details = [
@@ -111,7 +118,9 @@ export function generationHint(err: unknown, cfg: ProviderConfig): string | null
     case 'timeout':
       return t('gen.hint.timeout');
     case 'auth':
-      return cfg.transport === 'backend' ? t('gen.hint.authServer') : t('gen.hint.authDirect');
+      if (cfg.transport !== 'backend') return t('gen.hint.authDirect');
+      // the server refused our access code (not its own provider key)
+      return /access code/i.test(`${(err as Error).message ?? ''} ${((err as Error).cause as Error | undefined)?.message ?? ''}`) ? t('gen.hint.serverCode') : t('gen.hint.authServer');
     case 'config':
       return cfg.transport === 'backend' ? t('gen.hint.configServer') : null;
     default:

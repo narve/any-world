@@ -17,6 +17,8 @@ export interface CreateProviderOptions extends HttpOptions {
   backendUrl?: string;
   /** backend transport: path of the proxy endpoint; default '/api/llm' */
   backendPath?: string;
+  /** backend transport: extra request headers, e.g. the server's access code (X-AnyWorld-Code) */
+  backendHeaders?: Record<string, string>;
   /** options for the "mock" preset */
   mock?: MockProviderOptions;
   /** Anthropic: force/disable the direct-browser-access header (default: detect) */
@@ -41,6 +43,7 @@ export class BackendProvider implements LLMProvider {
   private readonly explicitModel?: string;
   private readonly url: string;
   private readonly http: HttpOptions;
+  private readonly headers: Record<string, string>;
 
   constructor(preset: string, model: string | undefined, opts: CreateProviderOptions = {}) {
     this.preset = preset;
@@ -48,6 +51,7 @@ export class BackendProvider implements LLMProvider {
     this.model = model || getPreset(preset)?.defaultModel || preset;
     this.id = `backend:${preset}`;
     this.url = `${(opts.backendUrl ?? '').replace(/\/+$/, '')}${opts.backendPath ?? '/api/llm'}`;
+    this.headers = { ...(opts.backendHeaders ?? {}) };
     // the server already retries upstream, so by default the client does not retry (no double spending);
     // the wait outlasts the server's own upstream budget so its typed 504/429/... reaches us first
     this.http = { ...opts, maxRetries: opts.maxRetries ?? 0, timeoutMs: opts.timeoutMs ?? DEFAULT_BACKEND_TIMEOUT_MS };
@@ -59,7 +63,7 @@ export class BackendProvider implements LLMProvider {
     if (this.explicitModel) body.model = this.explicitModel;
     let json: unknown;
     try {
-      json = (await postJson({ url: this.url, headers: {}, body, provider: this.id, signal }, this.http)).json;
+      json = (await postJson({ url: this.url, headers: this.headers, body, provider: this.id, signal }, this.http)).json;
     } catch (e) {
       // server error bodies are {error:{kind,message,retryAfterMs}}; re-type them faithfully
       const status = (e as { status?: number }).status;
@@ -133,6 +137,21 @@ export interface ServerPresetInfo {
   models?: string[];
   structuredOutput: ProviderPreset['structuredOutput'];
   configured: boolean;
+}
+
+/** What the backend says about itself: its presets, and whether AI calls need the access code. */
+export interface ServerInfo {
+  presets: ServerPresetInfo[];
+  codeRequired: boolean;
+}
+
+export async function fetchServerInfo(backendUrl = '', opts: { fetch?: HttpOptions['fetch']; signal?: AbortSignal } = {}): Promise<ServerInfo> {
+  const f = opts.fetch ?? (globalThis.fetch?.bind(globalThis) as HttpOptions['fetch']);
+  if (!f) throw new LLMConfigError('No fetch implementation available');
+  const res = await f(`${backendUrl.replace(/\/+$/, '')}/api/presets`, { signal: opts.signal });
+  if (!res.ok) throw new LLMInvalidResponseError(`GET /api/presets failed with HTTP ${res.status}`);
+  const json = (await res.json()) as { presets?: ServerPresetInfo[]; codeRequired?: boolean };
+  return { presets: Array.isArray(json.presets) ? json.presets : [], codeRequired: json.codeRequired === true };
 }
 
 /** Ask the backend which presets it can serve. */

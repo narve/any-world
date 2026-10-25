@@ -1,6 +1,6 @@
 # Multiplayer edition — plan
 
-Status: plan, not started (2026-10-25). Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12
+Status: MP0 (hosting groundwork) done 2026-10-25, see [HOSTING.md](HOSTING.md); MP1–MP5 not started. Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12
 (sharing, multiplayer without waiting, chat). Target host: the owner's spare laptop (CachyOS) at home,
 reachable from the internet.
 

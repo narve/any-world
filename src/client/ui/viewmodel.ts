@@ -522,6 +522,8 @@ export interface Settings {
   quality?: 'auto' | 'low' | 'high';
   /** M4: the AI game master during play (false: offline/recorded GM only, no LLM calls in play); default true */
   gm?: boolean;
+  /** MP0: access code for a server that asks for one (ANYWORLD_HOST_CODE); sent as X-AnyWorld-Code */
+  accessCode?: string;
 }
 
 export interface SettingsView {
@@ -533,6 +535,8 @@ export interface SettingsView {
   offlineDemo?: boolean;
   /** M4: what the backend said: null = not asked/unreachable, else the presets it holds keys for */
   serverPresets?: string[] | null;
+  /** MP0: the backend asks for an access code before AI calls */
+  codeRequired?: boolean;
   /** M4: a run is on: the audio section shows the world's music panel (onMountMusic fills it) */
   music?: boolean;
 }

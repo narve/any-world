@@ -126,6 +126,7 @@ export function normalizeSettings(v: unknown, transport: 'direct' | 'backend', t
     reduceMotion: !!o.reduceMotion,
     quality: (QUALITIES as readonly string[]).includes(o.quality as string) ? (o.quality as Settings['quality']) : 'auto',
     gm: o.gm !== false,
+    ...(str(o.accessCode) ? { accessCode: (o.accessCode as string).trim().slice(0, 200) } : {}),
   };
 }
 

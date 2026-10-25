@@ -850,6 +850,23 @@ export class SettingsDialog {
           offline ? null : field(t('settings.model'), 'aw-set-model', modelInput),
           offline ? null : h('div', { class: 'aw-field' }, h('span', { class: 'aw-field-label' }, t('settings.transport')), transportRadios, serverLine),
           offline ? null : field(keyNeeded ? t('settings.apiKey') : t('settings.apiKeyOptional'), 'aw-set-key', keyRow, keyWarn),
+          !offline && backend
+            ? field(
+                t('settings.accessCode'),
+                'aw-set-code',
+                h('input', {
+                  id: 'aw-set-code',
+                  type: 'password',
+                  class: ['aw-input', v.codeRequired && !d.accessCode && 'is-needed'],
+                  autocomplete: 'off',
+                  spellcheck: 'false',
+                  maxlength: '200',
+                  value: d.accessCode ?? '',
+                  oninput: (e: Event) => this.set((s) => (s.accessCode = (e.target as HTMLInputElement).value.trim() || undefined)),
+                }),
+                t('settings.accessCodeHint'),
+              )
+            : null,
           check('aw-set-gm', d.gm !== false, t('settings.gm'), (on) => this.set((s) => (s.gm = on)), t('settings.gmHint')),
         ),
         h(

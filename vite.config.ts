@@ -19,6 +19,9 @@ export default defineConfig(({ mode }) => ({
   base: mode === 'static' ? './' : '/',
   define: {
     __ANYWORLD_DEFAULT_TRANSPORT__: JSON.stringify(mode === 'static' ? 'direct' : 'backend'),
+    // pages hosted apart from the server (e.g. GitHub Pages + a home server): the server's origin, which
+    // must list this page's origin in its ALLOWED_ORIGINS; '' = the page's own origin
+    __ANYWORLD_SERVER__: JSON.stringify((process.env.ANYWORLD_SERVER_URL ?? '').trim().replace(/\/+$/, '')),
   },
   build: {
     outDir: mode === 'static' ? '../../dist/static' : '../../dist/client',

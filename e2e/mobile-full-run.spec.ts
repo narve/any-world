@@ -17,7 +17,8 @@
 import { test, expect, devices, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
-const OUT = 'docs/progress/M5';
+// review screenshots go to test-results; SHOTS_TO_DOCS=1 writes the committed milestone copies
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M5' : 'test-results/shots/mobile-full-run';
 mkdirSync(OUT, { recursive: true });
 const BASE = process.env.MOBILE_BASE;
 const MAX = Number(process.env.FULLRUN_MAX ?? 3000);

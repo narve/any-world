@@ -1,5 +1,6 @@
 /** Modes (DESIGN §4.4): provider status line, failure hints, and the offline demo generator. */
 import { describe, it, expect } from 'vitest';
+import { normalizeSettings } from '../../src/client/storage';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseWorld } from '../../src/schema/refs';
@@ -128,5 +129,31 @@ describe('demoGenerator', () => {
     const res = await generateWorld({ provider: demoGenerator(choice.id, choice.world), prompt: 'teen drama', language: 'en', balance: false, yieldToUi: async () => {} });
     expect(res.world.meta.title).toBe(choice.world.meta.title);
     expect(res.attempts).toBe(1);
+  });
+});
+
+describe('server access code (MP0)', () => {
+  const cfg = { preset: 'anthropic', transport: 'backend' as const };
+  const server = { kind: 'ok' as const, configured: new Set(['anthropic', 'mock']), codeRequired: true };
+
+  it('a server that asks for a code is a problem until one is entered', () => {
+    expect(providerProblem(cfg, server)).toEqual({ kind: 'server_code' });
+    expect(providerProblem(cfg, server, '  ')).toEqual({ kind: 'server_code' });
+    expect(providerProblem(cfg, server, 'otter')).toBeNull();
+    expect(providerProblem(cfg, { ...server, codeRequired: false })).toBeNull();
+    expect(problemText({ kind: 'server_code' })).toMatch(/access code/);
+  });
+
+  it('a refused code gets its own hint, a refused server key keeps the old one', () => {
+    const codeErr = new WorldGenerationError('auth', 'HTTP 401: Wrong server access code');
+    const keyErr = new WorldGenerationError('auth', 'Upstream rejected the server’s credentials');
+    expect(generationHint(codeErr, cfg)).toMatch(/access code/);
+    expect(generationHint(keyErr, cfg)).not.toMatch(/access code/);
+  });
+
+  it('the code survives a save and reload, trimmed', () => {
+    const s = normalizeSettings({ provider: cfg, accessCode: '  otter  ' }, 'backend');
+    expect(s.accessCode).toBe('otter');
+    expect(normalizeSettings({ provider: cfg, accessCode: 42 }, 'backend').accessCode).toBeUndefined();
   });
 });
