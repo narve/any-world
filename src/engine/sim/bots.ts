@@ -7,6 +7,10 @@
  *              pursues the goal / transition requirements and moves on when the area is done
  *   cautious — avoids fights it doesn't need, sneaks, heals early, kites with ranged attacks
  *   talker   — talks to and persuades everyone it can (non-violent worlds); fights as a last resort
+ *   newbie   — a new player: follows the goal, fights only what comes close (and what the goal
+ *              needs), heals late (35%), never tries unknown items, walks straight at things
+ *              (no sneaking, kiting or detours around hostiles). The new-player gate
+ *              (balance/gate.ts) measures every demo world with it.
  *   random   — random legal actions (fuzzing), with a mild bias toward the way onward
  *
  * A bot keeps a small BotMemory (its own seeded RNG, targets it gave up on, stuck counters). The
@@ -39,6 +43,7 @@ import {
   known,
   knownHostiles,
   loseCounters,
+  lootCarriers,
   modValue,
   pathField,
   player,
@@ -51,7 +56,7 @@ import {
   weaponScore,
 } from './view';
 
-export const BOT_NAMES = ['explorer', 'cautious', 'talker', 'random'] as const;
+export const BOT_NAMES = ['explorer', 'cautious', 'talker', 'newbie', 'random'] as const;
 export type BotName = (typeof BOT_NAMES)[number];
 
 export interface BotMemory {
@@ -60,8 +65,11 @@ export interface BotMemory {
   areaIndex: number;
   /** decisions spent in the current area */
   areaDecisions: number;
-  /** tile indices (this area) the bot stopped trying to reach */
-  blacklist: Set<number>;
+  /**
+   * targets (this area) the bot stopped trying to reach: tile indices, or actor instance ids for
+   * actors (who move, so a tile index would forget them as soon as they shift)
+   */
+  blacklist: Set<TargetKey>;
   /** unknown item kinds already tried */
   tried: Set<string>;
   /** actor instance id → talk / persuade attempts */
@@ -69,7 +77,12 @@ export interface BotMemory {
   persuades: Map<string, number>;
   /** one-off uses this area ("reveal", "buff:<actorId>") */
   onceThisArea: Set<string>;
-  target: { idx: number; best: number; since: number } | null;
+  target: { key: TargetKey; best: number; since: number } | null;
+  /**
+   * per-target progress (this area), kept while the bot flips between targets: a bot that keeps
+   * alternating between two targets without getting closer to either gives up on them in turn
+   */
+  progress: Map<TargetKey, TargetProgress>;
   lastAction: PlayerAction | null;
   /** set by the runner: refusal reason of the last action (null = accepted) */
   lastInvalid: string | null;
@@ -85,6 +98,23 @@ export interface BotMemory {
   trail: number[];
 }
 
+/** what a navigation target is keyed by: a tile index, or an actor instance id */
+export type TargetKey = number | string;
+
+export interface TargetProgress {
+  /** best path cost to the target seen while pursuing it */
+  best: number;
+  /** decision number `best` was last beaten (or the record started) */
+  since: number;
+  /** decision number it was last the chosen target */
+  last: number;
+}
+
+/** decisions a target may be pursued without getting any closer before the bot gives up on it */
+const TARGET_PATIENCE = 25;
+/** a target not pursued for this many decisions starts over (it was set aside, not flip-flopped) */
+const TARGET_FORGET = 10;
+
 export function newMemory(seed: number): BotMemory {
   return {
     rng: createRng((seed * 2654435761) >>> 0 || 1),
@@ -97,6 +127,7 @@ export function newMemory(seed: number): BotMemory {
     persuades: new Map(),
     onceThisArea: new Set(),
     target: null,
+    progress: new Map(),
     lastAction: null,
     lastInvalid: null,
     lastSeenCount: 0,
@@ -111,21 +142,32 @@ export function newMemory(seed: number): BotMemory {
 
 interface Persona {
   name: BotName;
-  /** eager: hunts visible hostiles; avoid: only fights what blocks it or is required; talk: persuades first */
-  fight: 'eager' | 'avoid' | 'talk';
+  /**
+   * eager: hunts visible hostiles; avoid: only fights what blocks it or is required; talk:
+   * persuades first; defend: fights what comes within DEFEND_RANGE or is required, never detours
+   */
+  fight: 'eager' | 'avoid' | 'talk' | 'defend';
   /** heal below this hp fraction */
   healAt: number;
+  /** heal below this hp fraction when no hostile is in view (topping up between fights) */
+  calmHealAt: number;
   sneak: boolean;
   kite: boolean;
   /** explore the whole area before moving on (else leave once the way is open and a bit explored) */
   exploreFully: boolean;
   talkAll: boolean;
+  /** tries unknown items (when calm, and as a last resort when nearly dead) */
+  tryUnknown: boolean;
 }
 
+/** a defending bot fights hostiles this close (Chebyshev tiles) and leaves the rest alone */
+export const DEFEND_RANGE = 3;
+
 const PERSONAS: Record<Exclude<BotName, 'random'>, Persona> = {
-  explorer: { name: 'explorer', fight: 'eager', healAt: 0.4, sneak: false, kite: false, exploreFully: true, talkAll: false },
-  cautious: { name: 'cautious', fight: 'avoid', healAt: 0.55, sneak: true, kite: true, exploreFully: false, talkAll: false },
-  talker: { name: 'talker', fight: 'talk', healAt: 0.5, sneak: false, kite: false, exploreFully: true, talkAll: true },
+  explorer: { name: 'explorer', calmHealAt: 0.5, fight: 'eager', healAt: 0.4, sneak: false, kite: false, exploreFully: true, talkAll: false, tryUnknown: true },
+  cautious: { name: 'cautious', calmHealAt: 0.5, fight: 'avoid', healAt: 0.55, sneak: true, kite: true, exploreFully: false, talkAll: false, tryUnknown: true },
+  talker: { name: 'talker', calmHealAt: 0.5, fight: 'talk', healAt: 0.5, sneak: false, kite: false, exploreFully: true, talkAll: true, tryUnknown: true },
+  newbie: { name: 'newbie', calmHealAt: 0.35, fight: 'defend', healAt: 0.35, sneak: false, kite: false, exploreFully: false, talkAll: false, tryUnknown: false },
 };
 
 /** decisions per area before a bot stops exploring and heads for the way onward */
@@ -193,6 +235,7 @@ function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem
     mem.blacklist.clear();
     mem.onceThisArea.clear();
     mem.target = null;
+    mem.progress.clear();
     mem.lastProgressAt = mem.decisions;
     mem.wanderUntil = 0;
   }
@@ -204,7 +247,7 @@ function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem
   }
   // a refused move: give up on the current target
   if (mem.lastInvalid && mem.lastAction?.type === 'move' && mem.target) {
-    mem.blacklist.add(mem.target.idx);
+    mem.blacklist.add(mem.target.key);
     mem.target = null;
   }
   // pacing between two or three tiles without seeing anything new: drop the target, wander a bit
@@ -212,7 +255,7 @@ function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem
   mem.trail.push(here.y * state.area.map.width + here.x);
   if (mem.trail.length > 16) mem.trail.shift();
   if (mem.trail.length === 16 && new Set(mem.trail).size <= 3 && mem.decisions - mem.lastProgressAt > 16 && mem.decisions >= mem.wanderUntil) {
-    if (mem.target) mem.blacklist.add(mem.target.idx);
+    if (mem.target) mem.blacklist.add(mem.target.key);
     mem.target = null;
     mem.trail = [];
     mem.wanderUntil = mem.decisions + 6;
@@ -220,7 +263,10 @@ function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem
 
   const objectives = currentObjectives(ctx);
   const all = [...objectives.goal, ...objectives.lock];
-  const t: Turn = { ctx, legal, persona: restrained(ctx, persona), mem, world, objectives, wantItems: wantedItems(all), wantDefeat: wantedDefeats(all) };
+  const wantItems = wantedItems(all);
+  // a needed item that only a hostile carries: defeating it is part of the objective
+  const wantDefeat = new Set([...wantedDefeats(all), ...lootCarriers(ctx, wantItems)]);
+  const t: Turn = { ctx, legal, persona: restrained(ctx, persona), mem, world, objectives, wantItems, wantDefeat };
 
   const act =
     survive(t) ??
@@ -414,7 +460,7 @@ function survive(t: Turn): PlayerAction | null {
   const p = player(ctx);
   const frac = hpFrac(ctx);
   const hostiles = visibleHostiles(ctx);
-  const healAt = hostiles.length ? t.persona.healAt : Math.max(t.persona.healAt, 0.5);
+  const healAt = hostiles.length ? t.persona.healAt : Math.max(t.persona.healAt, t.persona.calmHealAt);
   if (frac < healAt) {
     const missing = maxHp(ctx, p) - p.hp;
     const heals = knownUses(t)
@@ -427,7 +473,7 @@ function survive(t: Turn): PlayerAction | null {
       return fit.a;
     }
     // desperate: try an unknown item
-    if (frac < 0.25) {
+    if (frac < 0.25 && t.persona.tryUnknown) {
       const unk = useActions(t).find((a) => {
         const def = defAt(t, a.slot);
         return def && known(ctx, def.id) === 'unknown' && def.category === 'consumable';
@@ -540,6 +586,7 @@ function sneak(t: Turn): PlayerAction | null {
 
 function tryUnknown(t: Turn): PlayerAction | null {
   const { ctx } = t;
+  if (!t.persona.tryUnknown) return null;
   if (visibleHostiles(ctx).length || hpFrac(ctx) < 0.7) return null;
   for (const a of useActions(t)) {
     const def = defAt(t, a.slot);
@@ -732,12 +779,16 @@ function fight(t: Turn): PlayerAction | null {
   // ranged attack on the nearest visible hostile
   for (const h of hostiles) {
     if (persona.fight === 'avoid' && !t.wantDefeat.has(h.defId) && cheb(h.pos, p.pos) > 3) continue;
+    if (persona.fight === 'defend' && !t.wantDefeat.has(h.defId) && cheb(h.pos, p.pos) > DEFEND_RANGE) continue;
     const atk = t.legal.find((a) => a.type === 'attack' && a.targetId === h.id);
     if (atk) return atk;
   }
   // close in: eager bots chase what they see; the others only what they must defeat
   const chase = hostiles.find((h) => {
+    if (t.mem.blacklist.has(h.id)) return false;
     if (t.wantDefeat.has(h.defId)) return hpFrac(ctx) > 0.35 || heldHeals(ctx) === 0;
+    // a new player turns on what came close (a shooter included) but does not go hunting
+    if (persona.fight === 'defend') return cheb(h.pos, p.pos) <= DEFEND_RANGE;
     if (persona.fight !== 'eager') return false;
     const def = ctx.ix.actors.get(h.defId);
     if (def?.unique && hpFrac(ctx) < 0.6 && !t.wantDefeat.has(h.defId)) return false;
@@ -746,14 +797,20 @@ function fight(t: Turn): PlayerAction | null {
   if (chase) {
     const field = pathField(ctx);
     const W = ctx.s.area.map.width;
-    const step = firstStep(field, chase.pos.y * W + chase.pos.x, p.pos.y * W + p.pos.x);
-    if (step >= 0) {
+    const goal = chase.pos.y * W + chase.pos.x;
+    const step = firstStep(field, goal, p.pos.y * W + p.pos.x);
+    // a chase that gets no closer (the quarry drops in and out of view behind a doorway, or is
+    // out of reach) is given up like any other target, or the bot can pace between two tiles forever
+    if (step >= 0 && !trackProgress(t.mem, chase.id, field.dist[goal])) {
+      t.mem.blacklist.add(chase.id);
+      t.mem.target = null;
+    } else if (step >= 0) {
       const mv = moveAction(t, dirTo(p.pos, idxToPos(step, W)));
       if (mv) return mv;
     }
   }
   // cautious bots slip away from approaching hostiles
-  if (persona.fight !== 'eager' && hostiles.some((h) => cheb(h.pos, p.pos) <= 3) && hpFrac(ctx) < 0.6) {
+  if ((persona.fight === 'avoid' || persona.fight === 'talk') && hostiles.some((h) => cheb(h.pos, p.pos) <= 3) && hpFrac(ctx) < 0.6) {
     const away = stepAway(t, hostiles.map((h) => h.pos));
     if (away) return away;
   }
@@ -808,6 +865,8 @@ function readyToLeave(t: Turn): boolean {
 interface Candidate {
   /** tile to walk to (or stand next to, for `adjacentOk`) */
   idx: number;
+  /** progress / blacklist key: the actor id for actors (they move), else the tile index */
+  key: TargetKey;
   bonus: number;
   /** act when adjacent (talk, interact) instead of stepping onto it */
   onArrive?: PlayerAction;
@@ -821,7 +880,8 @@ function navigate(t: Turn): PlayerAction | null {
   const W = map.width;
   const here = p.pos.y * W + p.pos.x;
   const hostiles = knownHostiles(ctx);
-  const avoid = t.persona.fight !== 'eager';
+  // careful bots path around hostiles; explorers and new players walk straight at things
+  const avoid = t.persona.fight === 'avoid' || t.persona.fight === 'talk';
   const field = pathField(ctx, avoid && hostiles.length ? { extraCost: (i) => nearHostileCost(i, W, hostiles) } : {});
   const cands: Candidate[] = [];
   const seen = ctx.s.area.seen;
@@ -833,20 +893,20 @@ function navigate(t: Turn): PlayerAction | null {
     if (!seen[i] || mem.blacklist.has(i)) continue;
     const wanted = t.wantItems.has(fi.item.defId);
     if (!invSpace && !wanted) continue;
-    cands.push({ idx: i, bonus: wanted ? 60 : 10 });
+    cands.push({ idx: i, key: i, bonus: wanted ? 60 : 10 });
   }
   // actors to defeat
   for (const a of hostiles) {
     const i = a.pos.y * W + a.pos.x;
-    if (mem.blacklist.has(i)) continue;
-    if (t.wantDefeat.has(a.defId) && (hpFrac(ctx) > 0.45 || heldHeals(ctx) === 0)) cands.push({ idx: i, bonus: 45 });
+    if (mem.blacklist.has(a.id)) continue;
+    if (t.wantDefeat.has(a.defId) && (hpFrac(ctx) > 0.45 || heldHeals(ctx) === 0)) cands.push({ idx: i, key: a.id, bonus: 45 });
   }
   // npcs to talk to
   if (ctx.world.verbs.talk) {
     for (const a of ctx.s.area.actors) {
       if (a.hp <= 0 || a.id === ctx.s.player.actorId || !isNpc(ctx, a) || side(ctx, a) === 'H') continue;
       const i = a.pos.y * W + a.pos.x;
-      if (seen[i] !== 2 || mem.blacklist.has(i)) continue;
+      if (seen[i] !== 2 || mem.blacklist.has(a.id)) continue;
       const talks = mem.talks.get(a.id) ?? 0;
       const def = ctx.ix.actors.get(a.defId)!;
       const used = new Set(a.npcUsed ?? []);
@@ -855,7 +915,7 @@ function navigate(t: Turn): PlayerAction | null {
       const again = t.persona.talkAll && talks < 3;
       if (!(healer || first || again)) continue;
       const talk = t.legal.find((x) => x.type === 'talk' && x.targetId === a.id);
-      cands.push({ idx: i, bonus: healer ? 25 : first ? 8 : 3, onArrive: talk ?? { type: 'talk', targetId: a.id } });
+      cands.push({ idx: i, key: a.id, bonus: healer ? 25 : first ? 8 : 3, onArrive: talk ?? { type: 'talk', targetId: a.id } });
     }
   }
   // interactable terrain (each tile works once)
@@ -866,17 +926,17 @@ function navigate(t: Turn): PlayerAction | null {
     if (!td?.interact) continue;
     if (hpFrac(ctx) < 0.5) continue;
     const pos = idxToPos(i, W);
-    cands.push({ idx: i, bonus: 5, onArrive: { type: 'interact', pos } });
+    cands.push({ idx: i, key: i, bonus: 5, onArrive: { type: 'interact', pos } });
   }
   // frontier
   const frontier = frontierTiles(ctx);
   const exitKnown = Number.isFinite(field.dist[map.exit.y * W + map.exit.x]);
   const exploring = t.persona.exploreFully || !lockMet(t) || !exitKnown || t.mem.areaDecisions < 80;
-  if (exploring) for (const i of frontier) if (!mem.blacklist.has(i)) cands.push({ idx: i, bonus: 0 });
+  if (exploring) for (const i of frontier) if (!mem.blacklist.has(i)) cands.push({ idx: i, key: i, bonus: 0 });
   // the way onward: when the area is done (or the per-area budget is spent)
   const exitIdx = map.exit.y * W + map.exit.x;
   const canLeave = lockMet(t) && !t.objectives.finalArea;
-  if (canLeave && (mem.areaDecisions > AREA_DECISION_CAP || readyToLeave(t))) cands.push({ idx: exitIdx, bonus: 100 });
+  if (canLeave && (mem.areaDecisions > AREA_DECISION_CAP || readyToLeave(t))) cands.push({ idx: exitIdx, key: exitIdx, bonus: 100 });
 
   // pick the best reachable candidate (adjacency targets: closest neighbour)
   let best: { c: Candidate; cost: number; goal: number; score: number } | null = null;
@@ -890,12 +950,13 @@ function navigate(t: Turn): PlayerAction | null {
         const ready = t.legal.find((x) => JSON.stringify(x) === JSON.stringify(c.onArrive));
         if (ready) {
           if (c.onArrive.type === 'talk') mem.talks.set(c.onArrive.targetId, (mem.talks.get(c.onArrive.targetId) ?? 0) + 1);
-          if (c.onArrive.type === 'interact') mem.blacklist.add(c.idx);
+          if (c.onArrive.type === 'interact') mem.blacklist.add(c.key);
           mem.target = null;
           return ready;
         }
-        if (c.onArrive.type === 'interact' && cheb(pos, p.pos) <= 1) {
-          mem.blacklist.add(c.idx);
+        // adjacent and still not possible (a talk needs no line of sight up close): give up on it
+        if (cheb(pos, p.pos) <= 1) {
+          mem.blacklist.add(c.key);
           continue;
         }
       }
@@ -916,29 +977,50 @@ function navigate(t: Turn): PlayerAction | null {
     }
     if (!Number.isFinite(cost)) continue;
     // hysteresis: the current target keeps a small edge so two targets can't flip-flop
-    const score = cost - c.bonus - (mem.target?.idx === c.idx ? 3 : 0);
+    const score = cost - c.bonus - (mem.target?.key === c.key ? 3 : 0);
     if (!best || score < best.score) best = { c, cost, goal, score };
   }
-  if (!best && canLeave && Number.isFinite(field.dist[exitIdx])) best = { c: { idx: exitIdx, bonus: 0 }, cost: field.dist[exitIdx], goal: exitIdx, score: 0 };
-  if (!best && canLeave && exitIdx === here) best = { c: { idx: exitIdx, bonus: 0 }, cost: 0, goal: exitIdx, score: 0 };
+  if (!best && canLeave && Number.isFinite(field.dist[exitIdx])) best = { c: { idx: exitIdx, key: exitIdx, bonus: 0 }, cost: field.dist[exitIdx], goal: exitIdx, score: 0 };
+  if (!best && canLeave && exitIdx === here) best = { c: { idx: exitIdx, key: exitIdx, bonus: 0 }, cost: 0, goal: exitIdx, score: 0 };
   if (!best) return null;
   if (best.goal === here) {
     if (best.c.idx === exitIdx) return t.legal.find((a) => a.type === 'transition') ?? null;
     // standing on the goal tile: nothing more to do there
-    mem.blacklist.add(best.c.idx);
+    mem.blacklist.add(best.c.key);
     return null;
   }
-  // progress check on the current target
-  if (!mem.target || mem.target.idx !== best.c.idx) mem.target = { idx: best.c.idx, best: best.cost, since: mem.decisions };
-  else if (best.cost < mem.target.best) {
-    mem.target.best = best.cost;
-    mem.target.since = mem.decisions;
-  } else if (mem.decisions - mem.target.since > 25) {
-    mem.blacklist.add(best.c.idx);
+  if (!trackProgress(mem, best.c.key, best.cost)) {
+    mem.blacklist.add(best.c.key);
     mem.target = null;
     return null;
   }
   return stepTowards(t, field, best.goal, here);
+}
+
+/**
+ * Progress check on the chosen target; false = no closer for TARGET_PATIENCE decisions (give up).
+ * The clock runs in decisions (resting or fighting in between counts, as it always has). The
+ * record outlives target switches: two targets whose costs see-saw (hostiles moving near one of
+ * them shift the path costs) would otherwise reset each other forever and circle the bot. Only a
+ * target that another target replaced for more than TARGET_FORGET decisions starts over.
+ */
+export function trackProgress(mem: BotMemory, key: TargetKey, cost: number): boolean {
+  let rec = mem.progress.get(key);
+  const switched = mem.target?.key !== key;
+  if (!rec || (switched && mem.decisions - rec.last > TARGET_FORGET)) {
+    rec = { best: cost, since: mem.decisions, last: mem.decisions };
+    mem.progress.set(key, rec);
+  } else if (cost < rec.best) {
+    rec.best = cost;
+    rec.since = mem.decisions;
+  }
+  rec.last = mem.decisions;
+  mem.target = { key, best: rec.best, since: rec.since };
+  if (mem.decisions - rec.since > TARGET_PATIENCE) {
+    mem.progress.delete(key);
+    return false;
+  }
+  return true;
 }
 
 function nearHostileCost(i: number, W: number, hostiles: { pos: Pos }[]): number {

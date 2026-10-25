@@ -1,0 +1,613 @@
+{
+  "safeAreaEmulated": true,
+  "placed": {
+    "id": "a8",
+    "pos": {
+      "x": 40,
+      "y": 21
+    }
+  },
+  "samples": [
+    {
+      "t": 0,
+      "cardTop": 250,
+      "cardBottom": 687,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 600,
+          "bottom": 644
+        },
+        {
+          "lbl": "Leave",
+          "top": 600,
+          "bottom": 644
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 111,
+      "cardTop": 250,
+      "cardBottom": 687,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 600,
+          "bottom": 644
+        },
+        {
+          "lbl": "Leave",
+          "top": 600,
+          "bottom": 644
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 230,
+      "cardTop": 250,
+      "cardBottom": 687,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 600,
+          "bottom": 644
+        },
+        {
+          "lbl": "Leave",
+          "top": 600,
+          "bottom": 644
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 354,
+      "cardTop": 250,
+      "cardBottom": 687,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 600,
+          "bottom": 644
+        },
+        {
+          "lbl": "Leave",
+          "top": 600,
+          "bottom": 644
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 484,
+      "cardTop": 250,
+      "cardBottom": 687,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 600,
+          "bottom": 644
+        },
+        {
+          "lbl": "Leave",
+          "top": 600,
+          "bottom": 644
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 2824,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 2938,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 3050,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 3176,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 3324,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 3441,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 3550,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 3663,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 3787,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 3904,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 4035,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 4162,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 4299,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 4413,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 4533,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 4663,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 4777,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 4909,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 5031,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 5178,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 5314,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 5444,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 5559,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 5668,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    },
+    {
+      "t": 5802,
+      "cardTop": 222,
+      "cardBottom": 659,
+      "cardH": 437,
+      "transform": "none",
+      "btns": [
+        {
+          "lbl": "Persuade",
+          "top": 572,
+          "bottom": 616
+        },
+        {
+          "lbl": "Leave",
+          "top": 572,
+          "bottom": 616
+        }
+      ],
+      "H": 659
+    }
+  ],
+  "settledUnderHomeBar": []
+}

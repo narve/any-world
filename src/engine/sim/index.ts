@@ -1,5 +1,5 @@
 /** Simulation: bots, the game runner and batch summaries (see tools/sim.ts). */
-export { BOT_NAMES, type Bot, type BotName, type BotMemory, botByName, newMemory, botPower } from './bots';
+export { BOT_NAMES, DEFEND_RANGE, type Bot, type BotName, type BotMemory, botByName, newMemory, botPower } from './bots';
 export {
   type SimOutcome,
   type RunOptions,

@@ -32,7 +32,9 @@ function conditionList(lines: ConditionLineView[], cls: string): HTMLElement {
           class: ['aw-cond', l.group && 'is-group', l.done === true && 'is-done', l.done === false && 'is-open'],
           style: { '--depth': l.depth },
         },
-        l.group ? null : h('span', { class: 'aw-cond-mark', 'aria-hidden': 'true' }, l.done === true ? '✓' : '•'),
+        // a nested group ("All of these:" as one alternative of "One of these:") is an entry of its
+        // parent list like any other line, so it gets its bullet (issues/M5-nested-goal-group-bullet.md)
+        l.group && l.depth === 0 ? null : h('span', { class: 'aw-cond-mark', 'aria-hidden': 'true' }, l.done === true ? '✓' : '•'),
         h('span', { class: 'aw-cond-text' }, l.text, l.done === true ? h('span', { class: 'aw-sr' }, ` (${t('goal.doneSr')})`) : null),
         l.now ? h('span', { class: 'aw-cond-now' }, l.now) : null,
       ),
@@ -218,7 +220,20 @@ export class OnboardingCard {
         'div',
         { class: 'aw-onboard-body' },
         h('section', null, h('h3', null, t('onboard.win')), h('p', null, v.goal), winLines.length > 1 ? conditionList(winLines, 'is-win') : null),
-        h('section', null, h('h3', null, t('onboard.conflict')), h('ul', { class: 'aw-onboard-list' }, v.conflict.map((c) => h('li', null, c)))),
+        h(
+          'section',
+          null,
+          h('h3', null, t('onboard.conflict')),
+          h(
+            'ul',
+            { class: 'aw-onboard-list' },
+            v.conflict.map((c, i) => {
+              // the verb's key on a key cap, for keyboard and mouse players (touch uses the buttons)
+              const k = mode !== 'touch' ? v.conflictKeys?.[i] : null;
+              return h('li', null, k ? h('kbd', { class: 'aw-key aw-onboard-verbkey' }, keyCap(k)) : null, k ? ' ' : null, c);
+            }),
+          ),
+        ),
         h(
           'section',
           null,

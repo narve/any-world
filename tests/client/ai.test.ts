@@ -134,16 +134,24 @@ describe('NPC voice in the session', () => {
     expect(s.viewModel().game!.dialogue!.reply).toBe('Rain is a debt, stranger.');
     expect(s.state.pendingChoice!.prompt).toBe(engineLine); // the engine state is untouched
 
-    // answering ends this (engine) conversation: no voice is wanted and a late answer is dropped
+    // "Ask what they know": the conversation stays open with the engine's answer as the line, and
+    // the next turn asks the voice with the player's question; a late answer to the old turn is dropped
+    const asked = s.viewModel().game!.dialogue!.options[0];
     s.dialogueReply(0);
-    expect(s.state.pendingChoice).toBeNull();
-    expect(s.takeVoiceRequest()).toBeNull();
+    expect(s.state.pendingChoice?.kind).toBe('dialogue');
+    const next = s.takeVoiceRequest();
+    expect(next!.token).toBeGreaterThan(req!.token);
+    expect(next!.playerLine).toBe(asked);
     expect(s.setVoice(req!.token, { reply: 'stale', actions: [] }).changed).toBe(false);
+    expect(s.voiceLine()).not.toBe('stale');
+    expect(s.voiceLine()).toBe(s.state.log[s.state.log.length - 1].text);
+    // leaving ends it; talking again is a new conversation and a new turn
+    s.dialogueLeave();
+    expect(s.state.pendingChoice).toBeNull();
     expect(s.voiceLine()).toBeNull();
-    // talking again is a new conversation and a new turn
     s.intent({ type: 'talk' });
     const again = s.takeVoiceRequest();
-    expect(again!.token).toBeGreaterThan(req!.token);
+    expect(again!.token).toBeGreaterThan(next!.token);
     expect(again!.history).toEqual([]);
     expect(s.viewModel().game!.dialogue!.reply).toBe(s.state.pendingChoice!.prompt);
   });

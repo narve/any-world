@@ -367,14 +367,37 @@ export interface Rng {
   state(): number[];
 }
 
+/**
+ * One item effect line as a message-catalog key (`item.fx.*`, English templates in
+ * engine/log-keys.ts ITEM_FX_KEYS) with params, like LogMessage.key/params.
+ */
+export interface ItemEffectLine {
+  key: string;
+  /** numbers, or strings already in the world's language (names, vocabulary words, dice like "2d4") */
+  params: Record<string, string | number>;
+  /** the English text of the line (the fallback when no catalog has the key) */
+  text: string;
+  /**
+   * params that are themselves catalog lines (a trigger's event and effects, a scaled amount, the
+   * "allies" suffix of a targeting line). A client renders each through its catalog (a list joined
+   * with ", ") and uses the result instead of params[name], which holds the English rendering.
+   */
+  sub?: Record<string, ItemEffectLine | ItemEffectLine[]>;
+}
+
 /** UI-facing descriptions that respect player knowledge */
 export interface ItemView {
   name: string;
   kind: string;
   description: string;
   knowledge: Knowledge;
-  /** human-readable effect lines, only when known ("Restores 20 Health") */
+  /** human-readable effect lines, only when known ("Restores 20 Health"): the English fallback */
   effectLines: string[];
+  /**
+   * i18n (DESIGN §7b): the same lines as catalog key + params, one per effectLines entry in the same
+   * order (effects[i].text === effectLines[i]). The client renders these through its catalog.
+   */
+  effects?: ItemEffectLine[];
   vagueText?: string;
   notes: string[];
   count: number;

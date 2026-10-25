@@ -1,0 +1,172 @@
+{
+  "id": "iphone15-landscape",
+  "world": "cyberpunk-rooftop-yams",
+  "device": "iPhone 15 landscape",
+  "safeAreaEmulated": true,
+  "layout": "phone-landscape",
+  "small": [],
+  "overlaps": [],
+  "offscreen": [],
+  "inSafeArea": [],
+  "thumb": {
+    "wait": {
+      "cx": 578,
+      "cy": 195,
+      "fromBottomPct": 43
+    },
+    "slot1": {
+      "cx": 508,
+      "cy": 249,
+      "fromBottomPct": 27
+    },
+    "bag": {
+      "cx": 452,
+      "cy": 200,
+      "fromBottomPct": 42
+    },
+    "rotate": {
+      "cx": 347,
+      "cy": 300,
+      "fromBottomPct": 13
+    },
+    "goal": {
+      "cx": 162,
+      "cy": 97,
+      "fromBottomPct": 72
+    },
+    "log": {
+      "cx": 162,
+      "cy": 283,
+      "fromBottomPct": 17
+    },
+    "rulesBadge": {
+      "cx": 454,
+      "cy": 28,
+      "fromBottomPct": 92
+    },
+    "hud": {
+      "cx": 162,
+      "cy": 38,
+      "fromBottomPct": 89
+    }
+  },
+  "stats": [
+    {
+      "where": "start",
+      "drawCalls": 38,
+      "triangles": 105208,
+      "fps": 11,
+      "geometries": 31,
+      "textures": 5,
+      "programs": 16,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1101x514"
+    },
+    {
+      "where": "second run",
+      "drawCalls": 37,
+      "triangles": 29532,
+      "fps": 10.6,
+      "geometries": 38,
+      "textures": 9,
+      "programs": 20,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1101x514"
+    }
+  ],
+  "pathWalks": [
+    {
+      "from": {
+        "x": 17,
+        "y": 8
+      },
+      "dest": {
+        "x": 9,
+        "y": 10
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    }
+  ],
+  "inspects": [
+    {
+      "what": "player",
+      "ok": true,
+      "text": "Yemi Adebayo You Harmless COOL 28 / 28 Nineteen, sunburnt, owner of a jailbroken deck held together with electrical tape and a sticker of a "
+    },
+    {
+      "what": "actor",
+      "ok": true,
+      "text": "Aunty Bisi, Co-op Treasurer Friendly Talk COOL 20 / 20 Runs the co-op's cowrie ledger from a shaded plastic chair and an ancient solar fridg"
+    }
+  ],
+  "contextLoss": {},
+  "emptyBand": [
+    33
+  ],
+  "hiddenActors": [
+    "turn 0: hostile:mist-drone under aw-ctx",
+    "turn 32: hostile:logo-weevil under aw-ctx",
+    "turn 43: hostile:process-server under aw-strip"
+  ],
+  "clipped": [
+    "start: aw-strip-area \"ROOFTOP 1 / 4\nIdumota Rooftop Allotment\" 75>37 (clip/normal)",
+    "second run: aw-strip-area \"ZONE 1 / 4\nThe Rhizosphere\" 58>37 (clip/normal)"
+  ],
+  "sheets": [],
+  "thumbs": {
+    "start": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    },
+    "second run": {
+      "slots": 8,
+      "filled": 3,
+      "withImg": 3
+    }
+  },
+  "secondRun": {
+    "layerAfterNewWorld": "start",
+    "startScroll": [],
+    "world": "microscopic-root-nodule",
+    "firstLayer": "narration",
+    "turn": 0,
+    "onboardingBeforeMove": true
+  },
+  "turnsPlayed": 70,
+  "areasReached": 0,
+  "status": "lost",
+  "errors": [],
+  "notes": [
+    "start screen scrolled before the first run: [\"aw-screen 1598\"]",
+    "first run opened on layer narration",
+    "env(safe-area-inset-*) seen by CSS: 0px 21px 59px 59px",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"sw\"} from {\"x\":6,\"y\":12} turn 8 -> {\"me\":{\"x\":6,\"y\":12},\"turn\":8,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":5,\"y\":13}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":5,\"y\":13}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"se\"} from {\"x\":6,\"y\":15} turn 12 -> {\"me\":{\"x\":6,\"y\":15},\"turn\":12,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":7,\"y\":16}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":7,\"y\":16}}",
+    "aim tap did not fire (slot 4, tile hit true): {\"aim\":null,\"pick\":{\"x\":10,\"y\":5},\"toasts\":[\"Target out of range\"],\"me\":{\"x\":15,\"y\":14},\"target\":{\"x\":16,\"y\":9}}",
+    "noWay toast after bot action {\"type\":\"attack\",\"targetId\":\"a11\"} from {\"x\":17,\"y\":8} turn 64 -> {\"me\":{\"x\":17,\"y\":8},\"turn\":64,\"L\":\"game\",\"legalMove\":false,\"seen\":2,\"path\":[],\"actorThere\":true,\"actor\":{\"def\":\"player\",\"faction\":\"player\",\"legal\":[],\"meaning\":{\"kind\":\"travel\"}},\"pickAtTile\":{\"x\":17,\"y\":8}}",
+    "goal sheet found open at turn 67; last test tap {\"kind\":\"attack\",\"at\":[373,102],\"turn\":65}; goal pointerdowns [{\"x\":217,\"y\":149,\"goal\":[101,147],\"turn\":67}]",
+    "aim tap did not fire (slot 4, tile hit true): {\"aim\":null,\"pick\":{\"x\":12,\"y\":7},\"toasts\":[\"No valid target there\"],\"me\":{\"x\":17,\"y\":8},\"target\":{\"x\":17,\"y\":7}}",
+    "aim tap did not fire (slot 4, tile hit true): {\"aim\":null,\"pick\":{\"x\":12,\"y\":7},\"toasts\":[\"No valid target there ×3\"],\"me\":{\"x\":17,\"y\":8},\"target\":{\"x\":17,\"y\":7}}",
+    "aim tap did not fire (slot 4, tile hit true): {\"aim\":null,\"pick\":{\"x\":12,\"y\":7},\"toasts\":[\"No valid target there ×5\"],\"me\":{\"x\":17,\"y\":8},\"target\":{\"x\":17,\"y\":7}}",
+    "aim tap did not fire (slot 4, tile hit true): {\"aim\":null,\"pick\":{\"x\":12,\"y\":7},\"toasts\":[\"No valid target there ×7\"],\"me\":{\"x\":17,\"y\":8},\"target\":{\"x\":17,\"y\":7}}",
+    "aim tap did not fire (slot 4, tile hit true): {\"aim\":null,\"pick\":{\"x\":12,\"y\":7},\"toasts\":[\"No valid target there ×9\"],\"me\":{\"x\":17,\"y\":8},\"target\":{\"x\":17,\"y\":7}}",
+    "stalled at turn 68 on bot action {\"type\":\"use\",\"slot\":4,\"target\":{\"x\":17,\"y\":7}} from {\"x\":17,\"y\":8}",
+    "stalled at turn 69 on bot action {\"type\":\"use\",\"slot\":4,\"target\":{\"x\":17,\"y\":7}} from {\"x\":17,\"y\":8}",
+    "aims cancelled after a tap found no valid target: 13",
+    "ctx buttons covered by a panel: [] (0 total)",
+    "end buttons: [{\"t\":\"New world\",\"h\":45,\"w\":109,\"b\":536.21875},{\"t\":\"Same world again\",\"h\":45,\"w\":159,\"b\":536.21875}]"
+  ]
+}

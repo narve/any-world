@@ -31,7 +31,7 @@ import { activeRuleEntries, estimateRuleImpact, gmRuleHarm } from './rules';
 import { difficultyOf, profileOf } from './difficulty';
 import { evalCondition } from './conditions';
 import { progressRefs } from './goals';
-import { cheb } from './util';
+import { cheb, own } from './util';
 
 export const GM_CONTEXT_VERSION = 1;
 /** default token budget of the summary */
@@ -234,9 +234,9 @@ function visibleOf(ctx: Ctx): GmContextActor[] {
 function progressOf(ctx: Ctx): GmContextSummary['progress'] {
   const refs = progressRefs(ctx);
   const out: GmContextSummary['progress'] = {};
-  if (refs.flags.size) out.flags = Object.fromEntries([...refs.flags].sort().map((f) => [f, ctx.s.flags[f] ?? false]));
-  if (refs.counters.size) out.counters = Object.fromEntries([...refs.counters].sort().map((c) => [c, ctx.s.counters[c] ?? 0]));
-  if (refs.defeats.size) out.defeats = Object.fromEntries([...refs.defeats].sort(([a], [b]) => a.localeCompare(b)).map(([id, n]) => [id, `${ctx.s.defeated[id] ?? 0}/${n}`]));
+  if (refs.flags.size) out.flags = Object.fromEntries([...refs.flags].sort().map((f) => [f, own(ctx.s.flags, f) ?? false]));
+  if (refs.counters.size) out.counters = Object.fromEntries([...refs.counters].sort().map((c) => [c, own(ctx.s.counters, c) ?? 0]));
+  if (refs.defeats.size) out.defeats = Object.fromEntries([...refs.defeats].sort(([a], [b]) => a.localeCompare(b)).map(([id, n]) => [id, `${own(ctx.s.defeated, id) ?? 0}/${n}`]));
   if (refs.items.size) {
     const held = new Set(ctx.s.player.slots.filter((x) => !!x).map((x) => x!.defId));
     out.items = Object.fromEntries([...refs.items].sort().map((id) => [id, held.has(id)]));
@@ -271,7 +271,7 @@ function summarize(ctx: Ctx, hook: GmContextHook | undefined, logLines: number):
       maxMp: maxMp(ctx, p),
       stats: { str: getStat(ctx, p, 'str'), dex: getStat(ctx, p, 'dex'), int: getStat(ctx, p, 'int'), ac: getStat(ctx, p, 'ac') },
       statuses: p.statuses.map((st) => `${statusName(ctx, st.id)}(${st.turnsLeft})`),
-      resources: (w.resources ?? []).map((r) => `${r.name} ${s.player.resources[r.id] ?? 0}/${r.max}`),
+      resources: (w.resources ?? []).map((r) => `${r.name} ${own(s.player.resources, r.id) ?? 0}/${r.max}`),
       currency: s.player.currency,
       perks: s.player.perks.map((id) => ctx.ix.perks.get(id)?.name ?? id),
       inventory: inventoryOf(ctx),

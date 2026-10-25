@@ -793,7 +793,7 @@
       "description": "A crawler made of canyon glass, grown by the Gleam to cut stragglers off from the herd.",
       "faction": "hostile",
       "stats": {
-        "hp": 14,
+        "hp": 12,
         "ac": 13,
         "str": 11,
         "dex": 12,
@@ -805,7 +805,7 @@
         "verb": "slices",
         "damage": {
           "base": 3,
-          "dice": "1d6"
+          "dice": "1d4"
         }
       },
       "behaviour": {
@@ -931,7 +931,7 @@
       "description": "A colony of mirror-coral fanned across the canyon's throat. It glows the exact amber of a lead mossback and calls half the Drove sunward every generation, to bake and feed it.",
       "faction": "hostile",
       "stats": {
-        "hp": 78,
+        "hp": 56,
         "ac": 13,
         "str": 14,
         "dex": 12,
@@ -944,8 +944,8 @@
         "name": "Focused glare",
         "verb": "focuses glare on",
         "damage": {
-          "base": 4,
-          "dice": "1d8"
+          "base": 3,
+          "dice": "1d5"
         },
         "damageType": "glare",
         "range": 5,
@@ -968,7 +968,7 @@
                 "type": "damage",
                 "amount": {
                   "base": 1,
-                  "dice": "2d4"
+                  "dice": "2d2"
                 },
                 "damageType": "glare"
               },
@@ -2004,7 +2004,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 3
+              "base": 7
             }
           }
         ],
@@ -3224,14 +3224,14 @@
         {
           "actor": "rind-tick",
           "weight": 35,
-          "min": 3,
-          "max": 5
+          "min": 2,
+          "max": 4
         },
         {
           "actor": "lamplighter-moth",
           "weight": 25,
-          "min": 1,
-          "max": 2
+          "min": 0,
+          "max": 0
         },
         {
           "actor": "heelbiter",
@@ -3876,6 +3876,7 @@
     },
     "winText": "The Drove pours through the Glass Canyon in one long, groaning line, Hollowhill at its head with a lodestone back where it belongs. Heelbiters snap at stragglers; glasswings ride the lichen picking ticks; the wyrm coughs up a calf on the far side, unharmed and furious. Nobody turns east. Behind you the canyon is only glass.",
     "lossText": "The herd breaks at the canyon. Half of it turns toward a beautiful amber light and walks into the sun, and the other half walks on west, thinner, without you. The band moves on. It always does.",
+    "deathText": "You slip from the mossback's flank and the lichen closes over the place you held. The Drove does not stop; it never does. Somewhere ahead the canyon waits for a herd with one courier fewer, and the seed you carried takes root where you fell.",
     "labels": {
       "herd-rejoined": "The Drove is whole again",
       "symbionts-lost": "Symbionts lost"

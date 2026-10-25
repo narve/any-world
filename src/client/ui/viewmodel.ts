@@ -144,6 +144,8 @@ export interface SlotItemView extends ItemView {
   thumb?: string;
   /** vitals this item is known to restore ('hp', 'mp' or a resource id) */
   restores?: string[];
+  /** a ranged weapon's reach in tiles (only set when > 1): equipped, its key aims it */
+  range?: number;
   /** glow + hint: the item answers a current danger ("press 3") */
   urgent?: boolean;
 }
@@ -304,6 +306,8 @@ export interface OnboardingView {
   win: ConditionLineView[];
   /** how conflict works in this world, in plain words (from world data) */
   conflict: string[];
+  /** the key for each `conflict` line that is a verb ('p' persuade, 't' talk…), else null */
+  conflictKeys?: (string | null)[];
   /** how the run is lost */
   lose: string[];
   verbs: { talk: boolean; sneak: boolean; search: boolean; persuade: boolean };
@@ -431,7 +435,8 @@ export interface RecentWorldView {
   genre: string;
   color?: string;
   language?: string;
-  source: 'generated' | 'imported';
+  /** demo: picked from the recorded worlds by the offline demo generator (M5; no AI involved) */
+  source: 'generated' | 'imported' | 'demo';
   /** epoch ms */
   savedAt: number;
 }
@@ -487,7 +492,7 @@ export interface RunStatsView {
 export interface EndView {
   result: 'won' | 'lost';
   worldTitle: string;
-  /** goal.winText / goal.lossText */
+  /** goal.winText / goal.deathText / goal.lossText, by how the run ended (engine endingText) */
   text: string;
   /** engine endReason */
   reason?: string;
@@ -501,7 +506,13 @@ export interface EndView {
 }
 
 export interface Settings {
+  /** the active provider; `provider.apiKey` is the key saved for this preset (and base URL) only */
   provider: ProviderConfig;
+  /**
+   * direct-mode API keys per provider (storage.keySlot: preset id, plus the base URL when one is
+   * set), so a key typed for one host is never sent to another (issues/M5-api-key-leaks-across-presets.md)
+   */
+  apiKeys?: Record<string, string>;
   /** soundcloud (M4): also look for matching music on SoundCloud (default off) */
   audio: { volume: number; muted: boolean; soundcloud?: boolean };
   /** 0.5 (slow) .. 3 (fast); multiplies animation speed */
@@ -558,6 +569,7 @@ export interface UiViewModel {
 /** UI-level intents that are not engine actions; the integrator decides what they mean. */
 export type UiIntent =
   | { type: 'rotate_camera'; dir: -1 | 1 }
+  /** +1 zooms in (closer, the '+' key), -1 zooms out */
   | { type: 'zoom'; delta: -1 | 1 }
   /** look mode on/off (x) */
   | { type: 'look'; on: boolean }

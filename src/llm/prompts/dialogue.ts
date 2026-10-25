@@ -12,6 +12,7 @@ import { DIALOGUE_SCHEMA_DOC, SCHEMA_NOTATION } from './world-schema';
 import { JSON_ONLY, languageInstruction } from './common';
 import { gmPersona, gmSituation, worldSummary, knownItemName } from './gm-summary';
 import { HELPFUL_CEILING } from './gm';
+import { protectedGoalLine } from '../goal-refs';
 
 export const DIALOGUE_MAX_TOKENS = 1200;
 export const DIALOGUE_TEMPERATURE = 0.9;
@@ -59,7 +60,7 @@ export function dialogueSystemPrompt(world: WorldSpec, difficulty: Difficulty): 
     ROLE,
     `THE WORLD'S GAME MASTER (tone reference)\n${gmPersona(world)}`,
     languageInstruction(world.meta.language ?? 'en'),
-    RULES,
+    [RULES, protectedGoalLine(world, { npcStockAllowed: true })].filter(Boolean).join('\n'),
     `Help ceiling on ${difficulty}: at most ${HELPFUL_CEILING[difficulty]} helpful actions per area across all GM moments and conversations.`,
     `WORLD FACTS\n${worldSummary(world)}`,
     `OUTPUT FORMAT (TypeScript-style; the root value is a DialogueResponse)\n${SCHEMA_NOTATION}\n\n${DIALOGUE_SCHEMA_DOC}`,

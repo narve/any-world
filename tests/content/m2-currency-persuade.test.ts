@@ -150,10 +150,17 @@ describe('persuadeDifficulty on actors without an npc block', () => {
     }
   });
 
-  it('dream: the talker no longer wins nearly every run by persuading (seeds 1-12)', () => {
-    let won = 0;
-    for (let seed = 1; seed <= 12; seed++) if (runGame(worlds.dream, seed, 'talker', { invariants: false }).result === 'won') won++;
-    // before the fix the talker won ~92%; after it ~63% over 200 seeds
-    expect(won).toBeLessThanOrEqual(10);
-  }, 120_000);
+  it('dream: persuading is no shortcut — the talker does not out-win the fighting explorer (seeds 1-12)', () => {
+    let talker = 0;
+    let explorer = 0;
+    for (let seed = 1; seed <= 12; seed++) {
+      if (runGame(worlds.dream, seed, 'talker', { invariants: false }).result === 'won') talker++;
+      if (runGame(worlds.dream, seed, 'explorer', { invariants: false }).result === 'won') explorer++;
+    }
+    // before the M2 fix the talker won ~92% by talking everything down while the explorer won ~45%.
+    // Since the M5 new-player retune (issues/M5-new-player-deaths.md: The Erasure ×0.85) the world
+    // is easier for everyone (200 seeds: talker ~90%, explorer ~84%), so the guard is relative now:
+    // the talker may not win clearly more than a bot that fights its way through
+    expect(talker).toBeLessThanOrEqual(explorer + 2);
+  }, 240_000);
 });

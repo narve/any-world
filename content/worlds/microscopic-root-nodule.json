@@ -1182,7 +1182,7 @@
         "name": "Flagellin Clamp",
         "verb": "clamps",
         "damage": {
-          "base": 1,
+          "base": 0,
           "dice": "1d6"
         },
         "range": 1,
@@ -1577,7 +1577,7 @@
       "description": "Kappa, swollen into a bacteroid on stolen malate, enthroned in a symbiosome it never paid for. Its nitrogenase dial reads zero and it is not embarrassed.",
       "faction": "hostile",
       "stats": {
-        "hp": 60,
+        "hp": 51,
         "ac": 13,
         "str": 14,
         "dex": 12,
@@ -1589,7 +1589,7 @@
         "verb": "lashes",
         "damage": {
           "base": 2,
-          "dice": "1d8"
+          "dice": "1d6"
         },
         "damageType": "signal",
         "range": 1,
@@ -1615,7 +1615,7 @@
               {
                 "type": "damage",
                 "amount": {
-                  "dice": "1d4"
+                  "dice": "1d3"
                 },
                 "damageType": "signal"
               }
@@ -3240,18 +3240,18 @@
           "actor": "grazing-amoeba",
           "weight": 30,
           "min": 1,
-          "max": 4
+          "max": 1
         },
         {
           "actor": "streptomyces",
           "weight": 25,
-          "min": 1,
-          "max": 3
+          "min": 0,
+          "max": 0
         },
         {
           "actor": "phage-lander",
           "weight": 25,
-          "max": 4
+          "max": 3
         }
       ],
       "placed": [

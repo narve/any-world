@@ -12,13 +12,17 @@
  * Pure (no DOM): the browser download/upload glue lives in main.ts.
  */
 import { parseWorld } from '../schema/refs';
+import { MAX_JSON_DEPTH, jsonDepth } from '../schema/json-depth';
 import type { WorldSpec } from '../schema/world';
 import { slugify } from '../llm/recording-keys';
 
 export const WORLD_FILE_FORMAT = 'anyworld-world';
 export const WORLD_FILE_VERSION = 1;
-/** a generous ceiling: recorded worlds are 40–120 kB */
-export const MAX_WORLD_FILE_BYTES = 2_000_000;
+/**
+ * A generous ceiling: recorded worlds are 40–140 kB. Kept well under the ~5 MB localStorage quota,
+ * so one untrusted file cannot push every other kept world out (issues/M5-stored-world-evicts-saved-run.md).
+ */
+export const MAX_WORLD_FILE_BYTES = 600_000;
 
 export interface WorldFile {
   format: typeof WORLD_FILE_FORMAT;
@@ -70,6 +74,8 @@ function utf8Bytes(s: string): number {
   return n;
 }
 
+export { MAX_JSON_DEPTH, jsonDepth };
+
 /** parses and re-validates a world file (wrapped or a bare WorldSpec) */
 export function parseWorldFile(text: string): WorldImportResult {
   if (typeof text !== 'string') return fail('not_json');
@@ -92,7 +98,15 @@ export function parseWorldFile(text: string): WorldImportResult {
   const s = spec as Record<string, unknown>;
   if (!s.meta || typeof s.meta !== 'object' || !('specVersion' in s)) return fail('not_world');
   if (typeof s.specVersion === 'number' && s.specVersion > 1) return fail('newer_version', [`specVersion ${s.specVersion}`]);
-  const r = parseWorld(spec);
+  const depth = jsonDepth(spec, MAX_JSON_DEPTH);
+  if (depth > MAX_JSON_DEPTH) return fail('invalid', [`nested too deeply (more than ${MAX_JSON_DEPTH} levels)`]);
+  let r: ReturnType<typeof parseWorld>;
+  try {
+    r = parseWorld(spec);
+  } catch (e) {
+    // any other failure inside validation is still a typed "invalid", never an uncaught throw
+    return fail('invalid', [e instanceof RangeError ? 'nested too deeply' : e instanceof Error ? e.message : String(e)]);
+  }
   if (!r.ok) return fail('invalid', r.errors.slice(0, 8));
   return { ok: true, world: r.world };
 }

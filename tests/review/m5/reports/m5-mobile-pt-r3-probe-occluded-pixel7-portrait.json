@@ -1,0 +1,75 @@
+{
+  "world": "heist-silent-vault",
+  "placed": {
+    "id": "a8",
+    "name": "Loose Parquet",
+    "pos": {
+      "x": 5,
+      "y": 26
+    },
+    "me": {
+      "x": 5,
+      "y": 27
+    }
+  },
+  "sweep": {
+    "hits": 318,
+    "player": 67,
+    "total": 651,
+    "hitPts": [
+      [
+        230,
+        351
+      ],
+      [
+        234,
+        351
+      ],
+      [
+        238,
+        351
+      ],
+      [
+        222,
+        355
+      ],
+      [
+        226,
+        355
+      ],
+      [
+        230,
+        355
+      ]
+    ],
+    "tileCentre": [
+      206,
+      399
+    ],
+    "pickTile": {
+      "x": 5,
+      "y": 26
+    },
+    "body": [
+      206,
+      391
+    ],
+    "pickBody": {
+      "x": 5,
+      "y": 26
+    }
+  },
+  "tapBody": {
+    "turn": 1,
+    "me": {
+      "x": 5,
+      "y": 27
+    },
+    "newLog": [
+      "Ottilie Graf hums a pure A at Loose Parquet for 1 Misdirection.",
+      "Loose Parquet creaks under Ottilie Graf for 3 Feedback."
+    ],
+    "toasts": [],
+    "layer": "game"
+  }
+}

@@ -64,7 +64,7 @@
       "translations": {
         "nb": {
           "genre": "vikingsaga",
-          "prompt": "Island, 1004. Mesteren din, lovsigemannen, er død, og som læregutten hans må du si fram hele loven etter hukommelsen på Alltinget – men tre mektige ætter vil ha hver sin versjon husket, og hver paragraf du sier høyt, blir bindende. Vinn stemmer, ikke tvekamper.",
+          "prompt": "Island, 1004. Mesteren din, lovsigemannen, er død, og som lærlingen hans må du si fram hele loven etter hukommelsen på Alltinget – men tre mektige ætter vil ha hver sin versjon husket, og hver paragraf du sier høyt, blir bindende. Vinn stemmer, ikke tvekamper.",
           "teaser": "Si fram hele loven etter hukommelsen – hver paragraf du sier, blir bindende.",
           "worldId": "viking-lawspeaker-althing-nb"
         }
@@ -678,7 +678,7 @@
     },
     {
       "id": "viking-lawspeaker-althing-nb",
-      "prompt": "Island, 1004. Mesteren din, lovsigemannen, er død, og som læregutten hans må du si fram hele loven etter hukommelsen på Alltinget – men tre mektige ætter vil ha hver sin versjon husket, og hver paragraf du sier høyt, blir bindende. Vinn stemmer, ikke tvekamper.",
+      "prompt": "Island, 1004. Mesteren din, lovsigemannen, er død, og som lærlingen hans må du si fram hele loven etter hukommelsen på Alltinget – men tre mektige ætter vil ha hver sin versjon husket, og hver paragraf du sier høyt, blir bindende. Vinn stemmer, ikke tvekamper.",
       "language": "nb",
       "genre": "vikingsaga",
       "tags": [

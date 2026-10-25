@@ -1,0 +1,83 @@
+{
+  "world": "detective-sugar-hotel",
+  "empty": {
+    "me": {
+      "x": 39,
+      "y": 21
+    },
+    "target": {
+      "x": 39,
+      "y": 20
+    },
+    "x": 196.5,
+    "y": 314.0734633893969,
+    "onMap": true,
+    "pick": {
+      "x": 39,
+      "y": 21
+    },
+    "screenToTile": {
+      "x": 39,
+      "y": 20
+    },
+    "after": {
+      "turn": 0,
+      "me": {
+        "x": 39,
+        "y": 21
+      },
+      "toasts": []
+    },
+    "walked": false
+  },
+  "actor": {
+    "id": "a8",
+    "faction": "neutral",
+    "name": "Hedda Imboden, Head Housekeeper",
+    "pos": {
+      "x": 39,
+      "y": 20
+    }
+  },
+  "longPress": [
+    {
+      "frac": 0.2,
+      "at": [
+        197,
+        309
+      ],
+      "pick": {
+        "x": 39,
+        "y": 20
+      },
+      "text": "Hedda Imboden, Head Housekeeper Neutral Talk COM 20 / 20 Keys at her belt, linen",
+      "ok": true
+    },
+    {
+      "frac": 0.45,
+      "at": [
+        197,
+        303
+      ],
+      "pick": {
+        "x": 39,
+        "y": 20
+      },
+      "text": "Hedda Imboden, Head Housekeeper Neutral Talk COM 20 / 20 Keys at her belt, linen",
+      "ok": true
+    },
+    {
+      "frac": 0.7,
+      "at": [
+        197,
+        296
+      ],
+      "pick": {
+        "x": 39,
+        "y": 20
+      },
+      "text": "Hedda Imboden, Head Housekeeper Neutral Talk COM 20 / 20 Keys at her belt, linen",
+      "ok": true
+    }
+  ]
+}

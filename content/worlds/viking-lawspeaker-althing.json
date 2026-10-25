@@ -1813,8 +1813,8 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4,
-              "dice": "1d4"
+              "base": 5,
+              "dice": "1d3"
             }
           }
         ],
@@ -1889,8 +1889,8 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4,
-              "dice": "1d4"
+              "base": 5,
+              "dice": "1d3"
             }
           },
           {
@@ -3244,7 +3244,7 @@
   },
   "areas": [
     {
-      "name": "First Day: The Booths at Thingvellir",
+      "name": "The Booths at Thingvellir",
       "description": "A green plain under a sun that will not set, crowded with turf booths, cooking smoke and men from every quarter of Iceland arguing about sheep.",
       "generator": "town",
       "size": "medium",
@@ -3287,14 +3287,14 @@
         {
           "actor": "booth-heckler",
           "weight": 10,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 1
         },
         {
           "actor": "boundary-reeve",
           "weight": 6,
-          "min": 1,
-          "max": 3
+          "min": 0,
+          "max": 0
         },
         {
           "actor": "hof-satirist",
@@ -3304,7 +3304,7 @@
         {
           "actor": "oath-helper",
           "weight": 4,
-          "max": 3
+          "max": 1
         }
       ],
       "placed": [
@@ -3440,7 +3440,7 @@
       }
     },
     {
-      "name": "Second Day: Almannagja, the All-Men's Rift",
+      "name": "Almannagja, the All-Men's Rift",
       "description": "A crack in the world where two continents pull apart. Black basalt walls, mist off the glacier water, and ravens that have learned to eat words.",
       "generator": "caves",
       "size": "medium",
@@ -3636,7 +3636,7 @@
       }
     },
     {
-      "name": "Third Day: Inside Hallbjorn's Memory",
+      "name": "Inside Hallbjorn's Memory",
       "description": "No ground, no sky. The law as your master held it: rings of carved stone floating in the dark, gold runes in the floor, and gaps where he chose to forget.",
       "generator": "geometric",
       "size": "medium",
@@ -3815,7 +3815,7 @@
       "music": "eerie"
     },
     {
-      "name": "Last Day: The Law Rock",
+      "name": "The Law Rock",
       "description": "A ledge of lava rock above the plain, the whole Thing gathered below. The wind carries every word to every ear. Thorgunna is already speaking.",
       "generator": "arena",
       "size": "small",

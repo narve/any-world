@@ -12,7 +12,7 @@ import { col, shade, mixHex, hash2, luminance } from './color';
 import { buildModel, animateModel } from './models';
 import { prim } from './models/geom';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { mergeModel } from './models/merge';
+import { compactModel, mergeModel } from './models/merge';
 import { towardCamera } from './coords';
 import type { Pos } from '../../engine/types';
 import {
@@ -755,6 +755,15 @@ export class AreaView {
           if (ls && ls.intensity > 0) for (const i of tiles) this.lightSources.push({ pos: new THREE.Vector3(i % this.width, 0.8, Math.floor(i / this.width)), tile: i, ...ls });
           continue;
         }
+        // animated terrain models keep their moving parts but merge everything rigid per material
+        // (compactModel), so each placed copy costs a few draw calls instead of one per primitive
+        template.traverse((o) => {
+          if ((o as THREE.Mesh).isMesh) {
+            o.castShadow = true;
+            o.receiveShadow = true;
+          }
+        });
+        compactModel(template);
         for (const i of tiles) {
           const m = template.clone();
           m.position.set(i % this.width, 0, Math.floor(i / this.width));
@@ -860,7 +869,8 @@ export class AreaView {
       g.position.set(x, 0, y);
       if (this.doorOrientation(map, x, y) === 'z') g.rotation.y = Math.PI / 2;
       // threshold plate: marks the doorway even when the frame is cut down to a stub
-      g.add(prim('box', [0.96, 0.03, 0.42], [0, 0.015, 0], shade(doorColor, 1.15), { material: wl.material === 'metal' ? 'metal' : 'wood', castShadow: false }));
+      // (same colour and material as the jambs, so compactModel merges them into one draw call)
+      g.add(prim('box', [0.96, 0.03, 0.42], [0, 0.015, 0], shade(doorColor, 1.1), { material: wl.material === 'metal' ? 'metal' : 'wood' }));
       // lintel joins the walls above the door
       if (H - doorH > 0.05) g.add(prim('box', [1, H - doorH, 0.9], [0, doorH + (H - doorH) / 2, 0], shade(wl.color, 0.9), { material: wl.material }));
       for (const s of [-1, 1]) g.add(prim('box', [0.1, doorH, 0.34], [s * 0.46, doorH / 2, 0], shade(doorColor, 1.1), { material: wl.material === 'metal' ? 'metal' : 'wood' }));
@@ -873,6 +883,8 @@ export class AreaView {
       panel.add(prim('sphere', [0.06, 0.06, 0.06], [0.72, doorH * 0.5, 0.05], '#d9c27a', { material: 'metal' }));
       hinge.add(panel);
       g.add(hinge);
+      // frame parts merge per material into the door group, panel parts into the moving panel
+      compactModel(g, { isRigid: (o) => o === g || o === hinge || o === panel });
       g.visible = false;
       this.group.add(g);
       const open = t.kind === 'door_open';

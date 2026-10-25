@@ -2126,7 +2126,7 @@
       "unique": true,
       "description": "A hole in the shape of a rectangle, the size of a door, drifting through the painting and leaving bare primer behind. It is not angry. It is tidying up.",
       "stats": {
-        "hp": 76,
+        "hp": 65,
         "ac": 13,
         "str": 15,
         "dex": 10,
@@ -2139,8 +2139,8 @@
         "name": "Blank",
         "verb": "blanks out",
         "damage": {
-          "base": 4,
-          "dice": "1d8"
+          "base": 3,
+          "dice": "1d7"
         },
         "damageType": "solvent",
         "range": 1,
@@ -2164,7 +2164,7 @@
                 "type": "damage",
                 "amount": {
                   "base": 3,
-                  "dice": "2d4"
+                  "dice": "2d3"
                 },
                 "damageType": "solvent"
               },
@@ -4760,7 +4760,7 @@
   },
   "areas": [
     {
-      "name": "First Layer: The Loose Archipelago",
+      "name": "The Loose Archipelago",
       "description": "Daubs of magenta and violet drift over a gradient that goes down forever. Narrow bridges of dragged paint join them. Bright patches hum where the white was laid on too thick.",
       "generator": "islands",
       "size": "medium",
@@ -4813,26 +4813,26 @@
         {
           "actor": "running-drip",
           "weight": 30,
-          "min": 2,
-          "max": 5
+          "min": 1,
+          "max": 1
         },
         {
           "actor": "grey-wash",
           "weight": 20,
-          "min": 1,
-          "max": 3
+          "min": 0,
+          "max": 1
         },
         {
           "actor": "dissonant-moth",
           "weight": 20,
           "min": 1,
-          "max": 4
+          "max": 2
         },
         {
           "actor": "acute-angle",
           "weight": 10,
           "min": 0,
-          "max": 2
+          "max": 0
         }
       ],
       "placed": [
@@ -4985,7 +4985,7 @@
       "music": "calm"
     },
     {
-      "name": "Second Layer: The Warm Underpainting",
+      "name": "The Warm Underpainting",
       "description": "Beneath the first layer the paint is warm and alive: membranes of coral and crimson, tubes that pulse, blooms with eyes. Ribbons of light slide across the dark above.",
       "generator": "organic",
       "size": "medium",
@@ -5232,7 +5232,7 @@
       "music": "eerie"
     },
     {
-      "name": "Third Layer: The Grid Beneath Everything",
+      "name": "The Grid Beneath Everything",
       "description": "The scaffolding under the painting: an endless tessellation of cyan lines on indigo, every one of them running toward the same point. Prisms hang in the air. Shapes patrol the lines and correct anything out of place.",
       "generator": "geometric",
       "size": "medium",
@@ -5664,6 +5664,7 @@
     },
     "winText": "The horizon closes. Red bleeds into yellow bleeds into blue, and where they meet, a hue nobody has a name for: yours. The grey retreats to the very edge and becomes a frame. Somewhere far outside, in a light that is not the moon, a hand picks up a brush, looks at the canvas for a long time, and signs it.",
     "lossText": "You thin, and thin, and are a glaze, and are a stain, and are primer. The Erasure smooths you flat with something like kindness. The canvas is very clean now. It is waiting for someone to begin again.",
+    "deathText": "Your last stroke fades to clear and the canvas forgets your hue. The primaries drift on without anyone to gather them, and the Erasure washes over the place where you were, very gently, as if you had never been laid down at all.",
     "labels": {
       "horizon-finished": "The horizon is finished",
       "colours-spilled": "Colours unmade"

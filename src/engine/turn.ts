@@ -5,7 +5,7 @@
  * equal to its (hasted/slowed) speed.
  */
 import { type Ctx, actorAt, emit, endGame, isAlive, isPlayer, logKey, mutTile, playerActor } from './ctx';
-import { samePos } from './util';
+import { own, samePos } from './util';
 import { energyGain, hasFlag, maxHp, maxMp } from './stats';
 import { actorTurn } from './ai';
 import { statusPerTurn, tickStatuses } from './statuses';
@@ -119,10 +119,10 @@ export function endRound(ctx: Ctx): void {
   if (s.turn % 5 === 0) for (const a of s.area.actors) if (!isPlayer(ctx, a) && a.mp < maxMp(ctx, a)) a.mp += 1;
   // custom resources
   for (const r of ctx.world.resources ?? []) {
-    const cur = s.player.resources[r.id] ?? 0;
+    const cur = own(s.player.resources, r.id) ?? 0;
     if (r.perTurn) changeResource(ctx, p, r.id, r.perTurn);
     if (s.status !== 'playing') return;
-    if (cur === 0 && (s.player.resources[r.id] ?? 0) === 0 && r.perTurn < 0 && s.turn % RESOURCE_EMPTY_REPEAT === 0 && r.onEmpty.length) {
+    if (cur === 0 && (own(s.player.resources, r.id) ?? 0) === 0 && r.perTurn < 0 && s.turn % RESOURCE_EMPTY_REPEAT === 0 && r.onEmpty.length) {
       applyEffectList(ctx, r.onEmpty, p, [p], p.pos, []);
     }
   }

@@ -54,6 +54,14 @@ export function languagePicker(lang: LanguageVm, onPick: ((code: string) => void
   );
 }
 
+/**
+ * how a kept world got here: AI-made, opened from a file, or picked from the recorded demo worlds by
+ * the offline demo generator (no AI involved, so it must not say "made by AI")
+ */
+export function recentSourceLabel(source: RecentWorldView['source']): string {
+  return source === 'imported' ? t('start.recentImported') : source === 'demo' ? t('start.recentDemo') : t('start.recentGenerated');
+}
+
 const CARD_COUNT = 4;
 
 /** the offline demo generator's preset id (modes.ts OFFLINE_PRESET) */
@@ -181,6 +189,21 @@ export class StartScreen {
       this.fileInput,
     );
     this.syncOut();
+    // shown again (after a run, "New world", "Back"): open at the top with the prompt box in view,
+    // not where the last demo card was clicked (ui.ts toggles `hidden`; focus uses preventScroll)
+    if (typeof MutationObserver !== 'undefined') {
+      new MutationObserver(() => {
+        if (!this.el.hidden) this.resetScroll();
+      }).observe(this.el, { attributes: true, attributeFilter: ['hidden'] });
+    }
+  }
+
+  /** scrolls the start screen (and its inner columns, which scroll on their own on some layouts) to the top */
+  resetScroll(): void {
+    for (const el of [this.el, ...this.el.querySelectorAll<HTMLElement>('.aw-start-inner, .aw-start-main, .aw-start-side')]) {
+      if (el.scrollTop) el.scrollTop = 0;
+      if (el.scrollLeft) el.scrollLeft = 0;
+    }
   }
 
   private syncOut(): void {
@@ -412,7 +435,7 @@ export class StartScreen {
             { class: 'aw-demo-genre' },
             w.genre,
             ' · ',
-            w.source === 'imported' ? t('start.recentImported') : t('start.recentGenerated'),
+            recentSourceLabel(w.source),
             baseLang(w.language) !== ui ? h('span', { class: 'aw-lang-badge' }, baseLang(w.language).toUpperCase()) : null,
           ),
           h('span', { class: 'aw-demo-title' }, w.title),

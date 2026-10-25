@@ -139,6 +139,8 @@ export const WORLD_NOTES: Record<string, string> = {
   'SurfaceStyle.height': 'walls only: height in tiles',
   'GoalSpec.win': 'checked every turn; must be reachable',
   'GoalSpec.lose': 'extra loss condition besides death',
+  'GoalSpec.lossText': 'ending shown when goal.lose holds or a fatal resource runs out (and on defeat when deathText is absent)',
+  'GoalSpec.deathText': 'ending shown when the player is defeated (hp 0); give it whenever goal.lose or an emptyIsDeath resource exists',
   'GoalSpec.labels': 'player-facing name for each flag / counter id used by the goal or a lock (the goal tracker shows it instead of the id)',
   'GmSpec.persona': 'who the game master is in this world',
   'GmSpec.voice': 'how it speaks',

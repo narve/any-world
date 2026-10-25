@@ -4,7 +4,7 @@ import type { ActorInstance } from './types';
 import { type Ctx, playerActor } from './ctx';
 import { getMax, getStat } from './stats';
 import { countItem } from './inventory';
-import { tileAt } from './util';
+import { own, tileAt } from './util';
 
 export interface CondCtx {
   self?: ActorInstance | null;
@@ -79,11 +79,11 @@ export function evalCondition(ctx: Ctx, c: Condition, cc: CondCtx = {}, depth = 
       return !!a && a.statuses.some((s) => s.id === c.status);
     }
     case 'flag':
-      return (ctx.s.flags[c.flag] ?? false) === (c.value ?? true);
+      return (own(ctx.s.flags, c.flag) ?? false) === (c.value ?? true);
     case 'counter':
-      return compare(ctx.s.counters[c.counter] ?? 0, c.cmp, c.value);
+      return compare(own(ctx.s.counters, c.counter) ?? 0, c.cmp, c.value);
     case 'actor_defeated':
-      return (ctx.s.defeated[c.actor] ?? 0) >= (c.count ?? 1);
+      return (own(ctx.s.defeated, c.actor) ?? 0) >= (c.count ?? 1);
     case 'in_area':
       return ctx.s.area.index === c.area;
     case 'turn':

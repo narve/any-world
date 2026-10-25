@@ -209,7 +209,7 @@
     {
       "id": "tre-uker-til-eksamen",
       "name": "Tre uker til eksamen",
-      "description": "Hver 20. tur glemmer du 1 Pensum. Står Pensum på 0, får du Strykfare (−2 Kvikkhet, −1 Tykk hud) til du leser deg opp igjen. Kollokvienotater og gamle oppgaver fyller på.",
+      "description": "Hver 20. runde glemmer du 1 Pensum. Står Pensum på 0, får du Strykfare (−2 Kvikkhet, −1 Tykk hud) til du leser deg opp igjen. Kollokvienotater og gamle oppgaver fyller på.",
       "playerTriggers": [
         {
           "on": "on_turn",
@@ -1355,7 +1355,7 @@
       "description": "Bussjefen. Kaptein-lue, gullkjede, overbevist om at et lydanlegg til 410 000 er en investering i fellesskapet. Han tror faktisk på det.",
       "faction": "hostile",
       "stats": {
-        "hp": 55,
+        "hp": 47,
         "ac": 13,
         "str": 15,
         "dex": 12,
@@ -1366,7 +1366,7 @@
         "verb": "minner om ofrene sine for",
         "damage": {
           "base": 1,
-          "dice": "1d8"
+          "dice": "1d6"
         },
         "damageType": "skyld"
       },
@@ -1386,7 +1386,7 @@
               {
                 "type": "damage",
                 "amount": {
-                  "dice": "1d6"
+                  "dice": "1d5"
                 },
                 "damageType": "bass"
               },
@@ -1877,7 +1877,7 @@
       "id": "russelue-knuter",
       "name": "Russelue med knuter",
       "kind": "Russelue",
-      "description": "Tunge av knuter: en pinnsvinpigg, en bit av en IKEA-kvittering, en knapp fra en natteravn.",
+      "description": "Tung av knuter: en pinnsvinpigg, en bit av en IKEA-kvittering, en knapp fra en natteravn.",
       "category": "trinket",
       "equipSlot": "trinket",
       "useMode": "passive",
@@ -2099,7 +2099,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4
+              "base": 8
             }
           },
           {
@@ -3130,7 +3130,7 @@
   },
   "areas": [
     {
-      "name": "Mandag: Skolen",
+      "name": "Skolen (mandag)",
       "description": "Videregående i siste time før lunsj. Linoleum, elevskap, en rektor på høyttaleranlegget som sier ordet «russ» som om det var en diagnose. Gjengen er spredt, og alle vet allerede at bussen er uten lakk.",
       "generator": "building",
       "size": "medium",
@@ -3166,19 +3166,19 @@
           "actor": "russekortjeger",
           "weight": 40,
           "min": 2,
-          "max": 5
+          "max": 3
         },
         {
           "actor": "snap-sladrer",
           "weight": 30,
-          "min": 1,
-          "max": 2
+          "min": 0,
+          "max": 0
         },
         {
           "actor": "eksamensvakt",
           "weight": 20,
-          "min": 1,
-          "max": 3
+          "min": 0,
+          "max": 1
         }
       ],
       "placed": [
@@ -3276,8 +3276,8 @@
       }
     },
     {
-      "name": "Onsdag: Russetreffet",
-      "description": "En jorde ved skogkanten i lys maikveld. Partytelt, bålpanner, tjue busser som dunker i kor, og en tom plass der Gullkalven skulle stått. Ida er her et sted.",
+      "name": "Russetreffet (onsdag)",
+      "description": "Et jorde ved skogkanten i lys maikveld. Partytelt, bålpanner, tjue busser som dunker i kor, og en tom plass der Gullkalven skulle stått. Ida er her et sted.",
       "generator": "open",
       "size": "medium",
       "params": {
@@ -3461,7 +3461,7 @@
       "music": "explore"
     },
     {
-      "name": "Torsdag natt: Inne i bassen",
+      "name": "Inne i bassen (torsdag natt)",
       "description": "Du sovner med Idas hodetelefoner på, og bassen trekker deg inn. Tunneler av pulserende membran, rom som slår i 128 bpm, ekko av alt du har sagt. Et sted her sover droppet, og det har portkoden.",
       "generator": "organic",
       "size": "medium",
@@ -3629,7 +3629,7 @@
       "music": "eerie"
     },
     {
-      "name": "Fredag: Lageret på Alnabru",
+      "name": "Lageret på Alnabru (fredag)",
       "description": "Port 7. Betonggulv, paller til taket, og midt i hallen: anlegget. Tolv basselementer som en kirke av svart tre. Kasper sitter foran det med fjernkontrollen. Angrefristen går ut ved midnatt.",
       "generator": "arena",
       "size": "small",

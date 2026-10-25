@@ -1352,6 +1352,11 @@ body {
   box-shadow: 0 24px 70px var(--c-shadow);
 }
 
+/* guarded modals (level-up, GM offer) take focus on the card itself, not on an option */
+.aw-modal-card[tabindex='-1']:focus {
+  outline: none;
+}
+
 .aw-options {
   display: grid;
   gap: 6px;
@@ -4313,6 +4318,21 @@ body {
   max-width: 72vw;
 }
 
+/* a long "Talk to <name, title>" must not push Wait (the only touch way to pass a turn) off the
+   screen: named buttons are capped and ellipsised, and Wait stays pinned at the row's right end
+   (issues/M5-phone-talk-pushes-wait.md) */
+.aw-ui[data-layout='phone-portrait'] .aw-ctx-btn:is(.ctx-talk, .ctx-persuade, .ctx-interact, .ctx-pickup, .ctx-exit) {
+  max-width: 45vw;
+}
+
+.aw-ui[data-layout='phone-portrait'] .aw-ctx-btn.ctx-wait {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  margin-left: auto;
+  background: rgba(var(--c-panel-rgb), 0.97);
+}
+
 .aw-ui[data-layout='phone-portrait'] .aw-hotbar-slots {
   grid-template-columns: repeat(8, minmax(0, 1fr));
   margin-top: 6px;
@@ -4538,4 +4558,224 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
   white-space: normal;
+}
+
+/* ------------------------------------------------------------------------ */
+/* M5 phone fixes                                                            */
+/* ------------------------------------------------------------------------ */
+
+/* toasts never sit on a bottom sheet (choice, dialogue, narration, backpack…): while one is open
+   they go to the top safe area (issues/M5-toasts-over-sheets.md) */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape'])[data-sheet='1'] .aw-toasts {
+  top: calc(var(--safe-t) + 8px);
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  width: min(92vw, 420px);
+  transform: translateX(-50%);
+  z-index: 46;
+}
+
+/* the dialogue's actions (Persuade / Trade / Leave) stay on screen at the bottom of the sheet, above
+   the home bar, however long the reply is (issues/M5-landscape-dialogue-buttons-clipped.md) */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game .aw-modal.no-backdrop:is(.dock-left, .dock-right) .aw-dialogue,
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game .aw-modal-card.aw-dialogue {
+  padding-bottom: 0;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-game .aw-dialogue .aw-dlg-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: 8px -14px 0;
+  padding: 8px 14px calc(8px + env(safe-area-inset-bottom));
+  background: rgba(var(--c-panel-rgb), 0.98);
+  border-top: 1px solid var(--c-border);
+}
+
+/* landscape phones have ~390 px of height: a smaller head and reply leave room for the replies */
+.aw-ui[data-layout='phone-landscape'] .aw-game .aw-dialogue .aw-dlg-head {
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-game .aw-dialogue .aw-portrait-lg {
+  width: 32px;
+  height: 32px;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-game .aw-dialogue .aw-dlg-reply {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-game .aw-dialogue .aw-dlg-history {
+  max-height: 22vh;
+  overflow: auto;
+}
+
+.aw-ui[data-layout='phone-landscape'] .aw-game .aw-dialogue .aw-options {
+  gap: 6px;
+}
+
+/* the WebGL context is lost: the map is black, so play holds behind a notice
+   (issues/M5-webgl-context-lost-silent.md) */
+.aw-gfx-lost {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.aw-gfx-lost[hidden] {
+  display: none;
+}
+
+.aw-gfx-card {
+  max-width: min(420px, 100%);
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: rgba(var(--c-panel-rgb), 0.97);
+  border: 1px solid var(--c-border);
+  box-shadow: 0 24px 70px var(--c-shadow);
+  text-align: center;
+}
+
+.aw-gfx-title {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.aw-gfx-hint {
+  margin: 0 0 12px;
+  color: var(--c-muted);
+  font-size: 13px;
+}
+
+.aw-gfx-reload {
+  min-height: 44px;
+}
+
+/* trade rows: the item name gets the room (two lines at most), the price never squeezes it out;
+   on phones the price goes under the name (issues/M5-trade-names-clipped.md) */
+.aw-trade-row .aw-trade-name {
+  white-space: normal;
+  overflow: visible;
+}
+
+.aw-trade-label {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+.aw-trade-row .aw-trade-act {
+  white-space: nowrap;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-trade-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'key name act'
+    'key price act';
+  row-gap: 2px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-trade-row > :first-child {
+  grid-area: key;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-trade-row > .aw-trade-name {
+  grid-area: name;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-trade-row > .aw-trade-price {
+  grid-area: price;
+  padding-left: 28px;
+  white-space: normal;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-trade-row > .aw-trade-act {
+  grid-area: act;
+}
+
+/* goal: the step and the summary may take two lines instead of being cut mid-word; phones show
+   the money as "¤ 15" and keep a separator between the strip's parts
+   (issues/M5-phone-goal-strip-cramped.md) */
+.aw-goal-summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+}
+
+.aw-money-short {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal:not(.is-expanded) .aw-goal-step {
+  white-space: normal;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal:not(.is-expanded) .aw-goal-step-label {
+  flex: none;
+  white-space: nowrap;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-goal:not(.is-expanded) .aw-goal-step-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+  line-height: 1.25;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-money-full {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-money-short {
+  display: inline;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) :is(.aw-strip-turn, .aw-strip-money)::before {
+  content: '·';
+  margin-right: 6px;
+  color: var(--c-muted);
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-strip-sep {
+  display: none;
+}
+
+/* touch: the aiming / look banner carries a Cancel button (there is no Esc key) */
+.aw-mode-banner .aw-mode-cancel {
+  pointer-events: auto;
+  margin-left: 10px;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.aw-mode-banner:has(.aw-mode-cancel) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.aw-mode-banner[hidden] {
+  display: none;
 }

@@ -68,17 +68,23 @@ describe('perks without stat/item chips spell out their mechanics', () => {
 });
 
 describe('fixture difficulty (normal) — static guards behind the sim tuning', () => {
+  // M5 (issues/M5-new-player-deaths.md): the first area is deliberately gentle now (a few hostiles,
+  // heals worth a quarter of max hp) and the bosses were softened until the newbie bot wins 50% on
+  // gentle / 25% on normal. The M2 guards ("the first area takes away 90% of its healing", "boss
+  // risk >= 1.3") contradicted that; what stays is that the areas after the first are not free
+  // and the final boss is still a fight.
   for (const name of ['teen', 'western', 'dream']) {
-    it(`${name}: the first area does not hand out more healing than it can take away`, () => {
-      const a0 = staticAnalysis(worlds[name]).areas[0];
-      // before the fix: teen 58 dmg vs 86 healing, western 60 vs 73
-      expect(a0.fightDamage + a0.ruleDamage).toBeGreaterThanOrEqual(0.9 * a0.healing);
+    it(`${name}: past the first area, fights take away at least half the healing on offer`, () => {
+      const areas = staticAnalysis(worlds[name]).areas.slice(1);
+      const dmg = areas.reduce((n, a) => n + a.fightDamage + a.ruleDamage, 0);
+      const heal = areas.reduce((n, a) => n + a.healing, 0);
+      expect(dmg).toBeGreaterThanOrEqual(0.5 * heal);
     });
 
-    it(`${name}: the final boss is a real threat in a straight fight`, () => {
+    it(`${name}: the final boss is still a real fight`, () => {
       const areas = staticAnalysis(worlds[name]).areas;
-      // before the fix: teen 0.90, western 1.06, dream 1.19
-      expect(areas[areas.length - 1].bossRisk ?? 0).toBeGreaterThanOrEqual(1.3);
+      // before M2: teen 0.90, western 1.06, dream 1.19; after the M5 new-player retune ≥ 0.8
+      expect(areas[areas.length - 1].bossRisk ?? 0).toBeGreaterThanOrEqual(0.8);
     });
   }
 

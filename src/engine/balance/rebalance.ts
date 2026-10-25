@@ -13,7 +13,7 @@
  */
 import type { ActorDef, Amount, Condition, Effect, ItemDef, WorldSpec } from '../../schema/world';
 import { parseWorld } from '../../schema/refs';
-import { itemProfile } from '../sim/view';
+import { avgAmount, itemProfile } from '../sim/view';
 import { collectSources, type Sources } from './static';
 import { estimateRuleImpact } from './rules';
 import type { BalanceReport, VerdictResult } from './analyse';
@@ -342,4 +342,167 @@ export function feasibilityFixes(world: WorldSpec): RebalanceResult {
 /** the adjusted world (re-validated); see rebalance() for the change list */
 export function autoRebalance(world: WorldSpec, report: Pick<BalanceReport, 'verdict' | 'winRate' | 'target' | 'sims'> | VerdictResult): WorldSpec {
   return rebalance(world, report).world;
+}
+
+// --- new-player fixes ----------------------------------------------------------
+// issues/M5-new-player-deaths.md: new players died in the first area and to small heals. These
+// fixes are about the first minutes of a run, not the world's overall band, so they apply to any
+// verdict (tuneWorld runs them once, before its loop; the demo worlds were retuned with them).
+
+/** hostiles the first area's spawn table may produce at most, per area size */
+export const FIRST_AREA_MAX_HOSTILES: Record<string, number> = { small: 3, medium: 4, large: 5 };
+/** hostiles the first area's spawn table guarantees at most (the sum of the entries' minimums) */
+export const FIRST_AREA_MAX_GUARANTEED = 2;
+/** a healing consumable heals at least this share of the player's starting max hp */
+export const MIN_HEAL_SHARE = 0.25;
+/** healing below this share of max hp is a side effect (a coffee that heals 2), not a heal item */
+const HEAL_ITEM_SHARE = 0.1;
+
+/** how far an action's damage reaches (0: none, or only the adjacent tiles and the user) */
+function damageReach(a: { targeting: { shape: string; range: number; radius: number; affects: string }; effects: Effect[] } | undefined): number {
+  if (!a || !a.effects.some((e) => e.type === 'damage')) return 0;
+  const t = a.targeting;
+  if (t.affects === 'allies' || t.affects === 'self_only' || t.shape === 'self') return 0;
+  if (t.shape === 'adjacent') return 1;
+  if (t.shape === 'all_visible') return 8;
+  // a cone's length is its radius; an area reaches its centre's range plus its radius
+  if (t.shape === 'cone') return Math.max(1, t.radius);
+  if (t.shape === 'area') return t.range + t.radius;
+  return t.range;
+}
+
+/** the farthest a hostile hurts from (1 = melee only) */
+export function hostileReach(a: ActorDef): number {
+  let r = a.attack?.range ?? 1;
+  for (const ab of a.abilities) r = Math.max(r, damageReach(ab.action));
+  return r;
+}
+
+function itemReach(it: ItemDef | undefined): number {
+  if (!it) return 0;
+  const weapon = it.weapon?.range ?? 0;
+  return Math.max(weapon, it.useMode !== 'passive' ? damageReach(it.onUse) : 0);
+}
+
+/**
+ * How far the player can hurt hostiles from in the first area: unarmed reach, starting items and
+ * items placed in the first area (1 = melee only).
+ */
+export function playerReach(w: WorldSpec): number {
+  const items = new Map(w.items.map((i) => [i.id, i]));
+  let r = Math.max(1, w.player.unarmed.range);
+  for (const s of w.player.startingItems) r = Math.max(r, itemReach(items.get(s.item)));
+  for (const p of w.areas[0]?.placedItems ?? []) r = Math.max(r, itemReach(items.get(p.item)));
+  return r;
+}
+
+/** ids an objective needs defeated (goal or a transition lock): never removed from a spawn table */
+function neededActors(w: WorldSpec): Set<string> {
+  const out = new Set<string>();
+  const walk = (c: Condition | undefined, depth = 0): void => {
+    if (!c || depth > 32) return;
+    if (c.type === 'actor_defeated') out.add(c.actor);
+    if (c.type === 'all' || c.type === 'any') for (const x of c.of) walk(x, depth + 1);
+    if (c.type === 'not') walk(c.cond, depth + 1);
+  };
+  walk(w.goal.win);
+  for (const a of w.areas) walk(a.transitionRequires);
+  return out;
+}
+
+/** how dangerous one hostile is to fight: hp × mean hit (the hits are what kill a new player) */
+export function hostileThreat(a: ActorDef): number {
+  let hit = a.attack ? avgAmount(a.attack.damage) : 1;
+  for (const ab of a.abilities) for (const e of ab.action.effects) if (e.type === 'damage') hit = Math.max(hit, avgAmount(e.amount));
+  return a.stats.hp * Math.max(1, hit);
+}
+
+/**
+ * Lowers `vals` one at a time until their sum is at most `cap`, always where count × weight[i] is
+ * largest (the first index wins ties): the most dangerous share of the table goes first, the
+ * fodder stays.
+ */
+function capSum(vals: number[], cap: number, weight: number[]): number[] {
+  const out = [...vals];
+  let sum = out.reduce((n, v) => n + v, 0);
+  while (sum > cap) {
+    let k = -1;
+    for (let i = 0; i < out.length; i++) if (out[i] > 0 && (k < 0 || out[i] * weight[i] > out[k] * weight[k])) k = i;
+    if (k < 0) break;
+    out[k]--;
+    sum--;
+  }
+  return out;
+}
+
+function firstAreaFixes(w: WorldSpec, changes: string[]): void {
+  const plan = w.areas[0];
+  if (!plan) return;
+  const defs = new Map(w.actors.map((a) => [a.id, a]));
+  const needed = neededActors(w);
+  const hostile = plan.actors.filter((e) => defs.get(e.actor)?.faction === 'hostile');
+  if (!hostile.length) return;
+  // no shooters in the first area that outrange everything the player has (a melee-only courier
+  // cannot catch a range-3 kiter)
+  const reach = playerReach(w);
+  {
+    const out: string[] = [];
+    for (const e of hostile) {
+      const def = defs.get(e.actor)!;
+      const r = hostileReach(def);
+      if (r <= 1 || r <= reach || needed.has(def.id) || (e.max === 0 && e.min === 0)) continue;
+      e.min = 0;
+      e.max = 0;
+      out.push(def.id);
+    }
+    if (out.length) changes.push(`area 1: no hostiles that outrange the player (reach ${reach}): ${out.join(', ')} removed from its spawn table`);
+  }
+  // a few hostiles at most, and only a couple guaranteed
+  const cap = FIRST_AREA_MAX_HOSTILES[plan.size] ?? 4;
+  const before = hostile.reduce((n, e) => n + Math.max(e.min, e.max), 0);
+  const threat = hostile.map((e) => hostileThreat(defs.get(e.actor)!));
+  const maxes = capSum(hostile.map((e) => Math.max(e.min, e.max)), cap, threat);
+  hostile.forEach((e, i) => {
+    e.max = maxes[i];
+    e.min = Math.min(e.min, e.max);
+  });
+  const minBefore = hostile.reduce((n, e) => n + e.min, 0);
+  const mins = capSum(hostile.map((e) => e.min), FIRST_AREA_MAX_GUARANTEED, threat);
+  hostile.forEach((e, i) => (e.min = mins[i]));
+  const after = hostile.reduce((n, e) => n + Math.max(e.min, e.max), 0);
+  if (after < before || minBefore > FIRST_AREA_MAX_GUARANTEED) changes.push(`area 1: spawn table capped at ${after} hostiles (was ${before}), at most ${FIRST_AREA_MAX_GUARANTEED} guaranteed`);
+}
+
+function scaleHeals(w: WorldSpec, changes: string[]): void {
+  const hp = w.player.stats.hp;
+  const want = hp * MIN_HEAL_SHARE;
+  const out: string[] = [];
+  w.items = w.items.map((it) => {
+    const use = it.onUse;
+    if (!use || (it.useMode !== 'consumed' && it.useMode !== 'charges') || it.rarity === 'unique') return it;
+    const pr = itemProfile(w, it);
+    if (pr.heal <= 0 || pr.offensive || pr.selfHarm || pr.heal >= want || pr.heal < hp * HEAL_ITEM_SHARE) return it;
+    const f = want / pr.heal;
+    // a new object: itemProfile caches per def object
+    const next: ItemDef = { ...it, onUse: { ...use, effects: use.effects.map((e) => (e.type === 'heal' ? { ...e, amount: scaleAmount(e.amount, f) } : e)) } };
+    out.push(`${it.id} ${Math.round(pr.heal * 10) / 10}→${Math.round(itemProfile(w, next).heal * 10) / 10}`);
+    return next;
+  });
+  if (out.length) changes.push(`healing items heal at least ${Math.round(MIN_HEAL_SHARE * 100)}% of max hp (${out.join(', ')})`);
+}
+
+/**
+ * The new-player fixes, re-validated: the first area spawns at most a few hostiles (none that
+ * outrange everything the player starts with), and healing consumables heal about a quarter of the
+ * player's max hp. Returns the input world itself when nothing changed.
+ */
+export function newPlayerFixes(world: WorldSpec): RebalanceResult {
+  const w = structuredClone(world) as WorldSpec;
+  const changes: string[] = [];
+  firstAreaFixes(w, changes);
+  scaleHeals(w, changes);
+  if (!changes.length) return { world, changes: ['no changes'], valid: true };
+  const parsed = parseWorld(JSON.parse(JSON.stringify(w)));
+  if (!parsed.ok) return { world, changes: [...changes, `rejected: adjusted world failed validation (${parsed.errors.slice(0, 3).join('; ')})`], valid: false };
+  return { world: parsed.world, changes, valid: true };
 }

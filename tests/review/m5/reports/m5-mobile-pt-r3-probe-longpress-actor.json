@@ -1,0 +1,164 @@
+[
+  {
+    "actor": "Mrs Percolate",
+    "pos": {
+      "x": 29,
+      "y": 18
+    },
+    "frac": 0.2,
+    "at": [
+      230,
+      250
+    ],
+    "pick": {
+      "x": 29,
+      "y": 18
+    },
+    "ok": true,
+    "text": "Mrs Percolate Neutral Talk STF 25 / 25 The break-room tea urn, a fellow mimic of"
+  },
+  {
+    "actor": "Mrs Percolate",
+    "pos": {
+      "x": 29,
+      "y": 18
+    },
+    "frac": 0.45,
+    "at": [
+      231,
+      244
+    ],
+    "pick": {
+      "x": 29,
+      "y": 18
+    },
+    "ok": true,
+    "text": "Mrs Percolate Neutral Talk STF 25 / 25 The break-room tea urn, a fellow mimic of"
+  },
+  {
+    "actor": "Mrs Percolate",
+    "pos": {
+      "x": 29,
+      "y": 18
+    },
+    "frac": 0.7,
+    "at": [
+      231,
+      238
+    ],
+    "pick": {
+      "x": 29,
+      "y": 18
+    },
+    "ok": true,
+    "text": "Mrs Percolate Neutral Talk STF 25 / 25 The break-room tea urn, a fellow mimic of"
+  },
+  {
+    "actor": "Intern Adventurer",
+    "pos": {
+      "x": 21,
+      "y": 9
+    },
+    "frac": 0.2,
+    "at": [
+      158,
+      328
+    ],
+    "pick": {
+      "x": 21,
+      "y": 9
+    },
+    "ok": true,
+    "text": "Intern Adventurer Hostile Even match STF 10 / 10 A trainee hero on a work-experi"
+  },
+  {
+    "actor": "Intern Adventurer",
+    "pos": {
+      "x": 21,
+      "y": 9
+    },
+    "frac": 0.45,
+    "at": [
+      160,
+      323
+    ],
+    "pick": {
+      "x": 21,
+      "y": 9
+    },
+    "ok": true,
+    "text": "Intern Adventurer Hostile Even match STF 10 / 10 A trainee hero on a work-experi"
+  },
+  {
+    "actor": "Intern Adventurer",
+    "pos": {
+      "x": 21,
+      "y": 9
+    },
+    "frac": 0.7,
+    "at": [
+      160,
+      318
+    ],
+    "pick": {
+      "x": 21,
+      "y": 9
+    },
+    "ok": true,
+    "text": "Intern Adventurer Hostile Even match STF 10 / 10 A trainee hero on a work-experi"
+  },
+  {
+    "actor": "Intern Adventurer",
+    "pos": {
+      "x": 6,
+      "y": 25
+    },
+    "frac": 0.2,
+    "at": [
+      122,
+      388
+    ],
+    "pick": {
+      "x": 6,
+      "y": 25
+    },
+    "ok": true,
+    "text": "Intern Adventurer Hostile Even match Stuffing 2 / 10 A trainee hero on a work-ex"
+  },
+  {
+    "actor": "Intern Adventurer",
+    "pos": {
+      "x": 6,
+      "y": 25
+    },
+    "frac": 0.45,
+    "at": [
+      121,
+      381
+    ],
+    "pick": {
+      "x": 6,
+      "y": 25
+    },
+    "ok": true,
+    "text": "Intern Adventurer Hostile Even match Stuffing 2 / 10 A trainee hero on a work-ex"
+  },
+  {
+    "actor": "Intern Adventurer",
+    "pos": {
+      "x": 6,
+      "y": 25
+    },
+    "frac": 0.7,
+    "at": [
+      120,
+      375
+    ],
+    "pick": {
+      "x": 6,
+      "y": 25
+    },
+    "ok": true,
+    "text": "Intern Adventurer Hostile Even match Stuffing 2 / 10 A trainee hero on a work-ex"
+  }
+]

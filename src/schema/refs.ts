@@ -599,6 +599,63 @@ export function findUnknownKeys(input: unknown, output: unknown, path: PropertyK
   return out;
 }
 
+/**
+ * Soft problems that do not stop a world from loading but make it read wrong; for generation
+ * reports and authoring tools. Never part of parseWorld's errors.
+ */
+export function worldWarnings(world: WorldSpecT): string[] {
+  const out: string[] = [];
+  const fatalResource = world.resources.some((r) => r.emptyIsDeath);
+  if ((world.goal.lose || fatalResource) && !world.goal.deathText) {
+    out.push(
+      `goal.deathText: missing; the world can be lost ${world.goal.lose ? 'by goal.lose' : 'by a fatal resource'} as well as by defeat, and goal.lossText is shown for both. Write goal.lossText for that loss and goal.deathText for the player being defeated.`,
+    );
+  }
+  out.push(...summonLoopWarnings(world));
+  return out;
+}
+
+/**
+ * Actors that summon their own kind, directly or round a loop (A summons B, B summons A), from an
+ * ability or a repeating trigger (not on_death / on_low_hp). Every copy carries the same summon, so the count grows exponentially until
+ * the engine's per-area cap (MAX_AREA_ACTORS in engine/actors.ts) stops it with a crowded map.
+ * Uniques are skipped (only one is ever alive).
+ */
+function summonLoopWarnings(world: WorldSpecT): string[] {
+  const unique = new Set(world.actors.filter((a) => a.unique).map((a) => a.id));
+  const edges = new Map<string, Set<string>>();
+  for (const a of world.actors) {
+    const to = new Set<string>();
+    // one-off triggers (a split on death, a call for help when wounded) are not a runaway loop
+    const repeating = a.triggers.filter((t) => t.on !== 'on_death' && t.on !== 'on_low_hp');
+    const actions = [...a.abilities.map((ab) => ab.action), ...repeating.map((t) => t.action)];
+    for (const act of actions) for (const e of act.effects) if (e.type === 'summon' && !unique.has(e.actor)) to.add(e.actor);
+    edges.set(a.id, to);
+  }
+  const out: string[] = [];
+  for (const a of world.actors) {
+    if (unique.has(a.id)) continue;
+    // breadth-first search from a's summons back to a
+    const seen = new Set<string>();
+    const queue = [...(edges.get(a.id) ?? [])];
+    let loops = false;
+    while (queue.length && !loops) {
+      const id = queue.shift()!;
+      if (id === a.id) loops = true;
+      else if (!seen.has(id)) {
+        seen.add(id);
+        queue.push(...(edges.get(id) ?? []));
+      }
+    }
+    if (loops) {
+      out.push(
+        `actors.${a.id}: summons its own kind${(edges.get(a.id) ?? new Set()).has(a.id) ? '' : ' through another actor'}; every copy summons again, so the area fills up until the engine's actor cap stops it. Make it unique, summon a different actor that does not summon back, or use a one-off trigger (on_death, on_low_hp).`,
+      );
+    }
+  }
+  return out;
+}
+
 export type ParseWorldResult = { ok: true; world: WorldSpecT } | { ok: false; errors: string[] };
 
 export interface ParseWorldOptions {

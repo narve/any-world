@@ -25,9 +25,9 @@ import { fireDefTriggers, fireTriggers } from './triggers';
 import { defChain } from './actors';
 import { grantXp } from './progression';
 import { damageEquipped, dropItemAt } from './inventory';
-import { cheb } from './util';
+import { cheb, own } from './util';
 import { END_REASON_KEYS, type EndReasonKey, type LogParams, renderTemplate } from './log-keys';
-import { withinRadius } from './fov';
+import { withinReach } from './fov';
 import { playerSeesTile } from './vision';
 import { switchesOf } from './rules';
 import { profileOf } from './difficulty';
@@ -38,6 +38,10 @@ export interface AttackInfo {
   slot: number | null;
 }
 
+/**
+ * The attack of a hostile (non-NPC) actor or recruited ally whose def has none. Its `verb` is only
+ * the English fallback: log lines of this attack use the *_default keys, which carry no verb param.
+ */
 export const DEFAULT_ACTOR_ATTACK: Attack = {
   name: 'Strike',
   verb: 'strikes',
@@ -67,14 +71,15 @@ export function attackOf(ctx: Ctx, a: ActorInstance): AttackInfo | null {
 
 /**
  * Can `a` hit `t` with its attack right now. Melee reaches the 8 neighbours; ranged attacks reach
- * the same Euclidean circle as sight (withinRadius) with line of sight. Perception is symmetric:
- * nobody shoots the player from beyond arm's reach while standing where the player can't see.
+ * `range` steps in any direction (withinReach, the same count as movement and ability targeting)
+ * with line of sight. Perception is symmetric: nobody shoots the player from beyond arm's reach
+ * while standing where the player can't see.
  */
 export function inAttackRange(ctx: Ctx, a: ActorInstance, t: ActorInstance, atk: Attack): boolean {
   const d = cheb(a.pos, t.pos);
   if (d < 1) return false;
   if (atk.range <= 1) return d <= 1;
-  if (!withinRadius(a.pos, t.pos, atk.range) || !los(ctx, a.pos, t.pos)) return false;
+  if (!withinReach(a.pos, t.pos, atk.range) || !los(ctx, a.pos, t.pos)) return false;
   if (d > 1 && isPlayer(ctx, t) && !isPlayer(ctx, a) && !playerSeesTile(ctx, a.pos)) return false;
   return true;
 }
@@ -114,7 +119,10 @@ export function performAttack(ctx: Ctx, attacker: ActorInstance, target: ActorIn
   provoke(ctx, attacker, target);
   if (!hit) {
     emit(ctx, { type: 'attacked', attackerId: attacker.id, targetId: target.id, hit: false, damage: 0, damageType: atk.damageType, ranged });
-    logKey(ctx, 'log.attack.miss', { attacker: aName, verb: atk.verb, target: tName }, 'combat');
+    // the built-in attack has no world-authored verb: its lines have their own keys, so the catalog
+    // supplies the verb in the UI language ("angriper"), not the English "strikes"
+    if (atk === DEFAULT_ACTOR_ATTACK) logKey(ctx, 'log.attack.miss_default', { attacker: aName, target: tName }, 'combat');
+    else logKey(ctx, 'log.attack.miss', { attacker: aName, verb: atk.verb, target: tName }, 'combat');
     return res;
   }
   let dmg = evalAmount(ctx, atk.damage, attacker, res.crit);
@@ -124,7 +132,8 @@ export function performAttack(ctx: Ctx, attacker: ActorInstance, target: ActorIn
   res.damage = dealt;
   emit(ctx, { type: 'attacked', attackerId: attacker.id, targetId: target.id, hit: true, damage: dealt, damageType: atk.damageType, ranged });
   const hitParams = { attacker: aName, verb: atk.verb, target: tName, amount: dealt };
-  if (atk.damageType === 'physical') logKey(ctx, res.crit ? 'log.attack.crit' : 'log.attack.hit', hitParams, 'combat');
+  if (atk === DEFAULT_ACTOR_ATTACK) logKey(ctx, res.crit ? 'log.attack.crit_default' : 'log.attack.hit_default', { attacker: aName, target: tName, amount: dealt }, 'combat');
+  else if (atk.damageType === 'physical') logKey(ctx, res.crit ? 'log.attack.crit' : 'log.attack.hit', hitParams, 'combat');
   else logKey(ctx, res.crit ? 'log.attack.crit_typed' : 'log.attack.hit_typed', { ...hitParams, damageType: damageTypeName(ctx, atk.damageType) }, 'combat');
   if (isPlayer(ctx, attacker) && ai.slot !== null) damageEquipped(ctx, ai.slot);
   if (isAlive(ctx, attacker)) fireTriggers(ctx, attacker, 'on_hit', { other: target, pos: target.pos });
@@ -253,7 +262,10 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
   emit(ctx, killerId ? { type: 'died', actorId: victim.id, defId: victim.defId, killerId } : { type: 'died', actorId: victim.id, defId: victim.defId });
   // a transformed actor (a unique's later phase) counts as defeating every form it has had
   const chain = defChain(victim);
-  for (const id of chain) ctx.s.defeated[id] = (ctx.s.defeated[id] ?? 0) + 1;
+  // an actor fighting on the player's side (a summoned or converted ally) does not count as
+  // "defeated": otherwise a copy of the goal actor made friendly could be bumped to death for a win
+  const wasAlly = side(ctx, victim) === 'P';
+  if (!wasAlly) for (const id of chain) ctx.s.defeated[id] = (own(ctx.s.defeated, id) ?? 0) + 1;
   logKey(ctx, 'log.defeated', { target: vName, defeated: ctx.world.vocabulary.defeated }, 'combat');
   // on_death triggers run with the victim as the user (it is no longer listed); earlier unique
   // forms fire theirs too (oldest first), so a boss's "defeated" flags survive a second phase
@@ -267,7 +279,7 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
   if (byPlayerSide && def) {
     ctx.s.stats.kills += 1;
     const vc = switchesOf(ctx).violenceCounter;
-    if (vc) ctx.s.counters[vc] = (ctx.s.counters[vc] ?? 0) + 1;
+    if (vc) ctx.s.counters[vc] = (own(ctx.s.counters, vc) ?? 0) + 1;
     if (def.xp > 0) grantXp(ctx, def.xp);
   }
   if (killer && isAlive(ctx, killer)) fireTriggers(ctx, killer, 'on_kill', { other: victim, pos: victim.pos });

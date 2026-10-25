@@ -477,6 +477,24 @@ export function gmRuleHarm(ctx: Ctx, live: readonly ActiveRuleEntry[] = activeRu
   return total;
 }
 
+/** harmful effect types a standing GM rule may not aim at the player's foes */
+const FOE_STRIKES: ReadonlySet<string> = new Set(['damage', 'kill', 'drain', 'transform', 'change_faction', 'teleport']);
+
+/**
+ * Whether a player trigger of `rule` reaches the player's foes with a harmful effect. The engine's
+ * impact estimate only scores what reaches the player, so such a rule would pass the harm limits
+ * while killing every boss it sees (defence in depth: llm/gm-checks refuses these too).
+ */
+function strikesFoes(rule: RuleVariant): boolean {
+  return (rule.playerTriggers ?? []).some((t) => {
+    const tg = t.action?.targeting;
+    if (!tg || tg.shape === 'self' || (tg.affects !== 'enemies' && tg.affects !== 'all')) return false;
+    return (t.action.effects ?? []).some(
+      (e) => FOE_STRIKES.has(e.type) || (e.type === 'resource' && (e.amount?.base ?? 0) < 0) || (e.type === 'modify_stat' && e.amount < 0),
+    );
+  });
+}
+
 /**
  * Why the GM may not add `rule` now (null = it may): the cap on active rules, one GM rule per
  * area, no duplicate ids, no writing the counters / flags the world's outcome reads, and the
@@ -489,6 +507,7 @@ export function addRuleRefusal(ctx: Ctx, rule: RuleVariant): string | null {
   if ((ctx.s.area.gmRulesAdded ?? 0) >= MAX_GM_RULES_PER_AREA) return `at most ${MAX_GM_RULES_PER_AREA} new rule per area`;
   const goalWrite = ruleGoalWrite(ctx.world, rule);
   if (goalWrite) return `a rule may not change ${goalWrite}: the goal depends on it`;
+  if (strikesFoes(rule)) return 'a GM rule may not strike the player\'s foes (it would fire at every later boss)';
   const prof = profileOf(ctx.s);
   const band = difficultyOf(ctx.s);
   const harm = estimateRuleImpact(ctx.world, rule, { mercyHelps: mercyWouldHelp(ctx, live) }).hpPer100;

@@ -8,14 +8,16 @@ import { TOTAL_SLOTS } from '../engine/types';
 import {
   describeInventory,
   describeItemDef,
+  endingText,
   legalActions,
   playerSheet,
   transitionBlocker,
   type PlayerSheet,
 } from '../engine/index';
 import { activeRulesOf, type RuleTracker } from './rules';
-import { contextActions, goalView } from './guide';
-import { listJoin, t, tx } from './i18n/index';
+import { contextActions, goalView, inWorldLanguage, worldTextLanguage } from './guide';
+import { logTextIn } from './i18n/prompt-log';
+import { catalog, formatMessage, listJoin, t, tx } from './i18n/index';
 import { dialogueOptionLabel, npcRoleLabel } from './i18n/engine-text';
 import type {
   ChoiceView,
@@ -249,6 +251,14 @@ export function restoresOf(def: ItemDef): string[] {
   return [...out];
 }
 
+/** pressing this slot would use the item right now (no cooldown, charges left, usable) */
+export function readyToUse(sv: SlotItemView): boolean {
+  if (!sv.usable) return false;
+  if (sv.cooldown && sv.cooldown > 0) return false;
+  if (sv.maxCharges && (sv.charges ?? 0) <= 0) return false;
+  return true;
+}
+
 export function slotViews(world: WorldSpec, state: GameState, views: (ItemView | null)[]): (SlotItemView | null)[] {
   const defs = new Map(world.items.map((i) => [i.id, i]));
   const out: (SlotItemView | null)[] = [];
@@ -268,6 +278,7 @@ export function slotViews(world: WorldSpec, state: GameState, views: (ItemView |
       if (es) sv.equipSlot = es;
       sv.needsTarget = needsTarget(def);
       if (aimsDirection(def)) sv.aimsDirection = true;
+      if (def.weapon && def.weapon.range > 1) sv.range = def.weapon.range;
       sv.rarity = def.rarity;
       // what it restores is only shown when the player knows what it does
       if (v.knowledge === 'clear') {
@@ -299,9 +310,13 @@ export interface DialogueMap {
   sell: number[];
 }
 
-export function dialogueMap(pc: PendingChoice): DialogueMap {
+/** a dialogue option the session hides from the reply list (e.g. "Ask what they know" once heard out) */
+export type DialogueSkip = (option: PendingChoice['options'][number], index: number) => boolean;
+
+export function dialogueMap(pc: PendingChoice, skip?: DialogueSkip): DialogueMap {
   const m: DialogueMap = { labels: [], engineIndex: [], leaveIndex: null, buy: [], sell: [] };
   pc.options.forEach((o, i) => {
+    if (skip?.(o, i)) return;
     if (o.tag === 'buy') m.buy.push(i);
     else if (o.tag === 'sell') m.sell.push(i);
     else if (!o.tag && o.actions.length === 0 && m.leaveIndex === null && i === pc.options.length - 1) m.leaveIndex = i;
@@ -317,12 +332,13 @@ export function dialogueView(
   world: WorldSpec,
   state: GameState,
   history: { who: 'npc' | 'player'; text: string }[],
+  skip?: DialogueSkip,
 ): DialogueView | null {
   const pc = state.pendingChoice;
   if (!pc || pc.kind !== 'dialogue') return null;
   const npc = state.area.actors.find((a) => a.id === pc.speakerId);
   const def = npc ? world.actors.find((d) => d.id === npc.defId) : undefined;
-  const m = dialogueMap(pc);
+  const m = dialogueMap(pc, skip);
   return {
     npcId: pc.speakerId ?? '',
     npcName: def?.name ?? t('common.someone'),
@@ -497,6 +513,8 @@ export interface GameViewExtras {
   mode: GameView['mode'];
   targetingSlot?: number;
   dialogueHistory: { who: 'npc' | 'player'; text: string }[];
+  /** dialogue options to leave out of the reply list (the session's dialogueReply uses the same) */
+  dialogueSkip?: DialogueSkip;
   tradeOpen: boolean;
   busy?: string | null;
   rules?: RuleTracker;
@@ -511,6 +529,23 @@ export interface GameViewExtras {
   thumbs?: (defId: string) => string | undefined;
 }
 
+/**
+ * Engine log lines in the world's language when it differs from the UI language: an English world
+ * in a Norwegian UI reads "Mesa Rattler is put in the dirt.", not "Mesa Rattler er put in the dirt."
+ * (world names and verbs are world text). Such lines lose their catalog key, so the log panel shows
+ * them as they are (issues/M5-mixed-language-world-ui.md).
+ */
+export function worldLanguageLog(log: LogMessage[], world: Pick<WorldSpec, 'meta' | 'vocabulary'>): LogMessage[] {
+  const lang = worldTextLanguage(world);
+  if (!lang) return log;
+  const hp = world.vocabulary.stats.hp.name;
+  return log.map((m) => {
+    if (!m.key || m.kind === 'gm' || m.kind === 'npc') return m;
+    const { key: _key, params: _params, ...rest } = m;
+    return { ...rest, text: logTextIn(m, lang, hp) };
+  });
+}
+
 export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras): GameView {
   const sheet = playerSheet(state);
   const plan = world.areas[state.area.index];
@@ -523,7 +558,9 @@ export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras):
   const slots = slotViews(world, state, describeInventory(state));
   // a quick-slot item that answers a current danger glows ("press 3")
   for (const d of hud.danger ?? []) {
-    const i = slots.findIndex((sv, idx) => idx < 8 && !!sv?.restores?.includes(d.id) && !(sv.cooldown && sv.cooldown > 0));
+    // only an item pressing would use now: not cooling down, not out of charges, not otherwise
+    // unusable (issues/M5-danger-hint-empty-item.md)
+    const i = slots.findIndex((sv, idx) => idx < 8 && !!sv?.restores?.includes(d.id) && readyToUse(sv));
     if (i >= 0) {
       d.slot = i;
       slots[i] = { ...slots[i]!, urgent: true };
@@ -541,10 +578,10 @@ export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras):
   const legal = x.legal ?? (state.status === 'playing' ? legalActions(state) : []);
   return {
     hud,
-    log: mergedLog(state, x.gmLog),
+    log: worldLanguageLog(mergedLog(state, x.gmLog), world),
     slots,
     narration: x.narration,
-    dialogue: trade || levelUp ? null : dialogueView(world, state, x.dialogueHistory),
+    dialogue: trade || levelUp ? null : dialogueView(world, state, x.dialogueHistory, x.dialogueSkip),
     choice: levelUp ? null : choiceView(world, state),
     levelUp,
     trade,
@@ -559,10 +596,19 @@ export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras):
     busy: x.busy ?? null,
     ...objectiveFields(objectiveParts(world, state, canTransition)),
     interactHint: x.interactHint ?? null,
-    goal: goalView(world, state),
+    goal: inWorldLanguage(world, () => goalView(world, state)),
     actions: contextActions(world, state, { legal, interact: x.interact ?? null, canTransition }),
     onboarding: x.onboarding ?? null,
   };
+}
+
+/** the loss reason, in the world's language when it differs from the UI's (issues/M5-mixed-language-world-ui.md) */
+function endReasonText(world: WorldSpec, key: string, params: Record<string, string | number> | undefined, fallback: string): string {
+  const lang = worldTextLanguage(world);
+  const tpl = lang ? catalog(lang)?.[key] : undefined;
+  if (lang && tpl !== undefined) return formatMessage(tpl, params, lang);
+  if (lang) return fallback;
+  return tx(key, params, fallback);
 }
 
 export function endView(world: WorldSpec, state: GameState, epitaph?: string, run?: { difficulty?: EndView['difficulty']; weirdness?: number }): EndView {
@@ -570,8 +616,8 @@ export function endView(world: WorldSpec, state: GameState, epitaph?: string, ru
   return {
     result: won ? 'won' : 'lost',
     worldTitle: world.meta.title,
-    text: won ? world.goal.winText : world.goal.lossText,
-    reason: state.endReasonKey && state.endReason !== undefined ? tx(state.endReasonKey, state.endReasonParams, state.endReason) : state.endReason,
+    text: endingText(world, state),
+    reason: state.endReasonKey && state.endReason !== undefined ? endReasonText(world, state.endReasonKey, state.endReasonParams, state.endReason) : state.endReason,
     epitaph,
     playerName: world.player.name,
     stats: {

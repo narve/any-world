@@ -17,9 +17,12 @@
  *   --analyse           also print the static balance analysis and verdict per world
  *   --difficulty <d>    gentle|normal|hard|brutal: the band the games are played at (engine
  *                       difficulty) and the win-rate target for --analyse (default normal)
+ *   --gate              the new-player gate (src/engine/balance/gate.ts): plays the newbie bot at
+ *                       gentle and normal (ignores --bots / --difficulty) and checks its win rate
+ *                       against the floors (gentle ≥ 50%, normal ≥ 25%); exit code 1 when a world fails
  *   --json              print JSON instead of tables
  *
- * Exit code 1 when any run crashed (or a world file is invalid).
+ * Exit code 1 when any run crashed (or a world file is invalid, or --gate failed).
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
@@ -29,7 +32,7 @@ import { cpus } from 'node:os';
 import { parseWorld } from '../src/schema/refs';
 import type { WorldSpec } from '../src/schema/world';
 import { runGame, summarize, formatSummary, type SimResult, type BotName, BOT_NAMES } from '../src/engine/sim/index';
-import { staticAnalysis, verdictFor, formatAnalysis, DIFFICULTIES, type Difficulty } from '../src/engine/balance/index';
+import { staticAnalysis, verdictFor, formatAnalysis, DIFFICULTIES, type Difficulty, NEW_PLAYER_GATE, GATE_BOT, gateFromResults, formatGate } from '../src/engine/balance/index';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const self = fileURLToPath(import.meta.url);
@@ -91,6 +94,7 @@ function parseArgs(argv: string[]) {
     jobs: Math.max(1, cpus().length - 1),
     json: false,
     analyse: false,
+    gate: false,
     difficulty: 'normal' as Difficulty,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -133,6 +137,9 @@ function parseArgs(argv: string[]) {
       case '--analyse':
       case '--analyze':
         o.analyse = true;
+        break;
+      case '--gate':
+        o.gate = true;
         break;
       case '--difficulty': {
         const d = val();
@@ -195,14 +202,18 @@ async function main(): Promise<void> {
     }
   }
   const tasks: Task[] = [];
+  const levels: Difficulty[] = o.gate ? (Object.keys(NEW_PLAYER_GATE) as Difficulty[]) : [o.difficulty];
+  const bots: BotName[] = o.gate ? [GATE_BOT] : o.bots;
   for (const [file] of worlds)
-    for (const bot of o.bots)
-      for (let k = 0; k < o.seeds; k++)
-        tasks.push({ file, bot, seed: o.seedStart + k, maxTurns: bot === 'random' ? Math.min(o.maxTurns, 800) : o.maxTurns, gm: o.gm, exact: o.exact, difficulty: o.difficulty });
+    for (const difficulty of levels)
+      for (const bot of bots)
+        for (let k = 0; k < o.seeds; k++)
+          tasks.push({ file, bot, seed: o.seedStart + k, maxTurns: bot === 'random' ? Math.min(o.maxTurns, 800) : o.maxTurns, gm: o.gm, exact: o.exact, difficulty });
   const t0 = Date.now();
   const results = await runParallel(tasks, o.jobs);
   const secs = (Date.now() - t0) / 1000;
   let crashes = 0;
+  let gateFails = 0;
   const report: unknown[] = [];
   const text: string[] = [];
   for (const [file, world] of worlds) {
@@ -213,8 +224,15 @@ async function main(): Promise<void> {
     // the band the games were really played at (from GameState.difficulty), not just the requested one
     const played = [...new Set(rs.map((r) => r.difficulty))];
     const entry: Record<string, unknown> = { file: rel, title: world.meta.title, difficulty: played.length === 1 ? played[0] : played, summaries: sums };
-    text.push(formatSummary(`${rel} — "${world.meta.title}" (${played.join(', ')})`, sums));
-    if (o.analyse) {
+    if (o.gate) text.push(`${rel} — "${world.meta.title}"`);
+    else text.push(formatSummary(`${rel} — "${world.meta.title}" (${played.join(', ')})`, sums));
+    if (o.gate) {
+      const g = gateFromResults(world, rs);
+      if (!g.pass) gateFails++;
+      entry.gate = g;
+      text.push(formatGate(g));
+    }
+    if (o.analyse && !o.gate) {
       const sa = staticAnalysis(world);
       const v = verdictFor(world, sa, sums, o.difficulty);
       entry.static = sa;
@@ -231,7 +249,7 @@ async function main(): Promise<void> {
   if (o.json) console.log(JSON.stringify({ seconds: secs, runs: results.length, worlds: report }, null, 2));
   else {
     console.log(text.join('\n\n'));
-    console.log(`\n${results.length} runs in ${secs.toFixed(1)}s (${o.jobs} jobs)${crashes ? `, ${crashes} CRASHED` : ''}`);
+    console.log(`\n${results.length} runs in ${secs.toFixed(1)}s (${o.jobs} jobs)${crashes ? `, ${crashes} CRASHED` : ''}${o.gate ? `, new-player gate: ${gateFails ? `${gateFails} of ${worlds.size} worlds FAIL` : 'all pass'}` : ''}`);
   }
-  process.exit(crashes || bad ? 1 : 0);
+  process.exit(crashes || bad || gateFails ? 1 : 0);
 }

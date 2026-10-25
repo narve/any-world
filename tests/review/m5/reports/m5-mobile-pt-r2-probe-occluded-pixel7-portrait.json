@@ -1,0 +1,75 @@
+{
+  "world": "heist-silent-vault",
+  "placed": {
+    "id": "a8",
+    "name": "Listening Horn",
+    "pos": {
+      "x": 5,
+      "y": 26
+    },
+    "me": {
+      "x": 5,
+      "y": 27
+    }
+  },
+  "sweep": {
+    "hits": 98,
+    "player": 99,
+    "total": 651,
+    "hitPts": [
+      [
+        202,
+        360
+      ],
+      [
+        206,
+        360
+      ],
+      [
+        198,
+        364
+      ],
+      [
+        202,
+        364
+      ],
+      [
+        206,
+        364
+      ],
+      [
+        210,
+        364
+      ]
+    ],
+    "tileCentre": [
+      206,
+      399
+    ],
+    "pickTile": {
+      "x": 5,
+      "y": 26
+    },
+    "body": [
+      206,
+      384
+    ],
+    "pickBody": {
+      "x": 5,
+      "y": 26
+    }
+  },
+  "tapBody": {
+    "turn": 1,
+    "me": {
+      "x": 5,
+      "y": 27
+    },
+    "newLog": [
+      "Ottilie Graf hums a pure A at Listening Horn for 2 Misdirection.",
+      "Listening Horn amplifies the rustle of Ottilie Graf for 3 Feedback."
+    ],
+    "toasts": [],
+    "layer": "game"
+  }
+}

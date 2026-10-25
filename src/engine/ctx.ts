@@ -15,8 +15,8 @@ import type {
 } from '../schema/world';
 import type { ActorInstance, GameEvent, GameState, LogMessage, MapGenerator, Pos, Tile } from './types';
 import type { SeededRng } from './rng';
-import { inBounds, tileAt } from './util';
-import { type LogKey, type LogParams, LOG_KEYS, renderTemplate } from './log-keys';
+import { inBounds, own, tileAt } from './util';
+import { DEATH_REASON_KEYS, type LogKey, type LogParams, LOG_KEYS, renderTemplate } from './log-keys';
 
 export interface Switches {
   durability: boolean;
@@ -192,6 +192,18 @@ export function emit(ctx: Ctx, ev: GameEvent): void {
   ctx.events.push(ev);
 }
 
+/**
+ * The world's ending text for a finished run: goal.winText when won; goal.deathText (falling
+ * back to goal.lossText) when the player was defeated (hp 0); goal.lossText when the run was
+ * lost by goal.lose or a fatal resource. Shared by the engine log and the end screen.
+ */
+export function endingText(world: Pick<WorldSpec, 'goal'>, state: Pick<GameState, 'status' | 'endReasonKey'>): string {
+  const g = world.goal;
+  if (state.status === 'won') return g.winText;
+  if (state.endReasonKey !== undefined && DEATH_REASON_KEYS.has(state.endReasonKey)) return g.deathText ?? g.lossText;
+  return g.lossText;
+}
+
 /** ends the run (idempotent): status, reason, title + goal text in the log, game_over event */
 export function endGame(ctx: Ctx, result: 'won' | 'lost', reason: string, reasonKey?: { key: string; params: LogParams }): void {
   if (ctx.s.status !== 'playing') return;
@@ -203,7 +215,7 @@ export function endGame(ctx: Ctx, result: 'won' | 'lost', reason: string, reason
   }
   const v = ctx.world.vocabulary;
   log(ctx, result === 'won' ? v.winTitle : v.lossTitle, result === 'won' ? 'good' : 'bad');
-  log(ctx, result === 'won' ? ctx.world.goal.winText : ctx.world.goal.lossText, 'gm');
+  log(ctx, endingText(ctx.world, ctx.s), 'gm');
   emit(ctx, { type: 'game_over', result, reason });
 }
 
@@ -247,7 +259,8 @@ export function actorAt(ctx: Ctx, p: Pos): ActorInstance | undefined {
 /** display name of a stat/resource using world vocabulary */
 export function statName(ctx: Ctx, stat: string): string {
   const v = ctx.world.vocabulary.stats as Record<string, { name: string }>;
-  if (v[stat]) return v[stat].name;
+  const named = own(v, stat);
+  if (named) return named.name;
   const r = ctx.ix.resources.get(stat);
   if (r) return r.name;
   if (stat === 'speed') return 'Speed';

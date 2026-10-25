@@ -16,6 +16,7 @@ export {
   verdictFor,
   formatAnalysis,
   WIN_RATE_TARGETS,
+  NEW_PLAYER_FLOORS,
   DIFFICULTIES,
   targetFor,
   MAX_STUCK_RATE,
@@ -28,5 +29,21 @@ export {
   type BalanceReport,
   type AnalyseOptions,
 } from './analyse';
-export { autoRebalance, rebalance, feasibilityFixes, topKiller, scaleAmount, tooEasyFactor, bestHealingItem, type RebalanceResult } from './rebalance';
+export {
+  autoRebalance,
+  rebalance,
+  feasibilityFixes,
+  newPlayerFixes,
+  playerReach,
+  hostileReach,
+  FIRST_AREA_MAX_HOSTILES,
+  FIRST_AREA_MAX_GUARANTEED,
+  MIN_HEAL_SHARE,
+  topKiller,
+  scaleAmount,
+  tooEasyFactor,
+  bestHealingItem,
+  type RebalanceResult,
+} from './rebalance';
+export { NEW_PLAYER_GATE, GATE_BOT, newPlayerGate, gateFromResults, gateLevel, formatGate, type GateLevel, type GateReport, type GateOptions } from './gate';
 export { tuneWorld, tuneDistance, preferCandidate, confirmReport, TUNE_DEFAULT_SEEDS, type TuneOptions, type TuneResult, type TuneStep } from './tune';

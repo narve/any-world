@@ -75,14 +75,26 @@ export function computeFov(width: number, height: number, origin: Pos, radius: n
 
 /**
  * True when `b` is within radius `r` of `a` by the same Euclidean rule computeFov uses
- * (dx² + dy² ≤ r² + r). Sight, perception and ranged reach all use it, so a range of 6 reaches
- * exactly the tiles a sight of 6 shows (never the far corners of the square).
+ * (dx² + dy² ≤ r² + r). Sight and perception use it, so an actor notices exactly the tiles a
+ * sight of the same radius shows (never the far corners of the square).
  */
 export function withinRadius(a: Pos, b: Pos, r: number): boolean {
   const rr = Math.max(0, Math.floor(r));
   const dx = a.x - b.x;
   const dy = a.y - b.y;
   return dx * dx + dy * dy <= rr * rr + rr;
+}
+
+/**
+ * True when `b` is at most `r` steps from `a` (Chebyshev distance: a diagonal step counts as one,
+ * exactly like movement). Weapon and ability reach use it, so "reaches 5 tiles" means five steps
+ * in any direction, the distance a player counts on the grid (issues/M5-ranged-reach-metric.md).
+ * Shots still need line of sight, and hostiles only shoot the player from tiles the player sees
+ * (vision.playerSeesTile), so a reach longer than the sight circle never hits from the dark.
+ */
+export function withinReach(a: Pos, b: Pos, r: number): boolean {
+  const rr = Math.max(0, Math.floor(r));
+  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) <= rr;
 }
 
 /** True when the straight line a→b (excluding endpoints) has no opaque tile, in either direction. */

@@ -75,7 +75,7 @@ const NB: Record<string, string> = {
   nature: 'natur',
   negotiation: 'forhandling',
   noir: 'noir',
-  'non-earth': 'ikke jorda',
+  'non-earth': 'utenomjordisk',
   'non-violent': 'ikke-voldelig',
   norway: 'Norge',
   persuasion: 'overtalelse',

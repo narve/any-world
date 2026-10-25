@@ -106,17 +106,71 @@ export function normalizeSettings(v: unknown, transport: 'direct' | 'backend', t
   const provider: Settings['provider'] = { preset: str(p.preset) ?? d.provider.preset, transport: tr };
   if (str(p.model)) provider.model = p.model;
   if (str(p.baseUrl)) provider.baseUrl = p.baseUrl;
-  if (str(p.apiKey)) provider.apiKey = p.apiKey;
+  // keys are kept per provider: an old single key belongs to the preset it was saved with
+  const apiKeys: Record<string, string> = {};
+  if (o.apiKeys && typeof o.apiKeys === 'object' && !Array.isArray(o.apiKeys)) {
+    for (const [k, val] of Object.entries(o.apiKeys as Record<string, unknown>)) if (k && str(val)) apiKeys[k] = val as string;
+  }
+  const slot = keySlot(provider);
+  if (str(p.apiKey) && !apiKeys[slot]) apiKeys[slot] = p.apiKey!;
+  if (apiKeys[slot]) provider.apiKey = apiKeys[slot];
   const a: Partial<Settings['audio']> = o.audio && typeof o.audio === 'object' ? o.audio : {};
   const vol = typeof a.volume === 'number' && Number.isFinite(a.volume) ? Math.min(1, Math.max(0, a.volume)) : d.audio.volume;
   return {
     provider,
+    ...(Object.keys(apiKeys).length ? { apiKeys } : {}),
     audio: { volume: vol, muted: !!a.muted, soundcloud: !!a.soundcloud },
     animationSpeed: typeof o.animationSpeed === 'number' && Number.isFinite(o.animationSpeed) ? Math.min(3, Math.max(0.5, o.animationSpeed)) : 1,
     reduceMotion: !!o.reduceMotion,
     quality: (QUALITIES as readonly string[]).includes(o.quality as string) ? (o.quality as Settings['quality']) : 'auto',
     gm: o.gm !== false,
   };
+}
+
+/**
+ * Which saved key a provider config may use: the preset id, plus its base URL when one is set (a
+ * custom endpoint, or a local server moved to another address), so a key never follows the player
+ * to a different host.
+ */
+export function keySlot(p: Pick<Settings['provider'], 'preset' | 'baseUrl'>): string {
+  const url = p.baseUrl?.trim().replace(/\/+$/, '');
+  return url ? `${p.preset}@${url}` : p.preset;
+}
+
+/**
+ * The settings the dialog saved, with keys kept per provider (issues/M5-api-key-leaks-across-presets.md):
+ *  - a key the player typed (or cleared) belongs to the provider the dialog is set to,
+ *  - otherwise switching provider swaps in that provider's own saved key, or none — the previous
+ *    provider's key is never carried over to the new host.
+ */
+export function reconcileApiKeys(before: Settings, next: Settings): Settings {
+  const keys: Record<string, string> = { ...(before.apiKeys ?? {}), ...(next.apiKeys ?? {}) };
+  const prevSlot = keySlot(before.provider);
+  if (before.provider.apiKey) keys[prevSlot] = before.provider.apiKey;
+  const slot = keySlot(next.provider);
+  const typed = (next.provider.apiKey ?? '') !== (before.provider.apiKey ?? '');
+  const provider = { ...next.provider };
+  if (typed) {
+    if (provider.apiKey) keys[slot] = provider.apiKey;
+    else delete keys[slot];
+  } else if (slot !== prevSlot) {
+    if (keys[slot]) provider.apiKey = keys[slot];
+    else delete provider.apiKey;
+  }
+  const out: Settings = { ...next, provider };
+  if (Object.keys(keys).length) out.apiKeys = keys;
+  else delete out.apiKeys;
+  return out;
+}
+
+/**
+ * The provider config to call with: the key only when it is the one saved for this provider and
+ * address (a hand-edited or stale entry never sends a key to another host).
+ */
+export function activeProvider(s: Settings): Settings['provider'] {
+  const p = { ...s.provider };
+  if (p.apiKey && s.apiKeys && s.apiKeys[keySlot(p)] !== p.apiKey) delete p.apiKey;
+  return p;
 }
 
 export function loadSettings(transport: 'direct' | 'backend', transports?: readonly ('direct' | 'backend')[]): Settings {
@@ -184,6 +238,15 @@ export interface StoredWorld {
 
 export type StoredWorldMeta = Pick<StoredWorld, 'source' | 'origin'>;
 
+/**
+ * How the start screen labels a kept world: imported from a file, AI-made, or "demo" — a copy of a
+ * recorded world that the offline demo generator picked (it carries `origin`, and no AI made it).
+ */
+export function recentSource(w: StoredWorldMeta): 'generated' | 'imported' | 'demo' {
+  if (w.source === 'imported') return 'imported';
+  return w.origin ? 'demo' : 'generated';
+}
+
 export function loadGeneratedWorlds(): StoredWorld[] {
   try {
     const v = JSON.parse(store()?.getItem(WORLDS_KEY) ?? '[]') as unknown;
@@ -195,23 +258,37 @@ export function loadGeneratedWorlds(): StoredWorld[] {
 }
 
 /**
- * Stores a generated world (replacing one with the same id). When storage is full the oldest worlds
- * are dropped until it fits; returns false when even the world alone does not fit.
+ * Stores a generated world (replacing one with the same id). Only the newest MAX_GENERATED_WORLDS
+ * are kept, and when storage is full the oldest worlds are dropped until it fits — but never the
+ * world of the autosaved run in progress, or that run could no longer be continued
+ * (issues/M5-stored-world-evicts-saved-run.md). Returns false (and changes nothing) when the world
+ * does not fit even then.
  */
 export function saveGeneratedWorld(id: string, world: unknown, now = Date.now(), meta: StoredWorldMeta = {}): boolean {
   const s = store();
   if (!s) return false;
   const entry: StoredWorld = { id, world, savedAt: now, ...(meta.source ? { source: meta.source } : {}), ...(meta.origin ? { origin: meta.origin } : {}) };
-  let list = [...loadGeneratedWorlds().filter((w) => w.id !== id), entry].slice(-MAX_GENERATED_WORLDS);
-  while (list.length) {
+  const pinned = loadRun()?.worldId ?? null;
+  const keep = (w: StoredWorld) => w.id === id || w.id === pinned;
+  /** drops the oldest entry that may go; false when none may */
+  const dropOldest = (xs: StoredWorld[]): StoredWorld[] | null => {
+    const i = xs.findIndex((w) => !keep(w));
+    return i < 0 ? null : [...xs.slice(0, i), ...xs.slice(i + 1)];
+  };
+  let list: StoredWorld[] | null = [...loadGeneratedWorlds().filter((w) => w.id !== id), entry];
+  while (list && list.length > MAX_GENERATED_WORLDS) list = dropOldest(list);
+  // more pinned entries than the cap is impossible (at most the run's world and the new one)
+  if (!list) return false;
+  for (;;) {
     try {
       s.setItem(WORLDS_KEY, JSON.stringify(list));
       return true;
     } catch {
-      list = list.slice(1);
+      const next = dropOldest(list);
+      if (!next) return false;
+      list = next;
     }
   }
-  return false;
 }
 
 /** drops a stored world; returns false when it was not there (or storage failed) */

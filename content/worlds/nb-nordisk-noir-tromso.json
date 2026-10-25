@@ -1746,8 +1746,8 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4,
-              "dice": "1d4"
+              "base": 5,
+              "dice": "1d3"
             }
           }
         ],
@@ -1923,7 +1923,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 3
+              "base": 7
             }
           }
         ],
@@ -2618,19 +2618,19 @@
           "actor": "gramake",
           "weight": 30,
           "min": 1,
-          "max": 4
+          "max": 3
         },
         {
           "actor": "journalist",
           "weight": 25,
           "min": 1,
-          "max": 3
+          "max": 1
         },
         {
           "actor": "havnevakt",
           "weight": 20,
-          "min": 1,
-          "max": 3
+          "min": 0,
+          "max": 0
         }
       ],
       "placed": [
@@ -3152,7 +3152,7 @@
       "placedItems": [
         {
           "item": "kapteinens-brev",
-          "where": "far"
+          "where": "near_exit"
         }
       ],
       "terrain": [

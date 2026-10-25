@@ -300,7 +300,7 @@
       "str": 11,
       "dex": 13,
       "int": 10,
-      "hp": 28,
+      "hp": 32,
       "mp": 12,
       "ac": 11
     },
@@ -547,7 +547,7 @@
       "name": "Banns Crow",
       "description": "A crow that has learned your name from the church door and shouts it from the hedges.",
       "stats": {
-        "hp": 6,
+        "hp": 5,
         "ac": 12,
         "str": 7,
         "dex": 14,
@@ -558,7 +558,6 @@
         "name": "Peck",
         "verb": "pecks",
         "damage": {
-          "base": 1,
           "dice": "1d3"
         }
       },
@@ -1010,7 +1009,6 @@
         "name": "Peal",
         "verb": "peals at",
         "damage": {
-          "base": 1,
           "dice": "1d4"
         },
         "range": 3
@@ -1343,7 +1341,7 @@
       "name": "Gaffer Hob",
       "description": "The oldest scarecrow on the Long Acre: a coat from the Civil War, a turnip head carved and recarved, a red rose in his buttonhole. He has been married forty-one times and has never once been asked what he wanted.",
       "stats": {
-        "hp": 66,
+        "hp": 45,
         "ac": 13,
         "str": 15,
         "dex": 11,
@@ -1353,8 +1351,8 @@
         "name": "Embrace",
         "verb": "embraces",
         "damage": {
-          "base": 3,
-          "dice": "1d8"
+          "base": 2,
+          "dice": "1d4"
         },
         "damageType": "chaff"
       },
@@ -1399,7 +1397,7 @@
               {
                 "type": "damage",
                 "amount": {
-                  "dice": "1d6"
+                  "dice": "1d3"
                 },
                 "damageType": "chaff"
               },
@@ -2161,7 +2159,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 6
+              "base": 8
             }
           },
           {
@@ -2528,7 +2526,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4
+              "base": 8
             }
           }
         ],
@@ -3499,13 +3497,13 @@
           "actor": "banns-crow",
           "weight": 10,
           "min": 1,
-          "max": 3
+          "max": 2
         },
         {
           "actor": "well-wishing-aunt",
           "weight": 10,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 1
         },
         {
           "actor": "corn-dolly",
@@ -3538,7 +3536,7 @@
         },
         {
           "item": "elderflower-cordial",
-          "weight": 4
+          "weight": 6
         },
         {
           "item": "harvest-home-ale",
@@ -3870,12 +3868,12 @@
           "actor": "clapperling",
           "weight": 10,
           "min": 1,
-          "max": 4
+          "max": 2
         },
         {
           "actor": "rope-ringer",
           "weight": 8,
-          "max": 3
+          "max": 2
         },
         {
           "actor": "banns-crow",
@@ -4041,8 +4039,8 @@
         {
           "actor": "barley-bridesmaid",
           "weight": 10,
-          "min": 3,
-          "max": 3
+          "min": 2,
+          "max": 2
         },
         {
           "actor": "corn-dolly",

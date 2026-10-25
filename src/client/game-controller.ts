@@ -129,6 +129,16 @@ export class GameController {
     window.addEventListener('keydown', onKey, true);
     this.overlay = new MapOverlay(this.host.canvasHost, (p) => renderer.tileToScreen(p as Pos));
     this.overlay.setAvoid(() => this.host.ui.panelRects().hud);
+    // a lost WebGL context leaves the map black: say so and hold play until the scene is back
+    // (issues/M5-webgl-context-lost-silent.md)
+    const r = renderer as Renderer & { onContextChange?: ((lost: boolean) => void) | null };
+    if ('onContextChange' in r) {
+      r.onContextChange = (lost) => this.onGraphicsContext(lost);
+      this.disposers.push(() => {
+        if (r.onContextChange) r.onContextChange = null;
+        this.host.ui.setGraphicsLost?.(false);
+      });
+    }
     this.disposers.push(
       () => pointer.detach(),
       () => window.removeEventListener('resize', onResize),
@@ -226,6 +236,18 @@ export class GameController {
     }
     this.stopTravel();
     this.apply(s.uiAction(d.kind === 'talk' ? { type: 'talk', targetId: d.targetId } : { type: 'attack', targetId: d.targetId }));
+  }
+
+  /** the renderer lost (true) or got back (false) its WebGL context */
+  onGraphicsContext(lost: boolean): void {
+    if (this.disposed) return;
+    if (lost) {
+      this.stopTravel();
+      this.lastHover = null;
+      this.host.ui.hideTooltip();
+    }
+    this.host.ui.setGraphicsLost?.(lost);
+    if (!lost) this.render();
   }
 
   /** long press on the map (touch): inspect the tile, like a right click */
@@ -349,7 +371,11 @@ export class GameController {
   /** re-describe the hovered tile when it holds an actor (new HP, statuses); else hide */
   private refreshTooltip(): void {
     const pos = this.lastHover;
-    if (!pos || this.session.ended) return this.host.ui.hideTooltip();
+    // touch has no hover: a long-press card answers that press only, and the next action (a tap
+    // on Wait, a slot…) closes it instead of re-opening it on top of what comes next
+    // (issues/M5-inspect-card-lingers.md)
+    if (this.host.ui.inputMode() === 'touch') this.lastHover = null;
+    if (!this.lastHover || !pos || this.session.ended) return this.host.ui.hideTooltip();
     const d = this.session.describeAt(pos);
     if (d.actor) this.showDescribe({ pos, ...d });
     else this.host.ui.hideTooltip();
@@ -429,7 +455,7 @@ export class GameController {
   }
 
   private applyGmResult(r: GmResult): void {
-    const out = this.session.applyGm(r.response.actions, { hook: r.request.hook, area: r.request.area });
+    const out = this.session.applyGm(r.response.actions, { hook: r.request.hook, area: r.request.area, ...(r.source === 'debug' ? { trusted: true } : {}) });
     if (!out.changed && !out.toasts.length) return;
     this.apply(out, { quiet: true });
   }

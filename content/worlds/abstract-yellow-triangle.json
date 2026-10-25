@@ -3519,20 +3519,20 @@
         {
           "actor": "doubt-smudge",
           "weight": 35,
-          "min": 2,
-          "max": 5
+          "min": 1,
+          "max": 1
         },
         {
           "actor": "stray-hatching",
           "weight": 30,
           "min": 1,
-          "max": 4
+          "max": 3
         },
         {
           "actor": "crawling-drip",
           "weight": 20,
-          "min": 1,
-          "max": 3
+          "min": 0,
+          "max": 0
         }
       ],
       "placed": [
@@ -4133,7 +4133,8 @@
       "value": 100
     },
     "winText": "You slide into the empty space at the end of the signature and fit exactly. Far above, the Painter steps back, laughs once, and does not reach for the big brush. The painting is finished, and it is yellow in the lower right corner, forever and on purpose.",
-    "lossText": "The gloss closes over your corners. You are still bright, still yellow, and perfectly, permanently still. The Painter will look at you every day and wonder why the painting feels unfinished."
+    "lossText": "The gloss closes over your corners. You are still bright, still yellow, and perfectly, permanently still. The Painter will look at you every day and wonder why the painting feels unfinished.",
+    "deathText": "Your last corner of yellow is smudged into the blue around it. The brushstroke you slipped off goes on without its ending. The Painter frowns at a muddy patch in the middle of the canvas and cannot remember what was meant to be there."
   },
   "gm": {
     "persona": "The unfinished painting itself, speaking from the margins like a gallery placard that has opinions about its own composition and is quietly rooting for the yellow.",

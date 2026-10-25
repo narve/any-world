@@ -35,7 +35,7 @@ import { identifyCarried } from './knowledge';
 import { dropItemAt } from './inventory';
 import { hasLos } from './fov';
 import { bfsDistances } from './path';
-import { cheb, clamp, inBounds, line, samePos, tileAt } from './util';
+import { cheb, clamp, own, inBounds, line, samePos, tileAt } from './util';
 
 /** something the player could observe while an action resolved (used for knowledge notes) */
 export interface Obs {
@@ -593,7 +593,7 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
       ctx.s.flags[e.flag] = e.value;
       return;
     case 'counter':
-      ctx.s.counters[e.counter] = (ctx.s.counters[e.counter] ?? 0) + e.add;
+      ctx.s.counters[e.counter] = (own(ctx.s.counters, e.counter) ?? 0) + e.add;
       return;
     case 'message':
       log(ctx, e.text, 'info');
@@ -628,7 +628,7 @@ export function changeResource(ctx: Ctx, a: ActorInstance, res: string, amount: 
   if (def) {
     if (!isPlayer(ctx, a)) return 0;
     const r = ctx.s.player.resources;
-    const before = r[res] ?? 0;
+    const before = own(r, res) ?? 0;
     r[res] = clamp(before + amount, 0, def.max);
     if (before > 0 && r[res] === 0) resourceEmptied(ctx, a, res);
     return r[res] - before;

@@ -128,10 +128,10 @@ describe('verdicts', () => {
   it('maps win rates to the difficulty band', () => {
     expect(verdictFor(world, sa, [summary('explorer', 8)], 'normal').verdict).toBe('ok');
     expect(verdictFor(world, sa, [summary('explorer', 1)], 'normal').verdict).toBe('too_hard');
-    expect(verdictFor(world, sa, [summary('explorer', 19)], 'normal').verdict).toBe('too_easy');
+    expect(verdictFor(world, sa, [summary('explorer', 20)], 'normal').verdict).toBe('too_easy');
     expect(verdictFor(world, sa, [summary('explorer', 3)], 'hard').verdict).toBe('ok');
     expect(verdictFor(world, sa, [summary('explorer', 3)], 'gentle').verdict).toBe('too_hard');
-    expect(WIN_RATE_TARGETS.normal).toEqual([0.25, 0.6]);
+    expect(WIN_RATE_TARGETS.normal).toEqual([0.25, 0.85]);
   });
   it('crashes make a world broken, soft-locks too', () => {
     const crashed = summary('explorer', 8, 20, { crash: 1, crashCauses: { 'engine: boom': 1 }, seeds: { won: [], lost: [], stuck: [], crash: [7], timeout: [] } });

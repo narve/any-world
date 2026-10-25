@@ -5,7 +5,8 @@
  * NPC role enum. These helpers map them onto catalog keys; anything unknown is returned as the
  * engine wrote it (capitalised), so a new engine string is never lost, only untranslated.
  */
-import { capitalizeFirst, t, tx } from './index';
+import type { ItemEffectLine, ItemView } from '../../engine/types';
+import { capitalizeFirst, t, tx, type MessageParams } from './index';
 
 /** "you cannot move" → "you_cannot_move" (the key suffix under engine.invalid.*) */
 export function reasonSlug(reason: string): string {
@@ -68,4 +69,21 @@ export function npcRoleLabel(role: string): string {
 /** the floating text over a target that was missed */
 export function missLabel(): string {
   return t('fx.miss');
+}
+
+/**
+ * An item effect line (engine ItemEffectLine: item.fx.* key + params) in the UI language. Sub-lines
+ * (a trigger's event and effects, a scaled amount, the "allies" suffix) are rendered first and
+ * replace their English params; a key no catalog has shows the engine's English text.
+ */
+export function itemEffectText(line: ItemEffectLine): string {
+  const params: MessageParams = { ...line.params };
+  for (const [name, sub] of Object.entries(line.sub ?? {})) params[name] = Array.isArray(sub) ? sub.map(itemEffectText).join(', ') : itemEffectText(sub);
+  return tx(line.key, params, line.text);
+}
+
+/** an item's effect lines in the UI language (the English effectLines when it has no keyed lines) */
+export function itemEffectTexts(item: Pick<ItemView, 'effectLines' | 'effects'>): string[] {
+  const fx = item.effects;
+  return fx && fx.length === item.effectLines.length ? fx.map(itemEffectText) : item.effectLines;
 }

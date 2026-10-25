@@ -23,6 +23,10 @@ export const LOG_KEYS = {
   'log.attack.hit_typed': '{attacker|cap} {verb} {target} for {amount} {damageType}.',
   'log.attack.crit': '{attacker|cap} {verb} {target} (critical) for {amount}.',
   'log.attack.crit_typed': '{attacker|cap} {verb} {target} (critical) for {amount} {damageType}.',
+  /** the built-in attack of an actor the world gave none (no world-authored verb) */
+  'log.attack.miss_default': '{attacker|cap} strikes {target} but misses.',
+  'log.attack.hit_default': '{attacker|cap} strikes {target} for {amount}.',
+  'log.attack.crit_default': '{attacker|cap} strikes {target} (critical) for {amount}.',
   'log.provoke': '{target|cap} turns on you.',
   'log.damage.immune': '{target|cap} is unaffected.',
   'log.damage.take': '{target|cap} takes {amount}.',
@@ -100,6 +104,94 @@ export const LOG_KEYS = {
 
 export type LogKey = keyof typeof LOG_KEYS;
 
+/**
+ * Keys of item effect lines (ItemView.effects: item cards, slot tips, trade rows), with their
+ * English templates. Same template syntax as LOG_KEYS. `{amount}` is a formatted amount string
+ * ("2d4+1", "+2" for modifiers), `{n}` a number of turns or tiles; `{who}` (targeting) is "" or a
+ * rendered item.fx.who_* line; `{event}`/`{effects}` of a trigger line are rendered sub-lines.
+ */
+export const ITEM_FX_KEYS = {
+  'item.fx.amount_scaled': '{amount} + {pct}% {stat}',
+  'item.fx.damage': 'Deals {amount} {damageType} damage',
+  'item.fx.heal': 'Restores {amount} {stat}',
+  'item.fx.resource_gain': '+{amount} {stat}',
+  'item.fx.resource_loss': '{amount} {stat}',
+  'item.fx.stat_temp': '{amount} {stat} for {n} turns',
+  'item.fx.stat_perm': '{amount} {stat} (permanent)',
+  'item.fx.status_inflict': 'Inflicts {status} ({n} turns)',
+  'item.fx.status_grant': 'Grants {status} ({n} turns)',
+  'item.fx.cleanse': 'Removes harmful conditions',
+  'item.fx.remove_status': 'Removes {status}',
+  'item.fx.teleport_random': 'Teleports to a random spot',
+  'item.fx.teleport_to_target': 'Teleports to the target',
+  'item.fx.teleport_swap': 'Swaps places with the target',
+  'item.fx.teleport_to_exit': 'Teleports near the way onward',
+  'item.fx.push': 'Pushes back {n}',
+  'item.fx.pull': 'Pulls in {n}',
+  'item.fx.summon': 'Summons {actor}',
+  'item.fx.summon_many': 'Summons {actor} ×{count}',
+  'item.fx.summon_allied': 'Summons {actor} (allied)',
+  'item.fx.summon_allied_many': 'Summons {actor} ×{count} (allied)',
+  'item.fx.terrain': 'Creates {terrain}',
+  'item.fx.terrain_radius': 'Creates {terrain} (radius {radius})',
+  'item.fx.terrain_turns': 'Creates {terrain} for {n} turns',
+  'item.fx.terrain_radius_turns': 'Creates {terrain} (radius {radius}) for {n} turns',
+  'item.fx.spawn_item': 'Produces {item}',
+  'item.fx.spawn_item_many': 'Produces {item} ×{count}',
+  'item.fx.reveal_map': 'Reveals the map',
+  'item.fx.reveal_near': 'Reveals the surroundings (radius {radius})',
+  'item.fx.identify_one': 'Identifies an item you carry',
+  'item.fx.identify_all': 'Identifies everything you carry',
+  'item.fx.transform': 'Transforms into {actor}',
+  'item.fx.light': 'Light (radius {radius}, {n} turns)',
+  'item.fx.noise': 'Makes noise (radius {radius})',
+  'item.fx.xp': '+{amount} {xp}',
+  'item.fx.currency': '+{amount} {currency}',
+  'item.fx.faction_hostile': 'Makes the target hostile',
+  'item.fx.faction_neutral': 'Makes the target neutral',
+  'item.fx.faction_friendly': 'Makes the target friendly',
+
+  // targeting ({who} is "" for enemies, else an item.fx.who_* line)
+  'item.fx.target_single': 'Target: one, range {range}{who}',
+  'item.fx.target_adjacent': 'Target: all adjacent{who}',
+  'item.fx.target_ray': 'Target: line, range {range}{who}',
+  'item.fx.target_cone': 'Target: cone, length {range}{who}',
+  'item.fx.target_area': 'Target: area radius {radius}, range {range}{who}',
+  'item.fx.target_all_visible': 'Target: everything in sight{who}',
+  'item.fx.who_allies': ', allies',
+  'item.fx.who_all': ', everyone',
+  'item.fx.chance': '{pct}% chance',
+
+  // the item itself
+  'item.fx.weapon': '{conflict}: {amount} {damageType} ({stat})',
+  'item.fx.weapon_ranged': '{conflict}: {amount} {damageType}, range {range} ({stat})',
+  'item.fx.modifier': '{amount} {stat}',
+  'item.fx.modifier_carried': '{amount} {stat} while carried',
+  'item.fx.cost': 'Costs {amount} {stat}',
+  'item.fx.cooldown': 'Cooldown {n} turns',
+  'item.fx.charges': 'Charges: {charges}/{max}',
+  'item.fx.requires': 'Requires {stat} {min}',
+  'item.fx.durability': 'Durability {n}',
+
+  // triggers: "{event}: {effects}" (effects joined with ", ")
+  'item.fx.trigger': '{event}: {effects}',
+  'item.fx.trigger_every': '{event} (every {n}): {effects}',
+  'item.fx.on.on_hit': 'On hit',
+  'item.fx.on.on_hurt': 'On hurt',
+  'item.fx.on.on_kill': 'On kill',
+  'item.fx.on.on_death': 'On death',
+  'item.fx.on.on_turn': 'On turn',
+  'item.fx.on.on_enter_tile': 'On enter tile',
+  'item.fx.on.on_pickup': 'On pickup',
+  'item.fx.on.on_equip': 'On equip',
+  'item.fx.on.on_unequip': 'On unequip',
+  'item.fx.on.on_area_enter': 'On area enter',
+  'item.fx.on.on_resource_empty': 'On resource empty',
+  'item.fx.on.on_low_hp': 'On low hp',
+} as const satisfies Record<string, string>;
+
+export type ItemFxKey = keyof typeof ITEM_FX_KEYS;
+
 /** catalog key of the "X is now <faction>" line */
 export const FACTION_KEYS = {
   hostile: 'log.faction.hostile',
@@ -130,6 +222,19 @@ export const END_REASON_KEYS = {
 } as const satisfies Record<string, string>;
 
 export type EndReasonKey = keyof typeof END_REASON_KEYS;
+
+/**
+ * The END_REASON_KEYS of a run lost because the player was defeated (hp reached 0), as opposed
+ * to a fatal resource running out (end.loss.resource) or goal.lose (no key). Picks the ending text.
+ */
+export const DEATH_REASON_KEYS: ReadonlySet<string> = new Set<EndReasonKey>([
+  'end.loss.defeated',
+  'end.loss.by',
+  'end.loss.cause',
+  'end.loss.by_cause',
+  'end.loss.cause_typed',
+  'end.loss.by_cause_typed',
+]);
 
 const cap = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 

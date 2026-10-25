@@ -514,6 +514,23 @@ export function wantedDefeats(objs: Objective[]): Set<string> {
   return new Set(objs.filter((o): o is Extract<Objective, { kind: 'defeat' }> => o.kind === 'defeat').map((o) => o.actor));
 }
 
+/**
+ * actor def ids worth defeating for their loot: hostiles in this area that drop an item the bot
+ * needs, while no copy of it lies on the floor or in the pack (a lock item carried by a boss)
+ */
+export function lootCarriers(ctx: Ctx, wantItems: Set<string>): Set<string> {
+  const out = new Set<string>();
+  if (!wantItems.size) return out;
+  const missing = [...wantItems].filter((id) => !ctx.s.area.items.some((fi) => fi.item.defId === id) && !ctx.s.player.slots.some((it) => it?.defId === id));
+  if (!missing.length) return out;
+  for (const a of ctx.s.area.actors) {
+    if (a.hp <= 0 || a.id === ctx.s.player.actorId || side(ctx, a) !== 'H') continue;
+    const def = ctx.ix.actors.get(a.defId);
+    if (def?.loot.some((l) => l.chance > 0 && missing.includes(l.item))) out.add(a.defId);
+  }
+  return out;
+}
+
 /** objectives that matter now: the transition lock of this area, and the goal (filtered to this area) */
 export function currentObjectives(ctx: Ctx): { goal: Objective[]; lock: Objective[]; finalArea: boolean } {
   const idx = ctx.s.area.index;

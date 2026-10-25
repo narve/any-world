@@ -7,16 +7,34 @@ import { dataKey, focusables, h, icon, ICONS, setChildren, trapFocus } from '../
 import { glyph, itemCard, type Tooltip, type UiContext } from './common';
 import { tradeColumns } from '../format';
 import { t } from '../../i18n/index';
+import { isKeyboardClick, KeyArm } from '../key-arm';
 
 export class Modal {
   readonly el: HTMLElement;
   readonly card: HTMLElement;
   private release: (() => void) | null = null;
   private key = '';
+  /** guardKeys modals: digits / Enter are ignored right after opening (see key-arm.ts) */
+  private readonly arm: KeyArm | null;
 
-  constructor(cls: string, label: string, opts: { backdrop?: boolean } = {}) {
-    this.card = h('div', { class: ['aw-modal-card', cls] });
+  constructor(cls: string, label: string, opts: { backdrop?: boolean; guardKeys?: boolean } = {}) {
+    // a guarded modal focuses its card, not its first option, so a stray Enter clicks nothing
+    this.card = h('div', { class: ['aw-modal-card', cls], tabindex: opts.guardKeys ? '-1' : undefined });
     this.el = h('div', { class: ['aw-modal', opts.backdrop === false && 'no-backdrop'], role: 'dialog', 'aria-modal': 'true', 'aria-label': label, hidden: true }, this.card);
+    this.arm = opts.guardKeys ? new KeyArm() : null;
+  }
+
+  /** true when keyboard picks may act (always for unguarded modals) */
+  keysArmed(): boolean {
+    return !this.arm || this.arm.armed();
+  }
+
+  /** a click handler that ignores keyboard-made clicks (Enter on a focused button) while not armed */
+  guardClick(fn: () => void): (ev?: MouseEvent) => void {
+    return (ev) => {
+      if (isKeyboardClick(ev) && !this.keysArmed()) return;
+      fn();
+    };
   }
 
   get isOpen(): boolean {
@@ -31,6 +49,8 @@ export class Modal {
     if (!wasOpen) this.release = trapFocus(this.el, { initial: false });
     if (key === this.key && wasOpen) return false;
     this.key = key;
+    // a new choice on screen (opened, or the next queued level-up): keys wait again
+    this.arm?.reset();
     return true;
   }
 
@@ -45,7 +65,7 @@ export class Modal {
 
   focusFirst(): void {
     queueMicrotask(() => {
-      const t = this.card.querySelector<HTMLElement>('[data-autofocus]') ?? focusables(this.card)[0];
+      const t = this.arm ? this.card : (this.card.querySelector<HTMLElement>('[data-autofocus]') ?? focusables(this.card)[0]);
       t?.focus({ preventScroll: true });
     });
   }
@@ -67,6 +87,14 @@ export interface DialogueHandlers {
   leave(): void;
   persuade(npcId: string): void;
   trade(npcId: string): void;
+}
+
+/**
+ * An item's name in a trade row: wraps to two lines and is never cut by the price beside it; the
+ * full name is in the title (issues/M5-trade-names-clipped.md).
+ */
+function tradeName(item: { name: string } & Parameters<typeof glyph>[0]): HTMLElement {
+  return h('span', { class: 'aw-trade-name', title: item.name }, glyph(item, 'sm'), h('span', { class: 'aw-trade-label' }, item.name));
 }
 
 export class DialoguePanel {
@@ -147,7 +175,7 @@ export class DialoguePanel {
 // ---------------------------------------------------------------------------
 
 export class ChoiceModal {
-  readonly modal = new Modal('aw-choice', t('choice.label'));
+  readonly modal = new Modal('aw-choice', t('choice.label'), { guardKeys: true });
   private view: ChoiceView | null = null;
 
   constructor(private pick: (index: number) => void) {}
@@ -168,14 +196,16 @@ export class ChoiceModal {
         'div',
         { class: 'aw-options' },
         c.options.map((o, i) =>
-          h('button', { type: 'button', class: 'aw-option', 'data-autofocus': i === 0 ? true : undefined, onclick: () => this.pick(i) }, h('kbd', null, String(i + 1)), h('span', null, o.label)),
+          h('button', { type: 'button', class: 'aw-option', onclick: this.modal.guardClick(() => this.pick(i)) }, h('kbd', null, String(i + 1)), h('span', null, o.label)),
         ),
       ),
     );
     this.modal.focusFirst();
   }
 
+  /** a digit key: ignored for a moment after the offer opens (issues/M5-levelup-accidental-pick.md) */
   option(i: number): void {
+    if (!this.modal.keysArmed()) return;
     if (this.view && i >= 0 && i < this.view.options.length) this.pick(i);
   }
 }
@@ -183,7 +213,7 @@ export class ChoiceModal {
 // ---------------------------------------------------------------------------
 
 export class LevelUpModal {
-  readonly modal = new Modal('aw-levelup', t('levelup.label'));
+  readonly modal = new Modal('aw-levelup', t('levelup.label'), { guardKeys: true });
   private view: LevelUpView | null = null;
 
   constructor(private choose: (perkId: string) => void, private ctx: () => UiContext) {}
@@ -208,7 +238,7 @@ export class LevelUpModal {
         l.perks.map((p, i) =>
           h(
             'button',
-            { type: 'button', class: 'aw-perk', 'data-autofocus': i === 0 ? true : undefined, onclick: () => this.choose(p.id) },
+            { type: 'button', class: 'aw-perk', onclick: this.modal.guardClick(() => this.choose(p.id)) },
             h('kbd', null, String(i + 1)),
             h('span', { class: 'aw-perk-name' }, p.name),
             h('span', { class: 'aw-perk-desc' }, p.description),
@@ -220,7 +250,9 @@ export class LevelUpModal {
     this.modal.focusFirst();
   }
 
+  /** a digit key: ignored for a moment after the card opens (issues/M5-levelup-accidental-pick.md) */
   option(i: number): void {
+    if (!this.modal.keysArmed()) return;
     const p = this.view?.perks[i];
     if (p) this.choose(p.id);
   }
@@ -276,7 +308,7 @@ export class TradePanel {
           tv.offers.length
             ? tv.offers.map((o, i) =>
                 row(
-                  h('span', { class: 'aw-trade-name' }, glyph(o.item, 'sm'), o.item.name),
+                  tradeName(o.item),
                   o.price,
                   t('trade.buyAction'),
                   () => this.emit({ type: 'buy', offerIndex: i }),
@@ -293,7 +325,7 @@ export class TradePanel {
               null,
               h('h3', null, t('trade.sell')),
               tv.sellable.map((s) =>
-                row(h('span', { class: 'aw-trade-name' }, glyph(s.item, 'sm'), s.item.name), s.price, t('trade.sellAction'), () => this.emit({ type: 'sell', slot: s.slot }), false, undefined, () => itemCard(s.item, this.ctx())),
+                row(tradeName(s.item), s.price, t('trade.sellAction'), () => this.emit({ type: 'sell', slot: s.slot }), false, undefined, () => itemCard(s.item, this.ctx())),
               ),
             )
           : null,

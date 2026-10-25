@@ -6,7 +6,8 @@ import type { Vocabulary } from '../../schema/world';
 import type { ActorView, ItemView, LogMessage } from '../../engine/types';
 import type { CoreStatKey, Difficulty, RunStatsView, SlotItemView, TradeView } from './viewmodel';
 import type { ProviderPreset } from '../../llm/types';
-import { t } from '../i18n/index';
+import { catalog, getLanguage, t, type MessageKey } from '../i18n/index';
+import { itemEffectTexts } from '../i18n/engine-text';
 
 /** the text for an unknown item, in the current UI language */
 export function unknownItemText(): string {
@@ -85,7 +86,7 @@ export function itemGlyph(item: Pick<ItemView, 'name' | 'knowledge'> & { glyph?:
 
 /** the knowledge-aware description body for an item */
 export function knowledgeLines(item: ItemView): { kind: 'exact' | 'vague' | 'unknown'; lines: string[] } {
-  if (item.knowledge === 'clear') return { kind: 'exact', lines: item.effectLines.length ? item.effectLines : [] };
+  if (item.knowledge === 'clear') return { kind: 'exact', lines: itemEffectTexts(item) };
   if (item.knowledge === 'vague') return { kind: 'vague', lines: item.vagueText ? [item.vagueText] : [] };
   return { kind: 'unknown', lines: [unknownItemText()] };
 }
@@ -215,14 +216,58 @@ export function ellipsis(s: string, max: number): string {
 }
 
 /** pure: notes shown under the provider select */
+const REGION_KEYS: Record<string, MessageKey> = {
+  us: 'settings.region.us',
+  china: 'settings.region.china',
+  eu: 'settings.region.eu',
+  global: 'settings.region.global',
+  local: 'settings.region.local',
+  custom: 'settings.region.custom',
+};
+
+/** a preset's region in the UI language ("China" → "Kina"); unknown regions are shown as given */
+export function presetRegion(region: string): string {
+  const k = REGION_KEYS[region.trim().toLowerCase()];
+  return k ? t(k) : region;
+}
+
+/** a preset's name in the UI language: brand names stay, "(local)" and "Custom (…)" are translated */
+export function presetLabel(p: Pick<ProviderPreset, 'id' | 'label'>): string {
+  if (p.id === 'custom') return t('settings.preset.custom');
+  const m = /^(.*?)\s*\(local\)\s*$/i.exec(p.label);
+  return m ? t('settings.preset.local', { name: m[1] }) : p.label;
+}
+
+/**
+ * The technical preset note (presets.ts) in the UI language: a catalog entry
+ * `settings.presetNote.<id>` when the UI language has one, the English note in the English UI, and
+ * nothing otherwise (no English paragraph in a Norwegian settings dialog).
+ */
+export function presetNote(p: Pick<ProviderPreset, 'id' | 'notes'>): string | undefined {
+  const lang = getLanguage();
+  const own = catalog(lang)?.[`settings.presetNote.${p.id}`];
+  if (own) return own;
+  return lang === 'en' ? p.notes : undefined;
+}
+
+/** a preset as the settings dialog shows it: label, region and note in the UI language */
+export function localizedPreset<P extends ProviderPreset>(p: P): P {
+  const notes = presetNote(p);
+  const out: P = { ...p, label: presetLabel(p), region: presetRegion(p.region) };
+  if (notes) out.notes = notes;
+  else delete out.notes;
+  return out;
+}
+
 export function presetNotes(p: ProviderPreset | undefined, transport: 'direct' | 'backend'): { text: string; warn: boolean }[] {
   if (!p) return [{ text: t('settings.note.custom'), warn: false }];
-  const out: { text: string; warn: boolean }[] = [{ text: t('settings.note.region', { region: p.region }), warn: false }];
+  const out: { text: string; warn: boolean }[] = [{ text: t('settings.note.region', { region: presetRegion(p.region) }), warn: false }];
   if (!p.cors && transport === 'direct') out.push({ text: t('settings.note.noCorsDirect'), warn: true });
   else if (!p.cors) out.push({ text: t('settings.note.noCors'), warn: false });
   if (transport === 'backend') out.push({ text: t('settings.note.backend'), warn: false });
   else if (p.needsKey) out.push({ text: t('settings.note.keyLocal'), warn: false });
-  if (p.notes) out.push({ text: p.notes, warn: false });
+  const note = presetNote(p);
+  if (note) out.push({ text: note, warn: false });
   return out;
 }
 

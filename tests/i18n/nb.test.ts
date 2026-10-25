@@ -19,6 +19,8 @@ const SAME_OK = new Set([
   'cond.counter', 'cond.areaName', 'cond.defeatedCount', 'vocab.int.abbr', 'vocab.int.name', 'vocab.hp.abbr', 'vocab.mp.name', 'vocab.mp.abbr',
   'rules.srcGm', 'npc.role.rival', 'key.enter', 'key.tab', 'key.esc', 'key.del', 'help.zoom', 'start.label', 'difficulty.normal.label',
   'difficulty.brutal.label', 'settings.note.region',
+  // item effect lines that are only numbers and world words
+  'item.fx.resource_gain', 'item.fx.resource_loss', 'item.fx.xp', 'item.fx.currency', 'item.fx.weapon', 'item.fx.modifier', 'item.fx.trigger',
 ]);
 
 /** all `plural` nodes of a template, with their option keys */

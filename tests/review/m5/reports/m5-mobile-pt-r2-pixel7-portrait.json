@@ -1,0 +1,653 @@
+{
+  "id": "pixel7-portrait",
+  "world": "nb-russetid-bussen",
+  "device": "Pixel 7",
+  "safeAreaEmulated": true,
+  "layout": "phone-portrait",
+  "small": [],
+  "overlaps": [],
+  "offscreen": [],
+  "inSafeArea": [],
+  "thumb": {
+    "wait": {
+      "cx": 379,
+      "cy": 740,
+      "fromBottomPct": 12
+    },
+    "slot1": {
+      "cx": 33,
+      "cy": 796,
+      "fromBottomPct": 5
+    },
+    "bag": {
+      "cx": 292,
+      "cy": 690,
+      "fromBottomPct": 18
+    },
+    "rotate": {
+      "cx": 382,
+      "cy": 447,
+      "fromBottomPct": 47
+    },
+    "goal": {
+      "cx": 206,
+      "cy": 156,
+      "fromBottomPct": 81
+    },
+    "log": {
+      "cx": 135,
+      "cy": 690,
+      "fromBottomPct": 18
+    },
+    "rulesBadge": {
+      "cx": 384,
+      "cy": 46,
+      "fromBottomPct": 95
+    },
+    "hud": {
+      "cx": 135,
+      "cy": 64,
+      "fromBottomPct": 92
+    }
+  },
+  "stats": [
+    {
+      "where": "start",
+      "drawCalls": 58,
+      "triangles": 40650,
+      "fps": 9.5,
+      "geometries": 39,
+      "textures": 6,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "turn 95",
+      "drawCalls": 68,
+      "triangles": 35732,
+      "fps": 6,
+      "geometries": 83,
+      "textures": 6,
+      "programs": 20,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "turn 194",
+      "drawCalls": 74,
+      "triangles": 42202,
+      "fps": 7.4,
+      "geometries": 115,
+      "textures": 6,
+      "programs": 20,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "turn 295",
+      "drawCalls": 52,
+      "triangles": 33894,
+      "fps": 8.4,
+      "geometries": 47,
+      "textures": 6,
+      "programs": 16,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "turn 398",
+      "drawCalls": 89,
+      "triangles": 41378,
+      "fps": 8.7,
+      "geometries": 83,
+      "textures": 11,
+      "programs": 17,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "turn 499",
+      "drawCalls": 87,
+      "triangles": 37472,
+      "fps": 6.8,
+      "geometries": 112,
+      "textures": 6,
+      "programs": 17,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "area 1",
+      "drawCalls": 52,
+      "triangles": 35892,
+      "fps": 7.4,
+      "geometries": 55,
+      "textures": 8,
+      "programs": 26,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "turn 582",
+      "drawCalls": 59,
+      "triangles": 28156,
+      "fps": 7.5,
+      "geometries": 82,
+      "textures": 10,
+      "programs": 28,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "turn 666",
+      "drawCalls": 59,
+      "triangles": 31196,
+      "fps": 8.1,
+      "geometries": 103,
+      "textures": 9,
+      "programs": 31,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "turn 765",
+      "drawCalls": 84,
+      "triangles": 35372,
+      "fps": 5.5,
+      "geometries": 114,
+      "textures": 10,
+      "programs": 32,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    {
+      "where": "second run",
+      "drawCalls": 53,
+      "triangles": 41804,
+      "fps": 11.6,
+      "geometries": 47,
+      "textures": 11,
+      "programs": 26,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    }
+  ],
+  "pathWalks": [
+    {
+      "from": {
+        "x": 4,
+        "y": 13
+      },
+      "dest": {
+        "x": 3,
+        "y": 5
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 4,
+        "y": 26
+      },
+      "dest": {
+        "x": 3,
+        "y": 18
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 11,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 13,
+        "y": 18
+      },
+      "dest": {
+        "x": 7,
+        "y": 15
+      },
+      "dist": 6,
+      "tiles": 6,
+      "turns": 11,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 17,
+        "y": 16
+      },
+      "dest": {
+        "x": 11,
+        "y": 11
+      },
+      "dist": 6,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 25,
+        "y": 21
+      },
+      "dest": {
+        "x": 21,
+        "y": 17
+      },
+      "dist": 4,
+      "tiles": 4,
+      "turns": 12,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 31,
+        "y": 9
+      },
+      "dest": {
+        "x": 25,
+        "y": 16
+      },
+      "dist": 7,
+      "tiles": 8,
+      "turns": 8,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 27,
+        "y": 22
+      },
+      "dest": {
+        "x": 22,
+        "y": 28
+      },
+      "dist": 6,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 40,
+        "y": 11
+      },
+      "dest": {
+        "x": 36,
+        "y": 13
+      },
+      "dist": 4,
+      "tiles": 3,
+      "turns": 3,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 35,
+        "y": 21
+      },
+      "dest": {
+        "x": 33,
+        "y": 17
+      },
+      "dist": 4,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 17,
+        "y": 22
+      },
+      "dest": {
+        "x": 14,
+        "y": 24
+      },
+      "dist": 3,
+      "tiles": 8,
+      "turns": 9,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 31,
+        "y": 21
+      },
+      "dest": {
+        "x": 24,
+        "y": 18
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 35,
+        "y": 14
+      },
+      "dest": {
+        "x": 32,
+        "y": 6
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 21,
+        "y": 21
+      },
+      "dest": {
+        "x": 29,
+        "y": 17
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 19,
+        "y": 18
+      },
+      "dest": {
+        "x": 21,
+        "y": 14
+      },
+      "dist": 4,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 19,
+        "y": 18
+      },
+      "dest": {
+        "x": 21,
+        "y": 14
+      },
+      "dist": 4,
+      "tiles": 4,
+      "turns": 12,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 21,
+        "y": 14
+      },
+      "dest": {
+        "x": 29,
+        "y": 9
+      },
+      "dist": 8,
+      "tiles": 3,
+      "turns": 3,
+      "reached": false,
+      "reason": "layer game"
+    }
+  ],
+  "inspects": [
+    {
+      "what": "player",
+      "ok": true,
+      "text": "Eli Nygård Deg Ufarlig FAT 30 / 30 Den eneste i gjengen som leser kontoutskrifter. Rød russebukse med regnestykker tusjet på låret, en mobil"
+    },
+    {
+      "what": "actor",
+      "ok": true,
+      "text": "Kantine-Kari Nøytral Snakk FAT 20 / 20 Har drevet kantina i 23 år og sett hvert eneste russekull falle fra hverandre og finne sammen igjen. "
+    }
+  ],
+  "contextLoss": {
+    "before": {
+      "where": "before-loss",
+      "drawCalls": 73,
+      "triangles": 35090,
+      "fps": 7.8,
+      "geometries": 130,
+      "textures": 7,
+      "programs": 20,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    "extension": true,
+    "lostStats": {
+      "where": "lost",
+      "drawCalls": 73,
+      "triangles": 35090,
+      "fps": 7.8,
+      "geometries": 130,
+      "textures": 6,
+      "programs": 20,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": true,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    "notice": {
+      "text": "Grafikken står på pause. Kartet kommer tilbake … Nettleseren tok grafikken bort et øyeblikk. Spillet ditt er lagret, og du spiller videre når kartet er tilbake.",
+      "box": [
+        0,
+        0,
+        412,
+        839
+      ],
+      "layer": "game"
+    },
+    "turnWhileLost": 0,
+    "reloadOfferedAfter5s": true,
+    "after": {
+      "where": "restored",
+      "drawCalls": 57,
+      "triangles": 35012,
+      "fps": 7.2,
+      "geometries": 34,
+      "textures": 5,
+      "programs": 16,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "618x1258"
+    },
+    "noticeAfterRestore": false,
+    "layerAfterRestore": "game",
+    "playerOnTile": true,
+    "canvasBytes": 581363
+  },
+  "emptyBand": [
+    50,
+    50,
+    50,
+    53,
+    50,
+    53,
+    50,
+    53,
+    50,
+    50
+  ],
+  "hiddenActors": [
+    "start: hostile:russekortjeger under aw-ctx",
+    "turn 11: hostile:eksamensvakt under aw-panel"
+  ],
+  "clipped": [],
+  "sheets": [
+    "dialogue: button under home bar: \"Overtal\" bottom 824 > 823",
+    "dialogue: button under home bar: \"Avslutt\" bottom 824 > 823"
+  ],
+  "thumbs": {
+    "start": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 95": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "turn 194": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "turn 295": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "turn 398": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "turn 499": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "area 1": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "turn 582": {
+      "slots": 8,
+      "filled": 7,
+      "withImg": 7
+    },
+    "turn 666": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "turn 765": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "second run": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    }
+  },
+  "secondRun": {
+    "layerAfterNewWorld": "start",
+    "startScroll": [],
+    "world": "nb-nordisk-noir-tromso",
+    "firstLayer": "narration",
+    "turn": 0,
+    "onboardingBeforeMove": true
+  },
+  "turnsPlayed": 776,
+  "areasReached": 1,
+  "status": "lost",
+  "errors": [],
+  "notes": [
+    "start screen scrolled before the first run: [\"aw-screen 1698\"]",
+    "first run opened on layer narration",
+    "env(safe-area-inset-*) seen by CSS: 24px 16px 0px 0px",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"n\"} from {\"x\":3,\"y\":19} turn 44 -> {\"me\":{\"x\":3,\"y\":19},\"turn\":44,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":3,\"y\":18}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":3,\"y\":18}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":4,\"y\":19} turn 79 -> {\"me\":{\"x\":4,\"y\":19},\"turn\":79,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":5,\"y\":19}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":5,\"y\":19}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"n\"} from {\"x\":3,\"y\":24} turn 95 -> {\"me\":{\"x\":3,\"y\":24},\"turn\":95,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":3,\"y\":23}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":3,\"y\":23}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"s\"} from {\"x\":9,\"y\":23} turn 103 -> {\"me\":{\"x\":9,\"y\":23},\"turn\":103,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":9,\"y\":24}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":9,\"y\":24}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"ne\"} from {\"x\":10,\"y\":21} turn 110 -> {\"me\":{\"x\":10,\"y\":21},\"turn\":110,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":11,\"y\":20}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":11,\"y\":20}}",
+    "noWay toast after bot action {\"type\":\"interact\",\"pos\":{\"x\":8,\"y\":6}} from {\"x\":7,\"y\":6} turn 134 -> {\"me\":{\"x\":7,\"y\":6},\"turn\":134,\"L\":\"game\",\"legalMove\":false,\"seen\":2,\"path\":[],\"actorThere\":true,\"actor\":{\"def\":\"player\",\"faction\":\"player\",\"legal\":[],\"meaning\":{\"kind\":\"travel\"}},\"pickAtTile\":{\"x\":7,\"y\":6}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"s\"} from {\"x\":15,\"y\":14} turn 151 -> {\"me\":{\"x\":15,\"y\":14},\"turn\":151,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":15,\"y\":15}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":15,\"y\":15}}",
+    "log sheet found open at turn 173; last test tap {\"kind\":\"move\",\"at\":[273,437],\"turn\":172}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"sw\"} from {\"x\":18,\"y\":21} turn 186 -> {\"me\":{\"x\":18,\"y\":21},\"turn\":186,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":17,\"y\":22}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":17,\"y\":22}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"n\"} from {\"x\":25,\"y\":21} turn 212 -> {\"me\":{\"x\":25,\"y\":21},\"turn\":212,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":25,\"y\":20}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":25,\"y\":20}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"sw\"} from {\"x\":20,\"y\":18} turn 226 -> {\"me\":{\"x\":20,\"y\":18},\"turn\":226,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":19,\"y\":19}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":19,\"y\":19}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"n\"} from {\"x\":25,\"y\":21} turn 238 -> {\"me\":{\"x\":25,\"y\":21},\"turn\":238,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":25,\"y\":20}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":25,\"y\":20}}",
+    "noWay toast after bot action {\"type\":\"attack\",\"targetId\":\"a11\"} from {\"x\":32,\"y\":7} turn 252 -> {\"me\":{\"x\":32,\"y\":7},\"turn\":252,\"L\":\"game\",\"legalMove\":false,\"seen\":2,\"path\":[],\"actorThere\":true,\"actor\":{\"def\":\"player\",\"faction\":\"player\",\"legal\":[],\"meaning\":{\"kind\":\"travel\"}},\"pickAtTile\":{\"x\":32,\"y\":7}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"s\"} from {\"x\":25,\"y\":18} turn 275 -> {\"me\":{\"x\":25,\"y\":18},\"turn\":275,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":25,\"y\":19}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":25,\"y\":19}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"se\"} from {\"x\":27,\"y\":22} turn 320 -> {\"me\":{\"x\":28,\"y\":23},\"turn\":321,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":29,\"y\":24}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":29,\"y\":24}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":31,\"y\":22} turn 331 -> {\"me\":{\"x\":31,\"y\":22},\"turn\":331,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":32,\"y\":22}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":32,\"y\":22}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"ne\"} from {\"x\":39,\"y\":21} turn 347 -> {\"me\":{\"x\":39,\"y\":21},\"turn\":347,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":40,\"y\":20}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":40,\"y\":20}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"s\"} from {\"x\":36,\"y\":11} turn 408 -> {\"me\":{\"x\":36,\"y\":11},\"turn\":408,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":36,\"y\":12}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":36,\"y\":12}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"nw\"} from {\"x\":18,\"y\":21} turn 436 -> {\"me\":{\"x\":18,\"y\":21},\"turn\":436,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":17,\"y\":20}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":17,\"y\":20}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"sw\"} from {\"x\":18,\"y\":13} turn 452 -> {\"me\":{\"x\":18,\"y\":13},\"turn\":452,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":17,\"y\":14}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":17,\"y\":14}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"se\"} from {\"x\":35,\"y\":20} turn 498 -> {\"me\":{\"x\":35,\"y\":20},\"turn\":498,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":36,\"y\":21}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":36,\"y\":21}}",
+    "noWay toast after bot action {\"type\":\"attack\",\"targetId\":\"a34\"} from {\"x\":31,\"y\":21} turn 521 -> {\"me\":{\"x\":31,\"y\":21},\"turn\":522,\"L\":\"game\",\"legalMove\":false,\"seen\":2,\"path\":[],\"actorThere\":true,\"actor\":{\"def\":\"player\",\"faction\":\"player\",\"legal\":[],\"meaning\":{\"kind\":\"travel\"}},\"pickAtTile\":{\"x\":31,\"y\":21}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":33,\"y\":5} turn 561 -> {\"me\":{\"x\":33,\"y\":5},\"turn\":561,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":34,\"y\":5}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":34,\"y\":5}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"n\"} from {\"x\":21,\"y\":21} turn 599 -> {\"me\":{\"x\":21,\"y\":21},\"turn\":599,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":21,\"y\":20}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":21,\"y\":20}}",
+    "noWay toast after bot action {\"type\":\"wait\"} from {\"x\":19,\"y\":18} turn 647 -> {\"me\":{\"x\":19,\"y\":18},\"turn\":648,\"L\":\"game\",\"legalMove\":false,\"seen\":2,\"path\":[],\"actorThere\":true,\"actor\":{\"def\":\"player\",\"faction\":\"player\",\"legal\":[],\"meaning\":{\"kind\":\"travel\"}},\"pickAtTile\":{\"x\":19,\"y\":18}}",
+    "ctx buttons covered by a panel: [] (0 total)",
+    "end buttons: [{\"t\":\"Ny verden\",\"h\":45,\"w\":106,\"b\":750.859375},{\"t\":\"Samme verden igjen\",\"h\":45,\"w\":175,\"b\":750.859375}]"
+  ]
+}

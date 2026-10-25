@@ -156,16 +156,29 @@ export function plainChip(text: string, tone: 'muted' | 'accent' | 'danger' | 'g
 // Inspect cards
 // ---------------------------------------------------------------------------
 
+/**
+ * The small grey facts line under an item card. A known item's effect bullets (engine describe)
+ * already state its cooldown, charges and durability, so those are not repeated here
+ * (issues/M5-tooltip-duplicate-tags.md); what the bullets never say — the turns until it is ready
+ * again, the stack size, "equipped" — always shows.
+ */
+export function itemMeta(item: ItemView | SlotItemView): string[] {
+  const slotItem = item as SlotItemView;
+  const described = item.knowledge === 'clear' && item.effectLines.length > 0;
+  const meta: string[] = [];
+  if (item.count > 1) meta.push(`×${item.count}`);
+  if (item.charges !== undefined && !described) meta.push(slotItem.maxCharges ? t('item.meta.chargesOf', { n: item.charges, max: slotItem.maxCharges }) : t('item.meta.charges', { n: item.charges }));
+  if (slotItem.cooldown && slotItem.cooldown > 0) meta.push(t('item.meta.readyIn', { n: slotItem.cooldown }));
+  else if (slotItem.maxCooldown && !described) meta.push(t('item.meta.cooldown', { n: slotItem.maxCooldown }));
+  if (slotItem.durability !== undefined && !described) meta.push(slotItem.maxDurability ? t('item.meta.wearOf', { n: slotItem.durability, max: slotItem.maxDurability }) : t('item.meta.wear', { n: slotItem.durability }));
+  if (item.equipped) meta.push(t('item.meta.equipped'));
+  return meta;
+}
+
 export function itemCard(item: ItemView | SlotItemView, ctx: UiContext, extra?: Child): HTMLElement {
   const k = knowledgeLines(item);
   const slotItem = item as SlotItemView;
-  const meta: string[] = [];
-  if (item.count > 1) meta.push(`×${item.count}`);
-  if (item.charges !== undefined) meta.push(slotItem.maxCharges ? t('item.meta.chargesOf', { n: item.charges, max: slotItem.maxCharges }) : t('item.meta.charges', { n: item.charges }));
-  if (slotItem.cooldown && slotItem.cooldown > 0) meta.push(t('item.meta.readyIn', { n: slotItem.cooldown }));
-  else if (slotItem.maxCooldown) meta.push(t('item.meta.cooldown', { n: slotItem.maxCooldown }));
-  if (slotItem.durability !== undefined) meta.push(slotItem.maxDurability ? t('item.meta.wearOf', { n: slotItem.durability, max: slotItem.maxDurability }) : t('item.meta.wear', { n: slotItem.durability }));
-  if (item.equipped) meta.push(t('item.meta.equipped'));
+  const meta = itemMeta(item);
   return h(
     'div',
     { class: ['aw-card', 'aw-item-card', `knowledge-${item.knowledge}`] },
@@ -420,6 +433,16 @@ export class Tooltip {
   hideAt(): void {
     this.pinned = false;
     this.hide();
+  }
+
+  /** is a map card (showAt: hover / long-press inspect) on screen? */
+  get pinnedVisible(): boolean {
+    return this.pinned && this.el.classList.contains('is-visible');
+  }
+
+  /** hide a map card (showAt) but leave a hover tip on a panel element alone */
+  hidePinned(): void {
+    if (this.pinned) this.hideAt();
   }
 
   /** forget the hovered element too (its element may be about to leave the DOM) */

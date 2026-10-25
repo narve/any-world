@@ -1627,7 +1627,7 @@
       "equipSlot": "weapon",
       "useMode": "passive",
       "weapon": {
-        "name": "Rødt strek",
+        "name": "Rød strek",
         "verb": "stryker ut",
         "damage": {
           "base": 1,
@@ -1974,7 +1974,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 5
+              "base": 7
             }
           },
           {
@@ -2945,7 +2945,7 @@
   },
   "areas": [
     {
-      "name": "1. instans: Venterommet",
+      "name": "Venterommet",
       "description": "Et venterom hugget inn i granitten, med lysrør som summer og flimrer. Hundre år gamle kølapper ligger i driver langs veggene, og alle stolene er fulle av vesener som har ventet siden svartedauden.",
       "generator": "building",
       "size": "medium",
@@ -2984,20 +2984,20 @@
         {
           "actor": "kolapp-vette",
           "weight": 40,
-          "min": 2,
-          "max": 5
+          "min": 1,
+          "max": 1
         },
         {
           "actor": "blankettflaggermus",
           "weight": 25,
           "min": 1,
-          "max": 3
+          "max": 2
         },
         {
           "actor": "evig-ventende",
           "weight": 20,
-          "min": 1,
-          "max": 3
+          "min": 0,
+          "max": 1
         }
       ],
       "placed": [
@@ -3104,7 +3104,7 @@
       "music": "calm"
     },
     {
-      "name": "2. instans: Det uendelige arkivet",
+      "name": "Det uendelige arkivet",
       "description": "Hyller så høye at de forsvinner i mørket, fulle av mapper som puster. Gulvet er knirkende eikeplanker, lyset kommer fra nakne lyspærer, og et sted innerst ligger nabovarselet til fjellet.",
       "generator": "maze",
       "size": "medium",
@@ -3285,8 +3285,8 @@
       "music": "eerie"
     },
     {
-      "name": "3. instans: Klagefristen",
-      "description": "Bak klageskuffen er det ikke mer fjell. Hundre år klagefrist henger i et mørkt tomrom som øyer av mosegrodd tid, ett tiår per øy, bundet sammen av smale bruer av papirstrimler. Over alt danser et nordlys av blekk.",
+      "name": "Klagefristen",
+      "description": "Bak klageskuffen er det ikke mer fjell. Hundre år klagefrist henger i et mørkt tomrom som øyer av mosegrodd tid, ett tiår per øy, bundet sammen av smale bruer av papirstrimler. Overalt danser et nordlys av blekk.",
       "generator": "islands",
       "size": "medium",
       "params": {
@@ -3479,8 +3479,8 @@
       "music": "eerie"
     },
     {
-      "name": "Siste instans: Trehodes kontor",
-      "description": "Et høyt kontor med rød teppe og en skranke av granitt. Bak skranken sitter Saksbehandler Trehode og diskuterer med seg selv. Gjennom ljoren i taket har himmelen begynt å bli blågrå.",
+      "name": "Trehodes kontor",
+      "description": "Et høyt kontor med rødt teppe og en skranke av granitt. Bak skranken sitter Saksbehandler Trehode og diskuterer med seg selv. Gjennom ljoren i taket har himmelen begynt å bli blågrå.",
       "generator": "arena",
       "size": "small",
       "params": {

@@ -91,7 +91,14 @@ export class Hud {
       h('span', { class: 'aw-strip-area' }, h('span', { class: 'aw-strip-label' }, areaLabel(vocab, v.areaIndex, v.areaCount)), h('span', { class: 'aw-strip-name' }, v.areaName)),
       h('span', { class: 'aw-strip-sep', 'aria-hidden': 'true' }),
       h('span', { class: 'aw-strip-turn' }, turnLabel(v.turn)),
-      h('span', { class: 'aw-strip-money', dataset: { tip: vocab.currency } }, t('hud.money', { n: v.currency, currency: vocab.currency })),
+      // phones show the amount with a coin sign only (a long currency word ran the strip together);
+      // the full text stays for screen readers and wider layouts (issues/M5-phone-goal-strip-cramped.md)
+      h(
+        'span',
+        { class: 'aw-strip-money', dataset: { tip: t('hud.money', { n: v.currency, currency: vocab.currency }) } },
+        h('span', { class: 'aw-money-full' }, t('hud.money', { n: v.currency, currency: vocab.currency })),
+        h('span', { class: 'aw-money-short', 'aria-hidden': 'true' }, `¤ ${v.currency}`),
+      ),
       v.sneaking ? plainChip(t('hud.sneaking'), 'good', t('hud.sneakingTip')) : null,
       speed ? plainChip(speed, v.speed === 'fast' ? 'good' : 'danger') : null,
     );

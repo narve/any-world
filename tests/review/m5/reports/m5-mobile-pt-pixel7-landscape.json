@@ -1,0 +1,261 @@
+{
+  "id": "pixel7-landscape",
+  "world": "nb-troll-direktoratet",
+  "device": "Pixel 7 landscape",
+  "safeAreaEmulated": true,
+  "layout": "phone-landscape",
+  "small": [],
+  "overlaps": [],
+  "offscreen": [],
+  "inSafeArea": [],
+  "thumb": {
+    "wait": {
+      "cx": 760,
+      "cy": 217,
+      "fromBottomPct": 40
+    },
+    "slot1": {
+      "cx": 690,
+      "cy": 271,
+      "fromBottomPct": 25
+    },
+    "bag": {
+      "cx": 634,
+      "cy": 222,
+      "fromBottomPct": 38
+    },
+    "rotate": {
+      "cx": 348,
+      "cy": 322,
+      "fromBottomPct": 11
+    },
+    "goal": {
+      "cx": 145,
+      "cy": 113,
+      "fromBottomPct": 69
+    },
+    "log": {
+      "cx": 145,
+      "cy": 305,
+      "fromBottomPct": 15
+    },
+    "rulesBadge": {
+      "cx": 636,
+      "cy": 28,
+      "fromBottomPct": 92
+    },
+    "hud": {
+      "cx": 145,
+      "cy": 46,
+      "fromBottomPct": 87
+    }
+  },
+  "stats": [
+    {
+      "where": "start",
+      "drawCalls": 39,
+      "triangles": 34952,
+      "fps": 10.5,
+      "geometries": 22,
+      "textures": 3,
+      "programs": 13,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 77",
+      "drawCalls": 114,
+      "triangles": 36096,
+      "fps": 10.7,
+      "geometries": 52,
+      "textures": 4,
+      "programs": 17,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 177",
+      "drawCalls": 83,
+      "triangles": 38446,
+      "fps": 11.5,
+      "geometries": 61,
+      "textures": 4,
+      "programs": 17,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 299",
+      "drawCalls": 118,
+      "triangles": 40398,
+      "fps": 9.5,
+      "geometries": 62,
+      "textures": 4,
+      "programs": 18,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "area 1",
+      "drawCalls": 45,
+      "triangles": 53720,
+      "fps": 13.6,
+      "geometries": 69,
+      "textures": 7,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    }
+  ],
+  "pathWalks": [
+    {
+      "from": {
+        "x": 39,
+        "y": 15
+      },
+      "dest": {
+        "x": 38,
+        "y": 8
+      },
+      "dist": 7,
+      "tiles": 6,
+      "turns": 7,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 29,
+        "y": 21
+      },
+      "dest": {
+        "x": 35,
+        "y": 21
+      },
+      "dist": 6,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer backpack"
+    },
+    {
+      "from": {
+        "x": 20,
+        "y": 16
+      },
+      "dest": {
+        "x": 17,
+        "y": 19
+      },
+      "dist": 3,
+      "tiles": 3,
+      "turns": 9,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 19,
+        "y": 6
+      },
+      "dest": {
+        "x": 24,
+        "y": 10
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 3,
+        "y": 7
+      },
+      "dest": {
+        "x": 7,
+        "y": 6
+      },
+      "dist": 4,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 4,
+        "y": 22
+      },
+      "dest": {
+        "x": 2,
+        "y": 14
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 22,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 19,
+        "y": 17
+      },
+      "dest": {
+        "x": 11,
+        "y": 9
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 12,
+      "reached": true
+    }
+  ],
+  "inspects": [
+    {
+      "what": "player",
+      "ok": true,
+      "text": "Kari Brekkestø Deg Ufarlig TÅL 28 / 28 Lektor fra Dombås med termos, lusekofte og en drøm om en torvtakshytte ved Snøhetta. Har lest hele pl"
+    },
+    {
+      "what": "actor",
+      "ok": true,
+      "text": "Kaffetrollet Bruse Vennlig Snakk TÅL 30 / 30 Et vennlig, mosegrodd troll som driver kiosken i venterommet. Kokekaffen er så sterk at skjeen "
+    }
+  ],
+  "contextLoss": {},
+  "emptyBand": [
+    52,
+    54,
+    53,
+    52,
+    52
+  ],
+  "turnsPlayed": 377,
+  "areasReached": 1,
+  "status": "playing",
+  "errors": [],
+  "notes": [
+    "env(safe-area-inset-*) seen by CSS: 0px 16px 24px 0px"
+  ]
+}

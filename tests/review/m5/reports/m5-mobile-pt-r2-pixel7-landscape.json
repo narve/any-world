@@ -1,0 +1,596 @@
+{
+  "id": "pixel7-landscape",
+  "world": "folk-horror-scarecrow-wedding",
+  "device": "Pixel 7 landscape",
+  "safeAreaEmulated": true,
+  "layout": "phone-landscape",
+  "small": [],
+  "overlaps": [],
+  "offscreen": [],
+  "inSafeArea": [],
+  "thumb": {
+    "wait": {
+      "cx": 760,
+      "cy": 217,
+      "fromBottomPct": 40
+    },
+    "slot1": {
+      "cx": 690,
+      "cy": 271,
+      "fromBottomPct": 25
+    },
+    "bag": {
+      "cx": 634,
+      "cy": 222,
+      "fromBottomPct": 38
+    },
+    "rotate": {
+      "cx": 348,
+      "cy": 322,
+      "fromBottomPct": 11
+    },
+    "goal": {
+      "cx": 145,
+      "cy": 113,
+      "fromBottomPct": 69
+    },
+    "log": {
+      "cx": 145,
+      "cy": 314,
+      "fromBottomPct": 13
+    },
+    "rulesBadge": {
+      "cx": 636,
+      "cy": 28,
+      "fromBottomPct": 92
+    },
+    "hud": {
+      "cx": 145,
+      "cy": 46,
+      "fromBottomPct": 87
+    }
+  },
+  "stats": [
+    {
+      "where": "start",
+      "drawCalls": 54,
+      "triangles": 40726,
+      "fps": 9.6,
+      "geometries": 38,
+      "textures": 5,
+      "programs": 17,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 90",
+      "drawCalls": 57,
+      "triangles": 41028,
+      "fps": 9.2,
+      "geometries": 69,
+      "textures": 5,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 182",
+      "drawCalls": 55,
+      "triangles": 40728,
+      "fps": 9.1,
+      "geometries": 69,
+      "textures": 5,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 275",
+      "drawCalls": 58,
+      "triangles": 41030,
+      "fps": 7.2,
+      "geometries": 35,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 353",
+      "drawCalls": 58,
+      "triangles": 41030,
+      "fps": 11.5,
+      "geometries": 36,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 431",
+      "drawCalls": 58,
+      "triangles": 41030,
+      "fps": 13.2,
+      "geometries": 36,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 509",
+      "drawCalls": 58,
+      "triangles": 41030,
+      "fps": 11,
+      "geometries": 36,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 587",
+      "drawCalls": 58,
+      "triangles": 41030,
+      "fps": 11.3,
+      "geometries": 36,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 665",
+      "drawCalls": 58,
+      "triangles": 41030,
+      "fps": 11.9,
+      "geometries": 36,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    }
+  ],
+  "pathWalks": [
+    {
+      "from": {
+        "x": 14,
+        "y": 14
+      },
+      "dest": {
+        "x": 6,
+        "y": 6
+      },
+      "dist": 8,
+      "tiles": 2,
+      "turns": 2,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 13,
+        "y": 11
+      },
+      "dest": {
+        "x": 5,
+        "y": 3
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 11,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 5,
+        "y": 3
+      },
+      "dest": {
+        "x": 11,
+        "y": 2
+      },
+      "dist": 6,
+      "tiles": 6,
+      "turns": 6,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 11,
+        "y": 2
+      },
+      "dest": {
+        "x": 3,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 3,
+        "y": 1
+      },
+      "dest": {
+        "x": 3,
+        "y": 9
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 3,
+        "y": 9
+      },
+      "dest": {
+        "x": 2,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 2,
+        "y": 1
+      },
+      "dest": {
+        "x": 10,
+        "y": 1
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    }
+  ],
+  "inspects": [
+    {
+      "what": "player",
+      "ok": true,
+      "text": "Ash Pellow You Harmless PLK 32 / 32 Twenty-three, good with a sickle, bad at saying no. Somebody pinned a rosette to your wedding smock whil"
+    },
+    {
+      "what": "actor",
+      "ok": true,
+      "text": "The Reverend Amos Pell Friendly Talk PLK 20 / 20 Kind, tired, flour on his cassock. He has performed six of these weddings and cried at ever"
+    }
+  ],
+  "contextLoss": {
+    "before": {
+      "where": "before-loss",
+      "drawCalls": 58,
+      "triangles": 41030,
+      "fps": 6.4,
+      "geometries": 69,
+      "textures": 5,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    "extension": true,
+    "lostStats": {
+      "where": "lost",
+      "drawCalls": 58,
+      "triangles": 41030,
+      "fps": 6.4,
+      "geometries": 69,
+      "textures": 5,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": true,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    "notice": {
+      "text": "Graphics paused. The map is coming back… The browser took the graphics away for a moment. Your run is saved, and play goes on once the map is back.",
+      "box": [
+        0,
+        0,
+        863,
+        360
+      ],
+      "layer": "game"
+    },
+    "turnWhileLost": 0,
+    "reloadOfferedAfter5s": true,
+    "after": {
+      "where": "restored",
+      "drawCalls": 58,
+      "triangles": 41030,
+      "fps": 6.8,
+      "geometries": 35,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    "noticeAfterRestore": false,
+    "layerAfterRestore": "game",
+    "playerOnTile": true,
+    "canvasBytes": 565481
+  },
+  "emptyBand": [
+    52,
+    52,
+    52,
+    52,
+    52,
+    52,
+    52,
+    52,
+    52
+  ],
+  "hiddenActors": [],
+  "clipped": [],
+  "sheets": [],
+  "thumbs": {
+    "start": {
+      "slots": 8,
+      "filled": 4,
+      "withImg": 4
+    },
+    "turn 90": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 182": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 275": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 353": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 431": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 509": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 587": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 665": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "end": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    }
+  },
+  "secondRun": {},
+  "turnsPlayed": 724,
+  "areasReached": 0,
+  "status": "playing",
+  "errors": [],
+  "notes": [
+    "start screen scrolled before the first run: [\"aw-screen 2174\"]",
+    "first run opened on layer narration",
+    "env(safe-area-inset-*) seen by CSS: 0px 16px 24px 0px",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"se\"} from {\"x\":10,\"y\":1} turn 6 -> {\"me\":{\"x\":10,\"y\":1},\"turn\":6,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":11,\"y\":2}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":11,\"y\":2}}",
+    "ctx buttons covered by a panel: [] (0 total)"
+  ]
+}

@@ -1,70 +1,27 @@
 /**
- * UI strings of the audio module (music panel). Looked up through the shared i18n catalogs first
- * (`tx`), so a catalog that defines an `audio.*` key wins; otherwise these built-in English and
- * Norwegian bokmål texts are used. The catalogs may adopt the keys below verbatim
- * (AUDIO_MESSAGES.en / .nb).
+ * UI strings of the audio module (music panel). The texts live in the shared i18n catalogs
+ * (src/client/i18n/<lang>.ts, keys `audio.panel.*` and `audio.mood.*`), so adding a language means
+ * adding a catalog file and nothing else (DESIGN §7b), and the catalog CI checks cover them.
  */
-import { formatMessage, getLanguage, normalizeLanguage, tx, type MessageParams } from '../i18n';
+import en from '../i18n/en';
+import { availableLanguages, catalog, t, type MessageKey, type MessageParams } from '../i18n';
 
-const en = {
-  'audio.panel.title': 'Music',
-  'audio.panel.mood': 'Mood: {mood}',
-  'audio.panel.ambience': 'Generated ambience',
-  'audio.panel.volume': 'Volume',
-  'audio.panel.mute': 'Mute',
-  'audio.panel.unmute': 'Unmute',
-  'audio.panel.search': 'Search SoundCloud',
-  'audio.panel.suggestions': 'Suggested listening',
-  'audio.panel.nothing': 'This world has no music suggestions.',
-  'audio.panel.newTab': '{label} (opens in a new tab)',
-  'audio.panel.offline': 'You are offline. The links work once you are back online.',
-  'audio.panel.embedOff': 'The SoundCloud player is off. Turn it on in settings to play music here.',
-  'audio.panel.paste': 'SoundCloud track or playlist link',
-  'audio.panel.play': 'Play',
-  'audio.panel.close': 'Close player',
-  'audio.panel.badUrl': 'That is not a SoundCloud link.',
-  'audio.panel.playerTitle': 'SoundCloud player',
-  'audio.mood.explore': 'exploring',
-  'audio.mood.tense': 'tense',
-  'audio.mood.calm': 'calm',
-  'audio.mood.eerie': 'eerie',
-  'audio.mood.boss': 'showdown',
-  'audio.mood.upbeat': 'upbeat',
-} as const;
+export type AudioMessageKey = Extract<MessageKey, `audio.${string}`>;
 
-export type AudioMessageKey = keyof typeof en;
+const AUDIO_KEYS = (Object.keys(en) as MessageKey[]).filter((k): k is AudioMessageKey => k.startsWith('audio.'));
 
-const nb: Record<AudioMessageKey, string> = {
-  'audio.panel.title': 'Musikk',
-  'audio.panel.mood': 'Stemning: {mood}',
-  'audio.panel.ambience': 'Generert stemningsmusikk',
-  'audio.panel.volume': 'Volum',
-  'audio.panel.mute': 'Lyd av',
-  'audio.panel.unmute': 'Lyd på',
-  'audio.panel.search': 'Søk på SoundCloud',
-  'audio.panel.suggestions': 'Forslag til lytting',
-  'audio.panel.nothing': 'Denne verdenen har ingen musikkforslag.',
-  'audio.panel.newTab': '{label} (åpnes i ny fane)',
-  'audio.panel.offline': 'Du er frakoblet. Lenkene virker når du er på nett igjen.',
-  'audio.panel.embedOff': 'SoundCloud-spilleren er slått av. Slå den på i innstillingene for å spille musikk her.',
-  'audio.panel.paste': 'Lenke til et SoundCloud-spor eller en spilleliste',
-  'audio.panel.play': 'Spill',
-  'audio.panel.close': 'Lukk spilleren',
-  'audio.panel.badUrl': 'Det er ikke en SoundCloud-lenke.',
-  'audio.panel.playerTitle': 'SoundCloud-spiller',
-  'audio.mood.explore': 'utforskende',
-  'audio.mood.tense': 'anspent',
-  'audio.mood.calm': 'rolig',
-  'audio.mood.eerie': 'uhyggelig',
-  'audio.mood.boss': 'oppgjør',
-  'audio.mood.upbeat': 'lystig',
-};
+function pick(messages: Record<string, string> | undefined): Record<AudioMessageKey, string> {
+  const out = {} as Record<AudioMessageKey, string>;
+  for (const k of AUDIO_KEYS) out[k] = messages?.[k] ?? en[k];
+  return out;
+}
 
-export const AUDIO_MESSAGES: Record<string, Record<AudioMessageKey, string>> = { en, nb };
+/** the audio strings of every catalog, by language (falls back to English per key, like t()) */
+export const AUDIO_MESSAGES: Record<string, Record<AudioMessageKey, string>> = Object.fromEntries(
+  availableLanguages().map(({ code }) => [code, pick(catalog(code))]),
+);
 
 /** an audio UI string in the current language */
 export function at(key: AudioMessageKey, params?: MessageParams): string {
-  const lang = normalizeLanguage(getLanguage());
-  const local = AUDIO_MESSAGES[lang]?.[key] ?? en[key];
-  return tx(key, params, formatMessage(local, params, lang));
+  return t(key, params);
 }

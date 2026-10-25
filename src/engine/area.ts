@@ -159,7 +159,7 @@ function placeActors(ctx: Ctx, plan: AreaPlan): void {
   const pl = computePlacement(ctx);
   for (const pa of plan.placed) {
     const p = choosePos(ctx, pl, pa.where);
-    if (p) spawnActor(ctx, pa.actor, p, { randomEnergy: true, silent: true });
+    if (p) spawnActor(ctx, pa.actor, p, { randomEnergy: true, silent: true, uncapped: true });
   }
   // spawn table: every entry's minimum, then weighted extras up to the size budget
   const entries = plan.actors.filter((e) => ctx.ix.actors.has(e.actor));
@@ -167,7 +167,7 @@ function placeActors(ctx: Ctx, plan: AreaPlan): void {
   const spawnOne = (k: number): boolean => {
     const p = choosePos(ctx, pl, 'anywhere');
     if (!p) return false;
-    const a = spawnActor(ctx, entries[k].actor, p, { randomEnergy: true, silent: true });
+    const a = spawnActor(ctx, entries[k].actor, p, { randomEnergy: true, silent: true, uncapped: true });
     counts[k]++;
     return !!a;
   };

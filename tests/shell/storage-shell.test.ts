@@ -55,7 +55,7 @@ describe('settings', () => {
     const s = { ...defaultSettings('direct'), quality: 'low' as const, gm: false, audio: { volume: 0.2, muted: true, soundcloud: true } };
     s.provider = { preset: 'openai', transport: 'direct', apiKey: 'sk-1', model: 'gpt-5' };
     saveSettings(s);
-    expect(loadSettings('direct')).toEqual(s);
+    expect(loadSettings('direct')).toEqual({ ...s, apiKeys: { openai: 'sk-1' } }); // the key is also kept per preset (M5-api-key-leaks-across-presets)
   });
 
   it('repairs bad or hostile values field by field', () => {

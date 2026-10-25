@@ -3,6 +3,7 @@ import type { ItemDef, StatusDef } from '../schema/world';
 import type { ActorInstance, ItemInstance } from './types';
 import { type Ctx, isPlayer } from './ctx';
 import { switchesOf } from './rules';
+import { own } from './util';
 
 export type Side = 'P' | 'H' | 'N' | 'F';
 
@@ -109,7 +110,7 @@ export function getStat(ctx: Ctx, a: ActorInstance, stat: string): number {
     case 'sight':
       return sightRadius(ctx, a);
     default:
-      if (isPlayer(ctx, a)) return ctx.s.player.resources[stat] ?? 0;
+      if (isPlayer(ctx, a)) return own(ctx.s.player.resources, stat) ?? 0;
       return 0;
   }
 }

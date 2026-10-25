@@ -14,11 +14,19 @@ import { z } from 'zod';
 // Primitives
 // ---------------------------------------------------------------------------
 
+/**
+ * Ids that are built-in members of every JavaScript object. Game state keeps counters, flags and
+ * defeat counts in plain id-keyed objects, so these are refused as ids (the engine also reads those
+ * maps by own property only; M5 issue proto-ids). Only "constructor" passes the id pattern today.
+ */
+export const RESERVED_IDS: ReadonlySet<string> = new Set(['constructor', 'prototype', '__proto__']);
+
 export const Id = z
   .string()
   .min(1)
   .max(48)
-  .regex(/^[a-z0-9][a-z0-9_-]*$/, 'ids are lowercase kebab/snake case');
+  .regex(/^[a-z0-9][a-z0-9_-]*$/, 'ids are lowercase kebab/snake case')
+  .refine((id) => !RESERVED_IDS.has(id), { message: 'this id is reserved (built-in object key); pick another, e.g. add a suffix' });
 export type Id = z.infer<typeof Id>;
 
 /** CSS hex colour, #rgb or #rrggbb. */
@@ -35,6 +43,13 @@ export type CoreStat = z.infer<typeof CoreStat>;
 /** Any stat-like thing an effect can read or change: core stats, speed/sight, or a custom resource id. */
 export const StatRef = z.union([CoreStat, z.enum(['speed', 'sight']), Id]);
 export type StatRef = z.infer<typeof StatRef>;
+
+/**
+ * A stat change from a perk, item, status or modify_stat effect. Bounded so that no schema-valid
+ * world can overflow a stat to Infinity/NaN by stacking modifiers (M5 issue extreme-modifiers);
+ * shipped worlds use at most ±20.
+ */
+export const ModifierAmount = z.number().min(-100).max(100);
 
 /**
  * A number the engine computes: base + dice + scale * stat of the source.
@@ -134,7 +149,7 @@ export const Effect = z.discriminatedUnion('type', [
   /** change mp or a custom resource (positive or negative). */
   z.object({ type: z.literal('resource'), resource: StatRef, amount: Amount }),
   /** temporary (duration>0) or permanent (duration omitted) stat change. */
-  z.object({ type: z.literal('modify_stat'), stat: StatRef, amount: z.number(), duration: z.number().int().min(1).optional() }),
+  z.object({ type: z.literal('modify_stat'), stat: StatRef, amount: ModifierAmount, duration: z.number().int().min(1).optional() }),
   z.object({ type: z.literal('apply_status'), status: Id, duration: z.number().int().min(1).max(200).default(5) }),
   z.object({ type: z.literal('remove_status'), status: z.union([Id, z.literal('all_harmful')]) }),
   z.object({ type: z.literal('teleport'), mode: z.enum(['random', 'to_target', 'swap', 'to_exit']).default('random') }),
@@ -148,7 +163,7 @@ export const Effect = z.discriminatedUnion('type', [
   z.object({ type: z.literal('transform'), into: Id }),
   z.object({ type: z.literal('light'), radius: z.number().int().min(1).max(10), duration: z.number().int().min(1).max(500) }),
   z.object({ type: z.literal('noise'), radius: z.number().int().min(1).max(20) }),
-  z.object({ type: z.literal('grant_xp'), amount: z.number().int().min(1) }),
+  z.object({ type: z.literal('grant_xp'), amount: z.number().int().min(1).max(1000) }),
   /** pays the player in the world's currency (M2), e.g. from an on_kill rule, a loot item or a quest token. */
   z.object({ type: z.literal('currency'), amount: z.number().int().min(1).max(100) }),
   z.object({ type: z.literal('set_flag'), flag: Id, value: z.boolean().default(true) }),
@@ -223,7 +238,7 @@ export const StatusDef = z.object({
   /** per-turn effects on the holder */
   perTurn: z.array(Effect).max(4).default([]),
   /** stat changes while the status lasts */
-  modifiers: z.array(z.object({ stat: StatRef, amount: z.number() })).max(4).default([]),
+  modifiers: z.array(z.object({ stat: StatRef, amount: ModifierAmount })).max(4).default([]),
   /** special flags the engine understands */
   flags: z
     .array(z.enum(['stunned', 'rooted', 'invisible', 'confused', 'silenced', 'afraid', 'charmed', 'hasted', 'slowed', 'blinded', 'regenerating']))
@@ -350,7 +365,7 @@ export const ItemDef = z.object({
   /** armour value when equipped. */
   armour: z.number().int().min(0).max(20).optional(),
   /** stat modifiers while equipped (or carried if `passiveWhenCarried`). */
-  modifiers: z.array(z.object({ stat: StatRef, amount: z.number() })).max(4).default([]),
+  modifiers: z.array(z.object({ stat: StatRef, amount: ModifierAmount })).max(4).default([]),
   passiveWhenCarried: z.boolean().default(false),
   triggers: z.array(Trigger).max(3).default([]),
   /** requirements to equip/use. */
@@ -464,7 +479,7 @@ export const Perk = z.object({
   name: z.string().max(40),
   description: z.string().max(200),
   /** permanent stat changes */
-  modifiers: z.array(z.object({ stat: StatRef, amount: z.number() })).max(4).default([]),
+  modifiers: z.array(z.object({ stat: StatRef, amount: ModifierAmount })).max(4).default([]),
   /** abilities/items granted (spells become slot items) */
   grantItems: z.array(Id).max(2).default([]),
   triggers: z.array(Trigger).max(2).default([]),
@@ -653,7 +668,13 @@ export const GoalSpec = z.object({
   /** optional extra loss condition besides death */
   lose: Condition.optional(),
   winText: z.string().max(500),
+  /** the losing ending when the run is lost by goal.lose or a fatal resource (and by death when deathText is absent) */
   lossText: z.string().max(500),
+  /**
+   * The losing ending when the player is defeated (hp reaches 0). Optional, falls back to
+   * lossText; worlds with goal.lose should give both, since the two endings usually differ.
+   */
+  deathText: z.string().max(500).optional(),
   /**
    * Player-facing names for the flags and counters the goal and locks use, keyed by their id
    * ({"soknad-stemplet": "Søknaden er stemplet"}); the goal tracker shows these instead of the ids.

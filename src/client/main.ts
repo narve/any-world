@@ -6,7 +6,7 @@
  */
 import { createUi, type GameUi, type Settings, type StartView, type UiCallbacks, type UiViewModel, type InspirationPrompt, type DemoWorldView, type SettingsView, type StartOptions, type Difficulty } from './ui/index';
 import { DEFAULT_PALETTE } from './ui/index';
-import { defaultVocabulary } from './ui/format';
+import { defaultVocabulary, localizedPreset } from './ui/format';
 import type { Renderer } from './render/index';
 import { loadRenderer, preloadRenderer } from './render/lazy';
 import { listPresets } from '../llm/presets';
@@ -16,7 +16,7 @@ import { workerBalancer } from '../llm/balance-worker';
 import { loadBundledRecordings, recordedWorldKeys } from '../llm/recordings-bundle';
 import { findStoredWorld, forgetWorld, generatedWorlds, hasWorld, loadBundledWorld, loadWorld, recordingsKey, rememberWorld, worldIndex, worldTitle, type WorldEntry } from './worlds';
 import { providerFromSettings, providerLabel, runAi, WorldGeneration } from './ai';
-import { clearRun, loadRun, loadSettings, onboardingSeen, saveSettings } from './storage';
+import { activeProvider, clearRun, loadRun, loadSettings, onboardingSeen, reconcileApiKeys, recentSource, saveSettings } from './storage';
 import { demoGenerator, generationHint, OFFLINE_PRESET, pickDemoWorld, providerProblem, problemText, providerStatus, type ServerState } from './modes';
 import { exportWorldFile, parseWorldFile } from './world-file';
 import { AudioBridge } from './audio-bridge';
@@ -99,7 +99,7 @@ export class App {
   /** the LLM the settings give for play (GM and NPC voice), or null (demo/offline GM) */
   provider(): LLMProvider | null {
     if (this.settings.provider.preset === OFFLINE_PRESET) return null;
-    return providerFromSettings(this.settings.provider, this.serverConfigured());
+    return providerFromSettings(activeProvider(this.settings), this.serverConfigured());
   }
 
   /** worlds can be created: a working provider, or the offline demo generator */
@@ -127,7 +127,8 @@ export class App {
   private settingsView(): SettingsView | null {
     if (!this.settingsOpen) return null;
     return {
-      presets: [...listPresets()],
+      // labels, regions and notes in the UI language (issues/M5-settings-presets-english.md)
+      presets: listPresets().map((p) => localizedPreset(p)),
       current: this.settings,
       transports: TRANSPORTS,
       offlineDemo: true,
@@ -163,7 +164,7 @@ export class App {
         genre: w.world.meta.genre,
         color: w.world.palette.primary,
         language: w.world.meta.language || 'en',
-        source: w.source ?? 'generated',
+        source: recentSource(w),
         savedAt: w.savedAt ?? 0,
       }));
     return {
@@ -172,7 +173,7 @@ export class App {
       savedRun: saved && hasWorld(saved.worldId) ? { worldTitle: saved.worldTitle, playerName: saved.playerName, areaName: saved.areaName, turn: saved.turn } : null,
       canGenerate,
       providerLabel: this.provider() ? providerLabel(this.settings.provider) : null,
-      providerStatus: providerStatus(this.settings.provider, this.server, canGenerate, { gm: this.settings.gm }),
+      providerStatus: providerStatus(activeProvider(this.settings), this.server, canGenerate, { gm: this.settings.gm }),
       recent,
       canImport: true,
       defaults: { difficulty: this.runOptions.difficulty, weirdness: this.runOptions.weirdness },
@@ -332,7 +333,7 @@ export class App {
       origin = full?.id;
     } else provider = this.provider();
     if (!provider) {
-      const problem = providerProblem(this.settings.provider, this.server);
+      const problem = providerProblem(activeProvider(this.settings), this.server);
       if (problem) this.ui.toast(problemText(problem), 'warn');
       this.settingsOpen = true;
       this.render();
@@ -442,6 +443,11 @@ export class App {
       return null;
     }
     const entry = rememberWorld(r.world, randomSeed(), { source: 'imported' });
+    if (!entry.stored) {
+      // no room left (the saved run's world is never evicted for it): say so instead of "opened"
+      this.ui.toast(t('world.import.error.noRoom', { title: r.world.meta.title }), 'warn');
+      return null;
+    }
     this.ui.toast(t('world.import.ok', { title: r.world.meta.title }), 'info');
     if (this.screen === 'start') this.render();
     return entry.id;
@@ -473,7 +479,7 @@ export class App {
       onStart: (opts) => {
         if (this.canGenerate()) void this.createWorld(opts);
         else {
-          const problem = providerProblem(this.settings.provider, this.server);
+          const problem = providerProblem(activeProvider(this.settings), this.server);
           this.ui.toast(problem ? problemText(problem) : t('app.noGenerator'), 'info');
         }
       },
@@ -481,8 +487,10 @@ export class App {
         this.settingsOpen = open;
         this.render();
       },
-      onSettings: (s) => {
+      onSettings: (saved) => {
         const before = this.settings;
+        // keys stay with the provider they were typed for (issues/M5-api-key-leaks-across-presets.md)
+        const s = reconcileApiKeys(before, saved);
         this.settings = s;
         saveSettings(s);
         this.audio.applySettings(s.audio);

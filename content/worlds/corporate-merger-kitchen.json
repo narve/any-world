@@ -1282,7 +1282,7 @@
       "name": "Odile Greaves, Chief Integration Officer",
       "description": "Cream power suit, red pen, no surname on her yoghurt, only initials: O.G. She has already written Friday's slide deck. Your department is on slide 41.",
       "stats": {
-        "hp": 56,
+        "hp": 48,
         "ac": 13,
         "str": 13,
         "dex": 12,
@@ -1293,7 +1293,7 @@
         "verb": "redlines",
         "damage": {
           "base": 2,
-          "dice": "1d6"
+          "dice": "1d4"
         },
         "damageType": "red-tape",
         "accuracyStat": "int"
@@ -1315,7 +1315,7 @@
                 "type": "damage",
                 "amount": {
                   "base": 1,
-                  "dice": "1d6"
+                  "dice": "1d5"
                 },
                 "damageType": "spin"
               }
@@ -1941,7 +1941,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 5,
+              "base": 6,
               "dice": "1d3"
             }
           }
@@ -3006,7 +3006,7 @@
   },
   "areas": [
     {
-      "name": "Third Floor: The Kitchen Commons",
+      "name": "The Kitchen Commons",
       "description": "The last neutral room in the building, and the corridors either side of it. Cream lino, a humming fridge, two microwaves, and Greyline consultants circling the kettle.",
       "generator": "building",
       "size": "medium",
@@ -3042,24 +3042,24 @@
         {
           "actor": "greyline-consultant",
           "weight": 30,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 1
         },
         {
           "actor": "post-it-swarm",
           "weight": 30,
-          "min": 2,
-          "max": 5
+          "min": 1,
+          "max": 2
         },
         {
           "actor": "reply-all-chain",
           "weight": 20,
-          "max": 3
+          "max": 1
         },
         {
           "actor": "microwave-queue-bully",
           "weight": 8,
-          "max": 1
+          "max": 0
         }
       ],
       "placed": [
@@ -3188,7 +3188,7 @@
       }
     },
     {
-      "name": "Tab Four: The Integration Spreadsheet",
+      "name": "The Integration Spreadsheet (Tab Four)",
       "description": "Beyond the fire door there is no stairwell, just an endless pale grid of cells hanging in white space. Departments are rows. Some are being deleted as you watch.",
       "generator": "geometric",
       "size": "medium",
@@ -3418,24 +3418,24 @@
         {
           "actor": "rumour-mill",
           "weight": 25,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         {
           "actor": "watercooler-whisper",
           "weight": 30,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         {
           "actor": "reply-all-chain",
           "weight": 15,
-          "max": 3
+          "max": 2
         },
         {
           "actor": "greyline-consultant",
           "weight": 15,
-          "max": 3
+          "max": 2
         },
         {
           "actor": "hr-liaison",

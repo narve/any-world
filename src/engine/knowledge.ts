@@ -9,6 +9,7 @@ import type { WorldSpec } from '../schema/world';
 import { type Ctx, emit, itemName, logKey, statName, statusName } from './ctx';
 import type { Obs } from './effects';
 import { indexWorld } from './ctx';
+import { own } from './util';
 
 const RANK: Record<Knowledge, number> = { unknown: 0, vague: 1, clear: 2 };
 export const MAX_NOTES = 6;
@@ -126,7 +127,7 @@ export function unhideConsumablesForRule(ctx: Ctx): string[] {
 }
 
 export function knowledgeOf(ctx: Ctx, defId: string): ItemKnowledgeState {
-  let k = ctx.s.knowledge[defId];
+  let k = own(ctx.s.knowledge, defId);
   if (!k) {
     const def = ctx.ix.items.get(defId);
     k = { level: def ? initialKnowledge(ctx.world, def) : 'clear', notes: [], timesUsed: 0 };

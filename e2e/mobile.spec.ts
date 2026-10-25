@@ -18,7 +18,7 @@
 import { test, expect, devices, type Page, type CDPSession } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
-const OUT = 'docs/progress/M4';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M4' : 'test-results/shots/M4';
 mkdirSync(OUT, { recursive: true });
 const BASE = process.env.MOBILE_BASE;
 const TURNS = Number(process.env.MOBILE_TURNS ?? 260);

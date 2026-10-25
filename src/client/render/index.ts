@@ -37,6 +37,14 @@
  *   r.rotateStep(dir: -1 | 1): void                    // 90° step (same as rotateCamera)
  *   r.setViewportInsets({ top, bottom, left, right })  // CSS px covered by HUD / hotbar / safe areas;
  *                                                      // the player is centred in the rest
+ *   r.setOverlayRects([{ left, top, right, bottom }])  // viewport CSS px of panels over the map (HUD,
+ *                                                      // log, hotbar, goal bar…): auto framing shifts the
+ *                                                      // view (or zooms out) until no visible actor is
+ *                                                      // under one. Panels found over a framed actor
+ *                                                      // (document.elementFromPoint, once the camera
+ *                                                      // rests) are added on their own: see autoOverlays
+ *   r.autoOverlays: boolean                            // default true; false = only setOverlayRects
+ *   r.itemThumbnail(defId): string | null              // cached PNG data URL of the item's model
  *   r.onContextChange = (lost: boolean) => …           // WebGL context lost / restored (rebuilt in place)
  *   attachTouchCamera(r, el)                           // pinch + twist gestures (see touch.ts)
  *
@@ -60,8 +68,9 @@ import { clearTextureCache } from './textures';
 import { Backdrop } from './backdrop';
 import { disposeSurfaceTextures } from './surfaces';
 import { AdaptiveQuality, FpsMeter, QUALITY_PROFILES, browserDeviceHints, initialTier, isMobileDevice, type DeviceHints, type QualityProfile, type QualitySetting, type QualityTier } from './quality';
-import type { ViewInsets } from './camera';
+import type { ViewInsets, OverlayRect } from './camera';
 import { missLabel } from '../i18n/engine-text';
+import { ItemThumbnailer } from './thumbnails';
 
 export { buildModel, animateModel } from './models';
 export type { ModelSpecIn } from './models';
@@ -69,7 +78,8 @@ export { towardCamera, tileCentre, worldToTile } from './coords';
 export { attachTouchCamera, TouchCameraGesture } from './touch';
 export { QUALITY_PROFILES, isMobileDevice } from './quality';
 export type { QualitySetting, QualityTier, QualityProfile } from './quality';
-export type { ViewInsets } from './camera';
+export type { ViewInsets, OverlayRect } from './camera';
+export { THUMB_SIZE } from './thumbnails';
 
 /** What the last rendered frame cost (Renderer.stats()). */
 export interface RenderStats {
@@ -103,6 +113,10 @@ export interface RendererOptions {
 }
 
 const MOVE_MS = 120;
+/** while the camera rests, the page is checked for panels over framed actors this often (ms) */
+const PROBE_MS = 500;
+/** opacity of the player model while it hides an adjacent actor */
+export const PLAYER_SEE_THROUGH = 0.35;
 const LUNGE_MS = 170;
 const MAX_BLOCKING_MS = 520;
 const SAFETY_MS = 1200;
@@ -139,6 +153,29 @@ export class Renderer {
   private ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   private qualitySetting: QualitySetting = 'auto';
   private profile: QualityProfile = QUALITY_PROFILES.high;
+  private thumbnailer: ItemThumbnailer | null = null;
+  /** overlay panels over the canvas (viewport CSS px) that auto framing keeps actors out of */
+  private overlayRects: OverlayRect[] = [];
+  /**
+   * Find the page's panels over the map by themselves: once the camera rests, each framed actor's feet
+   * and head are hit-tested (document.elementFromPoint); a panel found over one is measured from then
+   * on (until it leaves the page) and framing moves the actor out from under it. Elements inside the
+   * renderer's container (map labels) never count.
+   */
+  autoOverlays = true;
+  private autoOverlayEls = new Set<Element>();
+  /** hit-test framed actors against the page once the camera rests */
+  private probeDue = false;
+  /** when probeOverlays last ran (ms, frame clock); it re-runs every PROBE_MS while the camera rests */
+  private lastProbe = 0;
+  /** the found panels' rects the camera rig was last given (rounded), to notice them move or go */
+  private autoKey = '';
+  /** re-check whether the player model hides a neighbour once the camera rests */
+  private seeThroughDue = false;
+  /** the player model is drawn see-through because it hides an adjacent actor */
+  private playerSeeThrough = false;
+  /** the player is drawn ghosted (sneaking / invisible) */
+  private playerGhosted = false;
   private readonly mobile: boolean;
   private adaptive: AdaptiveQuality | null = null;
   private fpsMeter = new FpsMeter();
@@ -208,6 +245,7 @@ export class Renderer {
   setWorld(world: WorldSpec): void {
     if (this.world === world) return;
     this.world = world;
+    this.thumbnailer?.setWorld(world);
     this.clearArea();
     this.actors?.dispose();
     this.items?.dispose();
@@ -243,6 +281,8 @@ export class Renderer {
     this.actors?.setLightFloor(this.lights.actorLightFloor);
     if (this.actors) this.actors.groundColor = plan.floor?.color;
     this.rig.setFrameDist(0);
+    this.rig.setPan({ x: 0, y: 0 });
+    this.playerSeeThrough = false;
     this.cutKey = '';
     // snap the camera onto the player (or the map start) so the area doesn't swoop in
     const player = area.actors.find((a) => a.faction === 'player' || a.defId === 'player');
@@ -269,6 +309,18 @@ export class Renderer {
   /** liquid terrain patches of the current area; for tests */
   liquidTerrainInfo(): ReturnType<AreaView['liquidTerrainInfo']> {
     return this.area?.liquidTerrainInfo() ?? [];
+  }
+
+  /**
+   * A small picture (PNG data URL, THUMB_SIZE px square, transparent background) of item `defId`'s
+   * model, rendered once per world into a shared offscreen target and cached. null for def ids the
+   * world does not have, before setWorld, or while the WebGL context is lost. It shows the item as it
+   * really is: the UI shows it only for items the player has identified.
+   */
+  itemThumbnail(defId: string): string | null {
+    if (!this.world || this.disposed) return null;
+    this.thumbnailer ??= new ItemThumbnailer(this.gl);
+    return this.thumbnailer.get(this.world, defId);
   }
 
   get backdropInfo(): { style: string; color: string; color2: string; intensity: number } | null {
@@ -573,7 +625,9 @@ export class Renderer {
       actors.setFaction(v, ActorLayer.factionOf(a, isPlayer(a.id)));
       // sneaking player / invisible actors are drawn ghosted
       const ghosted = (v.isPlayer && state.player.sneaking) || a.statuses.some((st) => this.world!.statuses.find((d) => d.id === st.id)?.flags.includes('invisible'));
-      if (!v.dying && (ghosted ? v.opacity !== 0.5 : v.opacity !== 1 && v.fadeMats)) actors.setOpacity(v, ghosted ? 0.5 : 1);
+      if (v.isPlayer) this.playerGhosted = ghosted;
+      const want = this.restingOpacity(v, ghosted);
+      if (!v.dying && v.opacity !== want && (want !== 1 || v.fadeMats)) actors.setOpacity(v, want);
       const frac = a.maxHp > 0 ? a.hp / a.maxHp : 1;
       const hpTime = impactAt.get(a.id) ?? 0;
       const showBar = frac < 0.999 && a.hp > 0;
@@ -633,6 +687,8 @@ export class Renderer {
       this.reframe(state, pa);
       this.updateCutaway(pa.pos);
     }
+    this.probeDue = true;
+    this.seeThroughDue = true;
 
     if (!this.anim.busy) return;
     await new Promise<void>((resolve) => {
@@ -677,15 +733,181 @@ export class Renderer {
    * the player's own zoom choice wins when it is wider.
    */
   private reframe(state: GameState, player: ActorInstance): void {
+    // panels found on the page move, resize and go away (toasts): measure them again each time
+    if (this.autoOverlayEls.size) this.applyOccluders();
+    const pts = this.framedPoints(state, player.id);
+    if (!pts.length) {
+      this.rig.setFrameDist(0);
+      this.rig.setPan({ x: 0, y: 0 });
+      return;
+    }
+    const pv = this.actors?.views.get(player.id);
+    const ph = Math.min(2.4, pv?.height ?? 1.2);
+    const me = [new THREE.Vector3(player.pos.x, 0, player.pos.y), new THREE.Vector3(player.pos.x, ph, player.pos.y)];
+    const f = this.rig.frame(pts, this.rig.userDist, { player: me });
+    this.rig.setFrameDist(f.dist);
+    this.rig.setPan(f.pan);
+  }
+
+  /** feet and head of every living non-player actor on a visible tile (what auto framing keeps clear) */
+  private framedPoints(state: GameState, playerId: string): THREE.Vector3[] {
     const pts: THREE.Vector3[] = [];
     for (const a of state.area.actors) {
-      if (a.id === player.id || a.hp <= 0) continue;
+      if (a.id === playerId || a.hp <= 0) continue;
       if (!this.area?.isVisible(a.pos.x, a.pos.y)) continue;
       const v = this.actors?.views.get(a.id);
       const h = Math.min(2.4, v?.height ?? 1.2);
       pts.push(new THREE.Vector3(a.pos.x, 0, a.pos.y), new THREE.Vector3(a.pos.x, h, a.pos.y));
     }
-    this.rig.setFrameDist(pts.length ? this.rig.distanceToFrame(pts, this.rig.userDist) : 0);
+    return pts;
+  }
+
+  /** the player's state, re-framed (after the overlay panels changed) */
+  private reframeNow(): void {
+    if (!this.state || !this.playerId) return;
+    const pa = this.state.area.actors.find((a) => a.id === this.playerId);
+    if (pa) this.reframe(this.state, pa);
+  }
+
+  /**
+   * Hit-test where each framed actor is drawn (feet, middle, head) against the page: a panel over one
+   * becomes an overlay rect (see autoOverlays) and the view is re-framed. Returns true when it found a
+   * new panel. Called once the camera rests; public for tests.
+   */
+  probeOverlays(): boolean {
+    if (!this.autoOverlays || typeof document === 'undefined' || typeof document.elementFromPoint !== 'function') return false;
+    if (!this.state || !this.playerId || !this.actors) return false;
+    const canvas = this.gl.domElement;
+    if (!canvas.isConnected) return false;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return false;
+    const me = this.actors.views.get(this.playerId);
+    const centre = me ? this.projectToViewport(me.root.position, rect) : { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const vw = typeof innerWidth === 'number' && innerWidth > 0 ? innerWidth : rect.width;
+    const vh = typeof innerHeight === 'number' && innerHeight > 0 ? innerHeight : rect.height;
+    // panels found earlier move, resize and leave (a dismissed narration, a toast): measure them again
+    let found = this.autoRectsKey() !== this.autoKey;
+    for (const v of this.actors.views.values()) {
+      if (v.isPlayer || v.dying || !v.root.visible) continue;
+      if (!this.area?.isVisible(v.tile.x, v.tile.y)) continue;
+      const h = Math.min(2.4, v.height);
+      for (const frac of [0, 0.45, 1]) {
+        const p = v.root.position.clone();
+        p.y += h * frac;
+        const s = this.projectToViewport(p, rect);
+        if (s.x < rect.left || s.y < rect.top || s.x > rect.right || s.y > rect.bottom || s.x >= vw || s.y >= vh || s.x < 0 || s.y < 0) continue;
+        const hit = document.elementFromPoint(s.x, s.y);
+        if (!hit || hit === canvas || this.container.contains(hit)) continue;
+        const panel = overlayPanel(hit, this.container, centre, vw * vh);
+        if (!panel || this.autoOverlayEls.has(panel)) continue;
+        this.autoOverlayEls.add(panel);
+        found = true;
+      }
+    }
+    if (found) {
+      this.applyOccluders();
+      this.cutKey = '';
+      this.reframeNow();
+    }
+    return found;
+  }
+
+  /** panels found by probeOverlays (viewport CSS px, measured now); for tests */
+  get autoOverlayRects(): OverlayRect[] {
+    return this.measureAutoOverlays();
+  }
+
+  /** forget the panels found by probeOverlays (they are found again when they cover an actor) */
+  clearAutoOverlays(): void {
+    this.autoOverlayEls.clear();
+    this.applyOccluders();
+    this.reframeNow();
+  }
+
+  private measureAutoOverlays(): OverlayRect[] {
+    const out: OverlayRect[] = [];
+    for (const el of Array.from(this.autoOverlayEls)) {
+      if (!el.isConnected) {
+        this.autoOverlayEls.delete(el);
+        continue;
+      }
+      let hidden = false;
+      try {
+        const cs = getComputedStyle(el);
+        hidden = cs.visibility === 'hidden' || cs.display === 'none' || cs.pointerEvents === 'none';
+      } catch {
+        /* not an element we can style-check */
+      }
+      if (hidden) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) out.push({ left: r.left, top: r.top, right: r.right, bottom: r.bottom });
+    }
+    return out;
+  }
+
+  private autoRectsKey(): string {
+    return rectsKey(this.measureAutoOverlays());
+  }
+
+  private projectToViewport(p: THREE.Vector3, rect: DOMRect): { x: number; y: number } {
+    const v = p.clone().project(this.rig.camera);
+    return { x: rect.left + ((v.x + 1) / 2) * rect.width, y: rect.top + ((1 - v.y) / 2) * rect.height };
+  }
+
+  /** the opacity a view rests at: ghosted 0.5; the player see-through while it hides a neighbour */
+  private restingOpacity(v: ActorView, ghosted: boolean): number {
+    const base = ghosted ? 0.5 : 1;
+    return v.isPlayer && this.playerSeeThrough ? Math.min(base, PLAYER_SEE_THROUGH) : base;
+  }
+
+  /**
+   * true when the player's model hides most of a living actor on an adjacent visible tile from the
+   * camera (a short creature right behind a tall player): rays from the camera to the actor's body
+   * hit the player's model first.
+   */
+  playerHidesNeighbour(): boolean {
+    if (!this.actors || !this.playerId || !this.area) return false;
+    const me = this.actors.views.get(this.playerId);
+    if (!me || !me.root.visible) return false;
+    const cam = this.rig.camera;
+    const ray = new THREE.Raycaster();
+    const dir = new THREE.Vector3();
+    for (const v of this.actors.views.values()) {
+      if (v.isPlayer || v.dying || !v.root.visible) continue;
+      if (Math.max(Math.abs(v.tile.x - me.tile.x), Math.abs(v.tile.y - me.tile.y)) !== 1) continue;
+      if (!this.area.isVisible(v.tile.x, v.tile.y)) continue;
+      const h = Math.min(2.4, v.height);
+      let blocked = 0;
+      const fracs = [0.25, 0.55, 0.85];
+      for (const f of fracs) {
+        const target = v.root.position.clone();
+        target.y += h * f;
+        dir.copy(target).sub(cam.position);
+        const len = dir.length();
+        ray.set(cam.position, dir.normalize());
+        ray.far = len;
+        const hits = ray.intersectObject(me.inner, true).filter((x) => x.object.visible && (x.object as THREE.Mesh).isMesh && !x.object.userData.outline);
+        if (hits.length) blocked++;
+      }
+      if (blocked >= 2) return true;
+    }
+    return false;
+  }
+
+  /** draw the player see-through while it hides a neighbour (see playerHidesNeighbour) */
+  private updateSeeThrough(): void {
+    const on = this.playerHidesNeighbour();
+    if (on === this.playerSeeThrough) return;
+    this.playerSeeThrough = on;
+    const v = this.playerId ? this.actors?.views.get(this.playerId) : undefined;
+    if (!v || v.dying) return;
+    const want = this.restingOpacity(v, this.playerGhosted);
+    if (v.opacity !== want) this.actors?.setOpacity(v, want);
+  }
+
+  /** the player model is drawn see-through right now (it hides an adjacent actor); for tests */
+  get playerIsSeeThrough(): boolean {
+    return this.playerSeeThrough;
   }
 
   private updateCutaway(p: Pos): void {
@@ -738,6 +960,10 @@ export class Renderer {
     this.rig.rotate(dir);
     const p = this.playerTile();
     if (p) this.updateCutaway(p);
+    // another side of the actors faces the panels and the player now: frame and test again
+    this.reframeNow();
+    this.probeDue = true;
+    this.seeThroughDue = true;
   }
 
   zoom(delta: number): void {
@@ -761,6 +987,48 @@ export class Renderer {
   setViewportInsets(insets: Partial<ViewInsets>): void {
     this.rig.setInsets(insets);
     this.cutKey = '';
+    this.applyOccluders();
+    this.reframeNow();
+    this.probeDue = true;
+    this.seeThroughDue = true;
+  }
+
+  /**
+   * Overlay panels drawn over the canvas (viewport CSS px, e.g. getBoundingClientRect() of the HUD,
+   * log, hotbar + context buttons, goal bar). Unlike setViewportInsets they do not move the view
+   * centre; auto framing zooms out until no visible actor stands under one of them. A rect that
+   * covers the view centre (where the player stands) is ignored. [] clears.
+   */
+  setOverlayRects(rects: readonly OverlayRect[]): void {
+    const ok = (n: unknown) => typeof n === 'number' && Number.isFinite(n);
+    this.overlayRects = rects
+      .filter((r) => r && ok(r.left) && ok(r.top) && ok(r.right) && ok(r.bottom) && r.right > r.left && r.bottom > r.top)
+      .map((r) => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom }));
+    this.applyOccluders();
+    this.cutKey = '';
+    this.reframeNow();
+    this.probeDue = true;
+  }
+
+  get overlayRectsInUse(): OverlayRect[] {
+    return this.overlayRects.map((r) => ({ ...r }));
+  }
+
+  /** overlay rects → canvas-relative px for the camera rig */
+  private applyOccluders(): void {
+    let ox = 0;
+    let oy = 0;
+    try {
+      const rc = this.gl.domElement.getBoundingClientRect();
+      ox = rc.left;
+      oy = rc.top;
+    } catch {
+      /* detached canvas */
+    }
+    const auto = this.measureAutoOverlays();
+    this.autoKey = rectsKey(auto);
+    const all = [...this.overlayRects, ...auto];
+    this.rig.setOccluders(all.map((r) => ({ left: r.left - ox, top: r.top - oy, right: r.right - ox, bottom: r.bottom - oy })));
   }
 
   get viewportInsets(): ViewInsets {
@@ -768,8 +1036,9 @@ export class Renderer {
   }
 
   /**
-   * Tile under viewport coordinates (a tap / click). A hit on a visible actor's model gives the tile
-   * it stands on (tall models cover the tiles behind them); otherwise the ground under the point.
+   * Tile under viewport coordinates (a tap / click). A hit on a visible non-player actor's model gives
+   * the tile it stands on (tall models cover the tiles behind them); otherwise the ground under the
+   * point. The player's own model never claims a tap whose ground point is another tile.
    */
   pick(x: number, y: number): Pos | null {
     if (!this.area) return null;
@@ -785,12 +1054,26 @@ export class Renderer {
         byRoot.set(v.inner, v);
       }
       if (roots.length) {
+        let mine: Pos | null = null;
         for (const hit of this.raycaster.intersectObjects(roots, true)) {
           if (!hit.object.visible || !(hit.object as THREE.Mesh).isMesh) continue;
           let o: THREE.Object3D | null = hit.object;
           while (o && !byRoot.has(o)) o = o.parent;
           const v = o ? byRoot.get(o) : undefined;
-          if (v && inBounds(v.tile, this.area.width, this.area.height)) return { ...v.tile };
+          if (!v || !inBounds(v.tile, this.area.width, this.area.height)) continue;
+          // the player's own model is never the answer while another actor is behind it on the same
+          // ray: a tall player model would otherwise swallow every tap on a short creature at its back
+          if (v.isPlayer) {
+            mine ??= { ...v.tile };
+            continue;
+          }
+          return { ...v.tile };
+        }
+        if (mine) {
+          // nothing else along the ray: a tall player model covers the tiles drawn behind it, and a tap
+          // there means that tile (walk there, or the actor the model hides; only an antenna shows), not
+          // "my own tile", which does nothing. Only a point whose ground is the player's tile picks it.
+          return this.screenToTile(x, y) ?? mine;
         }
       }
     }
@@ -940,6 +1223,10 @@ export class Renderer {
     const h = Math.max(1, this.container.clientHeight);
     this.gl.setSize(w, h, false);
     this.rig.setViewport(w, h);
+    if (this.overlayRects.length || this.autoOverlayEls.size) this.applyOccluders();
+    this.reframeNow();
+    this.probeDue = true;
+    this.seeThroughDue = true;
   }
 
   /** Render one frame immediately (tests/screenshots). */
@@ -1055,6 +1342,8 @@ export class Renderer {
     this.clearArea();
     this.actors?.dispose();
     this.items?.dispose();
+    this.thumbnailer?.dispose();
+    this.thumbnailer = null;
     this.vfx.clear();
     this.gl.dispose();
     this.gl.domElement.remove();
@@ -1090,9 +1379,21 @@ export class Renderer {
     const pv = this.playerId ? this.actors?.views.get(this.playerId) : undefined;
     if (pv) this.focus.set(pv.root.position.x, 0, pv.root.position.z);
     this.rig.follow(this.focus);
-    this.rig.update(dt);
+    const moving = this.rig.update(dt);
     const pt = this.playerTile();
     if (pt) this.updateCutaway(pt);
+    if (!moving && !this.anim.busy) {
+      // the camera rests: is a framed actor under a page panel, or hidden by the player's model?
+      if (this.probeDue || now - this.lastProbe > PROBE_MS) {
+        this.probeDue = false;
+        this.lastProbe = now;
+        if (this.probeOverlays()) this.probeDue = true;
+      }
+      if (this.seeThroughDue) {
+        this.seeThroughDue = false;
+        this.updateSeeThrough();
+      }
+    }
 
     this.area?.update(t, dt);
     this.actors?.update(t, this.rig.camera);
@@ -1144,4 +1445,36 @@ export function visibleRadius(area: Pick<AreaState, 'seen' | 'map'>, from: Pos):
     if (d > best) best = d;
   }
   return Math.sqrt(best);
+}
+
+/**
+ * The panel an element hit over the map belongs to: the element itself, or its largest ancestor that
+ * still leaves the player's screen point (`centre`) uncovered, stays under a third of the viewport and
+ * is not a page-wide wrapper (body, the renderer's own container or anything holding it).
+ */
+export function overlayPanel(hit: Element, container: Element, centre: { x: number; y: number }, viewportArea: number): Element | null {
+  const covers = (r: DOMRect) => centre.x >= r.left && centre.x <= r.right && centre.y >= r.top && centre.y <= r.bottom;
+  const doc = hit.ownerDocument;
+  const top = (e: Element) => e === doc?.body || e === doc?.documentElement || e.contains(container);
+  if (top(hit)) return null;
+  const r0 = hit.getBoundingClientRect();
+  if (r0.width <= 0 || r0.height <= 0 || covers(r0)) return null;
+  let el = hit;
+  for (let p = hit.parentElement; p && !top(p); p = p.parentElement) {
+    const r = p.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue; // display: contents wrappers
+    if (covers(r) || r.width * r.height > viewportArea / 3) break;
+    // a wrapper that lets touches through is layout, not a panel (corner columns wider than their parts)
+    try {
+      if (getComputedStyle(p).pointerEvents === 'none') break;
+    } catch {
+      /* no styles (detached) */
+    }
+    el = p;
+  }
+  return el;
+}
+
+function rectsKey(rects: readonly OverlayRect[]): string {
+  return rects.map((r) => `${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.right)},${Math.round(r.bottom)}`).join(';');
 }

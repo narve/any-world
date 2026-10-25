@@ -4,7 +4,9 @@
  *   broken      — crashes, or soft-locks (bots stuck with the way onward closed)
  *   unwinnable  — the static check proves a goal/transition requirement can't be met
  *   too_hard    — the explorer bot's win rate is below the difficulty band, beyond sampling noise
- *                 (the whole 90% Wilson interval of the win rate lies below the band)
+ *                 (the whole 90% Wilson interval of the win rate lies below the band); or, when
+ *                 the newbie bot was simulated at a gated difficulty, its win rate is below the
+ *                 new-player floor beyond noise (gate.ts NEW_PLAYER_GATE)
  *   too_easy    — above the band, likewise beyond noise
  *   ok          — inside the band, no crashes, no soft-locks
  */
@@ -14,17 +16,29 @@ import { runMany, summarize, type BotSummary, type RunOptions } from '../sim/run
 import type { BotName } from '../sim/bots';
 import { staticAnalysis, type StaticAnalysis } from './static';
 
+/**
+ * Newbie-bot win-rate floors per difficulty (issues/M5-new-player-deaths.md): a new player wins
+ * at least half the time on gentle and a quarter of the time on normal. Defined here (gate.ts
+ * re-exports it) so the verdicts can use it without an import cycle.
+ */
+export const NEW_PLAYER_FLOORS: Partial<Record<Difficulty, number>> = { gentle: 0.5, normal: 0.25 };
+
 export type { Difficulty };
 /** the player's difficulty levels (shared with the client and the engine, src/schema/gm.ts) */
 export const DIFFICULTIES: readonly Difficulty[] = Difficulty.options;
 export type Verdict = 'ok' | 'too_hard' | 'too_easy' | 'unwinnable' | 'broken';
 
-/** explorer-bot win-rate bands per difficulty */
+/**
+ * Explorer-bot win-rate bands per difficulty. The explorer is a strong, thorough bot; since M5 the
+ * player-facing guarantee is the newbie floor (NEW_PLAYER_FLOORS), and a world a new player wins
+ * half the time on gentle is one the explorer wins nearly always — so the upper limits are
+ * guard rails against absurdly easy worlds, not targets (DESIGN §2.5).
+ */
 export const WIN_RATE_TARGETS: Record<Difficulty, [number, number]> = {
-  gentle: [0.5, 0.85],
-  normal: [0.25, 0.6],
-  hard: [0.12, 0.4],
-  brutal: [0.05, 0.25],
+  gentle: [0.5, 0.98],
+  normal: [0.25, 0.85],
+  hard: [0.12, 0.65],
+  brutal: [0.05, 0.45],
 };
 
 /** the band for a difficulty; throws on anything that is not one of DIFFICULTIES */
@@ -143,6 +157,20 @@ export function verdictFor(world: WorldSpec, sa: StaticAnalysis, sums: BotSummar
       );
     } else {
       reasons.push(`${basis.bot} wins ${pct(winRate)} — inside ${pct(target[0])}–${pct(target[1])} for ${difficulty}`);
+    }
+  }
+  // the new-player floor: a newbie run that is clearly below it makes the world too hard, whatever
+  // the explorer does (a world only a thorough player can win is not one a new player enjoys)
+  const newbie = sums.find((s) => s.bot === 'newbie');
+  const floor = NEW_PLAYER_FLOORS[difficulty];
+  if (newbie && newbie.runs && floor !== undefined && (verdict === 'ok' || verdict === 'too_easy')) {
+    const ni = wilsonInterval(newbie.won, newbie.runs);
+    if (ni[1] < floor) {
+      verdict = 'too_hard';
+      reasons.push(`newbie wins ${pct(newbie.winRate)} (new-player floor ${pct(floor)} for ${difficulty}; 90% interval ${pct(ni[0])}–${pct(ni[1])} over ${newbie.runs} runs)`);
+      const killer = topEntry(newbie.deathsByCause);
+      if (killer) suggestions.push(`weaken what kills new players most (${killer[0].replace(/^killed by /, '')}): lower its damage or hp`);
+      suggestions.push('fewer hostiles near the start, bigger heals');
     }
   }
   if (verdict === 'ok' && !basis) reasons.push('no simulations: static analysis only');

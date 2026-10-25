@@ -7,6 +7,7 @@
  *   &still=1 freezes cosmetic motion (reduce motion); see applyOverrides for every override.
  *   &quality=auto|low|high   render quality tier (Renderer.setQuality)
  *   &insets=top,right,bottom,left   CSS px covered by a pretend HUD / hotbar (shown as dim bands)
+ *   &overlays=l,t,r,b;l,t,r,b       pretend desktop panels (Renderer.setOverlayRects; dim boxes)
  * Touch: pinch zooms, two-finger twist rotates (attachTouchCamera), a tap highlights the tile.
  * window.__dev exposes { renderer, state, demo(), move(dx,dy) } for e2e tests.
  */
@@ -65,6 +66,14 @@ async function main() {
       document.body.appendChild(band);
     }
   }
+  const overlays = parseOverlays(q.get('overlays'));
+  for (const o of overlays) {
+    const box = document.createElement('div');
+    box.className = 'inset overlay';
+    Object.assign(box.style, { left: `${o.left}px`, top: `${o.top}px`, width: `${o.right - o.left}px`, height: `${o.bottom - o.top}px` });
+    document.body.appendChild(box);
+  }
+  if (overlays.length) r.setOverlayRects(overlays);
   attachTouchCamera(r, view);
   r.setWorld(world);
   r.setArea(state.area);
@@ -168,6 +177,19 @@ async function main() {
   await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
   window.__dev.ready = true;
   document.body.dataset.ready = '1';
+}
+
+/** `l,t,r,b;l,t,r,b` → rects (viewport CSS px); malformed entries are skipped */
+export function parseOverlays(v: string | null): { left: number; top: number; right: number; bottom: number }[] {
+  if (!v) return [];
+  const out: { left: number; top: number; right: number; bottom: number }[] = [];
+  for (const part of v.split(';')) {
+    const n = part.split(',').map((x) => Number(x));
+    if (n.length !== 4 || n.some((x) => !Number.isFinite(x))) continue;
+    const [left, top, right, bottom] = n as [number, number, number, number];
+    if (right > left && bottom > top) out.push({ left, top, right, bottom });
+  }
+  return out;
 }
 
 /**

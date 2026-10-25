@@ -1,0 +1,594 @@
+{
+  "id": "iphone15-portrait",
+  "world": "fantasy-retired-mimic",
+  "device": "iPhone 15",
+  "safeAreaEmulated": true,
+  "layout": "phone-portrait",
+  "small": [],
+  "overlaps": [],
+  "offscreen": [],
+  "inSafeArea": [],
+  "thumb": {
+    "wait": {
+      "cx": 361,
+      "cy": 544,
+      "fromBottomPct": 17
+    },
+    "slot1": {
+      "cx": 32,
+      "cy": 599,
+      "fromBottomPct": 9
+    },
+    "bag": {
+      "cx": 273,
+      "cy": 494,
+      "fromBottomPct": 25
+    },
+    "rotate": {
+      "cx": 363,
+      "cy": 373,
+      "fromBottomPct": 43
+    },
+    "goal": {
+      "cx": 197,
+      "cy": 202,
+      "fromBottomPct": 69
+    },
+    "log": {
+      "cx": 126,
+      "cy": 494,
+      "fromBottomPct": 25
+    },
+    "rulesBadge": {
+      "cx": 365,
+      "cy": 81,
+      "fromBottomPct": 88
+    },
+    "hud": {
+      "cx": 126,
+      "cy": 104,
+      "fromBottomPct": 84
+    }
+  },
+  "stats": [
+    {
+      "where": "start",
+      "drawCalls": 42,
+      "triangles": 36688,
+      "fps": 10.7,
+      "geometries": 31,
+      "textures": 5,
+      "programs": 18,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 78",
+      "drawCalls": 62,
+      "triangles": 37544,
+      "fps": 8.9,
+      "geometries": 69,
+      "textures": 6,
+      "programs": 21,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 165",
+      "drawCalls": 45,
+      "triangles": 31170,
+      "fps": 11.1,
+      "geometries": 96,
+      "textures": 6,
+      "programs": 22,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 259",
+      "drawCalls": 88,
+      "triangles": 32886,
+      "fps": 11.8,
+      "geometries": 80,
+      "textures": 6,
+      "programs": 16,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 352",
+      "drawCalls": 57,
+      "triangles": 35186,
+      "fps": 9.4,
+      "geometries": 106,
+      "textures": 10,
+      "programs": 18,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 448",
+      "drawCalls": 67,
+      "triangles": 28770,
+      "fps": 10.1,
+      "geometries": 131,
+      "textures": 6,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 531",
+      "drawCalls": 88,
+      "triangles": 34396,
+      "fps": 10.5,
+      "geometries": 134,
+      "textures": 6,
+      "programs": 20,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "area 1",
+      "drawCalls": 37,
+      "triangles": 24084,
+      "fps": 13.7,
+      "geometries": 66,
+      "textures": 8,
+      "programs": 24,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 619",
+      "drawCalls": 40,
+      "triangles": 24110,
+      "fps": 13.9,
+      "geometries": 73,
+      "textures": 8,
+      "programs": 24,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    }
+  ],
+  "pathWalks": [
+    {
+      "from": {
+        "x": 7,
+        "y": 8
+      },
+      "dest": {
+        "x": 3,
+        "y": 4
+      },
+      "dist": 4,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 7,
+        "y": 21
+      },
+      "dest": {
+        "x": 4,
+        "y": 16
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer help"
+    },
+    {
+      "from": {
+        "x": 9,
+        "y": 6
+      },
+      "dest": {
+        "x": 3,
+        "y": 12
+      },
+      "dist": 6,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 14,
+        "y": 5
+      },
+      "dest": {
+        "x": 8,
+        "y": 8
+      },
+      "dist": 6,
+      "tiles": 3,
+      "turns": 4,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 16,
+        "y": 13
+      },
+      "dest": {
+        "x": 11,
+        "y": 16
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 31,
+        "y": 4
+      },
+      "dest": {
+        "x": 28,
+        "y": 3
+      },
+      "dist": 3,
+      "tiles": 5,
+      "turns": 7,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 33,
+        "y": 10
+      },
+      "dest": {
+        "x": 28,
+        "y": 4
+      },
+      "dist": 6,
+      "tiles": 6,
+      "turns": 14,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 26,
+        "y": 4
+      },
+      "dest": {
+        "x": 34,
+        "y": 3
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 24,
+        "y": 20
+      },
+      "dest": {
+        "x": 29,
+        "y": 26
+      },
+      "dist": 6,
+      "tiles": 2,
+      "turns": 3,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 35,
+        "y": 10
+      },
+      "dest": {
+        "x": 27,
+        "y": 5
+      },
+      "dist": 8,
+      "tiles": 9,
+      "turns": 15,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 38,
+        "y": 24
+      },
+      "dest": {
+        "x": 32,
+        "y": 24
+      },
+      "dist": 6,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 37,
+        "y": 17
+      },
+      "dest": {
+        "x": 33,
+        "y": 21
+      },
+      "dist": 4,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 31,
+        "y": 18
+      },
+      "dest": {
+        "x": 25,
+        "y": 24
+      },
+      "dist": 6,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 31,
+        "y": 7
+      },
+      "dest": {
+        "x": 36,
+        "y": 4
+      },
+      "dist": 5,
+      "tiles": 5,
+      "turns": 5,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 36,
+        "y": 4
+      },
+      "dest": {
+        "x": 31,
+        "y": 8
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    }
+  ],
+  "inspects": [
+    {
+      "what": "player",
+      "ok": true,
+      "text": "Wingback You Harmless STF 30 / 30 Just a Chair A burgundy velvet wingback with brass studs, a sagging seat, and a hinged lid full of teeth w"
+    },
+    {
+      "what": "actor",
+      "ok": true,
+      "text": "Grubb Nettleworth Friendly Talk STF 20 / 20 Goblin shop steward of the Gullet Deep branch of the Amalgamated Union of Lurkers. Has napped in"
+    }
+  ],
+  "contextLoss": {
+    "before": {
+      "where": "before-loss",
+      "drawCalls": 77,
+      "triangles": 38048,
+      "fps": 10.1,
+      "geometries": 116,
+      "textures": 9,
+      "programs": 23,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    "extension": true,
+    "lostStats": {
+      "where": "lost",
+      "drawCalls": 82,
+      "triangles": 38374,
+      "fps": 10.1,
+      "geometries": 116,
+      "textures": 6,
+      "programs": 23,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": true,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    "notice": {
+      "text": "Graphics paused. The map is coming back… The browser took the graphics away for a moment. Your run is saved, and play goes on once the map is back.",
+      "box": [
+        0,
+        0,
+        393,
+        659
+      ],
+      "layer": "game"
+    },
+    "turnWhileLost": 0,
+    "reloadOfferedAfter5s": true,
+    "after": {
+      "where": "restored",
+      "drawCalls": 76,
+      "triangles": 38046,
+      "fps": 10.8,
+      "geometries": 54,
+      "textures": 5,
+      "programs": 16,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    "noticeAfterRestore": false,
+    "layerAfterRestore": "game",
+    "playerOnTile": true,
+    "canvasBytes": 476305
+  },
+  "emptyBand": [
+    53,
+    51,
+    50,
+    51,
+    51,
+    50,
+    51,
+    53,
+    51
+  ],
+  "hiddenActors": [
+    "turn 25: hostile:intern-adventurer under aw-panel",
+    "turn 72: hostile:intern-adventurer under aw-goal"
+  ],
+  "clipped": [],
+  "sheets": [],
+  "thumbs": {
+    "start": {
+      "slots": 8,
+      "filled": 4,
+      "withImg": 4
+    },
+    "turn 78": {
+      "slots": 8,
+      "filled": 4,
+      "withImg": 4
+    },
+    "turn 165": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 4
+    },
+    "turn 259": {
+      "slots": 8,
+      "filled": 4,
+      "withImg": 4
+    },
+    "turn 352": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    },
+    "turn 448": {
+      "slots": 8,
+      "filled": 4,
+      "withImg": 4
+    },
+    "turn 531": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "area 1": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 619": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "end": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    }
+  },
+  "secondRun": {},
+  "turnsPlayed": 657,
+  "areasReached": 1,
+  "status": "playing",
+  "errors": [],
+  "notes": [
+    "start screen scrolled before the first run: [\"aw-screen 2367\"]",
+    "first run opened on layer narration",
+    "env(safe-area-inset-*) seen by CSS: 59px 34px 0px 0px",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":4,\"y\":5} turn 2 -> {\"me\":{\"x\":4,\"y\":5},\"turn\":2,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":5,\"y\":5}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":5,\"y\":5}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"w\"} from {\"x\":7,\"y\":8} turn 18 -> {\"me\":{\"x\":6,\"y\":8},\"turn\":19,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":5,\"y\":8}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":5,\"y\":8}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"nw\"} from {\"x\":4,\"y\":27} turn 47 -> {\"me\":{\"x\":4,\"y\":27},\"turn\":47,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":3,\"y\":26}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":3,\"y\":26}}",
+    "goal sheet found open at turn 99; last test tap {\"kind\":\"move\",\"at\":[133,366],\"turn\":80}; goal pointerdowns [{\"x\":387,\"y\":199,\"goal\":[152,198],\"turn\":99}]",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":11,\"y\":4} turn 134 -> {\"me\":{\"x\":11,\"y\":4},\"turn\":134,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":12,\"y\":4}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":12,\"y\":4}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"s\"} from {\"x\":14,\"y\":13} turn 158 -> {\"me\":{\"x\":14,\"y\":13},\"turn\":158,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":14,\"y\":14}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":14,\"y\":14}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"ne\"} from {\"x\":16,\"y\":13} turn 191 -> {\"me\":{\"x\":17,\"y\":12},\"turn\":192,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":18,\"y\":11}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":18,\"y\":11}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"n\"} from {\"x\":31,\"y\":7} turn 228 -> {\"me\":{\"x\":31,\"y\":7},\"turn\":228,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":31,\"y\":6}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":31,\"y\":6}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":29,\"y\":8} turn 261 -> {\"me\":{\"x\":29,\"y\":8},\"turn\":261,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":30,\"y\":8}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":29,\"y\":8}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"sw\"} from {\"x\":25,\"y\":17} turn 354 -> {\"me\":{\"x\":25,\"y\":17},\"turn\":354,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":24,\"y\":18}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":24,\"y\":18}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"n\"} from {\"x\":24,\"y\":17} turn 374 -> {\"me\":{\"x\":24,\"y\":17},\"turn\":374,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":24,\"y\":16}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":24,\"y\":16}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":28,\"y\":8} turn 387 -> {\"me\":{\"x\":28,\"y\":8},\"turn\":387,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":29,\"y\":8}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":29,\"y\":8}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"nw\"} from {\"x\":36,\"y\":11} turn 411 -> {\"me\":{\"x\":36,\"y\":11},\"turn\":411,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":35,\"y\":10}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":35,\"y\":10}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"se\"} from {\"x\":23,\"y\":7} turn 432 -> {\"me\":{\"x\":23,\"y\":7},\"turn\":432,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":24,\"y\":8}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":24,\"y\":8}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"se\"} from {\"x\":38,\"y\":24} turn 470 -> {\"me\":{\"x\":38,\"y\":24},\"turn\":470,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":39,\"y\":25}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":39,\"y\":25}}",
+    "goal sheet found open at turn 471; last test tap {\"kind\":\"move\",\"at\":[160,377],\"turn\":470}; goal pointerdowns [{\"x\":197,\"y\":194,\"goal\":[152,236],\"turn\":99},{\"x\":196,\"y\":200,\"goal\":[152,198],\"turn\":471}]",
+    "log sheet found open at turn 513; last test tap {\"kind\":\"move\",\"at\":[125,290],\"turn\":510}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"sw\"} from {\"x\":29,\"y\":13} turn 540 -> {\"me\":{\"x\":29,\"y\":13},\"turn\":540,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":28,\"y\":14}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":28,\"y\":14}}",
+    "goal sheet found open at turn 551; last test tap {\"kind\":\"move\",\"at\":[236,376],\"turn\":550}; goal pointerdowns [{\"x\":197,\"y\":194,\"goal\":[152,236],\"turn\":471},{\"x\":6,\"y\":199,\"goal\":[152,198],\"turn\":551}]",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"se\"} from {\"x\":35,\"y\":8} turn 563 -> {\"me\":{\"x\":35,\"y\":8},\"turn\":563,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":36,\"y\":9}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":36,\"y\":9}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"sw\"} from {\"x\":33,\"y\":5} turn 590 -> {\"me\":{\"x\":33,\"y\":5},\"turn\":590,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":32,\"y\":6}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":32,\"y\":6}}",
+    "log sheet found open at turn 639; last test tap {\"kind\":\"attack\",\"at\":[160,338],\"turn\":604}",
+    "aims cancelled after a tap found no valid target: 0",
+    "ctx buttons covered by a panel: [{\"action\":\"wait\",\"by\":\"aw-slot-tip\",\"btn\":[334,522,387,566],\"logBox\":[6,472,245,516],\"logExpanded\":false,\"turn\":331}] (1 total)"
+  ]
+}

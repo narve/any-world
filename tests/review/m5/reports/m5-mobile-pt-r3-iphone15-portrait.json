@@ -1,0 +1,501 @@
+{
+  "id": "iphone15-portrait",
+  "world": "detective-sugar-hotel",
+  "device": "iPhone 15",
+  "safeAreaEmulated": true,
+  "layout": "phone-portrait",
+  "small": [],
+  "overlaps": [],
+  "offscreen": [],
+  "inSafeArea": [],
+  "thumb": {
+    "wait": {
+      "cx": 361,
+      "cy": 544,
+      "fromBottomPct": 17
+    },
+    "slot1": {
+      "cx": 32,
+      "cy": 599,
+      "fromBottomPct": 9
+    },
+    "bag": {
+      "cx": 273,
+      "cy": 494,
+      "fromBottomPct": 25
+    },
+    "rotate": {
+      "cx": 363,
+      "cy": 367,
+      "fromBottomPct": 44
+    },
+    "goal": {
+      "cx": 197,
+      "cy": 191,
+      "fromBottomPct": 71
+    },
+    "log": {
+      "cx": 126,
+      "cy": 494,
+      "fromBottomPct": 25
+    },
+    "rulesBadge": {
+      "cx": 365,
+      "cy": 81,
+      "fromBottomPct": 88
+    },
+    "hud": {
+      "cx": 126,
+      "cy": 99,
+      "fromBottomPct": 85
+    }
+  },
+  "stats": [
+    {
+      "where": "start",
+      "drawCalls": 52,
+      "triangles": 41184,
+      "fps": 2.5,
+      "geometries": 40,
+      "textures": 5,
+      "programs": 18,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 64",
+      "drawCalls": 61,
+      "triangles": 36906,
+      "fps": 3.5,
+      "geometries": 92,
+      "textures": 5,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 163",
+      "drawCalls": 48,
+      "triangles": 36182,
+      "fps": 3.3,
+      "geometries": 92,
+      "textures": 5,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 238",
+      "drawCalls": 46,
+      "triangles": 36178,
+      "fps": 3.1,
+      "geometries": 35,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 314",
+      "drawCalls": 46,
+      "triangles": 36178,
+      "fps": 7.4,
+      "geometries": 35,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 390",
+      "drawCalls": 46,
+      "triangles": 36178,
+      "fps": 6.4,
+      "geometries": 35,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 466",
+      "drawCalls": 46,
+      "triangles": 36178,
+      "fps": 7.1,
+      "geometries": 35,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    }
+  ],
+  "pathWalks": [
+    {
+      "from": {
+        "x": 37,
+        "y": 28
+      },
+      "dest": {
+        "x": 31,
+        "y": 23
+      },
+      "dist": 6,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 34,
+        "y": 24
+      },
+      "dest": {
+        "x": 30,
+        "y": 21
+      },
+      "dist": 4,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 23,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 20
+      },
+      "dist": 3,
+      "tiles": 3,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 23,
+        "y": 20
+      },
+      "dest": {
+        "x": 18,
+        "y": 23
+      },
+      "dist": 5,
+      "tiles": 5,
+      "turns": 13,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 18,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 19
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 18,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 19
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 18,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 19
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 18,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 19
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 18,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 19
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 18,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 19
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 18,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 19
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 18,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 19
+      },
+      "dist": 5,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    }
+  ],
+  "inspects": [
+    {
+      "what": "player",
+      "ok": true,
+      "text": "Inspector Vreni Aebischer You Harmless COM 28 / 28 Came up to the Kandelhorn for three weeks of snow and no crime. Has a pencil behind one e"
+    },
+    {
+      "what": "actor",
+      "ok": true,
+      "text": "Inspector Vreni Aebischer You Harmless COM 28 / 28 Came up to the Kandelhorn for three weeks of snow and no crime. Has a pencil behind one e"
+    }
+  ],
+  "contextLoss": {
+    "before": {
+      "where": "before-loss",
+      "drawCalls": 48,
+      "triangles": 36182,
+      "fps": 3.8,
+      "geometries": 92,
+      "textures": 5,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    "extension": true,
+    "lostStats": {
+      "where": "lost",
+      "drawCalls": 61,
+      "triangles": 36208,
+      "fps": 3.8,
+      "geometries": 92,
+      "textures": 5,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": true,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    "notice": {
+      "text": "Graphics paused. The map is coming back… The browser took the graphics away for a moment. Your run is saved, and play goes on once the map is back.",
+      "box": [
+        0,
+        0,
+        393,
+        659
+      ],
+      "layer": "game"
+    },
+    "turnWhileLost": 0,
+    "reloadOfferedAfter5s": true,
+    "after": {
+      "where": "restored",
+      "drawCalls": 46,
+      "triangles": 36178,
+      "fps": 3.8,
+      "geometries": 35,
+      "textures": 4,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    "noticeAfterRestore": false,
+    "layerAfterRestore": "game",
+    "playerOnTile": true,
+    "canvasBytes": 465942
+  },
+  "emptyBand": [
+    52,
+    52,
+    52,
+    52,
+    52,
+    52,
+    52
+  ],
+  "hiddenActors": [],
+  "clipped": [],
+  "sheets": [
+    "dialogue: button under home bar: \"Persuade\" bottom 644 > 625",
+    "dialogue: button under home bar: \"Leave\" bottom 644 > 625"
+  ],
+  "thumbs": {
+    "start": {
+      "slots": 8,
+      "filled": 4,
+      "withImg": 4
+    },
+    "turn 64": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    },
+    "turn 163": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    },
+    "turn 238": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    },
+    "turn 314": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    },
+    "turn 390": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    },
+    "turn 466": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    },
+    "end": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    }
+  },
+  "secondRun": {},
+  "turnsPlayed": 486,
+  "areasReached": 0,
+  "status": "playing",
+  "errors": [],
+  "notes": [
+    "start screen scrolled before the first run: [\"aw-screen 2128\"]",
+    "first run opened on layer narration",
+    "env(safe-area-inset-*) seen by CSS: 59px 34px 0px 0px",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"n\"} from {\"x\":37,\"y\":28} turn 7 -> {\"me\":{\"x\":37,\"y\":28},\"turn\":7,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":37,\"y\":27}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":37,\"y\":28}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"n\"} from {\"x\":37,\"y\":28} turn 7 -> {\"me\":{\"x\":37,\"y\":27},\"turn\":8,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":37,\"y\":26}],\"actorThere\":true,\"actor\":{\"def\":\"hedda-imboden\",\"faction\":\"neutral\",\"legal\":[\"talk\",\"persuade\"],\"meaning\":{\"kind\":\"talk\",\"targetId\":\"a8\"}},\"pickAtTile\":{\"x\":37,\"y\":26}}",
+    "aim tap did not fire (slot 2, tile hit true): {\"aim\":null,\"pick\":{\"x\":32,\"y\":23},\"toasts\":[\"No valid target there\"],\"me\":{\"x\":33,\"y\":23},\"target\":{\"x\":31,\"y\":23}}",
+    "aim tap did not fire (slot 2, tile hit true): {\"aim\":null,\"pick\":{\"x\":32,\"y\":23},\"toasts\":[\"No valid target there\"],\"me\":{\"x\":33,\"y\":23},\"target\":{\"x\":31,\"y\":23}}",
+    "aim tap did not fire (slot 2, tile hit true): {\"aim\":null,\"pick\":{\"x\":32,\"y\":23},\"toasts\":[\"No valid target there ×3\"],\"me\":{\"x\":33,\"y\":23},\"target\":{\"x\":31,\"y\":23}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":25,\"y\":21} turn 32 -> {\"me\":{\"x\":25,\"y\":21},\"turn\":32,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":26,\"y\":21}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":26,\"y\":21}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"se\"} from {\"x\":28,\"y\":23} turn 35 -> {\"me\":{\"x\":28,\"y\":23},\"turn\":35,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":29,\"y\":24}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":29,\"y\":24}}",
+    "noWay toast after bot action {\"type\":\"attack\",\"targetId\":\"a10\"} from {\"x\":34,\"y\":24} turn 42 -> {\"me\":{\"x\":34,\"y\":24},\"turn\":43,\"L\":\"game\",\"legalMove\":false,\"seen\":2,\"path\":[],\"actorThere\":true,\"actor\":{\"def\":\"player\",\"faction\":\"player\",\"legal\":[],\"meaning\":{\"kind\":\"travel\"}},\"pickAtTile\":{\"x\":34,\"y\":24}}",
+    "log sheet found open at turn 182; last test tap {\"kind\":\"move\",\"at\":[182,354],\"turn\":56}",
+    "log sheet found open at turn 220; last test tap {\"kind\":\"move\",\"at\":[182,354],\"turn\":56}",
+    "log sheet found open at turn 258; last test tap {\"kind\":\"move\",\"at\":[182,354],\"turn\":56}",
+    "log sheet found open at turn 296; last test tap {\"kind\":\"move\",\"at\":[182,354],\"turn\":56}",
+    "log sheet found open at turn 334; last test tap {\"kind\":\"move\",\"at\":[182,354],\"turn\":56}",
+    "log sheet found open at turn 372; last test tap {\"kind\":\"move\",\"at\":[182,354],\"turn\":56}",
+    "log sheet found open at turn 410; last test tap {\"kind\":\"move\",\"at\":[182,354],\"turn\":56}",
+    "log sheet found open at turn 448; last test tap {\"kind\":\"move\",\"at\":[182,354],\"turn\":56}",
+    "aims cancelled after a tap found no valid target: 3",
+    "ctx buttons covered by a panel: [] (0 total)"
+  ]
+}

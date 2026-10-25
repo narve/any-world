@@ -1,0 +1,250 @@
+{
+  "id": "iphone15-landscape",
+  "world": "deep-sea-whale-fall",
+  "device": "iPhone 15 landscape",
+  "safeAreaEmulated": true,
+  "layout": "phone-landscape",
+  "small": [],
+  "overlaps": [],
+  "offscreen": [],
+  "inSafeArea": [],
+  "thumb": {
+    "wait": {
+      "cx": 578,
+      "cy": 195,
+      "fromBottomPct": 43
+    },
+    "slot1": {
+      "cx": 508,
+      "cy": 249,
+      "fromBottomPct": 27
+    },
+    "bag": {
+      "cx": 452,
+      "cy": 200,
+      "fromBottomPct": 42
+    },
+    "rotate": {
+      "cx": 347,
+      "cy": 300,
+      "fromBottomPct": 13
+    },
+    "goal": {
+      "cx": 162,
+      "cy": 113,
+      "fromBottomPct": 67
+    },
+    "log": {
+      "cx": 162,
+      "cy": 292,
+      "fromBottomPct": 15
+    },
+    "rulesBadge": {
+      "cx": 454,
+      "cy": 28,
+      "fromBottomPct": 92
+    },
+    "hud": {
+      "cx": 162,
+      "cy": 46,
+      "fromBottomPct": 87
+    }
+  },
+  "stats": [
+    {
+      "where": "start",
+      "drawCalls": 57,
+      "triangles": 40466,
+      "fps": 3,
+      "geometries": 37,
+      "textures": 4,
+      "programs": 14,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1101x514"
+    },
+    {
+      "where": "turn 86",
+      "drawCalls": 70,
+      "triangles": 41506,
+      "fps": 3.5,
+      "geometries": 39,
+      "textures": 4,
+      "programs": 14,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1101x514"
+    },
+    {
+      "where": "turn 164",
+      "drawCalls": 70,
+      "triangles": 41506,
+      "fps": 2.3,
+      "geometries": 40,
+      "textures": 4,
+      "programs": 14,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1101x514"
+    },
+    {
+      "where": "turn 242",
+      "drawCalls": 69,
+      "triangles": 41106,
+      "fps": 3,
+      "geometries": 39,
+      "textures": 4,
+      "programs": 14,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1101x514"
+    }
+  ],
+  "pathWalks": [
+    {
+      "from": {
+        "x": 27,
+        "y": 22
+      },
+      "dest": {
+        "x": 27,
+        "y": 28
+      },
+      "dist": 6,
+      "tiles": 6,
+      "turns": 6,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 27,
+        "y": 28
+      },
+      "dest": {
+        "x": 27,
+        "y": 21
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 27,
+        "y": 28
+      },
+      "dest": {
+        "x": 27,
+        "y": 21
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 27,
+        "y": 28
+      },
+      "dest": {
+        "x": 27,
+        "y": 21
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 27,
+        "y": 28
+      },
+      "dest": {
+        "x": 27,
+        "y": 21
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 27,
+        "y": 28
+      },
+      "dest": {
+        "x": 27,
+        "y": 21
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 27,
+        "y": 28
+      },
+      "dest": {
+        "x": 27,
+        "y": 21
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    }
+  ],
+  "inspects": [
+    {
+      "what": "player",
+      "ok": true,
+      "text": "Juno Achterberg You Harmless VIT 28 / 28 Contract saturation diver sent down after the samples stopped. Good with a hook, better with her tr"
+    },
+    {
+      "what": "actor",
+      "ok": true,
+      "text": "Kettleby Deep Habitat"
+    }
+  ],
+  "contextLoss": {},
+  "emptyBand": [
+    33,
+    33,
+    33,
+    33
+  ],
+  "turnsPlayed": 301,
+  "areasReached": 0,
+  "status": "playing",
+  "errors": [],
+  "notes": [
+    "env(safe-area-inset-*) seen by CSS: 0px 21px 59px 59px",
+    "inspect card for player did not close on the next tap",
+    "dialogue sheet buttons under the home-bar inset: Persuade | Trade | Leave",
+    "inspect card for actor did not close on the next tap"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "world": "detective-sugar-hotel",
+  "placed": {
+    "id": "a10",
+    "name": "Draught from Nowhere",
+    "pos": {
+      "x": 4,
+      "y": 2
+    },
+    "me": {
+      "x": 3,
+      "y": 2
+    }
+  },
+  "sweep": {
+    "hits": 40,
+    "player": 43,
+    "total": 651,
+    "hitPts": [
+      [
+        501,
+        189
+      ],
+      [
+        505,
+        189
+      ],
+      [
+        509,
+        189
+      ],
+      [
+        517,
+        189
+      ],
+      [
+        521,
+        189
+      ],
+      [
+        497,
+        193
+      ]
+    ],
+    "tileCentre": [
+      509,
+      201
+    ],
+    "pickTile": {
+      "x": 4,
+      "y": 2
+    },
+    "body": [
+      509,
+      197
+    ],
+    "pickBody": {
+      "x": 4,
+      "y": 2
+    }
+  },
+  "tapBody": {
+    "turn": 1,
+    "me": {
+      "x": 3,
+      "y": 2
+    },
+    "newLog": [
+      "Inspector Vreni Aebischer reads back the notes to Draught from Nowhere but misses.",
+      "Draught from Nowhere breathes cold down the neck of Inspector Vreni Aebischer but misses.",
+      "Draught from Nowhere breathes cold down the neck of Inspector Vreni Aebischer but misses."
+    ],
+    "toasts": [],
+    "layer": "game"
+  }
+}

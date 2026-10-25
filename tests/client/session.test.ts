@@ -125,18 +125,22 @@ describe('talk, dialogue and trade', () => {
     expect(d.npcName).toBe(western.actors.find((a) => a.id === 'preacher-weekes')!.name);
     expect(d.options.length).toBeGreaterThan(0);
     expect(d.options).not.toContain('Goodbye');
-    // reply 0 = "Ask for help" (healer service) resolves the engine choice
+    // reply 0 = "Ask for help" (healer service): healed, and the healer answers in the same
+    // conversation (issues/M5-healer-silent.md)
     const hurt = structuredClone(s.state) as GameState;
     hurt.area.actors.find((a) => a.id === hurt.player.actorId)!.hp = 3;
     s.state = hurt;
     s.dialogueReply(0);
-    expect(s.state.pendingChoice).toBeNull();
+    expect(s.state.pendingChoice?.kind).toBe('dialogue');
     expect(s.player().hp).toBeGreaterThan(3);
     expect(s.history.map((h) => h.who)).toEqual(['npc', 'player']);
-    // talk again, then leave
+    expect(s.viewModel().game!.dialogue!.reply).toMatch(/helps you/);
+    // leave, talk again: a new conversation, then leave
+    s.dialogueLeave();
+    expect(s.state.pendingChoice).toBeNull();
     s.intent({ type: 'talk' });
     expect(s.state.pendingChoice?.kind).toBe('dialogue');
-    expect(s.history).toEqual([]); // a new conversation
+    expect(s.history).toEqual([]);
     s.dialogueLeave();
     expect(s.state.pendingChoice).toBeNull();
     expect(s.viewModel().game!.dialogue).toBeNull();

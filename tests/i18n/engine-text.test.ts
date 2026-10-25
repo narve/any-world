@@ -31,7 +31,7 @@ describe('engine refusal reasons', () => {
     expect(engineReason('blocked')).toBe('Blocked');
     expect(engineReason('Kari has nothing to say')).toBe('Kari has nothing to say');
     setLanguage('nb', { persist: false });
-    expect(engineReason('blocked')).toBe('Stengt');
+    expect(engineReason('blocked')).toBe('Sperret');
     expect(engineReason('bad direction')).toBe('Ugyldig retning');
     expect(engineReason('the run is over')).toBe('Spillet er over');
     expect(engineReason('not enough gebyrmerker')).toBe('Ikke nok gebyrmerker');
@@ -49,7 +49,7 @@ describe('dialogue options and roles', () => {
     setLanguage('nb', { persist: false });
     expect(dialogueOptionLabel({ label: 'Ask what they know' })).toBe('Spør hva de vet');
     expect(dialogueOptionLabel({ label: 'Goodbye' })).toBe('Ha det');
-    expect(dialogueOptionLabel({ label: 'Leave' })).toBe('Gå');
+    expect(dialogueOptionLabel({ label: 'Leave' })).toBe('Avslutt');
     expect(dialogueOptionLabel({ label: 'Ask for help', tag: 'service:heal' })).toBe('Be om hjelp');
     expect(dialogueOptionLabel({ label: 'whatever', tag: 'service:recruit' })).toBe('Be dem bli med');
     expect(dialogueOptionLabel({ label: 'Tørrfisk (4 alen vadmel)', tag: 'buy' })).toBe('Tørrfisk (4 alen vadmel)');

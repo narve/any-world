@@ -1,0 +1,83 @@
+{
+  "world": "nb-troll-direktoratet",
+  "empty": {
+    "me": {
+      "x": 2,
+      "y": 4
+    },
+    "target": {
+      "x": 2,
+      "y": 3
+    },
+    "x": 206,
+    "y": 398.58670073399713,
+    "onMap": true,
+    "pick": {
+      "x": 2,
+      "y": 3
+    },
+    "screenToTile": {
+      "x": 2,
+      "y": 3
+    },
+    "after": {
+      "turn": 1,
+      "me": {
+        "x": 2,
+        "y": 3
+      },
+      "toasts": []
+    },
+    "walked": true
+  },
+  "actor": {
+    "id": "a7",
+    "faction": "friendly",
+    "name": "Kaffetrollet Bruse",
+    "pos": {
+      "x": 3,
+      "y": 3
+    }
+  },
+  "longPress": [
+    {
+      "frac": 0.2,
+      "at": [
+        252,
+        426
+      ],
+      "pick": {
+        "x": 3,
+        "y": 3
+      },
+      "text": "Kaffetrollet Bruse Friendly Talk TÅL 30 / 30 Et vennlig, mosegrodd troll som dri",
+      "ok": true
+    },
+    {
+      "frac": 0.45,
+      "at": [
+        252,
+        416
+      ],
+      "pick": {
+        "x": 3,
+        "y": 3
+      },
+      "text": "Kaffetrollet Bruse Friendly Talk TÅL 30 / 30 Et vennlig, mosegrodd troll som dri",
+      "ok": true
+    },
+    {
+      "frac": 0.7,
+      "at": [
+        253,
+        407
+      ],
+      "pick": {
+        "x": 3,
+        "y": 3
+      },
+      "text": "Kaffetrollet Bruse Friendly Talk TÅL 30 / 30 Et vennlig, mosegrodd troll som dri",
+      "ok": true
+    }
+  ]
+}

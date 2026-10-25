@@ -1,0 +1,52 @@
+{
+  "world": "fantasy-retired-mimic",
+  "placed": {
+    "id": "a8",
+    "name": "Clipboard Imp",
+    "pos": {
+      "x": 39,
+      "y": 4
+    },
+    "me": {
+      "x": 39,
+      "y": 5
+    }
+  },
+  "sweep": {
+    "hits": 1,
+    "player": 142,
+    "total": 651,
+    "hitPts": [
+      [
+        197,
+        304
+      ]
+    ],
+    "tileCentre": [
+      197,
+      320
+    ],
+    "pickTile": {
+      "x": 39,
+      "y": 5
+    },
+    "body": [
+      197,
+      312
+    ],
+    "pickBody": {
+      "x": 39,
+      "y": 5
+    }
+  },
+  "tapBody": {
+    "turn": 0,
+    "me": {
+      "x": 39,
+      "y": 5
+    },
+    "newLog": [],
+    "toasts": [],
+    "layer": "game"
+  }
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "from": {
+      "x": 39,
+      "y": 21
+    },
+    "dest": {
+      "x": 33,
+      "y": 15
+    },
+    "len": 11,
+    "reached": false,
+    "turns": 3,
+    "pos": {
+      "x": 40,
+      "y": 19
+    },
+    "turn": 3,
+    "L": "game",
+    "toasts": []
+  },
+  {
+    "from": {
+      "x": 40,
+      "y": 19
+    },
+    "dest": {
+      "x": 36,
+      "y": 21
+    },
+    "len": 9,
+    "reached": false,
+    "turns": 6,
+    "pos": {
+      "x": 36,
+      "y": 18
+    },
+    "turn": 9,
+    "L": "choice",
+    "toasts": []
+  },
+  {
+    "from": {
+      "x": 36,
+      "y": 18
+    },
+    "dest": {
+      "x": 40,
+      "y": 21
+    },
+    "len": 8,
+    "reached": true,
+    "turns": 8,
+    "pos": {
+      "x": 40,
+      "y": 21
+    },
+    "turn": 17,
+    "L": "game",
+    "toasts": []
+  },
+  {
+    "from": {
+      "x": 40,
+      "y": 21
+    },
+    "dest": {
+      "x": 35,
+      "y": 20
+    },
+    "len": 10,
+    "reached": true,
+    "turns": 10,
+    "pos": {
+      "x": 35,
+      "y": 20
+    },
+    "turn": 27,
+    "L": "game",
+    "toasts": []
+  }
+]

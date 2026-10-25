@@ -1,0 +1,483 @@
+{
+  "id": "pixel7-landscape",
+  "world": "alien-twilight-migration",
+  "device": "Pixel 7 landscape",
+  "safeAreaEmulated": true,
+  "layout": "phone-landscape",
+  "small": [],
+  "overlaps": [],
+  "offscreen": [],
+  "inSafeArea": [],
+  "thumb": {
+    "wait": {
+      "cx": 760,
+      "cy": 217,
+      "fromBottomPct": 40
+    },
+    "slot1": {
+      "cx": 690,
+      "cy": 271,
+      "fromBottomPct": 25
+    },
+    "bag": {
+      "cx": 634,
+      "cy": 222,
+      "fromBottomPct": 38
+    },
+    "rotate": {
+      "cx": 348,
+      "cy": 322,
+      "fromBottomPct": 11
+    },
+    "goal": {
+      "cx": 145,
+      "cy": 113,
+      "fromBottomPct": 69
+    },
+    "log": {
+      "cx": 145,
+      "cy": 305,
+      "fromBottomPct": 15
+    },
+    "rulesBadge": {
+      "cx": 636,
+      "cy": 28,
+      "fromBottomPct": 92
+    },
+    "hud": {
+      "cx": 145,
+      "cy": 46,
+      "fromBottomPct": 87
+    }
+  },
+  "stats": [
+    {
+      "where": "start",
+      "drawCalls": 47,
+      "triangles": 38318,
+      "fps": 8.3,
+      "geometries": 39,
+      "textures": 7,
+      "programs": 19,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 94",
+      "drawCalls": 70,
+      "triangles": 36648,
+      "fps": 3.8,
+      "geometries": 79,
+      "textures": 7,
+      "programs": 24,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 181",
+      "drawCalls": 48,
+      "triangles": 34258,
+      "fps": 2.9,
+      "geometries": 79,
+      "textures": 7,
+      "programs": 24,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 272",
+      "drawCalls": 57,
+      "triangles": 36202,
+      "fps": 3.5,
+      "geometries": 56,
+      "textures": 6,
+      "programs": 18,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 359",
+      "drawCalls": 57,
+      "triangles": 35702,
+      "fps": 4,
+      "geometries": 57,
+      "textures": 6,
+      "programs": 18,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 439",
+      "drawCalls": 57,
+      "triangles": 35702,
+      "fps": 7.8,
+      "geometries": 57,
+      "textures": 6,
+      "programs": 18,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    {
+      "where": "turn 519",
+      "drawCalls": 57,
+      "triangles": 35702,
+      "fps": 2.6,
+      "geometries": 58,
+      "textures": 6,
+      "programs": 18,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    }
+  ],
+  "pathWalks": [
+    {
+      "from": {
+        "x": 30,
+        "y": 23
+      },
+      "dest": {
+        "x": 23,
+        "y": 15
+      },
+      "dist": 8,
+      "tiles": 7,
+      "turns": 7,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 31,
+        "y": 22
+      },
+      "dest": {
+        "x": 23,
+        "y": 14
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 9,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 23,
+        "y": 14
+      },
+      "dest": {
+        "x": 17,
+        "y": 6
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 17,
+        "y": 6
+      },
+      "dest": {
+        "x": 9,
+        "y": 4
+      },
+      "dist": 8,
+      "tiles": 1,
+      "turns": 1,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 16,
+        "y": 5
+      },
+      "dest": {
+        "x": 8,
+        "y": 3
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 8,
+        "y": 3
+      },
+      "dest": {
+        "x": 14,
+        "y": 2
+      },
+      "dist": 6,
+      "tiles": 6,
+      "turns": 6,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 14,
+        "y": 2
+      },
+      "dest": {
+        "x": 6,
+        "y": 4
+      },
+      "dist": 8,
+      "tiles": 8,
+      "turns": 8,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 6,
+        "y": 4
+      },
+      "dest": {
+        "x": 13,
+        "y": 2
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 1,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 6,
+        "y": 4
+      },
+      "dest": {
+        "x": 13,
+        "y": 2
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 1,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 6,
+        "y": 4
+      },
+      "dest": {
+        "x": 13,
+        "y": 2
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 1,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 6,
+        "y": 4
+      },
+      "dest": {
+        "x": 13,
+        "y": 2
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 1,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 6,
+        "y": 4
+      },
+      "dest": {
+        "x": 13,
+        "y": 2
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 1,
+      "reached": false,
+      "reason": "layer game"
+    }
+  ],
+  "inspects": [
+    {
+      "what": "player",
+      "ok": true,
+      "text": "Senna Odrue You Harmless SAP 28 / 28 Nineteen seasons in the saddle-moss, satchel full of other herds' pollen, goad-hook in hand. You can te"
+    },
+    {
+      "what": "actor",
+      "ok": true,
+      "text": "The Grazing Shelf"
+    }
+  ],
+  "contextLoss": {
+    "before": {
+      "where": "before-loss",
+      "drawCalls": 48,
+      "triangles": 34258,
+      "fps": 1.9,
+      "geometries": 79,
+      "textures": 7,
+      "programs": 24,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    "extension": true,
+    "lostStats": {
+      "where": "lost",
+      "drawCalls": 56,
+      "triangles": 38286,
+      "fps": 1.8,
+      "geometries": 79,
+      "textures": 7,
+      "programs": 24,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": true,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    "notice": {
+      "text": "Graphics paused. The map is coming back… The browser took the graphics away for a moment. Your run is saved, and play goes on once the map is back.",
+      "box": [
+        0,
+        0,
+        863,
+        360
+      ],
+      "layer": "game"
+    },
+    "turnWhileLost": 0,
+    "reloadOfferedAfter5s": true,
+    "after": {
+      "where": "restored",
+      "drawCalls": 56,
+      "triangles": 38286,
+      "fps": 1.8,
+      "geometries": 38,
+      "textures": 6,
+      "programs": 18,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "1294x540"
+    },
+    "noticeAfterRestore": false,
+    "layerAfterRestore": "game",
+    "playerOnTile": true,
+    "canvasBytes": 967431
+  },
+  "emptyBand": [
+    38,
+    51,
+    51,
+    51,
+    51,
+    51,
+    51
+  ],
+  "hiddenActors": [],
+  "clipped": [],
+  "sheets": [],
+  "thumbs": {
+    "start": {
+      "slots": 8,
+      "filled": 5,
+      "withImg": 5
+    },
+    "turn 94": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "turn 181": {
+      "slots": 8,
+      "filled": 8,
+      "withImg": 8
+    },
+    "turn 272": {
+      "slots": 8,
+      "filled": 7,
+      "withImg": 7
+    },
+    "turn 359": {
+      "slots": 8,
+      "filled": 7,
+      "withImg": 7
+    },
+    "turn 439": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "turn 519": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    },
+    "end": {
+      "slots": 8,
+      "filled": 6,
+      "withImg": 6
+    }
+  },
+  "secondRun": {},
+  "turnsPlayed": 539,
+  "areasReached": 0,
+  "status": "playing",
+  "errors": [],
+  "notes": [
+    "start screen scrolled before the first run: [\"aw-screen 1301\"]",
+    "first run opened on layer narration",
+    "env(safe-area-inset-*) seen by CSS: 0px 16px 24px 0px",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"s\"} from {\"x\":40,\"y\":14} turn 2 -> {\"me\":{\"x\":40,\"y\":14},\"turn\":2,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":40,\"y\":15}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":40,\"y\":15}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"s\"} from {\"x\":20,\"y\":15} turn 43 -> {\"me\":{\"x\":20,\"y\":15},\"turn\":43,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":20,\"y\":16}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":20,\"y\":16}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":21,\"y\":19} turn 48 -> {\"me\":{\"x\":21,\"y\":19},\"turn\":48,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":22,\"y\":19}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":22,\"y\":19}}",
+    "noWay toast after bot action {\"type\":\"move\",\"dir\":\"e\"} from {\"x\":24,\"y\":20} turn 51 -> {\"me\":{\"x\":24,\"y\":20},\"turn\":51,\"L\":\"game\",\"legalMove\":true,\"seen\":2,\"path\":[{\"x\":25,\"y\":20}],\"actorThere\":false,\"actor\":null,\"pickAtTile\":{\"x\":25,\"y\":20}}",
+    "aims cancelled after a tap found no valid target: 0",
+    "ctx buttons covered by a panel: [] (0 total)"
+  ]
+}

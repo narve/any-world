@@ -32,6 +32,8 @@ export interface WorldEntry {
   origin?: string;
   /** epoch ms it was kept */
   savedAt?: number;
+  /** rememberWorld: false when the browser had no room to keep it (it plays, but cannot be resumed) */
+  stored?: boolean;
 }
 
 /** what the start screen needs to list a bundled world, without loading it */
@@ -152,8 +154,9 @@ export function generatedWorldId(world: WorldSpec, nonce: number): string {
 export function rememberWorld(world: WorldSpec, nonce: number, meta: StoredWorldMeta = {}): WorldEntry {
   const id = generatedWorldId(world, nonce);
   const savedAt = Date.now();
-  if (!saveGeneratedWorld(id, world, savedAt, meta)) console.warn('[anyworld] could not store the generated world; a reload will not resume it');
-  return { id, world, generated: true, source: meta.source ?? 'generated', savedAt, ...(meta.origin ? { origin: meta.origin } : {}) };
+  const stored = saveGeneratedWorld(id, world, savedAt, meta);
+  if (!stored) console.warn('[anyworld] could not store the generated world; a reload will not resume it');
+  return { id, world, generated: true, source: meta.source ?? 'generated', savedAt, stored, ...(meta.origin ? { origin: meta.origin } : {}) };
 }
 
 /** drops a world kept in this browser (bundled worlds cannot be forgotten) */

@@ -10,7 +10,7 @@
  */
 import type { PlayerAction } from '../../engine/types';
 import type { ActorTooltipView, ContextActionView, GameView, SlotItemView, TileTooltipView, UiCallbacks, UiIntent, UiViewModel } from './viewmodel';
-import { dataKey, h, icon, ICONS } from './dom';
+import { dataKey, h, icon, ICONS, setChildren } from './dom';
 import { applyTheme } from './theme';
 import { defaultVocabulary } from './format';
 import { attachKeyboard, computeLayer, type InputLayer, type InputVerbs, type KeyboardBinding, type UiCommand } from './input';
@@ -52,6 +52,11 @@ export interface GameUi {
    */
   panelRects(): { log: DOMRect | null; hud: DOMRect[] };
   hideTooltip(): void;
+  /**
+   * The map's graphics context is lost (true) or back (false): a notice covers the run and holds
+   * input until the scene is rebuilt; a reload button appears if the browser never restores it.
+   */
+  setGraphicsLost?(lost: boolean): void;
   setBackpackOpen(open: boolean): void;
   /** short transient notice */
   toast(text: string, tone?: 'info' | 'warn'): void;
@@ -74,6 +79,9 @@ export interface CreateUiOptions {
   /** randomness for inspiration shuffling (UI only; never the engine) */
   rand?: () => number;
 }
+
+/** how long a lost graphics context may take to come back before a reload is offered (ms) */
+export const GFX_RELOAD_AFTER_MS = 5000;
 
 const NO_VERBS: InputVerbs = { talk: false, sneak: false, search: false, persuade: false };
 
@@ -123,6 +131,10 @@ class UiRoot implements GameUi {
   private settings: SettingsDialog;
 
   private mapTools: HTMLElement;
+  private gfxLost = false;
+  private gfxEl: HTMLElement;
+  private gfxReload: HTMLButtonElement;
+  private gfxReloadTimer: ReturnType<typeof setTimeout> | null = null;
   private layoutValue: LayoutMode = 'desktop';
   private layoutCb: (() => void) | null = null;
   private layoutRaf = 0;
@@ -216,6 +228,13 @@ class UiRoot implements GameUi {
       h('button', { type: 'button', class: 'aw-icon-btn aw-map-btn', dataset: { cam: 'right' }, 'aria-label': `${t('help.rotate')} ⟳`, onclick: () => this.intent({ type: 'rotate_camera', dir: 1 }) }, icon(ICONS.rotateRight)),
     );
 
+    this.gfxReload = h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-gfx-reload', hidden: true, onclick: () => location.reload() }, t('gfx.reload'));
+    this.gfxEl = h(
+      'div',
+      { class: 'aw-gfx-lost', role: 'alertdialog', 'aria-modal': 'true', 'aria-labelledby': 'aw-gfx-lost-title', hidden: true },
+      h('div', { class: 'aw-gfx-card' }, h('p', { id: 'aw-gfx-lost-title', class: 'aw-gfx-title' }, t('gfx.lost')), h('p', { class: 'aw-gfx-hint' }, t('gfx.lostHint')), this.gfxReload),
+    );
+
     this.gameEl = h(
       'div',
       { class: 'aw-game', hidden: true },
@@ -234,6 +253,7 @@ class UiRoot implements GameUi {
       this.levelUp.el,
       this.choice.el,
       this.help.el,
+      this.gfxEl,
     );
     root.append(this.start.el, this.loading.el, this.end.el, this.gameEl, this.settings.el, this.toasts, this.slotTip.el, this.tooltip.el);
     for (const s of [this.start.el, this.loading.el, this.end.el]) s.hidden = true;
@@ -246,6 +266,19 @@ class UiRoot implements GameUi {
     const kt = opts.keyboardTarget ?? window;
     kt.addEventListener('keydown', () => this.setInputMode('key'), { capture: true, signal } as AddEventListenerOptions);
     window.addEventListener('pointerdown', (e: PointerEvent) => this.setInputMode(e.pointerType === 'touch' ? 'touch' : 'mouse'), { capture: true, signal });
+    // an inspect card (long-press / right click on the map) closes on any press outside it: a
+    // context button, a slot, the HUD — it must not linger over the sheet that press opens
+    // (issues/M5-inspect-card-lingers.md). Presses on the map itself are handled by the map input.
+    root.addEventListener(
+      'pointerdown',
+      (e: PointerEvent) => {
+        if (!this.tooltip.pinnedVisible) return;
+        const target = e.target as Node | null;
+        if (target && this.tooltip.el.contains(target)) return;
+        this.tooltip.hidePinned();
+      },
+      { capture: true, signal },
+    );
     // a tap anywhere else closes the slot tip
     window.addEventListener(
       'pointerdown',
@@ -331,14 +364,23 @@ class UiRoot implements GameUi {
     this.end.el.hidden = vm.screen !== 'end';
     this.gameEl.hidden = vm.screen !== 'game';
     this.root.dataset.screen = vm.screen;
+    if (vm.screen !== 'game') this.root.dataset.sheet = '0';
 
     if (vm.screen === 'start' && vm.start) {
       this.start.update(vm.start, vm.language);
-      if (screenChanged) queueMicrotask(() => this.start.el.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true }));
+      if (screenChanged) {
+        // back on the start screen (e.g. "New world" from the end screen): open at the top, with the
+        // prompt box in view, not scrolled to where the last demo card was clicked
+        this.start.el.scrollTop = 0;
+        queueMicrotask(() => this.start.el.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true }));
+      }
     }
     if (vm.screen === 'loading' && vm.loading) this.loading.update(vm.loading);
     if (vm.screen === 'end' && vm.end) this.end.update(vm.end, this.ctxValue.vocab);
     if (vm.screen !== 'game' && screenChanged) {
+      // whatever runs next is a new run (or the same one re-mounted, whose dismissed cards the
+      // session has already cleared): its prologue must show
+      this.narration.reset();
       this.bp = { open: false, cursor: 0, grabbed: null, menuIndex: null };
       this.helpOpen = false;
       this.rulesOpen = false;
@@ -367,6 +409,11 @@ class UiRoot implements GameUi {
     this.help.update(this.helpOpen, g.verbs, ctx, g.transitionName);
     this.rules.update(this.rulesOpen, g.goalSummary, g.rules, g.quests);
     this.renderAids(g);
+    // a dialogue, choice, level-up, trade or panel took over: no map card stays on top of it
+    const blocking = this.isBlocking();
+    if (blocking) this.tooltip.hidePinned();
+    // phones: toasts move out of the way of a bottom sheet (ui.css, issues/M5-toasts-over-sheets.md)
+    this.root.dataset.sheet = blocking || this.narration.visible || this.onboard.visible ? '1' : '0';
 
     const rk = dataKey([g.rules, this.rulesOpen]);
     if (rk !== this.rulesBadgeKey) {
@@ -376,19 +423,26 @@ class UiRoot implements GameUi {
     }
 
     const touch = this.mode === 'touch';
-    if (g.mode === 'look') {
-      this.modeBanner.hidden = false;
-      this.modeBanner.textContent = touch ? t('mode.lookTouch') : t('mode.look');
-    } else if (g.mode === 'target') {
+    let banner: string | null = null;
+    if (g.mode === 'look') banner = touch ? t('mode.lookTouch') : t('mode.look');
+    else if (g.mode === 'target') {
       const it = g.targetingSlot !== undefined ? g.slots[g.targetingSlot] : null;
-      this.modeBanner.hidden = false;
-      this.modeBanner.textContent = it?.aimsDirection
+      banner = it?.aimsDirection
         ? t(touch ? 'mode.aimTouch' : 'mode.aim', { item: it.name })
         : it
           ? t(touch ? 'mode.targetItemTouch' : 'mode.targetItem', { item: it.name })
           : t(touch ? 'mode.targetTouch' : 'mode.target');
-    } else {
-      this.modeBanner.hidden = true;
+    }
+    this.modeBanner.hidden = banner === null;
+    const bannerKey = banner === null ? '' : `${banner}|${touch}`;
+    if (banner !== null && this.modeBanner.dataset.key !== bannerKey) {
+      this.modeBanner.dataset.key = bannerKey;
+      // without Esc (touch) aiming needs a way out: a Cancel button in the banner
+      setChildren(
+        this.modeBanner,
+        h('span', { class: 'aw-mode-text' }, banner),
+        touch ? h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-mode-cancel', onclick: () => this.intent({ type: 'cancel' }) }, t('common.cancel')) : null,
+      );
     }
     this.busyEl.hidden = !g.busy;
     this.busyEl.textContent = g.busy ?? '';
@@ -564,6 +618,25 @@ class UiRoot implements GameUi {
     this.tooltip.hideAt();
   }
 
+  setGraphicsLost(lost: boolean): void {
+    if (lost === this.gfxLost) return;
+    this.gfxLost = lost;
+    if (this.gfxReloadTimer) clearTimeout(this.gfxReloadTimer);
+    this.gfxReloadTimer = null;
+    this.gfxEl.hidden = !lost;
+    this.gfxReload.hidden = true;
+    this.gameEl.classList.toggle('is-gfx-lost', lost);
+    if (lost) {
+      this.tooltip.hideAt();
+      // the browser normally restores the context within a second or two; if it never does, the
+      // only way back is a reload (the run is autosaved every turn)
+      this.gfxReloadTimer = setTimeout(() => {
+        this.gfxReloadTimer = null;
+        if (this.gfxLost) this.gfxReload.hidden = false;
+      }, GFX_RELOAD_AFTER_MS);
+    }
+  }
+
   setBackpackOpen(open: boolean): void {
     if (this.bp.open === open) return;
     this.bp = { ...this.bp, open, grabbed: null, menuIndex: null };
@@ -628,6 +701,7 @@ class UiRoot implements GameUi {
   }
 
   isBlocking(): boolean {
+    if (this.gfxLost) return true;
     const l = this.layer();
     return l !== 'game' && l !== 'narration' && l !== 'look' && l !== 'target';
   }
@@ -638,6 +712,7 @@ class UiRoot implements GameUi {
   }
 
   destroy(): void {
+    if (this.gfxReloadTimer) clearTimeout(this.gfxReloadTimer);
     this.kb.detach();
     this.inputAbort.abort();
     this.resizeObs?.disconnect();
@@ -747,7 +822,7 @@ class UiRoot implements GameUi {
   private explainSlot(slot: number): void {
     const it = this.slots()[slot];
     if (!it) return;
-    const exp = slotExplanation(it, this.ctxValue.vocab);
+    const exp = slotExplanation(it, this.ctxValue.vocab, slot);
     const anchor = isQuickSlot(slot) && !this.bp.open ? this.hotbar.slotEl(slot) : null;
     if (!anchor || !anchor.isConnected) {
       // in the backpack the inspect pane already shows the item: a short notice is enough
@@ -802,6 +877,8 @@ class UiRoot implements GameUi {
   }
 
   private command(cmd: UiCommand): void {
+    // the map is not drawn: no turn may pass blind (settings stay reachable through the overlay)
+    if (this.gfxLost) return;
     const layer = this.layer();
     const g = this.vm?.game;
     switch (layer) {

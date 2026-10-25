@@ -1,0 +1,47 @@
+{
+  "strip": {
+    "stillOpen": false,
+    "layer": "game",
+    "cardBox": {
+      "x": 167,
+      "y": 6,
+      "width": 400,
+      "height": 147.15625
+    },
+    "hitElement": "aw-strip-name"
+  },
+  "card itself": {
+    "stillOpen": false,
+    "layer": "game",
+    "cardBox": {
+      "x": 167,
+      "y": 6,
+      "width": 400,
+      "height": 147.15625
+    },
+    "hitElement": ""
+  },
+  "hud": {
+    "stillOpen": false,
+    "layer": "game",
+    "cardBox": {
+      "x": 167,
+      "y": 6,
+      "width": 400,
+      "height": 43
+    },
+    "hitElement": "aw-hud-name"
+  },
+  "ctx wait": {
+    "stillOpen": false,
+    "layer": "game",
+    "cardBox": {
+      "x": 167,
+      "y": 6,
+      "width": 400,
+      "height": 147.15625
+    },
+    "hitElement": "aw-ctx-label"
+  },
+  "ctx talk": "target not visible"
+}

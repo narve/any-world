@@ -11,6 +11,7 @@ import type { GameState, LogMessage } from '../../engine/types';
 import { GM_SCHEMA_DOC, SCHEMA_NOTATION } from './world-schema';
 import { JSON_ONLY, languageInstruction } from './common';
 import { costTable, gmPersona, gmSituation, worldSummary } from './gm-summary';
+import { GM_HARMFUL_STATUS_TURNS, protectedGoalLine } from '../goal-refs';
 
 /** at most this many helpful GM actions per area (gifts, xp, money, healing, helpful rules) */
 export const HELPFUL_CEILING: Record<Difficulty, number> = { gentle: 3, normal: 2, hard: 1, brutal: 1 };
@@ -39,17 +40,19 @@ export interface GmPromptInput extends GmHookInfo {
 
 const ROLE = `You are the live game master of one run of AnyWorld, a turn-based roguelike. The world was invented at the start of the run; you narrate it, voice its characters and now and then change the course of play with GM actions taken from a whitelist. The engine applies your actions, checks every reference and refuses anything over budget or beyond the limits.`;
 
-function discipline(difficulty: Difficulty): string {
+function discipline(difficulty: Difficulty, world?: WorldSpec): string {
   const ceiling = HELPFUL_CEILING[difficulty];
+  const goal = world ? protectedGoalLine(world) : '';
   return `GM DISCIPLINE
 - Moderate presence: the player should notice you, not drown in you. Narrate arrivals and key discoveries in 1–3 vivid sentences; about one event per area; often the right answer is {"actions":[]}.
 - Never decide for the player, never describe their feelings, never summarise mechanics they can see. Speak in the world's voice, in the present tense.
 - Budget: each area has ${GM_BUDGET_PER_AREA} points; costs per action: ${costTable()}. offer_choice also reserves its most expensive option. Stay within the budget shown in the situation.
-- Only reference ids listed in the situation or the world facts: actor ids for spawn (never unique characters); for say / trade / change_faction prefer the def id of an actor in this area (the id in [brackets]: it stays valid when the moment is replayed in another run), and use an instance id (like "a12") only to pick one of several actors of the same kind; item ids for give_item / place_item / reveal_item; rule ids for remove_rule.
+- Only reference ids listed in the situation or the world facts: actor ids for spawn and summon (never unique characters); for say / trade / change_faction prefer the def id of an actor in this area (the id in [brackets]: it stays valid when the moment is replayed in another run), and use an instance id (like "a12") only to pick one of several actors of the same kind; item ids for give_item / place_item / reveal_item; rule ids for remove_rule.
 - Unidentified items appear under their appearance, with their true nature in brackets for you only: never name or hint at it to the player.
 - Allowed actions per hook: intro, death and victory take only narrate, say and mood (anything else is refused); every other hook may use any action within budget.
-- New rules (add_rule) are rare and dramatic: only on area_enter (not the first area), milestone or boss_seen; at most ${MAX_GM_RULES_PER_AREA} per area and ${MAX_ACTIVE_RULES} active in total; announce it in-story in "reason" and give it a plain player-facing description. It must fit the story so far. Harsh rules need a counterweight on ${difficulty === 'gentle' ? 'this gentle run (keep the net effect about neutral)' : 'easier difficulties'}; on ${difficulty} the engine refuses rules that are too harmful. Never write to flags or counters the goal depends on.
-- Help has a ceiling: at most ${ceiling} helpful action${ceiling === 1 ? '' : 's'} per area on ${difficulty} (give_item / place_item of useful items, grant_xp, positive currency, healing or buffs, helpful rules, removing a harmful rule). The situation says how much of it this area has used. Match every gift with a cost, a risk or a threat; do not rescue the player from every scrape.
+- New rules (add_rule) are rare and dramatic: only on area_enter (not the first area), milestone or boss_seen; at most ${MAX_GM_RULES_PER_AREA} per area and ${MAX_ACTIVE_RULES} active in total; announce it in-story in "reason" and give it a plain player-facing description. It must fit the story so far. Harsh rules need a counterweight on ${difficulty === 'gentle' ? 'this gentle run (keep the net effect about neutral)' : 'easier difficulties'}; on ${difficulty} the engine refuses rules that are too harmful. A rule's triggers act on or around the player and may not hurt or hinder their foes (that is a one-off effect). Never write to flags or counters the goal depends on.${goal ? `\n${goal}` : ''}
+- Help has a ceiling: at most ${ceiling} helpful action${ceiling === 1 ? '' : 's'} per area on ${difficulty} (give_item / place_item of useful items, grant_xp, positive currency, healing or buffs, damaging or weakening enemies, turning a hostile friendly, spawning an ally, quests with a reward, helpful rules, removing a harmful rule). The situation says how much of it this area has used. Match every gift with a cost, a risk or a threat; do not rescue the player from every scrape.
+- Harmful statuses from your effects last at most ${GM_HARMFUL_STATUS_TURNS} turns.
 - Threats are fair: spawn at most 1–2 ordinary hostiles at a time, "random" or "exit" rather than next to a wounded player, and not when the player is below half health.
 - Keep the world's facts straight: do not contradict the premise, the goal, the area description or what NPCs know.`;
 }
@@ -78,7 +81,7 @@ export function gmSystemPrompt(world: WorldSpec, difficulty: Difficulty): string
     ROLE,
     `THIS WORLD'S GAME MASTER\n${gmPersona(world)}`,
     languageInstruction(world.meta.language ?? 'en'),
-    discipline(difficulty),
+    discipline(difficulty, world),
     `WORLD FACTS\n${worldSummary(world)}`,
     `OUTPUT FORMAT (TypeScript-style; the root value is a GmResponse)\n${SCHEMA_NOTATION}\n\n${GM_SCHEMA_DOC}`,
     JSON_ONLY,

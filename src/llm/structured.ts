@@ -3,6 +3,7 @@
  * validators such as validateWorldRefs), and on failure ask the model to repair its output with
  * the readable validation errors. Works with every provider and structured-output mode.
  */
+import { MAX_JSON_DEPTH, jsonDepth } from '../schema/json-depth';
 import { z } from 'zod';
 import type { ChatMessage, CompletionRequest, LLMProvider } from './types';
 import { LLMError, LLMInvalidResponseError, type LLMErrorInit } from './errors';
@@ -206,6 +207,8 @@ export async function checkStructuredText<T>(
 ): Promise<CheckResult<T>> {
   const ex = extractJson(text);
   if (!ex.ok) return { ok: false, errors: [ex.error] };
+  // zod recurses on the call stack: a reply nested thousands of levels deep would throw RangeError
+  if (jsonDepth(ex.value, MAX_JSON_DEPTH) > MAX_JSON_DEPTH) return { ok: false, errors: [`the JSON is nested too deeply (more than ${MAX_JSON_DEPTH} levels)`] };
   const parsed = schema.safeParse(ex.value);
   if (!parsed.success) return { ok: false, errors: formatZodError(parsed.error) };
   const extra = validate ? await validate(parsed.data) : [];

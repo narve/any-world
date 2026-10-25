@@ -42,6 +42,7 @@ import { transitionFailure } from './area';
 import { isDifficulty } from './difficulty';
 import { initialActiveRules } from './rules';
 import { cloneState } from './clone';
+import { own } from './util';
 
 export interface EngineEnv {
   /** the world spec (defaults to the registered one for state.worldId) */
@@ -278,7 +279,7 @@ export function playerSheet(state: GameState, env?: EngineEnv): PlayerSheet {
     maxMp: maxMp(ctx, p),
     xp: ctx.s.player.xp,
     xpToNext: xpToNext(ctx, ctx.s.player.level),
-    resources: (world.resources ?? []).map((r) => ({ id: r.id, value: ctx.s.player.resources[r.id] ?? 0, max: r.max })),
+    resources: (world.resources ?? []).map((r) => ({ id: r.id, value: own(ctx.s.player.resources, r.id) ?? 0, max: r.max })),
   };
 }
 
@@ -315,7 +316,8 @@ export function describeItemDef(state: GameState, defId: string, env?: EngineEnv
 }
 
 export { serialize, deserialize } from './serialize';
-export { LOG_KEYS, END_REASON_KEYS, FACTION_KEYS, renderTemplate, renderLogKey, templateParams, type LogKey, type EndReasonKey, type LogParams } from './log-keys';
+export { LOG_KEYS, END_REASON_KEYS, DEATH_REASON_KEYS, FACTION_KEYS, renderTemplate, renderLogKey, templateParams, type LogKey, type EndReasonKey, type LogParams } from './log-keys';
+export { endingText } from './ctx';
 export {
   buildGmContext,
   estimateTokens,
@@ -332,7 +334,8 @@ export { DIFFICULTIES, DIFFICULTY_PROFILES, difficultyOf, isDifficulty, type Dif
 export { estimateRuleImpact, activeRuleEntries, type RuleImpact } from './rules';
 export { registerWorld, getWorld, worldIdOf } from './registry';
 export { createRng, rngFromState, SeededRng } from './rng';
-export { computeFov, hasLos } from './fov';
+export { computeFov, hasLos, withinRadius, withinReach } from './fov';
+export { MAX_AREA_ACTORS } from './actors';
 export { findPath, bfsDistances } from './path';
 export type * from './types';
 export { QUICK_SLOTS, BACKPACK_SLOTS, TOTAL_SLOTS } from './types';

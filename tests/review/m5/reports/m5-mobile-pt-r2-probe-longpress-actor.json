@@ -1,0 +1,218 @@
+[
+  {
+    "actor": "Tape-Measure Sprite",
+    "pos": {
+      "x": 37,
+      "y": 16
+    },
+    "frac": 0.2,
+    "at": [
+      235,
+      419
+    ],
+    "pick": {
+      "x": 37,
+      "y": 16
+    },
+    "ok": true,
+    "text": "Tape-Measure Sprite Hostile Harmless STF 5 / 5 A whirring yellow coil that measu"
+  },
+  {
+    "actor": "Tape-Measure Sprite",
+    "pos": {
+      "x": 37,
+      "y": 16
+    },
+    "frac": 0.45,
+    "at": [
+      235,
+      416
+    ],
+    "pick": {
+      "x": 37,
+      "y": 16
+    },
+    "ok": true,
+    "text": "Tape-Measure Sprite Hostile Harmless STF 5 / 5 A whirring yellow coil that measu"
+  },
+  {
+    "actor": "Tape-Measure Sprite",
+    "pos": {
+      "x": 37,
+      "y": 16
+    },
+    "frac": 0.7,
+    "at": [
+      235,
+      413
+    ],
+    "pick": {
+      "x": 37,
+      "y": 16
+    },
+    "ok": true,
+    "text": "Tape-Measure Sprite Hostile Harmless STF 5 / 5 A whirring yellow coil that measu"
+  },
+  {
+    "actor": "Mrs Percolate",
+    "pos": {
+      "x": 29,
+      "y": 18
+    },
+    "frac": 0.2,
+    "at": [
+      230,
+      250
+    ],
+    "pick": {
+      "x": 29,
+      "y": 18
+    },
+    "ok": true,
+    "text": "Mrs Percolate Neutral Talk STF 25 / 25 The break-room tea urn, a fellow mimic of"
+  },
+  {
+    "actor": "Mrs Percolate",
+    "pos": {
+      "x": 29,
+      "y": 18
+    },
+    "frac": 0.45,
+    "at": [
+      231,
+      244
+    ],
+    "pick": {
+      "x": 29,
+      "y": 18
+    },
+    "ok": true,
+    "text": "Mrs Percolate Neutral Talk STF 25 / 25 The break-room tea urn, a fellow mimic of"
+  },
+  {
+    "actor": "Mrs Percolate",
+    "pos": {
+      "x": 29,
+      "y": 18
+    },
+    "frac": 0.7,
+    "at": [
+      231,
+      238
+    ],
+    "pick": {
+      "x": 29,
+      "y": 18
+    },
+    "ok": true,
+    "text": "Mrs Percolate Neutral Talk STF 25 / 25 The break-room tea urn, a fellow mimic of"
+  },
+  {
+    "actor": "Intern Adventurer",
+    "pos": {
+      "x": 20,
+      "y": 9
+    },
+    "frac": 0.2,
+    "at": [
+      160,
+      329
+    ],
+    "pick": {
+      "x": 20,
+      "y": 9
+    },
+    "ok": true,
+    "text": "Intern Adventurer Hostile Even match STF 10 / 10 A trainee hero on a work-experi"
+  },
+  {
+    "actor": "Intern Adventurer",
+    "pos": {
+      "x": 20,
+      "y": 9
+    },
+    "frac": 0.45,
+    "at": [
+      160,
+      323
+    ],
+    "pick": {
+      "x": 20,
+      "y": 9
+    },
+    "ok": true,
+    "text": "Intern Adventurer Hostile Even match STF 10 / 10 A trainee hero on a work-experi"
+  },
+  {
+    "actor": "Intern Adventurer",
+    "pos": {
+      "x": 20,
+      "y": 9
+    },
+    "frac": 0.7,
+    "at": [
+      160,
+      318
+    ],
+    "pick": {
+      "x": 20,
+      "y": 9
+    },
+    "ok": true,
+    "text": "Intern Adventurer Hostile Even match STF 10 / 10 A trainee hero on a work-experi"
+  },
+  {
+    "actor": "Clipboard Imp",
+    "pos": {
+      "x": 6,
+      "y": 24
+    },
+    "frac": 0.2,
+    "at": [
+      160,
+      358
+    ],
+    "pick": {
+      "x": 6,
+      "y": 24
+    },
+    "ok": true,
+    "text": "Clipboard Imp Hostile Even match STF 8 / 8 A pink imp in a lanyard, hired to aud"
+  },
+  {
+    "actor": "Clipboard Imp",
+    "pos": {
+      "x": 6,
+      "y": 24
+    },
+    "frac": 0.45,
+    "at": [
+      159,
+      354
+    ],
+    "pick": {
+      "x": 6,
+      "y": 24
+    },
+    "ok": true,
+    "text": "Clipboard Imp Hostile Even match STF 8 / 8 A pink imp in a lanyard, hired to aud"
+  },
+  {
+    "actor": "Clipboard Imp",
+    "pos": {
+      "x": 6,
+      "y": 24
+    },
+    "frac": 0.7,
+    "at": [
+      159,
+      350
+    ],
+    "pick": {
+      "x": 6,
+      "y": 24
+    },
+    "ok": true,
+    "text": "Clipboard Imp Hostile Even match STF 8 / 8 A pink imp in a lanyard, hired to aud"
+  }
+]

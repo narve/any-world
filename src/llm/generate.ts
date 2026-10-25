@@ -20,6 +20,7 @@ import { validateWorldRefs } from '../schema/refs';
 import type { Difficulty } from '../schema/gm';
 import type { ChatMessage, CompletionRequest, CompletionResponse, LLMProvider } from './types';
 import { LLMAbortedError, LLMError, LLMTimeoutError } from './errors';
+import { DEFAULT_BACKEND_TIMEOUT_MS } from './http';
 import { checkStructuredText, completeStructured, extractJson, repairMessage, StructuredOutputError, type CheckResult, type Usage } from './structured';
 import { worldRequest, WORLD_MAX_TOKENS, type WorldPromptOptions } from './prompts/world';
 import { normaliseLanguage } from './prompts/common';
@@ -77,10 +78,19 @@ export interface BalanceOptions {
   confirm?: boolean;
 }
 
+/**
+ * Time one world-generation provider call may take: the longest wait of any transport (the backend
+ * client's, which outlasts the server's own per-request budget and the 600 s per-attempt timeout).
+ */
+export const GENERATION_CALL_BUDGET_MS = DEFAULT_BACKEND_TIMEOUT_MS;
+
 export interface GenerateWorldOptions extends WorldPromptOptions {
   provider: LLMProvider;
   signal?: AbortSignal;
-  /** total time limit for the whole pipeline's provider calls, ms (default 300 000) */
+  /**
+   * total time limit for the whole pipeline, ms (default: the most provider calls the pipeline may
+   * make x GENERATION_CALL_BUDGET_MS; 0 = no total limit)
+   */
   timeoutMs?: number;
   /** repair turns after an invalid reply (default 2, i.e. up to 3 calls) */
   repairs?: number;
@@ -271,7 +281,12 @@ export async function generateWorld(opts: GenerateWorldOptions): Promise<Generat
   const repairs = Math.max(0, opts.repairs ?? 2);
   const feedbackRounds = Math.max(0, opts.balanceFeedback ?? 1);
   const yieldToUi = opts.yieldToUi ?? defaultYield;
-  const timeoutMs = opts.timeoutMs ?? 300_000;
+  // default deadline: every provider call the pipeline may make (first reply + repairs, for the
+  // first world and each balance feedback round) gets the transport's full per-call budget, so a
+  // slow model is never cut off below what one legitimate reply may take; the per-attempt
+  // timeouts and the caller's signal (Cancel) still bound each call
+  const maxCalls = (1 + repairs) * (1 + feedbackRounds);
+  const timeoutMs = opts.timeoutMs ?? maxCalls * GENERATION_CALL_BUDGET_MS;
   const usage: Usage = { inputTokens: 0, outputTokens: 0 };
   let calls = 0;
   let title: string | undefined;

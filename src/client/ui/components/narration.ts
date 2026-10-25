@@ -38,6 +38,16 @@ export class NarrationCard {
     return !!this.current && this.shownCount() < this.current.text.length;
   }
 
+  /**
+   * Forget the dismissed cards: a new run is being mounted. Session narration ids ('intro',
+   * `area-<index>-<seq>`) repeat from run to run, so a card dismissed in the last run must not
+   * hide the next run's prologue (issues/M5-second-run-skips-prologue.md).
+   */
+  reset(): void {
+    this.dismissed.clear();
+    this.hide();
+  }
+
   setSpeed(animationSpeed: number, reduceMotion: boolean): void {
     this.cps = typewriterSpeed(animationSpeed, reduceMotion);
   }

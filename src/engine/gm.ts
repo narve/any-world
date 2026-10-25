@@ -10,7 +10,7 @@ import { GM_ACTION_COST } from '../schema/gm';
 import { RuleVariant } from '../schema/world';
 import type { ActorInstance, PendingChoice, Pos, Quest } from './types';
 import { type Ctx, actorName, emit, findActor, findFreeNear, isAlive, isPlayer, log, logKey, playerActor } from './ctx';
-import { spawnActor } from './actors';
+import { MAX_AREA_ACTORS, areaHasRoom, spawnActor } from './actors';
 import { displayItemName, dropItemAt, giveItem } from './inventory';
 import { applyEffectList, isVisibleToPlayer } from './effects';
 import { reveal } from './knowledge';
@@ -213,6 +213,7 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
       return null;
     case 'spawn': {
       if (!ix.actors.has(a.actor)) return `unknown actor "${a.actor}"`;
+      if (!areaHasRoom(ctx)) return `the area is full (${MAX_AREA_ACTORS} actors)`;
       let n = 0;
       for (let i = 0; i < (a.count ?? 1); i++) {
         const p = nearPos(ctx, a.near ?? 'random');

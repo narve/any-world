@@ -155,8 +155,8 @@
     },
     {
       "id": "senior-prankster", "name": "Senior Prankster", "description": "Graduating into a town that won't exist. Has decided nothing matters, loudly, at you.",
-      "faction": "hostile", "stats": { "hp": 16, "ac": 10, "str": 13, "dex": 11, "int": 8, "mp": 0 }, "speed": 110, "sight": 7,
-      "attack": { "name": "Loud impression", "verb": "does a loud impression of", "damage": { "base": 2, "dice": "1d6" }, "damageType": "embarrassment", "range": 1, "accuracyStat": "str" },
+      "faction": "hostile", "stats": { "hp": 14, "ac": 10, "str": 13, "dex": 11, "int": 8, "mp": 0 }, "speed": 110, "sight": 7,
+      "attack": { "name": "Loud impression", "verb": "does a loud impression of", "damage": { "base": 1, "dice": "1d6" }, "damageType": "embarrassment", "range": 1, "accuracyStat": "str" },
       "triggers": [{ "on": "on_hit", "chance": 0.3, "action": { "targeting": { "shape": "adjacent", "range": 1, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "flustered", "duration": 3 }] } }, { "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 3 }] } }],
       "behaviour": { "type": "chaser", "erratic": 0.15 }, "xp": 8,
       "loot": [{ "item": "inside-joke", "chance": 0.3 }, { "item": "energy-drink", "chance": 0.2 }],
@@ -223,11 +223,11 @@
     },
     {
       "id": "mags-calloway", "name": "Magdalena 'Mags' Calloway", "description": "Head girl, debate champion, daughter of the Reservoir Board chair. She has a sponsor, a slideshow and a hashtag: #NewBeginnings. She will not be interrupted.",
-      "faction": "hostile", "stats": { "hp": 62, "ac": 14, "str": 13, "dex": 12, "int": 16, "mp": 24 }, "speed": 100, "sight": 9,
-      "attack": { "name": "Withering once-over", "verb": "gives a withering once-over to", "damage": { "base": 3, "dice": "1d8" }, "damageType": "embarrassment", "range": 2, "accuracyStat": "int" },
+      "faction": "hostile", "stats": { "hp": 53, "ac": 14, "str": 13, "dex": 12, "int": 16, "mp": 24 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Withering once-over", "verb": "gives a withering once-over to", "damage": { "base": 3, "dice": "1d6" }, "damageType": "embarrassment", "range": 2, "accuracyStat": "int" },
       "abilities": [
-        { "id": "devastating-read", "name": "Devastating Read", "description": "A paragraph-long takedown, delivered at microphone volume.", "action": { "targeting": { "shape": "ray", "range": 6, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 3, "dice": "2d4" }, "damageType": "embarrassment" }, { "type": "apply_status", "status": "mortified", "duration": 1 }], "vfx": { "kind": "beam", "color": "#ff6fa8" } }, "cost": { "resource": "mp", "amount": 6 }, "cooldown": 5, "useWhen": "target_in_range" },
-        { "id": "rally-the-squad", "name": "Rally the Squad", "description": "Three phones light up at once.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "summon", "actor": "group-chat-lurker", "count": 2, "allied": false }], "vfx": { "kind": "sparkle", "color": "#9ad1ff" } }, "cooldown": 20, "useWhen": "start_of_fight" },
+        { "id": "devastating-read", "name": "Devastating Read", "description": "A paragraph-long takedown, delivered at microphone volume.", "action": { "targeting": { "shape": "ray", "range": 6, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 3, "dice": "2d3" }, "damageType": "embarrassment" }, { "type": "apply_status", "status": "mortified", "duration": 1 }], "vfx": { "kind": "beam", "color": "#ff6fa8" } }, "cost": { "resource": "mp", "amount": 6 }, "cooldown": 5, "useWhen": "target_in_range" },
+        { "id": "rally-the-squad", "name": "Rally the Squad", "description": "Her phone lights up. Somebody in the group chat is always on their way.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "summon", "actor": "group-chat-lurker", "count": 1, "allied": false }], "vfx": { "kind": "sparkle", "color": "#9ad1ff" } }, "cooldown": 20, "useWhen": "start_of_fight" },
         { "id": "fix-lip-gloss", "name": "Fix Lip Gloss", "description": "A compact mirror, a deep breath, total reset.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 6, "dice": "1d6" } }, { "type": "remove_status", "status": "all_harmful" }], "vfx": { "kind": "sparkle", "color": "#ffd6e0" } }, "cooldown": 16, "useWhen": "low_hp" }
       ],
       "resistances": [{ "damageType": "gossip", "multiplier": 0.5 }, { "damageType": "nostalgia", "multiplier": 1.5 }],
@@ -368,7 +368,7 @@
     {
       "id": "iced-tea", "name": "Vending Machine Iced Tea", "kind": "Drink", "description": "Peach flavour. The vending machine is the only thing in school still fully stocked.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
-      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 6 } }], "vfx": { "kind": "sparkle", "color": "#f4a261" } },
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 7 } }], "vfx": { "kind": "sparkle", "color": "#f4a261" } },
       "rarity": "common", "value": 4, "knowledge": "clear", "appearanceGroup": "snack",
       "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.09, 0.2, 0.09], "pos": [0, 0.1, 0], "color": "#f4a261", "material": "metal" }], "idle": "bob" }
     },
@@ -403,7 +403,7 @@
     {
       "id": "cafeteria-cookie", "name": "Cafeteria Cookie", "kind": "Snack", "description": "Made by Mrs. Pell, whose recipe goes under the water with the rest of the town. Still warm.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
-      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 5 } }, { "type": "apply_status", "status": "in-the-zone", "duration": 6 }] },
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 7 } }, { "type": "apply_status", "status": "in-the-zone", "duration": 6 }] },
       "rarity": "common", "value": 6, "knowledge": "unknown", "appearanceGroup": "snack", "revealOnUse": "full",
       "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.16, 0.03, 0.16], "pos": [0, 0.03, 0], "color": "#c08552", "material": "matte" }], "idle": "bob" }
     },
@@ -490,16 +490,16 @@
   },
   "areas": [
     {
-      "name": "Monday: Lowmoor High",
+      "name": "Lowmoor High (Monday)",
       "description": "Corridors half packed into boxes, noticeboards stripped to drawing pins. Water stains climbing the walls. Somewhere, the goose.",
       "generator": "building", "size": "medium", "params": { "rooms": 10, "corridorWidth": 2, "floors": 1 },
       "floor": { "color": "#d8e2dc", "color2": "#c5d1cb", "material": "stone", "pattern": "tiles" },
       "wall": { "color": "#9fb8ad", "color2": "#457b9d", "material": "stone", "height": 1.5, "pattern": "plain" },
       "lighting": { "ambient": "#eef6ff", "ambientIntensity": 0.8, "fog": { "color": "#dfe9f0", "density": 0.01 }, "lamps": { "color": "#e8f6ff", "intensity": 1.0, "frequency": 0.1, "flicker": true }, "playerLight": 0 },
       "actors": [
-        { "actor": "group-chat-lurker", "weight": 30, "min": 2, "max": 5 },
-        { "actor": "senior-prankster", "weight": 20, "min": 2, "max": 3 },
-        { "actor": "hall-monitor", "weight": 15, "min": 1, "max": 3 },
+        { "actor": "group-chat-lurker", "weight": 30, "min": 1, "max": 1 },
+        { "actor": "senior-prankster", "weight": 20, "min": 0, "max": 0 },
+        { "actor": "hall-monitor", "weight": 15, "min": 0, "max": 0 },
         { "actor": "yearbook-paparazzo", "weight": 10, "min": 0, "max": 2 },
         { "actor": "bio-goose", "weight": 5, "min": 0, "max": 1 }
       ],
@@ -512,7 +512,7 @@
         { "item": "cafeteria-cookie", "weight": 5 }, { "item": "energy-drink", "weight": 8 }, { "item": "gas-station-sushi", "weight": 6 },
         { "item": "admirer-note", "weight": 2 }, { "item": "burn-book-page", "weight": 5 }, { "item": "group-text", "weight": 4 }
       ],
-      "itemCount": 7,
+      "itemCount": 5,
       "placedItems": [{ "item": "old-yearbook", "where": "far" }],
       "terrain": [{ "terrain": "lockers", "density": 0.04 }, { "terrain": "mop-water", "density": 0.02 }, { "terrain": "vending-machine", "density": 0.004 }, { "terrain": "trophy-case", "density": 0.004 }],
       "transitionName": "The bell rings. Survive until Wednesday.",
@@ -522,15 +522,15 @@
       "music": "upbeat"
     },
     {
-      "name": "Wednesday: The Achterbergs' Empty House",
+      "name": "The Achterbergs' Empty House (Wednesday)",
       "description": "Rosalind's farewell party in a house that is mostly boxes and echoes. Fairy lights on bare walls. Music too loud. Your notebook is somewhere in here, and so is she.",
       "generator": "rooms", "size": "medium", "params": { "roomCount": 9, "roomMin": 4, "roomMax": 8 },
       "floor": { "color": "#b08968", "color2": "#9c6644", "material": "wood", "pattern": "planks" },
       "wall": { "color": "#ede0d4", "color2": "#ddb892", "material": "stone", "height": 1.5, "pattern": "plain" },
       "lighting": { "ambient": "#5a4a7a", "ambientIntensity": 0.35, "fog": { "color": "#2d1e3e", "density": 0.02 }, "lamps": { "color": "#ffb3c6", "intensity": 1.6, "frequency": 0.12, "flicker": false }, "playerLight": 3 },
       "actors": [
-        { "actor": "group-chat-lurker", "weight": 25, "min": 2, "max": 5 },
-        { "actor": "senior-prankster", "weight": 25, "min": 2, "max": 5 },
+        { "actor": "group-chat-lurker", "weight": 25, "min": 2, "max": 3 },
+        { "actor": "senior-prankster", "weight": 25, "min": 1, "max": 2 },
         { "actor": "yearbook-paparazzo", "weight": 20, "min": 1, "max": 3 },
         { "actor": "dam-surveyor", "weight": 10, "min": 1, "max": 2 }
       ],
@@ -544,7 +544,7 @@
         { "item": "admirer-note", "weight": 3 }, { "item": "burn-book-page", "weight": 6 }, { "item": "mixtape", "weight": 4 },
         { "item": "permanent-marker", "weight": 3 }, { "item": "hall-pass", "weight": 2 }
       ],
-      "itemCount": 8,
+      "itemCount": 6,
       "placedItems": [{ "item": "speech-notebook", "where": "guarded" }],
       "terrain": [{ "terrain": "moving-boxes", "density": 0.06 }, { "terrain": "seep-water", "density": 0.02 }],
       "transitionName": "Walk home along the levee. Friday's coming.",
@@ -555,14 +555,14 @@
       "music": "tense"
     },
     {
-      "name": "Friday: The Last Assembly",
+      "name": "The Last Assembly (Friday)",
       "description": "The assembly hall, chairs in rows, a banner reading #NEWBEGINNINGS over the stage. Water at the edges of the floor. Mags Calloway stands at the microphone.",
       "generator": "building", "size": "small", "params": { "rooms": 5, "hall": 1, "floors": 1 },
       "floor": { "color": "#a47148", "color2": "#8b5e34", "material": "wood", "pattern": "planks" },
       "wall": { "color": "#283d3b", "color2": "#197278", "material": "stone", "height": 2, "pattern": "plain" },
       "lighting": { "ambient": "#3a4a6b", "ambientIntensity": 0.3, "fog": { "color": "#1b2a41", "density": 0.015 }, "lamps": { "color": "#ffe066", "intensity": 2.2, "frequency": 0.05, "flicker": false }, "playerLight": 3, "sky": "#1b2a41" },
       "actors": [
-        { "actor": "group-chat-lurker", "weight": 20, "min": 1, "max": 3 },
+        { "actor": "group-chat-lurker", "weight": 20, "min": 1, "max": 2 },
         { "actor": "hall-monitor", "weight": 20, "min": 1, "max": 2 },
         { "actor": "dam-surveyor", "weight": 20, "min": 1, "max": 3 },
         { "actor": "bio-goose", "weight": 5, "min": 0, "max": 1 }
@@ -574,8 +574,8 @@
         { "actor": "janitor", "where": "centre" }
       ],
       "items": [{ "item": "iced-tea", "weight": 15 }, { "item": "power-bank", "weight": 10 }, { "item": "polaroid", "weight": 8 }, { "item": "detention-eraser", "weight": 4 }],
-      "itemCount": 4,
-      "placedItems": [],
+      "itemCount": 3,
+      "placedItems": [{ "item": "polaroid", "where": "near_start" }],
       "terrain": [{ "terrain": "spotlight", "density": 0.03 }, { "terrain": "seep-water", "density": 0.04 }],
       "transitionName": "Walk out into the rain",
       "gmNotes": "Final confrontation, verbal. Mags is not a villain; she is scared. Leaving her speechless and then giving the speech (using the notebook) wins. Nan Ottoline wants the old village named too.",
@@ -595,6 +595,7 @@
     "lose": { "type": "counter", "counter": "detentions", "cmp": "gte", "value": 3 },
     "winText": "You read every name. Every family, every shop, the swimming hole, Mrs. Pell's cookies, Theo Marsh who knew things, the stupid goose. It takes twelve minutes. Nobody leaves. When you finish, Nan Ottoline is the first one standing, and Mags Calloway is the second.",
     "lossText": "Your mum picks you up early. You watch the school get smaller in the wing mirror, and the speech stays folded in your pocket, and on Saturday the water closes over all of it without anyone saying a word.",
+    "deathText": "You lose it in the corridor, in front of everyone. Somebody films it. You spend the rest of the week in the library with your hood up, and on Friday someone else reads a speech about new beginnings while yours stays unsaid.",
     "labels": { "speech-delivered": "The farewell speech is given", "detentions": "Detentions" }
   },
   "gm": {

@@ -63,18 +63,19 @@ describe('confidence-aware verdicts', () => {
   const sa = clean(staticAnalysis(teen));
 
   it('a 20-seed window just outside the band is ok (sampling noise), not too_easy / too_hard', () => {
-    // the review's windows: teen 14/20 and ship 13/20 at normal (100-seed means 55% / 51%)
-    for (const won of [13, 14]) {
+    // the review's windows were teen 14/20 and ship 13/20 against the old 25–60% normal band; the
+    // band is 25–85% since M5 (issues/M5-new-player-deaths.md), so the same check sits at its new top
+    for (const won of [18, 19]) {
       const v = verdictFor(teen, sa, [summary('explorer', won)], 'normal');
       expect(v.verdict).toBe('ok');
       expect(v.reasons.join('\n')).toMatch(/within sampling noise \(90% interval \d+%–\d+% over 20 runs\)/);
-      expect(v.interval![0]).toBeLessThan(0.6);
+      expect(v.interval![0]).toBeLessThan(0.85);
     }
     expect(verdictFor(teen, sa, [summary('explorer', 4)], 'normal').verdict).toBe('ok');
   });
 
   it('the same rate over more runs is confident', () => {
-    expect(verdictFor(teen, sa, [summary('explorer', 84, 120)], 'normal').verdict).toBe('too_easy');
+    expect(verdictFor(teen, sa, [summary('explorer', 114, 120)], 'normal').verdict).toBe('too_easy');
     expect(verdictFor(teen, sa, [summary('explorer', 8, 60)], 'normal').verdict).toBe('too_hard');
     const v = verdictFor(teen, sa, [summary('explorer', 0, 20)], 'normal');
     expect(v.verdict).toBe('too_hard');

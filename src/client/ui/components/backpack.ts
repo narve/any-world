@@ -120,7 +120,7 @@ export class Backpack {
             role: 'menuitem',
             class: ['aw-btn', 'aw-btn-small', st.menuIndex === idx && 'is-active', e.id === 'drop' && 'aw-btn-danger'],
             disabled: e.disabled,
-            dataset: { menu: idx, tip: e.hint },
+            dataset: { menu: idx, entry: e.id, tip: e.hint },
             tabindex: st.menuIndex === idx ? '0' : '-1',
             onclick: () => this.handlers.runEntry(st.cursor, e),
           },

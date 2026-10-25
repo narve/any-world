@@ -1088,7 +1088,7 @@
       "name": "Augustin Pell, Night Concierge",
       "description": "Forty years at the desk. Knows every key, every guest, every room — including the one he bricked up. Never raises his voice, never once blinks.",
       "stats": {
-        "hp": 78,
+        "hp": 66,
         "ac": 14,
         "str": 12,
         "dex": 12,
@@ -1101,8 +1101,8 @@
         "name": "Impeccable Alibi",
         "verb": "offers a flawless alibi to",
         "damage": {
-          "base": 4,
-          "dice": "1d8"
+          "base": 3,
+          "dice": "1d7"
         },
         "damageType": "pressure",
         "accuracyStat": "int"
@@ -1148,7 +1148,7 @@
                 "type": "damage",
                 "amount": {
                   "base": 2,
-                  "dice": "1d4"
+                  "dice": "1d3"
                 },
                 "damageType": "pressure"
               },
@@ -1779,7 +1779,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4,
+              "base": 5,
               "dice": "1d3"
             }
           },
@@ -1852,7 +1852,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 3
+              "base": 7
             }
           }
         ],
@@ -1902,7 +1902,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4
+              "base": 7
             }
           },
           {
@@ -3177,7 +3177,7 @@
   },
   "areas": [
     {
-      "name": "Ground Floor: The Grand Lobby",
+      "name": "The Grand Lobby",
       "description": "Dust sheets over the armchairs, the chandeliers half lit, snow pressed against the tall windows. The front desk is manned by nobody and watched by everybody.",
       "generator": "building",
       "size": "medium",
@@ -3217,20 +3217,20 @@
         {
           "actor": "bellhop",
           "weight": 30,
-          "min": 3,
-          "max": 5
+          "min": 0,
+          "max": 0
         },
         {
           "actor": "draught",
           "weight": 25,
-          "min": 2,
-          "max": 5
+          "min": 1,
+          "max": 2
         },
         {
           "actor": "gossip-moth",
           "weight": 20,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 2
         }
       ],
       "placed": [
@@ -3354,7 +3354,7 @@
       "music": "calm"
     },
     {
-      "name": "Below Stairs: The Pastry Kitchen",
+      "name": "The Pastry Kitchen (Below Stairs)",
       "description": "White tiles, copper pans, cold ovens. On the marble slab, the sugar model of the Kandelhorn, iced to the third floor and broken off at the fourth.",
       "generator": "rooms",
       "size": "medium",
@@ -3858,6 +3858,7 @@
     },
     "winText": "In the lobby, under the half-lit chandelier, you say his name. Hedda sets down her keys. Lisl stops polishing. Pell takes off his ruined gloves and, for the first time in forty years, sits down in a guest's armchair. Odile finishes the fourth floor of the model that night, every room exactly where it is.",
     "lossText": "The Föhn arrives on a Tuesday. The road opens by noon. A sledge goes down the pass with a man in a dark coat and a great deal of luggage, and Room 4½ goes back to not existing.",
+    "deathText": "Your nerve goes on the back stairs. You hand the file to the night porter, pack your skis and wait in the lobby for a road that is still closed. Upstairs, the sugar model quietly loses a room.",
     "labels": {
       "culprit-named": "The culprit is formally accused"
     }

@@ -126,7 +126,7 @@ describe('GM checks', () => {
     expect(isHelpfulAction(ship, { type: 'currency', amount: -5 })).toBe(false);
     expect(isHelpfulAction(ship, { type: 'spawn', actor: hostile, count: 1, near: 'random' })).toBe(false);
     expect(isHelpfulAction(ship, { type: 'effect', target: 'player', effects: [{ type: 'heal', amount: { base: 5 } }] })).toBe(true);
-    expect(isHelpfulAction(ship, { type: 'effect', target: 'nearest_enemy', effects: [{ type: 'damage', amount: { base: 5 }, damageType: 'physical' }] })).toBe(false);
+    expect(isHelpfulAction(ship, { type: 'effect', target: 'nearest_enemy', effects: [{ type: 'damage', amount: { base: 5 }, damageType: 'physical' }] })).toBe(true);
     expect(
       isHelpfulAction(ship, {
         type: 'offer_choice',

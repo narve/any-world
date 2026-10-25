@@ -265,7 +265,7 @@
       "str": 11,
       "dex": 14,
       "int": 11,
-      "hp": 28,
+      "hp": 32,
       "mp": 12,
       "ac": 11
     },
@@ -726,7 +726,6 @@
         "name": "Spine",
         "verb": "stabs",
         "damage": {
-          "base": 1,
           "dice": "1d6"
         }
       },
@@ -836,7 +835,7 @@
         "name": "Bone claw",
         "verb": "pinches",
         "damage": {
-          "base": 2,
+          "base": 1,
           "dice": "1d4"
         }
       },
@@ -993,7 +992,7 @@
       "name": "HARROW-4 Coring Rig",
       "description": "The company's answer to missing samples: an autonomous coring rig that never stops cutting. Every core it pulls, the Fall grows back double.",
       "stats": {
-        "hp": 68,
+        "hp": 83,
         "ac": 14,
         "str": 16,
         "dex": 10,
@@ -1007,7 +1006,7 @@
         "verb": "drills",
         "damage": {
           "base": 3,
-          "dice": "1d8"
+          "dice": "1d7"
         },
         "damageType": "physical"
       },
@@ -1027,7 +1026,7 @@
                 "type": "damage",
                 "amount": {
                   "base": 2,
-                  "dice": "2d4"
+                  "dice": "2d3"
                 },
                 "damageType": "pressure"
               }
@@ -2029,7 +2028,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4
+              "base": 8
             }
           },
           {
@@ -2965,24 +2964,24 @@
         {
           "actor": "hagfish-knot",
           "weight": 30,
-          "max": 4,
-          "min": 2
+          "max": 1,
+          "min": 1
         },
         {
           "actor": "scuttle-isopod",
           "weight": 25,
-          "max": 3,
-          "min": 2
+          "max": 1,
+          "min": 1
         },
         {
           "actor": "sampler-drone",
           "weight": 20,
-          "max": 3
+          "max": 1
         },
         {
           "actor": "worm-plume",
           "weight": 12,
-          "max": 2
+          "max": 1
         }
       ],
       "placed": [
@@ -3142,13 +3141,13 @@
           "actor": "hagfish-knot",
           "weight": 20,
           "max": 4,
-          "min": 2
+          "min": 1
         },
         {
           "actor": "ghost-chimaera",
           "weight": 25,
           "max": 3,
-          "min": 2
+          "min": 1
         },
         {
           "actor": "worm-plume",
@@ -3331,19 +3330,19 @@
           "actor": "ghost-chimaera",
           "weight": 20,
           "max": 3,
-          "min": 2
+          "min": 1
         },
         {
           "actor": "osteo-crab",
           "weight": 25,
-          "max": 4,
-          "min": 2
+          "max": 3,
+          "min": 1
         },
         {
           "actor": "worm-plume",
           "weight": 20,
           "max": 3,
-          "min": 2
+          "min": 1
         },
         {
           "actor": "hagfish-knot",
@@ -3560,6 +3559,14 @@
         {
           "item": "harrow-kill-code",
           "where": "centre"
+        },
+        {
+          "item": "galley-broth",
+          "where": "near_start"
+        },
+        {
+          "item": "galley-broth",
+          "where": "near_start"
         }
       ],
       "terrain": [

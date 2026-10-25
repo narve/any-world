@@ -72,9 +72,9 @@
     {
       "id": "drought",
       "name": "Drought",
-      "description": "There is no water to spare. Blood does not come back on its own, and every new stretch of country leaves you parched.",
+      "description": "There is no water to spare. Blood does not come back on its own, and every new stretch of country leaves you parched for a moment. Somebody always leaves a bottle by the trail.",
       "playerTriggers": [
-        { "on": "on_area_enter", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "parched", "duration": 5 }, { "type": "message", "text": "The heat comes off the ground like a hand on your chest." }] } }
+        { "on": "on_area_enter", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "parched", "duration": 2 }, { "type": "message", "text": "The heat comes off the ground like a hand on your chest." }] } }
       ],
       "switches": { "noNaturalHpRegen": true }
     },
@@ -156,7 +156,7 @@
     {
       "id": "claim-jumper", "name": "Claim Jumper", "description": "A rifle, a shovel and nobody's permission. Shoots from far off, then scuttles back behind a rock.",
       "faction": "hostile", "stats": { "hp": 12, "ac": 11, "str": 10, "dex": 13, "int": 9, "mp": 0 }, "speed": 100, "sight": 9,
-      "attack": { "name": "Long rifle", "verb": "takes a potshot at", "damage": { "base": 2, "dice": "1d6" }, "damageType": "lead", "range": 6, "accuracyStat": "dex" },
+      "attack": { "name": "Long rifle", "verb": "takes a potshot at", "damage": { "base": 2, "dice": "1d6" }, "damageType": "lead", "range": 5, "accuracyStat": "dex" },
       "behaviour": { "type": "kiter", "param": 4, "erratic": 0 }, "xp": 10,
       "loot": [{ "item": "cartridges", "chance": 0.5 }, { "item": "dynamite", "chance": 0.2 }],
       "triggers": [{ "on": "on_death", "chance": 1, "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "currency", "amount": 4 }] } }],
@@ -250,10 +250,10 @@
     },
     {
       "id": "absalom-vane", "name": "Absalom Vane, the Rain Broker", "description": "Tall as a well-rope, dressed in black oilcloth that has never been wet. Carries a lightning rod as a walking cane and smiles like an invoice.",
-      "faction": "hostile", "stats": { "hp": 66, "ac": 14, "str": 12, "dex": 12, "int": 17, "mp": 30 }, "speed": 100, "sight": 9,
-      "attack": { "name": "Lightning cane", "verb": "cracks the cane across", "damage": { "base": 3, "dice": "1d8" }, "damageType": "storm", "range": 1, "accuracyStat": "int" },
+      "faction": "hostile", "stats": { "hp": 48, "ac": 14, "str": 12, "dex": 12, "int": 17, "mp": 30 }, "speed": 100, "sight": 9,
+      "attack": { "name": "Lightning cane", "verb": "cracks the cane across", "damage": { "base": 2, "dice": "1d6" }, "damageType": "storm", "range": 1, "accuracyStat": "int" },
       "abilities": [
-        { "id": "bottled-bolt", "name": "Bottled Bolt", "description": "He uncorks a thimble of storm.", "action": { "targeting": { "shape": "ray", "range": 7, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 3, "dice": "2d4" }, "damageType": "storm" }, { "type": "apply_status", "status": "thunderstruck", "duration": 1 }], "vfx": { "kind": "bolt", "color": "#bfe6ff" } }, "cost": { "resource": "mp", "amount": 6 }, "cooldown": 5, "useWhen": "target_in_range" },
+        { "id": "bottled-bolt", "name": "Bottled Bolt", "description": "He uncorks a thimble of storm.", "action": { "targeting": { "shape": "ray", "range": 7, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "damage", "amount": { "base": 2, "dice": "2d3" }, "damageType": "storm" }, { "type": "apply_status", "status": "thunderstruck", "duration": 1 }], "vfx": { "kind": "bolt", "color": "#bfe6ff" } }, "cost": { "resource": "mp", "amount": 6 }, "cooldown": 5, "useWhen": "target_in_range" },
         { "id": "call-the-crew", "name": "Call the Crew", "description": "A whistle; the mine answers.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "summon", "actor": "tinplate-prospector", "count": 1, "allied": false }], "vfx": { "kind": "ring", "color": "#ff7b2e" } }, "cooldown": 20, "useWhen": "start_of_fight" },
         { "id": "drink-the-sky", "name": "Drink the Sky", "description": "He sips from a demijohn of stolen weather.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 8, "dice": "1d6" } }], "vfx": { "kind": "sparkle", "color": "#7fc8ff" } }, "cooldown": 18, "useWhen": "low_hp" }
       ],
@@ -379,14 +379,14 @@
     {
       "id": "canteen", "name": "Army Canteen", "kind": "Canteen", "description": "Dented tin under felt. Three good swallows if you are honest with yourself.",
       "category": "consumable", "useMode": "charges", "charges": 3,
-      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 2, "dice": "2d4" } }, { "type": "remove_status", "status": "parched" }], "vfx": { "kind": "sparkle", "color": "#7fc8ff" } },
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 2, "dice": "2d5" } }, { "type": "remove_status", "status": "parched" }], "vfx": { "kind": "sparkle", "color": "#7fc8ff" } },
       "rarity": "common", "value": 20, "knowledge": "clear", "appearanceGroup": "parcel",
       "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.22, 0.08, 0.22], "pos": [0, 0.15, 0], "rot": [90, 0, 0], "color": "#6b7b5a", "material": "cloth" }, { "shape": "cylinder", "size": [0.04, 0.06, 0.04], "pos": [0, 0.29, 0], "color": "#a9b0b8", "material": "metal" }], "idle": "bob" }
     },
     {
       "id": "sarsaparilla", "name": "Warm Sarsaparilla", "kind": "Tonic", "description": "Brown, sweet, fizzless. In this drought it is practically holy water.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
-      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 6 } }], "vfx": { "kind": "sparkle", "color": "#a0522d" } },
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": true }, "effects": [{ "type": "heal", "amount": { "base": 8 } }], "vfx": { "kind": "sparkle", "color": "#a0522d" } },
       "rarity": "common", "value": 6, "knowledge": "clear", "appearanceGroup": "tonic",
       "model": { "archetype": "prop", "parts": [{ "shape": "cylinder", "size": [0.09, 0.26, 0.09], "pos": [0, 0.13, 0], "color": "#5a2e14", "material": "glass" }], "idle": "bob" }
     },
@@ -514,8 +514,8 @@
       "wall": { "color": "#9a7656", "color2": "#7a5a40", "material": "wood", "height": 1.6, "pattern": "planks" },
       "lighting": { "ambient": "#ffe2b8", "ambientIntensity": 0.7, "sun": { "color": "#fff1d6", "intensity": 1.6, "elevation": 65 }, "fog": { "color": "#e8d2ac", "density": 0.015 }, "lamps": { "color": "#ffb35c", "intensity": 0.8, "frequency": 0.08, "flicker": true }, "playerLight": 0, "sky": "#e9d7b5" },
       "actors": [
-        { "actor": "company-deputy", "weight": 30, "min": 2, "max": 4 },
-        { "actor": "dust-coyote", "weight": 15, "min": 0, "max": 3 },
+        { "actor": "company-deputy", "weight": 30, "min": 1, "max": 1 },
+        { "actor": "dust-coyote", "weight": 15, "min": 0, "max": 2 },
         { "actor": "mesa-rattler", "weight": 8, "min": 0, "max": 1 }
       ],
       "placed": [
@@ -544,8 +544,8 @@
       "wall": { "color": "#a26a44", "color2": "#8a5536", "material": "stone", "height": 1.2, "pattern": "plain" },
       "lighting": { "ambient": "#ffd59e", "ambientIntensity": 0.8, "sun": { "color": "#ffe7c2", "intensity": 1.9, "elevation": 75 }, "fog": { "color": "#d9b98a", "density": 0.03 }, "playerLight": 0, "sky": "#f0d6a8" },
       "actors": [
-        { "actor": "claim-jumper", "weight": 25, "min": 2, "max": 4 },
-        { "actor": "dust-coyote", "weight": 25, "min": 3, "max": 6 },
+        { "actor": "claim-jumper", "weight": 25, "min": 1, "max": 3 },
+        { "actor": "dust-coyote", "weight": 25, "min": 2, "max": 5 },
         { "actor": "bone-buzzard", "weight": 15, "min": 1, "max": 3 },
         { "actor": "dust-devil", "weight": 15, "min": 1, "max": 3 },
         { "actor": "mesa-rattler", "weight": 15, "min": 1, "max": 3 }
@@ -556,8 +556,8 @@
         { "item": "antivenom", "weight": 12 }, { "item": "jackrabbit-tonic", "weight": 8 }, { "item": "rain-bead", "weight": 6 },
         { "item": "scattergun", "weight": 4 }, { "item": "church-bell", "weight": 3 }
       ],
-      "itemCount": 8,
-      "placedItems": [{ "item": "lode-key", "where": "guarded" }],
+      "itemCount": 6,
+      "placedItems": [{ "item": "lode-key", "where": "guarded" }, { "item": "sarsaparilla", "where": "near_start" }],
       "terrain": [{ "terrain": "saguaro", "density": 0.05 }, { "terrain": "prickly-pear", "density": 0.04 }],
       "transitionName": "Unlock the Lodestone mine gate",
       "transitionModel": { "archetype": "prop", "parts": [{ "shape": "box", "size": [1, 1.2, 0.15], "pos": [0, 0.6, 0], "color": "#5a3d2b", "material": "wood" }, { "shape": "box", "size": [0.3, 0.2, 0.1], "pos": [0, 0.7, 0.1], "color": "#4a4f57", "material": "metal" }], "idle": "none" },
@@ -574,7 +574,7 @@
       "wall": { "color": "#3d322a", "color2": "#6d5040", "material": "stone", "height": 1.8, "pattern": "plain" },
       "lighting": { "ambient": "#6a5a4a", "ambientIntensity": 0.25, "fog": { "color": "#2a211c", "density": 0.05 }, "lamps": { "color": "#ffa04a", "intensity": 1.4, "frequency": 0.05, "flicker": true }, "playerLight": 5 },
       "actors": [
-        { "actor": "tinplate-prospector", "weight": 30, "min": 2, "max": 4 },
+        { "actor": "tinplate-prospector", "weight": 30, "min": 1, "max": 3 },
         { "actor": "lodestone-mole", "weight": 15, "min": 1, "max": 2 },
         { "actor": "mesa-rattler", "weight": 15, "min": 1, "max": 3 },
         { "actor": "claim-jumper", "weight": 10, "min": 0, "max": 2 }
@@ -585,8 +585,8 @@
         { "item": "cactus-poultice", "weight": 6 }, { "item": "buffalo-coat", "weight": 4 }, { "item": "lucky-horseshoe", "weight": 4 },
         { "item": "laudanum", "weight": 8 }, { "item": "jackrabbit-tonic", "weight": 6 }
       ],
-      "itemCount": 7,
-      "placedItems": [],
+      "itemCount": 5,
+      "placedItems": [{ "item": "sarsaparilla", "where": "near_start" }],
       "terrain": [{ "terrain": "mine-rails", "density": 0.05 }],
       "transitionName": "Ride an ore cart down the deep shaft",
       "transitionModel": { "archetype": "vehicle", "colors": { "primary": "#6d6259", "secondary": "#b87333", "accent": "#ffa04a" }, "idle": "none" },

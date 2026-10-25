@@ -3,7 +3,7 @@ import type { ActorInstance, Pos } from './types';
 import { type Ctx, actorAt, actorName, emit, isPlayer, logKey, nextId } from './ctx';
 import { side } from './stats';
 import { fireTriggers } from './triggers';
-import { cheb } from './util';
+import { cheb, own } from './util';
 import { scaledHostileHp } from './difficulty';
 
 export interface SpawnOpts {
@@ -12,6 +12,31 @@ export interface SpawnOpts {
   /** stagger energy so packs don't move in lockstep */
   randomEnergy?: boolean;
   silent?: boolean;
+  /**
+   * Skip the per-area actor cap. Only the area's own placement (plan + spawn table, bounded by the
+   * plan) passes it; summons, GM spawns and trigger spawns are always capped.
+   */
+  uncapped?: boolean;
+}
+
+/**
+ * The most living non-player actors an area holds before summons and spawns are refused. Shipped
+ * worlds peak at about 16; without a cap one actor whose own trigger summons its own kind grows
+ * exponentially until the map is full (~1000 actors) and every turn costs seconds
+ * (issues/M5-actor-cap-per-area.md).
+ */
+export const MAX_AREA_ACTORS = 60;
+
+/** living actors in the area other than the player */
+export function livingNonPlayerActors(ctx: Ctx): number {
+  let n = 0;
+  for (const a of ctx.s.area.actors) if (a.hp > 0 && !isPlayer(ctx, a)) n++;
+  return n;
+}
+
+/** whether the area has room for one more runtime spawn (see MAX_AREA_ACTORS) */
+export function areaHasRoom(ctx: Ctx): boolean {
+  return livingNonPlayerActors(ctx) < MAX_AREA_ACTORS;
 }
 
 export function makeActor(ctx: Ctx, defId: string, pos: Pos, opts: SpawnOpts = {}): ActorInstance | null {
@@ -48,7 +73,7 @@ export function makeActor(ctx: Ctx, defId: string, pos: Pos, opts: SpawnOpts = {
  * so a win or lock that needs it stays reachable.
  */
 export function uniqueSpawnable(ctx: Ctx, defId: string): boolean {
-  if ((ctx.s.defeated[defId] ?? 0) > 0) return false;
+  if ((own(ctx.s.defeated, defId) ?? 0) > 0) return false;
   return !ctx.s.area.actors.some((a) => a.hp > 0 && defChain(a).includes(defId));
 }
 
@@ -59,11 +84,15 @@ export function defChain(a: ActorInstance): string[] {
   return out;
 }
 
-/** creates and places an actor; respects `unique` (one alive at a time, never after its defeat) */
+/**
+ * creates and places an actor; respects `unique` (one alive at a time, never after its defeat) and,
+ * unless `opts.uncapped`, the per-area cap (MAX_AREA_ACTORS): a full area gets no new actor (null)
+ */
 export function spawnActor(ctx: Ctx, defId: string, pos: Pos, opts: SpawnOpts = {}): ActorInstance | null {
   const def = ctx.ix.actors.get(defId);
   if (!def) return null;
   if (actorAt(ctx, pos)) return null;
+  if (!opts.uncapped && !areaHasRoom(ctx)) return null;
   if (def.unique) {
     if (!uniqueSpawnable(ctx, defId)) return null;
     const spawned = (ctx.s.uniquesSpawned ??= []);

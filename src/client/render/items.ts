@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import type { WorldSpec } from '../../schema/world';
 import type { FloorItem, GameState } from '../../engine/types';
 import { buildModel, animateModel } from './models';
+import { compactModel } from './models/merge';
 import { col } from './color';
 import { glowTexture } from './textures';
 
@@ -61,6 +62,8 @@ export class ItemLayer {
       const def = this.world.items.find((i) => i.id === defId);
       const spec = def?.model ?? { archetype: 'prop' as const, colors: { primary: '#b0a080' }, parts: [], scale: 0.6, idle: 'bob' as const };
       const obj = buildModel(spec, { lights: false, tint: tint ? { color: tint, strength: 0.7 } : undefined });
+      // rigid parts merged per material: a floor item costs a draw call or two, not one per primitive
+      compactModel(obj);
       const { scale, lift } = itemFit(obj);
       t = { obj, scale, lift };
       this.templates.set(key, t);
@@ -149,6 +152,12 @@ export class ItemLayer {
   dispose(): void {
     for (const id of [...this.views.keys()]) this.removeView(id);
     this.haloMat.dispose();
+    // merged geometries belong to the templates (unit primitives are shared and stay)
+    for (const t of this.templates.values())
+      t.obj.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh && !m.geometry.userData.shared) m.geometry.dispose();
+      });
     this.templates.clear();
   }
 }

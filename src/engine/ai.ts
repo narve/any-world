@@ -11,9 +11,9 @@ import { attackOf, inAttackRange, performAttack } from './combat';
 import { POSITIONAL_SHAPES, changeResource, los, resolveTargets, runAction, targetingReach } from './effects';
 import { moveActor } from './actors';
 import { findPath } from './path';
-import { withinRadius } from './fov';
+import { withinRadius, withinReach } from './fov';
 import { playerSeesTile } from './vision';
-import { DIR_LIST, DIRS, cheb, dist2, samePos, tileAt } from './util';
+import { DIR_LIST, DIRS, cheb, dist2, own, samePos, tileAt } from './util';
 
 
 /** perception radius of `a` for `target` */
@@ -133,7 +133,7 @@ function wander(ctx: Ctx, a: ActorInstance): number {
 function tryAbility(ctx: Ctx, a: ActorInstance, def: ActorDef, target: ActorInstance | null): boolean {
   if (!def.abilities.length || hasFlag(ctx, a, 'silenced')) return false;
   for (const ab of def.abilities) {
-    if ((a.cooldowns[ab.id] ?? 0) > 0) continue;
+    if ((own(a.cooldowns, ab.id) ?? 0) > 0) continue;
     if (ab.cost && ab.cost.amount > 0 && getStat(ctx, a, ab.cost.resource) < ab.cost.amount) continue;
     const t = ab.action.targeting;
     const reach = targetingReach(t, { sight: sightRadius(ctx, a) });
@@ -150,7 +150,7 @@ function tryAbility(ctx: Ctx, a: ActorInstance, def: ActorDef, target: ActorInst
         p = 0.35;
         break;
       case 'target_in_range':
-        ok = !!target && withinRadius(a.pos, target.pos, Math.max(1, reach)) && los(ctx, a.pos, target.pos);
+        ok = !!target && withinReach(a.pos, target.pos, Math.max(1, reach)) && los(ctx, a.pos, target.pos);
         p = 0.55;
         break;
       case 'low_hp':
@@ -163,7 +163,7 @@ function tryAbility(ctx: Ctx, a: ActorInstance, def: ActorDef, target: ActorInst
         break;
       }
       case 'start_of_fight':
-        ok = !!target && a.cooldowns[ab.id] === undefined;
+        ok = !!target && own(a.cooldowns, ab.id) === undefined;
         break;
     }
     if (!ok) continue;

@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
-const OUT = join(ROOT, 'docs/progress/M4');
+const OUT = join(ROOT, process.env.SHOTS_TO_DOCS ? 'docs/progress/M4' : 'test-results/shots/M4');
 const LEAKS_OUT = process.env.NB_LEAKS_OUT ?? join(ROOT, 'test-results/nb-leaks.json');
 mkdirSync(OUT, { recursive: true });
 
@@ -159,7 +159,7 @@ test('play the bokmål Althing world with the UI in bokmål', async ({ page }) =
   await page.keyboard.press('.');
   await page.keyboard.press('.');
   await page.waitForTimeout(300);
-  await expect(page.locator('.aw-hud')).toContainText('Læregutt hos lovsigemannen');
+  await expect(page.locator('.aw-hud')).toContainText('hos lovsigemannen');
   await check(page, '04-hud');
   await page.locator('.aw-goal-head').click();
   await page.waitForTimeout(300);

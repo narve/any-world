@@ -245,8 +245,34 @@ export function createAudio(world: AudioWorld, settings: Partial<AudioSettings> 
     timer = null;
   }
 
-  /** bring playback in line with muted / hidden / ambience state */
-  async function sync(): Promise<void> {
+  /**
+   * Bring playback in line with muted / hidden / ambience state. Calls are serialised: resume() and
+   * suspend() change `ctx.state` only when they settle, so two overlapping passes could each act on
+   * a stale state (unmute then mute before resume settled left the context running while muted).
+   * A call made while a pass is in flight marks it dirty; the pass then runs again with the latest
+   * flags, and every caller's promise resolves only after that final pass.
+   */
+  let syncing: Promise<void> | null = null;
+  let syncDirty = false;
+  function sync(): Promise<void> {
+    if (syncing) {
+      syncDirty = true;
+      return syncing;
+    }
+    syncing = (async () => {
+      try {
+        do {
+          syncDirty = false;
+          await syncOnce();
+        } while (syncDirty && !disposed);
+      } finally {
+        syncing = null;
+      }
+    })();
+    return syncing;
+  }
+
+  async function syncOnce(): Promise<void> {
     if (!ctx || disposed) return;
     const shouldRun = !muted && !hidden();
     if (shouldRun) {
@@ -257,6 +283,7 @@ export function createAudio(world: AudioWorld, settings: Partial<AudioSettings> 
           /* blocked: stays silent */
         }
       }
+      // flags changed during resume(): the next pass (syncDirty) suspends again
       if (disposed || muted || hidden()) return;
       ambience?.resync();
       if (ambienceOn && !ducked && ambience && !ambience.playing) ambience.start(director.current);

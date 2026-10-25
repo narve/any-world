@@ -1,5 +1,6 @@
 /**
- * tuneWorld: the generation pipeline's balance loop — analyse (static + bots), and while the
+ * tuneWorld: the generation pipeline's balance loop — the new-player fixes first (a quiet first
+ * area, heals worth a quarter of max hp; issues/M5-new-player-deaths.md), then analyse (static + bots), and while the
  * verdict is too_hard / too_easy / unwinnable, apply autoRebalance and analyse again, up to
  * `rounds` times. Keeps the best world seen (see `tuneDistance`; later rounds win ties, never one
  * that crashed), and always keeps the feasibility fixes (placed goal / lock items and actors).
@@ -17,7 +18,7 @@
 import type { WorldSpec } from '../../schema/world';
 import { analyseWorld, seedList, verdictFor, wilsonInterval, type AnalyseOptions, type BalanceReport, type Verdict } from './analyse';
 import { mergeSummaries } from '../sim/run';
-import { feasibilityFixes, rebalance } from './rebalance';
+import { feasibilityFixes, newPlayerFixes, rebalance } from './rebalance';
 
 /** seeds per analysis in tuneWorld when opts.seeds is not given */
 export const TUNE_DEFAULT_SEEDS = 60;
@@ -27,6 +28,11 @@ export interface TuneOptions extends AnalyseOptions {
   rounds?: number;
   /** re-check verdicts and candidates on fresh seeds before acting on them, default true */
   confirm?: boolean;
+  /**
+   * apply the new-player fixes (rebalance.ts newPlayerFixes: a quiet first area, heals worth a
+   * quarter of max hp) before the first analysis, default true
+   */
+  newPlayer?: boolean;
 }
 
 export interface TuneStep {
@@ -128,10 +134,18 @@ export function tuneWorld(world: WorldSpec, opts: TuneOptions = {}): TuneResult 
   const step = (round: number, r: BalanceReport, changes: string[]): TuneStep => ({ round, verdict: r.verdict, winRate: r.winRate, runs: r.runs, changes });
 
   let cur = world;
+  let first: string[] = [];
+  if (opts.newPlayer ?? true) {
+    const np = newPlayerFixes(world);
+    if (np.valid && np.world !== world) {
+      cur = np.world;
+      first = np.changes;
+    }
+  }
   let report = analyseWorld(cur, aopts);
   // never change a world on one seed window's say-so
   if (confirm && sampled(report.verdict)) report = confirmReport(cur, report, aopts, fresh());
-  const history: TuneStep[] = [step(0, report, [])];
+  const history: TuneStep[] = [step(0, report, first)];
   let best = { world: cur, report };
   for (let round = 1; round <= rounds; round++) {
     if (report.verdict === 'ok' || report.verdict === 'broken') break;

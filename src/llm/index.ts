@@ -51,11 +51,15 @@ export {
 } from './generate';
 export {
   LlmGmDirector,
+  CappedGmDirector,
+  DEFAULT_GM_DEADLINE_MS,
   LlmDialogue,
   HelpLedger,
   createDemoGm,
   offlineDialogueTurn,
   isHelpfulAction,
+  goalWriteProblem,
+  goalRefs,
   applyHelpCeiling,
   gmActionProblems,
   gmResponseErrors,

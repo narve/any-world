@@ -15,7 +15,7 @@
     "tone": "anspent, lun og midtsommerlys",
     "era": "Island, fristatstiden, sommeren 1004",
     "premise": "Hallbjørn Gråtunge, Islands lovsigemann i tretti somrer, satte et fiskebein i halsen en uke før Alltinget. Loven ble aldri skrevet ned: den levde i hodet hans, og nå i ditt. Tre ætter vil ha sin egen versjon husket. Mosfell-ætta vil flytte grensesteinene, Hvalfjord-ætta vil ha hver eneste strandet hval, og Hof-ætta vil ha de gamle gudene tilbake i offentligheten. På Lovberget blir hver paragraf du sier bindende – og mesteren din, viser det seg, har solgt paragrafer i årevis.",
-    "prompt": "Island, 1004. Mesteren din, lovsigemannen, er død, og som læregutten hans må du si fram hele loven etter hukommelsen på Alltinget – men tre mektige ætter vil ha hver sin versjon husket, og hver paragraf du sier høyt, blir bindende. Vinn stemmer, ikke tvekamper.",
+    "prompt": "Island, 1004. Mesteren din, lovsigemannen, er død, og som lærlingen hans må du si fram hele loven etter hukommelsen på Alltinget – men tre mektige ætter vil ha hver sin versjon husket, og hver paragraf du sier høyt, blir bindende. Vinn stemmer, ikke tvekamper.",
     "nonViolent": true,
     "language": "nb"
   },
@@ -255,7 +255,7 @@
   },
   "player": {
     "name": "Steinunn Hallsdóttir",
-    "title": "Læregutt hos lovsigemannen",
+    "title": "Lærling hos lovsigemannen",
     "description": "Tjue vintrer gammel. I ni somrer fulgte du Hallbjørn fra bod til bod og mimet loven etter ham. Nå er staven hans din, og Berget også.",
     "stats": {
       "str": 10,
@@ -1813,8 +1813,8 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4,
-              "dice": "1d4"
+              "base": 5,
+              "dice": "1d3"
             }
           }
         ],
@@ -1889,8 +1889,8 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4,
-              "dice": "1d4"
+              "base": 5,
+              "dice": "1d3"
             }
           },
           {
@@ -3244,7 +3244,7 @@
   },
   "areas": [
     {
-      "name": "Første dag: Budene på Tingvellir",
+      "name": "Budene på Tingvellir",
       "description": "En grønn slette under en sol som ikke vil gå ned, full av torvboder, matos og menn fra alle kanter av Island som krangler om sauer.",
       "generator": "town",
       "size": "medium",
@@ -3287,14 +3287,14 @@
         {
           "actor": "booth-heckler",
           "weight": 10,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 1
         },
         {
           "actor": "boundary-reeve",
           "weight": 6,
-          "min": 1,
-          "max": 3
+          "min": 0,
+          "max": 0
         },
         {
           "actor": "hof-satirist",
@@ -3304,7 +3304,7 @@
         {
           "actor": "oath-helper",
           "weight": 4,
-          "max": 3
+          "max": 1
         }
       ],
       "placed": [
@@ -3440,7 +3440,7 @@
       }
     },
     {
-      "name": "Andre dag: Allmannagjå",
+      "name": "Allmannagjå",
       "description": "En sprekk i verden der to kontinenter glir fra hverandre. Svarte basaltvegger, tåke fra brevannet og ravner som har lært å spise ord.",
       "generator": "caves",
       "size": "medium",
@@ -3636,7 +3636,7 @@
       }
     },
     {
-      "name": "Tredje dag: Inne i Hallbjørns minne",
+      "name": "Inne i Hallbjørns minne",
       "description": "Ingen grunn, ingen himmel. Loven slik mesteren din bar den: ringer av hugget stein som svever i mørket, gullruner i gulvet og hull der han valgte å glemme.",
       "generator": "geometric",
       "size": "medium",
@@ -3815,7 +3815,7 @@
       "music": "eerie"
     },
     {
-      "name": "Siste dag: Lovberget",
+      "name": "Lovberget",
       "description": "En hylle av lavastein over sletta, med hele tinget samlet nedenfor. Vinden bærer hvert ord til hvert øre. Torgunna har allerede begynt å tale.",
       "generator": "arena",
       "size": "small",
@@ -3960,7 +3960,7 @@
       "Midnattssola går aldri helt ned mens tinget varer."
     ],
     "fallback": {
-      "intro": "Det er sagt i loven at lovsigemannen sier fram en tredjedel av loven fra Berget hver sommer. Hallbjørn Gråtunge satte et fiskebein i halsen for åtte dager siden, med to tredjedeler usagt. Du er læregutten hans, og du har resten. Mosfell-ætta, Hvalfjord-ætta og Hof-ætta har hver sin idé om hva du husker. Her oppe er alt du sier høyt, lov.",
+      "intro": "Det er sagt i loven at lovsigemannen sier fram en tredjedel av loven fra Berget hver sommer. Hallbjørn Gråtunge satte et fiskebein i halsen for åtte dager siden, med to tredjedeler usagt. Du er lærlingen hans, og du har resten. Mosfell-ætta, Hvalfjord-ætta og Hof-ætta har hver sin idé om hva du husker. Her oppe er alt du sier høyt, lov.",
       "areaEnter": [
         "Det er sagt i loven at tinget varer i to uker. Budene er fulle, sola står lavt, og hver ætt har sendt noen for å rope.",
         "Det er sagt i loven at Allmannagjå ikke tilhører noen. Ravnene er uenige. Pass på ordene dine: de er sultne.",

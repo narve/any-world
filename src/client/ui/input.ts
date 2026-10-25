@@ -4,7 +4,8 @@
  *
  * FINAL KEY MAP (also rendered by the help overlay from KEY_HELP):
  *   Move / bump:   arrows · WASD · vi-keys h j k l y u b n · numpad 1-9 (5 = wait)
- *   Quick slots:   1-8 (top-row digits; numpad digits move)
+ *   Quick slots:   1-8 (top-row digits; numpad digits move); the equipped ranged weapon's key aims
+ *                  it (cursor on the nearest foe in reach), then Enter or the same key fires
  *   Pick up:       g  or  ,
  *   Backpack:      i  or  Tab
  *   Look mode:     x            Wait: .  or  Space  (numpad 5)
@@ -295,6 +296,7 @@ export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, 
       { keys: ['↑ ↓ ← →', 'W A S D', 'h j k l y u b n', t('key.numpad')], what: t('help.move', { conflict: vocab.conflict.toLowerCase() }) },
       { keys: ['.', t('key.space'), t('key.numpad5')], what: t('help.wait') },
       { keys: ['1 – 8'], what: t('help.slot') },
+      { keys: ['1 – 8', t('key.enter')], what: t('help.fire') },
       { keys: ['g', ','], what: t('help.pickup') },
       { keys: ['>'], what: transitionName },
       { keys: [t('key.enter')], what: t('help.interact') },

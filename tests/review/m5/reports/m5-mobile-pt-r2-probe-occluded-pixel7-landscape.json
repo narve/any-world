@@ -1,0 +1,75 @@
+{
+  "world": "detective-sugar-hotel",
+  "placed": {
+    "id": "a10",
+    "name": "Stonewalling Bellhop",
+    "pos": {
+      "x": 4,
+      "y": 2
+    },
+    "me": {
+      "x": 3,
+      "y": 2
+    }
+  },
+  "sweep": {
+    "hits": 39,
+    "player": 44,
+    "total": 651,
+    "hitPts": [
+      [
+        509,
+        186
+      ],
+      [
+        505,
+        190
+      ],
+      [
+        509,
+        190
+      ],
+      [
+        513,
+        190
+      ],
+      [
+        497,
+        194
+      ],
+      [
+        501,
+        194
+      ]
+    ],
+    "tileCentre": [
+      509,
+      201
+    ],
+    "pickTile": {
+      "x": 4,
+      "y": 2
+    },
+    "body": [
+      509,
+      194
+    ],
+    "pickBody": {
+      "x": 4,
+      "y": 2
+    }
+  },
+  "tapBody": {
+    "turn": 1,
+    "me": {
+      "x": 3,
+      "y": 2
+    },
+    "newLog": [
+      "Inspector Vreni Aebischer reads back the notes to Stonewalling Bellhop for 6 Pressure.",
+      "Stonewalling Bellhop stonewalls Inspector Vreni Aebischer for 3 Pressure."
+    ],
+    "toasts": [],
+    "layer": "game"
+  }
+}

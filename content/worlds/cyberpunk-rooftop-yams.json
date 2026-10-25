@@ -2087,8 +2087,8 @@
           {
             "type": "heal",
             "amount": {
-              "base": 4,
-              "dice": "1d4"
+              "base": 5,
+              "dice": "1d3"
             }
           },
           {
@@ -2211,7 +2211,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 3
+              "base": 7
             }
           }
         ],
@@ -3239,26 +3239,26 @@
         {
           "actor": "mist-drone",
           "weight": 30,
-          "min": 3,
-          "max": 5
+          "min": 1,
+          "max": 1
         },
         {
           "actor": "logo-weevil",
           "weight": 30,
-          "min": 3,
-          "max": 6
+          "min": 1,
+          "max": 2
         },
         {
           "actor": "panel-leech",
           "weight": 20,
-          "min": 1,
-          "max": 3
+          "min": 0,
+          "max": 1
         },
         {
           "actor": "process-server",
           "weight": 10,
           "min": 0,
-          "max": 2
+          "max": 0
         }
       ],
       "placed": [
@@ -3872,6 +3872,7 @@
     },
     "winText": "The cloud tears open like wet paper and the rain falls free for the first time in years. You ride it down to the roof with three purple yams in a cloth bundle. Aunty Bisi is already digging. By evening every co-op on the island has cuttings, and no one has signed anything.",
     "lossText": "The contract lapses, the weather masts turn their backs on Idumota, and a Nimbus clerk laminates your grandmother's yam into a catalogue. Somewhere, a pigeon remembers her name.",
+    "deathText": "Your Cool runs out under the umbrellas. You sign where the drone points, in the rain you paid for, and the purple seeds go into a Nimbus cold box with a barcode on the lid. Aunty Bisi waters the empty beds anyway.",
     "labels": {
       "prior-art-filed": "Mama Iyabo's almanac is filed as prior art"
     }

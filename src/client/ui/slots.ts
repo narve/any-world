@@ -11,6 +11,7 @@ import type { Dir, PlayerAction } from '../../engine/types';
 import type { Vocabulary } from '../../schema/world';
 import type { SlotItemView, UiIntent } from './viewmodel';
 import { t } from '../i18n/index';
+import { itemEffectTexts } from '../i18n/engine-text';
 
 export { QUICK_SLOTS, BACKPACK_SLOTS, TOTAL_SLOTS };
 export const BACKPACK_COLS = 5;
@@ -124,7 +125,21 @@ export function activateSlot(slots: Slots, slot: number): ActivateResult {
   if (it.equipSlot && !it.equipped && !it.usable) return { kind: 'action', action: { type: 'equip', slot } };
   if (it.usable) return { kind: 'action', action: { type: 'use', slot } };
   if (it.equipSlot && !it.equipped) return { kind: 'action', action: { type: 'equip', slot } };
+  // a charged item with nothing left is empty, not passive (issues/M5-danger-hint-empty-item.md)
+  if (isOutOfCharges(it)) return { kind: 'blocked', reason: t('slot.noCharges', { item: it.name, max: it.maxCharges ?? 0 }) };
+  // the equipped ranged weapon: its key aims it (cursor on the nearest foe in reach, Enter fires)
+  if (isRangedWeapon(it)) return { kind: 'intent', intent: { type: 'begin_target', slot } };
   return { kind: 'explain' };
+}
+
+/** a charged item whose charges are used up */
+export function isOutOfCharges(it: SlotItemView): boolean {
+  return !!it.maxCharges && (it.charges ?? 0) <= 0;
+}
+
+/** the equipped weapon reaches further than the next tile: it can be aimed and fired */
+export function isRangedWeapon(it: SlotItemView): boolean {
+  return it.equipped && it.equipSlot === 'weapon' && (it.range ?? 1) > 1;
 }
 
 /** what the slot tip says about an item that activating does nothing for */
@@ -137,15 +152,19 @@ export interface SlotExplanation {
  * Plain words for an equipped or passive item, with the world's words: "Equipped as your
  * Comeback — bump into anyone hostile to use it" (PLAN backlog "Clearer controls & goals").
  */
-export function slotExplanation(it: SlotItemView, vocab: Pick<Vocabulary, 'conflict'>): SlotExplanation {
+export function slotExplanation(it: SlotItemView, vocab: Pick<Vocabulary, 'conflict'>, slot?: number): SlotExplanation {
   const lines: string[] = [];
   const conflict = vocab.conflict;
-  if (it.equipped && it.equipSlot === 'weapon') lines.push(t('slot.explain.weapon', { item: it.name, conflict }));
+  const key = slot !== undefined ? slotKeyLabel(slot) : '';
+  if (isRangedWeapon(it)) {
+    lines.push(key ? t('slot.explain.weaponRanged', { item: it.name, conflict, range: it.range ?? 1, key }) : t('slot.explain.weaponRangedNoKey', { item: it.name, conflict, range: it.range ?? 1 }));
+  } else if (it.equipped && it.equipSlot === 'weapon') lines.push(t('slot.explain.weapon', { item: it.name, conflict }));
+  else if (isOutOfCharges(it)) lines.push(t('slot.noCharges', { item: it.name, max: it.maxCharges ?? 0 }));
   else if (it.equipped && it.equipSlot === 'armour') lines.push(t('slot.explain.armour', { item: it.name }));
   else if (it.equipped) lines.push(t('slot.explain.equipped', { item: it.name }));
   else lines.push(t('slot.explain.passive', { item: it.name }));
   // what it does, as far as the player knows
-  if (it.knowledge === 'clear' && it.effectLines.length) lines.push(...it.effectLines.slice(0, 3));
+  if (it.knowledge === 'clear' && it.effectLines.length) lines.push(...itemEffectTexts(it).slice(0, 3));
   else if (it.knowledge === 'vague' && it.vagueText) lines.push(it.vagueText);
   else if (it.knowledge === 'unknown') lines.push(t('item.unknownText'));
   if (it.equipped) lines.push(t('slot.explain.badge'));

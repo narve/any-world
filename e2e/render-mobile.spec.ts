@@ -13,17 +13,21 @@ const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M3' : 'test-results/shots
 mkdirSync(OUT, { recursive: true });
 
 const worldsDir = join(process.cwd(), 'content/worlds');
-const FIXTURES = readdirSync(worldsDir)
-  .filter((f) => f.startsWith('fixture-') && f.endsWith('.json'))
+/** every recorded world (fixtures and the agent-authored library): the budget is DoD §10 item 12 */
+const WORLDS = readdirSync(worldsDir)
+  .filter((f) => f.endsWith('.json'))
   .map((f) => f.replace(/\.json$/, ''))
   .sort();
+const FIXTURES = WORLDS.filter((w) => w.startsWith('fixture-'));
 const areaCount = (name: string): number => {
   const w = JSON.parse(readFileSync(join(worldsDir, `${name}.json`), 'utf8'));
   return Array.isArray(w.areas) ? w.areas.length : 0;
 };
 
-/** draw calls a fixture area may cost in one frame (both tiers) */
+/** draw calls an area may cost in one frame (both tiers) */
 const DRAW_CALL_BUDGET = 250;
+/** triangles an area may cost in one frame (both tiers); the heaviest recorded area is ≈ 285k in game */
+const TRIANGLE_BUDGET = 400_000;
 
 const IPHONE = {
   viewport: { width: 390, height: 844 },
@@ -49,6 +53,19 @@ function collectErrors(page: Page): string[] {
   return errors;
 }
 
+/** no Vite HMR socket: edits elsewhere in the tree must not reload the page mid-measurement */
+async function noHmr(page: Page) {
+  await page.addInitScript(() => {
+    const Native = window.WebSocket;
+    const Stub = function (this: unknown, url: string | URL, protocols?: string | string[]) {
+      if (String(protocols ?? '').includes('vite-hmr')) return { send() {}, close() {}, addEventListener() {}, removeEventListener() {}, readyState: 0 } as unknown as WebSocket;
+      return new Native(url, protocols);
+    } as unknown as typeof WebSocket;
+    Object.assign(Stub, { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 });
+    window.WebSocket = Stub;
+  });
+}
+
 async function open(page: Page, query: string) {
   await page.goto(`/dev/area.html?${query}`);
   await page.waitForFunction(() => document.body.dataset.ready === '1', null, { timeout: 60000 });
@@ -59,19 +76,31 @@ async function open(page: Page, query: string) {
 async function framing(page: Page, r: number) {
   return page.evaluate((r) => {
     const d = window.__dev!;
+    const rig = d.renderer.rig;
     d.renderer.skipAnimations();
-    d.renderer.rig.settle();
-    d.renderer.renderNow();
+    rig.settle();
     const p = d.state.area.actors.find((a) => a.id === d.state.player.actorId)!.pos;
     const s = (x: number, y: number) => d.renderer.tileToScreen({ x, y });
-    return {
+    // where auto framing put the player (it may shift the view to free an actor from a panel) …
+    const shifted = s(p.x, p.y);
+    const pan = { ...rig.panTarget };
+    // … and the plain framing without that shift, which centres the player in the free rectangle
+    rig.setPan({ x: 0, y: 0 });
+    rig.settle();
+    d.renderer.renderNow();
+    const out = {
       player: p,
       at: s(p.x, p.y),
       around: [s(p.x - r, p.y), s(p.x + r, p.y), s(p.x, p.y - r), s(p.x, p.y + r)],
+      shifted,
+      pan,
       insets: d.renderer.viewportInsets,
       w: innerWidth,
       h: innerHeight,
     };
+    rig.setPan(pan);
+    rig.settle();
+    return out;
   }, r);
 }
 
@@ -79,10 +108,13 @@ test.describe.configure({ mode: 'serial' });
 
 test.describe('draw-call budget (desktop)', () => {
   for (const quality of ['high', 'low'] as const) {
-    test(`every fixture area stays under ${DRAW_CALL_BUDGET} draw calls on ${quality}`, async ({ page }) => {
+    test(`every area of every world stays under ${DRAW_CALL_BUDGET} draw calls and ${TRIANGLE_BUDGET} triangles on ${quality}`, async ({ page }) => {
+      test.setTimeout(900000);
+      await noHmr(page);
       const errors = collectErrors(page);
       const rows: string[] = [];
-      for (const world of FIXTURES) {
+      let worst = { calls: 0, tris: 0 };
+      for (const world of WORLDS) {
         for (let area = 0; area < areaCount(world); area++) {
           await open(page, `world=${world}&area=${area}&seed=3&quality=${quality}`);
           const s = await page.evaluate(() => {
@@ -91,12 +123,15 @@ test.describe('draw-call budget (desktop)', () => {
             return r.stats();
           });
           rows.push(`${world}#${area}: ${s.drawCalls} calls, ${s.triangles} tris`);
+          worst = { calls: Math.max(worst.calls, s.drawCalls), tris: Math.max(worst.tris, s.triangles) };
           expect(s.tier).toBe(quality);
           expect(s.drawCalls, `${world} area ${area}`).toBeGreaterThan(10);
           expect(s.drawCalls, `${world} area ${area}`).toBeLessThan(DRAW_CALL_BUDGET);
+          expect(s.triangles, `${world} area ${area}`).toBeGreaterThan(0);
+          expect(s.triangles, `${world} area ${area}`).toBeLessThan(TRIANGLE_BUDGET);
         }
       }
-      console.log(`[${quality}]\n${rows.join('\n')}`);
+      console.log(`[${quality}] worst ${worst.calls} calls, ${worst.tris} tris\n${rows.join('\n')}`);
       expect(errors, errors.join('\n')).toEqual([]);
     });
   }
@@ -211,6 +246,11 @@ for (const d of DEVICES) {
         const cy = (top + (f.h - bottom)) / 2;
         expect(Math.abs(f.at.x - cx)).toBeLessThan(f.w * 0.06);
         expect(Math.abs(f.at.y - cy)).toBeLessThan(f.h * 0.12);
+        // a framing shift never pushes the player out of the free rectangle
+        expect(f.shifted.x).toBeGreaterThan(left);
+        expect(f.shifted.x).toBeLessThan(f.w - right);
+        expect(f.shifted.y).toBeGreaterThan(top);
+        expect(f.shifted.y).toBeLessThan(f.h - bottom);
         // three tiles in every direction stay in the free rectangle
         for (const p of f.around) {
           expect(p.x).toBeGreaterThan(left);

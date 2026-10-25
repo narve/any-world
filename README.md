@@ -58,7 +58,8 @@ Use a key with a spending limit, or use the backend.
 - **Offline demo generator:** in **Settings → AI provider**, pick *Offline demo: recorded worlds, no AI*.
   "Create world" and "Surprise me" then pick the recorded world that best fits your prompt and run it
   through the real pipeline (validation, bot play-test). This is useful for trying the whole flow
-  without a key or a network.
+  without a key or a network. The copy is kept under "Your worlds" and labelled *recorded demo*, not
+  *made by AI*.
 - **Turn off the AI game master** (Settings) to play an AI-made world without any AI calls during play.
 
 When something is missing, the start screen says so in one line: no key, a server that cannot be
@@ -147,10 +148,13 @@ works. Share links, a gallery and multiplayer are possible later (DESIGN §12).
 npm run typecheck                 # tsc --noEmit
 npm test                          # vitest (engine, schema, LLM contract tests with mocked HTTP, client, sims)
 npm run e2e                       # Playwright, headed Chromium under xvfb (WebGL needs it)
-xvfb-run -a npx playwright test e2e/modes.spec.ts   # both deployment modes end to end
+xvfb-run -a npx playwright test e2e/modes.spec.ts   # static build, npm run dev and npm start, end to end
 npm run validate-worlds           # every recorded world against the schema
 npm run sim -- --seeds 100        # bot playthroughs: wins, deaths, stuck runs, crashes
 ```
+
+e2e screenshots go to `test-results/shots/`. Set `SHOTS_TO_DOCS=1` to refresh the committed milestone
+screenshots in `docs/progress/` instead. `MODES_PORT` moves `e2e/modes.spec.ts` off its default port (5193).
 
 ### Project structure
 
@@ -190,8 +194,7 @@ live API run is left to a human.
 - [STATS.md](STATS.md): agents, time and tokens per phase
 - [issues/](issues/): every bug found, with its fix
 - [docs/progress/](docs/progress/): milestone notes with screenshots (M1, M2, M3, M4…)
-- `RETROSPECTIVE.md`: what worked, what didn't, and what a human still has to check (written at the
-  end of the build)
+- [RETROSPECTIVE.md](RETROSPECTIVE.md): what worked, what didn't, and what a human still has to check
 
 Known limits: real-device feel and frame rate on phones, and behaviour with live LLM providers, have
 been tested only in emulation and with recorded or agent-written responses. A human has to confirm them.

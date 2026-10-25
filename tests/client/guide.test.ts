@@ -58,7 +58,8 @@ describe('conditions in plain words', () => {
     const text = lines.map((l) => l.text).join(' | ');
     // win = any(flag speech-delivered, all(in_area 2, mags left speechless, notebook))
     expect(lines[0]).toMatchObject({ text: 'One of these:', group: true, depth: 0 });
-    expect(text).toContain('“The farewell speech is given” has happened'); // goal.labels (M3 gate)
+    expect(text).toContain('The farewell speech is given'); // goal.labels (M3 gate), shown as is
+    expect(text).not.toContain('“The farewell speech is given”'); // issues/M5-goal-flag-label-double-wrapped.md
     expect(text).toContain(`Magdalena 'Mags' Calloway is ${teen.vocabulary.defeated}`);
     expect(text).toContain("You carry Junie's Speech Notebook");
     expect(text).toContain(`You reach ${teen.vocabulary.area} 3: ${teen.areas[2].name}`);
@@ -76,9 +77,11 @@ describe('conditions in plain words', () => {
       st.counters.detentions = 1;
     });
     const win = conditionLines(teen, s.state, teen.goal.win);
-    expect(win.find((l) => l.text.includes('Speech Notebook'))!.done).toBe(true);
+    // the has_item line (the story-flag line names the notebook too: "… — with Junie's Speech Notebook")
+    expect(win.find((l) => l.text.includes('Speech Notebook') && !l.text.includes(' — with '))!.done).toBe(true);
+    expect(win.find((l) => l.text.includes(' — with '))!.done).toBe(false);
     const lose = goalView(teen, s.state).lose;
-    expect(lose[0].text).toBe(`Your ${teen.vocabulary.stats.hp.name} drops to 0`);
+    expect(lose[0].text).toBe(`You run out of ${teen.vocabulary.stats.hp.name}`);
     const det = lose.find((l) => l.text.startsWith('Detentions'))!;
     expect(det.text).toBe('Detentions: 3 or more');
     expect(det.now).toBe('now 1');

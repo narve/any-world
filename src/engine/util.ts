@@ -108,3 +108,13 @@ export function hashString(s: string): string {
   }
   return (h >>> 0).toString(16).padStart(8, '0');
 }
+
+/**
+ * An own property of a plain id-keyed record (GameState counters, flags, defeated, resources,
+ * knowledge, cooldowns, vocabulary maps), or undefined. `obj[id]` alone would return inherited
+ * Object.prototype members for ids such as "constructor" (a function, not a count), which turns
+ * every later sum into a string and every compare into NaN (M5 issue proto-ids).
+ */
+export function own<T>(obj: Readonly<Record<string, T>>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
+}

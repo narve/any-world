@@ -1,0 +1,83 @@
+{
+  "world": "fantasy-retired-mimic",
+  "empty": {
+    "me": {
+      "x": 39,
+      "y": 5
+    },
+    "target": {
+      "x": 39,
+      "y": 4
+    },
+    "x": 396.00000000000006,
+    "y": 173.52589370089208,
+    "onMap": true,
+    "pick": {
+      "x": 39,
+      "y": 5
+    },
+    "screenToTile": {
+      "x": 39,
+      "y": 4
+    },
+    "after": {
+      "turn": 0,
+      "me": {
+        "x": 39,
+        "y": 5
+      },
+      "toasts": []
+    },
+    "walked": false
+  },
+  "actor": {
+    "id": "a6",
+    "faction": "friendly",
+    "name": "Grubb Nettleworth",
+    "pos": {
+      "x": 39,
+      "y": 4
+    }
+  },
+  "longPress": [
+    {
+      "frac": 0.2,
+      "at": [
+        396,
+        171
+      ],
+      "pick": {
+        "x": 39,
+        "y": 4
+      },
+      "text": "Grubb Nettleworth Friendly Talk STF 20 / 20 Goblin shop steward of the Gullet De",
+      "ok": true
+    },
+    {
+      "frac": 0.45,
+      "at": [
+        396,
+        168
+      ],
+      "pick": {
+        "x": 39,
+        "y": 4
+      },
+      "text": "Grubb Nettleworth Friendly Talk STF 20 / 20 Goblin shop steward of the Gullet De",
+      "ok": true
+    },
+    {
+      "frac": 0.7,
+      "at": [
+        396,
+        165
+      ],
+      "pick": {
+        "x": 39,
+        "y": 4
+      },
+      "text": "Grubb Nettleworth Friendly Talk STF 20 / 20 Goblin shop steward of the Gullet De",
+      "ok": true
+    }
+  ]
+}

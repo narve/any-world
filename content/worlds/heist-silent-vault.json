@@ -229,8 +229,13 @@
           "type": "resource",
           "resource": "hush",
           "amount": {
-            "base": 5
+            "base": 10
           }
+        },
+        {
+          "type": "set_flag",
+          "flag": "watch-roused",
+          "value": true
         }
       ]
     }
@@ -239,7 +244,7 @@
     {
       "id": "whisper-floors",
       "name": "Whisper Floors",
-      "description": "Every time you lose Composure you also lose 1 Hush. At 0 Hush the floor sings: a Night Watchman comes running and your Hush resets to 5.",
+      "description": "Every time you lose Composure you also lose 1 Hush. At 0 Hush the floor sings: a Night Watchman comes running and your Hush is restored. After that the floor stays quiet until you reach the next room.",
       "playerTriggers": [
         {
           "on": "on_hurt",
@@ -256,6 +261,31 @@
                 "amount": {
                   "base": -1
                 }
+              }
+            ],
+            "vfx": {
+              "kind": "none"
+            },
+            "condition": {
+              "type": "flag",
+              "flag": "watch-roused",
+              "value": false
+            }
+          }
+        },
+        {
+          "on": "on_area_enter",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "set_flag",
+                "flag": "watch-roused",
+                "value": false
               }
             ],
             "vfx": {
@@ -785,8 +815,8 @@
       "description": "Brass buttons, a hooded lantern and orders to bring anyone who whispers to the Director.",
       "faction": "hostile",
       "stats": {
-        "hp": 12,
-        "ac": 12,
+        "hp": 13,
+        "ac": 11,
         "str": 12,
         "dex": 10,
         "int": 9
@@ -796,8 +826,8 @@
         "name": "Lantern in the Face",
         "verb": "shines a lantern at",
         "damage": {
-          "base": 2,
-          "dice": "1d4"
+          "base": 3,
+          "dice": "1d2"
         },
         "damageType": "suspicion"
       },
@@ -1259,7 +1289,7 @@
       "description": "Director of the Museum of Vanished Sound. She has not raised her voice since 1899, and she has never needed to.",
       "faction": "hostile",
       "stats": {
-        "hp": 80,
+        "hp": 68,
         "ac": 13,
         "str": 12,
         "dex": 11,
@@ -1273,7 +1303,7 @@
         "verb": "lets a silence fall on",
         "damage": {
           "base": 3,
-          "dice": "1d8"
+          "dice": "1d6"
         },
         "damageType": "suspicion"
       },
@@ -1317,7 +1347,7 @@
               {
                 "type": "damage",
                 "amount": {
-                  "dice": "1d4"
+                  "dice": "1d3"
                 },
                 "damageType": "shush"
               },
@@ -3211,7 +3241,7 @@
         {
           "actor": "night-docent",
           "weight": 10,
-          "max": 3
+          "max": 1
         },
         {
           "actor": "loose-parquet",
@@ -3221,12 +3251,12 @@
         {
           "actor": "listening-horn",
           "weight": 6,
-          "max": 2
+          "max": 0
         },
         {
           "actor": "night-watchman",
           "weight": 4,
-          "max": 2
+          "max": 0
         }
       ],
       "placed": [
@@ -3559,11 +3589,6 @@
           "actor": "echo-moth",
           "weight": 6,
           "max": 3
-        },
-        {
-          "actor": "wolf-tone",
-          "weight": 3,
-          "max": 1
         }
       ],
       "placed": [
@@ -3614,7 +3639,7 @@
       "placedItems": [
         {
           "item": "prompters-last-cue",
-          "where": "far"
+          "where": "centre"
         },
         {
           "item": "conductors-baton",
@@ -3717,7 +3742,7 @@
           "actor": "night-watchman",
           "weight": 5,
           "min": 1,
-          "max": 2
+          "max": 1
         }
       ],
       "placed": [
@@ -3749,6 +3774,10 @@
         {
           "item": "glass-lark-cylinder",
           "where": "guarded"
+        },
+        {
+          "item": "sacher-slice",
+          "where": "near_start"
         }
       ],
       "terrain": [

@@ -93,13 +93,15 @@ describe('rebalance scales hostile NPC bosses', () => {
     expect(res.changes.join('\n')).toMatch(/absalom-vane: hp and damage ×0.85/);
   });
 
-  it('tuneWorld improves a world whose NPC bosses deal ×3 damage', { timeout: 300_000 }, () => {
+  it('tuneWorld improves a world whose NPC bosses deal ×4 damage', { timeout: 300_000 }, () => {
     const w = structuredClone(western);
     for (const a of w.actors) {
       if (a.faction !== 'hostile' || !a.npc) continue;
       a.stats.hp = Math.min(500, a.stats.hp * 2);
-      if (a.attack) a.attack = { ...a.attack, damage: scaleAmount(a.attack.damage, 3) };
+      if (a.attack) a.attack = { ...a.attack, damage: scaleAmount(a.attack.damage, 4) };
     }
+    // ×4 since the M5 round-3 new-player retune made the western flats easier (issues/M5-new-player-gentle-deaths.md);
+    // at ×3 the explorer now wins some of the first 12 seeds and the verdict is only "ok"
     // 12 seeds: 0/8 wins is not confidently below the 25% band (90% Wilson upper bound 25.3%)
     const r = tuneWorld(w, { seeds: 12, bots: ['explorer'], fast: true, rounds: 2 });
     expect(r.history[0].verdict).toBe('too_hard');
@@ -198,8 +200,8 @@ describe('difficulty bands', () => {
   it('use the client levels gentle / normal / hard / brutal', () => {
     expect([...DIFFICULTIES]).toEqual(['gentle', 'normal', 'hard', 'brutal']);
     expect(Object.keys(WIN_RATE_TARGETS).sort()).toEqual([...DIFFICULTIES].sort());
-    expect(targetFor('brutal')).toEqual([0.05, 0.25]);
-    expect(targetFor('gentle')).toEqual([0.5, 0.85]);
+    expect(targetFor('brutal')).toEqual([0.05, 0.45]);
+    expect(targetFor('gentle')).toEqual([0.5, 0.98]);
     // the bands get stricter with each level
     for (let i = 1; i < DIFFICULTIES.length; i++) expect(WIN_RATE_TARGETS[DIFFICULTIES[i]][0]).toBeLessThan(WIN_RATE_TARGETS[DIFFICULTIES[i - 1]][0]);
   });
@@ -210,7 +212,7 @@ describe('difficulty bands', () => {
     expect(() => verdictFor(w, clean(staticAnalysis(w)), [summary('explorer', 8)], 'easy' as never)).toThrow(/unknown difficulty/);
     const brutal = verdictFor(w, clean(staticAnalysis(w)), [summary('explorer', 4)], 'brutal');
     expect(brutal.verdict).toBe('ok');
-    expect(brutal.reasons.join(' ')).toMatch(/5%–25% for brutal/);
+    expect(brutal.reasons.join(' ')).toMatch(/5%–45% for brutal/);
   });
 
   it('tools/sim.ts refuses an unknown --difficulty', { timeout: 60_000 }, () => {

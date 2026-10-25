@@ -1282,7 +1282,7 @@
       "name": "Odile Greaves, integrasjonsdirektør",
       "description": "Kremfarget maktdress, rødpenn, intet etternavn på yoghurten, bare initialene O.G. Hun har allerede laget fredagens lysbildeserie. Avdelingen din er på lysbilde 41.",
       "stats": {
-        "hp": 56,
+        "hp": 48,
         "ac": 13,
         "str": 13,
         "dex": 12,
@@ -1293,7 +1293,7 @@
         "verb": "retter med rødpenn på",
         "damage": {
           "base": 2,
-          "dice": "1d6"
+          "dice": "1d4"
         },
         "damageType": "red-tape",
         "accuracyStat": "int"
@@ -1315,7 +1315,7 @@
                 "type": "damage",
                 "amount": {
                   "base": 1,
-                  "dice": "1d6"
+                  "dice": "1d5"
                 },
                 "damageType": "spin"
               }
@@ -1941,7 +1941,7 @@
           {
             "type": "heal",
             "amount": {
-              "base": 5,
+              "base": 6,
               "dice": "1d3"
             }
           }
@@ -3006,7 +3006,7 @@
   },
   "areas": [
     {
-      "name": "Tredje etasje: Felleskjøkkenet",
+      "name": "Felleskjøkkenet",
       "description": "Det siste nøytrale rommet i bygget, og korridorene på hver side. Kremhvitt belegg, et durende kjøleskap, to mikroer og Greyline-konsulenter som sirkler rundt vannkokeren.",
       "generator": "building",
       "size": "medium",
@@ -3042,24 +3042,24 @@
         {
           "actor": "greyline-consultant",
           "weight": 30,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 1
         },
         {
           "actor": "post-it-swarm",
           "weight": 30,
-          "min": 2,
-          "max": 5
+          "min": 1,
+          "max": 2
         },
         {
           "actor": "reply-all-chain",
           "weight": 20,
-          "max": 3
+          "max": 1
         },
         {
           "actor": "microwave-queue-bully",
           "weight": 8,
-          "max": 1
+          "max": 0
         }
       ],
       "placed": [
@@ -3188,7 +3188,7 @@
       }
     },
     {
-      "name": "Fane fire: Integrasjonsregnearket",
+      "name": "Integrasjonsregnearket (fane fire)",
       "description": "Bak branndøra er det ingen trappeoppgang, bare et endeløst blekt rutenett av celler som henger i hvitt tomrom. Avdelinger er rader. Noen blir slettet mens du ser på.",
       "generator": "geometric",
       "size": "medium",
@@ -3418,24 +3418,24 @@
         {
           "actor": "rumour-mill",
           "weight": 25,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         {
           "actor": "watercooler-whisper",
           "weight": 30,
-          "min": 2,
-          "max": 4
+          "min": 1,
+          "max": 3
         },
         {
           "actor": "reply-all-chain",
           "weight": 15,
-          "max": 3
+          "max": 2
         },
         {
           "actor": "greyline-consultant",
           "weight": 15,
-          "max": 3
+          "max": 2
         },
         {
           "actor": "hr-liaison",

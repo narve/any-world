@@ -50,6 +50,42 @@ export interface ViewInsets {
   right: number;
 }
 
+/** A screen rectangle in CSS px (same unit and origin as setViewport: the canvas' top-left). */
+export interface OverlayRect {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+/** CSS px kept between a framed actor and an overlay panel's edge */
+export const OCCLUDER_PAD = 6;
+
+/** Margins of auto framing, as fractions of the unobscured half-width / half-height. */
+export interface FrameMargin {
+  x: number;
+  top: number;
+  bottom: number;
+}
+export const DEFAULT_FRAME_MARGIN: FrameMargin = { x: 0.1, top: 0.12, bottom: 0.3 };
+/** auto framing may shift the image by up to this share of the framed half-width / half-height … */
+export const PAN_SHARE = 0.6;
+/** … tried in this many steps to each side */
+export const PAN_STEPS = 8;
+
+/**
+ * true when a point at canvas px (x, y) is hidden by one of `rects` (grown by `pad`). Rects that
+ * contain `centre` (the follow target's screen position, where the player stands) never count:
+ * zooming out moves everything towards the centre, so they could never be escaped.
+ */
+export function underOverlay(x: number, y: number, rects: readonly OverlayRect[], centre: { x: number; y: number }, pad = OCCLUDER_PAD): boolean {
+  for (const r of rects) {
+    if (centre.x >= r.left && centre.x <= r.right && centre.y >= r.top && centre.y <= r.bottom) continue;
+    if (x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad) return true;
+  }
+  return false;
+}
+
 export class CameraRig {
   readonly camera: THREE.PerspectiveCamera;
   readonly target = new THREE.Vector3();
@@ -71,6 +107,14 @@ export class CameraRig {
   private viewW = 1;
   private viewH = 1;
   insets: ViewInsets = { top: 0, bottom: 0, left: 0, right: 0 };
+  /** overlay panels (canvas CSS px) that auto framing keeps points out of; see setOccluders */
+  occluders: OverlayRect[] = [];
+  /**
+   * Screen shift of the whole image (CSS px, +x right, +y down) that auto framing chose to move framed
+   * actors out from under overlay panels (see frame()); `pan` eases towards `panTarget`.
+   */
+  pan = { x: 0, y: 0 };
+  panTarget = { x: 0, y: 0 };
 
   constructor(aspect = 1) {
     this.camera = new THREE.PerspectiveCamera(CAMERA_FOV_DEG, aspect, 0.1, 220);
@@ -136,32 +180,110 @@ export class CameraRig {
 
   /**
    * Smallest camera distance in [from, MAX_DIST] at which every point projects inside the viewport
-   * shrunk by `margin` (NDC units) on each side, for the current target/yaw/pitch/aspect. Returns
+   * shrunk by `margin` (NDC units) on each side and outside every occluder (setOccluders), for the current target/yaw/pitch/aspect. Returns
    * MAX_DIST when even that cannot frame them all. Does not move the camera.
    */
-  distanceToFrame(points: readonly THREE.Vector3[], from: number, margin = { x: 0.1, top: 0.12, bottom: 0.3 }): number {
+  distanceToFrame(points: readonly THREE.Vector3[], from: number, margin: FrameMargin = DEFAULT_FRAME_MARGIN): number {
     if (points.length === 0) return 0;
+    return this.frame(points, from, { margin, pan: false }).dist;
+  }
+
+  /**
+   * Auto framing: the camera distance (≥ `from`) and image shift (CSS px) that keep every point inside
+   * the unobscured viewport (shrunk by `margin`) and out from under every occluder. At each distance,
+   * from the nearest outwards, it first tries no shift, then the current shift (so the view does not
+   * wander from turn to turn), then shifts of growing length up to PAN_SHARE of the unobscured
+   * rectangle: moving the view into the free band beats zooming out. `player` points (the player's
+   * feet and head) must stay inside the viewport and clear of the occluders too. Does not move the
+   * camera; apply with setFrameDist / setPan.
+   */
+  frame(
+    points: readonly THREE.Vector3[],
+    from: number,
+    opts: { player?: readonly THREE.Vector3[]; margin?: FrameMargin; pan?: boolean } = {},
+  ): { dist: number; pan: { x: number; y: number } } {
+    const zero = { x: 0, y: 0 };
+    if (points.length === 0) return { dist: 0, pan: zero };
+    const margin = opts.margin ?? DEFAULT_FRAME_MARGIN;
+    const player = opts.player ?? [];
     const cam = this.camera.clone();
     const v = new THREE.Vector3();
-    // the unobscured rectangle in NDC (insets removed), shrunk by the margins
+    const W = this.viewW;
+    const H = this.viewH;
+    // the unobscured rectangle in canvas px (insets removed), shrunk by the margins
     const b = this.safeNdc();
     const sx = (b.right - b.left) / 2;
     const sy = (b.top - b.bottom) / 2;
-    const xl = b.left + margin.x * sx;
-    const xr = b.right - margin.x * sx;
-    const yt = b.top - margin.top * sy;
-    const yb = b.bottom + margin.bottom * sy;
-    const fits = (d: number): boolean => {
-      this.place(cam, this.desired, this.yawTarget(), d);
-      for (const p of points) {
+    const toX = (n: number) => ((n + 1) / 2) * W;
+    const toY = (n: number) => ((1 - n) / 2) * H;
+    const xl = toX(b.left + margin.x * sx);
+    const xr = toX(b.right - margin.x * sx);
+    const yt = toY(b.top - margin.top * sy);
+    const yb = toY(b.bottom + margin.bottom * sy);
+    // the player may come closer to the edges than framed actors, but never leave the safe rect
+    const pxl = toX(b.left + 0.06 * sx);
+    const pxr = toX(b.right - 0.06 * sx);
+    const pyt = toY(b.top - 0.06 * sy);
+    const pyb = toY(b.bottom + 0.06 * sy);
+    const occ = this.occluders;
+    // the follow target projects to the middle of the unobscured rectangle (without any shift)
+    const centre = { x: toX((b.left + b.right) / 2), y: toY((b.top + b.bottom) / 2) };
+    // panels over the centre can never be escaped; they do not count for the player either
+    const live = occ.filter((r) => !(centre.x >= r.left && centre.x <= r.right && centre.y >= r.top && centre.y <= r.bottom));
+    const pans: { x: number; y: number }[] = [zero];
+    if (opts.pan !== false) {
+      const cur = this.panTarget;
+      if (cur.x !== 0 || cur.y !== 0) pans.push({ ...cur });
+      const mx = ((xr - xl) / 2) * PAN_SHARE;
+      const my = ((yb - yt) / 2) * PAN_SHARE;
+      const grid: { x: number; y: number }[] = [];
+      for (let i = -PAN_STEPS; i <= PAN_STEPS; i++)
+        for (let j = -PAN_STEPS; j <= PAN_STEPS; j++) if (i || j) grid.push({ x: (i / PAN_STEPS) * mx, y: (j / PAN_STEPS) * my });
+      grid.sort((p, q) => Math.hypot(p.x, p.y) - Math.hypot(q.x, q.y));
+      pans.push(...grid);
+    }
+    const sp: { x: number; y: number }[] = [];
+    const pp: { x: number; y: number }[] = [];
+    const project = (list: readonly THREE.Vector3[], out: { x: number; y: number }[]): boolean => {
+      out.length = 0;
+      for (const p of list) {
         v.copy(p).project(cam);
-        if (v.z > 1 || v.x < xl || v.x > xr || v.y > yt || v.y < yb) return false;
+        if (v.z > 1) return false;
+        out.push({ x: toX(v.x), y: toY(v.y) });
+      }
+      return true;
+    };
+    const fitsWith = (pan: { x: number; y: number }): boolean => {
+      for (const s of sp) {
+        const x = s.x + pan.x;
+        const y = s.y + pan.y;
+        if (x < xl || x > xr || y < yt || y > yb) return false;
+        if (live.length && underOverlay(x, y, live, centre)) return false;
+      }
+      if (pan.x === 0 && pan.y === 0) return true;
+      for (const s of pp) {
+        const x = s.x + pan.x;
+        const y = s.y + pan.y;
+        if (x < pxl || x > pxr || y < pyt || y > pyb) return false;
+        if (live.length && underOverlay(x, y, live, centre)) return false;
       }
       return true;
     };
     let d = Math.max(MIN_DIST, from);
-    while (d < MAX_DIST && !fits(d)) d = Math.min(MAX_DIST, d * 1.08);
-    return d;
+    for (;;) {
+      // the image without any shift; a shift moves every projected point by the same px
+      this.place(cam, this.desired, this.yawTarget(), d);
+      this.offsetCamera(cam, zero);
+      if (project(points, sp) && project(player, pp)) for (const pan of pans) if (fitsWith(pan)) return { dist: d, pan: { ...pan } };
+      if (d >= MAX_DIST) return { dist: MAX_DIST, pan: zero };
+      d = Math.min(MAX_DIST, d * 1.08);
+    }
+  }
+
+  /** Ease the image shift towards `pan` (CSS px, see frame()); snap with settle(). */
+  setPan(pan: { x: number; y: number }): void {
+    const ok = (n: number) => (Number.isFinite(n) ? n : 0);
+    this.panTarget = { x: ok(pan.x), y: ok(pan.y) };
   }
 
   /** Where the camera will come to rest (follow target, yaw step and zoom reached). */
@@ -200,6 +322,15 @@ export class CameraRig {
     this.updateProjection();
   }
 
+  /**
+   * Overlay panels over the viewport (CSS px from its top-left, same unit as setViewport) that do not
+   * shrink the view like insets do (corner HUD, log, hotbar on desktops): distanceToFrame also zooms
+   * out until no framed point lies under one of them.
+   */
+  setOccluders(rects: readonly OverlayRect[]): void {
+    this.occluders = rects.map((r) => ({ left: r.left, top: r.top, right: r.right, bottom: r.bottom }));
+  }
+
   /** Unobscured fraction of the viewport. */
   safeFraction(): SafeFraction {
     const i = this.clampedInsets();
@@ -230,17 +361,26 @@ export class CameraRig {
     return { top, bottom, left, right };
   }
 
-  private updateProjection(): void {
+  /**
+   * Shift `cam`'s image so the view centre lands in the middle of the uncovered rectangle, plus `pan`
+   * (CSS px), and update its projection.
+   */
+  private offsetCamera(cam: THREE.PerspectiveCamera, pan: { x: number; y: number }): void {
     const W = this.viewW;
     const H = this.viewH;
     const i = this.clampedInsets();
-    this.camera.aspect = W / H;
-    // move the image so the view centre lands in the middle of the uncovered rectangle
-    const sx = (i.left - i.right) / 2;
-    const sy = (i.top - i.bottom) / 2;
-    if (Math.abs(sx) > 1e-6 || Math.abs(sy) > 1e-6) this.camera.setViewOffset(W, H, -sx, -sy, W, H);
-    else this.camera.clearViewOffset();
-    this.camera.updateProjectionMatrix();
+    cam.aspect = W / H;
+    const sx = (i.left - i.right) / 2 + pan.x;
+    const sy = (i.top - i.bottom) / 2 + pan.y;
+    if (Math.abs(sx) > 1e-6 || Math.abs(sy) > 1e-6) cam.setViewOffset(W, H, -sx, -sy, W, H);
+    else cam.clearViewOffset();
+    cam.updateProjectionMatrix();
+  }
+
+  private updateProjection(): void {
+    const W = this.viewW;
+    const H = this.viewH;
+    this.offsetCamera(this.camera, this.pan);
     if (!this.userZoomed) {
       this.userDist = defaultDistance(W / H, this.camera.fov, this.safeFraction());
       this.retarget();
@@ -253,11 +393,20 @@ export class CameraRig {
   update(dt: number): boolean {
     const k = 1 - Math.exp(-dt * 9);
     const yawTarget = yawForStep(this.step);
+    const panning = Math.abs(this.pan.x - this.panTarget.x) > 0.25 || Math.abs(this.pan.y - this.panTarget.y) > 0.25;
     const moving =
-      this.target.distanceToSquared(this.desired) > 1e-6 || Math.abs(this.yaw - yawTarget) > 1e-4 || Math.abs(this.dist - this.distTarget) > 1e-3;
+      this.target.distanceToSquared(this.desired) > 1e-6 || Math.abs(this.yaw - yawTarget) > 1e-4 || Math.abs(this.dist - this.distTarget) > 1e-3 || panning;
     this.target.lerp(this.desired, k);
     this.yaw += (yawTarget - this.yaw) * (1 - Math.exp(-dt * 10));
     this.dist += (this.distTarget - this.dist) * k;
+    if (panning) {
+      this.pan.x += (this.panTarget.x - this.pan.x) * k;
+      this.pan.y += (this.panTarget.y - this.pan.y) * k;
+      this.offsetCamera(this.camera, this.pan);
+    } else if (this.pan.x !== this.panTarget.x || this.pan.y !== this.panTarget.y) {
+      this.pan = { ...this.panTarget };
+      this.offsetCamera(this.camera, this.pan);
+    }
     this.apply();
     return moving;
   }
@@ -267,6 +416,10 @@ export class CameraRig {
     this.target.copy(this.desired);
     this.yaw = yawForStep(this.step);
     this.dist = this.distTarget;
+    if (this.pan.x !== this.panTarget.x || this.pan.y !== this.panTarget.y) {
+      this.pan = { ...this.panTarget };
+      this.offsetCamera(this.camera, this.pan);
+    }
     this.apply();
   }
 

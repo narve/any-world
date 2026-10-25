@@ -8,7 +8,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
-const OUT = 'docs/progress/M4';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M4' : 'test-results/shots/M4';
 mkdirSync(OUT, { recursive: true });
 
 function collectErrors(page: Page): string[] {

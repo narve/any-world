@@ -11,7 +11,7 @@
  * templates (src/engine/log-keys.ts) so the keys always match; untyped harm names the world's
  * word for health ({hp}, filled in by the log view) as the M2 log did.
  */
-import { END_REASON_KEYS, LOG_KEYS } from '../../engine/log-keys';
+import { END_REASON_KEYS, ITEM_FX_KEYS, LOG_KEYS } from '../../engine/log-keys';
 
 const en = {
   // engine log lines and end reasons (keys from the engine; English as the engine renders them)
@@ -19,7 +19,21 @@ const en = {
   ...END_REASON_KEYS,
   'log.attack.hit': '{attacker|cap} {verb} {target} for {amount} {hp}.',
   'log.attack.crit': '{attacker|cap} {verb} {target} (critical) for {amount} {hp}.',
+  'log.attack.miss_default': '{attacker|cap} strikes {target} but misses.',
+  'log.attack.hit_default': '{attacker|cap} strikes {target} for {amount} {hp}.',
+  'log.attack.crit_default': '{attacker|cap} strikes {target} (critical) for {amount} {hp}.',
   'log.damage.take': '{target|cap} takes {amount} {hp}.',
+
+  // item effect lines (ItemView.effects; keys and English from the engine, turns pluralised)
+  ...ITEM_FX_KEYS,
+  'item.fx.stat_temp': '{amount} {stat} for {n, plural, one {# turn} other {# turns}}',
+  'item.fx.status_inflict': 'Inflicts {status} ({n, plural, one {# turn} other {# turns}})',
+  'item.fx.status_grant': 'Grants {status} ({n, plural, one {# turn} other {# turns}})',
+  'item.fx.terrain_turns': 'Creates {terrain} for {n, plural, one {# turn} other {# turns}}',
+  'item.fx.terrain_radius_turns': 'Creates {terrain} (radius {radius}) for {n, plural, one {# turn} other {# turns}}',
+  'item.fx.light': 'Light (radius {radius}, {n, plural, one {# turn} other {# turns}})',
+  'item.fx.cooldown': 'Cooldown {n, plural, one {# turn} other {# turns}}',
+  'item.fx.trigger_every': '{event} (every {n, plural, one {turn} other {# turns}}): {effects}',
 
   // common
   'common.cancel': 'Cancel',
@@ -127,6 +141,9 @@ const en = {
   'slot.explain.equipped': 'Equipped — it works while you have it on. Nothing to press.',
   'slot.explain.passive': 'Works just by being carried — nothing to press.',
   'slot.explain.badge': 'The E badge means equipped. Details lets you unequip or move it.',
+  'slot.noCharges': '{item|cap} is empty (0/{max}).',
+  'slot.explain.weaponRanged': 'Equipped as your {conflict} — it reaches {range, plural, one {# tile} other {# tiles}}. Click someone hostile in sight, or press {key} to aim at the nearest one (arrows move the aim) and Enter to fire.',
+  'slot.explain.weaponRangedNoKey': 'Equipped as your {conflict} — it reaches {range, plural, one {# tile} other {# tiles}}. Click someone hostile in sight, or put it in a quick slot (1–8) to aim it with the keyboard.',
   'slot.tip.details': 'Details',
   'hotbar.label': 'Quick slots',
   'hotbar.backpackAria': 'Backpack (i)',
@@ -295,6 +312,8 @@ const en = {
   'goal.step.findExit': 'Explore {area} and find the way on',
   'goal.step.findExitDetail': 'then: {way}',
   'goal.step.more': '{n, plural, one {and # more thing} other {and # more things}}',
+  'goal.step.alsoHere': 'Also here: {item} (for: {goal})',
+  'cond.via': '{text} — with {item}',
   'goal.win': 'How to win',
   'goal.lose': 'You lose if',
   'goal.exitNeeds': 'To move on ({way})',
@@ -303,8 +322,8 @@ const en = {
   'goal.doneSr': 'done',
   'goal.expandSr': 'show how to win',
   'goal.collapseSr': 'hide the details',
-  'goal.lose.hp': 'Your {hp} drops to 0',
-  'goal.lose.resource': 'Your {resource} runs out',
+  'goal.lose.hp': 'You run out of {hp}',
+  'goal.lose.resource': 'You run out of {resource}',
 
   // conditions in plain words
   'cond.all': 'All of these:',
@@ -375,6 +394,8 @@ const en = {
   'onboard.controls.touch': 'Touch',
   'onboard.conflict.violent': 'Conflict here is called “{conflict}”: walk into someone hostile to use it. Each hit lowers their {hp}; at 0 they are {defeated}.',
   'onboard.conflict.nonViolent': 'Conflict here is not about violence. It is called “{conflict}”: walk into a rival to use it. It wears down their {hp}; at 0 they are {defeated}.',
+  'onboard.conflict.ranged': 'Your {item} reaches {range, plural, one {# tile} other {# tiles}}: click or tap someone hostile in sight to use it from where you stand.',
+  'onboard.conflict.rangedKey': 'Your {item} reaches {range, plural, one {# tile} other {# tiles}}: click or tap someone hostile in sight, or press {key} to aim at the nearest one and Enter to fire — all from where you stand.',
   'onboard.conflict.weapon': 'Your equipped item (badge E) is what your {conflict} uses. Anyone hostile has a red ring.',
   'onboard.verb.persuade': 'Persuade: win someone hostile over with a stat check instead of a fight.',
   'onboard.verb.talk': 'Talk to anyone who is not hostile: they trade, help or give you a thread to follow.',
@@ -415,6 +436,7 @@ const en = {
   'help.pickup': 'Pick up',
   'help.interact': 'Use something next to you',
   'help.look': 'Look around (inspect)',
+  'help.fire': 'Aim the equipped ranged weapon (its slot key), arrows move the aim, Enter fires',
   'help.talk': 'Talk to someone nearby',
   'help.persuade': 'Persuade someone nearby',
   'help.search': 'Search here',
@@ -466,6 +488,7 @@ const en = {
   'toast.nothingToUse': 'There is nothing to use right next to you.',
   'toast.slotEmpty': 'That slot is empty.',
   'toast.noWay': 'No known way there.',
+  'toast.noRangedTarget': 'No one hostile in reach there — move the aim onto someone you can see.',
   'toast.pickReply': 'Pick one of the replies.',
   'invalid.hold': '{names} ({n, plural, one {# turn} other {# turns}} left)',
   'invalid.rooted': '{hold}: you cannot move — wait (.) to let it pass.',
@@ -600,6 +623,7 @@ const en = {
   'start.recentSub': 'Made by the AI for you, or opened from a file. Kept in this browser.',
   'start.recentGenerated': 'made by AI',
   'start.recentImported': 'from a file',
+  'start.recentDemo': 'recorded demo',
   'start.import': 'Open world file',
   'start.importHint': 'Got a world file from someone? Open it here to play it.',
   'start.export': 'Save as file',
@@ -717,6 +741,49 @@ const en = {
   'engine.invalid.nothing_more_to_find': '{terrain}: nothing more to find',
   'engine.invalid.cannot_be_equipped': '{item} cannot be equipped',
   'engine.invalid.nothing_to_say': '{name} has nothing to say',
+
+  // music panel (src/client/audio)
+  'audio.panel.title': 'Music',
+  'audio.panel.mood': 'Mood: {mood}',
+  'audio.panel.ambience': 'Generated ambience',
+  'audio.panel.volume': 'Volume',
+  'audio.panel.mute': 'Mute',
+  'audio.panel.unmute': 'Unmute',
+  'audio.panel.search': 'Search SoundCloud',
+  'audio.panel.suggestions': 'Suggested listening',
+  'audio.panel.nothing': 'This world has no music suggestions.',
+  'audio.panel.newTab': '{label} (opens in a new tab)',
+  'audio.panel.offline': 'You are offline. The links work once you are back online.',
+  'audio.panel.embedOff': 'The SoundCloud player is off. Turn it on in settings to play music here.',
+  'audio.panel.paste': 'SoundCloud track or playlist link',
+  'audio.panel.play': 'Play',
+  'audio.panel.close': 'Close player',
+  'audio.panel.badUrl': 'That is not a SoundCloud link.',
+  'audio.panel.playerTitle': 'SoundCloud player',
+  'audio.mood.explore': 'exploring',
+  'audio.mood.tense': 'tense',
+  'audio.mood.calm': 'calm',
+  'audio.mood.eerie': 'eerie',
+  'audio.mood.boss': 'showdown',
+  'audio.mood.upbeat': 'upbeat',
+  // M5 client fixes (issues/M5-*.md)
+  'dlg.healed': '{npc} helps you: +{amount} {hp}.',
+  'dlg.helped': '{npc} helps you.',
+  'cond.flagNotLabeled': 'Not: {label}',
+  'step.flagLabeled': 'Make this happen: {label}',
+  'step.avoidFlagLabeled': 'Keep this from happening: {label}',
+  'settings.region.us': 'US',
+  'settings.region.china': 'China',
+  'settings.region.eu': 'EU',
+  'settings.region.global': 'Global',
+  'settings.region.local': 'Local',
+  'settings.region.custom': 'Custom',
+  'settings.preset.custom': 'Custom (OpenAI-compatible)',
+  'settings.preset.local': '{name} (local)',
+  'gfx.lost': 'Graphics paused. The map is coming back…',
+  'gfx.lostHint': 'The browser took the graphics away for a moment. Your run is saved, and play goes on once the map is back.',
+  'gfx.reload': 'Reload the game',
+  'world.import.error.noRoom': 'There is no room left in this browser to keep “{title}”. Forget a world under Your worlds and try again.',
 };
 
 export default en;

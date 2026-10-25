@@ -1,0 +1,247 @@
+{
+  "id": "iphone15-portrait",
+  "world": "heist-silent-vault",
+  "device": "iPhone 15",
+  "safeAreaEmulated": true,
+  "layout": "phone-portrait",
+  "small": [],
+  "overlaps": [],
+  "offscreen": [],
+  "inSafeArea": [],
+  "thumb": {
+    "wait": {
+      "cx": 177,
+      "cy": 544,
+      "fromBottomPct": 17
+    },
+    "slot1": {
+      "cx": 32,
+      "cy": 599,
+      "fromBottomPct": 9
+    },
+    "bag": {
+      "cx": 273,
+      "cy": 494,
+      "fromBottomPct": 25
+    },
+    "rotate": {
+      "cx": 363,
+      "cy": 367,
+      "fromBottomPct": 44
+    },
+    "goal": {
+      "cx": 197,
+      "cy": 191,
+      "fromBottomPct": 71
+    },
+    "log": {
+      "cx": 126,
+      "cy": 494,
+      "fromBottomPct": 25
+    },
+    "rulesBadge": {
+      "cx": 365,
+      "cy": 81,
+      "fromBottomPct": 88
+    },
+    "hud": {
+      "cx": 126,
+      "cy": 99,
+      "fromBottomPct": 85
+    }
+  },
+  "stats": [
+    {
+      "where": "start",
+      "drawCalls": 58,
+      "triangles": 42456,
+      "fps": 3.4,
+      "geometries": 34,
+      "textures": 5,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 86",
+      "drawCalls": 90,
+      "triangles": 35650,
+      "fps": 5.4,
+      "geometries": 42,
+      "textures": 6,
+      "programs": 15,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 170",
+      "drawCalls": 64,
+      "triangles": 35754,
+      "fps": 5.7,
+      "geometries": 42,
+      "textures": 5,
+      "programs": 16,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    },
+    {
+      "where": "turn 248",
+      "drawCalls": 64,
+      "triangles": 35754,
+      "fps": 2.2,
+      "geometries": 42,
+      "textures": 5,
+      "programs": 16,
+      "tier": "low",
+      "pixelRatio": 1.5,
+      "contextLost": false,
+      "setting": "auto",
+      "mobile": true,
+      "canvas": "589x988"
+    }
+  ],
+  "pathWalks": [
+    {
+      "from": {
+        "x": 3,
+        "y": 23
+      },
+      "dest": {
+        "x": 6,
+        "y": 18
+      },
+      "dist": 5,
+      "tiles": 5,
+      "turns": 5,
+      "reached": true
+    },
+    {
+      "from": {
+        "x": 12,
+        "y": 15
+      },
+      "dest": {
+        "x": 5,
+        "y": 19
+      },
+      "dist": 7,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 20,
+        "y": 15
+      },
+      "dest": {
+        "x": 14,
+        "y": 19
+      },
+      "dist": 6,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 19,
+        "y": 24
+      },
+      "dest": {
+        "x": 27,
+        "y": 22
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 19,
+        "y": 24
+      },
+      "dest": {
+        "x": 11,
+        "y": 28
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 19,
+        "y": 24
+      },
+      "dest": {
+        "x": 11,
+        "y": 28
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    },
+    {
+      "from": {
+        "x": 19,
+        "y": 24
+      },
+      "dest": {
+        "x": 11,
+        "y": 28
+      },
+      "dist": 8,
+      "tiles": 0,
+      "turns": 0,
+      "reached": false,
+      "reason": "layer game"
+    }
+  ],
+  "inspects": [
+    {
+      "what": "player",
+      "ok": true,
+      "text": "Ottilie Graf You Harmless CMP 28 / 28 Forty years of tuning the pianos of Vienna's best salons. She can hear a loose floorboard three rooms "
+    },
+    {
+      "what": "actor",
+      "ok": true,
+      "text": "The Staff Entrance"
+    }
+  ],
+  "contextLoss": {},
+  "emptyBand": [
+    52,
+    53,
+    54,
+    54
+  ],
+  "turnsPlayed": 307,
+  "areasReached": 0,
+  "status": "playing",
+  "errors": [],
+  "notes": [
+    "env(safe-area-inset-*) seen by CSS: 59px 34px 0px 0px"
+  ]
+}

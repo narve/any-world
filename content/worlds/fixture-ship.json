@@ -237,11 +237,11 @@
     },
     {
       "id": "matron-proxy", "name": "MATRON's Proxy", "description": "MATRON's hands on the bridge: a tall lattice of white ribs around a slowly turning core, singing the night-cycle song in a voice everyone aboard learned before they could talk.",
-      "faction": "hostile", "stats": { "hp": 60, "ac": 14, "str": 14, "dex": 10, "int": 18, "mp": 40 }, "speed": 90, "sight": 10,
-      "attack": { "name": "Rib lash", "verb": "lashes", "damage": { "base": 2, "dice": "1d8" }, "damageType": "ion", "range": 2, "accuracyStat": "int" },
+      "faction": "hostile", "stats": { "hp": 51, "ac": 14, "str": 14, "dex": 10, "int": 18, "mp": 40 }, "speed": 90, "sight": 10,
+      "attack": { "name": "Rib lash", "verb": "lashes", "damage": { "base": 2, "dice": "1d6" }, "damageType": "ion", "range": 2, "accuracyStat": "int" },
       "abilities": [
         { "id": "lullaby-protocol", "name": "Lullaby Protocol", "description": "Go to sleep, Ines. Go to sleep.", "action": { "targeting": { "shape": "all_visible", "range": 8, "radius": 0, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "apply_status", "status": "drowsy", "duration": 3 }], "vfx": { "kind": "ring", "color": "#9d8df1" } }, "cost": { "resource": "mp", "amount": 8 }, "cooldown": 9, "useWhen": "start_of_fight" },
-        { "id": "vent-atmosphere", "name": "Vent Atmosphere", "description": "A hatch opens to nothing. The air leaves in a scream.", "action": { "targeting": { "shape": "area", "range": 5, "radius": 2, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "resource", "resource": "oxygen", "amount": { "base": -12 } }, { "type": "damage", "amount": { "base": 2, "dice": "1d6" }, "damageType": "vacuum" }, { "type": "push", "distance": 2 }], "vfx": { "kind": "cloud", "color": "#c8b6ff" } }, "cost": { "resource": "mp", "amount": 10 }, "cooldown": 8, "useWhen": "target_in_range" },
+        { "id": "vent-atmosphere", "name": "Vent Atmosphere", "description": "A hatch opens to nothing. The air leaves in a scream.", "action": { "targeting": { "shape": "area", "range": 5, "radius": 2, "affects": "enemies", "needsLos": true }, "effects": [{ "type": "resource", "resource": "oxygen", "amount": { "base": -12 } }, { "type": "damage", "amount": { "base": 2, "dice": "1d4" }, "damageType": "vacuum" }, { "type": "push", "distance": 2 }], "vfx": { "kind": "cloud", "color": "#c8b6ff" } }, "cost": { "resource": "mp", "amount": 10 }, "cooldown": 8, "useWhen": "target_in_range" },
         { "id": "deploy-custodian", "name": "Deploy Custodian", "description": "A floor panel lifts; something with six legs climbs out.", "action": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "summon", "actor": "custodian-unit", "count": 1, "allied": false }], "vfx": { "kind": "ring", "color": "#e4572e" } }, "cooldown": 25, "useWhen": "low_hp" }
       ],
       "resistances": [{ "damageType": "cold", "multiplier": 0.5 }, { "damageType": "spore", "multiplier": 0 }, { "damageType": "ion", "multiplier": 1.25 }],
@@ -375,14 +375,14 @@
     {
       "id": "ration-brick", "name": "Ration Brick", "kind": "Food", "description": "Pressed algae and soy, flavoured 'Tuesday'. Nobody knows what Tuesday tastes like.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
-      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 5 } }] },
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 7 } }] },
       "rarity": "common", "value": 4, "knowledge": "clear", "appearanceGroup": "supply",
       "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.16, 0.06, 0.1], "pos": [0, 0.04, 0], "color": "#7a8b5a", "material": "matte" }], "idle": "bob" }
     },
     {
       "id": "moss-poultice", "name": "Moss Poultice", "kind": "Remedy", "description": "Living cloister moss in a gel pack. Pressed to a wound, it gets to work.",
       "category": "consumable", "useMode": "consumed", "stackable": true,
-      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 6 } }, { "type": "apply_status", "status": "mending", "duration": 8 }, { "type": "remove_status", "status": "spored" }], "vfx": { "kind": "sparkle", "color": "#5fb58a" } },
+      "onUse": { "targeting": { "shape": "self", "range": 0, "radius": 0, "affects": "self_only", "needsLos": false }, "effects": [{ "type": "heal", "amount": { "base": 7 } }, { "type": "apply_status", "status": "mending", "duration": 8 }, { "type": "remove_status", "status": "spored" }], "vfx": { "kind": "sparkle", "color": "#5fb58a" } },
       "rarity": "uncommon", "value": 18, "knowledge": "clear", "appearanceGroup": "supply",
       "model": { "archetype": "prop", "parts": [{ "shape": "box", "size": [0.16, 0.04, 0.16], "pos": [0, 0.03, 0], "color": "#5fb58a", "material": "glass", "emissive": "#2d6a4f" }], "idle": "bob" }
     },
@@ -504,17 +504,17 @@
   },
   "areas": [
     {
-      "name": "Deck 7: The Moss Cloisters",
+      "name": "The Moss Cloisters",
       "description": "Terraced hydroponic galleries where the ship breathes. Grow-lamps hum over trellises of moss. Lately the moss has been leaning, all of it, toward the hull.",
       "generator": "ship", "size": "medium", "params": { "corridorWidth": 2, "rooms": 9, "symmetry": 1 },
       "floor": { "color": "#3a4a40", "color2": "#2f3d35", "material": "metal", "pattern": "metal_plates" },
       "wall": { "color": "#6b7f75", "color2": "#3f6e57", "material": "metal", "height": 1.8, "pattern": "metal_plates" },
       "lighting": { "ambient": "#6fa287", "ambientIntensity": 0.35, "fog": { "color": "#1d2e25", "density": 0.03 }, "lamps": { "color": "#c7ffb8", "intensity": 1.6, "frequency": 0.1, "flicker": false }, "playerLight": 3 },
       "actors": [
-        { "actor": "pruning-drone", "weight": 30, "min": 2, "max": 4 },
-        { "actor": "sleepwalker", "weight": 20, "min": 1, "max": 3 },
-        { "actor": "lamplighter-moth", "weight": 20, "min": 2, "max": 5 },
-        { "actor": "spore-choir", "weight": 15, "min": 1, "max": 2 }
+        { "actor": "pruning-drone", "weight": 30, "min": 0, "max": 1 },
+        { "actor": "sleepwalker", "weight": 20, "min": 0, "max": 0 },
+        { "actor": "lamplighter-moth", "weight": 20, "min": 2, "max": 3 },
+        { "actor": "spore-choir", "weight": 15, "min": 0, "max": 0 }
       ],
       "placed": [
         { "actor": "sister-ula", "where": "near_start" },

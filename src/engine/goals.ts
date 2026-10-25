@@ -6,6 +6,7 @@
  */
 import type { Condition } from '../schema/world';
 import type { Ctx } from './ctx';
+import { own } from './util';
 
 /** the references of a condition tree */
 export interface ConditionRefs {
@@ -88,6 +89,6 @@ export function requiredDefeats(ctx: Ctx): Set<string> {
   const refs = emptyRefs();
   for (const c of progressConditions(ctx)) collectRefs(c, refs);
   const out = new Set<string>();
-  for (const [id, n] of refs.defeats) if ((ctx.s.defeated[id] ?? 0) < n) out.add(id);
+  for (const [id, n] of refs.defeats) if ((own(ctx.s.defeated, id) ?? 0) < n) out.add(id);
   return out;
 }
