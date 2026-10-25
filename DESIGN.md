@@ -448,3 +448,15 @@ v1 is done when all of these hold. Each one is checked by automated tests or an 
   others, such as simultaneous turns with a short timer, async/independent turns, or real-time-ish
   ticks. Occasionally missing a turn or having an action resolve imperfectly is acceptable. Fluency
   matters more than strict turn fairness.
+  **Chat (required for the multiplayer edition):** a simple text chat between players.
+  - When the speaking player is visible on screen, the message appears as a speech bubble above
+    their character. The bubble lasts a few seconds, stacks or queues if several messages arrive,
+    and stays readable over the 3D scene.
+  - When the speaking player is not visible (off-screen, in fog of war or in another area), the
+    message scrolls up in a chat column at the side, with the player's name and colour.
+  - The input is always reachable: Enter on desktop, a chat button on phones. Typing must never
+    trigger game keys, and sending must not cost a turn or make anyone wait.
+  - Keep the history in the side column so missed bubbles can be re-read. Add basic length limits
+    and rate limits.
+  - Multiplayer is not built in v1, but the v1 UI should not block this. For example, the speech
+    bubbles NPCs could use in v1 should be reusable for player chat.
