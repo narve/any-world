@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-kkg-talen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Biblioteket, halv fem. Ti tusen bøker, tre lesesalselever som ikke har gått hjem, og en lyd som minner om latin. Mellom hyllene blafrer noe tungt i rødt skinn. Det er fra 1492, og det har noe som tilhører deg."
+          },
+          {
+            "type": "mood",
+            "music": "calm",
+            "tint": "#ffd9a0"
+          }
+        ]
+      }
+    }
+  ]
+}

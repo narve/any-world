@@ -616,6 +616,22 @@
       "worldId": "nb-russetid-bussen"
     },
     {
+      "id": "nb-kkg-talen",
+      "prompt": "Kristiansand katedralskole Gimle, fredag ettermiddag: du er elevrådsleder og skal holde talen på skoleballet klokka sju, men talen er borte. Én side sitter fast i skriveren, én er bokmerke i en bok fra 1492, og én har havnet inni et beatmaleri i gangen. Finn alle tre før nestlederen holder sin egen KI-tale.",
+      "language": "nb",
+      "genre": "skolekomedie",
+      "tags": [
+        "teen",
+        "school",
+        "norway",
+        "social",
+        "comedy"
+      ],
+      "teaser": "Skoleballet starter klokka sju, og talen din er spredd over hele skolen.",
+      "nonViolent": true,
+      "worldId": "nb-kkg-talen"
+    },
+    {
       "id": "nb-troll-direktoratet",
       "prompt": "Trollene under Dovre har fått sitt eget direktorat, og du er det første mennesket som har søkt om å bygge hytte på trollgrunn. Skjemaene må være ferdig utfylt før sola står opp, saksbehandleren har tre hoder som er hjertens uenige, og klagefristen er hundre år.",
       "language": "nb",

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/nb-kkg-talen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Selvtilliten din er nesten borte. Dum spiro spero (så lenge jeg puster, håper jeg). Ta en vaffel. Pharsalia har overlevd fem hundre år med verre lesere enn deg."
+          }
+        ]
+      }
+    }
+  ]
+}

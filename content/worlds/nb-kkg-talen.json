@@ -1,0 +1,4482 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Talen",
+    "tagline": "Skoleballet starter klokka sju. Talen din er borte: én side i skriveren, én i en bok fra 1492, én inni et maleri.",
+    "genre": "skolekomedie",
+    "tags": [
+      "skole",
+      "kkg",
+      "kristiansand",
+      "ikke-voldelig",
+      "sosialt",
+      "skoleball",
+      "latin"
+    ],
+    "tone": "morsomt, varmt, litt panisk",
+    "era": "nåtid, en fredag i desember, timene før skoleballet",
+    "premise": "Du er elevrådsleder på Kristiansand katedralskole Gimle, valgt med 51,3 prosent, og i kveld skal du holde talen på skoleballet. Den lå i elevrådsmappa i lunsjen. Nå er den borte. Side 1 sitter fast i skriveren på Servicetorget. Side 2 brukes som bokmerke i en bok fra 1492 i biblioteket. Side 3 har på en eller annen måte havnet inni et av beatmaleriene i gangen. Og nestlederen i elevrådet har allerede skrevet en reservetale med KI. Den er elleve sider og begynner med «I dagens samfunn».",
+    "prompt": "Kristiansand katedralskole Gimle, fredag ettermiddag: du er elevrådsleder og skal holde talen på skoleballet klokka sju, men talen er borte. Én side sitter fast i skriveren, én er bokmerke i en bok fra 1492, og én har havnet inni et beatmaleri i gangen. Finn alle tre før nestlederen holder sin egen KI-tale.",
+    "nonViolent": true,
+    "language": "nb"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Scenetekke",
+        "abbr": "SCN",
+        "description": "Hvor godt du eier et rom. Stemme, holdning og blikk som ikke flakker."
+      },
+      "dex": {
+        "name": "Kjapphet",
+        "abbr": "KJP",
+        "description": "Hvor fort replikken kommer, og hvor fort du smetter unna kleine øyeblikk."
+      },
+      "int": {
+        "name": "Belest",
+        "abbr": "BEL",
+        "description": "Alt du har lest, pugget og hørt i timen. Driver de store replikkene."
+      },
+      "hp": {
+        "name": "Selvtillit",
+        "abbr": "SLV",
+        "description": "Hvor lenge du holder masken. På null går du hjem og ser ballet på andres story."
+      },
+      "mp": {
+        "name": "Pågangsmot",
+        "abbr": "MOT",
+        "description": "Krutt til de store øyeblikkene. Fylles sakte opp igjen."
+      },
+      "ac": {
+        "name": "Is i magen",
+        "abbr": "IS",
+        "description": "Hvor godt ting preller av deg."
+      }
+    },
+    "conflict": "Svar for deg",
+    "defeated": "målbundet",
+    "xp": "Respekt",
+    "levelUp": "Du vokser som menneske",
+    "currency": "kroner",
+    "lossTitle": "Ballet startet uten deg",
+    "winTitle": "Talen satt!",
+    "area": "Etappe"
+  },
+  "palette": {
+    "primary": "#1f3a6b",
+    "secondary": "#e8b33c",
+    "accent": "#ff5fa2",
+    "danger": "#e6394a",
+    "ui": "#151a2b",
+    "text": "#fbf6ec"
+  },
+  "damageTypes": [
+    {
+      "id": "physical",
+      "name": "Dytt",
+      "color": "#d6d6d6"
+    },
+    {
+      "id": "kleinhet",
+      "name": "Kleinhet",
+      "color": "#ff7aa2"
+    },
+    {
+      "id": "stress",
+      "name": "Stress",
+      "color": "#ff9f43"
+    },
+    {
+      "id": "sladder",
+      "name": "Sladder",
+      "color": "#ffd23f"
+    },
+    {
+      "id": "latin",
+      "name": "Latin",
+      "color": "#b48cff"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "flau",
+      "name": "Flau",
+      "description": "Kinnene brenner, og ordene kommer i feil rekkefølge.",
+      "harmful": true,
+      "color": "#ff8fab",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "stresset",
+      "name": "Stresset",
+      "description": "Hodet er fullt av klokkeslett. Du tenker tregere.",
+      "harmful": true,
+      "color": "#ff9f43",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "latinforvirret",
+      "name": "Latinforvirret",
+      "description": "Noen har sitert heksameter rett i ansiktet ditt. Du går litt i ring.",
+      "harmful": true,
+      "color": "#b48cff",
+      "flags": [
+        "confused"
+      ]
+    },
+    {
+      "id": "bustete",
+      "name": "Bustete",
+      "description": "Sveisen har gitt opp. Det har litt av scenetekken også (−2 Scenetekke).",
+      "harmful": true,
+      "color": "#a0785a",
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "glitter-i-oyet",
+      "name": "Glitter i øyet",
+      "description": "Alt glitrer, og du ser nesten ingenting.",
+      "harmful": true,
+      "color": "#ffe9f5",
+      "modifiers": [
+        {
+          "stat": "sight",
+          "amount": -3
+        }
+      ]
+    },
+    {
+      "id": "malingsflekket",
+      "name": "Malingsflekket",
+      "description": "Våt beatmaling på skoene. Hvert skritt klistrer.",
+      "harmful": true,
+      "color": "#3ac1c9",
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "gira",
+      "name": "Gira",
+      "description": "Kakao, sukker og adrenalin. Du er overalt samtidig.",
+      "harmful": false,
+      "color": "#c6ff3a",
+      "flags": [
+        "hasted"
+      ]
+    },
+    {
+      "id": "inspirert",
+      "name": "Inspirert",
+      "description": "Du husker hvorfor du stilte til valg. Selvtilliten kommer litt tilbake hver runde.",
+      "harmful": false,
+      "color": "#ffd23f",
+      "perTurn": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "flags": [
+        "regenerating"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "sveis",
+      "name": "Sveis",
+      "description": "Hvor godt håret holder seg til ballet. Synker med 1 hvert 25. trekk. På 0 blir du Bustete. Hårspray fyller på.",
+      "color": "#e8b33c",
+      "max": 20,
+      "start": 16,
+      "perTurn": -0.04,
+      "onEmpty": [
+        {
+          "type": "apply_status",
+          "status": "bustete",
+          "duration": 6
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "sveisen-ma-sitte",
+      "name": "Sveisen må sitte til sju",
+      "description": "Sveis synker med 1 hvert 25. trekk. Står den på 0, er du Bustete (−2 Scenetekke) til du finner hårspray.",
+      "playerTriggers": [],
+      "switches": {}
+    },
+    {
+      "id": "kunnskap-kultur-glede",
+      "name": "Kunnskap, kultur og glede",
+      "description": "Skolens verdier henger på veggen. Hver gang du gjør noen målbundet, er det 1 av 3 sjanse for at gleden gir deg 3 Selvtillit tilbake.",
+      "playerTriggers": [
+        {
+          "on": "on_kill",
+          "chance": 0.33,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 3
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#ffd23f"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Tiril",
+    "title": "Elevrådsleder, valgt med 51,3 prosent",
+    "description": "Tredjeklassing på studiespesialisering. Har en rød ringperm, et ballantrekk i trekkpose og en tale som skulle vært ferdig i går. Kan alle reglene for ordstyring utenat.",
+    "stats": {
+      "str": 11,
+      "dex": 11,
+      "int": 14,
+      "hp": 30,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 9,
+    "sight": 8,
+    "unarmed": {
+      "name": "Sukk",
+      "verb": "sukker høyt mot",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "kleinhet"
+    },
+    "startingItems": [
+      {
+        "item": "elevradsmappa",
+        "equipped": true
+      },
+      {
+        "item": "hettegenser",
+        "equipped": true
+      },
+      {
+        "item": "elevradsstemmen"
+      },
+      {
+        "item": "kantinevaffel",
+        "count": 2
+      },
+      {
+        "item": "harspray",
+        "count": 1
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 28,
+      "curve": 1.55,
+      "hpPerLevel": 5,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "debattrutine",
+          "name": "Debattrutine",
+          "description": "Tre år med paneldebatt i aulaen. +2 Belest.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "scenevant",
+          "name": "Scenevant",
+          "description": "Du har stått på scenen med Idun før. +2 Scenetekke.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "kjapp-i-replikken",
+          "name": "Kjapp i replikken",
+          "description": "Du svarer før de er ferdige. +2 Kjapphet.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "isbit",
+          "name": "Isbit i magen",
+          "description": "Du har overlevd tre fellesmøter. +1 Is i magen.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ],
+          "minLevel": 2
+        },
+        {
+          "id": "hoyttalerstemme",
+          "name": "Høyttalerstemme",
+          "description": "Lærer deg Kunngjøring: alle du ser blir flaue på en gang.",
+          "grantItems": [
+            "kunngjoring"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "verdibevisst",
+          "name": "Verdibevisst",
+          "description": "Lærer deg Kunnskap, kultur og glede: hel deg selv og bli Inspirert.",
+          "grantItems": [
+            "kkg-verdiene"
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "harspray-i-veska",
+          "name": "Hårspray i veska",
+          "description": "Hver gang du kommer til en ny etappe, får du 6 Sveis.",
+          "triggers": [
+            {
+              "on": "on_area_enter",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "sveis",
+                    "amount": {
+                      "base": 6
+                    }
+                  }
+                ],
+                "vfx": {
+                  "kind": "sparkle",
+                  "color": "#e8b33c"
+                }
+              }
+            }
+          ],
+          "minLevel": 3
+        },
+        {
+          "id": "referatforer",
+          "name": "Referatfører",
+          "description": "Alt blir skrevet ned, også hvem som skylder deg. +2 kroner hver gang du gjør noen målbundet.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "currency",
+                    "amount": 2
+                  }
+                ],
+                "vfx": {
+                  "kind": "none"
+                }
+              }
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "vokst-som-menneske",
+          "name": "Vokst som menneske",
+          "description": "Der du vokser som menneske, sto det i brosjyren. Det stemte. +6 Selvtillit.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 6
+            }
+          ],
+          "minLevel": 4
+        },
+        {
+          "id": "siste-ord",
+          "name": "Siste ord",
+          "description": "Når Selvtilliten nesten er borte, tenker du på hvem talen er for: hel 8.",
+          "triggers": [
+            {
+              "on": "on_low_hp",
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 8
+                    }
+                  }
+                ],
+                "vfx": {
+                  "kind": "ring",
+                  "color": "#ffd23f"
+                }
+              }
+            }
+          ],
+          "minLevel": 5
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.88,
+        "build": "slim",
+        "skin": "#f1c9a5",
+        "top": "#8c8f99",
+        "bottom": "#1f3a6b",
+        "accent": "#e6394a",
+        "hair": "#7a4a26",
+        "hairStyle": "bun",
+        "headwear": "none",
+        "outfit": "plain",
+        "holding": "book"
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "forsteklassing",
+      "name": "Førsteklassing med spørsmål",
+      "description": "Har gått på KKG i fire måneder og vil vite om ballet har dresscode, om man må danse, og om du er den ekte elevrådslederen.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 6,
+        "ac": 10,
+        "str": 6,
+        "dex": 12,
+        "int": 7
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Oppfølgingsspørsmål",
+        "verb": "stiller et spørsmål til",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "stress"
+      },
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.15
+      },
+      "xp": 4,
+      "loot": [
+        {
+          "item": "kantinevaffel",
+          "chance": 0.15
+        }
+      ],
+      "tags": [
+        "elev"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.72,
+          "build": "slim",
+          "skin": "#e8b996",
+          "top": "#3fa9f5",
+          "bottom": "#2b2b6b",
+          "hair": "#d8b25a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "holding": "phone"
+        }
+      }
+    },
+    {
+      "id": "glitterkomite",
+      "name": "Ballkomiteen med glitterpistol",
+      "description": "Pynter alt som står stille. Du står for stille.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 8,
+        "ac": 11,
+        "str": 7,
+        "dex": 13,
+        "int": 9
+      },
+      "speed": 85,
+      "attack": {
+        "name": "Glitterskudd",
+        "verb": "glitrer ned",
+        "damage": {
+          "dice": "1d4"
+        },
+        "damageType": "kleinhet",
+        "range": 3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "glitter-i-oyet",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#ffe9f5"
+            }
+          }
+        },
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "behaviour": {
+        "type": "kiter",
+        "param": 2,
+        "erratic": 0.2
+      },
+      "xp": 6,
+      "loot": [
+        {
+          "item": "konfettiror",
+          "chance": 0.2
+        },
+        {
+          "item": "harspray",
+          "chance": 0.2
+        }
+      ],
+      "tags": [
+        "elev",
+        "ballkomiteen"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#c99b78",
+          "top": "#ff5fa2",
+          "bottom": "#2a2a3a",
+          "accent": "#ffe9f5",
+          "hair": "#1a1a1a",
+          "hairStyle": "long",
+          "holding": "gun"
+        },
+        "light": {
+          "color": "#ffd6ec",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "vikar",
+      "name": "Vikar som leter etter rommet",
+      "description": "Har lett etter rom 2114 siden andre time. Spør alle om veien og hører aldri på svaret.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 11,
+        "ac": 10,
+        "str": 10,
+        "dex": 9,
+        "int": 12
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Spør om veien",
+        "verb": "spør om veien",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "stress"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.2
+      },
+      "xp": 6,
+      "loot": [
+        {
+          "item": "laererkaffe",
+          "chance": 0.25
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "tags": [
+        "voksen"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#e0b48f",
+          "top": "#7a6a4f",
+          "bottom": "#3b3b3b",
+          "hair": "#8a8a8a",
+          "hairStyle": "short",
+          "outfit": "coat",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "skriveren",
+      "name": "Skriveren på Servicetorget",
+      "description": "Har spist side 1 av talen din. Blinker oransje. Skriver «PAPIRSTOPP I SKUFF 2» på skjermen, men det finnes ingen skuff 2.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 22,
+        "ac": 11,
+        "str": 12,
+        "dex": 8,
+        "int": 4
+      },
+      "speed": 70,
+      "attack": {
+        "name": "Papirstopp",
+        "verb": "kaster papirstopp på",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "stress"
+      },
+      "abilities": [
+        {
+          "id": "tonerstov",
+          "name": "Tonerstøv",
+          "description": "Et sukk av svart støv fra innmaten.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 1,
+              "radius": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "physical"
+              },
+              {
+                "type": "apply_status",
+                "status": "stresset",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#333333"
+            }
+          },
+          "cooldown": 6
+        }
+      ],
+      "behaviour": {
+        "type": "ambusher"
+      },
+      "xp": 18,
+      "loot": [
+        {
+          "item": "kantinevaffel",
+          "chance": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              },
+              {
+                "type": "message",
+                "text": "Skriveren hikster, piper én gang og spytter ut et krøllete ark. Det er ditt."
+              }
+            ]
+          }
+        }
+      ],
+      "tags": [
+        "maskin",
+        "elite"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#e8e8e8",
+          "secondary": "#4a4a4a",
+          "accent": "#ff9f43"
+        },
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.7,
+              0.45,
+              0.55
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#e8e8e8",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.12,
+              0.06,
+              0.02
+            ],
+            "pos": [
+              0.2,
+              0.45,
+              0.28
+            ],
+            "color": "#ff9f43",
+            "material": "glow",
+            "emissive": "#ff9f43"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#ff9f43",
+          "intensity": 0.8,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "hysjer",
+      "name": "Lesesalens hysjer",
+      "description": "Har lest til eksamen siden oktober. Tåler ikke pust, papirlyd eller tanken på et skoleball.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 15,
+        "ac": 12,
+        "str": 10,
+        "dex": 10,
+        "int": 13
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Hysj",
+        "verb": "hysjer hardt på",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "kleinhet",
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 8,
+      "loot": [
+        {
+          "item": "kakao",
+          "chance": 0.2
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "tags": [
+        "elev"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "slim",
+          "skin": "#f3d2b8",
+          "top": "#4a6b5a",
+          "bottom": "#2f3640",
+          "hair": "#2b1b12",
+          "hairStyle": "braids",
+          "headwear": "headphones",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "fotnote",
+      "name": "Flyvende fotnote",
+      "description": "En liten stjerne med henvisning som har løsnet fra en side og flagrer etter deg. Den vil bare at du skal se nederst på siden.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 9,
+        "ac": 12,
+        "str": 6,
+        "dex": 14,
+        "int": 10
+      },
+      "speed": 130,
+      "attack": {
+        "name": "Henvisning",
+        "verb": "henviser til",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "latin"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.3
+      },
+      "xp": 5,
+      "tags": [
+        "bok"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#fdf6e3",
+          "secondary": "#b48cff",
+          "accent": "#1a1a1a"
+        },
+        "scale": 0.6,
+        "idle": "hover"
+      }
+    },
+    {
+      "id": "pharsalia",
+      "name": "Pharsalia (1492)",
+      "description": "Bibliotekets eldste bok, trykt i Venezia i 1492. Ti bind borgerkrig på latin, og noen har brukt side 2 av talen din som bokmerke i den. Den er ikke fornøyd.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "str": 11,
+        "dex": 10,
+        "int": 16
+      },
+      "speed": 80,
+      "attack": {
+        "name": "Heksameter",
+        "verb": "siterer heksameter for",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "latin",
+        "range": 2,
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "alea-iacta-est",
+          "name": "Alea iacta est",
+          "description": "Terningen er kastet. Ti linjer latin rett i ansiktet.",
+          "action": {
+            "targeting": {
+              "shape": "ray",
+              "range": 5,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                },
+                "damageType": "latin"
+              },
+              {
+                "type": "apply_status",
+                "status": "latinforvirret",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#b48cff"
+            }
+          },
+          "cooldown": 7
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 24,
+      "unique": true,
+      "resistances": [
+        {
+          "damageType": "latin",
+          "multiplier": 0.5
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              },
+              {
+                "type": "message",
+                "text": "Boka klapper sammen med et sukk på 534 år. Bokmerket faller ut."
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "latinsk-ordbok",
+          "chance": 0.5
+        }
+      ],
+      "tags": [
+        "bok",
+        "elite"
+      ],
+      "model": {
+        "archetype": "freeform",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.12,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              18
+            ],
+            "color": "#6f1d1b",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.56,
+              0.1,
+              0.42
+            ],
+            "pos": [
+              0.01,
+              0.6,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              18
+            ],
+            "color": "#f2e8cf",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.3,
+              0.02
+            ],
+            "pos": [
+              0.1,
+              0.45,
+              0.2
+            ],
+            "color": "#ffffff",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#b48cff",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "beatpoet",
+      "name": "Beatpoet i svart polo",
+      "description": "Har gått ut av et maleri og leser dikt uten punktum. Knipser i stedet for å klappe.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 14,
+        "ac": 12,
+        "str": 8,
+        "dex": 12,
+        "int": 13
+      },
+      "speed": 85,
+      "attack": {
+        "name": "Dikt uten punktum",
+        "verb": "leser et dikt for",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "kleinhet",
+        "range": 3,
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 2,
+        "erratic": 0.2
+      },
+      "xp": 8,
+      "loot": [
+        {
+          "item": "ryktelapp",
+          "chance": 0.25
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "tags": [
+        "maleri"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.92,
+          "build": "slim",
+          "skin": "#e6c3a0",
+          "top": "#111111",
+          "bottom": "#111111",
+          "accent": "#3ac1c9",
+          "hair": "#2a2a2a",
+          "hairStyle": "short",
+          "headwear": "fedora",
+          "holding": "book"
+        },
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "saksofon",
+      "name": "Fri jazz-saksofon",
+      "description": "Har ingen eier, ingen melodi og ingen planer om å slutte.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 8,
+        "dex": 14,
+        "int": 5
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Improvisasjon",
+        "verb": "improviserer mot",
+        "damage": {
+          "base": 2,
+          "dice": "1d4"
+        },
+        "damageType": "stress"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.3
+      },
+      "xp": 7,
+      "loot": [
+        {
+          "item": "kakao",
+          "chance": 0.2
+        }
+      ],
+      "tags": [
+        "maleri",
+        "lyd"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#e8b33c",
+          "secondary": "#7a5a1a",
+          "accent": "#3ac1c9"
+        },
+        "idle": "sway",
+        "light": {
+          "color": "#e8b33c",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "penselstrok",
+      "name": "Selvbevisst penselstrøk",
+      "description": "Et tykt strøk turkis maling som har bestemt seg for å være abstrakt. Og våt.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 19,
+        "ac": 12,
+        "str": 13,
+        "dex": 7,
+        "int": 3
+      },
+      "speed": 70,
+      "attack": {
+        "name": "Smører",
+        "verb": "smører maling på",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "physical",
+        "accuracyStat": "str"
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "malingsflekket",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#3ac1c9"
+            }
+          }
+        }
+      ],
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 8,
+      "loot": [
+        {
+          "item": "kantinevaffel",
+          "chance": 0.2
+        }
+      ],
+      "tags": [
+        "maleri"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#3ac1c9",
+          "secondary": "#ff5fa2",
+          "accent": "#ffd23f"
+        },
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "setningen",
+      "name": "Den uendelige setningen",
+      "description": "Side 3 av talen din, skrevet om av beatpoetene til én setning uten slutt. Den kveiler seg rundt arket og sier «og så» hvert femte ord.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 34,
+        "ac": 12,
+        "str": 13,
+        "dex": 11,
+        "int": 12
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Og så",
+        "verb": "sier «og så» til",
+        "damage": {
+          "base": 3,
+          "dice": "1d6"
+        },
+        "damageType": "kleinhet"
+      },
+      "abilities": [
+        {
+          "id": "kommakaskade",
+          "name": "Kommakaskade",
+          "description": "Sytten komma i strekk. Du venter på et punktum som aldri kommer.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "radius": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "kleinhet"
+              },
+              {
+                "type": "apply_status",
+                "status": "flau",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#ff5fa2"
+            }
+          },
+          "cooldown": 7
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 26,
+      "unique": true,
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              },
+              {
+                "type": "message",
+                "text": "Du setter et punktum. Setningen stopper, forbløffet. Arket ditt daler ned."
+              }
+            ]
+          }
+        }
+      ],
+      "tags": [
+        "maleri",
+        "elite"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#fdf6ec",
+          "secondary": "#1a1a1a",
+          "accent": "#ff5fa2"
+        },
+        "idle": "sway",
+        "light": {
+          "color": "#fdf6ec",
+          "intensity": 0.6,
+          "radius": 1.5
+        }
+      }
+    },
+    {
+      "id": "ballkomite",
+      "name": "Ballkomiteens billettkontroll",
+      "description": "Har en liste. Du står ikke på den. Det spiller ingen rolle at du er elevrådsleder.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 16,
+        "ac": 12,
+        "str": 11,
+        "dex": 11,
+        "int": 10
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Billettkontroll",
+        "verb": "krever billett av",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "stress"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "xp": 9,
+      "loot": [
+        {
+          "item": "harspray",
+          "chance": 0.25
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "tags": [
+        "elev",
+        "ballkomiteen"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#efc29c",
+          "top": "#1f3a6b",
+          "bottom": "#1a1a1a",
+          "accent": "#e8b33c",
+          "hair": "#c99a4a",
+          "hairStyle": "bun",
+          "outfit": "suit",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "nestleder",
+      "name": "Sondre, nestleder",
+      "description": "Elevrådets nestleder. Har skrevet en reservetale med KI-portalen. Den er elleve sider og begynner med «I dagens samfunn». Han har allerede testet mikrofonen tre ganger.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 88,
+        "ac": 13,
+        "str": 14,
+        "dex": 11,
+        "int": 13,
+        "mp": 20
+      },
+      "speed": 100,
+      "attack": {
+        "name": "«I dagens samfunn …»",
+        "verb": "leser reservetalen for",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "kleinhet"
+      },
+      "abilities": [
+        {
+          "id": "kulepunkter",
+          "name": "Tolv kulepunkter",
+          "description": "Han leser opp alle tolv kulepunktene om «fellesskap». Med tydelige pauser.",
+          "action": {
+            "targeting": {
+              "shape": "ray",
+              "range": 6,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 3,
+                  "dice": "1d6"
+                },
+                "damageType": "kleinhet"
+              },
+              {
+                "type": "apply_status",
+                "status": "flau",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#ff7aa2"
+            }
+          },
+          "cost": {
+            "resource": "mp",
+            "amount": 5
+          },
+          "cooldown": 5
+        },
+        {
+          "id": "kaller-komiteen",
+          "name": "Kaller på ballkomiteen",
+          "description": "«Kan noen fra komiteen sjekke billetten hennes?»",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "ballkomite",
+                "count": 1
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#1f3a6b"
+            }
+          },
+          "cooldown": 14,
+          "useWhen": "start_of_fight"
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "sladder",
+          "multiplier": 0.5
+        },
+        {
+          "damageType": "latin",
+          "multiplier": 1.5
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 110,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Velment, overforberedt og livredd for å være den som ikke holdt tale. Snakker i kulepunkter. Tror KI-en skriver bedre enn ham.",
+        "greeting": "Tiril! Så bra du kom. Jeg har en reservetale, bare i tilfelle. Den er på elleve sider. Vil du høre innledningen?",
+        "lines": [
+          "I dagens samfunn er det viktig at vi som elever står sammen.",
+          "Jeg tok aldri latin. Jeg angrer litt nå.",
+          "KI-portalen sa at talen min hadde «god struktur». Det er en kompliment."
+        ],
+        "secrets": "Han har aldri holdt tale foran mer enn tolv personer. Han håper i all hemmelighet at Tiril finner talen sin, så han slipper.",
+        "wants": "At noen sier at han er god til noe annet enn å skrive referat. At han får introdusere Tiril.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 16
+      },
+      "tags": [
+        "elev",
+        "boss"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "scale": 1.1,
+        "humanoid": {
+          "height": 1,
+          "build": "broad",
+          "skin": "#efc29c",
+          "top": "#ffffff",
+          "bottom": "#1f3a6b",
+          "accent": "#e6394a",
+          "hair": "#c99a4a",
+          "hairStyle": "short",
+          "outfit": "suit",
+          "holding": "phone"
+        },
+        "light": {
+          "color": "#ffe8a3",
+          "intensity": 0.9,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "vaktmester",
+      "name": "Vaktmester Tor Inge",
+      "description": "Har nøkkel til alt, gaffateip i hver lomme og har sett tjue skoleball. Snakker sørlandsk og har aldri hastverk.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 25,
+        "ac": 12
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "quest_giver",
+        "personality": "Rolig, tørrvittig sørlending. Fikser alt med gaffateip og en kopp kaffe. Liker elevrådsledere som sier takk.",
+        "greeting": "Nei men, elevrådslederen. Du ser ut som en som har mista noe. Ta litt gaffateip, vennen. Det fikser det meste.",
+        "lines": [
+          "Skriveren på Servicetorget? Den har spist mer papir enn elevene har lest.",
+          "Biblioteket stenger klokka fire, men jeg har nøkkel. Jeg har nøkkel til alt.",
+          "Ikke se for lenge på beatmaleriene i gangen. Bare et råd."
+        ],
+        "stock": [
+          "gaffateip",
+          "nokkelknippe"
+        ],
+        "secrets": "Han så noen fra lesesalen bruke et løst ark som bokmerke i den gamle latinboka. Han vet at maleriene i gangen trekker til seg ting rett før ballet hvert år.",
+        "wants": "At noen i elevrådet takker vaktmesteren i talen. Bare én setning.",
+        "persuadeStat": "str",
+        "persuadeDifficulty": 8
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "round",
+          "skin": "#d8a07c",
+          "top": "#2f4f6f",
+          "bottom": "#2f4f6f",
+          "accent": "#c0c0c0",
+          "hair": "#cfcfcf",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "kantinesjef",
+      "name": "Kantinesjefen Randi",
+      "description": "Har drevet kantina så lenge at hun har servert vafler til lærerne som lærer deg i dag. Hører alt som blir sagt over et brett.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Tørr, varm, kaller alle «vennen», selger sladder og vafler til samme pris. Vet alltid hvem som har sagt hva.",
+        "greeting": "Vaffel, vennen? Du ser ut som du trenger to. Og ja, jeg har hørt om talen.",
+        "lines": [
+          "Nestlederen satt her i lunsjen og øvde. Han sa «i dagens samfunn» fire ganger.",
+          "Ballkomiteen har lånt alle brettene mine til pynt. Alle.",
+          "Kunnskap, kultur og glede, står det på veggen. Glede er vaffel. Det vet alle."
+        ],
+        "stock": [
+          "kantinevaffel",
+          "kakao",
+          "harspray",
+          "ryktelapp",
+          "konfettiror"
+        ],
+        "secrets": "Hun vet at nestlederen er livredd for å holde tale. Hun hørte ham be KI-portalen gjøre talen «mindre skummel».",
+        "wants": "At ingen danser på bordene i år. Hun sier det hvert år.",
+        "persuadeStat": "str",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#e8bfa0",
+          "top": "#ffffff",
+          "bottom": "#5b6b8a",
+          "accent": "#e6394a",
+          "hair": "#b0b0b0",
+          "hairStyle": "bun",
+          "outfit": "plain",
+          "holding": "tool"
+        }
+      }
+    },
+    {
+      "id": "bibliotekar",
+      "name": "Bibliotekaren",
+      "description": "Passer på ti tusen bøker, én av dem fra 1492. Hysjer med øyenbrynene, aldri med munnen.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Rolig, presis, elsker gamle bøker og elever som spør om hjelp. Behandler panikk som en feil i katalogen.",
+        "greeting": "Sett deg ned. Pust. Talen din er ikke borte, den er bare feilarkivert.",
+        "lines": [
+          "Pharsalia er fra 1492. Den har sett verre ting enn et skoleball.",
+          "Biblioteket var byens offentlige bibliotek i over hundre år. Vi har mistet bedre ting enn en tale og funnet dem igjen.",
+          "Fotnotene biter ikke. Ikke hardt."
+        ],
+        "secrets": "Hun vet at noen brukte et ark som bokmerke i Pharsalia i dag, og at boka blir sur av slikt.",
+        "wants": "At noen låner en bok som ikke er pensum. Bare én."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.88,
+          "build": "average",
+          "skin": "#c58c69",
+          "top": "#6a4c93",
+          "bottom": "#2f3640",
+          "accent": "#e8b33c",
+          "hair": "#3a2a1a",
+          "hairStyle": "long",
+          "outfit": "coat",
+          "holding": "book"
+        },
+        "light": {
+          "color": "#fff2c8",
+          "intensity": 0.6,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "ib-eleven",
+      "name": "Nora, IB-elev",
+      "description": "Går på IB og skriver fordypningsoppgave om semikolon. Har ikke sovet siden mandag, men er overraskende god i en diskusjon.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 18,
+        "ac": 11,
+        "str": 10,
+        "dex": 12,
+        "int": 15
+      },
+      "attack": {
+        "name": "Kildehenvisning",
+        "verb": "kildehenviser",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "latin",
+        "range": 2,
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "follower",
+        "param": 2
+      },
+      "xp": 0,
+      "npc": {
+        "role": "ally",
+        "personality": "Lynrask, utslitt, hjelpsom. Retter grammatikk i hodet mens folk snakker. Vil gjerne være med på noe som ikke er en innlevering.",
+        "greeting": "Leter du etter talen din? Jeg så et ark i Pharsalia. Jeg kan bli med, hvis jeg slipper å tenke på fordypningsoppgaven.",
+        "lines": [
+          "Et semikolon er et punktum som ikke har bestemt seg.",
+          "Jeg har tre innleveringer på mandag. Det her er mye bedre.",
+          "Si ifra hvis du trenger en kilde. Jeg har alle."
+        ],
+        "secrets": "Hun skrev egentlig talen til nestlederen da han spurte, men slettet den. Hun synes Tirils er bedre.",
+        "wants": "Å bli nevnt i talen som «hun som visste hvor arket var».",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 7
+      },
+      "tags": [
+        "elev",
+        "ib"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.84,
+          "build": "slim",
+          "skin": "#a0663f",
+          "top": "#2e8b57",
+          "bottom": "#212529",
+          "accent": "#ffd23f",
+          "hair": "#120d0b",
+          "hairStyle": "long",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "kafevert",
+      "name": "Kaféverten i maleriet",
+      "description": "En malt mann med malt kaffe i et malt hjørne. Har stått der siden sekstitallet og tar gjerne kroner.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Avslappet, filosofisk, svarer alltid med et spørsmål. Synes ingenting haster, minst av alt et skoleball.",
+        "greeting": "Ny i rammen? Sett deg. Hva er egentlig en tale, når du tenker etter?",
+        "lines": [
+          "Beatpoetene har lånt arket ditt. De gir aldri noe tilbake, de bare skriver videre.",
+          "Utgangen er der fargene blir lysere. Hvis du har punktumet ditt.",
+          "Jeg ble malt i én eneste natt. Ingen har spurt meg om det var greit."
+        ],
+        "stock": [
+          "kakao",
+          "kantinevaffel",
+          "harspray",
+          "tradlos-mikrofon",
+          "ballantrekk"
+        ],
+        "secrets": "Han vet at Den uendelige setningen bare kan stoppes med et godt plassert punktum, og at det er side 3 av talen.",
+        "wants": "At noen ser lenge nok på ham til å legge merke til at han smiler."
+      },
+      "tags": [
+        "maleri"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#7fd6c9",
+          "top": "#ff5fa2",
+          "bottom": "#3ac1c9",
+          "accent": "#ffd23f",
+          "hair": "#1a1a1a",
+          "hairStyle": "short",
+          "headwear": "fedora",
+          "outfit": "coat",
+          "holding": "bottle"
+        },
+        "idle": "sway",
+        "light": {
+          "color": "#3ac1c9",
+          "intensity": 0.7,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "rektor",
+      "name": "Rektor Solveig",
+      "description": "Har holdt velkomsttale for tusenvis av førsteklassinger. Står ved scenekanten og ser ut som hun vet nøyaktig hvordan dette ender.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 25,
+        "ac": 12
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Varm, rolig, litt teatralsk. Siterer skolens verdier uten ironi og mener det hver gang.",
+        "greeting": "Tiril. Kunnskap, kultur og glede. Du har kunnskapen. Ballet er kulturen. Gleden må du ta med selv.",
+        "lines": [
+          "Denne skolen har flyttet tre ganger siden 1686. Den har aldri mistet en tale for godt.",
+          "Sondre spurte om han kunne ta talen. Jeg sa at det var opp til deg.",
+          "Der du vokser som menneske. Det står i brosjyren, men det er sant likevel."
+        ],
+        "secrets": "Hun har lest både Tirils og Sondres taler. Hun vet hvilken som er best, og at Sondre vet det også.",
+        "wants": "At talen blir holdt, at ingen danser på bordene, og at Kantine-Randi ikke sier opp."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#f0c8a0",
+          "top": "#7a1f3a",
+          "bottom": "#1a1a1a",
+          "accent": "#e8b33c",
+          "hair": "#a8a8a8",
+          "hairStyle": "short",
+          "outfit": "suit",
+          "holding": "none"
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "elevradsmappa",
+      "name": "Elevrådsmappa",
+      "kind": "Ringperm",
+      "description": "Rød ringperm med alle referater siden august. Ingen har lest dem, men du kan sitere fra dem.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Sitat fra referatet",
+        "verb": "siterer et referat for",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "sladder",
+        "accuracyStat": "int"
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.36,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#e6394a",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.32,
+              0.06
+            ],
+            "pos": [
+              0.02,
+              0.2,
+              0
+            ],
+            "color": "#fdf6ec",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tradlos-mikrofon",
+      "name": "Trådløs mikrofon",
+      "kind": "Mikrofon",
+      "description": "Lånt fra Idun-teateret og aldri levert tilbake. Alt du sier, høres i tre rom.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Forsterket replikk",
+        "verb": "sier i mikrofonen til",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "kleinhet",
+        "range": 3,
+        "accuracyStat": "str"
+      },
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.3,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.33,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "latinsk-ordbok",
+      "name": "Latinsk ordbok",
+      "kind": "Ordbok",
+      "description": "Fra latinfaget. Tung nok til å stoppe en dør, presis nok til å stoppe en diskusjon.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Riktig bøyning",
+        "verb": "retter latinen til",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "latin",
+        "accuracyStat": "int"
+      },
+      "requires": [
+        {
+          "stat": "int",
+          "min": 13
+        }
+      ],
+      "rarity": "rare",
+      "value": 40,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.12,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#3a2a5a",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.005,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.125,
+              0
+            ],
+            "color": "#e8b33c",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hettegenser",
+      "name": "Elevrådshettegenser",
+      "kind": "Genser",
+      "description": "Grå, med «ELEVRÅDET» på ryggen. Du har sovet i den to ganger denne uka.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.4,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#8c8f99",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ballantrekk",
+      "name": "Ballantrekket i trekkpose",
+      "kind": "Antrekk",
+      "description": "Du skulle ikke tatt det på før sju. Men nå er det krise, og du ser fantastisk ut.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "triggers": [
+        {
+          "on": "on_equip",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "sveis",
+                "amount": {
+                  "base": 3
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#e8b33c"
+            }
+          }
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.5,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#1f3a6b",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.3,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#e8b33c",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "navneskilt",
+      "name": "Navneskilt: «Elevrådsleder»",
+      "kind": "Navneskilt",
+      "description": "Laminert, litt skjevt. Folk tar deg mer på alvor når det står på brystet.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 1
+        },
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.1,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#fdf6ec",
+            "material": "glass"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "kantinevaffel",
+      "name": "Kantinevaffel",
+      "kind": "Vaffel",
+      "description": "Med brunost. Kantinas egentlige pensum. Gir deg selvtilliten tilbake.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8b06a"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.3,
+              0.04,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#e0a050",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.03,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#a0522d",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "kakao",
+      "name": "Kakao med krem",
+      "kind": "Drikke",
+      "description": "Fra automaten ved kantina. Varm selvtillit i pappkopp, og fart i beina.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "gira",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c6ff3a"
+        }
+      },
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.2,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#fdf6ec",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.06,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.21,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "harspray",
+      "name": "Hårspray fra ballkomiteen",
+      "kind": "Hårspray",
+      "description": "Halvtom boks som lukter jordbær og panikk. Gir 7 Sveis og fjerner Bustete.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "sveis",
+            "amount": {
+              "base": 7
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "bustete"
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#ffd6ec"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.09,
+              0.26,
+              0.09
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#ff5fa2",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.05,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.28,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "laererlasagne",
+      "name": "Lasagne fra lærerværelset",
+      "kind": "Matboks",
+      "description": "Merket «IKKE TA». Noen tok. Den var verdt det.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 10
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ]
+      },
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "matboks",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.1,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#90e0ef",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fiskegrateng",
+      "name": "Noens fiskegrateng",
+      "kind": "Matboks",
+      "description": "Oppvarmet i mikroen på lærerværelset. Hele gangen vet det nå. Og hele gangen vet at det var deg.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 3
+          },
+          {
+            "type": "message",
+            "text": "Fiskegrateng. Oppvarmet. Alle snur seg."
+          }
+        ]
+      },
+      "value": 1,
+      "knowledge": "unknown",
+      "appearanceGroup": "matboks",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.1,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#fdf6ec",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "laererkaffe",
+      "name": "Kaffe fra lærerværelset",
+      "kind": "Matboks",
+      "description": "Trukket siden halv åtte. Smaker som et vedtak. Gir krutt, og litt stress.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "gira",
+            "duration": 6
+          },
+          {
+            "type": "apply_status",
+            "status": "stresset",
+            "duration": 3
+          }
+        ]
+      },
+      "value": 8,
+      "knowledge": "unknown",
+      "appearanceGroup": "matboks",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.18,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.09,
+              0
+            ],
+            "color": "#5a3a22",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "konfettiror",
+      "name": "Konfettirør",
+      "kind": "Festutstyr",
+      "description": "Tre skudd konfetti fra ballkomiteens lager. Alle i nærheten blir stående og se dumme ut.",
+      "category": "throwable",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 4,
+          "radius": 1,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d6"
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.3,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "metal"
+          },
+          {
+            "shape": "cone",
+            "size": [
+              0.12,
+              0.1,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.34,
+              0
+            ],
+            "color": "#ff5fa2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ryktelapp",
+      "name": "Lapp med et rykte",
+      "kind": "Sladder",
+      "description": "Brettet fire ganger, skrevet med lilla gelpenn. Kast den til noen, og de har plutselig mye å forklare.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "stackable": true,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "2d4"
+            },
+            "damageType": "sladder"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#ffd23f"
+        }
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "pyramid",
+            "size": [
+              0.12,
+              0.03,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#c8a2ff",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "elevradsstemmen",
+      "name": "Elevrådsstemmen",
+      "kind": "Replikk",
+      "description": "Stemmen du bruker på fellesmøter. Rolig, tydelig og helt umulig å avbryte.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 4
+      },
+      "cooldown": 2,
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.25
+              }
+            },
+            "damageType": "kleinhet"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#ff7aa2"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.15,
+              0.3,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "color": "#ff7aa2",
+            "material": "glow",
+            "emissive": "#ff7aa2"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "kunngjoring",
+      "name": "Kunngjøring over høyttaleren",
+      "kind": "Replikk",
+      "description": "«Kan alle som står i veien for elevrådslederen flytte seg.» Alle du ser blir flaue.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 6
+      },
+      "cooldown": 6,
+      "onUse": {
+        "targeting": {
+          "shape": "all_visible",
+          "range": 6,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd23f"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.25,
+              0.25,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "kkg-verdiene",
+      "name": "Kunnskap, kultur og glede",
+      "kind": "Skolens verdier",
+      "description": "Du sier dem høyt, og mener dem. Hel deg selv, rist av deg alt det kleine og bli Inspirert.",
+      "category": "spell",
+      "useMode": "reusable",
+      "cost": {
+        "resource": "mp",
+        "amount": 6
+      },
+      "cooldown": 10,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          },
+          {
+            "type": "apply_status",
+            "status": "inspirert",
+            "duration": 5
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd23f"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "gaffateip",
+      "name": "Vaktmesterens gaffateip",
+      "kind": "Gaffateip",
+      "description": "Fikser det meste, også folk. To biter igjen: hver gir Selvtillit og fjerner alt som plager deg.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 2,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c0c0c0"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.2,
+              0.2,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#8a8a8a",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nokkelknippe",
+      "name": "Vaktmesterens nøkkelknippe",
+      "kind": "Nøkler",
+      "description": "Førti nøkler, én av dem passer alltid. Tar deg rett til utgangen av etappen du er i, én gang.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 1,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "teleport",
+            "mode": "to_exit"
+          },
+          {
+            "type": "message",
+            "text": "Klikk. Dør etter dør går opp, og du står ved utgangen."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c0c0c0"
+        }
+      },
+      "rarity": "rare",
+      "value": 35,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.16,
+              0.16,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.03,
+              0.14,
+              0.01
+            ],
+            "pos": [
+              0.06,
+              0.02,
+              0
+            ],
+            "color": "#e8b33c",
+            "material": "metal"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "side-1",
+      "name": "Talen, side 1: Innledningen",
+      "kind": "Taleark",
+      "description": "«Kjære alle sammen.» Krøllete, varm fra skriveren og med en svart tonerstripe på tvers. Du må ha den for å komme videre.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "grant_xp",
+                "amount": 10
+              },
+              {
+                "type": "message",
+                "text": "Side 1 av 3. Innledningen er reddet."
+              }
+            ]
+          }
+        }
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.01,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#fdf6ec",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.012,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.022,
+              0.05
+            ],
+            "color": "#1a1a1a",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "side-2",
+      "name": "Talen, side 2: Det morsomme",
+      "kind": "Taleark",
+      "description": "Vitsene, inkludert den om kantinevaflene. Lukter gammelt papir etter fem hundre år i Pharsalia. Du må ha den for å komme videre.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "grant_xp",
+                "amount": 10
+              },
+              {
+                "type": "message",
+                "text": "Side 2 av 3. Vitsene er tilbake, og de er fortsatt morsomme."
+              }
+            ]
+          }
+        }
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.01,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#f2e8cf",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "side-3",
+      "name": "Talen, side 3: Det rørende",
+      "kind": "Taleark",
+      "description": "Avslutningen, den som får folk til å grine. Litt turkis maling i margen. Du må ha den for å komme ut av maleriet.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "rarity": "unique",
+      "value": 0,
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "grant_xp",
+                "amount": 10
+              },
+              {
+                "type": "message",
+                "text": "Side 3 av 3. Hele talen er din igjen. Nå gjelder det bare å få holdt den."
+              }
+            ]
+          }
+        }
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.01,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#fdf6ec",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.05,
+              0.012,
+              0.2
+            ],
+            "pos": [
+              0.08,
+              0.022,
+              0
+            ],
+            "color": "#3ac1c9",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "scenemikrofonen",
+      "name": "Scenemikrofonen",
+      "kind": "Mikrofon",
+      "description": "Mikrofonen på scenen, varm etter tre lydprøver. Bruk den i ballsalen med alle tre sidene i hånda, så holder du talen.",
+      "category": "quest",
+      "useMode": "reusable",
+      "cooldown": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "side-1"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "side-2"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "side-3"
+            }
+          ]
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "talen-holdt"
+          },
+          {
+            "type": "message",
+            "text": "Du banker lett på mikrofonen. «Kjære alle sammen.» Det blir stille i hele salen."
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.9,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.14,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.95,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffe8a3",
+          "intensity": 1,
+          "radius": 2
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "elevskap",
+      "name": "Elevskap",
+      "description": "Grå skap med klistremerker. Noen står på gløtt, og noen lukter hårspray.",
+      "walkable": false,
+      "color": "#5d7aa0",
+      "height": 1.3,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "chance",
+          "p": 0.35
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "harspray"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd6ec"
+        }
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.3,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.65,
+              0
+            ],
+            "color": "#5d7aa0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.1,
+              0.02
+            ],
+            "pos": [
+              0.25,
+              0.9,
+              0.31
+            ],
+            "color": "#ff5fa2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "beatmaleri",
+      "name": "Beatkunst på veggen",
+      "description": "Et maleri fra skolens beatkunst-samling. Sterke farger, en saksofon, en mann med hatt. Det ser ut som det ser tilbake.",
+      "walkable": false,
+      "color": "#3ac1c9",
+      "height": 1.4,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "grant_xp",
+            "amount": 5
+          },
+          {
+            "type": "message",
+            "text": "Du ser lenge på maleriet. Mannen med hatten blunker. Det gjorde han ikke i går."
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.7,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#ff5fa2",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.4,
+              0.07
+            ],
+            "pos": [
+              0.05,
+              0.92,
+              0
+            ],
+            "color": "#3ac1c9",
+            "material": "glow",
+            "emissive": "#3ac1c9"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.96,
+              0.76,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.9,
+              -0.02
+            ],
+            "color": "#e8b33c",
+            "material": "wood"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nyvasket-gulv",
+      "name": "Nyvasket gulv",
+      "description": "Det står et gult skilt. Ingen leser det gule skiltet.",
+      "walkable": true,
+      "moveCost": 2,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "flau",
+          "duration": 1
+        }
+      ],
+      "color": "#b9e3ea"
+    },
+    {
+      "id": "kakaoautomat",
+      "name": "Kakaoautomaten",
+      "description": "Den eneste maskinen på skolen som alle stoler på. Dunk den på riktig sted.",
+      "walkable": false,
+      "color": "#7a3a1a",
+      "height": 1.4,
+      "emissive": "#ffcc88",
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "condition": {
+          "type": "chance",
+          "p": 0.6
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "kakao"
+          },
+          {
+            "type": "noise",
+            "radius": 5
+          }
+        ]
+      },
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.7,
+              1.4,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#7a3a1a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.6,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.9,
+              0.26
+            ],
+            "color": "#ffcc88",
+            "material": "glass",
+            "emissive": "#ffcc88"
+          }
+        ],
+        "light": {
+          "color": "#ffcc88",
+          "intensity": 0.7,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "bokhylle",
+      "name": "Bokhylle",
+      "description": "Ti tusen bøker fordelt på altfor mange hyller. Noen av dem er eldre enn byen.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#6b4a2b",
+      "height": 1.6,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.95,
+              1.6,
+              0.45
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#6b4a2b",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.85,
+              0.25,
+              0.4
+            ],
+            "pos": [
+              0,
+              1.1,
+              0.03
+            ],
+            "color": "#b5442c",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.85,
+              0.25,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.6,
+              0.03
+            ],
+            "color": "#2e5a8a",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vat-maling",
+      "name": "Våt maling",
+      "description": "Turkis og rosa, tykk som syltetøy. Skoene sitter fast.",
+      "walkable": true,
+      "moveCost": 2,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "malingsflekket",
+          "duration": 1
+        }
+      ],
+      "color": "#3ac1c9",
+      "emissive": "#1a6a70"
+    },
+    {
+      "id": "glitter",
+      "name": "Glitter på gulvet",
+      "description": "Ballkomiteen har vært her. Det kommer aldri helt bort.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "glitter-i-oyet",
+          "duration": 1
+        }
+      ],
+      "color": "#ffd6ec",
+      "emissive": "#ff9fd0"
+    },
+    {
+      "id": "spotlight",
+      "name": "Spotlight",
+      "description": "En varm sirkel av lys på dansegulvet. Står du her, banker hjertet fortere.",
+      "walkable": true,
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "gira",
+          "duration": 2
+        }
+      ],
+      "color": "#fff3b0",
+      "emissive": "#ffe066"
+    }
+  ],
+  "unknownAppearances": {
+    "matboks": [
+      {
+        "label": "Matboks med teip-lapp: «IKKE TA»",
+        "color": "#90e0ef"
+      },
+      {
+        "label": "Matboks som er varm av seg selv",
+        "color": "#fdf6ec"
+      },
+      {
+        "label": "Termokopp uten lokk",
+        "color": "#5a3a22"
+      },
+      {
+        "label": "Boks med et navn som er strøket over",
+        "color": "#ffafcc"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Mellombygget (kl. 15.30)",
+      "description": "Glassbygget som binder gamle Katedralskolen og gamle Gimle sammen. Kantina rydder, Servicetorget stenger, ballkomiteen henger opp glitter. Et sted her blinker skriveren oransje.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 2,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#c9cfd6",
+        "color2": "#b7bec7",
+        "material": "stone",
+        "pattern": "tiles"
+      },
+      "wall": {
+        "color": "#e9e4d8",
+        "color2": "#9fb8c9",
+        "material": "glass",
+        "height": 1.6
+      },
+      "lighting": {
+        "ambient": "#eef4ff",
+        "ambientIntensity": 0.9,
+        "lamps": {
+          "color": "#fff8e0",
+          "intensity": 1.2,
+          "frequency": 0.2,
+          "flicker": false
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "forsteklassing",
+          "weight": 40,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "vikar",
+          "weight": 25,
+          "min": 0,
+          "max": 1
+        },
+        {
+          "actor": "glitterkomite",
+          "weight": 20,
+          "min": 0,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "vaktmester",
+          "where": "near_start"
+        },
+        {
+          "actor": "kantinesjef",
+          "where": "centre"
+        },
+        {
+          "actor": "skriveren",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "kantinevaffel",
+          "weight": 30
+        },
+        {
+          "item": "kakao",
+          "weight": 15
+        },
+        {
+          "item": "harspray",
+          "weight": 15
+        },
+        {
+          "item": "ryktelapp",
+          "weight": 15
+        },
+        {
+          "item": "laererlasagne",
+          "weight": 8
+        },
+        {
+          "item": "fiskegrateng",
+          "weight": 6
+        },
+        {
+          "item": "laererkaffe",
+          "weight": 8
+        },
+        {
+          "item": "navneskilt",
+          "weight": 5
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "side-1",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "elevskap",
+          "density": 0.015
+        },
+        {
+          "terrain": "beatmaleri",
+          "density": 0.006
+        },
+        {
+          "terrain": "nyvasket-gulv",
+          "density": 0.015
+        },
+        {
+          "terrain": "kakaoautomat",
+          "density": 0.004
+        }
+      ],
+      "transitionName": "Lås deg inn i biblioteket",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "side-1"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.8,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#6b4a2b",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.15,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.6,
+              0
+            ],
+            "color": "#fdf6ec",
+            "material": "matte"
+          }
+        ],
+        "light": {
+          "color": "#fff2c8",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Fredag ettermiddag, skolen tømmes. Vaktmesteren gir gaffateip og vet om bokmerket i Pharsalia. Kantinesjefen selger vafler og sladder. Side 1 sitter i skriveren på Servicetorget; skriveren må gjøres målbundet. Ingen vold: konflikter er spørsmål, hysj og kleinhet.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#9fb8c9",
+        "color2": "#e9e4d8",
+        "intensity": 0.4
+      },
+      "music": "upbeat"
+    },
+    {
+      "name": "Biblioteket (kl. 16.30)",
+      "description": "Ti tusen bøker, lesesalselever som ikke har gått hjem, og Pharsalia fra 1492 som flyr mellom hyllene med side 2 av talen din som bokmerke.",
+      "generator": "maze",
+      "size": "medium",
+      "params": {
+        "loops": 0.4,
+        "chambers": 4,
+        "deadEnds": 0.3
+      },
+      "floor": {
+        "color": "#7a5c45",
+        "color2": "#6a4e3a",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#4a3526",
+        "color2": "#6b4a2b",
+        "material": "wood",
+        "height": 1.7
+      },
+      "lighting": {
+        "ambient": "#ffe2b8",
+        "ambientIntensity": 0.6,
+        "lamps": {
+          "color": "#ffd9a0",
+          "intensity": 1.4,
+          "frequency": 0.18,
+          "flicker": false
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#3a2a1e",
+          "density": 0.015
+        }
+      },
+      "actors": [
+        {
+          "actor": "hysjer",
+          "weight": 35,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "fotnote",
+          "weight": 35,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "vikar",
+          "weight": 20,
+          "min": 0,
+          "max": 2
+        },
+        {
+          "actor": "forsteklassing",
+          "weight": 10,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "bibliotekar",
+          "where": "near_start"
+        },
+        {
+          "actor": "ib-eleven",
+          "where": "anywhere"
+        },
+        {
+          "actor": "pharsalia",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "kantinevaffel",
+          "weight": 22
+        },
+        {
+          "item": "kakao",
+          "weight": 12
+        },
+        {
+          "item": "harspray",
+          "weight": 15
+        },
+        {
+          "item": "ryktelapp",
+          "weight": 12
+        },
+        {
+          "item": "laererlasagne",
+          "weight": 6
+        },
+        {
+          "item": "laererkaffe",
+          "weight": 8
+        },
+        {
+          "item": "konfettiror",
+          "weight": 6
+        },
+        {
+          "item": "latinsk-ordbok",
+          "weight": 4
+        },
+        {
+          "item": "nokkelknippe",
+          "weight": 2
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "side-2",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "bokhylle",
+          "density": 0.05
+        }
+      ],
+      "transitionName": "Heng opp ballplakaten ved beatmaleriet",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "side-2"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1,
+              0.8,
+              0.06
+            ],
+            "pos": [
+              0,
+              1,
+              0
+            ],
+            "color": "#ff5fa2",
+            "material": "glow",
+            "emissive": "#ff5fa2"
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.06,
+              0.86,
+              0.04
+            ],
+            "pos": [
+              0,
+              1,
+              -0.02
+            ],
+            "color": "#e8b33c",
+            "material": "wood"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#3ac1c9",
+          "intensity": 1.4,
+          "radius": 2.5
+        }
+      },
+      "gmNotes": "Biblioteket var byens offentlige bibliotek i over hundre år. Bibliotekaren heler én gang. Nora fra IB kan bli med og hjelpe. Pharsalia (1492) er sur fordi noen brukte talearket som bokmerke; side 2 ligger ved boka. Latinsitater med oversettelse passer her.",
+      "backdrop": {
+        "style": "color",
+        "color": "#2a1e14",
+        "intensity": 0.3
+      },
+      "music": "calm"
+    },
+    {
+      "name": "Inne i beatkunsten (kl. 17.45)",
+      "description": "Du så for lenge på maleriet i gangen, og nå står du inni det. Turkise og rosa flater, en saksofon uten eier, beatpoeter som knipser. Side 3 er skrevet om til en setning som aldri slutter.",
+      "generator": "geometric",
+      "size": "medium",
+      "params": {
+        "variant": 4,
+        "symmetry": 2,
+        "rings": 4,
+        "spokes": 6,
+        "loops": 0.4,
+        "doors": 0.5
+      },
+      "floor": {
+        "color": "#2a2050",
+        "color2": "#3ac1c9",
+        "material": "glow",
+        "pattern": "noise"
+      },
+      "wall": {
+        "color": "#ff5fa2",
+        "color2": "#e8b33c",
+        "material": "stone",
+        "height": 1.5
+      },
+      "lighting": {
+        "ambient": "#b48cff",
+        "ambientIntensity": 0.8,
+        "lamps": {
+          "color": "#3ac1c9",
+          "intensity": 1.8,
+          "frequency": 0.25,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#1a1238",
+          "density": 0.02
+        }
+      },
+      "actors": [
+        {
+          "actor": "beatpoet",
+          "weight": 35,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "saksofon",
+          "weight": 30,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "penselstrok",
+          "weight": 25,
+          "min": 1,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "kafevert",
+          "where": "near_start"
+        },
+        {
+          "actor": "setningen",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "kantinevaffel",
+          "weight": 22
+        },
+        {
+          "item": "kakao",
+          "weight": 12
+        },
+        {
+          "item": "harspray",
+          "weight": 15
+        },
+        {
+          "item": "ryktelapp",
+          "weight": 10
+        },
+        {
+          "item": "konfettiror",
+          "weight": 8
+        },
+        {
+          "item": "laererlasagne",
+          "weight": 6
+        },
+        {
+          "item": "ballantrekk",
+          "weight": 4
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "side-3",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "vat-maling",
+          "density": 0.03
+        }
+      ],
+      "transitionName": "Fall ut av rammen og løp til ballet",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "side-3"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.1,
+              1.6,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#fdf6ec",
+            "material": "glow",
+            "emissive": "#fdf6ec"
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.2,
+              1.7,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.8,
+              -0.03
+            ],
+            "color": "#e8b33c",
+            "material": "wood"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#fdf6ec",
+          "intensity": 2,
+          "radius": 3
+        }
+      },
+      "gmNotes": "Det ikke-virkelige laget: inni et maleri fra skolens beatkunst-samling. Alt er sekstitall, jazz og dikt uten punktum. Kaféverten selger ting og hinter om at Den uendelige setningen må få et punktum. Side 3 ligger ved setningen. Hold det kjærlig: kunsten er fin, den er bare litt for levende i kveld.",
+      "backdrop": {
+        "style": "aurora",
+        "color": "#120c28",
+        "color2": "#3ac1c9",
+        "intensity": 0.6
+      },
+      "music": "eerie"
+    },
+    {
+      "name": "Skoleballet (kl. 19.00)",
+      "description": "Kantina, ryddet og pyntet til ball. Glitter på hvert brett, spotlights på gulvet, en scene med én mikrofon. Ved mikrofonen står nestlederen med elleve sider i hånda.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.2,
+        "sideRooms": 0.4
+      },
+      "floor": {
+        "color": "#2a2440",
+        "color2": "#3a3258",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#1f3a6b",
+        "color2": "#e8b33c",
+        "material": "stone",
+        "height": 2
+      },
+      "lighting": {
+        "ambient": "#5a4a8a",
+        "ambientIntensity": 0.5,
+        "lamps": {
+          "color": "#ff9fd0",
+          "intensity": 2,
+          "frequency": 0.2,
+          "flicker": false
+        },
+        "playerLight": 3,
+        "fog": {
+          "color": "#1a1430",
+          "density": 0.015
+        }
+      },
+      "actors": [
+        {
+          "actor": "ballkomite",
+          "weight": 40,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "glitterkomite",
+          "weight": 30,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "forsteklassing",
+          "weight": 20,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "nestleder",
+          "where": "near_exit"
+        },
+        {
+          "actor": "rektor",
+          "where": "near_start"
+        },
+        {
+          "actor": "kantinesjef",
+          "where": "anywhere"
+        }
+      ],
+      "items": [
+        {
+          "item": "kantinevaffel",
+          "weight": 30
+        },
+        {
+          "item": "harspray",
+          "weight": 20
+        },
+        {
+          "item": "konfettiror",
+          "weight": 15
+        }
+      ],
+      "itemCount": 3,
+      "placedItems": [
+        {
+          "item": "scenemikrofonen",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "spotlight",
+          "density": 0.03
+        },
+        {
+          "terrain": "glitter",
+          "density": 0.02
+        }
+      ],
+      "transitionName": "Gå av scenen",
+      "gmNotes": "Finalen, uten vold. To veier: gjør Sondre målbundet foran alle, eller ta Scenemikrofonen ved scenen og bruk den med alle tre sidene. Sondre kan også overtales; han er egentlig lettet. Rektor står ved scenekanten og siterer verdiene. Kantinesjefen ber folk gå ned fra bordene.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#1a1430",
+        "color2": "#5a2a5a",
+        "intensity": 0.5
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Finn de tre sidene av talen før ballet. Hold den så: gjør nestlederen målbundet, eller bruk Scenemikrofonen på ballet med alle tre sidene.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "side-1"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "side-2"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "side-3"
+            },
+            {
+              "type": "actor_defeated",
+              "actor": "nestleder"
+            }
+          ]
+        },
+        {
+          "type": "flag",
+          "flag": "talen-holdt"
+        }
+      ]
+    },
+    "winText": "Du går opp på scenen med tre krøllete ark: ett med tonerstripe, ett som lukter 1492, ett med turkis maling i margen. «Kjære alle sammen,» sier du, og hele kantina blir stille. Vitsen om vaflene sitter. Avslutningen får nestlederen til å grine først. Du takker vaktmesteren. Rektor nikker. Kunnskap, kultur og glede, tenker du. Mest glede.",
+    "lossText": "Klokka blir sju. Lysene går ned, og nestlederen begynner: «I dagens samfunn …» Du står bakerst med talen din i lomma og hører ham lese i elleve minutter. Neste år, tenker du. Neste år skriver du talen på mobilen.",
+    "labels": {
+      "talen-holdt": "Talen er holdt fra scenen"
+    },
+    "lose": {
+      "type": "turn",
+      "cmp": "gte",
+      "value": 1800
+    },
+    "deathText": "Selvtilliten tar slutt midt i gangen, foran glassveggen, og noen filmer det. Du går hjem, spiser en kald vaffel og ser skoleballet på andres story. Nestlederen holder talen. Den begynner med «I dagens samfunn»."
+  },
+  "gm": {
+    "persona": "Skolen selv: Schola Christiansandensis, latinskole fra 1686, som har flyttet fra domkirka til Kirkegata til Gimle og har sett hundrevis av skoleball. Snakker som en tørr, varm lektor som ikke klarer å la være å sitere latin.",
+    "voice": "Presens, du-form, korte setninger. Av og til et latinsk uttrykk med oversettelse i parentes. Aldri slem mot elevene, litt slem mot skrivere.",
+    "threads": [
+      "Talen er spredd på tre steder, og hvert sted har sin egen versjon av panikk.",
+      "Nestlederen er egentlig livredd for å holde tale, og håper at Tiril rekker det.",
+      "Skolens verdier, kunnskap, kultur og glede, dukker opp der man minst venter det.",
+      "Beatmaleriene i gangen er litt for levende rett før ballet, hvert år."
+    ],
+    "fallback": {
+      "intro": "Fredag, halv fire. Om tre og en halv time starter skoleballet, og du, Tiril, elevrådsleder på Kristiansand katedralskole Gimle, skal holde talen. Den lå i elevrådsmappa i lunsjen. Nå er mappa tom. Carpe diem (grip dagen). Helst før klokka sju.",
+      "areaEnter": [
+        "Mellombygget, halv fire. Glassveggene speiler en skole som tømmes. Ballkomiteen henger opp glitter, og fra Servicetorget kommer et langt, anklagende pip.",
+        "Biblioteket, halv fem. Det lukter gammelt papir og eksamensangst. Et sted mellom hyllene blafrer noe som høres ut som latin.",
+        "Du så for lenge på maleriet. Nå står du i det. Alt er turkis og rosa, noen knipser, og en setning uten slutt kveiler seg rundt arket ditt.",
+        "Klokka sju. Kantina er ikke en kantine lenger. Spotlightene går, glitteret ligger overalt, og ved mikrofonen står nestlederen og bretter ut side én av elleve."
+      ],
+      "lowHp": [
+        "Selvtilliten er nesten borte. Dum spiro spero (så lenge jeg puster, håper jeg). Ta en vaffel.",
+        "Kinnene brenner. Ingen husker dette i morgen. Nesten ingen."
+      ],
+      "events": [
+        "Høyttaleren skraper: «Ballkomiteen bes møte i kantina. Ballkomiteen.» Ingen fra ballkomiteen hører det.",
+        "Mobilen vibrerer. Elevrådschatten: «har du funnet talen??» «hvis ikke kan sondre ta den» «han har elleve sider»",
+        "Langt borte smeller et elevskap, og alle i nærheten skvetter.",
+        "Noen har skrevet KUNNSKAP KULTUR GLEDE på en serviett og lagt den igjen. Du føler deg merkelig styrket."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Lett skolekomedie: pizzicato og klokkespill, en saksofon som ikke klarer å la være, og en ballbass som kommer nærmere.",
+    "synth": {
+      "key": "G",
+      "scale": "mixolydian",
+      "tempo": 112,
+      "timbre": "pluck",
+      "drone": false,
+      "percussion": "soft",
+      "brightness": 0.7
+    },
+    "searchTerms": [
+      "skolekomedie instrumental",
+      "kul jazz saksofon",
+      "ballmusikk instrumental"
+    ],
+    "suggestions": [
+      "Lys pluck-melodi over myke trommer, med jazzakkorder i maleriet."
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:idle/nb-kkg-talen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Et sted bak deg sier noen «hysj». Det er ikke klart til hvem. Det er sjelden klart til hvem i et bibliotek."
+          }
+        ]
+      }
+    }
+  ]
+}

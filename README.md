@@ -8,7 +8,7 @@ narrates, voices characters and sometimes changes the rules. A deterministic eng
 playable and fair.
 
 The AI writes only structured, validated data (a *World Spec*). It never writes code. Normal turns
-never wait for the AI. With no AI at all, the 18 recorded demo worlds play with recorded narration.
+never wait for the AI. With no AI at all, the 19 recorded demo worlds play with recorded narration.
 
 > This repository is also an experiment: the game was designed with a human and then **built
 > autonomously by Claude agents**. See [the experiment documents](#the-ai-experiment).

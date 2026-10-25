@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-kkg-talen/kantinesjef",
+      "json": {
+        "reply": "Vaffel, vennen? Du ser ut som du trenger to. Og ja, jeg har hørt om talen. Sondre satt her i lunsjen og øvde på sin egen. Han sa «i dagens samfunn» fire ganger før han fikk brunosten på vaffelen.",
+        "options": [
+          "Hva mer sa han?",
+          "To vafler, takk.",
+          "Jeg må finne skriveren."
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-kkg-talen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Glassveggene i mellombygget speiler en skole som tømmes. På den ene siden gamle Katedralskolen, på den andre gamle Gimle, og midt imellom deg, med en tom ringperm. Ballkomiteen henger opp glitter som om ingenting har skjedd."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

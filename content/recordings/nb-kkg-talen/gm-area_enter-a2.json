@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-kkg-talen/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Du skulle bare henge opp ballplakaten. Så så du for lenge på maleriet, og nå står du i det. Alt er turkis og rosa, noen knipser i stedet for å klappe, og langt inne kveiler en setning seg rundt side 3 av talen din, og så, og så, og så."
+          },
+          {
+            "type": "mood",
+            "music": "eerie",
+            "tint": "#3ac1c9"
+          }
+        ]
+      }
+    }
+  ]
+}

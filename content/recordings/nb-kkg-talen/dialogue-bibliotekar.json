@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-kkg-talen/bibliotekar",
+      "json": {
+        "reply": "Sett deg ned. Pust. Talen din er ikke borte, den er bare feilarkivert. Side to står i Pharsalia, og Pharsalia liker ikke bokmerker. Snakk rolig til den. Og ikke rop. Vi roper ikke i biblioteket, heller ikke når latinen roper først.",
+        "options": [
+          "Hvordan får jeg den til å slippe arket?",
+          "Takk. Jeg trengte å puste.",
+          "Hvorfor er boka så sur?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

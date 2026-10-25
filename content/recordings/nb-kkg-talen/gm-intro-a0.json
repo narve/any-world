@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/nb-kkg-talen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Fredag, halv fire. Om tre og en halv time starter skoleballet, og du, Tiril, skal holde talen. Den lå i elevrådsmappa i lunsjen. Nå ligger det bare et referat fra september der. Et sted i mellombygget piper skriveren på Servicetorget, langt og anklagende. Carpe diem (grip dagen). Helst før sju."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

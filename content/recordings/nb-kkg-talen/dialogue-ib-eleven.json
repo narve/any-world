@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-kkg-talen/ib-eleven",
+      "json": {
+        "reply": "Leter du etter talen din? Jeg så et løst ark stikke ut av Pharsalia for en halvtime siden. Ingen burde bruke en bok fra 1492 som bokmerkeholder, men her er vi. Jeg blir med, hvis jeg slipper å tenke på fordypningsoppgaven min i en time.",
+        "options": [
+          "Bli med, Nora. Jeg trenger en med kilder.",
+          "Hva skriver du om?",
+          "Hvor er Pharsalia nå?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

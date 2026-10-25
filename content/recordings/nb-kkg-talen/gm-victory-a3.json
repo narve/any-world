@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/nb-kkg-talen/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Det blir stille i hele kantina. Tre krøllete ark, en vaffelflekk, en sveis som så vidt holder, og en tale som sitter. Schola Christiansandensis har hørt mange taler siden 1686. Denne skal den huske."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}
