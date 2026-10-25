@@ -11,10 +11,13 @@ export default defineConfig({
     headless: false,
     launchOptions: { args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] },
   },
+  // The API server and the Vite dev server (which proxies /api to it) in one process, as `npm run dev`
+  // does. Vite alone made every /api call fail with 502 unless a dev server was already running.
   webServer: {
-    command: 'npx vite --port 5173',
+    command: 'npx tsx server/dev.ts',
     port: 5173,
     reuseExistingServer: true,
     timeout: 60000,
+    env: { PORT: '8787', ANYWORLD_CLIENT_PORT: '5173' },
   },
 });

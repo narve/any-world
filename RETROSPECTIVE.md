@@ -1,8 +1,7 @@
 # Retrospective
 
-> **Draft — orchestrator to finalize.** Written during M5 review round 1, updated by the M5 gate
-> (2026-10-25) with the final numbers, a quality assessment and lessons. Token totals for M5 are still to be
-> added to STATS.md by the orchestrator.
+> Drafted by agents during M5 (review round 1 and the gate) and finalized by the orchestrator on
+> 2026-10-25 after re-running the checks. Full token figures are in [STATS.md](STATS.md).
 
 AnyWorld was built by Claude agents working on their own in a sandbox (DESIGN §9). A human agreed the
 design, answered a few questions mid-build and changed some requirements (non-Earth worlds, GM-invented
@@ -154,6 +153,20 @@ These could only be tested in emulation, or with recorded and agent-written repl
    without inflection, so some sentences will read stiffly.
 8. **Deployment.** `npm start` behind a real reverse proxy (`TRUST_PROXY`, rate limits), and the static
    build on a real host such as GitHub Pages in a sub-folder.
+
+## The orchestrator's own mistakes
+
+The orchestrator (the main Claude session that talked to the owner and launched the workflows) also slipped:
+
+- **Reverting a shared file during a run.** While committing a design change, it ran `git checkout BUILD_LOG.md`
+  and threw away entries that running reviewers and fixers had appended. It recovered 17 entries from the
+  agent transcripts. The rule: never check out, restore or stash a file a running workflow writes; stage only
+  the paths you changed.
+- **Slow to notice stalls.** The M2 refusals and the 3h20m M4 gate stall were both found only when the owner
+  asked for status. The orchestrator should check workflow journals on a timer rather than waiting for a
+  completion notice.
+- **Screenshot growth went unchecked.** About 1600 review screenshots (~575 MB for M3–M5) were committed into
+  git before anyone looked at the size. A size check belongs in each gate.
 
 ## If we did it again
 

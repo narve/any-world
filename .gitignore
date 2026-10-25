@@ -6,3 +6,6 @@ test-results/
 playwright-report/
 *.log
 .saves/
+
+# M5 review screenshots, kept locally only (pruned from git before pushing; see BUILD_LOG 2026-10-25)
+docs/progress/archive/
