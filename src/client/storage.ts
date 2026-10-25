@@ -79,7 +79,9 @@ export function clearRun(): void {
 
 export function defaultSettings(transport: 'direct' | 'backend'): Settings {
   return {
-    provider: { preset: 'anthropic', transport },
+    // the browser-only build (direct transport) starts with the offline demo generator ('mock', modes.ts
+    // OFFLINE_PRESET), so a first visit works with no key; the backend build starts with Anthropic
+    provider: { preset: transport === 'direct' ? 'mock' : 'anthropic', transport },
     audio: { volume: 0.6, muted: false, soundcloud: false },
     animationSpeed: 1,
     reduceMotion: false,

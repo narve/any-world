@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AnyWorld — technical notes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23202430' stroke='%23e8b04a' stroke-width='3'/%3E%3Cpath d='M5 16h22M16 3c-5 6-5 20 0 26M16 3c5 6 5 20 0 26' fill='none' stroke='%23e8b04a' stroke-width='2'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #14161d; --panel: #1c1f29; --text: #e6e3da; --muted: #9a978f; --accent: #e8b04a; --border: #2e3240;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg: #f6f3ec; --panel: #fffdf8; --text: #22242b; --muted: #676459; --accent: #9a6a10; --border: #ddd6c6; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  a { color: var(--accent); }
+  h1 { font: 600 28px/1.2 Georgia, serif; margin: 8px 0 4px; }
+  h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 32px 0 8px; }
+  p, li { margin: 6px 0; }
+  ul { padding-left: 20px; }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+  pre { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; overflow-x: auto; font: 13px/1.5 ui-monospace, Menlo, monospace; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; }
+  .sub { color: var(--muted); margin: 0; }
+  .back { font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="./">← Back to the game</a>
+<h1>AnyWorld — technical notes</h1>
+<p class="sub">How the game is put together, for people who want to run, extend or connect it to their own AI.
+  Source code: <a href="https://github.com/narve/any-world">github.com/narve/any-world</a>.</p>
+
+<h2>What it is</h2>
+<p>A turn-based roguelike in the browser, seen from a tilted three-quarter angle. At the start of each run a
+large language model writes the whole game instance as one JSON document, the <em>World Spec</em>: genre,
+setting, stats and their names, rules, areas, actors, items and the win condition. During play the same model
+acts as a game master that may narrate, offer choices, spawn things or add rules, within strict limits.</p>
+
+<h2>Architecture</h2>
+<pre>src/schema/   zod contracts: World Spec, GM actions, cross-reference checks
+src/engine/   pure, deterministic rules (seeded RNG, no DOM, no clock)
+src/llm/      providers, prompts, generate → validate → repair → balance, GM runtime
+src/client/   three.js renderer, DOM UI, i18n (en, nb), touch input, audio
+server/       Node backend: serves the client, POST /api/llm proxy (keys in env)</pre>
+<ul>
+  <li><strong>Engine:</strong> <code>step(state, action)</code> clones and returns a new state. The same seed and
+    actions always give the same run, so bots can play thousands of runs and every bug report replays.</li>
+  <li><strong>Renderer:</strong> low-poly models composed from archetypes and colours in the World Spec; no
+    generated images. Quality tiers and instancing keep phones at a playable frame rate.</li>
+  <li><strong>UI text:</strong> engine messages are keys with parameters, translated by the client catalog. World
+    text is written by the model in the chosen language (<code>meta.language</code>).</li>
+</ul>
+
+<h2>How a world is made</h2>
+<ol>
+  <li>The prompt (or “surprise me”) goes to the model with a condensed schema description.</li>
+  <li>The reply is parsed and validated with zod, then checked for broken references.</li>
+  <li>Errors go back to the model for repair, a few times at most.</li>
+  <li>Bots play the world in a Web Worker. If it is far too easy or too hard, the model gets the numbers and rebalances it.</li>
+  <li>The finished world is kept in the browser and can be exported as a file and opened elsewhere.
+    Imported files are treated as untrusted and validated again.</li>
+</ol>
+
+<h2>The game master</h2>
+<p>The GM is consulted at fixed moments (run start, new area, low health, boss seen, milestones, idle, death,
+victory) and returns only whitelisted actions. Each area has an action budget. Checks refuse actions that would
+win the run for the player, copy a boss, or stack harmful effects, and GM-invented rules are limited by the
+chosen difficulty. If the model is slow or fails, a built-in offline GM takes over and play never waits.</p>
+
+<h2>Running it</h2>
+<table>
+  <tr><th>Mode</th><th>How</th><th>AI calls</th></tr>
+  <tr><td>Backend</td><td><code>npm start</code> (production) or <code>npm run dev</code></td><td>Server-side; keys in environment variables, never sent to the browser</td></tr>
+  <tr><td>Static</td><td><code>npm run build:static</code>, host <code>dist/static</code> anywhere</td><td>Directly from the browser; the key stays in this browser's localStorage</td></tr>
+  <tr><td>Offline demo</td><td>Provider “Offline demo” in Settings (the static build’s default)</td><td>None; recorded worlds and recorded GM lines</td></tr>
+</table>
+<p>Without a usable AI, “Surprise me” plays one of the recorded demo worlds.</p>
+
+<h2>AI providers</h2>
+<p>Pluggable presets: Anthropic Claude, OpenAI, DeepSeek, Mistral, Qwen, Moonshot Kimi, Zhipu GLM, OpenRouter,
+Ollama, LM Studio, and any OpenAI-compatible endpoint. Several of them cannot be called from a browser (no
+CORS) and need the backend. A shared layer validates every structured answer against the schema and retries
+with error feedback, so models without native structured output also work. Small local models often struggle
+to write a whole world.</p>
+
+<h2>Testing</h2>
+<ul>
+  <li>Unit tests (vitest) for schema, engine, providers and UI logic.</li>
+  <li>Bot simulation over every demo world: crashes, soft-locks and win-rate bands.</li>
+  <li>Playwright end-to-end in a real WebGL browser, desktop and emulated phones, English and Norwegian.</li>
+</ul>
+
+<h2>How it was built</h2>
+<p>The design was agreed with a human; then Claude agents built, reviewed, play-tested and fixed it in
+orchestrated workflows, with agents standing in for the LLM while writing the demo worlds. No live model was
+called during the build. The <a href="https://github.com/narve/any-world">repository</a>’s <code>BUILD_LOG.md</code>, <code>STATS.md</code> and
+<code>RETROSPECTIVE.md</code> describe the process and its limits.</p>
+</main>
+</body>
+</html>

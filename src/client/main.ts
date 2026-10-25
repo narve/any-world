@@ -477,6 +477,14 @@ export class App {
       onPlayDemo: (id, opts) => void this.playWorld(id, undefined, opts),
       onContinue: () => void this.continueRun(),
       onStart: (opts) => {
+        // no AI to invent a world (offline demo or no usable provider): "Surprise me" plays a random demo world
+        if (opts.surprise && (this.settings.provider.preset === OFFLINE_PRESET || !this.provider())) {
+          const pick = pickDemoWorld(worldIndex(), { prompt: '', language: opts.language ?? getLanguage(), seed: randomSeed() });
+          if (pick) {
+            void this.playWorld(pick.id, undefined, opts);
+            return;
+          }
+        }
         if (this.canGenerate()) void this.createWorld(opts);
         else {
           const problem = providerProblem(activeProvider(this.settings), this.server);

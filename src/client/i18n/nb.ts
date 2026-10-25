@@ -651,6 +651,7 @@ const nb = {
   'start.weirdness': 'Rarhet',
   'start.create': 'Lag verden',
   'start.surprise': 'Overrask meg',
+  'start.techNotes': 'Tekniske notater',
   'start.inspiration': 'Inspirasjon',
   'start.shuffle': 'Stokk',
   'start.shuffleAria': 'Stokk inspirasjonen',

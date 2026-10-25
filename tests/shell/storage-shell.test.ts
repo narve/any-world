@@ -51,6 +51,12 @@ describe('settings', () => {
     expect(d).toMatchObject({ quality: 'auto', gm: true, audio: { soundcloud: false }, provider: { transport: 'backend' } });
   });
 
+  it('provider default: Anthropic with a server, the offline demo in the browser-only build', () => {
+    expect(defaultSettings('backend').provider.preset).toBe('anthropic');
+    // a first visit to the static build works with no key (start screen note in demo tone, no warning)
+    expect(defaultSettings('direct').provider.preset).toBe('mock');
+  });
+
   it('round-trips through localStorage', () => {
     const s = { ...defaultSettings('direct'), quality: 'low' as const, gm: false, audio: { volume: 0.2, muted: true, soundcloud: true } };
     s.provider = { preset: 'openai', transport: 'direct', apiKey: 'sk-1', model: 'gpt-5' };

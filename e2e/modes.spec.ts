@@ -183,10 +183,9 @@ test.describe('static build (browser-only)', () => {
     await page.goto(`${BASE}/`);
     await waitReady(page);
     await expect(page.locator('.aw-start')).toBeVisible();
-    // static build: direct transport only, no server to ask
+    // static build: direct transport only, no server to ask; a first visit starts with the offline demo
     const note = page.locator('.aw-start-note');
-    await expect(note).toHaveAttribute('data-tone', 'warn');
-    await expect(note).toContainText('needs an API key');
+    await expect(note).toHaveAttribute('data-tone', 'demo');
     expect(api).toEqual([]);
     // inspiration filters: a theme chip narrows the cards to prompts with that tag
     const chip = page.locator('.aw-tag-chip').first();
@@ -235,6 +234,8 @@ test.describe('static build (browser-only)', () => {
     await page.goto(`${BASE}/`);
     await waitReady(page);
     await openSettings(page);
+    // the static build starts on the offline demo; choose a real provider to see the key and transport fields
+    await page.locator('#aw-set-preset').selectOption('anthropic');
     // static build: the backend transport is not offered
     await expect(page.locator('#aw-set-transport-backend')).toBeDisabled();
     await expect(page.locator('#aw-set-keywarn')).toContainText('localStorage');
@@ -263,6 +264,27 @@ test.describe('static build (browser-only)', () => {
     expect(errors).toEqual([]);
   });
 
+  test('first visit: "Surprise me" plays a recorded demo world; the technical notes link works', async ({ page }) => {
+    const errors = collectErrors(page);
+    await prepare(page);
+    await page.goto(`${BASE}/`);
+    await waitReady(page);
+    const tech = page.locator('.aw-start-tech');
+    await expect(tech).toHaveAttribute('href', 'tech.html');
+    await page.getByRole('button', { name: 'Surprise me' }).click();
+    await waitGame(page);
+    const id = await page.evaluate(() => window.__anyworld!.controller!.session.worldId);
+    expect(id).not.toMatch(/^gen-|^fixture-/); // a demo world as it is, not a "generated" copy
+    await backToStart(page);
+    await tech.click();
+    await expect(page.locator('h1')).toContainText('technical notes');
+    await expect(page.locator('a[href="https://github.com/narve/any-world"]').first()).toBeVisible();
+    await page.locator('a.back').click();
+    await waitReady(page);
+    await expect(page.locator('.aw-start')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
   test('offline demo generator: "Create world" and "Surprise me" with no AI, then "Your worlds"', async ({ page }) => {
     const errors = collectErrors(page);
     await prepare(page, { provider: { preset: 'mock', transport: 'direct' }, audio: { volume: 0.6, muted: true }, animationSpeed: 1, reduceMotion: false });
@@ -280,11 +302,12 @@ test.describe('static build (browser-only)', () => {
     expect(await page.evaluate(() => window.__anyworld!.controller!.session.worldId)).toMatch(/^gen-/);
 
     await backToStart(page);
+    // "Surprise me" with no AI plays a demo world as it is, so it adds nothing to "Your worlds"
     await page.getByRole('button', { name: 'Surprise me' }).click();
     await waitGame(page);
     await backToStart(page);
     const recent = page.locator('.aw-recent-play');
-    await expect(recent).toHaveCount(2);
+    await expect(recent).toHaveCount(1);
     await expect(page.locator('.aw-recent')).toContainText('Pianissimo');
     // no AI made these: they are copies of recorded worlds (issues/M5-offline-demo-labelled-ai.md)
     for (const label of await recent.locator('.aw-demo-genre').allTextContents()) {
@@ -364,7 +387,8 @@ test.describe('static build (browser-only)', () => {
     await waitReady(page);
     // nothing kept yet: the import hint shows
     await expect(page.locator('.aw-recent')).toContainText('Open it here');
-    await page.getByRole('button', { name: 'Surprise me' }).click();
+    // "Create world" keeps a copy under "Your worlds" ("Surprise me" with no AI just plays a demo world)
+    await page.getByRole('button', { name: 'Create world' }).click();
     await waitGame(page);
     await backToStart(page);
 

@@ -183,6 +183,7 @@ export class StartScreen {
             this.filterEl,
             this.cardsEl,
           ),
+          h('p', { class: 'aw-start-foot' }, h('a', { href: 'tech.html', class: 'aw-start-tech' }, t('start.techNotes'))),
         ),
         this.sideEl,
       ),

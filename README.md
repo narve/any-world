@@ -55,11 +55,15 @@ Use a key with a spending limit, or use the backend.
 
 - **Demo worlds:** every recorded world (`content/worlds/`) plays at once, in both modes. The game
   master plays recorded lines (`content/recordings/`) and falls back to built-in lines.
-- **Offline demo generator:** in **Settings → AI provider**, pick *Offline demo: recorded worlds, no AI*.
-  "Create world" and "Surprise me" then pick the recorded world that best fits your prompt and run it
-  through the real pipeline (validation, bot play-test). This is useful for trying the whole flow
-  without a key or a network. The copy is kept under "Your worlds" and labelled *recorded demo*, not
-  *made by AI*.
+- **Offline demo generator:** in **Settings → AI provider**, pick *Offline demo: recorded worlds, no AI*
+  (the static build starts with it, so a first visit needs no key). "Create world" then picks the
+  recorded world that best fits your prompt and runs it through the real pipeline (validation, bot
+  play-test). This is useful for trying the whole flow without a key or a network. The copy is kept
+  under "Your worlds" and labelled *recorded demo*, not *made by AI*.
+- **"Surprise me" without a usable AI** (offline demo, or no key) plays a random recorded demo world in
+  the current language. With a working provider it asks the AI for a new world as before.
+- **Technical notes:** a short page for advanced users (`public/tech.html`, linked quietly at the bottom
+  of the start screen).
 - **Turn off the AI game master** (Settings) to play an AI-made world without any AI calls during play.
 
 When something is missing, the start screen says so in one line: no key, a server that cannot be

@@ -506,6 +506,7 @@ const en = {
   'start.weirdness': 'Weirdness',
   'start.create': 'Create world',
   'start.surprise': 'Surprise me',
+  'start.techNotes': 'Technical notes',
   'start.inspiration': 'Inspiration',
   'start.shuffle': 'Shuffle',
   'start.shuffleAria': 'Shuffle inspiration',
