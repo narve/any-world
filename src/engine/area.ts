@@ -211,8 +211,15 @@ export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
   const prev = ctx.s.area;
   const player = prev?.actors.find((a) => a.id === me(ctx).actorId);
   if (!player) throw new Error('player actor missing');
+  // the rest of the party comes along (party order), and every player's allies close to them
+  const others: ActorInstance[] = [];
+  for (const id of ctx.s.party) {
+    const a = prev.actors.find((x) => x.id === ctx.s.players[id].actorId);
+    if (a && a !== player) others.push(a);
+  }
+  const owners = [player, ...others];
   const allies: ActorInstance[] = prev
-    ? prev.actors.filter((a) => a.allyOf === player.id && a.hp > 0 && cheb(a.pos, player.pos) <= 4)
+    ? prev.actors.filter((a) => a.hp > 0 && owners.some((o) => a.allyOf === o.id && cheb(a.pos, o.pos) <= 4))
     : [];
   player.pos = { ...map.start };
   ctx.s.area = {
@@ -225,6 +232,13 @@ export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
   };
   for (const id of ctx.s.party) ctx.s.players[id].seen = new Uint8Array(map.width * map.height);
   placeTerrain(ctx, plan);
+  // teammates before allies and spawns, on the nearest free floor to the start (reachable, so
+  // nobody lands behind a wall); a party of one places exactly as before
+  for (const o of others) {
+    const p = nearestFreeFloor(ctx, map.start) ?? { ...map.start };
+    o.pos = p;
+    ctx.s.area.actors.push(o);
+  }
   for (const al of allies) {
     const p = nearestFreeFloor(ctx, map.start);
     if (!p) continue;
@@ -242,7 +256,8 @@ export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
   updateFov(ctx);
 }
 
-function nearestFreeFloor(ctx: Ctx, from: Pos): Pos | null {
+/** the nearest reachable, unoccupied plain floor tile to `from` (BFS; `from` itself excluded) */
+export function nearestFreeFloor(ctx: Ctx, from: Pos): Pos | null {
   const map = ctx.s.area.map;
   const d = bfsDistances(map.width, map.height, from, walk(ctx));
   let best: Pos | null = null;

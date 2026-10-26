@@ -376,6 +376,51 @@ export interface StepResult {
   gmSkipped?: { action: string; reason: string }[];
 }
 
+// ---------------------------------------------------------------------------
+// Party turns (engine/party.ts)
+// ---------------------------------------------------------------------------
+
+/** one player's input for a party turn: free actions first, at most one turn action (last) */
+export interface TurnInput {
+  playerId: PlayerId;
+  actions?: PlayerAction[];
+  /** typing / in a menu; only honoured when the input brings no successful turn action */
+  busy?: boolean;
+}
+
+export interface TurnOptions {
+  /**
+   * The deadline passed (MP2) or the sim forces a turn: ready players without a successful turn
+   * action wait and the world moves even if nobody acted.
+   */
+  advance?: boolean;
+}
+
+/**
+ * Why an action of a party turn was refused: `contested` (an earlier mover took the tile or the
+ * target), `stale` (an earlier action changed things otherwise), `area changed` (an earlier input
+ * moved the party on), `not ready` (no energy for a turn action), `down`, or `illegal` (refused
+ * although nothing changed since the caller read legalActions: a bug in the caller or the engine).
+ */
+export type Refusal = 'not ready' | 'down' | 'contested' | 'stale' | 'area changed' | 'illegal';
+
+export interface TurnOutcome {
+  playerId: PlayerId;
+  action: PlayerAction;
+  ok: boolean;
+  tookTurn: boolean;
+  reason?: Refusal;
+  /** the engine's own reason for a refusal (as in the `invalid` event) */
+  detail?: string;
+}
+
+export interface TurnResult extends StepResult {
+  /** one per action, in input order */
+  outcomes: TurnOutcome[];
+  /** players who could have acted (standing, energy ≥ ACT_COST, not stunned) but took no turn: they waited */
+  waited: PlayerId[];
+}
+
 export interface NewGameOptions {
   seed: number;
   /** optional pre-generated area map (from tests) */
@@ -386,6 +431,8 @@ export interface NewGameOptions {
   difficulty?: Difficulty;
   /** turns of the party's exit countdown (GameState.partyRules, default 5) */
   exitCountdownTurns?: number;
+  /** the party in join order (default: one player named world.player.name); ids p1, p2… */
+  players?: { name: string }[];
 }
 
 /** generator contract (src/engine/mapgen) */

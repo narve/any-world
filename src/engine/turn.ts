@@ -4,7 +4,8 @@
  * ends: statuses, terrain, regen, resources, on_turn triggers, quests; then everyone gains energy
  * equal to its (hasted/slowed) speed.
  */
-import { type Ctx, actorAt, emit, endGame, isAlive, isPlayer, logKey, me, mutTile, playerActor, playerName } from './ctx';
+import { type Ctx, actorAt, emit, endGame, isAlive, isPlayer, logKey, mutTile, playerActor, playerActorOf, playerName, timed } from './ctx';
+import type { PlayerId } from './types';
 import { own, samePos } from './util';
 import { energyGain, hasFlag, maxHp, maxMp } from './stats';
 import { actorTurn } from './ai';
@@ -17,14 +18,23 @@ import { heal } from './combat';
 import { switchesOf } from './rules';
 import { lossReasonKeyed } from './combat';
 import { regenInterval } from './difficulty';
+import { closeStaleChoices } from './npc';
 
 export const ACT_COST = 100;
 const RESOURCE_EMPTY_REPEAT = 5;
 /** runWorld iterations (about two per round) before it gives control back to the player */
 export const RUN_WORLD_GUARD = 2000;
 
-/** runs other actors and rounds until the player can act again (or the game ends) */
+/**
+ * Runs other actors and rounds until some standing player can act again (or the game ends). A
+ * stunned player with energy to act burns it (each logs as in single player); hasted players get
+ * their extra actions while the others are still out of energy.
+ */
 export function runWorld(ctx: Ctx): void {
+  timed(ctx, 'world', () => runWorldLoop(ctx));
+}
+
+function runWorldLoop(ctx: Ctx): void {
   // 2 iterations per round at most; generous so even a 200-turn stun resolves in one step
   for (let guard = 0; ; guard++) {
     if (guard >= RUN_WORLD_GUARD) {
@@ -36,20 +46,42 @@ export function runWorld(ctx: Ctx): void {
     if (ctx.s.status !== 'playing') return;
     runOthers(ctx);
     if (ctx.s.status !== 'playing') return;
-    const p = playerActor(ctx);
-    if (p.energy >= ACT_COST) {
+    let ready = false;
+    let burned = false;
+    for (const id of ctx.s.party) {
+      const p = playerActorOf(ctx, id);
+      if (!p || !isStanding(ctx, id) || p.energy < ACT_COST) continue;
       if (hasFlag(ctx, p, 'stunned')) {
         p.energy -= ACT_COST;
-        logKey(ctx, 'log.turn.stunned', { player: playerName(ctx) }, 'bad');
-        continue;
-      }
-      return;
+        logKey(ctx, 'log.turn.stunned', { player: playerName(ctx, id) }, 'bad');
+        burned = true;
+      } else ready = true;
     }
+    if (ready) return;
+    if (burned) continue;
     endRound(ctx);
     if (ctx.s.status !== 'playing') return;
     for (const a of ctx.s.area.actors) a.energy = Math.min(a.energy + energyGain(ctx, a), 400);
     checkEnd(ctx);
   }
+}
+
+/**
+ * Whether a player has the energy for a turn action. A party of one always has: the world only
+ * hands control back once the player can act (so solo play is exactly as before parties).
+ */
+export function canTakeTurn(ctx: Ctx, pid: PlayerId): boolean {
+  if (ctx.s.party.length < 2) return true;
+  const a = playerActorOf(ctx, pid);
+  return !!a && a.energy >= ACT_COST;
+}
+
+/** a player whose actor is in the area and who is not down */
+export function isStanding(ctx: Ctx, pid: PlayerId): boolean {
+  const ps = ctx.s.players[pid];
+  if (!ps || ps.down) return false;
+  const a = playerActorOf(ctx, pid);
+  return !!a && a.hp > 0;
 }
 
 function runOthers(ctx: Ctx): void {
@@ -59,7 +91,7 @@ function runOthers(ctx: Ctx): void {
       if (ctx.s.status !== 'playing') return;
       if (isPlayer(ctx, a) || !isAlive(ctx, a) || a.energy < ACT_COST) continue;
       a.energy -= ACT_COST;
-      const extra = actorTurn(ctx, a);
+      const extra = timed(ctx, 'ai', () => actorTurn(ctx, a));
       if (extra > 0) a.energy -= extra;
       acted = true;
       checkEnd(ctx);
@@ -109,23 +141,32 @@ export function endRound(ctx: Ctx): void {
     a.hp = Math.min(a.hp, maxHp(ctx, a));
     a.mp = Math.min(a.mp, maxMp(ctx, a));
   }
-  for (const it of me(ctx).slots) if (it && it.cooldown) it.cooldown = Math.max(0, it.cooldown - 1);
-  // regeneration
-  const p = playerActor(ctx);
+  for (const id of s.party) for (const it of s.players[id].slots) if (it && it.cooldown) it.cooldown = Math.max(0, it.cooldown - 1);
+  // regeneration (each player's own actor)
   const ps = ctx.world.player;
-  if (ps.mpRegenEvery > 0 && s.turn % ps.mpRegenEvery === 0 && p.mp < maxMp(ctx, p)) p.mp += 1;
   const regenEvery = regenInterval(s, ps.hpRegenEvery);
-  if (regenEvery > 0 && !switchesOf(ctx).noNaturalHpRegen && s.turn % regenEvery === 0) heal(ctx, p, 1);
+  for (const id of s.party) {
+    const p = playerActorOf(ctx, id);
+    if (!p) continue;
+    if (ps.mpRegenEvery > 0 && s.turn % ps.mpRegenEvery === 0 && p.mp < maxMp(ctx, p)) p.mp += 1;
+    if (regenEvery > 0 && !switchesOf(ctx).noNaturalHpRegen && s.turn % regenEvery === 0) heal(ctx, p, 1);
+  }
   if (s.turn % 5 === 0) for (const a of s.area.actors) if (!isPlayer(ctx, a) && a.mp < maxMp(ctx, a)) a.mp += 1;
-  // custom resources
-  for (const r of ctx.world.resources ?? []) {
-    const cur = own(me(ctx).resources, r.id) ?? 0;
-    if (r.perTurn) changeResource(ctx, p, r.id, r.perTurn);
-    if (s.status !== 'playing') return;
-    if (cur === 0 && (own(me(ctx).resources, r.id) ?? 0) === 0 && r.perTurn < 0 && s.turn % RESOURCE_EMPTY_REPEAT === 0 && r.onEmpty.length) {
-      applyEffectList(ctx, r.onEmpty, p, [p], p.pos, []);
+  // custom resources: bodily, each player drains their own
+  for (const id of s.party) {
+    const p = playerActorOf(ctx, id);
+    if (!p || !isAlive(ctx, p)) continue;
+    const res = s.players[id].resources;
+    for (const r of ctx.world.resources ?? []) {
+      const cur = own(res, r.id) ?? 0;
+      if (r.perTurn) changeResource(ctx, p, r.id, r.perTurn);
+      if (s.status !== 'playing') return;
+      if (cur === 0 && (own(res, r.id) ?? 0) === 0 && r.perTurn < 0 && s.turn % RESOURCE_EMPTY_REPEAT === 0 && r.onEmpty.length) {
+        applyEffectList(ctx, r.onEmpty, p, [p], p.pos, []);
+      }
     }
   }
+  closeStaleChoices(ctx);
   // on_turn triggers
   for (const a of [...s.area.actors]) {
     if (s.status !== 'playing') return;
@@ -163,17 +204,19 @@ export function endRound(ctx: Ctx): void {
   checkEnd(ctx);
 }
 
-/** win/lose: death, empty fatal resources, goal.lose, goal.win */
+/** win/lose: death, empty fatal resources, goal.lose, goal.win (conditions for the lead in MP1 B2a) */
 export function checkEnd(ctx: Ctx): void {
   const s = ctx.s;
   if (s.status !== 'playing') return;
-  const p = playerActor(ctx);
-  if (p.hp <= 0) {
-    const lr = lossReasonKeyed(ctx);
-    endGame(ctx, 'lost', lr.text, lr);
-    return;
+  for (const id of s.party) {
+    const a = playerActorOf(ctx, id);
+    if (a && a.hp <= 0 && !s.players[id].down) {
+      const lr = lossReasonKeyed(ctx, undefined, s.players[id]);
+      endGame(ctx, 'lost', lr.text, lr);
+      return;
+    }
   }
-  const cc = { self: p };
+  const cc = { self: playerActorOf(ctx, s.party[0]) ?? playerActor(ctx) };
   if (evalCondition(ctx, ctx.world.goal.win, cc)) {
     endGame(ctx, 'won', ctx.world.goal.summary);
     return;

@@ -3,7 +3,8 @@
  * Stepping into a room (a map region) also remembers its whole layout, walls and doors included,
  * without showing who is in it (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §4: fog as memory).
  */
-import { type Ctx, emit, me, opaque, playerActor } from './ctx';
+import { type Ctx, emit, me, opaque, playerActor, playerActorOf, timed, withPlayer } from './ctx';
+import { own } from './util';
 import { computeFov, withinRadius } from './fov';
 import type { Pos } from './types';
 import { sightRadius } from './stats';
@@ -30,11 +31,12 @@ export function playerSeesTile(ctx: Ctx, pos: Pos): boolean {
 function playerFov(ctx: Ctx, r: number): Set<number> {
   const map = ctx.s.area.map;
   const p = playerActor(ctx);
-  const c = ctx.fovCache;
+  const cache = (ctx.fovCache ??= {});
+  const c = own(cache, ctx.pid);
   const writes = ctx.tileWrites ?? 0;
   if (c && c.tiles === map.tiles && c.writes === writes && c.x === p.pos.x && c.y === p.pos.y && c.r === r) return c.vis;
   const vis = computeFov(map.width, map.height, p.pos, r, (x, y) => opaque(ctx, x, y));
-  ctx.fovCache = { tiles: map.tiles, writes, x: p.pos.x, y: p.pos.y, r, vis };
+  cache[ctx.pid] = { tiles: map.tiles, writes, x: p.pos.x, y: p.pos.y, r, vis };
   return vis;
 }
 
@@ -89,8 +91,19 @@ function rememberRoom(ctx: Ctx): void {
   for (const i of regionLayout(ctx, r)) if (seen[i] === 0) seen[i] = 1;
 }
 
-/** the acting player's fog: visible tiles become remembered, the current field of view visible */
+/**
+ * Every player's fog, in party order (each with its own cached field of view): visible tiles
+ * become remembered, the current field of view visible. Players whose actor is not in the area
+ * are skipped.
+ */
 export function updateFov(ctx: Ctx): void {
+  timed(ctx, 'fov', () => {
+    for (const id of ctx.s.party) if (playerActorOf(ctx, id)) withPlayer(ctx, id, () => updatePlayerFov(ctx));
+  });
+}
+
+/** the acting player's fog */
+function updatePlayerFov(ctx: Ctx): void {
   const area = ctx.s.area;
   const map = area.map;
   const seen = me(ctx).seen;

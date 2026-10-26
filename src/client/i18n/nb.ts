@@ -65,6 +65,7 @@ const nb = {
   'log.ally.joins': '{actor|cap} slår følge med deg.',
   'log.trade.cannot_afford': 'Du har ikke råd til noe av dette (ikke nok {currency}).',
   'log.trade.sold': '{player} selger {item} for {amount} {currency}.',
+  'log.party.talk_gone': '{player} mister tråden: samtalen er over.',
 
   'log.quest.new': 'Nytt: {title}',
   'log.quest.done': 'Fullført: {title}',

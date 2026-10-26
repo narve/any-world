@@ -4,8 +4,8 @@
  * version 2 with run-length coded fog, and version-1 saves are refused.
  */
 import { describe, it, expect } from 'vitest';
-import { act, ctxFor, env, handBuiltPlayer, loadFixture, newGame, roomMap, testWorld } from './helpers';
-import { applyGmActions, createGame, describeInventory, deserialize, hashState, leadPlayer, patchPlayer, playerIds, playerSheet, serialize, step } from '../../src/engine';
+import { act, ctxFor, env, loadFixture, newGame, roomMap, testWorld } from './helpers';
+import { addPlayer, applyGmActions, createGame, describeInventory, deserialize, hashState, leadPlayer, patchPlayer, playerIds, playerSheet, serialize, step } from '../../src/engine';
 import { packSeen, unpackSeen } from '../../src/engine/serialize';
 import { cloneState } from '../../src/engine/clone';
 import { actorName, isPlayer, me, playerActorOf, playerName, playerOf, withPlayer } from '../../src/engine/ctx';
@@ -16,8 +16,7 @@ const ship = loadFixture('fixture-ship.json');
 
 function twoPlayers(): GameState {
   const s = createGame(ship, { seed: 4, map: roomMap(14, 10) });
-  handBuiltPlayer(s, { x: 3, y: 3 }, 'Bea');
-  return s;
+  return addPlayer(s, { name: 'Bea' }, { world: ship }).state;
 }
 
 describe('a single player is a party of one', () => {
@@ -98,8 +97,7 @@ describe('players and actors', () => {
       x.items.push({ ...x.items.find((i) => i.id === 'tonic')!, id: 'bread', name: 'Bread', appearanceGroup: 'flask', knowledge: 'clear' } as never);
       x.unknownAppearances!.flask.push({ label: 'blue flask', color: '#0000ff' });
     });
-    const s0 = newGame(w);
-    handBuiltPlayer(s0, { x: 4, y: 4 }, 'Bea');
+    const s0 = addPlayer(newGame(w), { name: 'Bea' }, env(w)).state;
     const s = applyGmActions(s0, [{ type: 'add_rule', rule: forget as never, reason: 'fog' }], env(w)).state;
     const k1 = s.players.p1.knowledge.bread;
     const k2 = s.players.p2.knowledge.bread;
@@ -119,8 +117,12 @@ describe('players and actors', () => {
     const w = { world: ship };
     expect(playerSheet(s, w).xp).toBe(leadPlayer(s).xp);
     expect(playerSheet(s, { ...w, playerId: 'p2' }).xp).toBe(3);
-    expect(describeInventory(s, { ...w, playerId: 'p2' }).every((v) => v === null)).toBe(true);
-    expect(describeInventory(s, w).some((v) => v !== null)).toBe(true);
+    // each player carries their own copy of the starting kit
+    const names = (pid?: string) => describeInventory(s, { ...w, ...(pid ? { playerId: pid } : {}) }).map((v) => v?.name ?? null);
+    expect(names('p2')).toEqual(names());
+    const ids = (pid: string) => s.players[pid].slots.flatMap((it) => (it ? [it.id] : []));
+    expect(ids('p2').length).toBeGreaterThan(0);
+    expect(ids('p2').some((id) => ids('p1').includes(id))).toBe(false);
   });
 
   it('patchPlayer copies without touching the input', () => {
@@ -131,7 +133,7 @@ describe('players and actors', () => {
     expect(t.players.p1).toBe(s.players.p1);
   });
 
-  it('step leaves a hand-built second player intact (single-player rules still act for the lead)', () => {
+  it('step with a party of two keeps both players in the area', () => {
     const s = twoPlayers();
     const r = step(s, { type: 'wait' }, { world: ship });
     expect(r.state.party).toEqual(['p1', 'p2']);
@@ -193,8 +195,9 @@ describe('save, load, clone', () => {
     expect(c.players.p2).not.toBe(s.players.p2);
     expect(c.players.p2.seen).toBeInstanceOf(Uint8Array);
     expect(c.players.p1.knowledge).not.toBe(s.players.p1.knowledge);
-    c.players.p2.seen[0] = 2;
-    expect(s.players.p2.seen[0]).toBe(0);
+    const before = s.players.p2.seen[0];
+    c.players.p2.seen[0] = before === 0 ? 1 : 0;
+    expect(s.players.p2.seen[0]).toBe(before);
     expect(hashState(c)).not.toBe(hashState(s));
   });
 });

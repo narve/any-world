@@ -22,7 +22,9 @@ import {
   opaque,
   passable,
   playerActor,
+  playerOf,
   tileWalkable,
+  withPlayer,
 } from './ctx';
 import { END_REASON_KEYS, FACTION_KEYS, renderTemplate } from './log-keys';
 import { evalCondition } from './conditions';
@@ -374,7 +376,20 @@ function resolveShape(
 // Running actions
 // ---------------------------------------------------------------------------
 
+/**
+ * Runs `fn` with the user's player as the acting player when the user is a player actor, so the
+ * `me(ctx)` reads inside an effect (fog, knowledge, xp) are the user's, never another player's.
+ */
+export function asUser<T>(ctx: Ctx, user: ActorInstance, fn: () => T): T {
+  const ps = playerOf(ctx, user);
+  return ps && ps.id !== ctx.pid ? withPlayer(ctx, ps.id, fn) : fn();
+}
+
 export function runAction(ctx: Ctx, action: Action, user: ActorInstance, opts: RunOpts = {}): RunResult {
+  return asUser(ctx, user, () => runActionAs(ctx, action, user, opts));
+}
+
+function runActionAs(ctx: Ctx, action: Action, user: ActorInstance, opts: RunOpts): RunResult {
   const obs = opts.obs ?? [];
   const tr = resolveTargets(ctx, user, action.targeting, opts.targetPos ?? opts.targetActor?.pos, action.effects);
   if (!tr.ok) return { ok: false, reason: tr.reason, affected: [], obs, centre: { ...user.pos } };
@@ -407,17 +422,19 @@ export function applyEffectList(
   obs: Obs[],
   sourceId?: string,
 ): void {
-  for (const e of effects) {
-    if (ctx.s.status !== 'playing') return;
-    if (isActorEffect(e)) {
-      for (const t of targets) {
-        if (!isAlive(ctx, t)) continue;
-        applyActorEffect(ctx, e, user, t, centre, obs, sourceId);
+  asUser(ctx, user, () => {
+    for (const e of effects) {
+      if (ctx.s.status !== 'playing') return;
+      if (isActorEffect(e)) {
+        for (const t of targets) {
+          if (!isAlive(ctx, t)) continue;
+          applyActorEffect(ctx, e, user, t, centre, obs, sourceId);
+        }
+      } else {
+        applyPositionalEffect(ctx, e, user, centre, obs);
       }
-    } else {
-      applyPositionalEffect(ctx, e, user, centre, obs);
     }
-  }
+  });
 }
 
 function credit(user: ActorInstance, target: ActorInstance, sourceId?: string): string | undefined {
@@ -434,7 +451,8 @@ export function applyActorEffect(
   obs: Obs[],
   sourceId?: string,
 ): void {
-  const self = isPlayer(ctx, target);
+  // "you" in item notes: the user's own player, never a teammate the effect lands on
+  const self = isPlayer(ctx, target) && (target === user || !isPlayer(ctx, user));
   const who = actorName(ctx, target);
   switch (e.type) {
     case 'damage': {
@@ -628,8 +646,9 @@ export function changeResource(ctx: Ctx, a: ActorInstance, res: string, amount: 
   }
   const def = ctx.ix.resources.get(res);
   if (def) {
-    if (!isPlayer(ctx, a)) return 0;
-    const r = me(ctx).resources;
+    const ps = playerOf(ctx, a);
+    if (!ps) return 0;
+    const r = ps.resources;
     const before = own(r, res) ?? 0;
     r[res] = clamp(before + amount, 0, def.max);
     if (before > 0 && r[res] === 0) resourceEmptied(ctx, a, res);

@@ -115,8 +115,41 @@ export interface Ctx {
   harmCause?: { status?: string; terrain?: string };
   /** count of tile writes in this call (mutTile), the invalidation stamp of fovCache */
   tileWrites?: number;
-  /** the player's last field of view (vision.ts playerFov) */
-  fovCache?: { tiles: Tile[]; writes: number; x: number; y: number; r: number; vis: Set<number> };
+  /** each player's last field of view (vision.ts playerFov), by player id */
+  fovCache?: Record<PlayerId, FovEntry>;
+  /** timing hooks (EngineEnv.profile); absent = the engine does no timing */
+  profile?: EngineProfile;
+}
+
+/** one player's cached field of view and what it was computed from */
+export interface FovEntry {
+  tiles: Tile[];
+  writes: number;
+  x: number;
+  y: number;
+  r: number;
+  vis: Set<number>;
+}
+
+/**
+ * Timing hooks injected from outside the engine (the engine never reads a clock): `now` is the
+ * caller's clock in ms, `add` receives the time spent per key ('turn', 'world', 'ai', 'fov').
+ */
+export interface EngineProfile {
+  now(): number;
+  add(key: string, ms: number): void;
+}
+
+/** runs `fn`, adding its time under `key` when the context carries a profile */
+export function timed<T>(ctx: Ctx, key: string, fn: () => T): T {
+  const pr = ctx.profile;
+  if (!pr) return fn();
+  const t0 = pr.now();
+  try {
+    return fn();
+  } finally {
+    pr.add(key, pr.now() - t0);
+  }
 }
 
 /** the shared tile array of the input state, its private copy (once made) and the tiles cloned so far */

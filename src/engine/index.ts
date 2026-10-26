@@ -21,17 +21,20 @@ import type {
   PlayerId,
   PlayerState,
   StepResult,
+  TurnInput,
+  TurnOptions,
+  TurnResult,
 } from './types';
 import { TOTAL_SLOTS } from './types';
 import { generateArea } from './mapgen/index';
-import { type Ctx, indexWorld, log, me, playerActor } from './ctx';
+import { type Ctx, type EngineProfile, findFreeNear, indexWorld, leadOf, me, nextId, playerActor, playerActorOf, withPlayer } from './ctx';
 import { createRng, rngFromState } from './rng';
 import { initKnowledge } from './knowledge';
 import { addInstance, equipSlotOf, makeItem } from './inventory';
-import { enterArea } from './area';
+import { enterArea, nearestFreeFloor } from './area';
 import { updateFov } from './vision';
-import { doPlayerAction } from './actions';
-import { ACT_COST, checkEnd, runWorld } from './turn';
+import { ACT_COST, checkEnd } from './turn';
+import { readyIds, runTurn } from './party';
 import { applyGmList, checkQuests, gmSkip } from './gm';
 import { computeLegalActions } from './legal';
 import { findItemInstance, viewActor, viewItem } from './describe';
@@ -54,6 +57,11 @@ export interface EngineEnv {
   mapGenerator?: MapGenerator;
   /** the player a call acts or answers for (defaults to the lead player, party[0]) */
   playerId?: PlayerId;
+  /**
+   * Timing hooks: the caller's clock and a sink for the time per key ('turn', 'world', 'ai',
+   * 'fov'). The engine itself never reads a clock; without this it does no timing.
+   */
+  profile?: EngineProfile;
 }
 
 function worldFor(state: GameState, env?: EngineEnv): WorldSpec {
@@ -80,6 +88,7 @@ function makeCtx(world: WorldSpec, s: GameState, env?: EngineEnv): Ctx {
     events: [],
     mapGen: env?.mapGenerator ?? generateArea,
     depth: 0,
+    ...(env?.profile ? { profile: env.profile } : {}),
   };
 }
 
@@ -108,12 +117,11 @@ export function playerIds(state: GameState): PlayerId[] {
   return state.party.slice();
 }
 
-export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
-  const worldId = registerWorld(world);
-  const rng = createRng(opts.seed);
+/** a fresh player actor at level 1 (placed by enterArea / addPlayer) */
+function newPlayerActor(world: WorldSpec, id: string): ActorInstance {
   const ps = world.player;
-  const player: ActorInstance = {
-    id: 'a1',
+  return {
+    id,
     defId: 'player',
     pos: { x: 0, y: 0 },
     hp: ps.stats.hp,
@@ -128,13 +136,14 @@ export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
     ai: { alerted: false },
     tempMods: [],
   };
-  const placeholder: AreaMap = { width: 1, height: 1, tiles: [{ kind: 'floor' }], start: { x: 0, y: 0 }, exit: { x: 0, y: 0 }, regions: [] };
-  // appearances are rolled once (before any item id is made) and every player starts with a copy
-  const knowledge = initKnowledge(world, rng);
-  const lead: PlayerState = {
-    id: 'p1',
-    name: world.player.name,
-    actorId: player.id,
+}
+
+/** a new player's state: level 1, empty pack, the given knowledge table */
+function newPlayerState(world: WorldSpec, id: PlayerId, name: string, actorId: string, knowledge: PlayerState['knowledge']): PlayerState {
+  return {
+    id,
+    name,
+    actorId,
     slots: Array.from({ length: TOTAL_SLOTS }, () => null),
     equipped: { weapon: null, armour: null, trinket: null },
     level: 1,
@@ -147,6 +156,76 @@ export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
     pendingChoice: null,
     seen: new Uint8Array(1),
   };
+}
+
+/**
+ * A knowledge table for a player joining with nothing learned: the same appearances as `from`
+ * (so "the blue vial" is the same item for everyone), each item at its starting level.
+ */
+function freshKnowledge(ctx: Ctx, from: PlayerState['knowledge']): PlayerState['knowledge'] {
+  const out: PlayerState['knowledge'] = {};
+  for (const [id, k] of Object.entries(from)) {
+    const def = ctx.ix.items.get(id);
+    const level = k.ruleHidden ? 'unknown' : (def?.knowledge ?? k.level);
+    out[id] = { level, notes: [], timesUsed: 0, ...(k.appearance ? { appearance: { ...k.appearance } } : {}), ...(k.ruleHidden ? { ruleHidden: true } : {}) };
+  }
+  return out;
+}
+
+/** the world's starting items into the acting player's pack; returns the slots to equip */
+function giveStartingKit(ctx: Ctx): number[] {
+  const ps = me(ctx);
+  const toEquip: number[] = [];
+  for (const si of ctx.world.player.startingItems) {
+    const def = ctx.ix.items.get(si.item);
+    if (!def) continue;
+    const units = def.stackable ? [si.count] : Array.from({ length: si.count }, () => 1);
+    for (const n of units) {
+      const it = makeItem(ctx, def.id, n);
+      if (!it) continue;
+      const slot = addInstance(ctx, it, si.quick);
+      if (slot < 0) continue;
+      const kind = equipSlotOf(def);
+      if (si.equipped && kind && ps.equipped[kind] === null) {
+        ps.equipped[kind] = slot;
+        toEquip.push(slot);
+      }
+    }
+  }
+  return toEquip;
+}
+
+/** on_equip of the starting kit, once the player stands in the area */
+function equipStartingKit(ctx: Ctx, slots: number[]): void {
+  const ps = me(ctx);
+  for (const slot of slots) {
+    const it = ps.slots[slot];
+    const def = it ? ctx.ix.items.get(it.defId) : undefined;
+    if (def) fireItemTriggers(ctx, playerActor(ctx), def, 'on_equip');
+  }
+  const pa = playerActor(ctx);
+  pa.hp = Math.max(1, pa.hp);
+}
+
+/** the next free player id (p1, p2…; never reused) */
+function nextPlayerId(s: GameState): PlayerId {
+  let n = 0;
+  for (const id of Object.keys(s.players)) n = Math.max(n, Number(/^p(\d+)$/.exec(id)?.[1] ?? 0));
+  return `p${n + 1}`;
+}
+
+/** most players in one party */
+export const MAX_PARTY_SIZE = 12;
+
+export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
+  const worldId = registerWorld(world);
+  const rng = createRng(opts.seed);
+  const player = newPlayerActor(world, 'a1');
+  const placeholder: AreaMap = { width: 1, height: 1, tiles: [{ kind: 'floor' }], start: { x: 0, y: 0 }, exit: { x: 0, y: 0 }, regions: [] };
+  // appearances are rolled once (before any item id is made) and every player starts with a copy
+  const knowledge = initKnowledge(world, rng);
+  const names = (Array.isArray(opts.players) && opts.players.length ? opts.players : [{ name: world.player.name }]).slice(0, MAX_PARTY_SIZE);
+  const lead = newPlayerState(world, 'p1', String(names[0]?.name || world.player.name), player.id, knowledge);
   const s: GameState = {
     version: 2,
     worldId,
@@ -171,35 +250,48 @@ export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
     activeRules: initialActiveRules(world),
   };
   const ctx: Ctx = { world, ix: indexWorld(world), s, pid: lead.id, rng, events: [], mapGen: opts.mapGenerator ?? generateArea, depth: 0 };
-  // starting items
-  const toEquip: number[] = [];
-  for (const si of ps.startingItems) {
-    const def = ctx.ix.items.get(si.item);
-    if (!def) continue;
-    const units = def.stackable ? [si.count] : Array.from({ length: si.count }, () => 1);
-    for (const n of units) {
-      const it = makeItem(ctx, def.id, n);
-      if (!it) continue;
-      const slot = addInstance(ctx, it, si.quick);
-      if (slot < 0) continue;
-      const kind = equipSlotOf(def);
-      if (si.equipped && kind && lead.equipped[kind] === null) {
-        lead.equipped[kind] = slot;
-        toEquip.push(slot);
-      }
-    }
+  const kits = new Map<PlayerId, number[]>([[lead.id, giveStartingKit(ctx)]]);
+  // the rest of the party after the lead's kit, so a party of one keeps its rng and ids
+  for (const n of names.slice(1)) {
+    const id = nextPlayerId(s);
+    const a = newPlayerActor(world, nextId(ctx, 'a'));
+    s.area.actors.push(a);
+    s.players[id] = newPlayerState(world, id, String(n?.name || `${world.player.name} ${s.party.length + 1}`), a.id, freshKnowledge(ctx, knowledge));
+    s.party.push(id);
+    kits.set(id, withPlayer(ctx, id, () => giveStartingKit(ctx)));
   }
   enterArea(ctx, 0, opts.map);
-  for (const slot of toEquip) {
-    const it = lead.slots[slot];
-    const def = it ? ctx.ix.items.get(it.defId) : undefined;
-    if (def) fireItemTriggers(ctx, playerActor(ctx), def, 'on_equip');
-  }
-  const pa = playerActor(ctx);
-  pa.hp = Math.max(1, pa.hp);
+  for (const id of s.party) withPlayer(ctx, id, () => equipStartingKit(ctx, kits.get(id) ?? []));
   updateFov(ctx);
   s.rng = rng.state();
   return s;
+}
+
+/**
+ * Adds a player to a running game (a late joiner, MP2): level 1 with the world's starting kit and
+ * the party's item appearances, placed on a free tile next to the lead. Pure: `state` is not
+ * changed. The party grows to at most MAX_PARTY_SIZE.
+ */
+export function addPlayer(state: GameState, opts: { name: string }, env?: EngineEnv): { state: GameState; playerId: PlayerId } {
+  const world = worldFor(state, env);
+  if (state.status !== 'playing') throw new Error('the run is over');
+  if (state.party.length >= MAX_PARTY_SIZE) throw new Error(`the party is full (${MAX_PARTY_SIZE})`);
+  const ctx = clonedCtx(world, state, env);
+  const s = ctx.s;
+  const lead = leadOf(s);
+  const leadActor = playerActorOf(ctx, lead.id);
+  const id = nextPlayerId(s);
+  const a = newPlayerActor(world, nextId(ctx, 'a'));
+  a.pos = (leadActor && (findFreeNear(ctx, leadActor.pos, 3) ?? nearestFreeFloor(ctx, leadActor.pos))) ?? nearestFreeFloor(ctx, s.area.map.start) ?? { ...s.area.map.start };
+  s.area.actors.push(a);
+  const ps = newPlayerState(world, id, String(opts?.name || `${world.player.name} ${s.party.length + 1}`), a.id, freshKnowledge(ctx, lead.knowledge));
+  ps.seen = new Uint8Array(s.area.map.width * s.area.map.height);
+  s.players[id] = ps;
+  s.party.push(id);
+  withPlayer(ctx, id, () => equipStartingKit(ctx, giveStartingKit(ctx)));
+  updateFov(ctx);
+  s.rng = ctx.rng.state();
+  return { state: s, playerId: id };
 }
 
 function finish(ctx: Ctx, tookTurn: boolean): StepResult {
@@ -209,26 +301,36 @@ function finish(ctx: Ctx, tookTurn: boolean): StepResult {
   return { state: ctx.s, events: ctx.events, tookTurn };
 }
 
-/** applies one player action; never mutates `state` (invalid actions return it unchanged) */
-export function step(state: GameState, action: PlayerAction, env?: EngineEnv): StepResult {
+/**
+ * One party turn: every player's input (free actions first, at most one turn action each), then
+ * the world moves once (engine/party.ts). Never mutates `state`; when nothing changed (every
+ * action refused, no busy flag, no `advance`) the input state is returned with the refusals.
+ */
+export function stepTurn(state: GameState, inputs: TurnInput[], env?: EngineEnv & TurnOptions): TurnResult {
   const world = worldFor(state, env);
   if (state.status !== 'playing') {
-    return { state, events: [{ type: 'invalid', reason: 'the run is over' }], tookTurn: false };
+    const outcomes = (Array.isArray(inputs) ? inputs : []).flatMap((i) =>
+      (i?.actions ?? []).map((action) => ({ playerId: i.playerId, action, ok: false, tookTurn: false, reason: 'stale' as const, detail: 'the run is over' })),
+    );
+    return { state, events: [{ type: 'invalid', reason: 'the run is over' }], tookTurn: false, outcomes, waited: [] };
   }
   const ctx = clonedCtx(world, state, env);
-  const r = doPlayerAction(ctx, action);
-  if (!r.ok) {
-    const events: GameEvent[] = [{ type: 'invalid', reason: r.reason ?? 'not possible' }];
-    return { state, events, tookTurn: false };
-  }
-  if (r.tookTurn) {
-    const p = playerActor(ctx);
-    p.energy -= r.cost ?? ACT_COST;
-    runWorld(ctx);
-  } else {
-    checkQuests(ctx);
-  }
-  return finish(ctx, r.tookTurn);
+  const r = runTurn(ctx, inputs, env?.advance ? { advance: true } : {});
+  if (!r.changed) return { state, events: ctx.events, tookTurn: false, outcomes: r.outcomes, waited: [] };
+  return { state: ctx.s, events: ctx.events, tookTurn: r.tookTurn, outcomes: r.outcomes, waited: r.waited };
+}
+
+/** applies one player action (a party turn with one input); never mutates `state` (invalid actions return it unchanged) */
+export function step(state: GameState, action: PlayerAction, env?: EngineEnv): StepResult {
+  const r = stepTurn(state, [{ playerId: env?.playerId ?? state.party[0], actions: [action] }], env ? { ...env, advance: false } : undefined);
+  return { state: r.state, events: r.events, tookTurn: r.tookTurn };
+}
+
+/** players whose input a party turn waits for: standing, energy ≥ ACT_COST, not stunned (party order) */
+export function readyPlayers(state: GameState, env?: EngineEnv): PlayerId[] {
+  const world = worldFor(state, env);
+  if (state.status !== 'playing') return [];
+  return readyIds(makeCtx(world, state, env));
 }
 
 /**

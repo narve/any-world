@@ -1,11 +1,12 @@
 /** Legal player actions for bots and UI hints (every action listed here is accepted by step). */
 import type { PlayerAction } from './types';
 import { TOTAL_SLOTS } from './types';
-import { type Ctx, actorAt, isPlayer, me, passable, playerActor } from './ctx';
+import { type Ctx, actorAt, isPlayer, me, passable, playerActor, playerActorOf } from './ctx';
 import { firstFreeSlot, equipSlotOf, equippedKindOf, requiresFailure, useFailure } from './inventory';
 import { POSITIONAL_SHAPES, autoTarget, isVisibleToPlayer } from './effects';
 import { attackFailure } from './actions';
-import { canTalkTo, TALK_RANGE } from './npc';
+import { canTalkTo, talkingWith, TALK_RANGE } from './npc';
+import { canTakeTurn } from './turn';
 import { optionPrice } from './gm';
 import { transitionFailure } from './area';
 import { hasFlag, side } from './stats';
@@ -27,6 +28,7 @@ export function computeLegalActions(ctx: Ctx): PlayerAction[] {
   const s = ctx.s;
   if (s.status !== 'playing') return [];
   const ps = me(ctx);
+  if (ps.down || !playerActorOf(ctx, ps.id)) return [];
   if (ps.pendingPerkChoice) return ps.pendingPerkChoice.map((perkId) => ({ type: 'choose_perk', perkId }));
   const pc = ps.pendingChoice;
   if (pc) {
@@ -37,6 +39,15 @@ export function computeLegalActions(ctx: Ctx): PlayerAction[] {
   }
   const out: PlayerAction[] = [];
   const p = playerActor(ctx);
+  // out of energy (a teammate is hasted): only the free actions
+  if (!canTakeTurn(ctx, ps.id)) {
+    for (const a of s.area.actors) {
+      if (isPlayer(ctx, a) || a.hp <= 0 || cheb(a.pos, p.pos) > TALK_RANGE || !canTalkTo(ctx, a) || talkingWith(ctx, a)) continue;
+      if (isVisibleToPlayer(ctx, a) || cheb(a.pos, p.pos) <= 1) out.push({ type: 'talk', targetId: a.id });
+    }
+    if (ctx.world.verbs.sneak) out.push({ type: 'toggle_sneak' });
+    return out;
+  }
   const map = s.area.map;
   const rooted = hasFlag(ctx, p, 'rooted');
   for (const dir of DIR_LIST) {
@@ -47,7 +58,7 @@ export function computeLegalActions(ctx: Ctx): PlayerAction[] {
     if (other && !isPlayer(ctx, other)) {
       if (side(ctx, other) === 'H') {
         if (!attackFailure(ctx, other, true)) out.push({ type: 'move', dir });
-      } else if (canTalkTo(ctx, other) && !other.talkedTo) {
+      } else if (canTalkTo(ctx, other) && !other.talkedTo && !talkingWith(ctx, other)) {
         out.push({ type: 'move', dir });
       } else if (!rooted) out.push({ type: 'move', dir });
       continue;
@@ -65,7 +76,7 @@ export function computeLegalActions(ctx: Ctx): PlayerAction[] {
     // step() accepts an attack on a neutral or friendly actor (it provokes them)
     if ((side(ctx, a) === 'H' || defeatRequired(required, a)) && !attackFailure(ctx, a)) out.push({ type: 'attack', targetId: a.id });
     if (cheb(a.pos, p.pos) <= TALK_RANGE) {
-      if (canTalkTo(ctx, a)) out.push({ type: 'talk', targetId: a.id });
+      if (canTalkTo(ctx, a) && !talkingWith(ctx, a)) out.push({ type: 'talk', targetId: a.id });
       if (ctx.world.verbs.persuade && !a.allyOf) out.push({ type: 'persuade', targetId: a.id });
     }
   }

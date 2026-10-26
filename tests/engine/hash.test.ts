@@ -3,8 +3,8 @@
  * order, fog as bytes whatever its form, a fixed-order tile walker).
  */
 import { describe, it, expect } from 'vitest';
-import { handBuiltPlayer, loadFixture, roomMap } from './helpers';
-import { createGame, deserialize, hashState, serialize, step, legalActions } from '../../src/engine';
+import { loadFixture, roomMap } from './helpers';
+import { addPlayer, createGame, deserialize, hashState, serialize, step, legalActions } from '../../src/engine';
 import { cloneState } from '../../src/engine/clone';
 import { fastStep } from '../../src/engine/sim/fast';
 import { botByName, newMemory } from '../../src/engine/sim/bots';
@@ -14,8 +14,7 @@ const ship = loadFixture('fixture-ship.json');
 
 function twoPlayers(): GameState {
   const s = createGame(ship, { seed: 6, map: roomMap(14, 10) });
-  handBuiltPlayer(s, { x: 3, y: 3 }, 'Bea');
-  return s;
+  return addPlayer(s, { name: 'Bea' }, { world: ship }).state;
 }
 
 describe('hashState', () => {
@@ -93,10 +92,10 @@ describe('hashState', () => {
   });
 
   it('costs well under 20 ms for a 12-player party on a 91×65 area', () => {
-    const s = createGame(ship, { seed: 8, map: roomMap(91, 65) });
-    for (let i = 2; i <= 12; i++) {
-      const p = handBuiltPlayer(s, { x: 2 + i * 3, y: 5 }, `P${i}`);
-      for (let k = 0; k < p.seen.length; k += 3) p.seen[k] = k % 2 ? 1 : 2;
+    const s = createGame(ship, { seed: 8, map: roomMap(91, 65), players: Array.from({ length: 12 }, (_, i) => ({ name: `P${i + 1}` })) });
+    for (const id of s.party) {
+      const seen = s.players[id].seen;
+      for (let k = 0; k < seen.length; k += 3) seen[k] = k % 2 ? 1 : 2;
     }
     hashState(s);
     const n = 10;

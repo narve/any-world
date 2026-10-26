@@ -514,6 +514,33 @@ one NPC, two trades in one `stepTurn` checked against the purse in order), `test
 3-player parity, `tests/sim/party.test.ts` (2 players on two fixture worlds, capped turns: no crash,
 invariants hold, deterministic).
 
+**B2a as built** (2026-10-26):
+- `src/engine/party.ts` `runTurn` is the one core under `step`, `stepTurn`, `fastStep` and
+  `fastStepTurn`. Free actions are the types `talk`, `choose_option`, `choose_perk`,
+  `toggle_sneak` (`FREE_ACTIONS`); everything else is a turn action. A refused action is rolled back
+  (rng, log, events), so it changes nothing even mid-turn. `illegal` = refused while nothing earlier
+  in the same call had changed the state; after a change, `contested` (the tile or target is taken,
+  the NPC is talking with someone else) or `stale`.
+- `not ready` (and "only free actions" in `legalActions`) applies only to parties of two or more:
+  a party of one always may act, as before (the world only hands control back once it can).
+- Busy: `TurnInput.busy` without a successful turn action sets / clears `busySince`; a turn action
+  deletes it. Nothing reads it yet (B2b).
+- One dialogue per NPC is a refusal (`invalid` reason "… is talking with someone else"), not a
+  `log.party.npc_busy` line: a refused action leaves no log. `log.party.talk_gone` (en + nb) is the
+  only new key. Stale-choice checks (speaker dead, hostile, beyond `TALK_RANGE`, service or recruit
+  taken) run only with two or more players, so a GM `trade` with a distant speaker closes at the end
+  of the first round in a party.
+- `enterArea` already carries the whole party (others on `nearestFreeFloor` from the start, before
+  allies and spawns) and `doTransition` gives everyone `max(energy, ACT_COST)`: the immediate
+  version of §5; B3 adds the countdown and the pending change.
+- `checkEnd` still ends the run when any player is at 0 hp and not down (B2b brings `down`); win /
+  lose conditions are evaluated for the lead.
+- `Bot.decide` takes an optional `playerId`. `runParty` (no CLI yet) gives the lead runGame's memory
+  seed, so a party of one plays runGame's game.
+- Timing, 12 bots on fixture-western (areas up to 56×40, fast stepping): whole party turn incl. 12
+  bot decisions mean 7–8 ms, p95 12–14 ms, max 25–54 ms; engine time ~1 ms per turn, of which FOV
+  ~60 % (12 players × every call). Under budget, so no cross-call FOV cache yet; recheck at 91×65 in B3.
+
 ### B2b — AI among players, falling and revive, party goals
 
 Scope: §3, §4. Sticky and busy targeting (`BUSY_MAX_TURNS`, close-in-to-2), per-player perception and

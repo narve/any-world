@@ -68,6 +68,10 @@ export const LOG_KEYS = {
   'log.trade.cannot_afford': 'You cannot afford any of it (not enough {currency}).',
   'log.trade.sold': '{player} sells {item} for {amount} {currency}.',
 
+  // party
+  /** a dialogue closed because its speaker died, left talking range or turned hostile meanwhile */
+  'log.party.talk_gone': '{player} loses the thread: the conversation is over.',
+
   // quests, rules, currency, progression
   'log.quest.new': 'New: {title}',
   'log.quest.done': 'Done: {title}',

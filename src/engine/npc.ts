@@ -4,8 +4,8 @@
  * choose_option resolves any pending choice.
  */
 import type { GmAction } from '../schema/gm';
-import type { ActorInstance, PendingChoice } from './types';
-import { type Ctx, actorDef, actorName, emit, findActor, isAlive, isPlayer, log, logKey, me, playerActor, playerName } from './ctx';
+import type { ActorInstance, PendingChoice, PlayerId, PlayerState } from './types';
+import { type Ctx, actorDef, actorName, emit, findActor, isAlive, isPlayer, log, logKey, me, playerActor, playerActorOf, playerName } from './ctx';
 import { type ActionOutcome, displayItemName, done, equippedKindOf, free, invalid, removeFromSlot } from './inventory';
 import { TOTAL_SLOTS } from './types';
 import { progressRefs } from './goals';
@@ -74,6 +74,47 @@ export function canTalkTo(ctx: Ctx, a: ActorInstance): boolean {
   return !!ctx.world.verbs.talk && !!actorDef(ctx, a)?.npc;
 }
 
+/** the other player (not the acting one) who has a dialogue with `a` open, if any: one per NPC */
+export function talkingWith(ctx: Ctx, a: ActorInstance): PlayerId | undefined {
+  for (const id of ctx.s.party) {
+    if (id === ctx.pid) continue;
+    if (ctx.s.players[id].pendingChoice?.speakerId === a.id) return id;
+  }
+  return undefined;
+}
+
+/**
+ * Why an open choice can no longer be answered (null = it still can): its speaker died, left
+ * talking range or turned hostile. In a party the world moves while a choice is open; a party of
+ * one never gets here (nothing moves until the choice is made), so solo play is unchanged.
+ */
+function choiceStale(ctx: Ctx, ps: PlayerState): boolean {
+  const pc = ps.pendingChoice;
+  if (!pc?.speakerId || ctx.s.party.length < 2) return false;
+  const speaker = findActor(ctx, pc.speakerId);
+  const pa = playerActorOf(ctx, ps.id);
+  if (!speaker || !isAlive(ctx, speaker) || side(ctx, speaker) === 'H') return true;
+  return !pa || cheb(speaker.pos, pa.pos) > TALK_RANGE;
+}
+
+/** closes a player's open choice; a GM offer gives back the budget reserved for it */
+export function closeChoice(ctx: Ctx, ps: PlayerState): void {
+  const pc = ps.pendingChoice;
+  if (!pc) return;
+  ps.pendingChoice = null;
+  if (pc.kind === 'gm_offer' && pc.reservedBudget) ctx.s.area.gmBudget += pc.reservedBudget;
+}
+
+/** end of round: every player's choice whose speaker is gone is closed (log.party.talk_gone) */
+export function closeStaleChoices(ctx: Ctx): void {
+  for (const id of ctx.s.party) {
+    const ps = ctx.s.players[id];
+    if (!choiceStale(ctx, ps)) continue;
+    closeChoice(ctx, ps);
+    logKey(ctx, 'log.party.talk_gone', { player: ps.name }, 'info');
+  }
+}
+
 export function doTalk(ctx: Ctx, targetId: string): ActionOutcome {
   if (!ctx.world.verbs.talk) return invalid('talking is not possible here');
   const a = npcTarget(ctx, targetId);
@@ -81,6 +122,7 @@ export function doTalk(ctx: Ctx, targetId: string): ActionOutcome {
   const def = actorDef(ctx, a);
   if (!def?.npc) return invalid(`${actorName(ctx, a)} has nothing to say`);
   if (me(ctx).pendingChoice) return invalid('finish the current conversation first');
+  if (talkingWith(ctx, a)) return invalid(`${actorName(ctx, a)} is talking with someone else`);
   const npc = def.npc;
   const first = !a.talkedTo;
   a.talkedTo = true;
@@ -205,12 +247,23 @@ export function doChooseOption(ctx: Ctx, index: number): ActionOutcome {
   if (!pc) return invalid('nothing to choose');
   if (!Number.isInteger(index) || index < 0 || index >= pc.options.length) return invalid('no such option');
   const opt = pc.options[index];
+  // the world kept moving while the choice was open (a party): the speaker may be gone, and a
+  // once-only service or a recruit may have been taken by now
+  const svcTaken = (sp: ActorInstance | undefined): boolean => {
+    if (!sp || !opt.tag?.startsWith('service:') || ctx.s.party.length < 2) return false;
+    const svc = opt.tag.slice('service:'.length);
+    return (sp.npcUsed ?? []).includes(svc) || (svc === 'recruit' && !!sp.allyOf);
+  };
+  if (choiceStale(ctx, me(ctx)) || svcTaken(findActor(ctx, pc.speakerId))) {
+    closeChoice(ctx, me(ctx));
+    logKey(ctx, 'log.party.talk_gone', { player: playerName(ctx) }, 'info');
+    return free();
+  }
   if (optionPrice(opt.actions) > ctx.s.purse) {
     // a choice with no affordable option (e.g. from a save made before offers always carried a
     // free option) must not lock the run: any pick then declines it
     if (pc.options.some((o) => optionPrice(o.actions) <= ctx.s.purse)) return invalid(`not enough ${ctx.world.vocabulary.currency}`);
-    me(ctx).pendingChoice = null;
-    if (pc.kind === 'gm_offer' && pc.reservedBudget) ctx.s.area.gmBudget += pc.reservedBudget;
+    closeChoice(ctx, me(ctx));
     logKey(ctx, 'log.trade.cannot_afford', { currency: ctx.world.vocabulary.currency }, 'info');
     return free();
   }

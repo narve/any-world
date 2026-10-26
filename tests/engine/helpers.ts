@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { WorldSpec, parseWorld, type WorldSpecInput } from '../../src/schema';
-import type { AreaMap, MapGenerator, Pos, Tile, GameState, ActorInstance, PlayerState } from '../../src/engine/types';
+import type { AreaMap, MapGenerator, Pos, Tile, GameState, ActorInstance } from '../../src/engine/types';
 import { createGame, leadPlayer, step, type EngineEnv } from '../../src/engine';
 
 export const WORLD_DIR = join(__dirname, '..', '..', 'content', 'worlds');
@@ -380,40 +380,6 @@ export function addActor(world: WorldSpec, s: GameState, defId: string, pos: Pos
   };
   s.area.actors.push(a);
   return a;
-}
-
-/**
- * Adds a second (third…) player by direct state surgery: a copy of the lead's actor at `pos` and a
- * fresh PlayerState with a copy of the lead's knowledge (appearances are shared). Test setup only,
- * for the data model (save, clone, hash); the engine's own addPlayer comes with the party rules.
- */
-export function handBuiltPlayer(s: GameState, pos: Pos, name: string): PlayerState {
-  const lead = leadPlayer(s);
-  const la = s.area.actors.find((a) => a.id === lead.actorId)!;
-  const id = `p${s.party.length + 1}`;
-  const a: ActorInstance = structuredClone(la);
-  a.id = `a${s.nextId++}`;
-  a.pos = { ...pos };
-  s.area.actors.push(a);
-  const ps: PlayerState = {
-    id,
-    name,
-    actorId: a.id,
-    slots: lead.slots.map(() => null),
-    equipped: { weapon: null, armour: null, trinket: null },
-    level: 1,
-    xp: 0,
-    perks: [],
-    pendingPerkChoice: null,
-    resources: { ...lead.resources },
-    sneaking: false,
-    knowledge: structuredClone(lead.knowledge),
-    pendingChoice: null,
-    seen: new Uint8Array(s.area.map.width * s.area.map.height),
-  };
-  s.players[id] = ps;
-  s.party.push(id);
-  return ps;
 }
 
 export function act(world: WorldSpec, s: GameState, action: Parameters<typeof step>[1]) {

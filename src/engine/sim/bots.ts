@@ -18,7 +18,7 @@
  */
 import type { WorldSpec, ItemDef } from '../../schema/world';
 import type { GmAction } from '../../schema/gm';
-import type { Dir, GameState, PlayerAction, Pos } from '../types';
+import type { Dir, GameState, PlayerAction, PlayerId, Pos } from '../types';
 import { type Ctx, me } from '../ctx';
 import { SeededRng, createRng } from '../rng';
 import { equipSlotOf } from '../inventory';
@@ -177,22 +177,23 @@ const STALL_LIMIT = 60;
 
 export interface Bot {
   name: BotName;
-  decide(state: GameState, world: WorldSpec, memory: BotMemory): PlayerAction;
+  /** the next action of `playerId` (default: the lead player); never mutates `state` */
+  decide(state: GameState, world: WorldSpec, memory: BotMemory, playerId?: PlayerId): PlayerAction;
 }
 
 export function botByName(name: string): Bot {
   if (name === 'random') return { name: 'random', decide: randomDecide };
   const persona = PERSONAS[name as Exclude<BotName, 'random'>];
   if (!persona) throw new Error(`unknown bot "${name}" (known: ${BOT_NAMES.join(', ')})`);
-  return { name: persona.name, decide: (s, w, m) => personaDecide(persona, s, w, m) };
+  return { name: persona.name, decide: (s, w, m, pid) => personaDecide(persona, s, w, m, pid) };
 }
 
 // ---------------------------------------------------------------------------
 // Random bot
 // ---------------------------------------------------------------------------
 
-function randomDecide(state: GameState, world: WorldSpec, mem: BotMemory): PlayerAction {
-  const ctx = botCtx(world, state);
+function randomDecide(state: GameState, world: WorldSpec, mem: BotMemory, playerId?: PlayerId): PlayerAction {
+  const ctx = botCtx(world, state, playerId);
   const legal = fastLegal(ctx);
   mem.decisions++;
   if (!legal.length) return { type: 'wait' };
@@ -221,8 +222,8 @@ interface Turn {
   wantDefeat: Set<string>;
 }
 
-function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem: BotMemory): PlayerAction {
-  const ctx = botCtx(world, state);
+function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem: BotMemory, playerId?: PlayerId): PlayerAction {
+  const ctx = botCtx(world, state, playerId);
   const legal = fastLegal(ctx);
   mem.decisions++;
   if (!legal.length) return { type: 'wait' };

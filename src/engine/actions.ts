@@ -15,6 +15,7 @@ import {
   moveCost,
   mutTile,
   passable,
+  partyActors,
   playerActor,
   playerName,
 } from './ctx';
@@ -36,7 +37,7 @@ import { hasFlag, side } from './stats';
 import { isVisibleToPlayer, runAction } from './effects';
 import { moveActor } from './actors';
 import { enterArea, lockedReason, transitionFailure } from './area';
-import { canTalkTo, doChooseOption, doPersuade, doTalk } from './npc';
+import { canTalkTo, doChooseOption, doPersuade, doTalk, talkingWith } from './npc';
 import { choosePerk } from './progression';
 import { DIR_LIST, addDir, cheb, isValidPos, samePos, tileAt } from './util';
 
@@ -104,10 +105,19 @@ function doMove(ctx: Ctx, dirIn: Dir): ActionOutcome {
   const map = ctx.s.area.map;
   const tile = tileAt(map, to.x, to.y);
   const other = tile ? actorAt(ctx, to) : undefined;
-  if (other && !isPlayer(ctx, other)) {
+  if (other && isPlayer(ctx, other)) {
+    // walking into a teammate swaps places (as with allies), so nobody blocks a corridor
+    if (hasFlag(ctx, p, 'rooted')) return invalid('you cannot move');
+    const from = { ...p.pos };
+    other.pos = from;
+    emit(ctx, { type: 'moved', actorId: other.id, from: to, to: from });
+    moveActor(ctx, p, to);
+    return done(Math.round(100 * moveCost(ctx, to)));
+  }
+  if (other) {
     if (side(ctx, other) === 'H') return attackTarget(ctx, other, true);
     // allies, and NPCs you've already spoken to, step aside (so nobody can block a corridor)
-    const talkFirst = canTalkTo(ctx, other) && !other.talkedTo;
+    const talkFirst = canTalkTo(ctx, other) && !other.talkedTo && !talkingWith(ctx, other);
     if (other.allyOf === p.id || (!talkFirst && !confused)) {
       if (hasFlag(ctx, p, 'rooted')) return invalid('you cannot move');
       const from = { ...p.pos };
@@ -184,9 +194,9 @@ function doTransition(ctx: Ctx): ActionOutcome {
   }
   ctx.s.stats.areasCleared += 1;
   log(ctx, ctx.world.areas[ctx.s.area.index].transitionName, 'system');
+  // the whole party moves on together (MP1 B3 adds the exit countdown)
   enterArea(ctx, ctx.s.area.index + 1);
-  const p = playerActor(ctx);
-  p.energy = Math.max(p.energy, 100);
+  for (const p of partyActors(ctx)) p.energy = Math.max(p.energy, 100);
   return done();
 }
 

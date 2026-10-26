@@ -98,18 +98,39 @@ function progressKey(s: GameState): string {
   return [s.area.index, seenCount(s), defeated, items, p.xp, p.level, flags, counters, kn, s.stats.damageDealt, s.quests.length, p.equipped.weapon, p.equipped.armour].join('|');
 }
 
-/** cheap structural invariants; returns a description of the first violation */
+/** cheap structural invariants (every player of the party); returns a description of the first violation */
 export function invariantError(world: WorldSpec, s: GameState): string | null {
   const map = s.area.map;
   const lead = leadPlayer(s);
   if (!lead) return 'no lead player';
   if (s.party.length !== Object.keys(s.players).length || s.party.some((id) => s.players[id]?.id !== id)) return 'party and players disagree';
-  for (const id of s.party) if (s.players[id].seen.length !== map.width * map.height) return `fog of ${id} does not match the map size`;
+  if (new Set(s.party).size !== s.party.length) return 'a player is in the party twice';
   if (map.tiles.length !== map.width * map.height) return 'tile count does not match map size';
-  if (lead.slots.length !== TOTAL_SLOTS) return 'slot array has the wrong length';
-  const p = s.area.actors.find((a) => a.id === lead.actorId);
-  if (!p) return 'player actor missing from the area';
-  if (s.status === 'playing' && p.hp <= 0) return 'player at 0 hp while the run is playing';
+  for (const id of s.party) {
+    const ps = s.players[id];
+    if (ps.seen.length !== map.width * map.height) return `fog of ${id} does not match the map size`;
+    if (ps.slots.length !== TOTAL_SLOTS) return `slot array of ${id} has the wrong length`;
+    const mine = s.area.actors.filter((a) => a.id === ps.actorId);
+    if (mine.length !== 1) return mine.length ? `actor of ${id} is in the area twice` : `actor of ${id} missing from the area`;
+    const p = mine[0];
+    if (s.party.some((o) => o !== id && s.players[o].actorId === ps.actorId)) return `${id} shares an actor with another player`;
+    if (ps.down) {
+      if (p.hp !== 0) return `${id} is down with ${p.hp} hp`;
+      if (p.statuses.length || p.tempMods.length || p.energy !== 0) return `${id} is down with statuses, temporary mods or energy`;
+    } else if (s.status === 'playing' && p.hp <= 0) return `${id} at 0 hp while the run is playing`;
+    for (const kind of ['weapon', 'armour', 'trinket'] as const) {
+      const i = ps.equipped[kind];
+      if (i !== null && !ps.slots[i]) return `equipped ${kind} of ${id} points at an empty slot`;
+    }
+    for (const it of ps.slots) if (it && !(it.count > 0)) return `item ${it.id} has count ${it.count}`;
+    for (const r of world.resources ?? []) {
+      const v = ps.resources[r.id];
+      if (!(v >= 0 && v <= r.max)) return `resource ${r.id} of ${id} = ${v} outside 0..${r.max}`;
+    }
+  }
+  const cd = s.area.exitCountdown;
+  if (cd && !(cd.turnsLeft >= 0 && cd.turnsLeft <= s.partyRules.exitCountdownTurns)) return `exit countdown at ${cd.turnsLeft}`;
+  if (!Number.isFinite(s.purse)) return `purse = ${s.purse}`;
   const taken = new Set<number>();
   for (const a of s.area.actors) {
     if (!Number.isFinite(a.hp) || !Number.isFinite(a.energy)) return `actor ${a.id} has a non-finite hp/energy`;
@@ -118,15 +139,6 @@ export function invariantError(world: WorldSpec, s: GameState): string | null {
     const k = a.pos.y * map.width + a.pos.x;
     if (taken.has(k)) return `two actors on ${a.pos.x},${a.pos.y}`;
     taken.add(k);
-  }
-  for (const kind of ['weapon', 'armour', 'trinket'] as const) {
-    const i = lead.equipped[kind];
-    if (i !== null && !lead.slots[i]) return `equipped ${kind} points at an empty slot`;
-  }
-  for (const it of lead.slots) if (it && !(it.count > 0)) return `item ${it.id} has count ${it.count}`;
-  for (const r of world.resources ?? []) {
-    const v = lead.resources[r.id];
-    if (!(v >= 0 && v <= r.max)) return `resource ${r.id} = ${v} outside 0..${r.max}`;
   }
   if (s.rng.length !== 4) return 'rng state has the wrong length';
   return null;

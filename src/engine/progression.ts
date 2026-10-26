@@ -1,6 +1,6 @@
 /** XP, level-ups and perks. */
 import type { Perk } from '../schema/world';
-import { type Ctx, emit, logKey, me, playerActor } from './ctx';
+import { type Ctx, emit, logKey, me, playerActor, playerActorOf, withPlayer } from './ctx';
 import { modifyStat } from './effects';
 import { giveItem } from './inventory';
 
@@ -10,11 +10,16 @@ export function xpToNext(ctx: Ctx, level: number): number {
   return Math.max(1, Math.round(g.firstLevelXp * Math.pow(g.curve, Math.max(0, level - 1))));
 }
 
+/**
+ * XP is shared in full: every player in the party gets the whole amount (kills, grant_xp effects
+ * and GM grants alike), one log line; level-ups are checked per player in party order.
+ */
 export function grantXp(ctx: Ctx, amount: number): void {
   if (!(amount > 0) || !Number.isFinite(amount)) return;
-  me(ctx).xp += Math.round(amount);
-  logKey(ctx, 'log.xp', { amount: Math.round(amount), xp: ctx.world.vocabulary.xp }, 'good');
-  checkLevelUp(ctx);
+  const n = Math.round(amount);
+  for (const id of ctx.s.party) ctx.s.players[id].xp += n;
+  logKey(ctx, 'log.xp', { amount: n, xp: ctx.world.vocabulary.xp }, 'good');
+  for (const id of ctx.s.party) if (playerActorOf(ctx, id)) withPlayer(ctx, id, () => checkLevelUp(ctx));
 }
 
 export function availablePerks(ctx: Ctx, level: number): Perk[] {
