@@ -43,10 +43,13 @@ describe('sim difficulty', () => {
     expect(n).toBeGreaterThan(0);
     expect(hostileHp('brutal') / n).toBeGreaterThan(1.2);
     const few = [1, 2, 3];
-    const play = (d: 'normal' | 'brutal') => summarize(runMany(teen, { seeds: few, bots: ['explorer'], fast: true, maxTurns: 400, difficulty: d }), teen.areas.length)[0];
-    const brutal = play('brutal');
-    const normal = play('normal');
-    expect([brutal.avgTurns, brutal.avgKills]).not.toEqual([normal.avgTurns, normal.avgKills]);
+    const runs = (d: 'normal' | 'brutal') => runMany(teen, { seeds: few, bots: ['explorer'], fast: true, maxTurns: 400, difficulty: d });
+    const brutalRuns = runs('brutal');
+    const normalRuns = runs('normal');
+    // turns and kills alone can tie when every run hits the turn cap; the damage taken cannot
+    const fingerprint = (rs: typeof brutalRuns) => rs.map((r) => [r.turns, r.stats.kills, r.stats.damageTaken]);
+    expect(fingerprint(brutalRuns)).not.toEqual(fingerprint(normalRuns));
+    const brutal = summarize(brutalRuns, teen.areas.length)[0];
     const report = analyseWorld(teen, { seeds: few, bots: ['explorer'], fast: true, maxTurns: 400, difficulty: 'brutal' });
     expect(report.difficulty).toBe('brutal');
     expect([report.sims[0].won, report.sims[0].avgTurns, report.sims[0].avgKills]).toEqual([brutal.won, brutal.avgTurns, brutal.avgKills]);

@@ -254,7 +254,11 @@ export class GameSession {
     if (!pos || this.mode !== 'normal' || this.ended || !this.inBounds(pos)) return null;
     if (this.state.pendingChoice || this.state.player.pendingPerkChoice) return null;
     const seen = this.seenAt(pos);
-    if (seen === 0) return { pos, kind: 'none', path: [] };
+    // an unexplored tile: travel walks toward it (travelPath plans through the unknown)
+    if (seen === 0) {
+      const path = travelPath(this.state, pos);
+      return path ? { pos, kind: 'walk', path } : { pos, kind: 'none', path: [] };
+    }
     const p = this.player().pos;
     if (p.x === pos.x && p.y === pos.y) return { pos, kind: 'self', path: [] };
     const target = seen === 2 ? actorAt(this.state, pos) : undefined;
@@ -892,8 +896,9 @@ export class GameSession {
 
   /**
    * One click-to-travel step. Returns the outcome and whether travel goes on. Travel stops when the
-   * destination is reached, the route is gone, a new hostile comes into view, the player gets hurt,
-   * a choice/level-up/narration-worthy event happens or the area changes.
+   * destination is reached, the route is gone, a new hostile comes into view (a spawn included), the
+   * player gets hurt, a choice / level-up / pick-up happens or the area changes. Entering a new room
+   * does not stop it: travel into the unknown would otherwise halt every few steps.
    */
   travelTick(): { outcome: Outcome; more: boolean } {
     const dest = this.travelDest;
@@ -931,9 +936,7 @@ export class GameSession {
           (e.type === 'status_applied' && e.actorId === pid) ||
           e.type === 'low_hp' ||
           e.type === 'level_up' ||
-          e.type === 'item_picked' ||
-          e.type === 'region_discovered' ||
-          e.type === 'spawned',
+          e.type === 'item_picked',
       ) ||
       p.hp < hpBefore - Math.max(2, Math.ceil(p.maxHp * 0.1));
     if (arrived || interrupted) {

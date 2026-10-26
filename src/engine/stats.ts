@@ -75,9 +75,19 @@ export function maxMp(ctx: Ctx, a: ActorInstance): number {
   return Math.max(0, a.maxMp + modSum(ctx, a, 'mp'));
 }
 
+/**
+ * The player sees farther than the world's number says: +3, at least 10, at most 15 (the world's
+ * 7–9 become 10–12). On 44×32 maps a sight of ~7 meant most turns only revealed empty floor
+ * (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §4). World rules (darkness, sight modifiers) and
+ * blindness still shrink it from there; hostiles keep their own numbers.
+ */
+export function playerBaseSight(sight: number): number {
+  return Math.min(15, Math.max(10, sight + 3));
+}
+
 export function sightRadius(ctx: Ctx, a: ActorInstance): number {
   if (hasFlag(ctx, a, 'blinded')) return 1;
-  let v = a.base.sight + modSum(ctx, a, 'sight');
+  let v = (isPlayer(ctx, a) ? playerBaseSight(a.base.sight) : a.base.sight) + modSum(ctx, a, 'sight');
   v = Math.round(v * switchesOf(ctx).darkness);
   let light = 0;
   for (const m of a.tempMods) if (m.stat === 'light') light = Math.max(light, m.amount);

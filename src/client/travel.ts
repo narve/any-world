@@ -49,8 +49,9 @@ export function actorAt(state: GameState, p: Pos) {
 }
 
 /**
- * The next direction to walk toward `dest`, over explored, passable tiles, routing around other
- * actors (except at the destination). null = no route or already there.
+ * The next direction to walk toward `dest`, over explored, passable tiles (and, for a destination
+ * in the unknown, unexplored ones), routing around other actors (except at the destination).
+ * null = no route or already there.
  */
 export function travelStep(state: GameState, dest: Pos): Dir | null {
   const path = travelPath(state, dest);
@@ -60,26 +61,32 @@ export function travelStep(state: GameState, dest: Pos): Dir | null {
 
 /**
  * The whole click-to-travel route to `dest` (excluding the player's tile, including `dest`), over
- * explored passable tiles and around other actors. null = no known way; [] = already there.
+ * explored passable tiles and around other actors. Unexplored tiles count as open ("walk toward"):
+ * the route is re-planned every step as the map reveals itself, and its first step is always a
+ * visible tile, so it never walks into an unseen wall and reveals nothing the player has not seen
+ * (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §3.4, §3.5). null = no known way; [] = already there.
  */
 export function travelPath(state: GameState, dest: Pos): Pos[] | null {
   const p = playerOf(state).pos;
   if (p.x === dest.x && p.y === dest.y) return [];
   const map = state.area.map;
   if (dest.x < 0 || dest.y < 0 || dest.x >= map.width || dest.y >= map.height) return null;
-  if (seenAt(state, dest.x, dest.y) === 0) return null;
   const pass = passability(state);
+  const known = (x: number, y: number) => seenAt(state, x, y) !== 0;
+  // through the unknown everything might be floor; what is known must be passable
+  const open = (x: number, y: number) => (known(x, y) ? pass(x, y) : x > 0 && y > 0 && x < map.width - 1 && y < map.height - 1);
   const occupied = new Set(state.area.actors.filter((a) => a.hp > 0 && a.id !== state.player.actorId).map((a) => a.pos.y * map.width + a.pos.x));
   const ok = (x: number, y: number) => {
-    if (seenAt(state, x, y) === 0 || !pass(x, y)) return false;
+    if (!open(x, y)) return false;
     if (x === dest.x && y === dest.y) return true;
-    return !occupied.has(y * map.width + x);
+    // only actors the player can see are routed around
+    return !(seenAt(state, x, y) === 2 && occupied.has(y * map.width + x));
   };
-  if (!pass(dest.x, dest.y)) return null;
+  if (!open(dest.x, dest.y)) return null;
   let path = findPath(map.width, map.height, p, dest, ok, { maxNodes: 6000 });
   // blocked by a crowd? try ignoring actors that are not adjacent to the player
   if (!path) {
-    const loose = (x: number, y: number) => seenAt(state, x, y) !== 0 && pass(x, y) && (cheb({ x, y }, p) > 1 || !occupied.has(y * map.width + x));
+    const loose = (x: number, y: number) => open(x, y) && (cheb({ x, y }, p) > 1 || !occupied.has(y * map.width + x));
     path = findPath(map.width, map.height, p, dest, loose, { maxNodes: 6000 });
   }
   return path && path.length ? path : null;

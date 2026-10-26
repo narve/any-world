@@ -11,6 +11,7 @@ import { RuleVariant } from '../schema/world';
 import type { ActorInstance, PendingChoice, Pos, Quest } from './types';
 import { type Ctx, actorName, emit, findActor, findFreeNear, isAlive, isPlayer, log, logKey, playerActor } from './ctx';
 import { MAX_AREA_ACTORS, areaHasRoom, spawnActor } from './actors';
+import { playerSeesTile } from './vision';
 import { displayItemName, dropItemAt, giveItem } from './inventory';
 import { applyEffectList, isVisibleToPlayer } from './effects';
 import { reveal } from './knowledge';
@@ -58,7 +59,9 @@ function nearPos(ctx: Ctx, near: 'player' | 'random' | 'exit'): Pos | null {
       cands.push(q);
     }
   ctx.rng.shuffle(cands);
-  for (const q of cands.slice(0, 50)) {
+  // somewhere the player can see, so nothing "appears" out of sight (FABLE-GAMEPLAY-REVIEW.md §3.5)
+  const inView = cands.filter((q) => playerSeesTile(ctx, q));
+  for (const q of [...inView.slice(0, 50), ...cands.slice(0, 50)]) {
     const f = findFreeNear(ctx, q, 0);
     if (f) return f;
   }

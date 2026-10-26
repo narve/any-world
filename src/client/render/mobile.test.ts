@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { AdaptiveQuality, FpsMeter, QUALITY_PROFILES, initialTier, isMobileDevice } from './quality';
 import { TouchCameraGesture } from './touch';
-import { CameraRig, defaultDistance, MAX_DIST, MIN_HALF_HEIGHT, MIN_HALF_WIDTH, CAMERA_FOV_DEG } from './camera';
+import { CameraRig, defaultDistance, MAX_DIST, USER_MAX_DIST, MIN_HALF_HEIGHT, MIN_HALF_WIDTH, CAMERA_FOV_DEG } from './camera';
 import { compactModel } from './models/merge';
 import { buildModel, animateModel } from './models';
 import { LightRig, LAMP_LIGHTS, MODEL_LIGHTS } from './lighting';
@@ -233,10 +233,12 @@ describe('responsive framing and viewport insets', () => {
     rig.zoomBy(2);
     expect(rig.distTarget).toBeCloseTo(8);
     rig.zoomBy(0.25);
-    expect(rig.distTarget).toBeCloseTo(MAX_DIST);
+    expect(rig.distTarget).toBeCloseTo(32);
+    rig.zoomBy(0.1);
+    expect(rig.distTarget).toBeCloseTo(USER_MAX_DIST);
     rig.zoomBy(0);
     rig.zoomBy(Number.NaN);
-    expect(rig.distTarget).toBeCloseTo(MAX_DIST);
+    expect(rig.distTarget).toBeCloseTo(USER_MAX_DIST);
   });
 });
 

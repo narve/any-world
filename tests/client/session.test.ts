@@ -325,11 +325,34 @@ describe('click-to-travel', () => {
     expect(s.travelDest).toBeNull();
   });
 
-  it('refuses unexplored destinations', () => {
+  it('walks toward unexplored destinations, without leaking what is there', () => {
     const s = session();
+    const p = s.state.area.actors.find((a) => a.id === s.state.player.actorId)!.pos;
+    const map = s.state.area.map;
+    // only the player's own tile and its neighbours are known
     const seen = new Uint8Array(s.state.area.seen.length);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) seen[(p.y + dy) * map.width + p.x + dx] = 2;
     s.state = { ...s.state, area: { ...s.state.area, seen } };
-    const out = s.intent({ type: 'click_tile', pos: { x: 10, y: 7 }, button: 'primary' });
+    let dest: Pos | null = null;
+    for (let y = 1; y < map.height - 1 && !dest; y++)
+      for (let x = 1; x < map.width - 1; x++)
+        if (Math.max(Math.abs(x - p.x), Math.abs(y - p.y)) > 4) {
+          dest = { x, y };
+          break;
+        }
+    const out = s.intent({ type: 'click_tile', pos: dest!, button: 'primary' });
+    expect(out.travel).toBe(true);
+    expect(s.preview(dest)).toMatchObject({ kind: 'walk' });
+    // the route through the unknown is the same whether the unseen tiles are wall or floor
+    const before = JSON.stringify(s.preview(dest)!.path);
+    const walls = map.tiles.map((t, i) => (seen[i] ? t : { ...t, kind: 'wall' as const }));
+    s.state = { ...s.state, area: { ...s.state.area, map: { ...map, tiles: walls } } };
+    expect(JSON.stringify(s.preview(dest)!.path)).toBe(before);
+  });
+
+  it('refuses destinations on the map border (never passable)', () => {
+    const s = session();
+    const out = s.intent({ type: 'click_tile', pos: { x: 0, y: 0 }, button: 'primary' });
     expect(out.travel).toBeUndefined();
     expect(out.toasts.length).toBe(1);
   });

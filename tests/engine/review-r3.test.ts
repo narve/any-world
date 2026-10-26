@@ -42,7 +42,9 @@ describe('perception symmetry: nobody attacks the player from a tile the player 
   it('a range-6 shooter on a 6x6 diagonal (outside a sight-7 circle) never fires', () => {
     const world = shooterWorld();
     let s = newGame(world, 1, roomMap(30, 30, { start: { x: 20, y: 20 }, exit: { x: 27, y: 27 } }));
+    // the player's base sight is at least 10 (playerBaseSight); a dimming modifier brings it to 7
     player(s).base.sight = 7;
+    player(s).tempMods.push({ stat: 'sight', amount: -3, turnsLeft: 99 });
     addActor(world, s, 'shooter', { x: 14, y: 14 }, { ai: { alerted: true } });
     const hp = player(s).hp;
     for (let i = 0; i < 8; i++) s = step(s, { type: 'wait' }, env(world)).state;
@@ -52,7 +54,9 @@ describe('perception symmetry: nobody attacks the player from a tile the player 
   it('a shooter in range but beyond the player\'s (short) sight holds fire until it is seen', () => {
     const world = shooterWorld();
     const s = newGame(world, 1, roomMap(30, 30, { start: { x: 10, y: 10 }, exit: { x: 27, y: 27 } }));
+    // base sight 3 plays as 10 (playerBaseSight); a dimming modifier brings it back to 3
     player(s).base.sight = 3;
+    player(s).tempMods.push({ stat: 'sight', amount: -7, turnsLeft: 99 });
     const far = addActor(world, s, 'shooter', { x: 15, y: 10 }, { ai: { alerted: true } });
     const ctx = ctxFor(world, s);
     const atk = world.actors.find((a) => a.id === 'shooter')!.attack!;

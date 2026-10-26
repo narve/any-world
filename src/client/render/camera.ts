@@ -9,6 +9,11 @@ export const CAMERA_PITCH_DEG = 50;
 export const CAMERA_FOV_DEG = 34;
 export const MIN_DIST = 6;
 export const MAX_DIST = 30;
+/**
+ * How far the player may zoom out themselves: far enough to see most of a large area's explored
+ * tiles at once (FABLE-GAMEPLAY-REVIEW.md §3.4). Automatic framing still stops at MAX_DIST.
+ */
+export const USER_MAX_DIST = 64;
 /** tiles visible to each side of the player at the default zoom (landscape) */
 export const DEFAULT_HALF_WIDTH = 8.5;
 /** tiles visible above / below the player at the default zoom (portrait is framed by this) */
@@ -142,7 +147,7 @@ export class CameraRig {
   zoom(delta: number): void {
     const f = Math.exp(Math.max(-2, Math.min(2, delta)) * 0.15);
     // start from what is on screen (which may be auto-framed further out than the player's choice)
-    this.userDist = Math.min(MAX_DIST, Math.max(MIN_DIST, this.distTarget * f));
+    this.userDist = Math.min(USER_MAX_DIST, Math.max(MIN_DIST, this.distTarget * f));
     this.userZoomed = true;
     // an explicit zoom-in overrides auto framing until the renderer next reframes (next turn)
     if (delta < 0) this.frameDist = 0;
@@ -155,14 +160,14 @@ export class CameraRig {
    */
   zoomBy(f: number): void {
     if (!(f > 0) || !Number.isFinite(f)) return;
-    this.userDist = Math.min(MAX_DIST, Math.max(MIN_DIST, this.distTarget / f));
+    this.userDist = Math.min(USER_MAX_DIST, Math.max(MIN_DIST, this.distTarget / f));
     this.userZoomed = true;
     if (f > 1) this.frameDist = 0;
     this.retarget();
   }
 
   setZoom(dist: number, snap = false): void {
-    this.userDist = Math.min(MAX_DIST, Math.max(MIN_DIST, dist));
+    this.userDist = Math.min(USER_MAX_DIST, Math.max(MIN_DIST, dist));
     this.userZoomed = true;
     this.retarget();
     if (snap) this.dist = this.distTarget;
@@ -175,7 +180,7 @@ export class CameraRig {
   }
 
   private retarget(): void {
-    this.distTarget = Math.min(MAX_DIST, Math.max(MIN_DIST, this.userDist, this.frameDist));
+    this.distTarget = Math.min(USER_MAX_DIST, Math.max(MIN_DIST, this.userDist, this.frameDist));
   }
 
   /**

@@ -1,4 +1,8 @@
-/** Player field of view → area.seen (0 unseen, 1 remembered, 2 visible) and region discovery. */
+/**
+ * Player field of view → area.seen (0 unseen, 1 remembered, 2 visible) and region discovery.
+ * Stepping into a room (a map region) also remembers its whole layout, walls and doors included,
+ * without showing who is in it (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §4: fog as memory).
+ */
 import { type Ctx, emit, opaque, playerActor } from './ctx';
 import { computeFov, withinRadius } from './fov';
 import type { Pos } from './types';
@@ -34,12 +38,63 @@ function playerFov(ctx: Ctx, r: number): Set<number> {
   return vis;
 }
 
+/**
+ * Regions larger than this are open ground (a town's main street, an arena floor), not rooms: their
+ * layout is not handed over on entry.
+ */
+export const ROOM_MEMORY_MAX_TILES = 150;
+
+/** tiles of each room-sized region plus the solid tiles around them, per map (tile arrays are per area) */
+const roomTiles = new WeakMap<object, Map<number, number[]>>();
+
+function regionLayout(ctx: Ctx, region: number): number[] {
+  const map = ctx.s.area.map;
+  let byRegion = roomTiles.get(map.tiles);
+  if (!byRegion) {
+    byRegion = new Map();
+    const W = map.width;
+    const H = map.height;
+    for (let i = 0; i < map.tiles.length; i++) {
+      const r = map.tiles[i].region;
+      if (r === undefined) continue;
+      let list = byRegion.get(r);
+      if (!list) byRegion.set(r, (list = []));
+      list.push(i);
+      const x = i % W;
+      const y = (i - x) / W;
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if ((dx || dy) && nx >= 0 && ny >= 0 && nx < W && ny < H && map.tiles[ny * W + nx].region !== r) list.push(ny * W + nx);
+        }
+    }
+    for (const [r, list] of byRegion) {
+      let floor = 0;
+      for (const i of list) if (map.tiles[i].region === r) floor++;
+      if (floor > ROOM_MEMORY_MAX_TILES) byRegion.set(r, []);
+    }
+    roomTiles.set(map.tiles, byRegion);
+  }
+  return byRegion.get(region) ?? [];
+}
+
+/** remember the layout of the room the player stands in (seen 0 → 1; nothing becomes visible) */
+function rememberRoom(ctx: Ctx): void {
+  const area = ctx.s.area;
+  const p = playerActor(ctx);
+  const r = area.map.tiles[p.pos.y * area.map.width + p.pos.x]?.region;
+  if (r === undefined) return;
+  for (const i of regionLayout(ctx, r)) if (area.seen[i] === 0) area.seen[i] = 1;
+}
+
 export function updateFov(ctx: Ctx): void {
   const area = ctx.s.area;
   const map = area.map;
   const seen = area.seen;
   for (let i = 0; i < seen.length; i++) if (seen[i] === 2) seen[i] = 1;
   const p = playerActor(ctx);
+  rememberRoom(ctx);
   const vis = playerFov(ctx, sightRadius(ctx, p));
   const known = new Set(area.discoveredRegions);
   const valid = new Set(map.regions.map((r) => r.id));
