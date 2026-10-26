@@ -107,8 +107,8 @@ Plan: design and test for 8; allow up to 12 as an option, tested with bots and a
 | MP4 | GM and dialogue for parties | **move the GM from the browser to the server**: today the request queue (`src/client/gm-director.ts`) runs in the client and may use the player's own key; in rooms it runs next to the room. GM context with all players and per-player hooks (low health); dialogue and trade per player without pausing others; party-aware world-generation prompt; recordings for demo rooms | GM checks still refuse fiat; demo rooms play without AI |
 | MP5 | Verify | review, playtest and fix rounds as in M5; latency playtest through the real exposure path; a short session with real people, judged on "was it fast, did we talk" | DoD table in `docs/progress/MP.md` |
 
-Order: finish MP0 first (deploy the single-player game to the laptop and pass its exit check), so
-hosting is proven before the large engine work. The orchestration would follow M3–M5: builders own
+Order: deployment to the real server waits (owner, 2026-10-26); MP1 can start against the development
+laptop, and MP0's exit check is done when the Dell and the VPS are set up. The orchestration would follow M3–M5: builders own
 directories (engine, server, client, llm), then integration, review and fix rounds, and a gate. MP1 is
 the largest and riskiest part.
 
@@ -201,6 +201,14 @@ Decided:
 - 2026-10-26: the game master reads the player chat and may react to it. The lobby says so in one line,
   since chat then goes to the AI provider.
 
+- 2026-10-26: anyone may create a room (no access code); the room limits (§2) apply.
+- 2026-10-26: deployment to the real server waits; development and testing run on the development
+  laptop until then (MP0's exit check stays open).
+- 2026-10-26 (single player, not yet implemented): bosses get generally a bit more health. Unique
+  hostiles were left weaker by the 90 % player hit chance (static boss risk about halved).
+
 Open:
-1. **Who may create a room?** The host access code guards AI calls today. Proposal: creating a room
-   needs the code too (rooms use the Dell and the GM runs on the owner's key); joining by link does not.
+1. **The AI game master in rooms anyone can create** runs on the owner's API key. Proposal: rooms with
+   a recorded or imported world use the offline GM (canned lines) unless the creator enters the host
+   access code; making a new AI world still needs the code, as today.
+2. **Finding rooms:** link-only (the proposal), or also a public list of open rooms on the start page?
