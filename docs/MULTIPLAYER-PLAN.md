@@ -3,7 +3,8 @@
 Status (2026-10-26): MP0 (hosting groundwork) is in the code, see [HOSTING.md](HOSTING.md), but not
 yet deployed: its exit check (HTTPS from a phone on 4G) is still open. MP1–MP5 not started.
 Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12 (sharing, multiplayer without waiting,
-chat). Target host: the owner's spare laptop (CachyOS) at home, reachable from the internet.
+chat). Hosts: the owner's Dell laptop runs the server, reached over WireGuard; for development and
+testing the server also runs on the owner's development laptop.
 
 **Guiding priority: fast and fun.** Nobody waits, and talking to each other is a big part of the game.
 When a rule has to choose between exact turn fairness and keeping the party moving and chatting, it
@@ -109,9 +110,14 @@ hosting is proven before the large engine work. The orchestration would follow M
 directories (engine, server, client, llm), then integration, review and fix rounds, and a gate. MP1 is
 the largest and riskiest part.
 
-## 4. Hosting on the laptop (CachyOS)
+## 4. Hosting
 
-Step by step in [HOSTING.md](HOSTING.md). In short:
+**Decided (2026-10-26):** production runs on the **Dell laptop**, reached over **WireGuard**.
+Development and testing run on the development laptop (same setup, or just `npm run dev`; multi-player
+tests use several browser contexts against it).
+
+Step by step in [HOSTING.md](HOSTING.md) (written for Arch/CachyOS; any systemd distribution works the
+same way). In short:
 
 1. **Packages:** a patched Node.js (22.23.4+, 24.22.1+ or 26.12.1+; HOSTING.md §1), npm and git. Clone
    the repo to `/opt/anyworld` and run `npm ci && npm run build`.
@@ -128,7 +134,7 @@ Step by step in [HOSTING.md](HOSTING.md). In short:
    - **Cloudflare Tunnel (to use dv8.no):** move the DNS for `dv8.no` to Cloudflare (free plan; the
      whole domain), install `cloudflared`, and route `play.dv8.no` to `http://localhost:8787`. It
      supports WebSockets, and Cloudflare Access can put a login in front if wanted.
-   - **Plain WireGuard (owner's likely choice):** WireGuard connects devices that hold a config. On its
+   - **WireGuard (chosen):** WireGuard connects devices that hold a config. On its
      own it is a private network: each player needs the WireGuard app and a config from the owner (fine
      for a few friends, not for open links). For public links, run a small VPS with a public IP as a
      relay. The laptop keeps a WireGuard tunnel to the VPS (`PersistentKeepalive`, so no router setup at
@@ -169,9 +175,17 @@ Decided:
   chance (straight back up at half health), instead of waiting out the area as a downed spectator;
   backward compatibility is not a priority (fail gracefully, no migrations).
 
+- 2026-10-26: the server runs on the Dell laptop, exposed over WireGuard; development and testing on
+  the development laptop.
+
 Open:
-1. **Exposure:** WireGuard with a small public relay (VPS), WireGuard only for invited devices, or
-   Tailscale Funnel / Cloudflare Tunnel (no relay to run).
+1. **WireGuard: public links or invited devices?** (a) A small VPS relay with Caddy (§4) gives open
+   `https://play.dv8.no` links anyone can join. (b) WireGuard only: each player installs the WireGuard
+   app with a config from the owner and opens `http://10.66.0.2:8787`. That works for a few friends,
+   but the page is then not a secure context (no HTTPS), so phone features that need one (clipboard
+   share, installing as an app) are unavailable unless the laptop also gets a certificate (e.g. Caddy
+   with a DNS challenge for a name that points to the WireGuard address). Proposal: start with (b)
+   for testing with friends, add (a) when rooms should be open by link.
 2. **A second fall:** after their second chance is used, what happens to a player who falls again?
    Proposal: they are down, watch through a teammate's camera, and get up at half health when a
    teammate stands next to them for one turn (or by themselves after 20 turns), so nobody sits out long.

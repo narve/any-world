@@ -62,8 +62,8 @@ Also set a spending limit on the provider key itself.
 
 ## 4. Reaching it from the internet
 
-Not decided yet; see [the multiplayer plan, §4](MULTIPLAYER-PLAN.md#4-hosting-on-the-laptop-cachyos).
-In every option the server stays on `HOST=127.0.0.1` and the tunnel or proxy connects to it, so no
+Decided: **WireGuard**, with the server on the Dell laptop (see [the multiplayer plan, §4](MULTIPLAYER-PLAN.md#4-hosting)).
+Still open: a public VPS relay (open links) or WireGuard-only access for invited devices. In every option the server stays on `HOST=127.0.0.1` and the tunnel or proxy connects to it, so no
 port on the home router is opened:
 
 - **Tailscale Funnel:** `sudo tailscale funnel --bg 8787` gives `https://<machine>.<tailnet>.ts.net`.
