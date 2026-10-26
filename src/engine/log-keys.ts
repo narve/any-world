@@ -71,6 +71,8 @@ export const LOG_KEYS = {
   // party
   /** a dialogue closed because its speaker died, left talking range or turned hostile meanwhile */
   'log.party.talk_gone': '{player} loses the thread: the conversation is over.',
+  'log.party.down': '{player} is down. A teammate at their side gets them back up.',
+  'log.party.up': '{player} gets back up.',
 
   // quests, rules, currency, progression
   'log.quest.new': 'New: {title}',

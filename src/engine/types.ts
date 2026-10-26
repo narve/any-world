@@ -153,9 +153,16 @@ export interface PlayerState {
   seen: Uint8Array | number[];
   /** this player's second chance (permadeathMercy rule, gentle band) is spent */
   mercyUsed?: boolean;
-  /** down (MP1 B2b): fell without a second chance; gets up when helped or after a while */
+  /**
+   * Down: fell with no second chance left (hp 0, no statuses, no energy, skips all upkeep). Gets up
+   * at half health when a standing teammate stood next to them at the end of a round, or by
+   * themselves REVIVE_SELF_TURNS after `since` (turn.ts). The run is lost when every player is down.
+   */
   down?: { since: number; helpedTurns: number } | null;
-  /** turn this player became busy (typing, in a menu; MP1 B2a); null/absent = not busy */
+  /**
+   * Turn this player became busy (typing, in a menu, an open dialogue or trade); null/absent = not
+   * busy. Hostiles do not pick a busy player as their target for BUSY_MAX_TURNS (ai.ts).
+   */
   busySince?: number | null;
   /** the last harm this player took (for the loss reason): who and what kind */
   lastHarm?: {
@@ -354,6 +361,10 @@ export type GameEvent =
   | { type: 'level_up'; level: number; choices: string[] }
   | { type: 'npc_talk'; actorId: string }
   | { type: 'low_hp' }
+  /** a player of a party fell with no second chance left and is down (a party of one loses instead) */
+  | { type: 'downed'; playerId: PlayerId; actorId: string }
+  /** a down player got back up (helped by a teammate, or by themselves after a while) */
+  | { type: 'revived'; playerId: PlayerId; actorId: string; helped: boolean }
   | { type: 'quest_updated'; questId: string; status: Quest['status'] }
   | { type: 'game_over'; result: 'won' | 'lost'; reason: string }
   | { type: 'message'; text: string; kind: LogMessage['kind']; /** i18n, as LogMessage.key/params */ key?: string; params?: Record<string, string | number> }

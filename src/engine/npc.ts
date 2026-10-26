@@ -5,7 +5,7 @@
  */
 import type { GmAction } from '../schema/gm';
 import type { ActorInstance, PendingChoice, PlayerId, PlayerState } from './types';
-import { type Ctx, actorDef, actorName, emit, findActor, isAlive, isPlayer, log, logKey, me, playerActor, playerActorOf, playerName } from './ctx';
+import { type Ctx, actorDef, actorName, emit, findActor, isAlive, isPlayer, log, logKey, markBusy, me, playerActor, playerActorOf, playerName } from './ctx';
 import { type ActionOutcome, displayItemName, done, equippedKindOf, free, invalid, removeFromSlot } from './inventory';
 import { TOTAL_SLOTS } from './types';
 import { progressRefs } from './goals';
@@ -181,6 +181,7 @@ export function doTalk(ctx: Ctx, targetId: string): ActionOutcome {
   }
   options.push({ label: 'Goodbye', actions: [] });
   me(ctx).pendingChoice = { kind: 'dialogue', prompt: line, speakerId: a.id, options };
+  markBusy(ctx, me(ctx));
   return free();
 }
 

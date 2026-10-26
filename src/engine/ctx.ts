@@ -307,12 +307,13 @@ export function isPlayer(ctx: Ctx, a: ActorInstance | null | undefined): boolean
   return playerOf(ctx, a) !== undefined;
 }
 
-/** the party's player actors in the area, in party order */
+/** the party's standing player actors in the area (not down), in party order */
 export function partyActors(ctx: Ctx): ActorInstance[] {
   const out: ActorInstance[] = [];
   for (const id of ctx.s.party) {
+    if (ctx.s.players[id].down) continue;
     const a = playerActorOf(ctx, id);
-    if (a) out.push(a);
+    if (a && a.hp > 0) out.push(a);
   }
   return out;
 }
@@ -326,6 +327,14 @@ export function withPlayer<T>(ctx: Ctx, pid: PlayerId, fn: () => T): T {
   } finally {
     ctx.pid = prev;
   }
+}
+
+/**
+ * Opening a dialogue, trade or offer makes a player of a party busy (hostiles leave them alone for
+ * a while, ai.ts isBusy); a party of one never needs it (nothing moves while a choice is open).
+ */
+export function markBusy(ctx: Ctx, ps: PlayerState): void {
+  if (ctx.s.party.length > 1 && ps.busySince == null) ps.busySince = ctx.s.turn;
 }
 
 /** a player's name for log lines (the acting player by default) */

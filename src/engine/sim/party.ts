@@ -151,38 +151,54 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
     if (s.status === 'lost') return finish('lost', s.endReason ?? 'lost');
     if (s.turn >= maxTurns) return finish('timeout', `turn cap ${maxTurns} reached in area ${s.area.index}`);
     const t0 = opts.now?.();
-    const inputs: TurnInput[] = [];
+    const kept = new Map<PlayerId, TurnInput>();
     try {
       const ready = new Set(readyPlayers(s, env));
-      for (const pid of [...s.party]) {
-        if (s.status !== 'playing') break;
+      /** one player's decisions: free actions applied at once, the first turn action kept */
+      const decide = (pid: PlayerId): SimOutcomeCrash | null => {
         const bot = botOf.get(pid)!;
         const mem = mems.get(pid)!;
         for (let n = 0; ; n++) {
           const ps = s.players[pid];
-          if (!ps || ps.down) break;
-          if (!ready.has(pid) && !ps.pendingChoice && !ps.pendingPerkChoice) break;
+          if (!ps || ps.down) return null;
+          if (!ready.has(pid) && !ps.pendingChoice && !ps.pendingPerkChoice) return null;
           let action: PlayerAction;
           try {
             action = bot.decide(s, world, mem, pid);
           } catch (e) {
-            return finish('crash', `bot: ${bot.name} (${pid}) threw: ${errText(e)}`);
+            return { cause: `bot: ${bot.name} (${pid}) threw: ${errText(e)}` };
           }
           if (FREE_ACTIONS.has(action?.type)) {
-            if (n >= MAX_FREE_PER_TURN) break;
+            if (n >= MAX_FREE_PER_TURN) return null;
             const r = turnFn(s, [{ playerId: pid, actions: [action] }], false);
             tally(r);
             s = r.state;
-            if (s.status !== 'playing') break;
+            if (s.status !== 'playing') return null;
             continue;
           }
-          if (ready.has(pid)) inputs.push({ playerId: pid, actions: [action] });
-          break;
+          if (ready.has(pid)) kept.set(pid, { playerId: pid, actions: [action] });
+          return null;
         }
+      };
+      for (const pid of [...s.party]) {
+        if (s.status !== 'playing') break;
+        const err = decide(pid);
+        if (err) return finish('crash', err.cause);
+      }
+      // a later player's free action may have opened a choice for an earlier one (shared xp: a
+      // level-up); they answer it before their turn action is sent
+      for (const pid of [...kept.keys()]) {
+        if (s.status !== 'playing') break;
+        const ps = s.players[pid];
+        if (!ps.pendingChoice && !ps.pendingPerkChoice) continue;
+        kept.delete(pid);
+        const err = decide(pid);
+        if (err) return finish('crash', err.cause);
       }
     } catch (e) {
       return finish('crash', `engine: free action threw: ${errText(e)}`);
     }
+    const inputs: TurnInput[] = s.party.filter((id) => kept.has(id)).map((id) => kept.get(id)!);
     if (s.status !== 'playing') continue;
     let r: TurnResult;
     try {
@@ -213,6 +229,10 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
       return finish('stuck', `no progress for ${stallSteps} party turns in area ${s.area.index}`);
     }
   }
+}
+
+interface SimOutcomeCrash {
+  cause: string;
 }
 
 function errText(e: unknown): string {

@@ -43,6 +43,27 @@ describe('runParty', () => {
     expect(one.areaReached).toBe(solo.areaReached);
   });
 
+  it('Brutal: players go down and get back up, the run goes on until everyone is down (MP1 B2b)', () => {
+    const world = loadFixture('fixture-dream.json');
+    let downed = 0;
+    let revived = 0;
+    const r = runParty(world, 2, ['explorer', 'cautious'], {
+      fast: true,
+      maxTurns: 1500,
+      difficulty: 'brutal',
+      onTurn: (i) => {
+        for (const e of i.result.events) {
+          if (e.type === 'downed') downed++;
+          if (e.type === 'revived') revived++;
+        }
+      },
+    });
+    expect(r.result, r.cause).not.toBe('crash');
+    expect(r.anomalies).toEqual([]);
+    expect(downed).toBeGreaterThan(0);
+    expect(revived).toBeGreaterThan(0);
+  });
+
   it('an injected clock gives a time per party turn and the engine split', () => {
     const world = loadFixture('fixture-ship.json');
     let t = 0;

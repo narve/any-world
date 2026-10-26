@@ -561,6 +561,51 @@ energy, revived by neighbour after 1 turn or alone after 20, fatal resource refi
 (compound `all(has_item A, has_item B)` across two packs, `not`, `chance` drawn once, lose needs all,
 down key-holder's pack counts).
 
+**B2b as built** (2026-10-26):
+- Targeting (`ai.ts`): `pickEnemy` skips busy players and remembers the nearest busy one;
+  `hostilePick` adds the stickiness (`TARGET_STICK_TILES = 2`) and stores `ai.targetId`, both only
+  with two or more players, so a solo state never gains the field. A hostile that perceives only
+  busy players closes in to `BUSY_WAIT_RANGE = 2` and waits (stationary ones wait in place,
+  guardians keep their home rule). Abilities are not otherwise held back: splash and an `always`
+  burst still reach a busy neighbour.
+- Busy (`isBusy`, parties only): `busySince` set by `TurnInput.busy` or by opening a dialogue,
+  trade or GM offer (`ctx.markBusy`); cleared by a turn action, or by a `choose_option` that ends
+  the choice; ignored after `BUSY_MAX_TURNS = 10`.
+- "The player" during an AI turn: `hostileTurn` runs the rest of the turn under `withPlayer` (its
+  target, else the busy player it watches, else the nearest standing player), and `allyTurn`
+  under the owner, so conditions and effects (`who: 'player'`, a summon's `lastSeen`) read that
+  player without the AI reading `ctx.pid`.
+- Symmetric perception: `playerSeesTile(ctx, pid, pos)` with the per-player FOV cache; attacks check
+  the target, abilities every affected player beyond arm's reach. GM random placement keeps 5 tiles
+  from the lead and every standing player and prefers tiles any standing player sees
+  (`partySeesTile`); `near: 'player'` and GM effect targets stay on the lead (MP4).
+- Allies follow their owner (`allyOf` → `playerOf`); while the owner is down they keep within 2 tiles
+  of the body and fight only hostiles within `GUARD_RANGE = 3` of it.
+- Falling (`combat.ts`): `killPlayer(ctx, actor, killerId, cause?)` is idempotent on a down player;
+  the second chance comes from `bandSecondChance` (`profile.secondChance`, or `partySecondChance`
+  with 2+ players) or the world's mercy rule; in a party it also refills empty fatal resources.
+  A party of one keeps today's loss path byte for byte (golden replay unchanged). `downPlayer`
+  clears statuses, temp mods, energy, sneaking, the open choice (refunding a GM offer) and busy.
+  The run is lost at the last fall, with that fall's loss line (`end.loss.resource` for an
+  `emptyIsDeath` resource). `checkEnd` sends a party player found at 0 hp through `killPlayer`.
+- Down players skip item cooldowns, regen, resource drain and energy gain; a level-up while down
+  (shared xp) raises max hp only. `partyActors` now lists standing players only.
+- Revive (`turn.ts` `reviveDown` / `getUp`, end of round before quests): `REVIVE_HELP_TURNS = 1`,
+  `REVIVE_SELF_TURNS = 20`; up at half health with `ACT_COST` energy, on the nearest free tile when
+  someone stands on the body (waits a round if none within 12); fatal resources refilled to half.
+- Goals: `evalParty` / `evalPartyFull` in `conditions.ts` for `goal.win` / `goal.lose`
+  (`checkEnd`), `transitionRequires` (`transitionFailure`) and quests; quest rewards run under
+  `withPlayer(decider ?? lead)`. `rules.ts` `mercyGranted(ctx, ps = me(ctx))` with
+  `bandSecondChance`.
+- Log keys `log.party.down`, `log.party.up` (en, nb); events `downed`, `revived`.
+- Sim: `runParty` re-asks a player whose choice was opened by a later player's free action (a
+  shared level-up) before sending their turn action; this was the one `illegal` refusal seen.
+- Sweep, 21 worlds × 2 seeds, fast mode: 2 players normal 39 won / 0 crash (2 timeouts: the known
+  viking area-2 stall); 3 players 38 won, 0 illegal; 4 players 37 won, 1 lost, 4 stuck (viking);
+  2 players brutal 33 won, 7 lost, 0 crash, 78 downs and 63 revives, 0 invariant errors.
+- Left for B3: an area change carries down players along still down (B3 gets them up on arrival).
+  Bots do not yet revive on purpose (B4); revives so far come from adjacency or the 20 turns.
+
 ### B3 — Area transitions and party scaling
 
 Scope: §5, §6. Exit countdown (`partyRules.exitCountdownTurns`, default 5), decrement in `endRound`,

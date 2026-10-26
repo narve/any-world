@@ -51,7 +51,8 @@ export function checkLevelUp(ctx: Ctx): void {
     p.level += 1;
     const pa = playerActor(ctx);
     pa.maxHp += g.hpPerLevel;
-    pa.hp += g.hpPerLevel;
+    // a down player (shared xp) gets the larger maximum but stays at 0 until they get up
+    if (!p.down) pa.hp += g.hpPerLevel;
     pa.maxMp += g.mpPerLevel;
     pa.mp += g.mpPerLevel;
     const pool = availablePerks(ctx, p.level).map((x) => x.id);

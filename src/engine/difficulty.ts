@@ -5,7 +5,8 @@
  *     player's side (combat.dealDamage)
  *   - the player's natural hp regeneration interval (turn.ts)
  *   - the harm a GM rule may add or take away (gm.ts add_rule / remove_rule, see rules.ts)
- *   - whether the first defeat of a run is a second chance (combat.killPlayer)
+ *   - whether the first defeat of a run is a second chance (combat.killPlayer), and in a party of
+ *     two or more whether every player has one (partySecondChance)
  * Saves keep the band in GameState.difficulty; states without one play as 'normal'.
  */
 import { Difficulty } from '../schema/gm';
@@ -36,13 +37,19 @@ export interface DifficultyProfile {
    * gentle; every death came with a tool or escape unused).
    */
   secondChance: boolean;
+  /**
+   * In a party of two or more, each player's first fall is a second chance (owner decision,
+   * MULTIPLAYER-PLAN §6: Gentle and Normal, not Hard and Brutal). A party of one keeps
+   * `secondChance` alone, so single player is unchanged.
+   */
+  partySecondChance: boolean;
 }
 
 export const DIFFICULTY_PROFILES: Record<Difficulty, DifficultyProfile> = {
-  gentle: { hostileHp: 0.8, hostileDamage: 0.8, regenEvery: 0.75, ruleHarm: 1, ruleHarmTotal: 1, secondChance: true },
-  normal: { hostileHp: 1, hostileDamage: 1, regenEvery: 1, ruleHarm: 6, ruleHarmTotal: 10, secondChance: false },
-  hard: { hostileHp: 1.15, hostileDamage: 1.15, regenEvery: 1.25, ruleHarm: 12, ruleHarmTotal: 20, secondChance: false },
-  brutal: { hostileHp: 1.3, hostileDamage: 1.3, regenEvery: 1.5, ruleHarm: 20, ruleHarmTotal: 35, secondChance: false },
+  gentle: { hostileHp: 0.8, hostileDamage: 0.8, regenEvery: 0.75, ruleHarm: 1, ruleHarmTotal: 1, secondChance: true, partySecondChance: true },
+  normal: { hostileHp: 1, hostileDamage: 1, regenEvery: 1, ruleHarm: 6, ruleHarmTotal: 10, secondChance: false, partySecondChance: true },
+  hard: { hostileHp: 1.15, hostileDamage: 1.15, regenEvery: 1.25, ruleHarm: 12, ruleHarmTotal: 20, secondChance: false, partySecondChance: false },
+  brutal: { hostileHp: 1.3, hostileDamage: 1.3, regenEvery: 1.5, ruleHarm: 20, ruleHarmTotal: 35, secondChance: false, partySecondChance: false },
 };
 
 export function isDifficulty(v: unknown): v is Difficulty {
@@ -56,6 +63,15 @@ export function difficultyOf(s: Pick<GameState, 'difficulty'>): Difficulty {
 
 export function profileOf(s: Pick<GameState, 'difficulty'>): DifficultyProfile {
   return DIFFICULTY_PROFILES[difficultyOf(s)];
+}
+
+/**
+ * Whether the band gives every player a second chance (before any world rule): Gentle always, and
+ * Normal too in a party of two or more (partySecondChance).
+ */
+export function bandSecondChance(s: Pick<GameState, 'difficulty' | 'party'>): boolean {
+  const pr = profileOf(s);
+  return pr.secondChance || (s.party.length >= 2 && pr.partySecondChance);
 }
 
 /**

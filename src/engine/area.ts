@@ -9,7 +9,7 @@ import { type Ctx, emit, isPlayer, logKey, me, playerActor, tileWalkable } from 
 import { spawnActor } from './actors';
 import { dropItemAt } from './inventory';
 import { fireTriggers } from './triggers';
-import { evalCondition } from './conditions';
+import { evalParty } from './conditions';
 import { updateFov } from './vision';
 import { bfsDistances } from './path';
 import { applyAreaTerrain } from './mapgen/index';
@@ -281,7 +281,8 @@ export function transitionFailure(ctx: Ctx): string | null {
   if (!samePos(p.pos, map.exit) && t?.kind !== 'transition') return 'not at the way onward';
   const plan = ctx.world.areas[ctx.s.area.index];
   if (ctx.s.area.index >= ctx.world.areas.length - 1) return 'there is nowhere further to go';
-  if (plan.transitionRequires && !evalCondition(ctx, plan.transitionRequires, { self: p })) return lockedReason(ctx);
+  // the lock is a run-level condition: the party's packs count together (evalParty)
+  if (plan.transitionRequires && !evalParty(ctx, plan.transitionRequires, 'win')) return lockedReason(ctx);
   return null;
 }
 

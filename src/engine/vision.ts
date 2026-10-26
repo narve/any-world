@@ -6,37 +6,42 @@
 import { type Ctx, emit, me, opaque, playerActor, playerActorOf, timed, withPlayer } from './ctx';
 import { own } from './util';
 import { computeFov, withinRadius } from './fov';
-import type { Pos } from './types';
+import type { ActorInstance, PlayerId, Pos } from './types';
 import { sightRadius } from './stats';
 
 /**
- * Whether the player can see tile `pos` right now (a fresh field of view from where the player
- * stands, so it is correct mid-round after pushes, teleports or new smoke). Hostiles only strike
- * the player from beyond arm's reach when standing on such a tile, so every attack the player
- * takes comes from somewhere the player can see.
+ * Whether player `pid` can see tile `pos` right now (a fresh field of view from where they stand,
+ * so it is correct mid-round after pushes, teleports or new smoke). Hostiles only strike a player
+ * from beyond arm's reach when standing on a tile *that* player sees, so every attack a player
+ * takes comes from somewhere they can see. False for a player whose actor is not standing.
  */
-export function playerSeesTile(ctx: Ctx, pos: Pos): boolean {
+export function playerSeesTile(ctx: Ctx, pid: PlayerId, pos: Pos): boolean {
   const map = ctx.s.area.map;
-  const p = playerActor(ctx);
+  const p = playerActorOf(ctx, pid);
+  if (!p || p.hp <= 0) return false;
   const r = sightRadius(ctx, p);
   if (!withinRadius(p.pos, pos, r)) return false;
-  return playerFov(ctx, r).has(pos.y * map.width + pos.x);
+  return playerFov(ctx, pid, p, r).has(pos.y * map.width + pos.x);
+}
+
+/** whether any standing player sees tile `pos` (GM placement: nothing appears out of everyone's sight) */
+export function partySeesTile(ctx: Ctx, pos: Pos): boolean {
+  return ctx.s.party.some((id) => !ctx.s.players[id].down && playerSeesTile(ctx, id, pos));
 }
 
 /**
- * The player's field of view (tile indices) with sight radius `r`, cached on the context until
- * the player moves, the radius changes or a tile changes (every tile write goes through mutTile,
+ * A player's field of view (tile indices) with sight radius `r`, cached on the context per player
+ * until they move, the radius changes or a tile changes (every tile write goes through mutTile,
  * which bumps ctx.tileWrites; a new area brings a new tile array).
  */
-function playerFov(ctx: Ctx, r: number): Set<number> {
+function playerFov(ctx: Ctx, pid: PlayerId, p: ActorInstance, r: number): Set<number> {
   const map = ctx.s.area.map;
-  const p = playerActor(ctx);
   const cache = (ctx.fovCache ??= {});
-  const c = own(cache, ctx.pid);
+  const c = own(cache, pid);
   const writes = ctx.tileWrites ?? 0;
   if (c && c.tiles === map.tiles && c.writes === writes && c.x === p.pos.x && c.y === p.pos.y && c.r === r) return c.vis;
   const vis = computeFov(map.width, map.height, p.pos, r, (x, y) => opaque(ctx, x, y));
-  cache[ctx.pid] = { tiles: map.tiles, writes, x: p.pos.x, y: p.pos.y, r, vis };
+  cache[pid] = { tiles: map.tiles, writes, x: p.pos.x, y: p.pos.y, r, vis };
   return vis;
 }
 
@@ -110,7 +115,7 @@ function updatePlayerFov(ctx: Ctx): void {
   for (let i = 0; i < seen.length; i++) if (seen[i] === 2) seen[i] = 1;
   const p = playerActor(ctx);
   rememberRoom(ctx);
-  const vis = playerFov(ctx, sightRadius(ctx, p));
+  const vis = playerFov(ctx, ctx.pid, p, sightRadius(ctx, p));
   const known = new Set(area.discoveredRegions);
   const valid = new Set(map.regions.map((r) => r.id));
   for (const i of vis) {

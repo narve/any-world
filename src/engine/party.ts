@@ -119,6 +119,9 @@ function runTurnCore(ctx: Ctx, inputs: readonly TurnInput[], opts: TurnOptions):
       if (pa) pa.energy -= r.cost ?? ACT_COST;
       // busy lasts only between actions
       delete ps.busySince;
+    } else if (action.type === 'choose_option' && !ps.pendingChoice) {
+      // the dialogue is over (an input still typing sets busy again below)
+      delete ps.busySince;
     }
   };
 

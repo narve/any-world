@@ -66,6 +66,8 @@ const nb = {
   'log.trade.cannot_afford': 'Du har ikke råd til noe av dette (ikke nok {currency}).',
   'log.trade.sold': '{player} selger {item} for {amount} {currency}.',
   'log.party.talk_gone': '{player} mister tråden: samtalen er over.',
+  'log.party.down': '{player} er nede. En lagkamerat ved siden av får dem på beina igjen.',
+  'log.party.up': '{player} kommer seg på beina igjen.',
 
   'log.quest.new': 'Nytt: {title}',
   'log.quest.done': 'Fullført: {title}',

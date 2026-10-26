@@ -11,9 +11,9 @@
  */
 import type { Amount, Condition, Effect, RuleVariant, Targeting, Trigger, WorldSpec } from '../schema/world';
 import { MAX_ACTIVE_RULES, MAX_GM_RULES_PER_AREA } from '../schema/gm';
-import type { ActiveRuleEntry, GameState } from './types';
+import type { ActiveRuleEntry, GameState, PlayerState } from './types';
 import { type Ctx, type Switches, computeSwitches, me } from './ctx';
-import { difficultyOf, profileOf } from './difficulty';
+import { bandSecondChance, difficultyOf, profileOf } from './difficulty';
 import { DEFAULT_DURABILITY } from './inventory';
 import { POSITIONAL_SHAPES, isActorEffect } from './effects';
 import { hideConsumablesForRule, unhideConsumablesForRule } from './knowledge';
@@ -461,9 +461,13 @@ function liveImpacts(ctx: Ctx, live: readonly ActiveRuleEntry[]): Map<ActiveRule
   return out;
 }
 
-/** the mercy is spent, or the difficulty grants it anyway (Gentle's second chance): a mercy switch changes nothing */
-function mercyGranted(ctx: Ctx): boolean {
-  return !!me(ctx).mercyUsed || profileOf(ctx.s).secondChance;
+/**
+ * The mercy of the player in question (the acting player: the lead for the GM in MP1) is spent, or
+ * the difficulty grants it anyway (Gentle's second chance, every player's on Normal in a party):
+ * a mercy switch changes nothing
+ */
+function mercyGranted(ctx: Ctx, ps: PlayerState = me(ctx)): boolean {
+  return !!ps.mercyUsed || bandSecondChance(ctx.s);
 }
 
 /** whether a mercy switch on a rule joining (or staying in) `others` would help: not spent, not granted elsewhere */

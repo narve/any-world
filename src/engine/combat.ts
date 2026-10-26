@@ -33,7 +33,8 @@ import { END_REASON_KEYS, type EndReasonKey, type LogParams, renderTemplate } fr
 import { withinReach } from './fov';
 import { playerSeesTile } from './vision';
 import { switchesOf } from './rules';
-import { profileOf } from './difficulty';
+import { bandSecondChance, profileOf } from './difficulty';
+import { closeChoice } from './npc';
 
 export interface AttackInfo {
   attack: Attack;
@@ -76,15 +77,16 @@ export function attackOf(ctx: Ctx, a: ActorInstance): AttackInfo | null {
 /**
  * Can `a` hit `t` with its attack right now. Melee reaches the 8 neighbours; ranged attacks reach
  * `range` steps in any direction (withinReach, the same count as movement and ability targeting)
- * with line of sight. Perception is symmetric: nobody shoots the player from beyond arm's reach
- * while standing where the player can't see.
+ * with line of sight. Perception is symmetric: nobody shoots a player from beyond arm's reach
+ * while standing where that player can't see.
  */
 export function inAttackRange(ctx: Ctx, a: ActorInstance, t: ActorInstance, atk: Attack): boolean {
   const d = cheb(a.pos, t.pos);
   if (d < 1) return false;
   if (atk.range <= 1) return d <= 1;
   if (!withinReach(a.pos, t.pos, atk.range) || !los(ctx, a.pos, t.pos)) return false;
-  if (d > 1 && isPlayer(ctx, t) && !isPlayer(ctx, a) && !playerSeesTile(ctx, a.pos)) return false;
+  const tps = playerOf(ctx, t);
+  if (d > 1 && tps && !isPlayer(ctx, a) && !playerSeesTile(ctx, tps.id, a.pos)) return false;
   return true;
 }
 
@@ -306,23 +308,83 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
   }
 }
 
-function killPlayer(ctx: Ctx, p: ActorInstance, killerId: string | undefined): void {
+/** how a player fell when it was not to an attack: the loss line to use if the run ends on it */
+export interface FallCause {
+  text: string;
+  key: EndReasonKey;
+  params: LogParams;
+}
+
+/**
+ * A player's hp ran out (or a fatal resource emptied, `cause`). In order:
+ *   - already down: nothing (a second hit in the same turn neither resets the fall nor spends a
+ *     second chance);
+ *   - a second chance left (a world's permadeathMercy rule, the band's: bandSecondChance): straight
+ *     back up at half health, once per player;
+ *   - a party of one: the run is lost, as in single player;
+ *   - otherwise the player is down (downPlayer); the run is lost when nobody is left standing.
+ */
+export function killPlayer(ctx: Ctx, p: ActorInstance, killerId: string | undefined, cause?: FallCause): void {
   const ps = playerOf(ctx, p)!;
-  // a world's mercy rule, or Gentle's second chance: once per run and player
-  if ((switchesOf(ctx).permadeathMercy || profileOf(ctx.s).secondChance) && !ps.mercyUsed) {
+  if (ps.down) {
+    p.hp = 0;
+    return;
+  }
+  const party = ctx.s.party.length > 1;
+  if ((switchesOf(ctx).permadeathMercy || bandSecondChance(ctx.s)) && !ps.mercyUsed) {
     ps.mercyUsed = true;
     p.hp = Math.max(1, Math.ceil(maxHp(ctx, p) / 2));
     p.ai.lowHp = false;
+    // in a party the world keeps moving: an empty fatal resource would fell them again at once
+    if (party) refillFatalResources(ctx, ps);
     logKey(ctx, 'log.mercy', { player: ps.name }, 'good');
     return;
   }
-  p.hp = Math.min(p.hp, 0);
-  if (ctx.s.status !== 'playing') return;
+  if (ctx.s.status !== 'playing') {
+    p.hp = Math.min(p.hp, 0);
+    return;
+  }
   const k = findActor(ctx, killerId);
   const killer = k && k !== p ? k : undefined;
+  if (party) {
+    downPlayer(ctx, ps, p);
+    if (ctx.s.party.some((id) => !ctx.s.players[id].down)) return;
+  } else p.hp = Math.min(p.hp, 0);
   emit(ctx, killer ? { type: 'died', actorId: p.id, defId: p.defId, killerId: killer.id } : { type: 'died', actorId: p.id, defId: p.defId });
-  const lr = lossReasonKeyed(ctx, killer, ps);
+  const lr = cause ?? lossReasonKeyed(ctx, killer, ps);
   endGame(ctx, 'lost', lr.text, lr);
+}
+
+/**
+ * Makes a player down: hp 0, no statuses, temporary mods, energy, sneaking, open choice or busy
+ * flag. The actor stays in the area (at 0 hp it is not alive: hostiles ignore it, anyone may step
+ * on its tile) until it gets up (turn.ts reviveDown) or the party moves on.
+ */
+export function downPlayer(ctx: Ctx, ps: PlayerState, p: ActorInstance): void {
+  p.hp = 0;
+  p.statuses = [];
+  p.tempMods = [];
+  p.energy = 0;
+  p.ai.lowHp = false;
+  ps.sneaking = false;
+  closeChoice(ctx, ps);
+  delete ps.busySince;
+  ps.down = { since: ctx.s.turn, helpedTurns: 0 };
+  emit(ctx, { type: 'downed', playerId: ps.id, actorId: p.id });
+  logKey(ctx, 'log.party.down', { player: ps.name }, 'bad');
+}
+
+/** a resource whose running out harms or fells the player (onEmpty effects, emptyIsDeath) */
+export function isFatalResource(r: { onEmpty: readonly unknown[]; emptyIsDeath?: boolean }): boolean {
+  return r.onEmpty.length > 0 || !!r.emptyIsDeath;
+}
+
+/** every empty fatal resource of a player back to half its maximum (getting up, a party's second chance) */
+export function refillFatalResources(ctx: Ctx, ps: PlayerState): void {
+  for (const r of ctx.world.resources ?? []) {
+    if (!isFatalResource(r) || (own(ps.resources, r.id) ?? 0) > 0) continue;
+    ps.resources[r.id] = Math.max(1, Math.ceil(r.max / 2));
+  }
 }
 
 /**

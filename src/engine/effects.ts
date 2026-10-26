@@ -30,7 +30,7 @@ import { END_REASON_KEYS, FACTION_KEYS, renderTemplate } from './log-keys';
 import { evalCondition } from './conditions';
 import { getStat, isAlly, isEnemy, maxHp, maxMp, sightRadius } from './stats';
 import { applyStatus, removeStatus } from './statuses';
-import { dealDamage, heal } from './combat';
+import { dealDamage, heal, killPlayer } from './combat';
 import { makeNoise, moveActor, spawnActor, transformActor } from './actors';
 import { fireTriggers } from './triggers';
 import { grantXp } from './progression';
@@ -668,10 +668,18 @@ export function resourceEmptied(ctx: Ctx, a: ActorInstance, res: string): void {
     logKey(ctx, 'log.resource.empty', { resource: def.name }, 'warning');
     if (def.onEmpty.length) applyEffectList(ctx, def.onEmpty, a, [a], a.pos, []);
     if (def.emptyIsDeath && ctx.s.status === 'playing') {
-      a.hp = 0;
-      emit(ctx, { type: 'died', actorId: a.id, defId: a.defId });
-      endGame(ctx, 'lost', renderTemplate(END_REASON_KEYS['end.loss.resource'], { resource: def.name }), { key: 'end.loss.resource', params: { resource: def.name } });
-      return;
+      const params = { resource: def.name };
+      const cause = { text: renderTemplate(END_REASON_KEYS['end.loss.resource'], params), key: 'end.loss.resource' as const, params };
+      if (ctx.s.party.length > 1) {
+        // a party: a fall like any other (a second chance, or down), the run lost only when all are down
+        killPlayer(ctx, a, undefined, cause);
+        if (ctx.s.status !== 'playing' || !isAlive(ctx, a)) return;
+      } else {
+        a.hp = 0;
+        emit(ctx, { type: 'died', actorId: a.id, defId: a.defId });
+        endGame(ctx, 'lost', cause.text, cause);
+        return;
+      }
     }
   }
   fireTriggers(ctx, a, 'on_resource_empty', { pos: a.pos });

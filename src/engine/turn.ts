@@ -4,19 +4,18 @@
  * ends: statuses, terrain, regen, resources, on_turn triggers, quests; then everyone gains energy
  * equal to its (hasted/slowed) speed.
  */
-import { type Ctx, actorAt, emit, endGame, isAlive, isPlayer, logKey, mutTile, playerActor, playerActorOf, playerName, timed } from './ctx';
+import { type Ctx, actorAt, emit, endGame, findFreeNear, isAlive, isPlayer, logKey, mutTile, playerActorOf, playerName, timed } from './ctx';
 import type { PlayerId } from './types';
-import { own, samePos } from './util';
+import { cheb, own, samePos } from './util';
 import { energyGain, hasFlag, maxHp, maxMp } from './stats';
 import { actorTurn } from './ai';
 import { statusPerTurn, tickStatuses } from './statuses';
 import { applyEffectList, changeResource } from './effects';
 import { fireTriggers } from './triggers';
 import { checkQuests } from './gm';
-import { evalCondition } from './conditions';
-import { heal } from './combat';
+import { evalParty } from './conditions';
+import { heal, killPlayer, lossReasonKeyed, refillFatalResources } from './combat';
 import { switchesOf } from './rules';
-import { lossReasonKeyed } from './combat';
 import { regenInterval } from './difficulty';
 import { closeStaleChoices } from './npc';
 
@@ -61,7 +60,8 @@ function runWorldLoop(ctx: Ctx): void {
     if (burned) continue;
     endRound(ctx);
     if (ctx.s.status !== 'playing') return;
-    for (const a of ctx.s.area.actors) a.energy = Math.min(a.energy + energyGain(ctx, a), 400);
+    // down players gain no energy (no burst when they get up)
+    for (const a of ctx.s.area.actors) if (a.hp > 0 || !isPlayer(ctx, a)) a.energy = Math.min(a.energy + energyGain(ctx, a), 400);
     checkEnd(ctx);
   }
 }
@@ -141,13 +141,18 @@ export function endRound(ctx: Ctx): void {
     a.hp = Math.min(a.hp, maxHp(ctx, a));
     a.mp = Math.min(a.mp, maxMp(ctx, a));
   }
-  for (const id of s.party) for (const it of s.players[id].slots) if (it && it.cooldown) it.cooldown = Math.max(0, it.cooldown - 1);
+  // a down player skips all upkeep: item cooldowns, regeneration, resources (and, not being alive,
+  // statuses, terrain and on_turn triggers)
+  for (const id of s.party) {
+    if (s.players[id].down) continue;
+    for (const it of s.players[id].slots) if (it && it.cooldown) it.cooldown = Math.max(0, it.cooldown - 1);
+  }
   // regeneration (each player's own actor)
   const ps = ctx.world.player;
   const regenEvery = regenInterval(s, ps.hpRegenEvery);
   for (const id of s.party) {
     const p = playerActorOf(ctx, id);
-    if (!p) continue;
+    if (!p || !isAlive(ctx, p)) continue;
     if (ps.mpRegenEvery > 0 && s.turn % ps.mpRegenEvery === 0 && p.mp < maxMp(ctx, p)) p.mp += 1;
     if (regenEvery > 0 && !switchesOf(ctx).noNaturalHpRegen && s.turn % regenEvery === 0) heal(ctx, p, 1);
   }
@@ -200,28 +205,90 @@ export function endRound(ctx: Ctx): void {
     changed.push(pos);
   }
   if (changed.length) emit(ctx, { type: 'terrain_changed', positions: changed });
+  reviveDown(ctx);
   checkQuests(ctx);
   checkEnd(ctx);
 }
 
-/** win/lose: death, empty fatal resources, goal.lose, goal.win (conditions for the lead in MP1 B2a) */
+/** rounds a standing teammate must spend next to a down player to get them up */
+export const REVIVE_HELP_TURNS = 1;
+/** rounds after which a down player gets up by themselves */
+export const REVIVE_SELF_TURNS = 20;
+
+/**
+ * End of round: a down player with a standing teammate next to them (Chebyshev 1) counts a helped
+ * round; after REVIVE_HELP_TURNS of them, or REVIVE_SELF_TURNS since the fall, they get up.
+ */
+function reviveDown(ctx: Ctx): void {
+  const s = ctx.s;
+  for (const id of s.party) {
+    const ps = s.players[id];
+    const down = ps.down;
+    const a = playerActorOf(ctx, id);
+    if (!down || !a) continue;
+    const helped = s.party.some((o) => {
+      if (o === id || !isStanding(ctx, o)) return false;
+      return cheb(playerActorOf(ctx, o)!.pos, a.pos) <= 1;
+    });
+    if (helped) down.helpedTurns += 1;
+    if (down.helpedTurns >= REVIVE_HELP_TURNS || s.turn - down.since >= REVIVE_SELF_TURNS) getUp(ctx, id, helped);
+  }
+}
+
+/**
+ * A down player gets up at half health with ACT_COST energy, on their tile or the nearest free one
+ * (someone may have stepped onto the body), and every empty fatal resource refilled to half.
+ * Waits a round when there is no free tile anywhere near.
+ */
+export function getUp(ctx: Ctx, pid: PlayerId, helped: boolean): void {
+  const ps = ctx.s.players[pid];
+  const a = playerActorOf(ctx, pid);
+  if (!ps?.down || !a) return;
+  if (actorAt(ctx, a.pos)) {
+    const p = findFreeNear(ctx, a.pos, 12);
+    if (!p) return;
+    a.pos = p;
+  }
+  delete ps.down;
+  a.hp = Math.max(1, Math.ceil(maxHp(ctx, a) / 2));
+  a.energy = ACT_COST;
+  refillFatalResources(ctx, ps);
+  emit(ctx, { type: 'revived', playerId: pid, actorId: a.id, helped });
+  logKey(ctx, 'log.party.up', { player: ps.name }, 'good');
+}
+
+/**
+ * win/lose: a player at 0 hp who is not down (a party of one loses; in a party it is a fall like
+ * any other), everyone down, goal.lose, goal.win. Goals are evaluated for the whole party per
+ * condition leaf (conditions.ts evalParty).
+ */
 export function checkEnd(ctx: Ctx): void {
   const s = ctx.s;
   if (s.status !== 'playing') return;
   for (const id of s.party) {
     const a = playerActorOf(ctx, id);
     if (a && a.hp <= 0 && !s.players[id].down) {
+      if (s.party.length > 1) {
+        killPlayer(ctx, a, undefined);
+        if (s.status !== 'playing') return;
+        continue;
+      }
       const lr = lossReasonKeyed(ctx, undefined, s.players[id]);
       endGame(ctx, 'lost', lr.text, lr);
       return;
     }
   }
-  const cc = { self: playerActorOf(ctx, s.party[0]) ?? playerActor(ctx) };
-  if (evalCondition(ctx, ctx.world.goal.win, cc)) {
+  if (s.party.every((id) => s.players[id].down)) {
+    // killPlayer ends the run on the last fall; this only guards states that got here otherwise
+    const lr = lossReasonKeyed(ctx, undefined, s.players[s.party[0]]);
+    endGame(ctx, 'lost', lr.text, lr);
+    return;
+  }
+  if (evalParty(ctx, ctx.world.goal.win, 'win')) {
     endGame(ctx, 'won', ctx.world.goal.summary);
     return;
   }
-  if (ctx.world.goal.lose && evalCondition(ctx, ctx.world.goal.lose, cc)) {
+  if (ctx.world.goal.lose && evalParty(ctx, ctx.world.goal.lose, 'lose')) {
     endGame(ctx, 'lost', ctx.world.goal.summary);
   }
 }

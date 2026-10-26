@@ -67,7 +67,7 @@ describe('fog as memory', () => {
     updateFov(ctx);
     const at = (x: number, y: number) => leadPlayer(s).seen[y * map.width + x];
     // behind the wall stub: not in view, but remembered as part of the room
-    expect(playerSeesTile(ctx, hidden)).toBe(false);
+    expect(playerSeesTile(ctx, ctx.pid, hidden)).toBe(false);
     expect(at(hidden.x, hidden.y)).toBe(1);
     expect(at(11, 1)).toBe(1);
     expect(at(12, 3)).toBe(1); // the room's east wall
@@ -94,7 +94,7 @@ describe('fog as memory', () => {
       const ctx = ctxFor(w, s);
       const rats = s.area.actors.filter((a) => a.defId === 'rat');
       expect(rats.length).toBe(2);
-      for (const r of rats) expect(playerSeesTile(ctx, r.pos)).toBe(true);
+      for (const r of rats) expect(playerSeesTile(ctx, ctx.pid, r.pos)).toBe(true);
     }
   });
 

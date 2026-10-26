@@ -1,24 +1,34 @@
 /**
- * Non-player actor behaviour. Hostiles perceive player-side actors (sight, LOS, sneaking, invisible),
- * use abilities per `useWhen`, then act by behaviour type. Allies/followers fight hostiles and
- * follow the player. Neutral/friendly actors don't attack unless provoked (they turn hostile).
+ * Non-player actor behaviour. Hostiles perceive player-side actors (sight, LOS, each player's own
+ * sneaking, invisible), use abilities per `useWhen`, then act by behaviour type. Allies/followers
+ * fight hostiles and follow their owner (guarding the body while the owner is down).
+ * Neutral/friendly actors don't attack unless provoked (they turn hostile).
+ *
+ * Among several players (MP1): a hostile goes for the nearest player it perceives, but keeps its
+ * current player target (`ai.targetId`) while that one is at most TARGET_STICK_TILES farther. Busy
+ * players (typing, in a dialogue or trade) are never chosen as a target for BUSY_MAX_TURNS; a
+ * hostile that perceives only busy players closes in to BUSY_WAIT_RANGE and waits. During a
+ * hostile's or ally's turn "the player" (conditions, effects) is its target or owner (withPlayer).
  */
 import type { ActorDef } from '../schema/world';
-import type { ActorInstance, Pos } from './types';
+import type { ActorInstance, PlayerState, Pos } from './types';
 import {
   type Ctx,
   actorDef,
   actorName,
   emit,
+  findActor,
   isAlive,
   isFree,
   isPlayer,
   logKey,
   moveCost,
   mutTile,
+  partyActors,
   passable,
   playerActor,
   playerOf,
+  withPlayer,
 } from './ctx';
 import { getStat, hasFlag, isAlly, isEnemy, maxHp, side, sightRadius } from './stats';
 import { attackOf, inAttackRange, performAttack } from './combat';
@@ -38,6 +48,40 @@ export function noticeRadius(ctx: Ctx, a: ActorInstance, target: ActorInstance):
   return r;
 }
 
+/** turns since `busySince` during which hostiles do not pick a busy player as their target */
+export const BUSY_MAX_TURNS = 10;
+/** how close a hostile that perceives only busy players comes before it waits */
+export const BUSY_WAIT_RANGE = 2;
+/** a hostile keeps its player target while it is at most this many tiles farther than the nearest */
+export const TARGET_STICK_TILES = 2;
+/** an ally guarding its down owner fights hostiles this close to the body */
+export const GUARD_RANGE = 3;
+
+/**
+ * Whether hostiles leave this player alone for now: busy (busySince, or an open choice) for less
+ * than BUSY_MAX_TURNS. Never in a party of one: there a dialogue never lets the world move.
+ */
+export function isBusy(ctx: Ctx, ps: PlayerState | undefined): boolean {
+  if (!ps || ctx.s.party.length < 2 || ps.down) return false;
+  const since = ps.busySince;
+  if (since == null) return !!ps.pendingChoice;
+  return ctx.s.turn - since < BUSY_MAX_TURNS;
+}
+
+/** the standing player actor nearest to `a` (party order breaks ties) */
+export function nearestPlayer(ctx: Ctx, a: ActorInstance): ActorInstance | undefined {
+  let best: ActorInstance | undefined;
+  let bd = Infinity;
+  for (const p of partyActors(ctx)) {
+    const d = dist2(a.pos, p.pos);
+    if (d < bd) {
+      best = p;
+      bd = d;
+    }
+  }
+  return best;
+}
+
 export function canPerceive(ctx: Ctx, a: ActorInstance, target: ActorInstance, radius?: number): boolean {
   const r = radius ?? noticeRadius(ctx, a, target);
   // the same circle the player's own field of view uses (computeFov), not a square
@@ -45,19 +89,58 @@ export function canPerceive(ctx: Ctx, a: ActorInstance, target: ActorInstance, r
   return los(ctx, a.pos, target.pos);
 }
 
-function nearestEnemy(ctx: Ctx, a: ActorInstance, radiusFor: (t: ActorInstance) => number): ActorInstance | null {
+interface EnemyPick {
+  /** the enemy to act against (never a busy player) */
+  target: ActorInstance | null;
+  /** the nearest perceived busy player (only matters when there is no target) */
+  busy: ActorInstance | null;
+}
+
+/** the nearest perceived enemy, busy players aside (see EnemyPick) */
+function pickEnemy(ctx: Ctx, a: ActorInstance, radiusFor: (t: ActorInstance) => number): EnemyPick {
   let best: ActorInstance | null = null;
   let bd = Infinity;
+  let busy: ActorInstance | null = null;
+  let busyD = Infinity;
   for (const t of ctx.s.area.actors) {
     if (t === a || t.hp <= 0 || !isEnemy(ctx, a, t)) continue;
     if (!canPerceive(ctx, a, t, radiusFor(t))) continue;
     const d = dist2(a.pos, t.pos);
+    if (isBusy(ctx, playerOf(ctx, t))) {
+      if (d < busyD) {
+        busy = t;
+        busyD = d;
+      }
+      continue;
+    }
     if (d < bd) {
       best = t;
       bd = d;
     }
   }
-  return best;
+  return { target: best, busy };
+}
+
+function nearestEnemy(ctx: Ctx, a: ActorInstance, radiusFor: (t: ActorInstance) => number): ActorInstance | null {
+  return pickEnemy(ctx, a, radiusFor).target;
+}
+
+/**
+ * A hostile's pick among players: the nearest one, unless its current player target is still
+ * perceived, standing, not busy and at most TARGET_STICK_TILES farther (no flip-flopping between
+ * two players at about the same distance). Remembers the pick in ai.targetId (parties only).
+ */
+function hostilePick(ctx: Ctx, a: ActorInstance, radiusFor: (t: ActorInstance) => number): EnemyPick {
+  const pick = pickEnemy(ctx, a, radiusFor);
+  if (ctx.s.party.length < 2) return pick;
+  const t = pick.target;
+  const prev = findActor(ctx, a.ai.targetId);
+  if (t && prev && prev !== t && isPlayer(ctx, t) && isPlayer(ctx, prev) && isAlive(ctx, prev) && isEnemy(ctx, a, prev)) {
+    if (!isBusy(ctx, playerOf(ctx, prev)) && canPerceive(ctx, a, prev, radiusFor(prev)) && cheb(a.pos, prev.pos) <= cheb(a.pos, t.pos) + TARGET_STICK_TILES) pick.target = prev;
+  }
+  if (pick.target && isPlayer(ctx, pick.target)) a.ai.targetId = pick.target.id;
+  else delete a.ai.targetId;
+  return pick;
 }
 
 // ---------------------------------------------------------------------------
@@ -200,7 +283,7 @@ function tryAbility(ctx: Ctx, a: ActorInstance, def: ActorDef, target: ActorInst
     if (offensive && t.affects === 'enemies' && t.shape !== 'self' && !tr.actors.length && ab.useWhen === 'target_in_range') continue;
     // symmetric perception: a hostile never hits the player from beyond arm's reach while standing
     // somewhere the player cannot see
-    if (side(ctx, a) === 'H' && offensive && tr.actors.some((x) => isPlayer(ctx, x)) && cheb(a.pos, playerActor(ctx).pos) > 1 && !playerSeesTile(ctx, a.pos)) continue;
+    if (side(ctx, a) === 'H' && offensive && tr.actors.some((x) => hitFromDark(ctx, a, x))) continue;
     if (ab.cost && ab.cost.amount > 0) changeResource(ctx, a, ab.cost.resource, -ab.cost.amount);
     a.cooldowns[ab.id] = ab.cooldown;
     logKey(ctx, 'log.ability', { actor: actorName(ctx, a), ability: ab.name }, 'combat');
@@ -208,6 +291,12 @@ function tryAbility(ctx: Ctx, a: ActorInstance, def: ActorDef, target: ActorInst
     return true;
   }
   return false;
+}
+
+/** `x` is a player farther than arm's reach from `a` who cannot see the tile `a` stands on */
+function hitFromDark(ctx: Ctx, a: ActorInstance, x: ActorInstance): boolean {
+  const ps = playerOf(ctx, x);
+  return !!ps && cheb(a.pos, x.pos) > 1 && !playerSeesTile(ctx, ps.id, a.pos);
 }
 
 // ---------------------------------------------------------------------------
@@ -250,28 +339,41 @@ function alertPack(ctx: Ctx, a: ActorInstance, target: ActorInstance): void {
 
 function hostileTurn(ctx: Ctx, a: ActorInstance, def: ActorDef): number {
   const b = def.behaviour;
-  let target: ActorInstance | null = null;
+  let pick: EnemyPick = { target: null, busy: null };
   if (b.type === 'idle') {
-    if (a.ai.alerted) target = nearestEnemy(ctx, a, () => sightRadius(ctx, a));
+    if (a.ai.alerted) pick = hostilePick(ctx, a, () => sightRadius(ctx, a));
   } else if (b.type === 'ambusher' && !a.ai.alerted) {
     const r = Math.max(1, Math.round(b.param ?? 2));
-    target = nearestEnemy(ctx, a, (t) => Math.min(r, noticeRadius(ctx, a, t)));
+    pick = hostilePick(ctx, a, (t) => Math.min(r, noticeRadius(ctx, a, t)));
   } else if (b.type === 'guardian') {
     const home = a.ai.home ?? a.pos;
     const r = Math.max(1, Math.round(b.param ?? 5));
-    const t = nearestEnemy(ctx, a, (x) => noticeRadius(ctx, a, x));
-    target = t && cheb(t.pos, home) <= r + 1 ? t : null;
+    const pk = hostilePick(ctx, a, (x) => noticeRadius(ctx, a, x));
+    pick = { target: pk.target && cheb(pk.target.pos, home) <= r + 1 ? pk.target : null, busy: null };
   } else {
-    target = nearestEnemy(ctx, a, (t) => noticeRadius(ctx, a, t));
+    pick = hostilePick(ctx, a, (t) => noticeRadius(ctx, a, t));
   }
+  // "the player" during this turn: the target, else the busy player it watches, else the nearest
+  const focus = playerOf(ctx, pick.target) ?? playerOf(ctx, pick.busy) ?? playerOf(ctx, nearestPlayer(ctx, a));
+  if (focus && focus.id !== ctx.pid) return withPlayer(ctx, focus.id, () => hostileAct(ctx, a, def, pick));
+  return hostileAct(ctx, a, def, pick);
+}
+
+function hostileAct(ctx: Ctx, a: ActorInstance, def: ActorDef, pick: EnemyPick): number {
+  const b = def.behaviour;
+  const target = pick.target;
+  const busy = target ? null : pick.busy;
   if (target) {
     const wasAlerted = a.ai.alerted;
     a.ai.alerted = true;
     a.ai.lastSeen = { ...target.pos };
     if (!wasAlerted && b.type === 'pack') alertPack(ctx, a, target);
+  } else if (busy) {
+    a.ai.alerted = true;
+    a.ai.lastSeen = { ...busy.pos };
   }
   if (hasFlag(ctx, a, 'charmed')) return ctx.rng.chance(0.5) ? randomStep(ctx, a) : -1;
-  const threat = target?.pos ?? a.ai.lastSeen ?? null;
+  const threat = target?.pos ?? busy?.pos ?? a.ai.lastSeen ?? null;
   if (hasFlag(ctx, a, 'afraid') && threat) {
     const c = stepAway(ctx, a, threat);
     if (c >= 0) return c;
@@ -315,6 +417,11 @@ function hostileTurn(ctx: Ctx, a: ActorInstance, def: ActorDef): number {
   }
   // no target in view
   if (b.type === 'stationary') return -1;
+  if (busy) {
+    // a busy player is not attacked: close in and wait
+    if (cheb(a.pos, busy.pos) <= BUSY_WAIT_RANGE) return -1;
+    return stepToward(ctx, a, busy.pos);
+  }
   if (b.type === 'guardian') {
     const home = a.ai.home;
     if (home && !samePos(home, a.pos)) return stepToward(ctx, a, home);
@@ -344,12 +451,24 @@ function passiveTurn(ctx: Ctx, a: ActorInstance, def: ActorDef): number {
   return -1;
 }
 
+/**
+ * An ally fights hostiles near its owner and follows them (within its leash). While the owner is
+ * down it guards the body: stays within 2 tiles and fights only hostiles within GUARD_RANGE of it.
+ * During the turn "the player" is the owner.
+ */
 function allyTurn(ctx: Ctx, a: ActorInstance, def: ActorDef): number {
-  const pl = playerActor(ctx);
-  const leash = Math.max(1, Math.round(def.behaviour.type === 'follower' ? (def.behaviour.param ?? 2) : 2));
+  const owner = findActor(ctx, a.allyOf);
+  const ops = playerOf(ctx, owner);
+  if (ops && ops.id !== ctx.pid) return withPlayer(ctx, ops.id, () => allyAct(ctx, a, def, owner!, !!ops.down));
+  return allyAct(ctx, a, def, ops ? owner! : (partyActors(ctx)[0] ?? playerActor(ctx)), !!ops?.down);
+}
+
+function allyAct(ctx: Ctx, a: ActorInstance, def: ActorDef, pl: ActorInstance, guarding: boolean): number {
+  const leash = guarding ? 2 : Math.max(1, Math.round(def.behaviour.type === 'follower' ? (def.behaviour.param ?? 2) : 2));
   if (hasFlag(ctx, a, 'confused') && ctx.rng.chance(0.5)) return randomStep(ctx, a);
   const target = nearestEnemy(ctx, a, () => sightRadius(ctx, a));
-  if (target && cheb(a.pos, pl.pos) <= 8 && !hasFlag(ctx, a, 'afraid')) {
+  const engage = !!target && (guarding ? cheb(target.pos, pl.pos) <= GUARD_RANGE : cheb(a.pos, pl.pos) <= 8);
+  if (target && engage && !hasFlag(ctx, a, 'afraid')) {
     if (tryAbility(ctx, a, def, target)) return 0;
     const c = approachAttack(ctx, a, target);
     if (c >= 0) return c;
