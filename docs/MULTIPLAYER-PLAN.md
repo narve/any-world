@@ -1,26 +1,39 @@
 # Multiplayer edition — plan
 
-Status: MP0 (hosting groundwork) done 2026-10-25, see [HOSTING.md](HOSTING.md); MP1–MP5 not started. Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12
-(sharing, multiplayer without waiting, chat). Target host: the owner's spare laptop (CachyOS) at home,
-reachable from the internet.
+Status (2026-10-26): MP0 (hosting groundwork) is in the code, see [HOSTING.md](HOSTING.md), but not
+yet deployed: its exit check (HTTPS from a phone on 4G) is still open. MP1–MP5 not started.
+Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12 (sharing, multiplayer without waiting,
+chat). Target host: the owner's spare laptop (CachyOS) at home, reachable from the internet.
+
+**Guiding priority: fast and fun.** Nobody waits, and talking to each other is a big part of the game.
+When a rule has to choose between exact turn fairness and keeping the party moving and chatting, it
+keeps them moving and chatting. Breaking old saves, rooms or worlds is acceptable in this phase as long
+as it fails gracefully (a new game or a closed room, with a short toast); no migration code.
 
 ## 1. What we build
 
-- **Co-op, 2–8 players (up to 12 as a room option), one shared run** in one world (recorded, imported or AI-made). No PvP in the
-  first version.
+- **Co-op, 2–8 players (up to 12 as a room option), one shared run** in one world (recorded, imported or
+  AI-made). No PvP in the first version.
 - **No waiting.** Turns are simultaneous with a short deadline: the server advances the world when every
-  connected player has acted, or a deadline after the first action, whichever comes first. The host picks
-  the deadline per room, 1–5 s (default 2 s). A player who has not
-  acted simply waits that turn. A player in a menu, a dialogue or a trade never holds up the others.
-- **Joining:** the host creates a room and shares a link (`…/?room=K7QX`). Players pick a name and a
-  colour; no accounts. Late joiners appear next to the host at the next turn.
-- **Death is not the end of the fun:** a downed player watches (camera follows a teammate) and comes back
-  at the next area entrance with half health. The run is lost only when everyone is down at once.
+  active player has acted, or a deadline after the first action, whichever comes first. The host picks
+  the deadline per room, 1–5 s (default 2 s). A player who has not acted simply waits that turn. While
+  nobody acts, the world does not move, so a party that stops to chat loses nothing.
+- **Pace (§2.1):** walking must not be slowed by the turn clock. Click/tap travel keeps its quick
+  cadence when nothing hostile is in view, and a player who is only reading, chatting or in a menu
+  never holds up the others.
+- **Chat is a main feature, not an add-on** (DESIGN §12): speech bubbles over the speaker when they are on
+  screen, otherwise a line in the side column with name and colour; Enter on desktop and an always-visible
+  chat button on phones. Typing never triggers game keys and never costs a turn. Quick reactions (a few
+  one-tap emotes and "follow me" / "wait" / "help" pings on the map) for phones. History of the last 100
+  lines per room, 200 characters per message, 1 message/s. A player who is typing shows a "…" bubble.
+- **Joining:** the host creates a room and shares a link (`…/?room=K7QX`) and a QR code. Players pick a
+  name and a colour; no accounts. Late joiners appear next to the host at the next turn.
+- **Falling in a fight:** every player has their own second chance. The first time a player would be
+  defeated they get straight back up at half health (as Gentle's second chance does in single player,
+  per player instead of per run). See §6 for what happens on a second fall. The run is lost only when
+  everyone is down at once.
 - **Area exits:** the first player to take an exit starts a 10-second countdown ("The party moves on");
   everyone is pulled along when it ends. No one waits at the door.
-- **Chat** as specified in DESIGN §12: a speech bubble over the speaker when they are on screen, otherwise
-  a line in the side column (name and colour). Enter on desktop, a chat button on phones. Typing never
-  triggers game keys. History of the last 100 lines per room, 200 characters per message, 1 message/s.
 - **The AI game master** runs only on the server (keys stay there). It sees the whole party, and its
   actions go into the shared turn stream like any other input.
 
@@ -33,25 +46,46 @@ browser (each player)                         home laptop (Node 22, systemd)
 ```
 
 - **Lockstep on a deterministic engine.** The engine already gives the same result for the same seed and
-  inputs. The server collects the inputs for turn *n* and broadcasts them. Every client runs the same
-  `step` locally, so the traffic is a few hundred bytes per turn. The server runs it too and is the
-  authority.
+  inputs (no Date or Math.random in `src/engine`). The server collects the inputs for turn *n* and
+  broadcasts them. Every client runs the same `step` locally, so the traffic is a few hundred bytes per
+  turn. The server runs it too and is the authority.
 - **Desync guard:** clients send a state hash every 10 turns. On a mismatch the server sends a full
   snapshot. Fog of war is a client view (cheating is possible but harmless in co-op).
-- **Persistence:** each room's world, seed and input log in `/var/lib/anyworld/rooms/<id>.json`. A
-  restart replays the log; players reconnect with a token kept in their browser.
+- **Persistence:** each room's world, seed, engine version, a snapshot and the input log since it, in
+  `/var/lib/anyworld/rooms/<id>.json` (the systemd unit's `StateDirectory`). A restart replays the log;
+  players reconnect with a token kept in their browser. **After a deploy that changes the engine
+  version**, old rooms are closed with a short toast ("the server was updated; start a new room"); no
+  replay across versions.
+- **World for a room:** worlds are made and play-tested in the host's browser today. The host uploads
+  the chosen world; the server validates it (`parseWorld`, untrusted input) before opening the room.
+  Recorded demo worlds need no upload.
 - **Limits:** 10 rooms, 8 players per room by default (`MAX_PLAYERS`, up to 12), idle rooms closed after
   2 hours.
+
+### 2.1 Turns, pace and talking
+
+- **Active players:** a player counts towards "everyone has acted" only while they are playing the map.
+  Reading a dialogue, trading, typing in chat, in a menu or idle for 10 s makes them inactive: the
+  others' turns resolve as soon as the active players have acted, without the deadline.
+- **Travel:** a player on click/tap travel sends their next step automatically every turn. Turns where
+  all active players are travelling (or waiting) resolve at the travel cadence (~100 ms), not the
+  deadline. The deadline only applies while someone is deciding.
+- **Safe while talking:** a player in a dialogue, a trade or typing is "busy" and hostiles do not start
+  new attacks on them (they may still close in). The playtest already flagged enemies gathering during
+  a conversation; with more NPCs and chat this matters more.
+- **NPC conversations:** worlds now place 2–4 NPCs per area (world prompt, 2026-10-26). A dialogue is
+  per player and does not pause anyone. Other players near the speaker see the NPC's lines as bubbles.
 
 ### How many players?
 
 The server and network are not the limit: lockstep sends a few hundred bytes per turn, and the engine
 steps a turn in well under a millisecond, so a laptop could run dozens. The limits are in the game:
 
-- **Map space:** areas are sized for one player. With 8 or more, rooms and corridors jam. The world
-  generator and the map generators get a party size, and areas grow by about 15% per extra player.
+- **Map space:** areas are sized for one player and the owner does not want them smaller. With 8 or
+  more, rooms and corridors jam. The map generators get a party size, and areas grow by about 15% per
+  extra player (map sizes are fixed per small/medium/large today: 32×24, 44×32, 56×40).
 - **Turns:** the more players, the more turns end on the deadline rather than when everyone has acted.
-  That is fine (no waiting), but with 10 or more the world mostly moves on the clock.
+  §2.1 keeps this from slowing walking and talking.
 - **Screen:** the camera frames the local player. Name tags, chat bubbles and the turn indicator become
   crowded with many players on one screen, and phones show fewer of them.
 - **Balance:** hostile numbers and health scale with party size. This is tested by bots up to 12.
@@ -63,25 +97,27 @@ Plan: design and test for 8; allow up to 12 as an option, tested with bots and a
 
 | # | Milestone | Content | Exit check |
 |---|---|---|---|
-| MP0 | Hosting groundwork (useful even for single player) | `systemd` unit and env file; deploy script; `/healthz`; **host access code** (`ANYWORLD_HOST_CODE`) required to create AI worlds or rooms, so strangers cannot spend the API key; optional split hosting (§5): `ALLOWED_ORIGINS` (CORS) on the server and `VITE_ANYWORLD_SERVER` in the client build | the game runs on the laptop, reachable over HTTPS from a phone on 4G |
-| MP1 | Engine: parties | `GameState.players` (map) instead of `player`; per-player inventory, knowledge, levelling, statuses and FOV; `stepTurn(state, inputs[])` with a fixed resolution order; enemy AI picks among players; downed / rejoin / party-loss rules; exit countdown; hostile strength scaled by party size; single player = a party of one, and all current tests still pass | engine tests, bots playing 2–4 player runs over all 20 worlds with 0 crashes and no soft-locks |
-| MP2 | Room server | WebSocket on the existing `node:http` server (`ws` package); rooms, roster, reconnect tokens, the turn deadline, input log and replay, desync hashes, rate limits, persistence | server tests with 4 scripted clients, kill and restart mid-run, packet delay and loss |
-| MP3 | Client | lobby (create, share link and QR code, roster, ready, world picker); other players rendered with name tags and colours; turn indicator ("2 of 3 acted"), never blocking; downed or spectator camera; chat (bubbles and side column, mobile chat button); en and nb strings | Playwright with 3 browser contexts (desktop and phone) playing one run together |
-| MP4 | GM and dialogue for parties | GM context with all players and hooks per player (low health); dialogue and trade per player without pausing others; party-aware world-generation prompt; recordings for demo rooms | GM checks still refuse fiat; demo rooms play without AI |
-| MP5 | Verify | review, playtest and fix rounds as in M5; latency playtest through the real tunnel; a short session with real people | DoD table in `docs/progress/MP.md` |
+| MP0 | Hosting groundwork (useful for single player too) | done in code: `systemd` unit and env file, `scripts/deploy.sh`, `/api/health`, **host access code** (`ANYWORLD_HOST_CODE`), split hosting (`ALLOWED_ORIGINS` on the server, `ANYWORLD_SERVER_URL` at build time), Node.js version guard | **open:** the single-player game runs on the laptop, reachable over HTTPS from a phone on 4G |
+| MP1 | Engine: parties | `GameState.players` (map) instead of `player`, per-player inventory, knowledge, levelling, statuses, FOV and remembered rooms, second chance (`mercyUsed`) and `pendingChoice` (dialogue, trade, offers; today one shared field used in ~65 places); `stepTurn(state, inputs[])` with a fixed resolution order; enemy AI picks among players and skips busy ones (§2.1); party-loss rule; exit countdown; hostile strength and map size scaled by party size; single player = a party of one, and all current tests still pass. Size: about 120 `state.player` uses in 24 engine files plus 53 `playerActor(ctx)` calls | engine tests; **multi-player bots** (the sim bots drive one player today) playing 2–4 player runs over all 21 worlds with 0 crashes and no soft-locks |
+| MP2 | Room server | WebSocket on the existing `node:http` server (`ws` package, not yet a dependency); rooms, roster, reconnect tokens, turn deadline with active/busy players and travel cadence (§2.1), input log, snapshots and replay, engine-version check, desync hashes, world upload and validation, rate limits, persistence | server tests with 4 scripted clients, kill and restart mid-run, a deploy with a new engine version closes rooms with a toast, packet delay and loss |
+| MP3 | Client | lobby (create, share link and QR code, roster, ready, world picker); other players with name tags and colours; per-player view (fog, compass, hints, persuade odds are already computed per state and become per player); turn indicator ("2 of 3 acted"), never blocking; chat as in §1 (bubbles, side column, typing indicator, emotes and map pings, phone chat button); en and nb strings | Playwright with 3 browser contexts (desktop and phone) playing one run together and chatting |
+| MP4 | GM and dialogue for parties | **move the GM from the browser to the server**: today the request queue (`src/client/gm-director.ts`) runs in the client and may use the player's own key; in rooms it runs next to the room. GM context with all players and per-player hooks (low health); dialogue and trade per player without pausing others; party-aware world-generation prompt; recordings for demo rooms | GM checks still refuse fiat; demo rooms play without AI |
+| MP5 | Verify | review, playtest and fix rounds as in M5; latency playtest through the real exposure path; a short session with real people, judged on "was it fast, did we talk" | DoD table in `docs/progress/MP.md` |
 
-The orchestration would follow M3–M5: builders own directories (engine, server, client, llm), then
-integration, review and fix rounds, and a gate. MP1 is the largest and riskiest part. MP0 can start at
-once and does not depend on the rest.
+Order: finish MP0 first (deploy the single-player game to the laptop and pass its exit check), so
+hosting is proven before the large engine work. The orchestration would follow M3–M5: builders own
+directories (engine, server, client, llm), then integration, review and fix rounds, and a gate. MP1 is
+the largest and riskiest part.
 
 ## 4. Hosting on the laptop (CachyOS)
 
-1. **Packages:** `sudo pacman -S --needed nodejs npm git tailscale`. Clone the repo to `/opt/anyworld`
-   and run `npm ci && npm run build`.
+Step by step in [HOSTING.md](HOSTING.md). In short:
+
+1. **Packages:** a patched Node.js (22.23.4+, 24.22.1+ or 26.12.1+; HOSTING.md §1), npm and git. Clone
+   the repo to `/opt/anyworld` and run `npm ci && npm run build`.
 2. **Service:** a dedicated user `anyworld`. Keys go in `/etc/anyworld.env` (mode 600), for example
-   `ANTHROPIC_API_KEY=…`, `ANYWORLD_HOST_CODE=…` and `PORT=8787`. A `systemd` unit runs
-   `npm start` with `Restart=always`, `ProtectSystem=strict` and `ReadWritePaths=/var/lib/anyworld`.
-   Enable it with `systemctl enable --now anyworld`.
+   `ANTHROPIC_API_KEY=…`, `ANYWORLD_HOST_CODE=…` and `PORT=8787`. `deploy/anyworld.service` runs
+   `npm start` with `Restart=always`, `ProtectSystem=strict` and `StateDirectory=anyworld`.
 3. **Keep it awake:** in `/etc/systemd/logind.conf` set `HandleLidSwitch=ignore` and
    `HandleLidSwitchExternalPower=ignore`, and turn off automatic suspend in the desktop power settings.
 4. **Expose it**, with no ports opened on the home router either way:
@@ -101,10 +137,10 @@ once and does not depend on the rest.
      the VPS. This is the do-it-yourself version of what Tailscale Funnel and Cloudflare Tunnel provide.
    - Router port-forward with Caddy and dynamic DNS also works, but it exposes the home IP and fails
      behind CGNAT. Not recommended.
-5. **Updates:** `scripts/deploy.sh` (MP0) runs git pull, `npm ci`, the build and a service restart.
-   Rooms survive restarts (§2).
-6. **Safety:** set a spending limit on the API key; the host code (MP0) and rate limits stop casual
-   abuse. Nothing else on the laptop is exposed.
+5. **Updates:** `scripts/deploy.sh` runs git pull, `npm ci`, the build and a service restart. Rooms
+   survive a restart; a deploy that changes the engine closes them gracefully (§2).
+6. **Safety:** set a spending limit on the API key; the host code and rate limits stop casual abuse.
+   Nothing else on the laptop is exposed.
 
 ## 5. Web pages elsewhere, server at home
 
@@ -114,7 +150,7 @@ multiplayer edition. Both options:
 | | One origin (recommended) | Pages front + home server |
 |---|---|---|
 | Page | served by the laptop (`play.dv8.no` or `…ts.net`) | GitHub Pages, optionally at `anyworld.dv8.no` (a CNAME to `narve.github.io` plus the custom domain set in the repo's Pages settings) |
-| API and WebSocket | same origin, no CORS | `https://play.dv8.no` / `wss://…`; the server needs CORS for the Pages origin, and the client a build-time server URL |
+| API and WebSocket | same origin, no CORS | `https://play.dv8.no` / `wss://…`; the server needs CORS for the Pages origin (`ALLOWED_ORIGINS`), and the client a build-time server URL (`ANYWORLD_SERVER_URL`) |
 | Auth | a cookie works | a token in headers (third-party cookies are blocked) — or keep both under `dv8.no` so they count as the same site |
 | When the laptop is off | nothing loads | the page still loads and plays demo worlds; online features say "server offline" |
 
@@ -126,9 +162,20 @@ A good combination: GitHub Pages at `anyworld.dv8.no` stays the always-on offlin
 
 ## 6. Decisions for the owner
 
-Decided (2026-10-25): co-op only; party of 8 by default (12 as an option); turn deadline 1–5 s chosen
-per room (default 2 s). Exposure: to be decided, probably WireGuard (see §4).
+Decided:
+- 2026-10-25: co-op only; party of 8 by default (12 as an option); turn deadline 1–5 s chosen per room
+  (default 2 s).
+- 2026-10-26: fast and fun first, chat is a big part of the game; every player has their own second
+  chance (straight back up at half health), instead of waiting out the area as a downed spectator;
+  backward compatibility is not a priority (fail gracefully, no migrations).
 
 Open:
-1. Exposure: WireGuard with a small public relay (VPS), or WireGuard only for invited devices?
-2. Start with MP0 now (hosting, host code, optional split hosting) before the multiplayer work?
+1. **Exposure:** WireGuard with a small public relay (VPS), WireGuard only for invited devices, or
+   Tailscale Funnel / Cloudflare Tunnel (no relay to run).
+2. **A second fall:** after their second chance is used, what happens to a player who falls again?
+   Proposal: they are down, watch through a teammate's camera, and get up at half health when a
+   teammate stands next to them for one turn (or by themselves after 20 turns), so nobody sits out long.
+3. **Second chance on every difficulty?** In single player it is Gentle only. Proposal: one per player
+   on Gentle and Normal, none on Hard and Brutal.
+4. **The GM and chat:** should the game master read player chat and react to it (fun, but it adds cost
+   and sends the players' messages to the AI provider)? Proposal: off by default, a room option.
