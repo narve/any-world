@@ -27,7 +27,8 @@ as it fails gracefully (a new game or a closed room, with a short toast); no mig
   chat button on phones. Typing never triggers game keys and never costs a turn. Quick reactions (a few
   one-tap emotes and "follow me" / "wait" / "help" pings on the map) for phones. History of the last 100
   lines per room, 200 characters per message, 1 message/s. A player who is typing shows a "…" bubble.
-- **Joining:** the host creates a room and shares a link (`…/?room=K7QX`) and a QR code. Players pick a
+- **Joining:** the host creates a room and shares a link (`…/?room=K7QX`) and a QR code; open rooms are
+  also listed on the start page. Players pick a
   name and a colour; no accounts. Late joiners appear next to the host at the next turn.
 - **Falling in a fight:** every player has their own second chance. The first time a player would be
   defeated they get straight back up at half health (as Gentle's second chance does in single player,
@@ -102,8 +103,8 @@ Plan: design and test for 8; allow up to 12 as an option, tested with bots and a
 |---|---|---|---|
 | MP0 | Hosting groundwork (useful for single player too) | done in code: `systemd` unit and env file, `scripts/deploy.sh`, `/api/health`, **host access code** (`ANYWORLD_HOST_CODE`), split hosting (`ALLOWED_ORIGINS` on the server, `ANYWORLD_SERVER_URL` at build time), Node.js version guard | **open:** the single-player game runs on the laptop, reachable over HTTPS from a phone on 4G |
 | MP1 | Engine: parties | `GameState.players` (map) instead of `player`, per-player inventory, knowledge, levelling, statuses, FOV and remembered rooms, second chance (`mercyUsed`) and `pendingChoice` (dialogue, trade, offers; today one shared field used in ~65 places); `stepTurn(state, inputs[])` with a fixed resolution order; enemy AI picks among players and skips busy ones (§2.1); party-loss rule; exit countdown; hostile strength and map size scaled by party size; single player = a party of one, and all current tests still pass. Size: about 120 `state.player` uses in 24 engine files plus 53 `playerActor(ctx)` calls | engine tests; **multi-player bots** (the sim bots drive one player today) playing 2–4 player runs over all 21 worlds with 0 crashes and no soft-locks |
-| MP2 | Room server | WebSocket on the existing `node:http` server (`ws` package, not yet a dependency); rooms, roster, reconnect tokens, turn deadline with active/busy players and travel cadence (§2.1), input log, snapshots and replay, engine-version check, desync hashes, world upload and validation, rate limits, persistence | server tests with 4 scripted clients, kill and restart mid-run, a deploy with a new engine version closes rooms with a toast, packet delay and loss |
-| MP3 | Client | lobby (create, share link and QR code, roster, ready, world picker); other players with name tags and colours; per-player view (fog, compass, hints, persuade odds are already computed per state and become per player); turn indicator ("2 of 3 acted"), never blocking; chat as in §1 (bubbles, side column, typing indicator, emotes and map pings, phone chat button); en and nb strings | Playwright with 3 browser contexts (desktop and phone) playing one run together and chatting |
+| MP2 | Room server | WebSocket on the existing `node:http` server (`ws` package, not yet a dependency); rooms and the public room list (`GET /api/rooms`), roster, reconnect tokens, turn deadline with active/busy players and travel cadence (§2.1), input log, snapshots and replay, engine-version check, desync hashes, world upload and validation, rate limits, persistence | server tests with 4 scripted clients, kill and restart mid-run, a deploy with a new engine version closes rooms with a toast, packet delay and loss |
+| MP3 | Client | lobby (create, share link and QR code, public list of open rooms on the start page, roster, ready, world picker); other players with name tags and colours; per-player view (fog, compass, hints, persuade odds are already computed per state and become per player); turn indicator ("2 of 3 acted"), never blocking; chat as in §1 (bubbles, side column, typing indicator, emotes and map pings, phone chat button); en and nb strings | Playwright with 3 browser contexts (desktop and phone) playing one run together and chatting |
 | MP4 | GM and dialogue for parties | **move the GM from the browser to the server**: today the request queue (`src/client/gm-director.ts`) runs in the client and may use the player's own key; in rooms it runs next to the room. GM context with all players and per-player hooks (low health); dialogue and trade per player without pausing others; party-aware world-generation prompt; recordings for demo rooms | GM checks still refuse fiat; demo rooms play without AI |
 | MP5 | Verify | review, playtest and fix rounds as in M5; latency playtest through the real exposure path; a short session with real people, judged on "was it fast, did we talk" | DoD table in `docs/progress/MP.md` |
 
@@ -207,8 +208,10 @@ Decided:
 - 2026-10-26 (single player, not yet implemented): bosses get generally a bit more health. Unique
   hostiles were left weaker by the 90 % player hit chance (static boss risk about halved).
 
-Open:
-1. **The AI game master in rooms anyone can create** runs on the owner's API key. Proposal: rooms with
-   a recorded or imported world use the offline GM (canned lines) unless the creator enters the host
-   access code; making a new AI world still needs the code, as today.
-2. **Finding rooms:** link-only (the proposal), or also a public list of open rooms on the start page?
+- 2026-10-26: the AI game master runs in every room, also rooms created without the host access code;
+  its cost is not a concern (the spending limit on the API key is the safeguard). Making a new AI world
+  still needs the code, as today.
+- 2026-10-26: rooms are listed publicly: the start page shows open rooms (world, players, joinable),
+  besides joining by link.
+
+Open: none (2026-10-26).
