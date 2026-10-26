@@ -39,8 +39,11 @@ import type {
   TradeView,
 } from './ui/viewmodel';
 
-/** HP below this fraction is dangerous */
-export const HP_DANGER = 0.3;
+/**
+ * HP below this fraction is dangerous: the HUD warns, a red vignette rims the screen and a healing
+ * item glows (35 %: the HUD badge alone was easy to miss, FABLE-GAMEPLAY-REVIEW.md §1.5)
+ */
+export const HP_DANGER = 0.35;
 /** a custom resource below this fraction is low */
 export const RESOURCE_DANGER = 0.25;
 

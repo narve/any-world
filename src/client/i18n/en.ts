@@ -525,7 +525,7 @@ const en = {
   'start.demosIn': '{language}: {count, plural, one {# world} other {# worlds}}',
   'start.worldLanguage': 'Written in {language}',
   'difficulty.gentle.label': 'Gentle',
-  'difficulty.gentle.hint': 'Forgiving. The GM may not add harsh rules without a counterweight.',
+  'difficulty.gentle.hint': 'Forgiving. Your first defeat is a second chance, and the GM may not add harsh rules without a counterweight.',
   'difficulty.normal.label': 'Normal',
   'difficulty.normal.hint': 'Fair but deadly. Permadeath, as intended.',
   'difficulty.hard.label': 'Hard',

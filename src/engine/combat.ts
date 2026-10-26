@@ -302,7 +302,8 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
 
 function killPlayer(ctx: Ctx, killerId: string | undefined): void {
   const p = playerActor(ctx);
-  if (switchesOf(ctx).permadeathMercy && !ctx.s.mercyUsed) {
+  // a world's mercy rule, or Gentle's second chance: once per run
+  if ((switchesOf(ctx).permadeathMercy || profileOf(ctx.s).secondChance) && !ctx.s.mercyUsed) {
     ctx.s.mercyUsed = true;
     p.hp = Math.max(1, Math.ceil(maxHp(ctx, p) / 2));
     p.ai.lowHp = false;

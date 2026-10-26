@@ -132,6 +132,31 @@ describe('combat math', () => {
     expect(m.s.status).toBe('lost');
   });
 
+  it('Gentle gives one second chance (half health), Normal none; it is not stacked with a mercy rule', () => {
+    const gentle = setup();
+    gentle.s.difficulty = 'gentle';
+    const gctx = ctxFor(gentle.w, gentle.s);
+    dealDamage(gctx, gentle.p, 999, 'physical');
+    expect(gentle.s.status).toBe('playing');
+    expect(gentle.p.hp).toBe(15);
+    expect(gctx.s.log.some((l) => l.key === 'log.mercy')).toBe(true);
+    dealDamage(gctx, gentle.p, 999, 'physical');
+    expect(gentle.s.status).toBe('lost');
+    const normal = setup();
+    normal.s.difficulty = 'normal';
+    dealDamage(ctxFor(normal.w, normal.s), normal.p, 999, 'physical');
+    expect(normal.s.status).toBe('lost');
+    // a world mercy rule on Gentle is still one mercy, not two
+    const both = setup((x) => {
+      x.rules = [{ id: 'r', name: 'R', description: 'd', switches: { permadeathMercy: true } }];
+    });
+    both.s.difficulty = 'gentle';
+    const bctx = ctxFor(both.w, both.s);
+    dealDamage(bctx, both.p, 999, 'physical');
+    dealDamage(bctx, both.p, 999, 'physical');
+    expect(both.s.status).toBe('lost');
+  });
+
   it('durability: equipped weapons wear out and break', () => {
     const { w, s, p } = setup((x) => {
       x.rules = [{ id: 'r', name: 'R', description: 'd', switches: { durability: true } }];

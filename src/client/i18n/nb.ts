@@ -670,7 +670,7 @@ const nb = {
   'start.demosIn': '{language}: {count, plural, one {# verden} other {# verdener}}',
   'start.worldLanguage': 'Skrevet på {language}',
   'difficulty.gentle.label': 'Mild',
-  'difficulty.gentle.hint': 'Tilgivende. Spillmesteren kan ikke innføre harde regler uten en motvekt.',
+  'difficulty.gentle.hint': 'Tilgivende. Første nederlag gir deg en ny sjanse, og spillmesteren kan ikke innføre harde regler uten en motvekt.',
   'difficulty.normal.label': 'Normal',
   'difficulty.normal.hint': 'Rettferdig, men dødelig. Permadød, slik det er ment.',
   'difficulty.hard.label': 'Vanskelig',

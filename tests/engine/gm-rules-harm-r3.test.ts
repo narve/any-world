@@ -98,6 +98,18 @@ describe('GM rule harm: permadeathMercy counted as help when it can no longer he
     const res = applyGmActions(s0, [add(r)], env(w));
     expect(ids(res.state)).not.toContain('fake_mercy');
   });
+
+  it('gentle refuses a mercy-counterweighted drain: Gentle already grants the second chance', () => {
+    const w = testWorld();
+    // 1 damage every 10 turns = 10 hp/100t, exactly what the mercy (30 hp / 3) would offset
+    const r = rule('fake_mercy', {
+      playerTriggers: [onTurn(10, [{ type: 'damage', amount: { base: 1 }, damageType: 'physical' }])],
+      switches: { permadeathMercy: true },
+    });
+    expect(estimateRuleImpact(w, r).hpPer100).toBeLessThanOrEqual(1);
+    const res = applyGmActions(game('gentle', w), [add(r)], env(w));
+    expect(ids(res.state)).not.toContain('fake_mercy');
+  });
 });
 
 // ---------------------------------------------------------------------------

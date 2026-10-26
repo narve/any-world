@@ -85,6 +85,9 @@ export const GFX_RELOAD_AFTER_MS = 5000;
 
 const NO_VERBS: InputVerbs = { talk: false, sneak: false, search: false, persuade: false };
 
+/** the low-health vignette's colour (a world's danger colour may be orange or green) */
+const LOW_HP_RED = '#e0303c';
+
 export function createUi(root: HTMLElement, cb: UiCallbacks, opts: CreateUiOptions = {}): GameUi {
   return new UiRoot(root, cb, opts);
 }
@@ -461,12 +464,14 @@ class UiRoot implements GameUi {
     this.onboard.update(g.onboarding, this.mode, this.ctxValue.vocab, g.transitionName, !playing || this.narration.visible || g.mode !== 'normal');
     this.gameEl.classList.toggle('has-onboarding', this.onboard.visible);
 
-    // screen-edge vignette in the colour of whatever is draining health
+    // screen-edge vignette in the colour of whatever is draining health; low health itself is
+    // always red, whatever the world's palette
     const drain = (g.hud.danger ?? []).find((d) => d.draining);
     this.vignette.hidden = !drain;
     if (drain) {
-      this.vignette.style.setProperty('--vignette', drain.color);
+      this.vignette.style.setProperty('--vignette', drain.id === 'hp' ? LOW_HP_RED : drain.color);
       this.vignette.dataset.level = drain.level;
+      this.vignette.dataset.vital = drain.id === 'hp' ? 'hp' : 'resource';
     }
   }
 

@@ -443,8 +443,9 @@ const grantsMercy = (r: RuleVariant): boolean => !!r.switches?.permadeathMercy;
  * (a world rule first, then the earliest GM rule) and to none once it is spent.
  */
 function liveImpacts(ctx: Ctx, live: readonly ActiveRuleEntry[]): Map<ActiveRuleEntry, RuleImpact> {
-  let credited = !!ctx.s.mercyUsed || live.some((e) => e.source !== 'gm' && grantsMercy(e.rule));
-  const worldHolder = ctx.s.mercyUsed ? null : live.find((e) => e.source !== 'gm' && grantsMercy(e.rule));
+  const granted = mercyGranted(ctx);
+  let credited = granted || live.some((e) => e.source !== 'gm' && grantsMercy(e.rule));
+  const worldHolder = granted ? null : live.find((e) => e.source !== 'gm' && grantsMercy(e.rule));
   const out = new Map<ActiveRuleEntry, RuleImpact>();
   for (const e of live) {
     let mercyHelps = false;
@@ -460,9 +461,14 @@ function liveImpacts(ctx: Ctx, live: readonly ActiveRuleEntry[]): Map<ActiveRule
   return out;
 }
 
+/** the mercy is spent, or the difficulty grants it anyway (Gentle's second chance): a mercy switch changes nothing */
+function mercyGranted(ctx: Ctx): boolean {
+  return !!ctx.s.mercyUsed || profileOf(ctx.s).secondChance;
+}
+
 /** whether a mercy switch on a rule joining (or staying in) `others` would help: not spent, not granted elsewhere */
 function mercyWouldHelp(ctx: Ctx, others: readonly ActiveRuleEntry[]): boolean {
-  return !ctx.s.mercyUsed && !others.some((e) => grantsMercy(e.rule));
+  return !mercyGranted(ctx) && !others.some((e) => grantsMercy(e.rule));
 }
 
 /**

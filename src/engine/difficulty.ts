@@ -4,6 +4,7 @@
  *     player's side (combat.dealDamage)
  *   - the player's natural hp regeneration interval (turn.ts)
  *   - the harm a GM rule may add or take away (gm.ts add_rule / remove_rule, see rules.ts)
+ *   - whether the first defeat of a run is a second chance (combat.killPlayer)
  * Saves keep the band in GameState.difficulty; states without one play as 'normal'.
  */
 import { Difficulty } from '../schema/gm';
@@ -28,13 +29,19 @@ export interface DifficultyProfile {
   ruleHarm: number;
   /** most net harm all GM-added rules together may have */
   ruleHarmTotal: number;
+  /**
+   * The first time the player would be defeated they get up again at half health, as a world's
+   * permadeathMercy rule does (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §1.5: Gentle did not feel
+   * gentle; every death came with a tool or escape unused).
+   */
+  secondChance: boolean;
 }
 
 export const DIFFICULTY_PROFILES: Record<Difficulty, DifficultyProfile> = {
-  gentle: { hostileHp: 0.8, hostileDamage: 0.8, regenEvery: 0.75, ruleHarm: 1, ruleHarmTotal: 1 },
-  normal: { hostileHp: 1, hostileDamage: 1, regenEvery: 1, ruleHarm: 6, ruleHarmTotal: 10 },
-  hard: { hostileHp: 1.15, hostileDamage: 1.15, regenEvery: 1.25, ruleHarm: 12, ruleHarmTotal: 20 },
-  brutal: { hostileHp: 1.3, hostileDamage: 1.3, regenEvery: 1.5, ruleHarm: 20, ruleHarmTotal: 35 },
+  gentle: { hostileHp: 0.8, hostileDamage: 0.8, regenEvery: 0.75, ruleHarm: 1, ruleHarmTotal: 1, secondChance: true },
+  normal: { hostileHp: 1, hostileDamage: 1, regenEvery: 1, ruleHarm: 6, ruleHarmTotal: 10, secondChance: false },
+  hard: { hostileHp: 1.15, hostileDamage: 1.15, regenEvery: 1.25, ruleHarm: 12, ruleHarmTotal: 20, secondChance: false },
+  brutal: { hostileHp: 1.3, hostileDamage: 1.3, regenEvery: 1.5, ruleHarm: 20, ruleHarmTotal: 35, secondChance: false },
 };
 
 export function isDifficulty(v: unknown): v is Difficulty {
