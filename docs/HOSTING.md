@@ -62,17 +62,18 @@ Also set a spending limit on the provider key itself.
 
 ## 4. Reaching it from the internet
 
-Decided: **WireGuard**, with the server on the Dell laptop (see [the multiplayer plan, §4](MULTIPLAYER-PLAN.md#4-hosting)).
-Still open: a public VPS relay (open links) or WireGuard-only access for invited devices. In every option the server stays on `HOST=127.0.0.1` and the tunnel or proxy connects to it, so no
+Decided: **WireGuard through the owner's VPS**, with the server on the Dell laptop at
+`https://any-game.dv8.no` and the pages at `https://any.dv8.no` (see [the multiplayer plan, §4–5](MULTIPLAYER-PLAN.md#4-hosting)).
+In every option the server stays on `HOST=127.0.0.1` and the tunnel or proxy connects to it, so no
 port on the home router is opened:
 
 - **Tailscale Funnel:** `sudo tailscale funnel --bg 8787` gives `https://<machine>.<tailnet>.ts.net`.
-- **Cloudflare Tunnel:** `cloudflared` routes a name such as `play.dv8.no` to `http://localhost:8787`.
-- **WireGuard + VPS:** Caddy on the VPS serves `play.dv8.no` and proxies through the tunnel. Set
+- **Cloudflare Tunnel:** `cloudflared` routes a name such as `any-game.dv8.no` to `http://localhost:8787`.
+- **WireGuard + VPS (chosen):** Caddy on the VPS serves `any-game.dv8.no` and proxies through the tunnel. Set
   `TRUST_PROXY=1` so rate limits see the real client address. A minimal Caddyfile:
 
   ```
-  play.dv8.no {
+  any-game.dv8.no {
       reverse_proxy 10.66.0.2:8787
   }
   ```
@@ -83,10 +84,10 @@ port on the home router is opened:
 ## 5. Web pages hosted elsewhere (optional)
 
 The simplest setup is the one above: the server also serves the game's pages. To keep the pages on
-GitHub Pages (for example at `anyworld.dv8.no`) and only the server at home:
+GitHub Pages (at `any.dv8.no`) and only the server at home:
 
-1. On the server: `ALLOWED_ORIGINS=https://anyworld.dv8.no` (or `https://narve.github.io`).
-2. Build the pages with the server's address: `ANYWORLD_SERVER_URL=https://play.dv8.no npm run build:static`.
+1. On the server: `ALLOWED_ORIGINS=https://any.dv8.no` (add `https://narve.github.io` while the old address is in use).
+2. Build the pages with the server's address: `ANYWORLD_SERVER_URL=https://any-game.dv8.no npm run build:static`.
    In the Pages workflow, set it as an environment variable on the build step. Without it, the pages are
    the offline demo, as now.
 3. Both must be HTTPS: a page served over HTTPS cannot call an `http://` server.

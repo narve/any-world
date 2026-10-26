@@ -28,6 +28,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build:static
+        env:
+          # the game server for online play (repository variable, e.g. https://any-game.dv8.no);
+          # unset = an offline demo build, as before
+          ANYWORLD_SERVER_URL: ${{ vars.ANYWORLD_SERVER_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist/static

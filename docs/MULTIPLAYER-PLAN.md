@@ -31,12 +31,14 @@ as it fails gracefully (a new game or a closed room, with a short toast); no mig
   name and a colour; no accounts. Late joiners appear next to the host at the next turn.
 - **Falling in a fight:** every player has their own second chance. The first time a player would be
   defeated they get straight back up at half health (as Gentle's second chance does in single player,
-  per player instead of per run). See §6 for what happens on a second fall. The run is lost only when
-  everyone is down at once.
+  per player instead of per run; on Gentle and Normal). A second fall leaves them down, watching
+  through a teammate's camera, until a teammate stands next to them for one turn or 20 turns pass;
+  then they are back at half health. The run is lost only when everyone is down at once.
 - **Area exits:** the first player to take an exit starts a 10-second countdown ("The party moves on");
   everyone is pulled along when it ends. No one waits at the door.
-- **The AI game master** runs only on the server (keys stay there). It sees the whole party, and its
-  actions go into the shared turn stream like any other input.
+- **The AI game master** runs only on the server (keys stay there). It sees the whole party and reads
+  the chat (it may answer a joke or weave a plan into the story), and its actions go into the shared
+  turn stream like any other input.
 
 ## 2. Architecture
 
@@ -112,7 +114,9 @@ the largest and riskiest part.
 
 ## 4. Hosting
 
-**Decided (2026-10-26):** production runs on the **Dell laptop**, reached over **WireGuard**.
+**Decided (2026-10-26):** production runs on the **Dell laptop**, reached over **WireGuard** through the
+owner's **VPS** (Caddy, HTTPS, public links): `any-game.dv8.no` for the server, `any.dv8.no` for the
+pages (§5).
 Development and testing run on the development laptop (same setup, or just `npm run dev`; multi-player
 tests use several browser contexts against it).
 
@@ -132,14 +136,14 @@ same way). In short:
      game is then at `https://<laptop>.<tailnet>.ts.net`, with TLS and WebSockets handled. It cannot use
      a custom domain.
    - **Cloudflare Tunnel (to use dv8.no):** move the DNS for `dv8.no` to Cloudflare (free plan; the
-     whole domain), install `cloudflared`, and route `play.dv8.no` to `http://localhost:8787`. It
+     whole domain), install `cloudflared`, and route a name such as `any-game.dv8.no` to `http://localhost:8787`. It
      supports WebSockets, and Cloudflare Access can put a login in front if wanted.
-   - **WireGuard (chosen):** WireGuard connects devices that hold a config. On its
+   - **WireGuard with a VPS relay (chosen):** WireGuard connects devices that hold a config. On its
      own it is a private network: each player needs the WireGuard app and a config from the owner (fine
      for a few friends, not for open links). For public links, run a small VPS with a public IP as a
      relay. The laptop keeps a WireGuard tunnel to the VPS (`PersistentKeepalive`, so no router setup at
-     home). On the VPS, Caddy serves `play.dv8.no` with automatic HTTPS and proxies (WebSockets
-     included) through the tunnel to `10.x.x.2:8787`. DNS: an A record for `play.dv8.no` pointing to
+     home). On the VPS, Caddy serves `any-game.dv8.no` with automatic HTTPS and proxies (WebSockets
+     included) through the tunnel to `10.x.x.2:8787`. DNS: an A record for `any-game.dv8.no` pointing to
      the VPS. This is the do-it-yourself version of what Tailscale Funnel and Cloudflare Tunnel provide.
    - Router port-forward with Caddy and dynamic DNS also works, but it exposes the home IP and fails
      behind CGNAT. Not recommended.
@@ -150,21 +154,35 @@ same way). In short:
 
 ## 5. Web pages elsewhere, server at home
 
-This is possible, but serving everything from the laptop is simpler and is the recommendation for the
-multiplayer edition. Both options:
+**Decided (2026-10-26): pages and server apart, both under `dv8.no`.**
+
+- **`any.dv8.no`: the web pages.** The static build on GitHub Pages (already built and deployed by
+  `.github/workflows/pages.yml`), with `any.dv8.no` as its custom domain: a CNAME record to
+  `narve.github.io` and the domain set in the repo's Pages settings. Always on: when the Dell is off,
+  the page still loads and plays the demo worlds, and online features say "server offline".
+- **`any-game.dv8.no`: the game server** (API now, WebSocket rooms later). An A record to the VPS;
+  Caddy there proxies through WireGuard to the Dell.
+- **Wiring** (already supported since MP0): the Pages build gets `ANYWORLD_SERVER_URL=https://any-game.dv8.no`
+  (a repository variable for the workflow), the server `ALLOWED_ORIGINS=https://any.dv8.no`. Both names
+  are under `dv8.no`, so they count as the same site: cookies and tokens are not third-party.
+- **For MP2:** CORS does not cover WebSockets, so the room server must check the `Origin` header of each
+  WebSocket upgrade against `ALLOWED_ORIGINS` itself.
+
+The two layouts compared:
 
 | | One origin (recommended) | Pages front + home server |
 |---|---|---|
-| Page | served by the laptop (`play.dv8.no` or `…ts.net`) | GitHub Pages, optionally at `anyworld.dv8.no` (a CNAME to `narve.github.io` plus the custom domain set in the repo's Pages settings) |
-| API and WebSocket | same origin, no CORS | `https://play.dv8.no` / `wss://…`; the server needs CORS for the Pages origin (`ALLOWED_ORIGINS`), and the client a build-time server URL (`ANYWORLD_SERVER_URL`) |
+| Page | served by the server (e.g. `any-game.dv8.no`) | GitHub Pages at `any.dv8.no` (chosen) |
+| API and WebSocket | same origin, no CORS | `https://any-game.dv8.no` / `wss://…`; the server needs CORS for the Pages origin (`ALLOWED_ORIGINS`), and the client a build-time server URL (`ANYWORLD_SERVER_URL`) |
 | Auth | a cookie works | a token in headers (third-party cookies are blocked) — or keep both under `dv8.no` so they count as the same site |
 | When the laptop is off | nothing loads | the page still loads and plays demo worlds; online features say "server offline" |
 
 Both sides must be HTTPS, because an HTTPS page cannot call an `http://` server. Funnel and Cloudflare
 Tunnel both provide that.
 
-A good combination: GitHub Pages at `anyworld.dv8.no` stays the always-on offline demo, with a
-"Play online" button that goes to `play.dv8.no` on the laptop.
+An alternative that keeps one origin and stays always on: Caddy on the VPS serves the static files for
+`any.dv8.no` itself and proxies only `/api` (and later the WebSocket path) to the Dell. It needs a step
+that copies each build to the VPS, so it is not the first choice.
 
 ## 6. Decisions for the owner
 
@@ -174,22 +192,15 @@ Decided:
 - 2026-10-26: fast and fun first, chat is a big part of the game; every player has their own second
   chance (straight back up at half health), instead of waiting out the area as a downed spectator;
   backward compatibility is not a priority (fail gracefully, no migrations).
-
-- 2026-10-26: the server runs on the Dell laptop, exposed over WireGuard; development and testing on
-  the development laptop.
+- 2026-10-26: the server runs on the Dell laptop, exposed over WireGuard through the owner's VPS
+  (public links, Caddy with HTTPS); pages at `any.dv8.no` (GitHub Pages), server at
+  `any-game.dv8.no`; development and testing on the development laptop.
+- 2026-10-26: a second fall: the player is down and watches through a teammate's camera; they get up
+  at half health when a teammate stands next to them for one turn, or by themselves after 20 turns.
+- 2026-10-26: the second chance applies on Gentle and Normal (one per player), not on Hard and Brutal.
+- 2026-10-26: the game master reads the player chat and may react to it. The lobby says so in one line,
+  since chat then goes to the AI provider.
 
 Open:
-1. **WireGuard: public links or invited devices?** (a) A small VPS relay with Caddy (§4) gives open
-   `https://play.dv8.no` links anyone can join. (b) WireGuard only: each player installs the WireGuard
-   app with a config from the owner and opens `http://10.66.0.2:8787`. That works for a few friends,
-   but the page is then not a secure context (no HTTPS), so phone features that need one (clipboard
-   share, installing as an app) are unavailable unless the laptop also gets a certificate (e.g. Caddy
-   with a DNS challenge for a name that points to the WireGuard address). Proposal: start with (b)
-   for testing with friends, add (a) when rooms should be open by link.
-2. **A second fall:** after their second chance is used, what happens to a player who falls again?
-   Proposal: they are down, watch through a teammate's camera, and get up at half health when a
-   teammate stands next to them for one turn (or by themselves after 20 turns), so nobody sits out long.
-3. **Second chance on every difficulty?** In single player it is Gentle only. Proposal: one per player
-   on Gentle and Normal, none on Hard and Brutal.
-4. **The GM and chat:** should the game master read player chat and react to it (fun, but it adds cost
-   and sends the players' messages to the AI provider)? Proposal: off by default, a room option.
+1. **Who may create a room?** The host access code guards AI calls today. Proposal: creating a room
+   needs the code too (rooms use the Dell and the GM runs on the owner's key); joining by link does not.
