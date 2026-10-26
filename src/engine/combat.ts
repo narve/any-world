@@ -1,6 +1,7 @@
 /**
- * Combat: to-hit (d20 + stat mod vs AC, natural 20 crits, natural 1 misses), damage with
- * resistances, death, loot, xp and durability.
+ * Combat: to-hit (d20 + stat mod vs AC, natural 20 crits, natural 1 misses; the player's own
+ * attacks only miss on a natural 1-2, PLAYER_HIT_CHANCE), damage with resistances, death, loot,
+ * xp and durability.
  */
 import type { Attack } from '../schema/world';
 import type { ActorInstance } from './types';
@@ -91,6 +92,15 @@ export interface AttackResult {
   roll: number;
 }
 
+/**
+ * The player's attacks land this often whatever the target's armour (natural 20 still crits). Long
+ * streaks of misses at level 1 read as the game cheating (docs/playtest/FABLE-GAMEPLAY-REVIEW.md
+ * §1.1); hostiles keep the full d20 roll so armour and evasion still matter on the player's side.
+ */
+export const PLAYER_HIT_CHANCE = 0.9;
+/** the highest d20 roll that still misses for the player (2 → 18 of 20 = 90 %) */
+const PLAYER_MISS_MAX = Math.round(20 * (1 - PLAYER_HIT_CHANCE));
+
 /** to-hit bonus for an attack */
 export function toHitBonus(ctx: Ctx, a: ActorInstance, atk: Attack): number {
   let b = statMod(getStat(ctx, a, atk.accuracyStat));
@@ -110,7 +120,7 @@ export function performAttack(ctx: Ctx, attacker: ActorInstance, target: ActorIn
   // unaware targets are easier to hit
   if (!isPlayer(ctx, target) && !target.ai.alerted) bonus += 2;
   const ac = getStat(ctx, target, 'ac');
-  const hit = roll === 20 || (roll !== 1 && roll + bonus >= ac);
+  const hit = isPlayer(ctx, attacker) ? roll > PLAYER_MISS_MAX : roll === 20 || (roll !== 1 && roll + bonus >= ac);
   res.hit = hit;
   res.crit = roll === 20;
   const aName = actorName(ctx, attacker);

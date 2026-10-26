@@ -22,20 +22,31 @@ describe('combat math', () => {
     const rat = addActor(w, s, 'rat', { x: 1, y: 2 }, { base: { str: 6, dex: 10, int: 10, ac: 0, speed: 100, sight: 7 } });
     const r1 = performAttack(ctxFor(w, s, new ScriptedRng([1])), p, rat);
     expect(r1).toMatchObject({ hit: false, roll: 1 });
+    // a hostile's natural 1 misses even an AC 0 player; its natural 20 hits through any armour
+    p.base.ac = 0;
+    expect(performAttack(ctxFor(w, s, new ScriptedRng([1])), rat, p).hit).toBe(false);
+    p.base.ac = 99;
+    expect(performAttack(ctxFor(w, s, new ScriptedRng([20])), rat, p)).toMatchObject({ hit: true, crit: true });
   });
 
-  it('hits when d20 + stat mod (+2 vs unaware) >= AC', () => {
+  it('the player hits 90 % of the time (misses only on 1-2), whatever the armour', () => {
     const { w, s, p } = setup();
-    // stick uses STR (12 → +1); rat AC 8; unaware +2 → needs 5
-    const mk = () => addActor(w, s, 'rat', { x: 2, y: 1 }, { hp: 99, maxHp: 99 });
-    let rat = mk();
-    expect(performAttack(ctxFor(w, s, new ScriptedRng([5])), p, rat).hit).toBe(true);
-    s.area.actors = s.area.actors.filter((a) => a !== rat);
-    rat = mk();
-    expect(performAttack(ctxFor(w, s, new ScriptedRng([4])), p, rat).hit).toBe(false);
-    rat.ai.alerted = true; // aware now: needs 7
-    expect(performAttack(ctxFor(w, s, new ScriptedRng([6])), p, rat).hit).toBe(false);
-    expect(performAttack(ctxFor(w, s, new ScriptedRng([7])), p, rat).hit).toBe(true);
+    const g = addActor(w, s, 'golem', { x: 2, y: 1 }, { hp: 9999, maxHp: 9999, base: { str: 16, dex: 10, int: 10, ac: 99, speed: 100, sight: 7 } });
+    g.ai.alerted = true;
+    expect(performAttack(ctxFor(w, s, new ScriptedRng([2])), p, g).hit).toBe(false);
+    expect(performAttack(ctxFor(w, s, new ScriptedRng([3])), p, g).hit).toBe(true);
+    let hits = 0;
+    for (let r = 1; r <= 20; r++) if (performAttack(ctxFor(w, s, new ScriptedRng([r])), p, g).hit) hits++;
+    expect(hits).toBe(18);
+  });
+
+  it('hostiles hit the player when d20 + stat mod >= AC', () => {
+    const { w, s, p } = setup();
+    // rat attacks with DEX 10 (+0); player AC 12 → needs 12
+    const rat = addActor(w, s, 'rat', { x: 2, y: 1 }, { base: { str: 6, dex: 10, int: 10, ac: 8, speed: 100, sight: 7 } });
+    p.base.ac = 12;
+    expect(performAttack(ctxFor(w, s, new ScriptedRng([11])), rat, p).hit).toBe(false);
+    expect(performAttack(ctxFor(w, s, new ScriptedRng([12])), rat, p).hit).toBe(true);
   });
 
   it('damage stays within weapon bounds (normal and critical)', () => {

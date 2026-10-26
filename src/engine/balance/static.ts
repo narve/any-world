@@ -9,6 +9,7 @@
  */
 import type { ActorDef, Attack, Condition, Effect, ItemDef, WorldSpec } from '../../schema/world';
 import { avgAmount, itemProfile } from '../sim/view';
+import { PLAYER_HIT_CHANCE } from '../combat';
 import { AREA_TURNS, estimateRuleImpact, resourceDrainHarm, type RuleImpact } from './rules';
 
 /** extra spawns per area size (mirrors engine/area.ts EXTRA_SPAWNS) */
@@ -38,7 +39,7 @@ export interface AreaBudget {
   name: string;
   playerLevel: number;
   playerHp: number;
-  /** expected player damage per turn against an AC 12 foe with the best weapon so far */
+  /** expected player damage per turn with the best weapon so far (the player hits PLAYER_HIT_CHANCE of the time) */
   playerDpt: number;
   playerAc: number;
   hostiles: HostileBudget[];
@@ -250,10 +251,9 @@ function actorDpt(a: ActorDef, playerAc: number): number {
   return dpt * (a.speed / 100) * rangedBonus;
 }
 
-function weaponDpt(world: WorldSpec, def: ItemDef | null, stats: { str: number; dex: number; int: number }, level: number, targetAc: number): number {
+function weaponDpt(world: WorldSpec, def: ItemDef | null, stats: { str: number; dex: number; int: number }): number {
   const atk = def?.weapon ?? world.player.unarmed;
-  const bonus = statMod(stats[atk.accuracyStat]) + Math.floor(level / 2);
-  return hitChance(bonus, targetAc) * attackDamage(atk, stats);
+  return PLAYER_HIT_CHANCE * attackDamage(atk, stats);
 }
 
 function levelFor(world: WorldSpec, xp: number): number {
@@ -364,12 +364,12 @@ export function staticAnalysis(world: WorldSpec): StaticAnalysis {
   const baseStats = { str: ps.stats.str, dex: ps.stats.dex, int: ps.stats.int };
   for (const it of world.items) {
     const pr = itemProfile(world, it);
-    if (it.weapon) items.push({ id: it.id, name: it.name, power: Math.round(weaponDpt(world, it, baseStats, 1, 12) * 10) / 10, note: 'weapon dmg/turn vs AC 12' });
+    if (it.weapon) items.push({ id: it.id, name: it.name, power: Math.round(weaponDpt(world, it, baseStats) * 10) / 10, note: 'weapon dmg/turn' });
     else if (it.armour) items.push({ id: it.id, name: it.name, power: it.armour, note: 'armour' });
     else if (pr.heal > 0) items.push({ id: it.id, name: it.name, power: Math.round(pr.heal), note: `heal (${it.useMode})` });
     else if (pr.damage > 0) items.push({ id: it.id, name: it.name, power: Math.round(pr.damage), note: `damage (${it.useMode})` });
   }
-  const startDpt = weaponDpt(world, weapon, baseStats, 1, 12);
+  const startDpt = weaponDpt(world, weapon, baseStats);
   for (const ip of items) {
     if (ip.note.startsWith('weapon') && ip.power > startDpt * 3) warnings.push(`weapon "${ip.id}" deals ${ip.power}/turn, over 3× the starting weapon`);
     if (ip.note.startsWith('heal') && ip.power > ps.stats.hp * 1.5) warnings.push(`"${ip.id}" heals ${ip.power}, more than 1.5× the player's starting hp`);
@@ -402,7 +402,7 @@ export function staticAnalysis(world: WorldSpec): StaticAnalysis {
       if (!def || def.faction !== 'hostile' || count <= 0) continue;
       const atkDef = weapon?.weapon ?? ps.unarmed;
       const resist = def.resistances.find((r) => r.damageType === atkDef.damageType)?.multiplier ?? 1;
-      const pdpt = Math.max(0.2, weaponDpt(world, weapon, stats, level, def.stats.ac) * resist);
+      const pdpt = Math.max(0.2, weaponDpt(world, weapon, stats) * resist);
       const ttk = def.stats.hp / pdpt;
       const dpt = actorDpt(def, playerAc);
       const group = def.behaviour.type === 'pack' ? 1.3 : 1;
@@ -455,7 +455,7 @@ export function staticAnalysis(world: WorldSpec): StaticAnalysis {
     // upgrades found here carry into later areas
     for (const e of table) {
       const d = world.items.find((x) => x.id === e.item)!;
-      if (d.weapon && weaponDpt(world, d, stats, level, 12) > weaponDpt(world, weapon, stats, level, 12) && d.requires.every((rq) => stats[rq.stat] >= rq.min)) weapon = d;
+      if (d.weapon && weaponDpt(world, d, stats) > weaponDpt(world, weapon, stats) && d.requires.every((rq) => stats[rq.stat] >= rq.min)) weapon = d;
       if (d.armour && d.armour > (armour?.armour ?? 0)) armour = d;
     }
     areas.push({
@@ -463,7 +463,7 @@ export function staticAnalysis(world: WorldSpec): StaticAnalysis {
       name: plan.name,
       playerLevel: level,
       playerHp: hp,
-      playerDpt: round1(weaponDpt(world, weapon, stats, level, 12)),
+      playerDpt: round1(weaponDpt(world, weapon, stats)),
       playerAc,
       hostiles,
       expectedHostiles: round1(hostiles.reduce((n, h) => n + h.count, 0)),

@@ -14,6 +14,7 @@ import { computeLegalActions } from '../legal';
 import { evalCondition } from '../conditions';
 import { getStat, maxHp, side } from '../stats';
 import { isVisibleToPlayer } from '../effects';
+import { PLAYER_HIT_CHANCE } from '../combat';
 import type { PlayerAction } from '../types';
 
 // ---------------------------------------------------------------------------
@@ -217,13 +218,12 @@ export function known(ctx: Ctx, defId: string): 'clear' | 'vague' | 'unknown' {
 // Weapons and armour
 // ---------------------------------------------------------------------------
 
-/** expected damage per swing of a weapon item for the player (hit chance vs an AC 12 target) */
+/** expected damage per swing of a weapon item for the player (combat PLAYER_HIT_CHANCE) */
 export function weaponScore(ctx: Ctx, def: ItemDef | null): number {
   const atk = def?.weapon ?? ctx.world.player.unarmed;
   const p = player(ctx);
   const statV = getStat(ctx, p, atk.accuracyStat);
-  const mod = Math.floor((statV - 10) / 2) + Math.floor(ctx.s.player.level / 2);
-  const hit = Math.min(0.95, Math.max(0.05, (21 + mod - 12) / 20));
+  const hit = PLAYER_HIT_CHANCE;
   let dmg = avgAmount(atk.damage, statV);
   if (atk.range <= 1 && atk.accuracyStat === 'str') dmg += Math.max(0, Math.floor((getStat(ctx, p, 'str') - 10) / 2));
   // ranged weapons are worth a little more (first shots before contact)
