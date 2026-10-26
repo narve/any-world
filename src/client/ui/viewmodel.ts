@@ -295,6 +295,8 @@ export interface ContextActionView {
   primary?: boolean;
   /** always-available verbs are drawn smaller */
   secondary?: boolean;
+  /** glows: the move that answers a current danger (the way on, open underfoot, at low health) */
+  urgent?: boolean;
 }
 
 /** first-run onboarding card for one world (after the prologue) */

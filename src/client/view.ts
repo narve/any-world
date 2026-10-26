@@ -4,7 +4,8 @@
  */
 import type { WorldSpec, ItemDef, Perk, Effect } from '../schema/world';
 import type { GameState, ItemView, LogMessage, PendingChoice, PlayerAction } from '../engine/types';
-import { TOTAL_SLOTS } from '../engine/types';
+import { QUICK_SLOTS, TOTAL_SLOTS } from '../engine/types';
+import { parseDice } from '../engine/rng';
 import {
   describeInventory,
   describeItemDef,
@@ -249,6 +250,66 @@ export function restoresOf(def: ItemDef): string[] {
   };
   u.effects.forEach(visit);
   return [...out];
+}
+
+/** expected damage an item's use deals to enemies (0 = not an attack item) */
+export function attackPower(def: ItemDef): number {
+  const u = def.onUse;
+  if (!u || def.useMode === 'passive' || def.weapon) return 0;
+  if (u.targeting.affects !== 'enemies' && u.targeting.affects !== 'all') return 0;
+  let n = 0;
+  for (const e of u.effects) {
+    if (e.type !== 'damage') continue;
+    const d = parseDice(e.amount.dice);
+    n += Math.max(0, (e.amount.base ?? 0) + (d ? (d[0] * (d[1] + 1)) / 2 : 0) + (e.amount.scale ? e.amount.scale.factor * 12 : 0));
+  }
+  // an area or a cone may hit several
+  return u.targeting.shape === 'area' || u.targeting.shape === 'cone' || u.targeting.shape === 'all_visible' ? n * 1.5 : n;
+}
+
+/** combat lines in this many recent turns make "a fight" */
+const FIGHT_TURNS = 3;
+
+/**
+ * Quick slots worth pressing now (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §1.4, §3.6):
+ *  - after two or more of the last three turns were spent fighting someone hostile next to the
+ *    player, the strongest attack item that is ready (fights that cost 15+ HP ended in one turn
+ *    with an item that sat unused);
+ *  - an equipped ranged weapon while someone hostile is in its reach but not adjacent (its key
+ *    aims it; bumping only works next to them).
+ */
+export function strongMoveSlots(world: WorldSpec, state: GameState, slots: (SlotItemView | null)[], legal: readonly PlayerAction[]): number[] {
+  if (state.status !== 'playing' || state.pendingChoice) return [];
+  const p = state.area.actors.find((a) => a.id === state.player.actorId);
+  if (!p) return [];
+  const seen = state.area.seen as ArrayLike<number>;
+  const W = state.area.map.width;
+  const hostiles = state.area.actors.filter((a) => a.hp > 0 && a.faction === 'hostile' && !a.allyOf && seen[a.pos.y * W + a.pos.x] === 2);
+  const near = (a: { pos: { x: number; y: number } }) => Math.max(Math.abs(a.pos.x - p.pos.x), Math.abs(a.pos.y - p.pos.y));
+  const out: number[] = [];
+  const defs = new Map(world.items.map((i) => [i.id, i]));
+  const quick = slots.slice(0, QUICK_SLOTS);
+  if (hostiles.some((h) => near(h) <= 1)) {
+    const turns = new Set(state.log.filter((m) => m.kind === 'combat' && m.turn > state.turn - FIGHT_TURNS).map((m) => m.turn));
+    if (turns.size >= 2) {
+      let best = -1;
+      let bestPower = 0;
+      quick.forEach((sv, i) => {
+        const def = sv && sv.knowledge !== 'unknown' && readyToUse(sv) ? defs.get(sv.defId) : undefined;
+        const power = def ? attackPower(def) : 0;
+        if (power > bestPower) {
+          bestPower = power;
+          best = i;
+        }
+      });
+      if (best >= 0) out.push(best);
+    }
+  } else {
+    const w = state.player.equipped.weapon;
+    const sv = w !== null && w < QUICK_SLOTS ? quick[w] : null;
+    if (sv?.range && hostiles.some((h) => near(h) > 1 && legal.some((a) => a.type === 'attack' && a.targetId === h.id))) out.push(w!);
+  }
+  return out;
 }
 
 /** pressing this slot would use the item right now (no cooldown, charges left, usable) */
@@ -566,6 +627,8 @@ export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras):
       slots[i] = { ...slots[i]!, urgent: true };
     }
   }
+  const legal = x.legal ?? (state.status === 'playing' ? legalActions(state) : []);
+  for (const i of strongMoveSlots(world, state, slots, legal)) slots[i] = { ...slots[i]!, urgent: true };
   if (x.thumbs) {
     for (let i = 0; i < slots.length; i++) {
       const sv = slots[i];
@@ -575,7 +638,6 @@ export function gameView(world: WorldSpec, state: GameState, x: GameViewExtras):
     }
   }
   const canTransition = transitionBlocker(state) === null;
-  const legal = x.legal ?? (state.status === 'playing' ? legalActions(state) : []);
   return {
     hud,
     log: worldLanguageLog(mergedLog(state, x.gmLog), world),

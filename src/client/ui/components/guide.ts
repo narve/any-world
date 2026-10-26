@@ -158,7 +158,7 @@ export class ContextBar {
           'button',
           {
             type: 'button',
-            class: ['aw-ctx-btn', `ctx-${a.id}`, a.primary && 'is-primary', a.secondary && 'is-secondary', a.blocked && 'is-blocked'],
+            class: ['aw-ctx-btn', `ctx-${a.id}`, a.primary && 'is-primary', a.secondary && 'is-secondary', a.blocked && 'is-blocked', a.urgent && 'is-urgent'],
             dataset: { action: a.id },
             'aria-label': a.blocked ? `${a.label} — ${a.blocked}` : a.label,
             onclick: () => this.run(a, b),

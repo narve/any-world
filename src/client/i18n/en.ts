@@ -377,6 +377,7 @@ const en = {
   'ctx.pickup': 'Pick up {item}{more, plural, =0 {} other { +#}}',
   'ctx.talk': 'Talk to {name}',
   'ctx.persuade': 'Persuade {name}',
+  'ctx.persuadeOdds': 'Persuade {name} ({pct} %)',
   'ctx.use': 'Use {name}',
   'ctx.search': 'Search',
   'ctx.sneak': 'Sneak',

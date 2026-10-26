@@ -3342,6 +3342,12 @@ body {
   animation: aw-ctx-pulse calc(1600ms / var(--anim-speed)) ease-in-out infinite;
 }
 
+/* the move that answers a danger right now (the open exit at low health) */
+.aw-ctx-btn.is-urgent {
+  box-shadow: 0 0 0 2px var(--c-accent), 0 0 16px rgba(var(--c-accent-rgb), 0.75);
+  animation: aw-urgent calc(1.2s / var(--anim-speed)) ease-in-out infinite;
+}
+
 @keyframes aw-ctx-pulse {
   50% {
     box-shadow: 0 0 0 4px rgba(var(--c-accent-rgb), 0.3), 0 4px 14px var(--c-shadow);

@@ -522,6 +522,7 @@ const nb = {
   'ctx.pickup': 'Plukk opp {item}{more, plural, =0 {} other { +#}}',
   'ctx.talk': 'Snakk med {name}',
   'ctx.persuade': 'Overtal {name}',
+  'ctx.persuadeOdds': 'Overtal {name} ({pct} %)',
   'ctx.use': 'Bruk {name}',
   'ctx.search': 'Let',
   'ctx.sneak': 'Snik deg',

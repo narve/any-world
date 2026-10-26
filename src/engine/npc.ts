@@ -142,6 +142,24 @@ export function doTalk(ctx: Ctx, targetId: string): ActionOutcome {
   return free();
 }
 
+/** the persuasion roll against `a`: d20 + bonus must reach dc (natural 20 wins, natural 1 fails) */
+function persuadeCheck(ctx: Ctx, a: ActorInstance): { dc: number; bonus: number } {
+  const def = actorDef(ctx, a);
+  const stat = def?.npc?.persuadeStat ?? 'int';
+  let dc = def ? (def.npc?.persuadeDifficulty ?? def.persuadeDifficulty ?? clamp(10 + Math.floor(def.stats.hp / 6) + (def.unique ? 5 : 0), 8, 25)) : 20;
+  if (a.faction === 'hostile') dc += 2;
+  const bonus = statMod(getStat(ctx, playerActor(ctx), stat)) + Math.floor(ctx.s.player.level / 2);
+  return { dc, bonus };
+}
+
+/** chance (0.05–0.95) that persuading `a` works right now, as the UI shows it */
+export function persuadeChance(ctx: Ctx, a: ActorInstance): number {
+  const { dc, bonus } = persuadeCheck(ctx, a);
+  let wins = 0;
+  for (let roll = 1; roll <= 20; roll++) if (roll !== 1 && (roll === 20 || roll + bonus >= dc)) wins++;
+  return wins / 20;
+}
+
 export function doPersuade(ctx: Ctx, targetId: string): ActionOutcome {
   if (!ctx.world.verbs.persuade) return invalid('persuasion is not possible here');
   const a = npcTarget(ctx, targetId);
@@ -149,12 +167,10 @@ export function doPersuade(ctx: Ctx, targetId: string): ActionOutcome {
   if (a.allyOf) return invalid('already on your side');
   const def = actorDef(ctx, a);
   if (!def) return invalid('no one there');
-  const stat = def.npc?.persuadeStat ?? 'int';
-  let dc = def.npc?.persuadeDifficulty ?? def.persuadeDifficulty ?? clamp(10 + Math.floor(def.stats.hp / 6) + (def.unique ? 5 : 0), 8, 25);
-  if (a.faction === 'hostile') dc += 2;
+  const { dc, bonus } = persuadeCheck(ctx, a);
   const pl = playerActor(ctx);
   const roll = ctx.rng.int(1, 20);
-  const total = roll + statMod(getStat(ctx, pl, stat)) + Math.floor(ctx.s.player.level / 2);
+  const total = roll + bonus;
   const name = actorName(ctx, a);
   if (roll !== 1 && (roll === 20 || total >= dc)) {
     if (a.faction === 'hostile') {

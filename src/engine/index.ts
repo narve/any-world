@@ -39,6 +39,7 @@ import { passable } from './ctx';
 import { energyGain, getStat, maxHp, maxMp, sightRadius } from './stats';
 import { xpToNext } from './progression';
 import { transitionFailure } from './area';
+import { persuadeChance } from './npc';
 import { isDifficulty } from './difficulty';
 import { initialActiveRules } from './rules';
 import { cloneState } from './clone';
@@ -291,6 +292,14 @@ export function passability(state: GameState, env?: EngineEnv): (x: number, y: n
   const world = worldFor(state, env);
   const ctx = makeCtx(world, state, env);
   return (x, y) => passable(ctx, x, y);
+}
+
+/** chance (0–1) that persuading the actor works right now; null when there is no such actor */
+export function persuadeOdds(state: GameState, actorInstanceId: string, env?: EngineEnv): number | null {
+  const world = worldFor(state, env);
+  const ctx = makeCtx(world, state, env);
+  const a = state.area.actors.find((x) => x.id === actorInstanceId && x.hp > 0);
+  return a ? persuadeChance(ctx, a) : null;
 }
 
 /** why the player can't take the area exit right now (null = they can) */

@@ -8,7 +8,7 @@
 import type { Condition, Effect, WorldSpec } from '../schema/world';
 import type { GameState, PlayerAction } from '../engine/types';
 import { QUICK_SLOTS } from '../engine/types';
-import { describeItemDef, playerSheet, type PlayerSheet } from '../engine/index';
+import { describeItemDef, persuadeOdds, playerSheet, type PlayerSheet } from '../engine/index';
 import { catalog, formatMessage, getLanguage, listJoin, normalizeLanguage, t as tUi, type MessageKey, type MessageParams } from './i18n/index';
 import type { ContextActionView, ConditionLineView, GoalStepView, GoalView, OnboardingView } from './ui/viewmodel';
 
@@ -723,6 +723,9 @@ export function shortName(name: string): string {
  * persuade, use) appear only when they apply; search, sneak and wait are always offered when the
  * world has them, so touch play never needs a keyboard.
  */
+/** below this share of health the open exit button glows */
+const LOW_HP_ESCAPE = 0.35;
+
 export function contextActions(world: WorldSpec, state: GameState, x: ContextInput): ContextActionView[] {
   if (state.status !== 'playing' || state.pendingChoice || state.player.pendingPerkChoice) return [];
   const out: ContextActionView[] = [];
@@ -732,7 +735,9 @@ export function contextActions(world: WorldSpec, state: GameState, x: ContextInp
   const last = state.area.index >= world.areas.length - 1;
 
   if (plan && !last && onExitTile(state)) {
-    if (x.canTransition) out.push({ id: 'exit', label: t('ctx.exit', { way: plan.transitionName }), key: '>', primary: true });
+    // at low health the way on is the escape (a playtest death came standing on an open exit)
+    const low = p.hp < p.maxHp * LOW_HP_ESCAPE;
+    if (x.canTransition) out.push({ id: 'exit', label: t('ctx.exit', { way: plan.transitionName }), key: '>', primary: true, ...(low ? { urgent: true } : {}) });
     else {
       const why = lockedReason(world, state);
       out.push({ id: 'exit', label: t('ctx.exitLocked', { way: plan.transitionName }), key: '>', blocked: why ? t('invalid.exitLocked', { way: plan.transitionName, needs: why }) : t('ctx.exitLockedPlain', { way: plan.transitionName }) });
@@ -760,7 +765,12 @@ export function contextActions(world: WorldSpec, state: GameState, x: ContextInp
   if (world.verbs.persuade) {
     // persuasion is the non-violent answer to someone hostile; everyone else gets "Talk"
     const who = nearest(actorsFor('persuade').filter((a) => a.faction === 'hostile' && !a.allyOf), p.pos);
-    if (who) out.push({ id: 'persuade', label: t('ctx.persuade', { name: nameOf(who) }), key: 'p' });
+    if (who) {
+      // the odds, so a failed attempt is not a mystery (FABLE-GAMEPLAY-REVIEW.md §1.4)
+      const odds = persuadeOdds(state, who.id);
+      const label = odds === null ? t('ctx.persuade', { name: nameOf(who) }) : t('ctx.persuadeOdds', { name: nameOf(who), pct: Math.round(odds * 100) });
+      out.push({ id: 'persuade', label, key: 'p' });
+    }
   }
   if (x.interact) out.push({ id: 'interact', label: t('ctx.use', { name: x.interact.name }), key: 'Enter', primary: true });
   if (world.verbs.search) out.push({ id: 'search', label: t('ctx.search'), key: 'f', secondary: true });
