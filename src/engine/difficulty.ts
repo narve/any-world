@@ -1,6 +1,7 @@
 /**
  * Difficulty (DESIGN §Difficulty): one profile per band. The engine applies it to
- *   - hostile actors: hp when they are created / transform, and the damage they deal to the
+ *   - hostile actors: hp when they are created / transform (times UNIQUE_HOSTILE_HP for uniques),
+ *     and the damage they deal to the
  *     player's side (combat.dealDamage)
  *   - the player's natural hp regeneration interval (turn.ts)
  *   - the harm a GM rule may add or take away (gm.ts add_rule / remove_rule, see rules.ts)
@@ -57,10 +58,25 @@ export function profileOf(s: Pick<GameState, 'difficulty'>): DifficultyProfile {
   return DIFFICULTY_PROFILES[difficultyOf(s)];
 }
 
-/** hostile hp for a def's base hp under the state's difficulty */
-export function scaledHostileHp(s: Pick<GameState, 'difficulty'>, hp: number): number {
-  const f = profileOf(s).hostileHp;
-  return f === 1 ? hp : Math.max(1, Math.round(hp * f));
+/**
+ * Extra hp of unique hostiles (bosses) on every band, multiplied with the band's hostileHp: the
+ * player's 90 % hit chance (combat PLAYER_HIT_CHANCE) about halved the final bosses' static risk.
+ * balance/static.ts uses the same factor (uniqueHp).
+ */
+export const UNIQUE_HOSTILE_HP = 1.25;
+
+/** a unique hostile's base hp before difficulty (balance/static.ts) */
+export function uniqueHp(hp: number): number {
+  return Math.max(1, Math.round(hp * UNIQUE_HOSTILE_HP));
+}
+
+/**
+ * hostile hp for a def's base hp under the state's difficulty; NPCs (def.npc) keep their hp on
+ * every band, but a unique NPC still gets the boss factor
+ */
+export function scaledHostileHp(s: Pick<GameState, 'difficulty'>, def: { stats: { hp: number }; unique?: boolean; npc?: unknown }): number {
+  const f = (def.npc ? 1 : profileOf(s).hostileHp) * (def.unique ? UNIQUE_HOSTILE_HP : 1);
+  return f === 1 ? def.stats.hp : Math.max(1, Math.round(def.stats.hp * f));
 }
 
 /** the natural hp regeneration interval (0 = none) */

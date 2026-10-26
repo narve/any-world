@@ -9,6 +9,7 @@ import { dealDamage } from '../../src/engine/combat';
 import { checkEnd } from '../../src/engine/turn';
 import { applyStatus } from '../../src/engine/statuses';
 import { makeActor } from '../../src/engine/actors';
+import { UNIQUE_HOSTILE_HP } from '../../src/engine/difficulty';
 import { testWorld, player, act, addActor, ctxFor, loadFixture, roomMap, simpleGenerator } from './helpers';
 import type { WorldSpec } from '../../src/schema/world';
 
@@ -62,6 +63,19 @@ describe('difficulty: hostiles', () => {
       expect(golem.hp).toBe(golem.maxHp);
       expect(makeActor(ctx, 'sage', { x: 4, y: 4 })!.maxHp).toBe(10);
       expect(makeActor(ctx, 'golem', { x: 5, y: 5 }, { allyOf: s.player.actorId })!.maxHp).toBe(40);
+    }
+  });
+
+  it('unique hostiles get UNIQUE_HOSTILE_HP on every band; a unique NPC gets only that', () => {
+    const w = testWorld();
+    const golem = w.actors.find((a) => a.id === 'golem')!;
+    const sage = w.actors.find((a) => a.id === 'sage')!;
+    w.actors.push({ ...golem, id: 'boss', unique: true }, { ...sage, id: 'boss-sage', faction: 'hostile', unique: true });
+    for (const d of BANDS) {
+      const s = game(w, d);
+      const ctx = ctxFor(w, s);
+      expect(makeActor(ctx, 'boss', { x: 3, y: 3 })!.maxHp).toBe(Math.round(40 * DIFFICULTY_PROFILES[d].hostileHp * UNIQUE_HOSTILE_HP));
+      expect(makeActor(ctx, 'boss-sage', { x: 4, y: 4 })!.maxHp).toBe(Math.round(10 * UNIQUE_HOSTILE_HP));
     }
   });
 
