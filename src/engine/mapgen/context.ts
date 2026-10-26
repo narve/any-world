@@ -32,6 +32,13 @@ export interface GenContext {
    * "ring 2"); copied onto AreaMap.regions[].name so discovery hooks can describe them.
    */
   regionNames: Map<number, string>;
+  /**
+   * Fewer dead ends (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §3.4): layers of corridor spurs that
+   * lead nowhere to fill, and loops to cut through thin walls where the walk around is longest.
+   * Both 0 for layouts whose dead ends or symmetry are the point (islands' pockets, geometric).
+   */
+  pruneSpurs: number;
+  shortcuts: number;
 }
 
 export function makeContext(plan: Pick<AreaPlan, 'size' | 'params'>, rng: Rng): GenContext {
@@ -47,6 +54,8 @@ export function makeContext(plan: Pick<AreaPlan, 'size' | 'params'>, rng: Rng): 
     carveDoors: true,
     openEdges: false,
     regionNames: new Map(),
+    pruneSpurs: Math.round(clamp(typeof params.spurs === 'number' ? params.spurs : 12, 0, 40)),
+    shortcuts: Math.round(clamp(typeof params.shortcuts === 'number' ? params.shortcuts : { small: 3, medium: 5, large: 7 }[size], 0, 20)),
     param(names, def, lo, hi) {
       for (const n of Array.isArray(names) ? names : [names]) {
         const v = params[n];

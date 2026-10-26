@@ -112,6 +112,23 @@ export function genRooms(ctx: GenContext): void {
     }
     if (best >= 0) edges.push([a, best]);
   }
+  // a room with a single corridor is a dead end: most get a second one to their nearest other room
+  // (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §3.4)
+  const throughShare = ctx.param('throughRooms', 0.8, 0, 1);
+  for (let a = 0; a < n && n > 2; a++) {
+    if (edges.filter(([p, q]) => p === a || q === a).length !== 1 || !rng.chance(throughShare)) continue;
+    let best = -1;
+    let bestD = Infinity;
+    for (let b = 0; b < n; b++) {
+      if (b === a || edges.some(([p, q]) => (p === a && q === b) || (p === b && q === a))) continue;
+      const d = d2(a, b);
+      if (d < bestD) {
+        bestD = d;
+        best = b;
+      }
+    }
+    if (best >= 0) edges.push([a, best]);
+  }
 
   const noise = new Uint8Array(g.w * g.h);
   for (let i = 0; i < noise.length; i++) noise[i] = rng.int(0, 2);

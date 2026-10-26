@@ -7,6 +7,8 @@
  *  - the click-to-travel route as faint dots;
  *  - a marker on the area exit once it has been seen, and an arrow at the screen edge pointing to it
  *    while it is off screen;
+ *  - before the exit has been seen, a small faint compass chevron beside the player pointing in its
+ *    general direction (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §1.2: walking is the slow part);
  *  - a pulsing ring around the NPC you are talking to;
  *  - while aiming a direction-targeted item (ray, cone), the eight directions around the player.
  *
@@ -144,6 +146,9 @@ export function placeEdgeMarker(
   return first;
 }
 
+/** how far from the player (in tiles) the compass chevron sits */
+const COMPASS_RADIUS = 1.15;
+
 /** the eight neighbours of the player, for direction-aimed items */
 const DIRS8: [number, number][] = [
   [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1],
@@ -158,6 +163,8 @@ export class MapOverlay {
   private exitArrow: SVGGElement;
   private exitLabel: SVGTextElement;
   private ring: SVGEllipseElement;
+  private compassEl: SVGGElement;
+  private compass: Pos | null = null;
   private preview: HoverPreview | null = null;
   private exit: { pos: Pos; label: string } | null = null;
   private speaker: Pos | null = null;
@@ -183,13 +190,15 @@ export class MapOverlay {
     this.exitArrow.append(el('path', { d: 'M -14 -10 L 6 0 L -14 10 L -9 0 Z' }));
     this.exitLabel = el('text', { class: 'ov-exit-label', 'text-anchor': 'middle' });
     this.ring = el('ellipse', { class: 'ov-speaker' });
+    this.compassEl = el('g', { class: 'ov-compass' });
+    this.compassEl.append(el('path', { d: 'M -5 -6 L 3 0 L -5 6' }));
     this.dirs = el('g', { class: 'ov-dirs' });
     for (let i = 0; i < DIRS8.length; i++) {
       const p = el('path', { d: 'M -7 -6 L 5 0 L -7 6 Z' });
       this.dirs.appendChild(p);
       this.dirEls.push(p);
     }
-    this.svg.append(this.exitMark, this.ring, this.dots, this.dirs, this.hover, this.cross, this.exitArrow, this.exitLabel);
+    this.svg.append(this.exitMark, this.compassEl, this.ring, this.dots, this.dirs, this.hover, this.cross, this.exitArrow, this.exitLabel);
     host.appendChild(this.svg);
     this.hideAll();
   }
@@ -232,6 +241,11 @@ export class MapOverlay {
     this.aim = aim;
   }
 
+  /** the not-yet-seen goal the compass chevron points toward (null hides it) */
+  setCompass(target: Pos | null): void {
+    this.compass = target;
+  }
+
   setSpeaker(pos: Pos | null): void {
     this.speaker = pos;
   }
@@ -241,7 +255,7 @@ export class MapOverlay {
   }
 
   private hideAll(): void {
-    for (const e of [this.hover, this.cross, this.exitMark, this.exitArrow, this.exitLabel, this.ring, this.dirs]) e.setAttribute('visibility', 'hidden');
+    for (const e of [this.hover, this.cross, this.exitMark, this.exitArrow, this.exitLabel, this.ring, this.dirs, this.compassEl]) e.setAttribute('visibility', 'hidden');
   }
 
   private quad(p: Pos, inset = 0.46): string {
@@ -303,6 +317,7 @@ export class MapOverlay {
     } else this.ring.setAttribute('visibility', 'hidden');
 
     this.drawAim(local);
+    this.drawCompass(local);
 
     // the area exit: a marker on it, or an arrow at the screen edge while it is off screen
     if (this.exit) {
@@ -339,6 +354,24 @@ export class MapOverlay {
       this.exitArrow.setAttribute('visibility', 'hidden');
       this.exitLabel.setAttribute('visibility', 'hidden');
     }
+  }
+
+  private drawCompass(local: (p: { x: number; y: number }) => { x: number; y: number }): void {
+    const goal = this.compass;
+    const p = this.player;
+    const dx = goal && p ? goal.x - p.x : 0;
+    const dy = goal && p ? goal.y - p.y : 0;
+    if (!goal || !p || (dx === 0 && dy === 0) || this.aim) {
+      this.compassEl.setAttribute('visibility', 'hidden');
+      return;
+    }
+    // map-space direction, projected so it follows the camera's tilt and rotation
+    const len = Math.hypot(dx, dy);
+    const c = local(p);
+    const n = local({ x: p.x + (dx / len) * COMPASS_RADIUS, y: p.y + (dy / len) * COMPASS_RADIUS });
+    const angle = (Math.atan2(n.y - c.y, n.x - c.x) * 180) / Math.PI;
+    this.compassEl.setAttribute('transform', `translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) rotate(${angle.toFixed(1)})`);
+    this.compassEl.setAttribute('visibility', 'visible');
   }
 
   private drawAim(local: (p: { x: number; y: number }) => { x: number; y: number }): void {

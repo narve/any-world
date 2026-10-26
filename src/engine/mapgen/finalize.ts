@@ -100,6 +100,115 @@ export function connectAll(g: Grid, opts: { dropBelow?: number; wallCost?: numbe
   }
 }
 
+/**
+ * Fills corridor spurs that lead nowhere: a passable tile with a single passable neighbour (8-way)
+ * is a tip; tips are filled one layer at a time for up to `maxDepth` layers. Rooms are never
+ * touched (their tiles have several neighbours) and the map stays connected (a tip is a leaf).
+ */
+export function pruneSpurs(g: Grid, maxDepth: number): void {
+  for (let layer = 0; layer < maxDepth; layer++) {
+    const tips: number[] = [];
+    for (let y = 1; y < g.h - 1; y++)
+      for (let x = 1; x < g.w - 1; x++) {
+        if (!g.passable(x, y)) continue;
+        let n = 0;
+        for (const [dx, dy] of RING8) if (g.passable(x + dx, y + dy)) n++;
+        if (n <= 1) tips.push(g.idx(x, y));
+      }
+    if (!tips.length) return;
+    for (const i of tips) {
+      g.tiles[i].kind = 'wall';
+      delete g.tiles[i].region;
+    }
+  }
+}
+
+/**
+ * Cuts up to `count` shortcuts through thin walls (1–2 tiles) where the walk around is longest,
+ * turning dead-end rooms and long backtracks into loops (docs/playtest/FABLE-GAMEPLAY-REVIEW.md
+ * §3.4). A shortcut is only cut when it saves at least `minSaving` steps. Single-tile cuts between
+ * walls become doors when `doors` is set.
+ */
+export function addShortcuts(g: Grid, rng: Rng, count: number, opts: { minSaving?: number; doors?: boolean } = {}): void {
+  if (count <= 0) return;
+  const minSaving = opts.minSaving ?? 14;
+  const pass = (i: number) => PASSABLE_KINDS.has(g.tiles[i].kind);
+  const solid = (x: number, y: number) => g.inInterior(x, y) && g.kind(x, y) === 'wall';
+  interface Cut {
+    a: number;
+    b: number;
+    tiles: number[];
+  }
+  const cuts: Cut[] = [];
+  for (let y = 1; y < g.h - 1; y++)
+    for (let x = 1; x < g.w - 1; x++) {
+      if (!solid(x, y)) continue;
+      for (const [dx, dy] of [
+        [1, 0],
+        [0, 1],
+      ] as const) {
+        // the cut runs along (dx,dy) and is walled on both sides, so it reads as a gap, not a hole
+        const side = (cx: number, cy: number) => solid(cx + dy, cy + dx) && solid(cx - dy, cy - dx);
+        if (!g.passable(x - dx, y - dy) || !side(x, y)) continue;
+        if (g.passable(x + dx, y + dy)) cuts.push({ a: g.idx(x - dx, y - dy), b: g.idx(x + dx, y + dy), tiles: [g.idx(x, y)] });
+        else if (solid(x + dx, y + dy) && side(x + dx, y + dy) && g.passable(x + 2 * dx, y + 2 * dy))
+          cuts.push({ a: g.idx(x - dx, y - dy), b: g.idx(x + 2 * dx, y + 2 * dy), tiles: [g.idx(x, y), g.idx(x + dx, y + dy)] });
+      }
+    }
+  if (!cuts.length) return;
+  shuffle(cuts, rng);
+  // walking distance a → b (4-way) over a passability snapshot, stopping as soon as b is reached
+  const open = new Uint8Array(g.w * g.h);
+  for (let i = 0; i < open.length; i++) open[i] = pass(i) ? 1 : 0;
+  const dist = new Int32Array(g.w * g.h);
+  const queue = new Int32Array(g.w * g.h);
+  const walk = (a: number, b: number): number => {
+    dist.fill(-1);
+    dist[a] = 0;
+    queue[0] = a;
+    for (let head = 0, tail = 1; head < tail; head++) {
+      const c = queue[head];
+      if (c === b) return dist[c];
+      for (const n of [c - 1, c + 1, c - g.w, c + g.w]) {
+        if (open[n] && dist[n] === -1) {
+          dist[n] = dist[c] + 1;
+          queue[tail++] = n;
+        }
+      }
+    }
+    return -1;
+  };
+  const saving = (c: Cut) => {
+    const d = walk(c.a, c.b);
+    return d < 0 ? -1 : d - (c.tiles.length + 1);
+  };
+  // lazy greedy: a cut only ever shrinks the others' savings, so a stale value is an upper bound
+  // and only the front of the list needs re-measuring after each cut
+  const best = cuts.slice(0, 80).map((c) => ({ c, s: saving(c) }));
+  for (let made = 0; made < count; ) {
+    best.sort((p, q) => q.s - p.s);
+    const top = best[0];
+    if (!top || top.s < minSaving) return;
+    const fresh = top.c.tiles.some(pass) ? -1 : saving(top.c);
+    if (fresh < top.s) {
+      top.s = fresh;
+      continue;
+    }
+    best.shift();
+    for (const i of top.c.tiles) {
+      g.tiles[i].kind = 'floor';
+      delete g.tiles[i].region;
+      open[i] = 1;
+    }
+    if (opts.doors && top.c.tiles.length === 1) {
+      const i = top.c.tiles[0];
+      const x = i % g.w;
+      if (isDoorway(g, x, (i - x) / g.w)) g.tiles[i].kind = 'door';
+    }
+    made++;
+  }
+}
+
 /** Void tiles touching (8-way) a passable tile become wall. */
 export function wallify(g: Grid): void {
   const toWall: number[] = [];
@@ -399,6 +508,10 @@ export function finalize(
     openEdges?: boolean;
     /** generator region id → structural name */
     regionNames?: ReadonlyMap<number, string>;
+    /** layers of dead-end corridor spurs to fill (pruneSpurs) */
+    pruneSpurs?: number;
+    /** loops to cut through thin walls (addShortcuts) */
+    shortcuts?: number;
   },
 ): AreaMap {
   closeBorder(g);
@@ -406,6 +519,8 @@ export function finalize(
   if (!opts.openEdges) wallify(g);
   closeBorder(g);
   voidOutside(g);
+  if (opts.pruneSpurs) pruneSpurs(g, opts.pruneSpurs);
+  if (opts.shortcuts && !opts.openEdges) addShortcuts(g, rng, opts.shortcuts, { doors: opts.doors });
   if (opts.voronoi) fillRegionsVoronoi(g, rng, opts.voronoi);
   const { start, exit } = chooseStartExit(g, rng);
   g.set(start.x, start.y, 'start');

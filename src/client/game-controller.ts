@@ -486,6 +486,8 @@ export class GameController {
     const seen = (st.area.seen as ArrayLike<number>)[ex.y * st.area.map.width + ex.x] ?? 0;
     const plan = s.world.areas[st.area.index];
     ov.setExit(!s.ended && seen > 0 && plan ? { pos: ex, label: plan.transitionName } : null);
+    // until the exit has been seen, a faint chevron beside the player points its general way
+    ov.setCompass(!s.ended && seen === 0 ? ex : null);
     const pc = st.pendingChoice;
     const speaker = pc?.kind === 'dialogue' && pc.speakerId ? st.area.actors.find((a) => a.id === pc.speakerId) : undefined;
     ov.setSpeaker(speaker ? speaker.pos : null);

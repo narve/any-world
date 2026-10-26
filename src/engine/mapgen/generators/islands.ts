@@ -192,6 +192,9 @@ export function genIslands(ctx: GenContext): void {
 
   ctx.openEdges = !rims;
   ctx.carveDoors = false;
+  // side pockets are dead ends on purpose
+  ctx.pruneSpurs = 0;
+  ctx.shortcuts = 0;
   ctx.dropBelow = 0;
   ctx.voronoi = 0;
 }

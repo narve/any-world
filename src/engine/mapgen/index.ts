@@ -77,6 +77,8 @@ function generateOnce(plan: AreaPlan, rng: Rng): AreaMap {
     doors: ctx.carveDoors,
     openEdges: ctx.openEdges,
     regionNames: ctx.regionNames,
+    pruneSpurs: ctx.pruneSpurs,
+    shortcuts: ctx.shortcuts,
   });
 }
 

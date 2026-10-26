@@ -88,4 +88,6 @@ export function genMaze(ctx: GenContext): void {
   }
   ctx.voronoi = 70;
   ctx.carveDoors = false;
+  // a maze keeps some of its dead ends (the deadEnds knob): fewer spur layers are filled
+  ctx.pruneSpurs = Math.round((1 - deadEnds) * 10);
 }

@@ -399,5 +399,8 @@ export function genGeometric(ctx: GenContext): void {
 
   ctx.carveDoors = doorShare > 0;
   ctx.dropBelow = 4;
+  // cuts and fills would break the mirror symmetry
+  ctx.pruneSpurs = 0;
+  ctx.shortcuts = 0;
   ctx.voronoi = 0;
 }

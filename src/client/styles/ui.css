@@ -2931,6 +2931,16 @@ body {
   stroke-width: 1.5;
 }
 
+.aw-map-overlay .ov-compass path {
+  fill: none;
+  stroke: #6ee6a0;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.5;
+  filter: drop-shadow(0 0 1.5px rgba(0, 0, 0, 0.8));
+}
+
 .aw-map-overlay .ov-exit-label {
   fill: #e8fff2;
   font: 600 11px var(--font-ui, sans-serif);
