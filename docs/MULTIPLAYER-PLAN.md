@@ -214,4 +214,13 @@ Decided:
 - 2026-10-26: rooms are listed publicly: the start page shows open rooms (world, players, joinable),
   besides joining by link.
 
-Open: none (2026-10-26).
+Open (2026-10-26, from the MP1 design, [MP1-DESIGN.md](progress/MP1-DESIGN.md); MP1 builds the reading
+given here unless the owner says otherwise):
+- Second chance for a party of one on Normal: the design keeps today's single-player rule (none on
+  Normal, so single player is unchanged); parties of 2+ get one per player on Gentle and Normal.
+- On Hard and Brutal (no second chance) a player's first fall makes them down, with the same revive
+  rules; the run is lost only when everyone is down.
+- Taking an exit pulls down players along and they arrive standing at half health (an exit acts as a
+  revive).
+- Currency is one shared party purse (items stay personal).
+- XP is shared in full: every player gets each kill's XP; levels and perks stay per player.
