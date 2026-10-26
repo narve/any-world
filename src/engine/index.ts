@@ -45,7 +45,7 @@ import { energyGain, getStat, maxHp, maxMp, sightRadius } from './stats';
 import { xpToNext } from './progression';
 import { transitionFailure } from './area';
 import { persuadeChance } from './npc';
-import { isDifficulty } from './difficulty';
+import { MAX_PARTY_SIZE, isDifficulty } from './difficulty';
 import { initialActiveRules } from './rules';
 import { cloneState } from './clone';
 import { own } from './util';
@@ -213,9 +213,6 @@ function nextPlayerId(s: GameState): PlayerId {
   for (const id of Object.keys(s.players)) n = Math.max(n, Number(/^p(\d+)$/.exec(id)?.[1] ?? 0));
   return `p${n + 1}`;
 }
-
-/** most players in one party */
-export const MAX_PARTY_SIZE = 12;
 
 export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
   const worldId = registerWorld(world);
@@ -477,12 +474,21 @@ export {
   type GmContextOptions,
 } from './gm-context';
 export { sellPrice, MAX_SELL_OPTIONS } from './npc';
-export { DIFFICULTIES, DIFFICULTY_PROFILES, difficultyOf, isDifficulty, type DifficultyProfile } from './difficulty';
+export {
+  DIFFICULTIES,
+  DIFFICULTY_PROFILES,
+  MAX_PARTY_SIZE,
+  PARTY_SCALING,
+  difficultyOf,
+  isDifficulty,
+  partyFactor,
+  type DifficultyProfile,
+} from './difficulty';
 export { estimateRuleImpact, activeRuleEntries, type RuleImpact } from './rules';
 export { registerWorld, getWorld, worldIdOf } from './registry';
 export { createRng, rngFromState, SeededRng } from './rng';
 export { computeFov, hasLos, withinRadius, withinReach } from './fov';
-export { MAX_AREA_ACTORS } from './actors';
+export { MAX_AREA_ACTORS, areaActorCap } from './actors';
 export { findPath, bfsDistances } from './path';
 export type * from './types';
 export { QUICK_SLOTS, BACKPACK_SLOTS, TOTAL_SLOTS } from './types';

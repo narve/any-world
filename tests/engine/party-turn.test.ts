@@ -167,10 +167,12 @@ describe('resolution and the world', () => {
     let s = party(2, { world: open });
     const exit = s.area.map.exit;
     actorOf(s, 'p1').pos = { ...exit };
+    // p2 at the exit too, so the party moves on at once (no countdown, MP1 B3)
+    actorOf(s, 'p2').pos = { x: exit.x - 1, y: exit.y };
     s = turn(s, [act('p1', { type: 'wait' })], false, open).state;
     // turn 1 resolves p2 first: let p1 lead by waiting one more round
     if (s.turn % 2 === 1) s = turn(s, [act('p1', { type: 'wait' })], false, open).state;
-    const r = turn(s, [act('p1', { type: 'transition' }), act('p2', { type: 'move', dir: 'e' })], false, open);
+    const r = turn(s, [act('p1', { type: 'transition' }), act('p2', { type: 'move', dir: 'w' })], false, open);
     expect(r.outcomes[0].ok).toBe(true);
     expect(r.outcomes[1]).toMatchObject({ ok: false, reason: 'area changed' });
     expect(r.state.area.index).toBe(1);

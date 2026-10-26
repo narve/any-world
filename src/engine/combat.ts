@@ -33,7 +33,7 @@ import { END_REASON_KEYS, type EndReasonKey, type LogParams, renderTemplate } fr
 import { withinReach } from './fov';
 import { playerSeesTile } from './vision';
 import { switchesOf } from './rules';
-import { bandSecondChance, profileOf } from './difficulty';
+import { PARTY_SCALING, bandSecondChance, partyFactor, profileOf } from './difficulty';
 import { closeChoice } from './npc';
 
 export interface AttackInfo {
@@ -297,7 +297,7 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
   if (byPlayerSide && def) {
     ctx.s.stats.kills += 1;
     const vc = switchesOf(ctx).violenceCounter;
-    if (vc) ctx.s.counters[vc] = (own(ctx.s.counters, vc) ?? 0) + 1;
+    if (vc) countViolence(ctx, vc);
     if (def.xp > 0) grantXp(ctx, def.xp);
   }
   if (killer && isAlive(ctx, killer)) fireTriggers(ctx, killer, 'on_kill', { other: victim, pos: victim.pos });
@@ -385,6 +385,22 @@ export function refillFatalResources(ctx: Ctx, ps: PlayerState): void {
     if (!isFatalResource(r) || (own(ps.resources, r.id) ?? 0) > 0) continue;
     ps.resources[r.id] = Math.max(1, Math.ceil(r.max / 2));
   }
+}
+
+/**
+ * A kill by the player's side raises the world's violence counter by one. A party area has more
+ * hostiles (PARTY_SCALING.hostileCount), so there each kill weighs 1/f (the remainder carries over
+ * in AreaState.violenceCarry): a lose condition on the counter stays as far away as for one player.
+ */
+function countViolence(ctx: Ctx, vc: string): void {
+  const n = ctx.s.area.partySize ?? 1;
+  let add = 1;
+  if (n > 1) {
+    const carry = (ctx.s.area.violenceCarry ?? 0) + 1 / partyFactor(n, PARTY_SCALING.hostileCount);
+    add = Math.floor(carry + 1e-9);
+    ctx.s.area.violenceCarry = Math.max(0, carry - add);
+  }
+  if (add > 0) ctx.s.counters[vc] = (own(ctx.s.counters, vc) ?? 0) + add;
 }
 
 /**

@@ -73,6 +73,8 @@ export const LOG_KEYS = {
   'log.party.talk_gone': '{player} loses the thread: the conversation is over.',
   'log.party.down': '{player} is down. A teammate at their side gets them back up.',
   'log.party.up': '{player} gets back up.',
+  /** a player took the exit with teammates elsewhere: the exit countdown starts (MP1 B3) */
+  'log.party.exit_countdown': '{player} takes {transition}: the party moves on in {turns}.',
 
   // quests, rules, currency, progression
   'log.quest.new': 'New: {title}',

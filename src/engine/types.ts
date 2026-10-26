@@ -214,6 +214,8 @@ export interface AreaState {
   exitCountdown?: { turnsLeft: number; by: PlayerId } | null;
   /** the party size this area was built for (MP1 B3; absent = 1) */
   partySize?: number;
+  /** a party area's share of a kill not yet added to the violence counter (combat.ts countViolence) */
+  violenceCarry?: number;
 }
 
 /** one rule in force (GameState.activeRules) */
@@ -365,6 +367,8 @@ export type GameEvent =
   | { type: 'downed'; playerId: PlayerId; actorId: string }
   /** a down player got back up (helped by a teammate, or by themselves after a while) */
   | { type: 'revived'; playerId: PlayerId; actorId: string; helped: boolean }
+  /** a player took the exit and the party moves on when turnsLeft reaches 0 (started, and each round) */
+  | { type: 'exit_countdown'; turnsLeft: number; by: PlayerId }
   | { type: 'quest_updated'; questId: string; status: Quest['status'] }
   | { type: 'game_over'; result: 'won' | 'lost'; reason: string }
   | { type: 'message'; text: string; kind: LogMessage['kind']; /** i18n, as LogMessage.key/params */ key?: string; params?: Record<string, string | number> }
@@ -446,11 +450,18 @@ export interface NewGameOptions {
   players?: { name: string }[];
 }
 
+/** generator options beyond the plan (MP1 B3) */
+export interface MapGenOptions {
+  /** the party the area is built for (absent or 1 = a single player: today's sizes) */
+  partySize?: number;
+}
+
 /** generator contract (src/engine/mapgen) */
 export type MapGenerator = (
   plan: WorldSpec['areas'][number],
   world: WorldSpec,
   rng: Rng,
+  opts?: MapGenOptions,
 ) => AreaMap;
 
 export interface Rng {

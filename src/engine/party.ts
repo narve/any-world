@@ -10,12 +10,14 @@
  *   3. busy flags of inputs that brought no successful turn action;
  *   4. if a turn action succeeded (or `advance` is set), every other ready player waits and the
  *      world runs; otherwise only quests are checked (a party that only chats loses nothing);
- *   5. end check, every player's fog, rng saved.
+ *   5. an area change the exit countdown left pending (area.ts tickExitCountdown) runs now;
+ *   6. end check, every player's fog, rng saved.
  * A refused action changes nothing (rng, log and events are put back) and gets a reason.
  */
 import type { PlayerAction, PlayerId, Refusal, TurnInput, TurnOptions, TurnOutcome } from './types';
 import { type Ctx, actorAt, findActor, isAlive, playerActorOf, timed, withPlayer } from './ctx';
-import { doPlayerAction } from './actions';
+import { doPlayerAction, moveOn } from './actions';
+import { exitPending } from './area';
 import { ACT_COST, canTakeTurn, checkEnd, isStanding, runWorld } from './turn';
 import { checkQuests } from './gm';
 import { updateFov } from './vision';
@@ -159,6 +161,8 @@ function runTurnCore(ctx: Ctx, inputs: readonly TurnInput[], opts: TurnOptions):
     tookTurn = true;
     changed = true;
     runWorld(ctx);
+    // the exit countdown ran out during the world's rounds: everyone moves on now
+    if (s.status === 'playing' && exitPending(ctx)) moveOn(ctx, s.area.exitCountdown!.by);
   } else if (changed) {
     checkQuests(ctx);
   }

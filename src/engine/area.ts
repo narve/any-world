@@ -1,11 +1,12 @@
 /**
  * Areas: entering an area (generate or inject a map), placing terrain, actors (spawn tables +
- * guaranteed placements), items (tables + placed items), carrying allies along, transition locks.
+ * guaranteed placements), items (tables + placed items), carrying the party and allies along,
+ * party scaling (PARTY_SCALING), the exit countdown, transition locks.
  */
 import type { AreaPlan } from '../schema/world';
 import { GM_BUDGET_PER_AREA } from '../schema/gm';
-import type { ActorInstance, AreaMap, Pos } from './types';
-import { type Ctx, emit, isPlayer, logKey, me, playerActor, tileWalkable } from './ctx';
+import type { ActorInstance, AreaMap, PlayerId, Pos } from './types';
+import { type Ctx, emit, isPlayer, logKey, me, partyActors, playerActor, playerActorOf, playerOf, tileWalkable } from './ctx';
 import { spawnActor } from './actors';
 import { dropItemAt } from './inventory';
 import { fireTriggers } from './triggers';
@@ -13,9 +14,15 @@ import { evalParty } from './conditions';
 import { updateFov } from './vision';
 import { bfsDistances } from './path';
 import { applyAreaTerrain } from './mapgen/index';
+import { PARTY_SCALING, clampPartySize, partyScaled } from './difficulty';
+import { maxHp } from './stats';
+import { refillFatalResources } from './combat';
+import { closeStaleChoices } from './npc';
 import { cheb, clone, inBounds, samePos } from './util';
 
 const EXTRA_SPAWNS: Record<string, number> = { small: 2, medium: 4, large: 6 };
+/** in a party, spawned actors keep this many tiles from every player when the map allows */
+const SPAWN_KEEP_AWAY = 3;
 
 /** makes sure a map is usable: tiles length, start/exit in bounds and marked */
 export function normaliseMap(map: AreaMap): AreaMap {
@@ -70,8 +77,15 @@ type Where = 'anywhere' | 'near_start' | 'near_exit' | 'far' | 'centre' | 'guard
 function choosePos(ctx: Ctx, pl: Placement, where: Where, forItem = false): Pos | null {
   const map = ctx.s.area.map;
   const W = map.width;
-  const free = pl.floor.filter((p) => (forItem ? !ctx.s.area.items.some((fi) => samePos(fi.pos, p)) : !occupied(ctx, p)));
+  let free = pl.floor.filter((p) => (forItem ? !ctx.s.area.items.some((fi) => samePos(fi.pos, p)) : !occupied(ctx, p)));
   if (!free.length) return null;
+  // in a party the players stand around the start: actors keep SPAWN_KEEP_AWAY tiles from all of
+  // them (near_start most of all), unless nothing else is left
+  if (!forItem && (ctx.s.area.partySize ?? 1) > 1) {
+    const players = partyActors(ctx).map((a) => a.pos);
+    const away = free.filter((p) => !players.some((q) => cheb(p, q) <= SPAWN_KEEP_AWAY));
+    if (away.length) free = away;
+  }
   const ds = (p: Pos) => pl.fromStart[p.y * W + p.x];
   const de = (p: Pos) => pl.fromExit[p.y * W + p.x];
   switch (where) {
@@ -164,22 +178,26 @@ function placeActors(ctx: Ctx, plan: AreaPlan): void {
   // spawn table: every entry's minimum, then weighted extras up to the size budget
   const entries = plan.actors.filter((e) => ctx.ix.actors.has(e.actor));
   const counts = entries.map(() => 0);
-  const spawnOne = (k: number): boolean => {
+  const spawnOne = (i: number): boolean => {
     const p = choosePos(ctx, pl, 'anywhere');
     if (!p) return false;
-    const a = spawnActor(ctx, entries[k].actor, p, { randomEnergy: true, silent: true, uncapped: true });
-    counts[k]++;
+    const a = spawnActor(ctx, entries[i].actor, p, { randomEnergy: true, silent: true, uncapped: true });
+    counts[i]++;
     return !!a;
   };
-  entries.forEach((e, k) => {
-    for (let i = 0; i < e.min; i++) spawnOne(k);
+  // a party gets more of them: minimums, maximums and the extras scale (PARTY_SCALING.hostileCount);
+  // `placed` actors (story, uniques) stay single
+  const n = ctx.s.area.partySize ?? 1;
+  const k = PARTY_SCALING.hostileCount;
+  entries.forEach((e, i) => {
+    for (let j = 0; j < partyScaled(e.min, n, k); j++) spawnOne(i);
   });
-  const extra = EXTRA_SPAWNS[plan.size] ?? 4;
+  const extra = partyScaled(EXTRA_SPAWNS[plan.size] ?? 4, n, k);
   for (let i = 0; i < extra; i++) {
-    const weights = entries.map((e, k) => (counts[k] < Math.max(e.min, e.max) ? e.weight : 0));
-    const k = ctx.rng.weighted(weights);
-    if (k < 0) break;
-    spawnOne(k);
+    const weights = entries.map((e, j) => (counts[j] < partyScaled(Math.max(e.min, e.max), n, k) ? e.weight : 0));
+    const j = ctx.rng.weighted(weights);
+    if (j < 0) break;
+    spawnOne(j);
   }
 }
 
@@ -191,7 +209,7 @@ function placeItems(ctx: Ctx, plan: AreaPlan): void {
     if (p) dropItemAt(ctx, pi.item, 1, p);
   }
   const table = plan.items.filter((e) => ctx.ix.items.has(e.item));
-  for (let i = 0; i < plan.itemCount; i++) {
+  for (let i = 0, count = partyScaled(plan.itemCount, ctx.s.area.partySize ?? 1, PARTY_SCALING.itemCount); i < count; i++) {
     const k = ctx.rng.weighted(table.map((e) => e.weight));
     if (k < 0) break;
     const p = choosePos(ctx, pl, 'anywhere', true);
@@ -201,13 +219,19 @@ function placeItems(ctx: Ctx, plan: AreaPlan): void {
 }
 
 /**
- * Enters area `index`: builds the map (injected or generated), places the player at the start,
- * brings nearby allies along, populates the area and fires on_area_enter.
+ * Enters area `index`: builds the map (injected or generated, sized for the party), places the
+ * acting player (the one who led the way) at the start and the rest of the party on the nearest
+ * free floor, brings each player's nearby allies along next to them, populates the area (scaled
+ * for the party) and fires on_area_enter with the acting player as user. Down players are pulled
+ * along and arrive standing (getsUpOnArrival). A party of one places, spawns and draws from the
+ * rng exactly as before parties.
  */
 export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
   const plan = ctx.world.areas[index];
   if (!plan) throw new Error(`no area ${index}`);
-  const map = normaliseMap(injected ?? ctx.mapGen(plan, ctx.world, ctx.rng));
+  // late joiners count from the next area on
+  const n = clampPartySize(ctx.s.party.length);
+  const map = normaliseMap(injected ?? (n > 1 ? ctx.mapGen(plan, ctx.world, ctx.rng, { partySize: n }) : ctx.mapGen(plan, ctx.world, ctx.rng)));
   const prev = ctx.s.area;
   const player = prev?.actors.find((a) => a.id === me(ctx).actorId);
   if (!player) throw new Error('player actor missing');
@@ -218,9 +242,12 @@ export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
     if (a && a !== player) others.push(a);
   }
   const owners = [player, ...others];
-  const allies: ActorInstance[] = prev
-    ? prev.actors.filter((a) => a.hp > 0 && owners.some((o) => a.allyOf === o.id && cheb(a.pos, o.pos) <= 4))
-    : [];
+  const allies: { ally: ActorInstance; owner: ActorInstance }[] = [];
+  for (const a of prev?.actors ?? []) {
+    if (a.hp <= 0) continue;
+    const owner = owners.find((o) => a.allyOf === o.id && cheb(a.pos, o.pos) <= 4);
+    if (owner) allies.push({ ally: a, owner });
+  }
   player.pos = { ...map.start };
   ctx.s.area = {
     index,
@@ -228,9 +255,11 @@ export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
     actors: [player],
     items: [],
     discoveredRegions: [],
-    gmBudget: GM_BUDGET_PER_AREA,
+    gmBudget: partyScaled(GM_BUDGET_PER_AREA, n, PARTY_SCALING.gmBudget),
+    ...(n > 1 ? { partySize: n } : {}),
   };
   for (const id of ctx.s.party) ctx.s.players[id].seen = new Uint8Array(map.width * map.height);
+  for (const o of owners) getsUpOnArrival(ctx, o);
   placeTerrain(ctx, plan);
   // teammates before allies and spawns, on the nearest free floor to the start (reachable, so
   // nobody lands behind a wall); a party of one places exactly as before
@@ -239,21 +268,66 @@ export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
     o.pos = p;
     ctx.s.area.actors.push(o);
   }
-  for (const al of allies) {
-    const p = nearestFreeFloor(ctx, map.start);
+  // allies next to their owner (for a party of one the owner is on the start, as before)
+  for (const { ally, owner } of allies) {
+    const p = nearestFreeFloor(ctx, owner.pos);
     if (!p) continue;
-    al.pos = p;
-    al.ai.home = { ...p };
-    delete al.ai.lastSeen;
-    ctx.s.area.actors.push(al);
+    ally.pos = p;
+    ally.ai.home = { ...p };
+    delete ally.ai.lastSeen;
+    delete ally.ai.targetId;
+    ctx.s.area.actors.push(ally);
   }
   placeActors(ctx, plan);
   placeItems(ctx, plan);
+  // a dialogue with someone left behind is over (parties only: a single player cannot leave mid-choice)
+  closeStaleChoices(ctx);
   emit(ctx, { type: 'area_entered', index });
   logKey(ctx, 'log.area.enter', { area: ctx.world.vocabulary.area, number: index + 1, name: plan.name }, 'system');
   updateFov(ctx);
   fireTriggers(ctx, player, 'on_area_enter', { pos: player.pos });
   updateFov(ctx);
+}
+
+/**
+ * A down player pulled along to a new area arrives standing at half health, with every empty fatal
+ * resource refilled to half (a new area is a fresh start; a spent second chance stays spent).
+ */
+function getsUpOnArrival(ctx: Ctx, a: ActorInstance): void {
+  const ps = playerOf(ctx, a);
+  if (!ps?.down) return;
+  delete ps.down;
+  a.hp = Math.max(1, Math.ceil(maxHp(ctx, a) / 2));
+  refillFatalResources(ctx, ps);
+  emit(ctx, { type: 'revived', playerId: ps.id, actorId: a.id, helped: false });
+  logKey(ctx, 'log.party.up', { player: ps.name }, 'good');
+}
+
+/** whether every standing player (but `except`) is within 1 tile of the exit */
+export function partyAtExit(ctx: Ctx, except?: PlayerId): boolean {
+  const exit = ctx.s.area.map.exit;
+  return ctx.s.party.every((id) => {
+    if (id === except || ctx.s.players[id].down) return true;
+    const a = playerActorOf(ctx, id);
+    return !a || a.hp <= 0 || cheb(a.pos, exit) <= 1;
+  });
+}
+
+/**
+ * End of round: the exit countdown counts down; at 0, or as soon as every standing player is at
+ * the exit, the area change is pending (turnsLeft 0): runWorld stops and runTurn moves the party
+ * on (party.ts). enterArea never runs inside endRound or runWorld.
+ */
+export function tickExitCountdown(ctx: Ctx): void {
+  const cd = ctx.s.area.exitCountdown;
+  if (!cd || cd.turnsLeft <= 0 || ctx.s.status !== 'playing') return;
+  cd.turnsLeft = partyAtExit(ctx) ? 0 : cd.turnsLeft - 1;
+  emit(ctx, { type: 'exit_countdown', turnsLeft: cd.turnsLeft, by: cd.by });
+}
+
+/** the exit countdown ran out (or everyone gathered at the exit): the party moves on now */
+export function exitPending(ctx: Ctx): boolean {
+  return ctx.s.area.exitCountdown?.turnsLeft === 0;
 }
 
 /** the nearest reachable, unoccupied plain floor tile to `from` (BFS; `from` itself excluded) */

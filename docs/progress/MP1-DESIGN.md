@@ -627,6 +627,55 @@ golden replay, growth for n = 2/4/12, caps, a unique's second phase keeps its sc
 `tests/mapgen/party-size.test.ts` (every generator at party size 4; party size 12 on a subset of three
 generators: valid, connected, start ≠ exit, dimensions as specified; one loose timing check at 91×65).
 
+**B3 as built** (2026-10-26):
+- Exit (`actions.ts` `doTransition` / `moveOn`, `area.ts` `partyAtExit` / `tickExitCountdown` /
+  `exitPending`): a party of one, or a party whose other standing players are all within 1 tile of
+  the exit, moves on at once from `doTransition` (today's path, so single player is unchanged and
+  the golden replay holds; later inputs of the same `stepTurn` are refused `area changed`).
+  Otherwise `area.exitCountdown = { turnsLeft: partyRules.exitCountdownTurns, by }` with
+  `log.party.exit_countdown` (en + nb) and event `exit_countdown` (also on each tick). A second
+  `transition` while it runs is an ordinary turn at the exit. `endRound` ends with the tick: −1, or
+  straight to 0 once every standing player is at the exit. 0 = pending: `runWorld` returns at the
+  top of its loop and `runTurn` calls `moveOn(ctx, by)` after it (enterArea never runs inside
+  endRound or runWorld). `invariantError`: between calls turnsLeft is 1..exitCountdownTurns and
+  `by` is in the party.
+- `moveOn`: `areasCleared` +1, the transition line, `enterArea` under `withPlayer(by)` (the starter
+  on `map.start`, the user of `on_area_enter`; only the starter's triggers fire), then every
+  player's energy `max(energy, ACT_COST)`. `enterArea` gets down players up on arrival (half hp,
+  fatal resources refilled, event `revived` with `helped: false`, `log.party.up`), places allies
+  on `nearestFreeFloor(owner)` (for one player the owner is on the start, as before), clears allies'
+  `targetId`, and closes dialogues whose speaker was left behind (`closeStaleChoices`, parties
+  only).
+- Scaling (`difficulty.ts` `PARTY_SCALING`, `partyFactor`, `partyScaled`, `clampPartySize`;
+  `MAX_PARTY_SIZE` moved here, re-exported from index.ts): `enterArea` passes `{ partySize: n }`
+  to the generator only for n > 1 (`MapGenOptions`, 4th argument of `MapGenerator`) and stores
+  `area.partySize` only then. `mapgen/context.ts` `mapDimensions(size, n)`; `GenContext.areaScale`
+  (tile ratio to MAP_SIZES) with `scaledCount`. **Deviation:** `rooms` (roomCount) and `town`
+  (buildings) scale their feature count by `areaScale`: with fixed room sizes a 12-player rooms
+  map failed the 15 % floor check; the other generators already size features from the grid.
+- Spawns: entry minimums, **maximums** (deviation: without them the extra spawns had no room)
+  and `EXTRA_SPAWNS` × `hostileCount`; `placed` single. In a party, every actor placement keeps
+  more than 3 tiles from every standing player when the map allows (not only `near_start`, since
+  `anywhere` is "6+ steps from the start" and teammates stand around it). `scaledHostileHp(s, def)`
+  reads `s.area.partySize` (hostileHp / uniqueHp; NPCs never), so spawn, transform (boss phases),
+  GM spawns and hostile summons all scale through `makeActor` / `transformActor`. Items
+  `plan.itemCount × itemCount`; GM budget `GM_BUDGET_PER_AREA × gmBudget` (the GM prompt still
+  quotes 10 per area: MP4); actor cap `areaActorCap(ctx)` (= 60 + 10 per extra player), also in the
+  GM's "area is full" message.
+- **Addition:** a world's `violenceCounter` (kills feeding a lose condition, fixture-dream's
+  "colours unmade ≥ 30") counts each kill as 1/f in a party area (`combat.ts` `countViolence`,
+  remainder in `AreaState.violenceCarry`), since a party meets f× the hostiles. Before this both
+  2-player fixture-dream runs were lost to it.
+- Sweep (21 worlds × 2 seeds, fast, explorer/cautious/talker): 2 players normal 41 won, 1 lost; 3
+  players 37 won, 1 lost, viking (en, nb) 2 stuck + 2 timeouts; 4 players 40 won, viking 2
+  timeouts; 2 players brutal 36 won, 6 lost, 68 downs, 55 revives. 0 crashes, 0 invariant errors,
+  0 `illegal` refusals everywhere; `area changed` 5 in all.
+- 12 bots on fixture-western (areas 72×52, **91×65**, 72×52, 52×39) won in 881 party turns: whole
+  party turn incl. 12 bot decisions mean 14 ms, p95 26–27 ms, max 380–400 ms (the turn that enters the 91×65 area); engine
+  ~3 ms per turn (world 1.2, AI 0.9, FOV 0.9). The engine is well under budget, so no cross-call
+  FOV cache; the p95 over 20 ms is the bots' own time (B4 should report engine and bot time apart
+  and decide whether the budget is meant for the engine only).
+
 ### B4 — Party sim tool, exit checks, tuning, docs
 
 Scope: the rest of §8. `tools/sim.ts --party / --party-sizes / --timing` (with the injected clock),

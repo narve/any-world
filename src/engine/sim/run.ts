@@ -129,7 +129,9 @@ export function invariantError(world: WorldSpec, s: GameState): string | null {
     }
   }
   const cd = s.area.exitCountdown;
-  if (cd && !(cd.turnsLeft >= 0 && cd.turnsLeft <= s.partyRules.exitCountdownTurns)) return `exit countdown at ${cd.turnsLeft}`;
+  // 0 means "moving on now" and never outlives the party turn that reached it (party.ts)
+  if (cd && s.status === 'playing' && !(cd.turnsLeft >= 1 && cd.turnsLeft <= s.partyRules.exitCountdownTurns)) return `exit countdown at ${cd.turnsLeft}`;
+  if (cd && !s.party.includes(cd.by)) return `exit countdown started by ${cd.by}, who is not in the party`;
   if (!Number.isFinite(s.purse)) return `purse = ${s.purse}`;
   const taken = new Set<number>();
   for (const a of s.area.actors) {

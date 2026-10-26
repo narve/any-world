@@ -44,7 +44,8 @@ describe('runParty', () => {
   });
 
   it('Brutal: players go down and get back up, the run goes on until everyone is down (MP1 B2b)', () => {
-    const world = loadFixture('fixture-dream.json');
+    // (B3: party scaling changed the maps; this seed has several downs and revives)
+    const world = loadFixture('fantasy-retired-mimic.json');
     let downed = 0;
     let revived = 0;
     const r = runParty(world, 2, ['explorer', 'cautious'], {

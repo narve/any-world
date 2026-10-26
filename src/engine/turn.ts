@@ -18,6 +18,7 @@ import { heal, killPlayer, lossReasonKeyed, refillFatalResources } from './comba
 import { switchesOf } from './rules';
 import { regenInterval } from './difficulty';
 import { closeStaleChoices } from './npc';
+import { exitPending, tickExitCountdown } from './area';
 
 export const ACT_COST = 100;
 const RESOURCE_EMPTY_REPEAT = 5;
@@ -25,7 +26,8 @@ const RESOURCE_EMPTY_REPEAT = 5;
 export const RUN_WORLD_GUARD = 2000;
 
 /**
- * Runs other actors and rounds until some standing player can act again (or the game ends). A
+ * Runs other actors and rounds until some standing player can act again, the game ends or the
+ * exit countdown runs out (party.ts then moves the party on). A
  * stunned player with energy to act burns it (each logs as in single player); hasted players get
  * their extra actions while the others are still out of energy.
  */
@@ -43,6 +45,8 @@ function runWorldLoop(ctx: Ctx): void {
       return;
     }
     if (ctx.s.status !== 'playing') return;
+    // the exit countdown ran out: runTurn moves the party on (enterArea never runs in here)
+    if (exitPending(ctx)) return;
     runOthers(ctx);
     if (ctx.s.status !== 'playing') return;
     let ready = false;
@@ -208,6 +212,7 @@ export function endRound(ctx: Ctx): void {
   reviveDown(ctx);
   checkQuests(ctx);
   checkEnd(ctx);
+  tickExitCountdown(ctx);
 }
 
 /** rounds a standing teammate must spend next to a down player to get them up */

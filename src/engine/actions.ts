@@ -1,5 +1,5 @@
 /** Player action dispatch: validation first (no state change when invalid), then the action. */
-import type { Dir, PlayerAction, Pos } from './types';
+import type { Dir, PlayerAction, PlayerId, Pos } from './types';
 import {
   type Ctx,
   actorAt,
@@ -18,6 +18,7 @@ import {
   partyActors,
   playerActor,
   playerName,
+  withPlayer,
 } from './ctx';
 import {
   type ActionOutcome,
@@ -36,7 +37,7 @@ import { attackOf, inAttackRange, performAttack } from './combat';
 import { hasFlag, side } from './stats';
 import { isVisibleToPlayer, runAction } from './effects';
 import { moveActor } from './actors';
-import { enterArea, lockedReason, transitionFailure } from './area';
+import { enterArea, lockedReason, partyAtExit, transitionFailure } from './area';
 import { canTalkTo, doChooseOption, doPersuade, doTalk, talkingWith } from './npc';
 import { choosePerk } from './progression';
 import { DIR_LIST, addDir, cheb, isValidPos, samePos, tileAt } from './util';
@@ -186,18 +187,44 @@ function doAttack(ctx: Ctx, targetId: string): ActionOutcome {
   return attackTarget(ctx, t, false);
 }
 
+/**
+ * Taking the exit (docs/progress/MP1-DESIGN.md §5). A party of one, or a party whose other standing
+ * players are all at the exit, moves on at once. Otherwise the exit countdown starts
+ * (partyRules.exitCountdownTurns rounds; endRound counts it down and runTurn moves everyone on at
+ * 0); taking the exit again while it runs just spends the turn at the exit.
+ */
 function doTransition(ctx: Ctx): ActionOutcome {
   const err = transitionFailure(ctx);
   if (err) {
     if (err === lockedReason(ctx)) logKey(ctx, 'log.transition.locked', { transition: ctx.world.areas[ctx.s.area.index].transitionName }, 'warning');
     return invalid(err);
   }
+  const area = ctx.s.area;
+  if (ctx.s.party.length < 2 || partyAtExit(ctx, ctx.pid)) {
+    moveOn(ctx, area.exitCountdown?.by ?? ctx.pid);
+    return done();
+  }
+  if (!area.exitCountdown) {
+    const turns = ctx.s.partyRules.exitCountdownTurns;
+    area.exitCountdown = { turnsLeft: turns, by: ctx.pid };
+    emit(ctx, { type: 'exit_countdown', turnsLeft: turns, by: ctx.pid });
+    logKey(ctx, 'log.party.exit_countdown', { player: playerName(ctx), transition: ctx.world.areas[area.index].transitionName, turns }, 'system');
+  }
+  return done();
+}
+
+/**
+ * The whole party moves on to the next area, led by `by` (placed on the start, the user of
+ * on_area_enter): down players are pulled along and get up, and everyone has the energy to act.
+ * Runs from doTransition (at once) or from runTurn after the world moved (the countdown ran out),
+ * never inside endRound or runWorld.
+ */
+export function moveOn(ctx: Ctx, by: PlayerId): void {
+  const lead = ctx.s.party.includes(by) ? by : ctx.s.party[0];
   ctx.s.stats.areasCleared += 1;
   log(ctx, ctx.world.areas[ctx.s.area.index].transitionName, 'system');
-  // the whole party moves on together (MP1 B3 adds the exit countdown)
-  enterArea(ctx, ctx.s.area.index + 1);
+  withPlayer(ctx, lead, () => enterArea(ctx, ctx.s.area.index + 1));
   for (const p of partyActors(ctx)) p.energy = Math.max(p.energy, 100);
-  return done();
 }
 
 function doSearch(ctx: Ctx): ActionOutcome {

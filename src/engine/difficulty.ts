@@ -7,10 +7,12 @@
  *   - the harm a GM rule may add or take away (gm.ts add_rule / remove_rule, see rules.ts)
  *   - whether the first defeat of a run is a second chance (combat.killPlayer), and in a party of
  *     two or more whether every player has one (partySecondChance)
+ * Party scaling (PARTY_SCALING, MP1 B3) sits on top of the band for parties of two or more: map
+ * size, hostile numbers and hp, items, GM budget and the actor cap grow with the party.
  * Saves keep the band in GameState.difficulty; states without one play as 'normal'.
  */
 import { Difficulty } from '../schema/gm';
-import type { GameState } from './types';
+import type { AreaState, GameState } from './types';
 
 export { Difficulty };
 
@@ -87,12 +89,59 @@ export function uniqueHp(hp: number): number {
 }
 
 /**
- * hostile hp for a def's base hp under the state's difficulty; NPCs (def.npc) keep their hp on
- * every band, but a unique NPC still gets the boss factor
+ * hostile hp for a def's base hp under the state's difficulty and the party size the area was
+ * built for (AreaState.partySize); NPCs (def.npc) keep their hp on every band and party size, but
+ * a unique NPC still gets the boss factor
  */
-export function scaledHostileHp(s: Pick<GameState, 'difficulty'>, def: { stats: { hp: number }; unique?: boolean; npc?: unknown }): number {
-  const f = (def.npc ? 1 : profileOf(s).hostileHp) * (def.unique ? UNIQUE_HOSTILE_HP : 1);
+export function scaledHostileHp(
+  s: Pick<GameState, 'difficulty'> & { area?: Pick<AreaState, 'partySize'> },
+  def: { stats: { hp: number }; unique?: boolean; npc?: unknown },
+): number {
+  let f = (def.npc ? 1 : profileOf(s).hostileHp) * (def.unique ? UNIQUE_HOSTILE_HP : 1);
+  const n = s.area?.partySize ?? 1;
+  if (n > 1 && !def.npc) f *= partyFactor(n, def.unique ? PARTY_SCALING.uniqueHp : PARTY_SCALING.hostileHp);
   return f === 1 ? def.stats.hp : Math.max(1, Math.round(def.stats.hp * f));
+}
+
+/** most players in one party (MULTIPLAYER-PLAN §1: 8 by default, up to 12) */
+export const MAX_PARTY_SIZE = 12;
+
+/**
+ * How an area grows with the party it is built for (docs/progress/MP1-DESIGN.md §6): each factor
+ * k gives 1 + k·(n − 1) for n players. Applied only for n ≥ 2: a party of one skips the scaling
+ * code entirely, so single-player maps, spawns and hp are unchanged. B4 tunes the numbers from bot
+ * win rates.
+ */
+export const PARTY_SCALING = {
+  /** map area (width and height each grow by the square root) */
+  mapArea: 0.15,
+  /** spawn-table minimums and maximums, and the extra spawns of the area size */
+  hostileCount: 0.35,
+  /** ordinary hostiles' hp */
+  hostileHp: 0.15,
+  /** bosses' hp (they face the whole party's focus fire) */
+  uniqueHp: 0.5,
+  /** plan.itemCount (packs are personal); placed items (keys, goal items) stay single */
+  itemCount: 0.5,
+  /** the GM's budget per area */
+  gmBudget: 0.25,
+  /** extra room in the per-area actor cap per extra player (absolute, not a factor) */
+  actorCap: 10,
+} as const;
+
+/** 1 + k·(n − 1): the scale for a party of n */
+export function partyFactor(n: number, k: number): number {
+  return 1 + k * (Math.max(1, n) - 1);
+}
+
+/** a party size as the scaling uses it: a whole number in 1..MAX_PARTY_SIZE (1 for anything odd) */
+export function clampPartySize(n: unknown): number {
+  return typeof n === 'number' && Number.isFinite(n) ? Math.max(1, Math.min(MAX_PARTY_SIZE, Math.round(n))) : 1;
+}
+
+/** `base` scaled for a party of n by factor k, rounded; `base` itself for a party of one */
+export function partyScaled(base: number, n: number, k: number): number {
+  return n > 1 ? Math.round(base * partyFactor(n, k)) : base;
 }
 
 /** the natural hp regeneration interval (0 = none) */

@@ -68,6 +68,7 @@ const nb = {
   'log.party.talk_gone': '{player} mister tråden: samtalen er over.',
   'log.party.down': '{player} er nede. En lagkamerat ved siden av får dem på beina igjen.',
   'log.party.up': '{player} kommer seg på beina igjen.',
+  'log.party.exit_countdown': '{player} tar {transition}: gruppa drar videre om {turns}.',
 
   'log.quest.new': 'Nytt: {title}',
   'log.quest.done': 'Fullført: {title}',

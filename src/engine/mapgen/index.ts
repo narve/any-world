@@ -1,7 +1,8 @@
 /**
  * Map generation entry point.
  *
- * generateArea(plan, world, rng) → AreaMap. Deterministic for a given rng state. Guarantees:
+ * generateArea(plan, world, rng, opts?) → AreaMap. Deterministic for a given rng state. The map
+ * grows with `opts.partySize` (context.ts mapDimensions; a party of one keeps MAP_SIZES). Guarantees:
  *  - start ('start' tile) and exit ('transition' tile) are distinct, walkable and connected
  *    (every passable tile is in one 4-connected component);
  *  - start and exit are far apart (≥ 40% of the map diagonal whenever the shape allows);
@@ -14,7 +15,7 @@
  * Custom terrain (plan.terrain) is NOT applied here — call applyAreaTerrain / scatterTerrain.
  */
 import type { AreaPlan, WorldSpec } from '../../schema/world';
-import type { AreaMap, MapGenerator, Rng } from '../types';
+import type { AreaMap, MapGenOptions, MapGenerator, Rng } from '../types';
 import { makeContext, type GenContext } from './context';
 import { finalize } from './finalize';
 import { PASSABLE_KINDS, components } from './grid';
@@ -66,8 +67,8 @@ export function validateMap(map: AreaMap): string[] {
   return problems;
 }
 
-function generateOnce(plan: AreaPlan, rng: Rng): AreaMap {
-  const ctx = makeContext(plan, rng);
+function generateOnce(plan: AreaPlan, rng: Rng, partySize?: number): AreaMap {
+  const ctx = makeContext(plan, rng, partySize);
   const gen = GENERATORS[plan.generator] ?? genRooms;
   gen(ctx);
   return finalize(ctx.g, rng, {
@@ -82,11 +83,12 @@ function generateOnce(plan: AreaPlan, rng: Rng): AreaMap {
   });
 }
 
-export const generateArea: MapGenerator = (plan: AreaPlan, _world: WorldSpec, rng: Rng): AreaMap => {
+export const generateArea: MapGenerator = (plan: AreaPlan, _world: WorldSpec, rng: Rng, opts?: MapGenOptions): AreaMap => {
+  const partySize = opts?.partySize;
   let lastErr: unknown = null;
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
-      const map = generateOnce(plan, rng);
+      const map = generateOnce(plan, rng, partySize);
       if (validateMap(map).length === 0) return map;
       lastErr = new Error(validateMap(map).join('; '));
     } catch (e) {
@@ -95,7 +97,7 @@ export const generateArea: MapGenerator = (plan: AreaPlan, _world: WorldSpec, rn
   }
   // last resort: plain rooms & corridors always work
   try {
-    const map = generateOnce({ ...plan, generator: 'rooms', params: {} }, rng);
+    const map = generateOnce({ ...plan, generator: 'rooms', params: {} }, rng, partySize);
     if (validateMap(map).length === 0) return map;
   } catch (e) {
     lastErr = e;
@@ -104,7 +106,7 @@ export const generateArea: MapGenerator = (plan: AreaPlan, _world: WorldSpec, rn
 };
 
 export { renderAscii, type AsciiOptions } from './ascii';
-export { MAP_SIZES, type MapSize } from './context';
+export { MAP_SIZES, mapDimensions, type MapSize } from './context';
 export { PASSABLE_KINDS, isPassableKind, isPassableTile, posKey } from './grid';
 export { applyAreaTerrain, distanceField, findPlacement, scatterTerrain, type PlacementOptions, type PlacementWhere } from './placement';
 export { seededRng } from './rng';
