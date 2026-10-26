@@ -10,7 +10,7 @@
  *       - moves tween (~120 ms), melee lunges / ranged bolts, floating damage/heal numbers, misses,
  *         status names, deaths topple + fade, Action.vfx effects (bolt/burst/beam/cloud/sparkle/slash/ring),
  *         item pickups fly to the player, spawns pop in, doors open, terrain changes rebuild.
- *       - fog of war is taken from state.area.seen (0 unseen, 1 remembered, 2 visible). Actors and floor
+ *       - fog of war is taken from the lead player's seen (0 unseen, 1 remembered, 2 visible). Actors and floor
  *         items are only shown on visible tiles; the player is always shown. Every actor on a visible
  *         tile is kept drawable: walls on its sight line to the camera are cut away, the camera zooms
  *         out (never in) to keep it on screen, fog starts beyond the sight radius and actor models get
@@ -55,7 +55,7 @@ import type { WorldSpec, AreaPlan } from '../../schema/world';
 import type { AreaState, GameEvent, GameState, Pos, ActorInstance } from '../../engine/types';
 import { CameraRig } from './camera';
 import { LightRig, type ModelLightRequest } from './lighting';
-import { AreaView } from './tiles';
+import { AreaView, type FoggedArea, type SeenArray } from './tiles';
 import { ActorLayer, type ActorView } from './actors';
 import { ItemLayer } from './items';
 import { VfxLayer } from './vfx';
@@ -71,6 +71,7 @@ import { AdaptiveQuality, FpsMeter, QUALITY_PROFILES, browserDeviceHints, initia
 import type { ViewInsets, OverlayRect } from './camera';
 import { missLabel } from '../i18n/engine-text';
 import { ItemThumbnailer } from './thumbnails';
+import { leadPlayer } from '../../engine/index';
 
 export { buildModel, animateModel } from './models';
 export type { ModelSpecIn } from './models';
@@ -257,7 +258,7 @@ export class Renderer {
     this.areaIndex = -1;
   }
 
-  setArea(area: AreaState, world?: WorldSpec): void {
+  setArea(area: FoggedArea, world?: WorldSpec): void {
     if (world) this.setWorld(world);
     const w = this.world;
     if (!w) throw new Error('Renderer.setArea: call setWorld first (or pass the world)');
@@ -346,12 +347,13 @@ export class Renderer {
     // a new turn fast-forwards whatever the previous one was still doing
     this.anim.finishBlocking();
     const gen = ++this.syncGen;
-    if (!this.area || state.area.index !== this.areaIndex) this.setArea(state.area);
-    else if (!this.area.updateTiles(state.area.map)) this.setArea(state.area);
+    const fogged = { ...state.area, seen: leadPlayer(state).seen };
+    if (!this.area || state.area.index !== this.areaIndex) this.setArea(fogged);
+    else if (!this.area.updateTiles(state.area.map)) this.setArea(fogged);
     const area = this.area!;
     this.state = state;
-    this.playerId = state.player.actorId;
-    area.applySeen(state.area.seen);
+    this.playerId = leadPlayer(state).actorId;
+    area.applySeen(leadPlayer(state).seen);
 
     const actors = this.actors;
     const byId = new Map<string, ActorInstance>(state.area.actors.map((a) => [a.id, a]));
@@ -624,7 +626,7 @@ export class Renderer {
       }
       actors.setFaction(v, ActorLayer.factionOf(a, isPlayer(a.id)));
       // sneaking player / invisible actors are drawn ghosted
-      const ghosted = (v.isPlayer && state.player.sneaking) || a.statuses.some((st) => this.world!.statuses.find((d) => d.id === st.id)?.flags.includes('invisible'));
+      const ghosted = (v.isPlayer && leadPlayer(state).sneaking) || a.statuses.some((st) => this.world!.statuses.find((d) => d.id === st.id)?.flags.includes('invisible'));
       if (v.isPlayer) this.playerGhosted = ghosted;
       const want = this.restingOpacity(v, ghosted);
       if (!v.dying && v.opacity !== want && (want !== 1 || v.fadeMats)) actors.setOpacity(v, want);
@@ -681,7 +683,7 @@ export class Renderer {
     if (pa) {
       // light and fog follow the engine's sight, and the camera keeps every visible actor framed, so
       // nothing the engine lets the player see (and that can act on them) is dark or off screen
-      this.lights.setSightRadius(visibleRadius(state.area, pa.pos));
+      this.lights.setSightRadius(visibleRadius({ map: state.area.map, seen: leadPlayer(state).seen }, pa.pos));
       this.focus.set(pa.pos.x, 0, pa.pos.y);
       this.rig.follow(this.focus);
       this.reframe(state, pa);
@@ -1163,7 +1165,7 @@ export class Renderer {
     const st = this.state;
     if (st && this.world) {
       const step = this.rig.step;
-      this.setArea(st.area);
+      this.setArea({ ...st.area, seen: leadPlayer(st).seen });
       this.rig.step = step;
       this.rig.settle();
       void this.sync(st, []);
@@ -1433,7 +1435,7 @@ function prefersReducedMotion(): boolean {
  * Radius (tiles, Euclidean) of the engine's current field of view: the farthest tile marked visible
  * (seen = 2) from the player. 0 when nothing is visible.
  */
-export function visibleRadius(area: Pick<AreaState, 'seen' | 'map'>, from: Pos): number {
+export function visibleRadius(area: { map: Pick<AreaState['map'], 'width'>; seen: SeenArray }, from: Pos): number {
   const W = area.map.width;
   let best = 0;
   const seen = area.seen as ArrayLike<number>;

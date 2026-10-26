@@ -6,8 +6,8 @@
  * Nothing here mutates the GameState it is given (tests/sim check this).
  */
 import type { Amount, Condition, Effect, ItemDef, WorldSpec } from '../../schema/world';
-import type { ActorInstance, GameState, Pos } from '../types';
-import { type Ctx, indexWorld, passable } from '../ctx';
+import type { ActorInstance, GameState, PlayerId, Pos } from '../types';
+import { type Ctx, indexWorld, leadOf, me, passable } from '../ctx';
 import { rngFromState } from '../rng';
 import { generateArea } from '../mapgen/index';
 import { computeLegalActions } from '../legal';
@@ -23,13 +23,15 @@ import type { PlayerAction } from '../types';
 
 /**
  * An engine context over `state` without cloning it (the public API clones on every call, which
- * dominates simulation time). Only read-only engine helpers may be called with it.
+ * dominates simulation time). Only read-only engine helpers may be called with it. `playerId` is
+ * the player the bot plays (default: the lead).
  */
-export function botCtx(world: WorldSpec, state: GameState): Ctx {
+export function botCtx(world: WorldSpec, state: GameState, playerId: PlayerId = state.party[0]): Ctx {
   return {
     world,
     ix: indexWorld(world),
     s: state,
+    pid: playerId,
     rng: rngFromState(state.rng),
     events: [],
     mapGen: generateArea,
@@ -43,7 +45,7 @@ export function fastLegal(ctx: Ctx): PlayerAction[] {
 }
 
 export function player(ctx: Ctx): ActorInstance {
-  const id = ctx.s.player.actorId;
+  const id = me(ctx).actorId;
   const p = ctx.s.area.actors.find((a) => a.id === id);
   if (!p) throw new Error('player actor missing');
   return p;
@@ -60,14 +62,14 @@ export function cheb(a: Pos, b: Pos): number {
 
 /** living hostile actors the player can currently see */
 export function visibleHostiles(ctx: Ctx): ActorInstance[] {
-  return ctx.s.area.actors.filter((a) => a.hp > 0 && a.id !== ctx.s.player.actorId && side(ctx, a) === 'H' && isVisibleToPlayer(ctx, a));
+  return ctx.s.area.actors.filter((a) => a.hp > 0 && a.id !== me(ctx).actorId && side(ctx, a) === 'H' && isVisibleToPlayer(ctx, a));
 }
 
 /** living hostiles on tiles the player has seen at some point (remembered positions are stale, but useful for hunting) */
 export function knownHostiles(ctx: Ctx): ActorInstance[] {
   const map = ctx.s.area.map;
   return ctx.s.area.actors.filter(
-    (a) => a.hp > 0 && a.id !== ctx.s.player.actorId && side(ctx, a) === 'H' && ctx.s.area.seen[a.pos.y * map.width + a.pos.x] === 2,
+    (a) => a.hp > 0 && a.id !== me(ctx).actorId && side(ctx, a) === 'H' && me(ctx).seen[a.pos.y * map.width + a.pos.x] === 2,
   );
 }
 
@@ -211,7 +213,7 @@ function addEffect(pr: ItemProfile, e: Effect, statuses: Map<string, { harmful: 
 
 /** knowledge level the player has of an item kind */
 export function known(ctx: Ctx, defId: string): 'clear' | 'vague' | 'unknown' {
-  return (ctx.s.knowledge[defId]?.level ?? 'clear') as 'clear' | 'vague' | 'unknown';
+  return (me(ctx).knowledge[defId]?.level ?? 'clear') as 'clear' | 'vague' | 'unknown';
 }
 
 // ---------------------------------------------------------------------------
@@ -310,7 +312,7 @@ export function pathField(ctx: Ctx, opts: PathOpts = {}): PathField {
   const N = W * map.height;
   const dist = new Float64Array(N).fill(Infinity);
   const prev = new Int32Array(N).fill(-1);
-  const seen = ctx.s.area.seen;
+  const seen = me(ctx).seen;
   const p = player(ctx);
   const start = p.pos.y * W + p.pos.x;
   dist[start] = 0;
@@ -399,7 +401,7 @@ export function frontierTiles(ctx: Ctx): number[] {
   const map = ctx.s.area.map;
   const W = map.width;
   const H = map.height;
-  const seen = ctx.s.area.seen;
+  const seen = me(ctx).seen;
   const out: number[] = [];
   for (let y = 0; y < H; y++)
     for (let x = 0; x < W; x++) {
@@ -421,9 +423,10 @@ export function frontierTiles(ctx: Ctx): number[] {
   return out;
 }
 
+/** tiles the lead player has seen in this area */
 export function seenCount(state: GameState): number {
   let n = 0;
-  const seen = state.area.seen;
+  const seen = leadOf(state).seen;
   for (let i = 0; i < seen.length; i++) if (seen[i]) n++;
   return n;
 }
@@ -521,10 +524,10 @@ export function wantedDefeats(objs: Objective[]): Set<string> {
 export function lootCarriers(ctx: Ctx, wantItems: Set<string>): Set<string> {
   const out = new Set<string>();
   if (!wantItems.size) return out;
-  const missing = [...wantItems].filter((id) => !ctx.s.area.items.some((fi) => fi.item.defId === id) && !ctx.s.player.slots.some((it) => it?.defId === id));
+  const missing = [...wantItems].filter((id) => !ctx.s.area.items.some((fi) => fi.item.defId === id) && !me(ctx).slots.some((it) => it?.defId === id));
   if (!missing.length) return out;
   for (const a of ctx.s.area.actors) {
-    if (a.hp <= 0 || a.id === ctx.s.player.actorId || side(ctx, a) !== 'H') continue;
+    if (a.hp <= 0 || a.id === me(ctx).actorId || side(ctx, a) !== 'H') continue;
     const def = ctx.ix.actors.get(a.defId);
     if (def?.loot.some((l) => l.chance > 0 && missing.includes(l.item))) out.add(a.defId);
   }

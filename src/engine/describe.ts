@@ -2,7 +2,7 @@
 import type { Action, Amount, Effect, ItemDef, Targeting, TriggerEvent } from '../schema/world';
 import type { ActorInstance, ActorView, ItemEffectLine, ItemInstance, ItemView } from './types';
 import { ITEM_FX_KEYS, type ItemFxKey, type LogParams, renderTemplate } from './log-keys';
-import { type Ctx, actorDef, damageTypeName, isPlayer, playerActor, statName, statusName } from './ctx';
+import { type Ctx, actorDef, damageTypeName, isPlayer, me, playerActor, playerOf, statName, statusName } from './ctx';
 import { knowledgeOf } from './knowledge';
 import { displayItemName, equipSlotOf, equippedKindOf } from './inventory';
 import { attackOf } from './combat';
@@ -217,8 +217,8 @@ function itemColor(ctx: Ctx, def: ItemDef): string {
 }
 
 export function findItemInstance(ctx: Ctx, id: string): { item: ItemInstance; slot: number | null } | null {
-  const slot = ctx.s.player.slots.findIndex((s) => s && s.id === id);
-  if (slot >= 0) return { item: ctx.s.player.slots[slot]!, slot };
+  const slot = me(ctx).slots.findIndex((s) => s && s.id === id);
+  if (slot >= 0) return { item: me(ctx).slots[slot]!, slot };
   const fi = ctx.s.area.items.find((f) => f.item.id === id);
   return fi ? { item: fi.item, slot: null } : null;
 }
@@ -277,7 +277,7 @@ export function viewActor(ctx: Ctx, a: ActorInstance): ActorView {
     if (a.faction !== 'hostile' && !def?.attack) threat = 'trivial';
   }
   return {
-    name: isPlayer(ctx, a) ? ctx.world.player.name : (def?.name ?? a.defId),
+    name: playerOf(ctx, a)?.name ?? def?.name ?? a.defId,
     description: isPlayer(ctx, a) ? ctx.world.player.description : (def?.description ?? ''),
     hp: a.hp,
     maxHp: maxHp(ctx, a),

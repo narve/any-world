@@ -8,6 +8,7 @@ import type { GameState, Pos } from '../../src/engine/types';
 import { GameSession } from '../../src/client/session';
 import { tradeColumns } from '../../src/client/ui/format';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer } from '../../src/engine';
 
 const western = loadFixture('fixture-western.json');
 
@@ -17,12 +18,12 @@ function session(): GameSession {
 
 function setup(s: GameSession, defId: string, me: Pos, them: Pos): string {
   const st = structuredClone(s.state) as GameState;
-  st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.defId === defId);
-  st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { ...me };
+  st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId || a.defId === defId);
+  st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!.pos = { ...me };
   const npc = st.area.actors.find((a) => a.defId === defId);
   if (!npc) throw new Error(`no ${defId} in area`);
   npc.pos = { ...them };
-  st.player.currency = 95; // the unspent pile the playtest bot ended with
+  st.purse = 95; // the unspent pile the playtest bot ended with
   s.state = st;
   s.act({ type: 'wait' });
   return npc.id;
@@ -57,10 +58,10 @@ describe('trade window columns', () => {
     const tv = s.viewModel().game!.trade!;
     if (!tv.sellable.length) return; // nothing this trader wants from the starting kit
     const offer = tv.sellable[0];
-    const before = s.state.player.currency;
+    const before = s.state.purse;
     const out = s.trade({ type: 'sell', slot: offer.slot });
     expect(out.changed).toBe(true);
-    expect(s.state.player.currency).toBe(before + offer.price);
+    expect(s.state.purse).toBe(before + offer.price);
     expect(s.viewModel().game!.trade).not.toBeNull();
   });
 

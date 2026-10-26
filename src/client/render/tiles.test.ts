@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { parseWorld } from '../../schema/refs';
 import type { WorldSpec } from '../../schema/world';
 import type { AreaMap, AreaState, Tile } from '../../engine/types';
-import { AreaView } from './tiles';
+import { AreaView, type FoggedArea } from './tiles';
 import { renderedWallHeight, MAX_WALL_HEIGHT, STUB_HEIGHT } from './surfaces';
 import { cutawayTiles } from './cutaway';
 import { ItemLayer } from './items';
@@ -41,7 +41,7 @@ function testMap(terrainId: string): AreaMap {
   return { width: 9, height: 7, tiles, start: { x: 1, y: 1 }, exit: { x: 7, y: 1 }, regions: [] };
 }
 
-function area(map: AreaMap, seen: number[]): AreaState {
+function area(map: AreaMap, seen: number[]): FoggedArea {
   return { index: 0, map, actors: [], items: [], seen, discoveredRegions: [], gmBudget: 0 };
 }
 
@@ -205,7 +205,7 @@ describe('ItemLayer / ActorLayer', () => {
 
   it('tints unknown items by their appearance and hides items on non-visible tiles', () => {
     const unknown = world.items.find((i) => i.knowledge === 'unknown')!;
-    const state = { knowledge: { [unknown.id]: { level: 'unknown', appearance: { label: 'x', color: '#ff00ff' }, notes: [], timesUsed: 0 } } } as never;
+    const state = { party: ['p1'], players: { p1: { knowledge: { [unknown.id]: { level: 'unknown', appearance: { label: 'x', color: '#ff00ff' }, notes: [], timesUsed: 0 } } } } } as never;
     expect(ItemLayer.tintFor(state, unknown.id)).toBe('#ff00ff');
     expect(ItemLayer.tintFor(state, 'nope')).toBeNull();
     const layer = new ItemLayer(world);

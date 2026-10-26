@@ -7,7 +7,7 @@
 import type { WorldSpec } from '../schema/world';
 import type { Difficulty, GmHook } from '../schema/gm';
 import type { GameState, LogMessage } from '../engine/types';
-import { createGame, step } from '../engine/index';
+import { createGame, step, leadPlayer } from '../engine/index';
 import { botByName, newMemory, type BotName } from '../engine/sim/bots';
 import type { GmPromptInput } from './prompts/gm';
 import type { DialoguePromptInput, DialogueLine } from './prompts/dialogue';
@@ -65,7 +65,7 @@ export function playToSituation(world: WorldSpec, opts: SituationOptions = {}): 
 export function stateForHook(sit: Situation, hook: GmHook): GameState {
   if (hook !== 'low_hp' && hook !== 'death' && hook !== 'victory') return sit.state;
   const s = structuredClone(sit.state);
-  const p = s.area.actors.find((a) => a.id === s.player.actorId);
+  const p = s.area.actors.find((a) => a.id === leadPlayer(s).actorId);
   if (hook === 'low_hp') {
     if (p) p.hp = Math.max(1, Math.min(p.hp, Math.ceil(p.maxHp * 0.25)));
   } else if (hook === 'death') {
@@ -96,7 +96,7 @@ export function gmInputFor(world: WorldSpec, sit: Situation, hook: GmHook, opts:
 /** NPC instances in the snapshot's area (talkable actors), nearest to the player first */
 export function npcsInArea(world: WorldSpec, state: GameState): { id: string; defId: string; name: string }[] {
   const defs = new Map(world.actors.map((a) => [a.id, a]));
-  const p = state.area.actors.find((a) => a.id === state.player.actorId);
+  const p = state.area.actors.find((a) => a.id === leadPlayer(state).actorId);
   return state.area.actors
     .filter((a) => a.hp > 0 && defs.get(a.defId)?.npc)
     .sort((a, b) => (p ? Math.max(Math.abs(a.pos.x - p.pos.x), Math.abs(a.pos.y - p.pos.y)) - Math.max(Math.abs(b.pos.x - p.pos.x), Math.abs(b.pos.y - p.pos.y)) : 0))

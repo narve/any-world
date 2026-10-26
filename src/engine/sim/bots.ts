@@ -19,7 +19,7 @@
 import type { WorldSpec, ItemDef } from '../../schema/world';
 import type { GmAction } from '../../schema/gm';
 import type { Dir, GameState, PlayerAction, Pos } from '../types';
-import type { Ctx } from '../ctx';
+import { type Ctx, me } from '../ctx';
 import { SeededRng, createRng } from '../rng';
 import { equipSlotOf } from '../inventory';
 import { getStat, maxHp, side } from '../stats';
@@ -198,7 +198,7 @@ function randomDecide(state: GameState, world: WorldSpec, mem: BotMemory): Playe
   if (!legal.length) return { type: 'wait' };
   const tr = legal.find((a) => a.type === 'transition');
   if (tr && mem.rng.chance(0.5)) return tr;
-  if (state.pendingChoice || state.player.pendingPerkChoice) return mem.rng.pick(legal);
+  if (me(ctx).pendingChoice || me(ctx).pendingPerkChoice) return mem.rng.pick(legal);
   // moves dominate the list; weight other verbs up a bit so items/talk/interact get exercised
   const moves = legal.filter((a) => a.type === 'move');
   const other = legal.filter((a) => a.type !== 'move');
@@ -226,8 +226,8 @@ function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem
   const legal = fastLegal(ctx);
   mem.decisions++;
   if (!legal.length) return { type: 'wait' };
-  if (state.player.pendingPerkChoice) return pickPerk(ctx, legal);
-  if (state.pendingChoice) return pickOption(ctx, legal, persona);
+  if (me(ctx).pendingPerkChoice) return pickPerk(ctx, legal);
+  if (me(ctx).pendingChoice) return pickOption(ctx, legal, persona);
 
   if (state.area.index !== mem.areaIndex) {
     mem.areaIndex = state.area.index;
@@ -366,7 +366,7 @@ function gmActionValue(ctx: Ctx, a: GmAction, want: Set<string>): number {
 
 function heldHeals(ctx: Ctx): number {
   let n = 0;
-  for (const it of ctx.s.player.slots) {
+  for (const it of me(ctx).slots) {
     if (!it) continue;
     const def = ctx.ix.items.get(it.defId);
     if (def && known(ctx, def.id) !== 'unknown' && itemProfile(ctx.world, def).heal > 0) n += it.count;
@@ -375,8 +375,8 @@ function heldHeals(ctx: Ctx): number {
 }
 
 function equippedDef(ctx: Ctx, kind: 'weapon' | 'armour' | 'trinket'): ItemDef | null {
-  const slot = ctx.s.player.equipped[kind];
-  const it = slot !== null ? ctx.s.player.slots[slot] : null;
+  const slot = me(ctx).equipped[kind];
+  const it = slot !== null ? me(ctx).slots[slot] : null;
   return it ? (ctx.ix.items.get(it.defId) ?? null) : null;
 }
 
@@ -389,7 +389,7 @@ function upgradeValue(ctx: Ctx, def: ItemDef): number {
 }
 
 function pickOption(ctx: Ctx, legal: PlayerAction[], persona: Persona): PlayerAction {
-  const pc = ctx.s.pendingChoice!;
+  const pc = me(ctx).pendingChoice!;
   const objs = currentObjectives(ctx);
   const want = wantedItems([...objs.goal, ...objs.lock]);
   const hurt = hpFrac(ctx) < 0.8;
@@ -439,7 +439,7 @@ function useActions(t: Turn): UseAction[] {
 }
 
 function defAt(t: Turn, slot: number): ItemDef | undefined {
-  const it = t.ctx.s.player.slots[slot];
+  const it = me(t.ctx).slots[slot];
   return it ? t.ctx.ix.items.get(it.defId) : undefined;
 }
 
@@ -494,7 +494,7 @@ function survive(t: Turn): PlayerAction | null {
   // vital resources (oxygen, light…) running low: an item, else terrain that refills it
   for (const res of vitalResources(t.world)) {
     const r = ctx.ix.resources.get(res)!;
-    const v = ctx.s.player.resources[res] ?? 0;
+    const v = me(ctx).resources[res] ?? 0;
     const onRefill = refillTiles(ctx, res).has(p.pos.y * ctx.s.area.map.width + p.pos.x);
     // topping up on a refill tile: stay until nearly full
     if (onRefill && v < r.max * 0.8 && !hostiles.some((h) => cheb(h.pos, p.pos) <= 2)) {
@@ -579,8 +579,8 @@ function sneak(t: Turn): PlayerAction | null {
   // sneaking makes every step slower: not worth it while a vital resource drains each turn
   const draining = vitalResources(t.world).some((r) => (t.ctx.ix.resources.get(r)?.perTurn ?? 0) < 0);
   const want = t.persona.sneak && !draining;
-  if (want === t.ctx.s.player.sneaking) return null;
-  if (!want && !t.ctx.s.player.sneaking) return null;
+  if (want === me(t.ctx).sneaking) return null;
+  if (!want && !me(t.ctx).sneaking) return null;
   return t.legal.find((a) => a.type === 'toggle_sneak') ?? null;
 }
 
@@ -623,7 +623,7 @@ function refillTiles(ctx: Ctx, res: string): Set<number> {
   );
   if (!good.size) return out;
   const tiles = ctx.s.area.map.tiles;
-  for (let i = 0; i < tiles.length; i++) if (tiles[i].terrain && good.has(tiles[i].terrain!) && ctx.s.area.seen[i]) out.add(i);
+  for (let i = 0; i < tiles.length; i++) if (tiles[i].terrain && good.has(tiles[i].terrain!) && me(ctx).seen[i]) out.add(i);
   return out;
 }
 
@@ -651,7 +651,7 @@ function hurry(t: Turn): boolean {
   for (const res of vitalResources(t.world)) {
     const r = ctx.ix.resources.get(res)!;
     if (r.perTurn >= 0) continue;
-    const v = ctx.s.player.resources[res] ?? 0;
+    const v = me(ctx).resources[res] ?? 0;
     if (v > r.max * 0.4) continue;
     const refill = knownUses(t).some((u) => (itemProfile(t.world, u.def).resources[res] ?? 0) > 0);
     if (!refill && !refillTiles(ctx, res).size) return true;
@@ -832,7 +832,7 @@ function rest(t: Turn): PlayerAction | null {
   // draining resources make resting expensive
   for (const res of vitalResources(t.world)) {
     const r = ctx.ix.resources.get(res)!;
-    if (r.perTurn < 0 && (ctx.s.player.resources[res] ?? 0) < r.max * 0.5) return null;
+    if (r.perTurn < 0 && (me(ctx).resources[res] ?? 0) < r.max * 0.5) return null;
   }
   if (t.mem.restStreak >= 30 * ps.hpRegenEvery) return null;
   t.mem.restStreak++;
@@ -857,7 +857,7 @@ function readyToLeave(t: Turn): boolean {
   // goal items/actors of this area still visible and reachable? stay (they may be needed later too)
   const { ctx } = t;
   if (t.mem.areaDecisions > AREA_DECISION_CAP || hurry(t)) return true;
-  if (t.wantItems.size && ctx.s.area.items.some((fi) => t.wantItems.has(fi.item.defId) && ctx.s.area.seen[fi.pos.y * ctx.s.area.map.width + fi.pos.x])) return false;
+  if (t.wantItems.size && ctx.s.area.items.some((fi) => t.wantItems.has(fi.item.defId) && me(ctx).seen[fi.pos.y * ctx.s.area.map.width + fi.pos.x])) return false;
   if (!t.persona.exploreFully) return t.mem.areaDecisions > 80 || frontierTiles(ctx).length === 0;
   return false; // explorers leave when navigate() finds nothing left to do
 }
@@ -884,8 +884,8 @@ function navigate(t: Turn): PlayerAction | null {
   const avoid = t.persona.fight === 'avoid' || t.persona.fight === 'talk';
   const field = pathField(ctx, avoid && hostiles.length ? { extraCost: (i) => nearHostileCost(i, W, hostiles) } : {});
   const cands: Candidate[] = [];
-  const seen = ctx.s.area.seen;
-  const invSpace = ctx.s.player.slots.some((s) => s === null);
+  const seen = me(ctx).seen;
+  const invSpace = me(ctx).slots.some((s) => s === null);
 
   // floor items (wanted ones first)
   for (const fi of ctx.s.area.items) {
@@ -904,7 +904,7 @@ function navigate(t: Turn): PlayerAction | null {
   // npcs to talk to
   if (ctx.world.verbs.talk) {
     for (const a of ctx.s.area.actors) {
-      if (a.hp <= 0 || a.id === ctx.s.player.actorId || !isNpc(ctx, a) || side(ctx, a) === 'H') continue;
+      if (a.hp <= 0 || a.id === me(ctx).actorId || !isNpc(ctx, a) || side(ctx, a) === 'H') continue;
       const i = a.pos.y * W + a.pos.x;
       if (seen[i] !== 2 || mem.blacklist.has(a.id)) continue;
       const talks = mem.talks.get(a.id) ?? 0;
@@ -1069,7 +1069,7 @@ function wander(t: Turn): PlayerAction {
       let goal = -1;
       let bestD = Infinity;
       for (let i = 0; i < field.dist.length; i++) {
-        if (ctx.s.area.seen[i] !== 0 || !Number.isFinite(field.dist[i]) || mem.blacklist.has(i)) continue;
+        if (me(ctx).seen[i] !== 0 || !Number.isFinite(field.dist[i]) || mem.blacklist.has(i)) continue;
         if (field.dist[i] < bestD) {
           bestD = field.dist[i];
           goal = i;

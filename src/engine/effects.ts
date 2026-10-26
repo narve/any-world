@@ -17,6 +17,7 @@ import {
   isPlayer,
   log,
   logKey,
+  me,
   mutTile,
   opaque,
   passable,
@@ -225,7 +226,7 @@ export function isVisibleToPlayer(ctx: Ctx, a: ActorInstance): boolean {
   const map = ctx.s.area.map;
   if (!inBounds(map, a.pos.x, a.pos.y)) return false;
   if (isPlayer(ctx, a)) return true;
-  const seen = ctx.s.area.seen[a.pos.y * map.width + a.pos.x];
+  const seen = me(ctx).seen[a.pos.y * map.width + a.pos.x];
   if (seen !== 2) return false;
   const inv = a.statuses.some((s) => ctx.ix.statuses.get(s.id)?.flags.includes('invisible'));
   if (inv && cheb(a.pos, playerActor(ctx).pos) > 1) return false;
@@ -527,7 +528,8 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
         if (!p) break;
         const opts: { faction?: ActorInstance['faction']; allyOf?: string; randomEnergy?: boolean } = {};
         if (e.allied) {
-          if (userIsPlayerSide) opts.allyOf = ctx.s.player.actorId;
+          // an ally's summon serves the same owner
+          if (userIsPlayerSide) opts.allyOf = user.allyOf ?? user.id;
           else opts.faction = user.faction === 'player' ? 'friendly' : user.faction;
         }
         const a = spawnActor(ctx, e.actor, p, opts);
@@ -557,7 +559,7 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
     }
     case 'reveal_map': {
       const map = ctx.s.area.map;
-      const seen = ctx.s.area.seen;
+      const seen = me(ctx).seen;
       for (let y = 0; y < map.height; y++)
         for (let x = 0; x < map.width; x++) {
           if (Math.max(Math.abs(x - centre.x), Math.abs(y - centre.y)) > e.radius) continue;
@@ -583,8 +585,8 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
       return;
     }
     case 'currency': {
-      // paid to the player whoever the effect lands on (like grant_xp): currency is player state
-      ctx.s.player.currency += e.amount;
+      // paid to the party whoever the effect lands on (like grant_xp): the purse is shared
+      ctx.s.purse += e.amount;
       if (e.amount >= 0) logKey(ctx, 'log.currency.gain', { amount: e.amount, currency: ctx.world.vocabulary.currency }, 'loot');
       else logKey(ctx, 'log.currency.spend', { amount: -e.amount, currency: ctx.world.vocabulary.currency }, 'info');
       return;
@@ -627,7 +629,7 @@ export function changeResource(ctx: Ctx, a: ActorInstance, res: string, amount: 
   const def = ctx.ix.resources.get(res);
   if (def) {
     if (!isPlayer(ctx, a)) return 0;
-    const r = ctx.s.player.resources;
+    const r = me(ctx).resources;
     const before = own(r, res) ?? 0;
     r[res] = clamp(before + amount, 0, def.max);
     if (before > 0 && r[res] === 0) resourceEmptied(ctx, a, res);

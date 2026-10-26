@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { parseWorld } from '../../schema/refs';
 import type { WorldSpec, AreaPlan } from '../../schema/world';
 import type { AreaMap, AreaState, Tile } from '../../engine/types';
-import { AreaView, REMEMBER_WALL, REMEMBER_EDGE, LIQUID_TERRAIN_ROUGHNESS } from './tiles';
+import { AreaView, type FoggedArea, REMEMBER_WALL, REMEMBER_EDGE, LIQUID_TERRAIN_ROUGHNESS } from './tiles';
 import { PatchLayer, patchGrow } from './surfaces';
 import { VfxLayer } from './vfx';
 import { Animator } from './tween';
@@ -34,7 +34,7 @@ function mapFrom(rows: string[], terrain = 'seep-water'): AreaMap {
   return { width: W, height: rows.length, tiles, start: { x: s % W, y: Math.floor(s / W) }, exit: { x: e % W, y: Math.floor(e / W) }, regions: [] };
 }
 
-const area = (map: AreaMap, seen = 2): AreaState => ({ index: 0, map, actors: [], items: [], seen: new Array(map.tiles.length).fill(seen), discoveredRegions: [], gmBudget: 0 });
+const area = (map: AreaMap, seen = 2): FoggedArea => ({ index: 0, map, actors: [], items: [], seen: new Array(map.tiles.length).fill(seen), discoveredRegions: [], gmBudget: 0 });
 
 // ---------------------------------------------------------------------------
 // Floating text follows its actor

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { testWorld, newGame, ctxFor, player, addActor, act, env, roomMap, loadFixture } from './helpers';
-import { createGame, describeActor, legalActions, step } from '../../src/engine';
+import { createGame, describeActor, legalActions, step, leadPlayer } from '../../src/engine';
 import { dealDamage } from '../../src/engine/combat';
 import { giveItem } from '../../src/engine/inventory';
 import type { WorldSpecInput } from '../../src/schema';
@@ -65,10 +65,10 @@ describe('map interaction', () => {
     s = act(w, s, { type: 'move', dir: 'e' }).state; // bump: opens
     expect(s.area.map.tiles[2 * map.width + 4].kind).toBe('door_open');
     expect(player(s).pos).toEqual({ x: 3, y: 2 });
-    expect(s.area.seen[2 * map.width + 6]).toBe(2);
+    expect(leadPlayer(s).seen[2 * map.width + 6]).toBe(2);
     s = act(w, s, { type: 'interact', pos: { x: 4, y: 2 } }).state;
     expect(s.area.map.tiles[2 * map.width + 4].kind).toBe('door');
-    expect(s.area.seen[2 * map.width + 6]).toBe(1);
+    expect(leadPlayer(s).seen[2 * map.width + 6]).toBe(1);
   });
 
   it('region_discovered fires for newly seen regions', () => {
@@ -135,9 +135,9 @@ describe('fixture worlds', () => {
   it('ship: oxygen drains every turn and the arrival-log pickup sets its flag', () => {
     const w = loadFixture('fixture-ship.json');
     let s = createGame(w, { seed: 3 });
-    const o2 = s.player.resources.oxygen;
+    const o2 = leadPlayer(s).resources.oxygen;
     s = step(s, { type: 'wait' }, { world: w }).state;
-    expect(s.player.resources.oxygen).toBe(o2 - 1);
+    expect(leadPlayer(s).resources.oxygen).toBe(o2 - 1);
     giveItem(ctxFor(w, s), 'arrival-log', 1);
     expect(s.flags['has-arrival-log']).toBe(true);
     expect(legalActions(s, { world: w }).length).toBeGreaterThan(0);

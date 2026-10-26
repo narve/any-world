@@ -144,7 +144,7 @@ async function npcNextToPlayer(page: Page): Promise<string | null> {
     const c = window.__anyworld!.controller!;
     let id: string | null = null;
     await c.setStateForTest((s) => {
-      const me = s.area.actors.find((a) => a.id === s.player.actorId)!;
+      const me = s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!;
       const defs = new Map(c.session.world.actors.map((d) => [d.id, d]));
       const npc = s.area.actors.find((a) => a.id !== me.id && a.hp > 0 && defs.get(a.defId)?.npc && a.faction !== 'hostile');
       if (!npc) return;

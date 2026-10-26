@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
 import { WORLD_DIR, loadFixture, simpleGenerator } from './helpers';
-import { createGame, step, legalActions, serialize, deserialize, describeItem, describeActor } from '../../src/engine';
+import { createGame, step, legalActions, serialize, deserialize, describeItem, describeActor, leadPlayer } from '../../src/engine';
 import { generateArea } from '../../src/engine/mapgen/index';
 import { createRng } from '../../src/engine/rng';
 import type { MapGenerator, PlayerAction, GameState } from '../../src/engine/types';
@@ -11,7 +11,7 @@ import type { WorldSpec } from '../../src/schema';
 function checkInvariants(world: WorldSpec, s: GameState): void {
   const map = s.area.map;
   expect(map.tiles.length).toBe(map.width * map.height);
-  expect(s.player.slots).toHaveLength(TOTAL_SLOTS);
+  expect(leadPlayer(s).slots).toHaveLength(TOTAL_SLOTS);
   const blocking = new Set(world.terrains.filter((t) => !t.walkable).map((t) => t.id));
   const taken = new Set<string>();
   for (const a of s.area.actors) {
@@ -25,14 +25,14 @@ function checkInvariants(world: WorldSpec, s: GameState): void {
     expect(['floor', 'door', 'door_open', 'start', 'transition']).toContain(t.kind);
     expect(t.terrain && blocking.has(t.terrain), `actor ${a.id} inside blocking terrain`).toBeFalsy();
   }
-  if (s.status === 'playing') expect(s.area.actors.some((a) => a.id === s.player.actorId && a.hp > 0)).toBe(true);
+  if (s.status === 'playing') expect(s.area.actors.some((a) => a.id === leadPlayer(s).actorId && a.hp > 0)).toBe(true);
   for (const k of ['weapon', 'armour', 'trinket'] as const) {
-    const i = s.player.equipped[k];
-    if (i !== null) expect(s.player.slots[i], `equipped ${k} points at empty slot`).not.toBeNull();
+    const i = leadPlayer(s).equipped[k];
+    if (i !== null) expect(leadPlayer(s).slots[i], `equipped ${k} points at empty slot`).not.toBeNull();
   }
-  for (const it of s.player.slots) if (it) expect(it.count).toBeGreaterThan(0);
+  for (const it of leadPlayer(s).slots) if (it) expect(it.count).toBeGreaterThan(0);
   for (const r of world.resources) {
-    const v = s.player.resources[r.id];
+    const v = leadPlayer(s).resources[r.id];
     expect(v >= 0 && v <= r.max).toBe(true);
   }
   expect(s.rng).toHaveLength(4);
@@ -99,7 +99,7 @@ describe(`500-turn random fuzz (${name})`, () => {
           steps++;
           maxArea = Math.max(maxArea, s.area.index);
           if (i % 50 === 0) {
-            for (const it of s.player.slots) if (it) describeItem(s, it.id, env);
+            for (const it of leadPlayer(s).slots) if (it) describeItem(s, it.id, env);
             for (const a of s.area.actors) describeActor(s, a.id, env);
             const back = deserialize(world, serialize(s));
             expect(serialize(back)).toBe(serialize(s));

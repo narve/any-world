@@ -56,7 +56,7 @@ async function play(page: Page, seed: number, steps: number) {
     const d = await page.evaluate(() => {
       const pt = (window as unknown as { __pt: { bot: { decide: Function }; mem: unknown } }).__pt;
       const s = window.__anyworld!.controller!.session;
-      return { a: pt.bot.decide(s.state, s.world, pt.mem), cur: s.state.player.currency, status: s.state.status };
+      return { a: pt.bot.decide(s.state, s.world, pt.mem), cur: s.state.purse, status: s.state.status };
     });
     if (d.status !== 'playing') break;
     const k = d.a.type === 'move' ? KEY[d.a.dir] : d.a.type === 'wait' ? '.' : d.a.type === 'pickup' ? 'g' : d.a.type === 'transition' ? '>' : null;
@@ -65,7 +65,7 @@ async function play(page: Page, seed: number, steps: number) {
     await page.waitForTimeout(35);
     const after = await page.evaluate(() => {
       const s = window.__anyworld!.controller!.session;
-      return { cur: s.state.player.currency, turn: s.state.turn, area: s.state.area.index, log: s.state.log.slice(-4).map((l) => l.text) };
+      return { cur: s.state.purse, turn: s.state.turn, area: s.state.area.index, log: s.state.log.slice(-4).map((l) => l.text) };
     });
     if (after.cur !== d.cur) gains.push({ turn: after.turn, area: after.area, delta: after.cur - d.cur, log: after.log });
     if (i % 25 === 0) {
@@ -98,11 +98,11 @@ for (const [wi, world] of WORLDS.entries()) {
     const seed = 301 + wi;
     await page.goto(`/?world=${world}&seed=${seed}`);
     await waitReady(page);
-    const start = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
+    const start = await page.evaluate(() => window.__anyworld!.controller!.session.state.purse);
     const run = await play(page, seed, 700);
     const mid = await page.evaluate(() => {
       const s = window.__anyworld!.controller!.session;
-      return { cur: s.state.player.currency, status: s.state.status, area: s.state.area.index, turn: s.state.turn, hud: document.querySelector('.aw-hud')?.textContent?.match(/\d+\s*[a-z ]*$/i)?.[0] ?? null };
+      return { cur: s.state.purse, status: s.state.status, area: s.state.area.index, turn: s.state.turn, hud: document.querySelector('.aw-hud')?.textContent?.match(/\d+\s*[a-z ]*$/i)?.[0] ?? null };
     });
     await shot(page, `${world}-after-play`);
 
@@ -113,7 +113,7 @@ for (const [wi, world] of WORLDS.entries()) {
       await waitReady(page);
       await page.evaluate(async (cur) => {
         await window.__anyworld!.controller!.setStateForTest((s) => {
-          s.player.currency = cur;
+          s.purse = cur;
         });
       }, mid.cur);
     }
@@ -143,8 +143,8 @@ for (const [wi, world] of WORLDS.entries()) {
         if (!tile || !['floor', 'start', 'door_open'].includes(tile.kind)) continue;
         if (c.session.state.area.actors.some((a) => a.pos.x === x && a.pos.y === y)) continue;
         await c.setStateForTest((s) => {
-          s.area.actors = s.area.actors.filter((a) => a.id === s.player.actorId || a.faction !== 'hostile');
-          s.area.actors.find((a) => a.id === s.player.actorId)!.pos = { x, y };
+          s.area.actors = s.area.actors.filter((a) => a.id === s.players[s.party[0]].actorId || a.faction !== 'hostile');
+          s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!.pos = { x, y };
         });
         c.actNow({ type: 'wait' });
         return { traderIds, found: t.defId, spawned };
@@ -167,8 +167,8 @@ for (const [wi, world] of WORLDS.entries()) {
     const rows = await page.locator('.aw-trade .aw-trade-row').evaluateAll((els) =>
       els.map((e) => ({ text: (e as HTMLElement).innerText.replace(/\s+/g, ' ').trim(), disabled: (e as HTMLButtonElement).disabled })),
     );
-    const cur0 = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
-    const slots0 = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.slots.filter(Boolean).length);
+    const cur0 = await page.evaluate(() => window.__anyworld!.controller!.session.state.purse);
+    const slots0 = await page.evaluate(() => window.__anyworld!.controller!.session.me.slots.filter(Boolean).length);
     const buyRow = page.locator('.aw-trade .aw-trade-row:not([disabled])', { hasText: /Buy/i }).first();
     let bought = false;
     if (await buyRow.count()) {
@@ -176,8 +176,8 @@ for (const [wi, world] of WORLDS.entries()) {
       await page.waitForTimeout(500);
       bought = true;
     }
-    const cur1 = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
-    const slots1 = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.slots.filter(Boolean).length);
+    const cur1 = await page.evaluate(() => window.__anyworld!.controller!.session.state.purse);
+    const slots1 = await page.evaluate(() => window.__anyworld!.controller!.session.me.slots.filter(Boolean).length);
     await shot(page, `${world}-bought`);
     const sellRow = page.locator('.aw-trade .aw-trade-row:not([disabled])', { hasText: /Sell/i }).first();
     let sold = false;
@@ -186,7 +186,7 @@ for (const [wi, world] of WORLDS.entries()) {
       await page.waitForTimeout(500);
       sold = true;
     }
-    const cur2 = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
+    const cur2 = await page.evaluate(() => window.__anyworld!.controller!.session.state.purse);
     const tradeLog = await page.evaluate(() => window.__anyworld!.controller!.session.state.log.slice(-5).map((l) => l.text));
     await shot(page, `${world}-sold`);
     fact(world, { start, earned: run.gains, labelPeaks: run.labelPeaks, mid, trader, talkLayer, tradeLayer, rows, cur0, bought, cur1, slots0, slots1, sold, cur2, tradeLog, errors });

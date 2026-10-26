@@ -473,8 +473,8 @@ for (const c of CASES) {
             const s = window.__anyworld!.controller!.session;
             const st = s.state;
             const w = st.area.map.width;
-            const seen = st.area.seen as ArrayLike<number>;
-            const a = st.area.actors.find((x) => x.id !== st.player.actorId && x.hp > 0 && seen[x.pos.y * w + x.pos.x] === 2);
+            const seen = st.players[st.party[0]].seen as ArrayLike<number>;
+            const a = st.area.actors.find((x) => x.id !== st.players[st.party[0]].actorId && x.hp > 0 && seen[x.pos.y * w + x.pos.x] === 2);
             if (a) return { what: 'actor', pos: a.pos, id: a.id };
             const it = (st.area.items as { pos: { x: number; y: number } }[]).find((x) => seen[x.pos.y * w + x.pos.x] === 2);
             return it ? { what: 'item', pos: it.pos, id: undefined } : null;
@@ -617,7 +617,7 @@ for (const c of CASES) {
                 turn: s.state.turn,
                 L: window.__anyworld!.ui.layer(),
                 legalMove: (eng.legalActions(s.state) as { type: string; dir?: string }[]).some((x) => x.type === 'move' && x.dir === dir),
-                seen: (s.state.area.seen as ArrayLike<number>)[t.y * w + t.x],
+                seen: (s.state.players[s.state.party[0]].seen as ArrayLike<number>)[t.y * w + t.x],
                 path: travel.travelPath(s.state, t),
                 actorThere: s.state.area.actors.some((x: { hp: number; pos: { x: number; y: number } }) => x.hp > 0 && x.pos.x === t.x && x.pos.y === t.y),
               };
@@ -695,7 +695,7 @@ test.describe('probes', () => {
       const st = s.state;
       const me = s.player().pos;
       const out: { x: number; y: number; id?: string }[] = [];
-      for (const a of st.area.actors) if (a.id !== st.player.actorId && a.hp > 0) out.push({ ...a.pos, id: a.id });
+      for (const a of st.area.actors) if (a.id !== st.players[st.party[0]].actorId && a.hp > 0) out.push({ ...a.pos, id: a.id });
       for (const [dx, dy] of [[0, 3], [2, -2], [-3, 0], [0, -4]]) out.push({ x: me.x + dx, y: me.y + dy });
       return out;
     });
@@ -714,7 +714,7 @@ test.describe('probes', () => {
       // nothing to describe on a never-seen tile or an actor out of sight: no card is right there
       const known = await page.evaluate((p) => {
         const st = window.__anyworld!.controller!.session.state;
-        return ((st.area.seen as ArrayLike<number>)[p.y * st.area.map.width + p.x] ?? 0) === 2;
+        return ((st.players[st.party[0]].seen as ArrayLike<number>)[p.y * st.area.map.width + p.x] ?? 0) === 2;
       }, tg);
       if (!tip && known) problems.push(`long-press on ${JSON.stringify(tg)} showed no inspect card`);
       await page.locator('.aw-strip').tap();

@@ -20,7 +20,7 @@
 import type { WorldSpec } from '../schema/world';
 import type { GmAction } from '../schema/gm';
 import type { ActorInstance, GameState } from '../engine/types';
-import { applyGmActions } from '../engine/index';
+import { applyGmActions, leadPlayer, patchPlayer } from '../engine/index';
 import { goalRefs, stateGoalProblem } from '../llm/gm-checks';
 
 export interface RecheckResult {
@@ -33,7 +33,7 @@ export interface RecheckResult {
 function goalActorsHere(world: WorldSpec, state: GameState): ActorInstance[] {
   const refs = goalRefs(world);
   if (!refs.actors.size) return [];
-  return state.area.actors.filter((x) => x.hp > 0 && x.id !== state.player.actorId && refs.actors.has(x.defId));
+  return state.area.actors.filter((x) => x.hp > 0 && x.id !== leadPlayer(state).actorId && refs.actors.has(x.defId));
 }
 
 function outcomeProblem(world: WorldSpec, before: GameState, after: GameState): string | null {
@@ -80,13 +80,13 @@ export function recheckGmActions(world: WorldSpec, state: GameState, actions: re
  * when nothing needs to change.
  */
 export function recheckOfferOption(world: WorldSpec, state: GameState, index: number): { state: GameState; dropped: RecheckResult['dropped'] } {
-  const pc = state.pendingChoice;
+  const pc = leadPlayer(state).pendingChoice;
   const opt = pc?.kind === 'gm_offer' ? pc.options[index] : undefined;
   if (!pc || !opt || !opt.actions.length) return { state, dropped: [] };
   // the dry run sees the state as it will be once the choice is resolved (no open choice)
-  const probe: GameState = { ...state, pendingChoice: null };
+  const probe: GameState = patchPlayer(state, { pendingChoice: null });
   const r = recheckGmActions(world, probe, opt.actions);
   if (!r.dropped.length) return { state, dropped: [] };
   const options = pc.options.map((o, i) => (i === index ? { ...o, actions: r.actions } : o));
-  return { state: { ...state, pendingChoice: { ...pc, options } }, dropped: r.dropped };
+  return { state: patchPlayer(state, { pendingChoice: { ...pc, options } }), dropped: r.dropped };
 }

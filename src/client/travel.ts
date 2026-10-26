@@ -3,7 +3,7 @@
  * steps and the "a hostile came into view" interrupt. No DOM.
  */
 import type { Dir, GameState, Pos } from '../engine/types';
-import { findPath, passability } from '../engine/index';
+import { findPath, passability, leadPlayer } from '../engine/index';
 import { playerOf } from './view';
 
 const DIRS: readonly Dir[] = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];
@@ -30,7 +30,7 @@ export function cheb(a: Pos, b: Pos): number {
 }
 
 function seenAt(state: GameState, x: number, y: number): number {
-  const seen = state.area.seen as ArrayLike<number>;
+  const seen = leadPlayer(state).seen as ArrayLike<number>;
   return seen[y * state.area.map.width + x] ?? 0;
 }
 
@@ -38,7 +38,7 @@ function seenAt(state: GameState, x: number, y: number): number {
 export function visibleHostiles(state: GameState): Set<string> {
   const out = new Set<string>();
   for (const a of state.area.actors) {
-    if (a.id === state.player.actorId || a.hp <= 0 || a.faction !== 'hostile' || a.allyOf) continue;
+    if (a.id === leadPlayer(state).actorId || a.hp <= 0 || a.faction !== 'hostile' || a.allyOf) continue;
     if (seenAt(state, a.pos.x, a.pos.y) === 2) out.add(a.id);
   }
   return out;
@@ -75,7 +75,7 @@ export function travelPath(state: GameState, dest: Pos): Pos[] | null {
   const known = (x: number, y: number) => seenAt(state, x, y) !== 0;
   // through the unknown everything might be floor; what is known must be passable
   const open = (x: number, y: number) => (known(x, y) ? pass(x, y) : x > 0 && y > 0 && x < map.width - 1 && y < map.height - 1);
-  const occupied = new Set(state.area.actors.filter((a) => a.hp > 0 && a.id !== state.player.actorId).map((a) => a.pos.y * map.width + a.pos.x));
+  const occupied = new Set(state.area.actors.filter((a) => a.hp > 0 && a.id !== leadPlayer(state).actorId).map((a) => a.pos.y * map.width + a.pos.x));
   const ok = (x: number, y: number) => {
     if (!open(x, y)) return false;
     if (x === dest.x && y === dest.y) return true;

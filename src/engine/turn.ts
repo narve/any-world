@@ -4,7 +4,7 @@
  * ends: statuses, terrain, regen, resources, on_turn triggers, quests; then everyone gains energy
  * equal to its (hasted/slowed) speed.
  */
-import { type Ctx, actorAt, emit, endGame, isAlive, isPlayer, logKey, mutTile, playerActor } from './ctx';
+import { type Ctx, actorAt, emit, endGame, isAlive, isPlayer, logKey, me, mutTile, playerActor, playerName } from './ctx';
 import { own, samePos } from './util';
 import { energyGain, hasFlag, maxHp, maxMp } from './stats';
 import { actorTurn } from './ai';
@@ -30,7 +30,7 @@ export function runWorld(ctx: Ctx): void {
     if (guard >= RUN_WORLD_GUARD) {
       // never expected (statuses and terrain always let the player act again); hand control back
       // with a visible note rather than silently burning further rounds
-      logKey(ctx, 'log.turn.act_again', { player: ctx.world.player.name }, 'system');
+      logKey(ctx, 'log.turn.act_again', { player: playerName(ctx) }, 'system');
       return;
     }
     if (ctx.s.status !== 'playing') return;
@@ -40,7 +40,7 @@ export function runWorld(ctx: Ctx): void {
     if (p.energy >= ACT_COST) {
       if (hasFlag(ctx, p, 'stunned')) {
         p.energy -= ACT_COST;
-        logKey(ctx, 'log.turn.stunned', { player: ctx.world.player.name }, 'bad');
+        logKey(ctx, 'log.turn.stunned', { player: playerName(ctx) }, 'bad');
         continue;
       }
       return;
@@ -109,7 +109,7 @@ export function endRound(ctx: Ctx): void {
     a.hp = Math.min(a.hp, maxHp(ctx, a));
     a.mp = Math.min(a.mp, maxMp(ctx, a));
   }
-  for (const it of s.player.slots) if (it && it.cooldown) it.cooldown = Math.max(0, it.cooldown - 1);
+  for (const it of me(ctx).slots) if (it && it.cooldown) it.cooldown = Math.max(0, it.cooldown - 1);
   // regeneration
   const p = playerActor(ctx);
   const ps = ctx.world.player;
@@ -119,10 +119,10 @@ export function endRound(ctx: Ctx): void {
   if (s.turn % 5 === 0) for (const a of s.area.actors) if (!isPlayer(ctx, a) && a.mp < maxMp(ctx, a)) a.mp += 1;
   // custom resources
   for (const r of ctx.world.resources ?? []) {
-    const cur = own(s.player.resources, r.id) ?? 0;
+    const cur = own(me(ctx).resources, r.id) ?? 0;
     if (r.perTurn) changeResource(ctx, p, r.id, r.perTurn);
     if (s.status !== 'playing') return;
-    if (cur === 0 && (own(s.player.resources, r.id) ?? 0) === 0 && r.perTurn < 0 && s.turn % RESOURCE_EMPTY_REPEAT === 0 && r.onEmpty.length) {
+    if (cur === 0 && (own(me(ctx).resources, r.id) ?? 0) === 0 && r.perTurn < 0 && s.turn % RESOURCE_EMPTY_REPEAT === 0 && r.onEmpty.length) {
       applyEffectList(ctx, r.onEmpty, p, [p], p.pos, []);
     }
   }

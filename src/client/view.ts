@@ -7,6 +7,7 @@ import type { GameState, ItemView, LogMessage, PendingChoice, PlayerAction } fro
 import { QUICK_SLOTS, TOTAL_SLOTS } from '../engine/types';
 import { parseDice } from '../engine/rng';
 import {
+  leadPlayer,
   describeInventory,
   describeItemDef,
   endingText,
@@ -58,7 +59,7 @@ export function themeOf(world: WorldSpec): ThemeView {
 }
 
 export function playerOf(state: GameState) {
-  const p = state.area.actors.find((a) => a.id === state.player.actorId);
+  const p = state.area.actors.find((a) => a.id === leadPlayer(state).actorId);
   if (!p) throw new Error('player actor missing');
   return p;
 }
@@ -193,15 +194,15 @@ export function hudView(world: WorldSpec, state: GameState, sheet: PlayerSheet):
       const value = v?.value ?? 0;
       return { id: r.id, label: r.name, description: r.description, value, max: r.max, color: r.color, ...(value < r.max * RESOURCE_DANGER ? { low: true } : {}) };
     }),
-    level: state.player.level,
-    ...xpProgress(world, state.player.level, sheet.xp, sheet.xpToNext),
-    currency: state.player.currency,
+    level: leadPlayer(state).level,
+    ...xpProgress(world, leadPlayer(state).level, sheet.xp, sheet.xpToNext),
+    currency: state.purse,
     statuses,
     areaName: plan?.name ?? '',
     areaIndex: state.area.index,
     areaCount: world.areas.length,
     turn: state.turn,
-    sneaking: state.player.sneaking,
+    sneaking: leadPlayer(state).sneaking,
     speed: sheet.speed >= 115 ? 'fast' : sheet.speed <= 85 ? 'slow' : 'normal',
     danger: dangerOf(world, state, sheet),
   };
@@ -227,7 +228,7 @@ export function dangerOf(world: WorldSpec, state: GameState, sheet: PlayerSheet)
     out.push({ id: 'hp', label: hp.name, color: world.palette.danger, level: sheet.hp <= 0 ? 'empty' : 'low', draining: true });
   }
   for (const r of world.resources) {
-    const v = state.player.resources[r.id] ?? 0;
+    const v = leadPlayer(state).resources[r.id] ?? 0;
     if (v >= r.max * RESOURCE_DANGER) continue;
     const empty = v <= 0;
     // only vitals: something that hurts when empty, or drains by itself
@@ -282,10 +283,10 @@ const FIGHT_TURNS = 3;
  *    aims it; bumping only works next to them).
  */
 export function strongMoveSlots(world: WorldSpec, state: GameState, slots: (SlotItemView | null)[], legal: readonly PlayerAction[]): number[] {
-  if (state.status !== 'playing' || state.pendingChoice) return [];
-  const p = state.area.actors.find((a) => a.id === state.player.actorId);
+  if (state.status !== 'playing' || leadPlayer(state).pendingChoice) return [];
+  const p = state.area.actors.find((a) => a.id === leadPlayer(state).actorId);
   if (!p) return [];
-  const seen = state.area.seen as ArrayLike<number>;
+  const seen = leadPlayer(state).seen as ArrayLike<number>;
   const W = state.area.map.width;
   const hostiles = state.area.actors.filter((a) => a.hp > 0 && a.faction === 'hostile' && !a.allyOf && seen[a.pos.y * W + a.pos.x] === 2);
   const near = (a: { pos: { x: number; y: number } }) => Math.max(Math.abs(a.pos.x - p.pos.x), Math.abs(a.pos.y - p.pos.y));
@@ -308,7 +309,7 @@ export function strongMoveSlots(world: WorldSpec, state: GameState, slots: (Slot
       if (best >= 0) out.push(best);
     }
   } else {
-    const w = state.player.equipped.weapon;
+    const w = leadPlayer(state).equipped.weapon;
     const sv = w !== null && w < QUICK_SLOTS ? quick[w] : null;
     if (sv?.range && hostiles.some((h) => near(h) > 1 && legal.some((a) => a.type === 'attack' && a.targetId === h.id))) out.push(w!);
   }
@@ -327,7 +328,7 @@ export function slotViews(world: WorldSpec, state: GameState, views: (ItemView |
   const defs = new Map(world.items.map((i) => [i.id, i]));
   const out: (SlotItemView | null)[] = [];
   for (let i = 0; i < TOTAL_SLOTS; i++) {
-    const it = state.player.slots[i];
+    const it = leadPlayer(state).slots[i];
     const v = views[i];
     if (!it || !v) {
       out.push(null);
@@ -398,7 +399,7 @@ export function dialogueView(
   history: { who: 'npc' | 'player'; text: string }[],
   skip?: DialogueSkip,
 ): DialogueView | null {
-  const pc = state.pendingChoice;
+  const pc = leadPlayer(state).pendingChoice;
   if (!pc || pc.kind !== 'dialogue') return null;
   const npc = state.area.actors.find((a) => a.id === pc.speakerId);
   const def = npc ? world.actors.find((d) => d.id === npc.defId) : undefined;
@@ -418,7 +419,7 @@ export function dialogueView(
 }
 
 export function choiceView(world: WorldSpec, state: GameState): ChoiceView | null {
-  const pc = state.pendingChoice;
+  const pc = leadPlayer(state).pendingChoice;
   if (!pc || pc.kind !== 'gm_offer') return null;
   const npc = pc.speakerId ? state.area.actors.find((a) => a.id === pc.speakerId) : undefined;
   const def = npc ? world.actors.find((d) => d.id === npc.defId) : undefined;
@@ -445,17 +446,17 @@ export function perkLines(world: WorldSpec, perk: Perk): string[] {
 }
 
 export function levelUpView(world: WorldSpec, state: GameState): LevelUpView | null {
-  const ids = state.player.pendingPerkChoice;
+  const ids = leadPlayer(state).pendingPerkChoice;
   if (!ids || !ids.length) return null;
   const perks = ids
     .map((id) => world.player.growth.perks.find((p) => p.id === id))
     .filter((p): p is Perk => !!p)
     .map((p) => ({ id: p.id, name: p.name, description: p.description, lines: perkLines(world, p) }));
-  return { level: state.player.level, perks };
+  return { level: leadPlayer(state).level, perks };
 }
 
 export function tradeView(world: WorldSpec, state: GameState): TradeView | null {
-  const pc = state.pendingChoice;
+  const pc = leadPlayer(state).pendingChoice;
   if (!pc || pc.kind !== 'dialogue') return null;
   const m = dialogueMap(pc);
   if (!m.buy.length && !m.sell.length) return null;
@@ -473,7 +474,7 @@ export function tradeView(world: WorldSpec, state: GameState): TradeView | null 
     traderName: def?.name ?? t('trade.trader'),
     traderColor: def?.model.humanoid?.top ?? def?.model.colors?.primary ?? world.palette.accent,
     greeting: pc.prompt,
-    currency: state.player.currency,
+    currency: state.purse,
     offers,
     sellable: sellableOf(world, state, pc, m),
   };
@@ -534,7 +535,7 @@ export function objectiveParts(world: WorldSpec, state: GameState, canTransition
   if (!plan || last) return { goal, hint: null };
   if (canTransition) return { goal, hint: t('objective.press', { way: lowerFirst(plan.transitionName) }) };
   const ex = state.area.map.exit;
-  const seen = (state.area.seen as ArrayLike<number>)[ex.y * state.area.map.width + ex.x] ?? 0;
+  const seen = (leadPlayer(state).seen as ArrayLike<number>)[ex.y * state.area.map.width + ex.x] ?? 0;
   return { goal, hint: seen ? t('objective.marked', { way: plan.transitionName }) : t('objective.find', { area: plan.name }) };
 }
 
@@ -693,7 +694,7 @@ export function endView(world: WorldSpec, state: GameState, epitaph?: string, ru
       damageTaken: state.stats.damageTaken,
       areasCleared: state.stats.areasCleared,
       areaCount: world.areas.length,
-      level: state.player.level,
+      level: leadPlayer(state).level,
     },
     ...(run?.difficulty ? { difficulty: run.difficulty } : {}),
     ...(run?.weirdness !== undefined ? { weirdness: run.weirdness } : {}),

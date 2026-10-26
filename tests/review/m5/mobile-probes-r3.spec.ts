@@ -130,14 +130,14 @@ for (const d of DEVICES) {
             const app = window.__anyworld!;
             const c = app.controller!;
             const st = c.session.state;
-            const npc = st.area.actors.find((a) => a.hp > 0 && a.id !== st.player.actorId && a.faction !== 'hostile') ?? st.area.actors.find((a) => a.hp > 0 && a.id !== st.player.actorId);
+            const npc = st.area.actors.find((a) => a.hp > 0 && a.id !== st.players[st.party[0]].actorId && a.faction !== 'hostile') ?? st.area.actors.find((a) => a.hp > 0 && a.id !== st.players[st.party[0]].actorId);
             if (!npc) return null;
             const id = npc.id;
             const w = st.area.map.width;
             await c.setStateForTest((ns) => {
               const a = ns.area.actors.find((x) => x.id === id)!;
               a.pos = { ...p };
-              (ns.area.seen as number[])[p.y * w + p.x] = 2;
+              (ns.players[ns.party[0]].seen as number[])[p.y * w + p.x] = 2;
             });
             return { id, faction: npc.faction, name: c.session.describeAt(p).actor?.name ?? npc.defId, pos: p };
           }, b2.p)
@@ -196,7 +196,7 @@ test.describe('dialogue-sheet-iphone15-portrait', () => {
       const st = c.session.state;
       const me = c.session.player().pos;
       const w = st.area.map.width;
-      const npc = st.area.actors.find((a) => a.hp > 0 && a.id !== st.player.actorId && a.faction !== 'hostile');
+      const npc = st.area.actors.find((a) => a.hp > 0 && a.id !== st.players[st.party[0]].actorId && a.faction !== 'hostile');
       if (!npc) return null;
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
         const p = { x: me.x + dx, y: me.y + dy };
@@ -204,7 +204,7 @@ test.describe('dialogue-sheet-iphone15-portrait', () => {
         if (!t || t.kind !== 'floor' || st.area.actors.some((a) => a.hp > 0 && a.pos.x === p.x && a.pos.y === p.y)) continue;
         await c.setStateForTest((ns) => {
           ns.area.actors.find((x) => x.id === npc.id)!.pos = p;
-          (ns.area.seen as number[])[p.y * w + p.x] = 2;
+          (ns.players[ns.party[0]].seen as number[])[p.y * w + p.x] = 2;
         });
         return { id: npc.id, pos: p };
       }
@@ -250,7 +250,7 @@ for (const d of DEVICES) {
       await page.evaluate(async () => {
         const c = window.__anyworld!.controller!;
         await c.setStateForTest((ns) => {
-          ns.area.actors = ns.area.actors.filter((a) => a.faction !== 'hostile' || a.id === ns.player.actorId);
+          ns.area.actors = ns.area.actors.filter((a) => a.faction !== 'hostile' || a.id === ns.players[ns.party[0]].actorId);
         });
       });
       const walks: unknown[] = [];
@@ -312,7 +312,7 @@ test.describe('ranged-slot-tip-iphone15-portrait', () => {
   test('ranged weapon slot tip on touch', async ({ page }) => {
     test.setTimeout(120000);
     await boot(page, 'fixture-western', 3);
-    const slot = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.equipped.weapon ?? 0);
+    const slot = await page.evaluate(() => window.__anyworld!.controller!.session.me.equipped.weapon ?? 0);
     const el = page.locator('.aw-hotbar-slots .aw-slot').nth(slot as number);
     const b = (await el.boundingBox())!;
     const cdp = await page.context().newCDPSession(page);

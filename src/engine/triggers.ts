@@ -5,7 +5,7 @@
  */
 import type { ItemDef, Trigger, TriggerEvent } from '../schema/world';
 import type { ActorInstance, Pos } from './types';
-import { type Ctx, isPlayer } from './ctx';
+import { type Ctx, playerOf } from './ctx';
 import { activeItems } from './stats';
 import { runAction } from './effects';
 import { activeRuleVariants } from './rules';
@@ -19,14 +19,15 @@ const ITEM_ONLY_EVENTS = new Set<TriggerEvent>(['on_pickup', 'on_equip', 'on_une
 const MAX_DEPTH = 6;
 
 export function triggersFor(ctx: Ctx, holder: ActorInstance): Trigger[] {
-  if (isPlayer(ctx, holder)) {
+  const ps = playerOf(ctx, holder);
+  if (ps) {
     const out: Trigger[] = [];
     for (const r of activeRuleVariants(ctx)) out.push(...(r.playerTriggers ?? []));
-    for (const id of ctx.s.player.perks) {
+    for (const id of ps.perks) {
       const p = ctx.ix.perks.get(id);
       if (p) out.push(...p.triggers);
     }
-    for (const ai of activeItems(ctx)) out.push(...ai.def.triggers);
+    for (const ai of activeItems(ctx, ps)) out.push(...ai.def.triggers);
     return out;
   }
   return ctx.ix.actors.get(holder.defId)?.triggers ?? [];

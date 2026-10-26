@@ -94,7 +94,7 @@ test.describe('desktop', () => {
 
     // --- the reported bug: "1" on the equipped Thesaurus explains it; the backpack stays shut
     const slot0 = await page.evaluate(() => {
-      const s = window.__anyworld!.controller!.session.state.player.slots[0];
+      const s = window.__anyworld!.controller!.session.me.slots[0];
       return s?.defId ?? null;
     });
     expect(slot0).toBe('thesaurus');
@@ -128,10 +128,10 @@ test.describe('desktop', () => {
       const c = window.__anyworld!.controller!;
       await c.setStateForTest((st) => {
         st.area.index = 1;
-        const p = st.area.actors.find((a) => a.id === st.player.actorId)!;
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId);
+        const p = st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!;
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId);
         p.pos = { ...st.area.map.exit };
-        st.player.slots = st.player.slots.map((it) => (it && it.defId === 'speech-notebook' ? null : it));
+        st.players[st.party[0]].slots = st.players[st.party[0]].slots.map((it) => (it && it.defId === 'speech-notebook' ? null : it));
       });
     });
     await page.waitForTimeout(400);
@@ -150,7 +150,7 @@ test.describe('desktop', () => {
     await page.evaluate(async () => {
       const c = window.__anyworld!.controller!;
       await c.setStateForTest((st) => {
-        st.player.slots[12] = { id: 'test-notebook', defId: 'speech-notebook', count: 1 };
+        st.players[st.party[0]].slots[12] = { id: 'test-notebook', defId: 'speech-notebook', count: 1 };
       });
     });
     await page.waitForTimeout(300);
@@ -279,8 +279,8 @@ test.describe('iPhone (touch)', () => {
       const c = window.__anyworld!.controller!;
       await c.setStateForTest((st) => {
         st.area.index = 1;
-        const p = st.area.actors.find((a) => a.id === st.player.actorId)!;
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId);
+        const p = st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!;
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId);
         p.pos = { ...st.area.map.exit };
       });
     });

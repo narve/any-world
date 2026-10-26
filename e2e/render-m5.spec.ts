@@ -136,8 +136,8 @@ test('overlay rects keep visible actors from standing under the panels', async (
     r.renderNow();
     const area = d.state.area;
     const W = area.map.width;
-    const seen = area.seen as ArrayLike<number>;
-    const visible = area.actors.filter((a) => a.id !== d.state.player.actorId && seen[a.pos.y * W + a.pos.x] === 2);
+    const seen = d.state.players[d.state.party[0]].seen as ArrayLike<number>;
+    const visible = area.actors.filter((a) => a.id !== d.state.players[d.state.party[0]].actorId && seen[a.pos.y * W + a.pos.x] === 2);
     if (!visible.length) return null;
     // the actor farthest from the view centre gets a pretend panel right over it
     const cx = innerWidth / 2;

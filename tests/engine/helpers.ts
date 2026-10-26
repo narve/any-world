@@ -2,8 +2,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { WorldSpec, parseWorld, type WorldSpecInput } from '../../src/schema';
-import type { AreaMap, MapGenerator, Pos, Tile, GameState, ActorInstance } from '../../src/engine/types';
-import { createGame, step, type EngineEnv } from '../../src/engine';
+import type { AreaMap, MapGenerator, Pos, Tile, GameState, ActorInstance, PlayerState } from '../../src/engine/types';
+import { createGame, leadPlayer, step, type EngineEnv } from '../../src/engine';
 
 export const WORLD_DIR = join(__dirname, '..', '..', 'content', 'worlds');
 
@@ -355,7 +355,7 @@ export function newGame(world: WorldSpec, seed = 1, map: AreaMap = roomMap()): G
 }
 
 export function player(s: GameState): ActorInstance {
-  return s.area.actors.find((a) => a.id === s.player.actorId)!;
+  return s.area.actors.find((a) => a.id === leadPlayer(s).actorId)!;
 }
 
 /** places a fresh actor of `defId` at pos by direct state surgery (test setup only) */
@@ -382,6 +382,40 @@ export function addActor(world: WorldSpec, s: GameState, defId: string, pos: Pos
   return a;
 }
 
+/**
+ * Adds a second (third…) player by direct state surgery: a copy of the lead's actor at `pos` and a
+ * fresh PlayerState with a copy of the lead's knowledge (appearances are shared). Test setup only,
+ * for the data model (save, clone, hash); the engine's own addPlayer comes with the party rules.
+ */
+export function handBuiltPlayer(s: GameState, pos: Pos, name: string): PlayerState {
+  const lead = leadPlayer(s);
+  const la = s.area.actors.find((a) => a.id === lead.actorId)!;
+  const id = `p${s.party.length + 1}`;
+  const a: ActorInstance = structuredClone(la);
+  a.id = `a${s.nextId++}`;
+  a.pos = { ...pos };
+  s.area.actors.push(a);
+  const ps: PlayerState = {
+    id,
+    name,
+    actorId: a.id,
+    slots: lead.slots.map(() => null),
+    equipped: { weapon: null, armour: null, trinket: null },
+    level: 1,
+    xp: 0,
+    perks: [],
+    pendingPerkChoice: null,
+    resources: { ...lead.resources },
+    sneaking: false,
+    knowledge: structuredClone(lead.knowledge),
+    pendingChoice: null,
+    seen: new Uint8Array(s.area.map.width * s.area.map.height),
+  };
+  s.players[id] = ps;
+  s.party.push(id);
+  return ps;
+}
+
 export function act(world: WorldSpec, s: GameState, action: Parameters<typeof step>[1]) {
   return step(s, action, env(world));
 }
@@ -393,7 +427,7 @@ import { indexWorld, type Ctx } from '../../src/engine/ctx';
 import { SeededRng, rngFromState } from '../../src/engine/rng';
 
 export function ctxFor(world: WorldSpec, s: GameState, rng?: SeededRng): Ctx {
-  return { world, ix: indexWorld(world), s, rng: rng ?? rngFromState(s.rng), events: [], mapGen: simpleGenerator, depth: 0 };
+  return { world, ix: indexWorld(world), s, pid: s.party[0], rng: rng ?? rngFromState(s.rng), events: [], mapGen: simpleGenerator, depth: 0 };
 }
 
 /** an rng whose int() calls return queued values first (then falls back to the seeded stream) */

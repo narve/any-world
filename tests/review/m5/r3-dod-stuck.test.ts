@@ -5,7 +5,7 @@
 import { it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { runGame } from '../../../src/engine/sim/index';
-import { legalActions } from '../../../src/engine/index';
+import { legalActions, leadPlayer } from '../../../src/engine/index';
 import { parseWorld } from '../../../src/schema/refs';
 
 const CASES: [string, number[]][] = [
@@ -22,7 +22,7 @@ it('stuck runs: way onward reachable?', () => {
       let last: any = null;
       const r = runGame(world, seed, 'cautious', { maxTurns: 3000, onStep: (s, a) => { last = s; acts.push(JSON.stringify(a)); } });
       const s = last;
-      const me = s.area.actors.find((a: any) => a.id === s.player.actorId);
+      const me = s.area.actors.find((a: any) => a.id === leadPlayer(s).actorId);
       const legal = legalActions(s).map((a: any) => a.type);
       const counts: Record<string, number> = {};
       for (const a of acts.slice(-400)) counts[a] = (counts[a] ?? 0) + 1;

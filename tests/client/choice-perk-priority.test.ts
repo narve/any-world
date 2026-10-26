@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createGame, applyGmActions, step } from '../../src/engine';
+import { createGame, applyGmActions, step, leadPlayer, patchPlayer } from '../../src/engine';
 import type { GameState } from '../../src/engine/types';
 import { loadFixture, roomMap } from '../engine/helpers';
 import { gameView, type GameViewExtras } from '../../src/client/view';
@@ -31,8 +31,8 @@ function offerOverPerk(): GameState {
 describe('GM offer arriving while a perk choice is pending', () => {
   it('routes input to the level-up first and the offer afterwards', () => {
     const s = offerOverPerk();
-    expect(s.player.pendingPerkChoice?.length).toBeGreaterThan(0);
-    expect(s.pendingChoice?.kind).toBe('gm_offer');
+    expect(leadPlayer(s).pendingPerkChoice?.length).toBeGreaterThan(0);
+    expect(leadPlayer(s).pendingChoice?.kind).toBe('gm_offer');
 
     const a = layerOf(s);
     expect(a.layer).toBe('levelup');
@@ -41,7 +41,7 @@ describe('GM offer arriving while a perk choice is pending', () => {
 
     // the engine accepts what the level-up layer sends (200 xp may be several levels)
     let cur = s;
-    for (let i = 0; i < 20 && cur.player.pendingPerkChoice; i++) {
+    for (let i = 0; i < 20 && leadPlayer(cur).pendingPerkChoice; i++) {
       const v = gameView(w, cur, extras());
       expect(layerOf(cur).layer).toBe('levelup');
       expect(v.choice).toBeNull();
@@ -51,14 +51,14 @@ describe('GM offer arriving while a perk choice is pending', () => {
       cur = r.state;
     }
     const r1 = { state: cur };
-    expect(r1.state.player.pendingPerkChoice ?? null).toBeNull();
+    expect(leadPlayer(r1.state).pendingPerkChoice ?? null).toBeNull();
 
     // the GM offer is still open and now reachable
     const b = layerOf(r1.state);
     expect(b.layer).toBe('choice');
     expect(b.v.choice?.options.map((o) => o.label)).toEqual(['A', 'B']);
     const r2 = step(r1.state, { type: 'choose_option', index: 0 });
-    expect(r2.state.pendingChoice ?? null).toBeNull();
+    expect(leadPlayer(r2.state).pendingChoice ?? null).toBeNull();
   });
 
   it('computeLayer ranks levelup above choice', () => {
@@ -72,7 +72,7 @@ describe('GM offer arriving while a perk choice is pending', () => {
 
   it('also hides dialogue/trade panels while a perk is pending', () => {
     const s = offerOverPerk();
-    const d: GameState = { ...s, pendingChoice: { kind: 'dialogue', prompt: 'Hi', options: [{ label: 'Bye', actions: [] }] } };
+    const d: GameState = patchPlayer(s, { pendingChoice: { kind: 'dialogue', prompt: 'Hi', options: [{ label: 'Bye', actions: [] }] } });
     const { v, layer } = layerOf(d, extras({ tradeOpen: true }));
     expect(layer).toBe('levelup');
     expect(v.dialogue).toBeNull();

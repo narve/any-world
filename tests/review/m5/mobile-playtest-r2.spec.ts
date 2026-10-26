@@ -193,10 +193,10 @@ async function extraAudit(page: Page) {
     const st = s.state;
     const r = app.renderer!;
     const w = st.area.map.width;
-    const seen = st.area.seen as ArrayLike<number>;
+    const seen = st.players[st.party[0]].seen as ArrayLike<number>;
     const hidden: string[] = [];
     for (const a of st.area.actors as { id: string; hp: number; pos: { x: number; y: number }; faction: string; defId: string }[]) {
-      if (a.hp <= 0 || a.id === st.player.actorId || seen[a.pos.y * w + a.pos.x] !== 2) continue;
+      if (a.hp <= 0 || a.id === st.players[st.party[0]].actorId || seen[a.pos.y * w + a.pos.x] !== 2) continue;
       const pts = [r.actorScreen(a.id, 0.45), r.tileToScreen(a.pos)].filter(Boolean) as { x: number; y: number }[];
       // on screen at all? (off-screen actors are the camera's business, not a panel's)
       const on = pts.filter((p) => p.x > 0 && p.y > 0 && p.x < innerWidth && p.y < innerHeight);
@@ -698,8 +698,8 @@ for (const c of CASES) {
             const s = window.__anyworld!.controller!.session;
             const st = s.state;
             const w = st.area.map.width;
-            const seen = st.area.seen as ArrayLike<number>;
-            const a = st.area.actors.find((x) => x.id !== st.player.actorId && x.hp > 0 && seen[x.pos.y * w + x.pos.x] === 2);
+            const seen = st.players[st.party[0]].seen as ArrayLike<number>;
+            const a = st.area.actors.find((x) => x.id !== st.players[st.party[0]].actorId && x.hp > 0 && seen[x.pos.y * w + x.pos.x] === 2);
             if (a) return { what: 'actor', pos: a.pos, id: a.id };
             const it = (st.area.items as { pos: { x: number; y: number } }[]).find((x) => seen[x.pos.y * w + x.pos.x] === 2);
             return it ? { what: 'item', pos: it.pos, id: undefined } : null;
@@ -896,7 +896,7 @@ for (const c of CASES) {
                 turn: s.state.turn,
                 L: window.__anyworld!.ui.layer(),
                 legalMove: (eng.legalActions(s.state) as { type: string; dir?: string }[]).some((x) => x.type === 'move' && x.dir === dir),
-                seen: (s.state.area.seen as ArrayLike<number>)[t.y * w + t.x],
+                seen: (s.state.players[s.state.party[0]].seen as ArrayLike<number>)[t.y * w + t.x],
                 path: travel.travelPath(s.state, t),
                 actorThere: s.state.area.actors.some((x: { hp: number; pos: { x: number; y: number } }) => x.hp > 0 && x.pos.x === t.x && x.pos.y === t.y),
                 actor: (() => {
@@ -1022,7 +1022,7 @@ test.describe('probes', () => {
       const st = s.state;
       const me = s.player().pos;
       const out: { x: number; y: number; id?: string }[] = [];
-      for (const a of st.area.actors) if (a.id !== st.player.actorId && a.hp > 0) out.push({ ...a.pos, id: a.id });
+      for (const a of st.area.actors) if (a.id !== st.players[st.party[0]].actorId && a.hp > 0) out.push({ ...a.pos, id: a.id });
       for (const [dx, dy] of [[0, 3], [2, -2], [-3, 0], [0, -4]]) out.push({ x: me.x + dx, y: me.y + dy });
       return out;
     });
@@ -1041,7 +1041,7 @@ test.describe('probes', () => {
       // nothing to describe on a never-seen tile or an actor out of sight: no card is right there
       const known = await page.evaluate((p) => {
         const st = window.__anyworld!.controller!.session.state;
-        return ((st.area.seen as ArrayLike<number>)[p.y * st.area.map.width + p.x] ?? 0) === 2;
+        return ((st.players[st.party[0]].seen as ArrayLike<number>)[p.y * st.area.map.width + p.x] ?? 0) === 2;
       }, tg);
       if (!tip && known) problems.push(`long-press on ${JSON.stringify(tg)} showed no inspect card`);
       await page.locator('.aw-strip').tap();
@@ -1161,9 +1161,9 @@ test.describe('probes-longpress-actor', () => {
         const s = window.__anyworld!.controller!.session;
         const st = s.state;
         const w = st.area.map.width;
-        const seen = st.area.seen as ArrayLike<number>;
+        const seen = st.players[st.party[0]].seen as ArrayLike<number>;
         return st.area.actors
-          .filter((a) => a.hp > 0 && a.id !== st.player.actorId && seen[a.pos.y * w + a.pos.x] === 2)
+          .filter((a) => a.hp > 0 && a.id !== st.players[st.party[0]].actorId && seen[a.pos.y * w + a.pos.x] === 2)
           .map((a) => ({ id: a.id, pos: a.pos, name: s.describeAt(a.pos).actor?.name ?? '?' }));
       });
       for (const a of actors) {
@@ -1232,7 +1232,7 @@ for (const pc of [
         const me = s.player().pos;
         const r = app.renderer!;
         const w = st.area.map.width;
-        const hostile = st.area.actors.find((a) => a.hp > 0 && a.faction === 'hostile' && a.id !== st.player.actorId);
+        const hostile = st.area.actors.find((a) => a.hp > 0 && a.faction === 'hostile' && a.id !== st.players[st.party[0]].actorId);
         if (!hostile) return null;
         let best: { x: number; y: number; sy: number } | null = null;
         for (const [dx, dy] of [[0, -1], [0, 1], [1, 0], [-1, 0], [1, -1], [-1, -1], [1, 1], [-1, 1]]) {
@@ -1248,7 +1248,7 @@ for (const pc of [
         await c.setStateForTest((ns) => {
           const a = ns.area.actors.find((x) => x.id === id)!;
           a.pos = { x: best!.x, y: best!.y };
-          const seen = ns.area.seen as number[];
+          const seen = ns.players[ns.party[0]].seen as number[];
           seen[best!.y * w + best!.x] = 2;
         });
         return { id, name: s.describeAt({ x: best.x, y: best.y }).actor?.name ?? hostile.defId, pos: { x: best.x, y: best.y }, me };
@@ -1283,7 +1283,7 @@ for (const pc of [
               hits++;
               if (hitPts.length < 6) hitPts.push([Math.round(x), Math.round(y)]);
             }
-            const me = st.area.actors.find((a) => a.id === st.player.actorId)!.pos;
+            const me = st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.pos;
             if (k && k.x === me.x && k.y === me.y) player++;
           }
         const pickTile = r.pick(tile.x, tile.y);

@@ -38,6 +38,9 @@ export const FLOOR_KINDS: ReadonlySet<TileKind> = new Set(['floor', 'start', 'do
 /** visibility per tile: 0 unseen, 1 remembered, 2 visible */
 export type SeenArray = ArrayLike<number>;
 
+/** an area with the fog to draw it under (the engine keeps fog per player: PlayerState.seen) */
+export type FoggedArea = AreaState & { seen?: SeenArray };
+
 const REMEMBER = new THREE.Color(0.36, 0.38, 0.48);
 /** liquid terrain surface: matte (no glints) and see-through, like a 'water' floor */
 export const LIQUID_TERRAIN_ROUGHNESS = 0.55;
@@ -351,7 +354,7 @@ export class AreaView {
   /** freeze cosmetic animation (ripples) */
   reduceMotion = false;
 
-  constructor(world: WorldSpec, plan: AreaPlan, area: AreaState) {
+  constructor(world: WorldSpec, plan: AreaPlan, area: FoggedArea) {
     this.world = world;
     this.plan = plan;
     const map = area.map;
@@ -370,7 +373,7 @@ export class AreaView {
     this.buildDoors(map);
     this.buildTransition(map);
     this.buildLamps(map);
-    this.applySeen(area.seen);
+    if (area.seen) this.applySeen(area.seen);
   }
 
   // -------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /** Actor creation, movement, transformation and noise. */
 import type { ActorInstance, Pos } from './types';
-import { type Ctx, actorAt, actorName, emit, isPlayer, logKey, nextId } from './ctx';
+import { type Ctx, actorAt, actorName, emit, isPlayer, logKey, me, nextId } from './ctx';
 import { side } from './stats';
 import { fireTriggers } from './triggers';
 import { cheb, own } from './util';
@@ -59,7 +59,7 @@ export function makeActor(ctx: Ctx, defId: string, pos: Pos, opts: SpawnOpts = {
     tempMods: [],
   };
   if (opts.allyOf) a.allyOf = opts.allyOf;
-  else if (a.faction === 'friendly' && def.behaviour.type === 'follower') a.allyOf = ctx.s.player.actorId;
+  else if (a.faction === 'friendly' && def.behaviour.type === 'follower') a.allyOf = me(ctx).actorId;
   if (a.allyOf) a.faction = 'friendly';
   // difficulty: hostiles (not NPCs) are tougher or frailer, uniques tougher still (engine/difficulty.ts)
   if (a.faction === 'hostile') a.hp = a.maxHp = scaledHostileHp(ctx.s, def);

@@ -5,6 +5,7 @@ import { GameSession } from '../../src/client/session';
 import { audioCueFor, type AudioUpdate } from '../../src/client/audio-cues';
 import { AudioBridge, type AudioModule, type BridgeAudio } from '../../src/client/audio-bridge';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer } from '../../src/engine';
 
 const western = loadFixture('fixture-western.json');
 
@@ -15,7 +16,7 @@ function session(seed = 1) {
 /** moves one actor of `defId` next to the player and refreshes FOV with a wait */
 function bringNear(s: GameSession, defId: string): void {
   const st = structuredClone(s.state) as GameState;
-  const me = st.area.actors.find((a) => a.id === st.player.actorId)!;
+  const me = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
   st.area.actors = st.area.actors.filter((a) => a.id === me.id);
   const id = `t-${defId}`;
   const proto = structuredClone(s.state.area.actors.find((a) => a.id !== me.id) ?? me);
@@ -28,7 +29,7 @@ describe('audioCueFor', () => {
   it('explore with nobody around; the area music mood comes from the plan', () => {
     const s = session();
     const st = structuredClone(s.state) as GameState;
-    st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId);
+    st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId);
     const cue = audioCueFor(western, st);
     expect(cue).toEqual({ situation: 'explore', area: 0, music: western.areas[0]!.music });
   });
@@ -54,7 +55,7 @@ describe('GameSession.audioListener', () => {
     s.audioListener = (u) => got.push(u);
     s.act({ type: 'wait' });
     expect(got).toHaveLength(1);
-    expect(got[0]!.playerId).toBe(s.state.player.actorId);
+    expect(got[0]!.playerId).toBe(leadPlayer(s.state).actorId);
     expect(Array.isArray(got[0]!.events)).toBe(true);
     s.applyGm([{ type: 'mood', music: 'eerie' } as never]);
     const last = got.at(-1)!;

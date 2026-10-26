@@ -5,7 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
 import { WORLD_DIR, loadFixture } from '../engine/helpers';
-import { createGame, step, legalActions, serialize } from '../../src/engine';
+import { createGame, step, legalActions, serialize, leadPlayer } from '../../src/engine';
 import { createRng } from '../../src/engine/rng';
 import type { GameState, PlayerAction } from '../../src/engine/types';
 import { fastStep } from '../../src/engine/sim/fast';
@@ -32,7 +32,7 @@ describe('fastStep matches step()', () => {
       let gmArea = -1;
       for (let i = 0; i < 600 && a.status === 'playing'; i++) {
         // GM batches go through the public API on both copies
-        if (a.area.index !== gmArea && !a.pendingChoice && !a.player.pendingPerkChoice) {
+        if (a.area.index !== gmArea && !leadPlayer(a).pendingChoice && !leadPlayer(a).pendingPerkChoice) {
           gmArea = a.area.index;
           const acts = gmActionsForArea(world, a.area.index);
           a = applyGmActions(a, acts, env).state;

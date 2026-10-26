@@ -1,6 +1,6 @@
 /** XP, level-ups and perks. */
 import type { Perk } from '../schema/world';
-import { type Ctx, emit, logKey, playerActor } from './ctx';
+import { type Ctx, emit, logKey, me, playerActor } from './ctx';
 import { modifyStat } from './effects';
 import { giveItem } from './inventory';
 
@@ -12,13 +12,13 @@ export function xpToNext(ctx: Ctx, level: number): number {
 
 export function grantXp(ctx: Ctx, amount: number): void {
   if (!(amount > 0) || !Number.isFinite(amount)) return;
-  ctx.s.player.xp += Math.round(amount);
+  me(ctx).xp += Math.round(amount);
   logKey(ctx, 'log.xp', { amount: Math.round(amount), xp: ctx.world.vocabulary.xp }, 'good');
   checkLevelUp(ctx);
 }
 
 export function availablePerks(ctx: Ctx, level: number): Perk[] {
-  return ctx.world.player.growth.perks.filter((p) => p.minLevel <= level && !ctx.s.player.perks.includes(p.id));
+  return ctx.world.player.growth.perks.filter((p) => p.minLevel <= level && !me(ctx).perks.includes(p.id));
 }
 
 /**
@@ -33,7 +33,7 @@ export const MAX_LEVELS_PER_CHECK = 50;
  * choosePerk resumes). Iterative, at most MAX_LEVELS_PER_CHECK levels per call.
  */
 export function checkLevelUp(ctx: Ctx): void {
-  const p = ctx.s.player;
+  const p = me(ctx);
   const g = ctx.world.player.growth;
   for (let gained = 0; !p.pendingPerkChoice; gained++) {
     const need = xpToNext(ctx, p.level);
@@ -60,7 +60,7 @@ export function checkLevelUp(ctx: Ctx): void {
 
 export function applyPerk(ctx: Ctx, perk: Perk): void {
   const pa = playerActor(ctx);
-  ctx.s.player.perks.push(perk.id);
+  me(ctx).perks.push(perk.id);
   for (const m of perk.modifiers) modifyStat(ctx, pa, m.stat, m.amount);
   for (const item of perk.grantItems) giveItem(ctx, item, 1);
   logKey(ctx, 'log.perk', { perk: perk.name, description: perk.description }, 'good');
@@ -68,7 +68,7 @@ export function applyPerk(ctx: Ctx, perk: Perk): void {
 
 /** resolves a pending perk choice; returns an error reason or null */
 export function choosePerk(ctx: Ctx, perkId: string): string | null {
-  const p = ctx.s.player;
+  const p = me(ctx);
   if (!p.pendingPerkChoice) return 'no perk choice pending';
   if (!p.pendingPerkChoice.includes(perkId)) return 'that perk is not on offer';
   const perk = ctx.ix.perks.get(perkId);

@@ -15,6 +15,7 @@ import { Renderer, attachTouchCamera, type QualitySetting } from '../render';
 import { loadWorld, buildDemoState, isOpaqueTile, simpleFov } from './fixtures';
 import type { GameEvent, GameState, Pos } from '../../engine/types';
 import type { WorldSpec, AreaPlan } from '../../schema/world';
+import { leadPlayer } from '../../engine/index';
 
 declare global {
   interface Window {
@@ -76,7 +77,7 @@ async function main() {
   if (overlays.length) r.setOverlayRects(overlays);
   attachTouchCamera(r, view);
   r.setWorld(world);
-  r.setArea(state.area);
+  r.setArea({ ...state.area, seen: leadPlayer(state).seen });
   const step = Number(q.get('step') ?? 0) | 0;
   for (let i = 0; i < ((step % 4) + 4) % 4; i++) r.rotateCamera(1);
   if (q.get('zoom')) r.rig.setZoom(Number(q.get('zoom')), true);
@@ -84,13 +85,13 @@ async function main() {
   r.rig.settle();
 
   let cur = state;
-  const player = () => cur.area.actors.find((a) => a.id === cur.player.actorId)!;
+  const player = () => cur.area.actors.find((a) => a.id === leadPlayer(cur).actorId)!;
 
   const recomputeSeen = (s: GameState) => {
     const vis = simpleFov(s.area.map, world, player().pos, world.player.sight ?? 8);
-    const seen = Uint8Array.from(s.area.seen as ArrayLike<number>, (v) => (v === 2 ? 1 : v));
+    const seen = Uint8Array.from(leadPlayer(s).seen as ArrayLike<number>, (v) => (v === 2 ? 1 : v));
     for (const i of vis) seen[i] = 2;
-    s.area.seen = seen;
+    leadPlayer(s).seen = seen;
   };
 
   const move = async (dx: number, dy: number) => {
@@ -98,7 +99,7 @@ async function main() {
     const to: Pos = { x: p.pos.x + dx, y: p.pos.y + dy };
     if (isOpaqueTile(cur.area.map, world, to.x, to.y) && cur.area.map.tiles[to.y * cur.area.map.width + to.x]?.kind !== 'door') return;
     const next: GameState = structuredClone(cur);
-    const np = next.area.actors.find((a) => a.id === next.player.actorId)!;
+    const np = next.area.actors.find((a) => a.id === leadPlayer(next).actorId)!;
     const events: GameEvent[] = [{ type: 'moved', actorId: np.id, from: { ...np.pos }, to }];
     const t = next.area.map.tiles[to.y * next.area.map.width + to.x];
     if (t.kind === 'door') t.kind = 'door_open';
@@ -116,7 +117,7 @@ async function main() {
 
   const demo = async () => {
     const next: GameState = structuredClone(cur);
-    const p = next.area.actors.find((a) => a.id === next.player.actorId)!;
+    const p = next.area.actors.find((a) => a.id === leadPlayer(next).actorId)!;
     const others = next.area.actors.filter((a) => a.id !== p.id);
     const events: GameEvent[] = [];
     const dist = (a: Pos) => Math.abs(a.x - p.pos.x) + Math.abs(a.y - p.pos.y);

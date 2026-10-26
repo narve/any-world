@@ -9,6 +9,7 @@ import type { StatusDef, WorldSpec } from '../schema/world';
 import { listJoin, t } from './i18n/index';
 import { lockedReason } from './guide';
 import { engineReason } from './i18n/engine-text';
+import { leadPlayer } from '../engine/index';
 
 type Flag = StatusDef['flags'][number];
 
@@ -19,7 +20,7 @@ interface Holding {
 
 /** the player's statuses that carry `flag`, longest-lasting first */
 export function statusesWithFlag(world: WorldSpec, state: GameState, flag: Flag): Holding[] {
-  const p = state.area.actors.find((a) => a.id === state.player.actorId);
+  const p = state.area.actors.find((a) => a.id === leadPlayer(state).actorId);
   if (!p) return [];
   const out: Holding[] = [];
   for (const s of p.statuses) {

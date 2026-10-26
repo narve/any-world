@@ -43,12 +43,12 @@ describe('currency effect (engine + schema)', () => {
       x.actors[0].triggers = [bounty(3)];
     });
     let s = newGame(w, 1);
-    const start = s.player.currency;
+    const start = s.purse;
     const rat = addActor(w, s, 'rat', { x: 2, y: 1 }, { hp: 1, maxHp: 1 });
     expect(player(s).pos).toEqual({ x: 1, y: 1 });
     for (let i = 0; i < 40 && s.area.actors.some((a) => a.id === rat.id && a.hp > 0); i++) s = act(w, s, { type: 'attack', targetId: rat.id }).state;
     expect(s.area.actors.some((a) => a.id === rat.id && a.hp > 0)).toBe(false);
-    expect(s.player.currency).toBe(start + 3);
+    expect(s.purse).toBe(start + 3);
     expect(s.log.some((m) => m.kind === 'loot' && m.text.includes(`+3 ${w.vocabulary.currency}`))).toBe(true);
   });
 
@@ -96,9 +96,9 @@ describe('fixtures: currency is earned during a run', () => {
           invariants: false,
           maxTurns: 1500,
           onStep: (s) => {
-            const d = s.player.currency - prev;
+            const d = s.purse - prev;
             if (d > 0) earned += d;
-            prev = s.player.currency;
+            prev = s.purse;
           },
         });
       }

@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { testWorld, testWorldInput, newGame, addActor, player, act, env, loadFixture, roomMap } from './helpers';
-import { applyGmActions, legalActions, serialize, step, createGame, sellPrice } from '../../src/engine';
+import { applyGmActions, legalActions, serialize, step, createGame, sellPrice, leadPlayer } from '../../src/engine';
 import { parseWorld, type WorldSpecInput } from '../../src/schema';
 import type { GameState, PlayerAction } from '../../src/engine/types';
 import { botByName, newMemory } from '../../src/engine/sim/bots';
@@ -42,7 +42,7 @@ describe('trader sell path', () => {
     let s = newGame(w);
     const m = addActor(w, s, 'merchant', { x: 2, y: 1 });
     s = talkTo(w, s, m.id);
-    const pc = s.pendingChoice!;
+    const pc = leadPlayer(s).pendingChoice!;
     const sells = pc.options.filter((o) => o.tag === 'sell');
     // the stick is equipped (not offered); the tonic stack is
     expect(sells.map((o) => o.sell!.defId)).toEqual(['tonic']);
@@ -53,20 +53,20 @@ describe('trader sell path', () => {
     expect(pc.options[0].tag).toBe('buy');
     expect(pc.options[pc.options.length - 1].label).toBe('Goodbye');
     const idx = pc.options.indexOf(sells[0]);
-    const before = s.player.currency;
+    const before = s.purse;
     const r = act(w, s, { type: 'choose_option', index: idx });
     expect(r.tookTurn).toBe(false);
     s = r.state;
-    expect(s.pendingChoice).toBeNull();
-    expect(s.player.currency).toBe(before + sellPrice(tonicValue));
-    expect(s.player.slots.find((it) => it?.defId === 'tonic')!.count).toBe(1);
+    expect(leadPlayer(s).pendingChoice).toBeNull();
+    expect(s.purse).toBe(before + sellPrice(tonicValue));
+    expect(leadPlayer(s).slots.find((it) => it?.defId === 'tonic')!.count).toBe(1);
     const line = s.log[s.log.length - 1];
     expect(line.key).toBe('log.trade.sold');
     expect(line.text).toBe(`Tess sells Tonic for ${sellPrice(tonicValue)} coins.`);
     // legalActions lists the sell options too (bots / UI)
     s = talkTo(w, s, m.id);
     const listed = legalActions(s, env(w)).flatMap((a) => (a.type === 'choose_option' ? [a.index] : []));
-    s.pendingChoice!.options.forEach((o, i) => {
+    leadPlayer(s).pendingChoice!.options.forEach((o, i) => {
       if (o.tag === 'sell') expect(listed).toContain(i);
     });
   });
@@ -80,10 +80,10 @@ describe('trader sell path', () => {
     let s = newGame(w);
     const m = addActor(w, s, 'merchant', { x: 2, y: 1 });
     s = talkTo(w, s, m.id);
-    const sells = s.pendingChoice!.options.filter((o) => o.tag === 'sell');
+    const sells = leadPlayer(s).pendingChoice!.options.filter((o) => o.tag === 'sell');
     expect(sells.map((o) => o.sell!.defId).sort()).toEqual(['murk', 'tonic', 'wand']);
     const murk = sells.find((o) => o.sell!.defId === 'murk')!;
-    expect(murk.label.startsWith(s.knowledge.murk.appearance!.label)).toBe(true);
+    expect(murk.label.startsWith(leadPlayer(s).knowledge.murk.appearance!.label)).toBe(true);
     expect(murk.label).not.toContain('Murky');
   });
 
@@ -92,17 +92,17 @@ describe('trader sell path', () => {
     let s = newGame(w);
     const m = addActor(w, s, 'merchant', { x: 2, y: 1 });
     s = talkTo(w, s, m.id);
-    const idx = s.pendingChoice!.options.findIndex((o) => o.tag === 'sell');
-    const from = s.pendingChoice!.options[idx].sell!.slot;
+    const idx = leadPlayer(s).pendingChoice!.options.findIndex((o) => o.tag === 'sell');
+    const from = leadPlayer(s).pendingChoice!.options[idx].sell!.slot;
     // move the stack elsewhere behind the offer's back (state surgery)
     const moved = structuredClone(s);
-    moved.player.slots[12] = moved.player.slots[from];
-    moved.player.slots[from] = null;
+    leadPlayer(moved).slots[12] = leadPlayer(moved).slots[from];
+    leadPlayer(moved).slots[from] = null;
     const r1 = act(w, moved, { type: 'choose_option', index: idx });
     expect(r1.events.some((e) => e.type === 'invalid')).toBe(false);
-    expect(r1.state.player.slots[12]!.count).toBe(1);
+    expect(leadPlayer(r1.state).slots[12]!.count).toBe(1);
     const gone = structuredClone(s);
-    gone.player.slots[from] = null;
+    leadPlayer(gone).slots[from] = null;
     const r2 = act(w, gone, { type: 'choose_option', index: idx });
     expect(r2.events).toEqual([{ type: 'invalid', reason: 'you no longer have that' }]);
     expect(r2.state).toBe(gone);
@@ -221,21 +221,21 @@ describe('GM rule allConsumablesUnknown mid-run', () => {
     expect(r.gmSkipped).toEqual([]);
     s = r.state;
     // bread: clear, never used, not carried → unknown under the free pool label
-    expect(s.knowledge.bread.level).toBe('unknown');
-    expect(s.knowledge.bread.ruleHidden).toBe(true);
+    expect(leadPlayer(s).knowledge.bread.level).toBe('unknown');
+    expect(leadPlayer(s).knowledge.bread.ruleHidden).toBe(true);
     const pool = ['green flask', 'red flask', 'blue flask'];
-    expect(pool).toContain(s.knowledge.bread.appearance!.label);
+    expect(pool).toContain(leadPlayer(s).knowledge.bread.appearance!.label);
     // the carried tonic stays known; murk/fog keep their own appearances
-    expect(s.knowledge.tonic.level).toBe('clear');
-    const labels = ['murk', 'fog', 'bread'].map((id) => s.knowledge[id].appearance!.label);
+    expect(leadPlayer(s).knowledge.tonic.level).toBe('clear');
+    const labels = ['murk', 'fog', 'bread'].map((id) => leadPlayer(s).knowledge[id].appearance!.label);
     expect(new Set(labels).size).toBe(3);
     expect(r.events).toContainEqual({ type: 'item_identified', defId: 'bread', level: 'unknown' });
     const back = applyGmActions(s, [{ type: 'remove_rule', id: 'forgetful', reason: 'It clears.' }], env(w));
     expect(back.gmSkipped).toEqual([]);
-    expect(back.state.knowledge.bread.level).toBe('clear');
-    expect(back.state.knowledge.bread.ruleHidden).toBeUndefined();
+    expect(leadPlayer(back.state).knowledge.bread.level).toBe('clear');
+    expect(leadPlayer(back.state).knowledge.bread.ruleHidden).toBeUndefined();
     // murk was unknown by design: stays unknown
-    expect(back.state.knowledge.murk.level).toBe('unknown');
+    expect(leadPlayer(back.state).knowledge.murk.level).toBe('unknown');
   });
 
   it("a world rule hides consumables from the start, and the GM retiring it restores them", () => {
@@ -245,10 +245,10 @@ describe('GM rule allConsumablesUnknown mid-run', () => {
     if (!parsed.ok) throw new Error(parsed.errors.join('\n'));
     const w = parsed.world;
     let s = createGame(w, { seed: 1, map: roomMap() });
-    expect(s.knowledge.tonic.level).toBe('unknown');
-    expect(s.knowledge.tonic.ruleHidden).toBe(true);
+    expect(leadPlayer(s).knowledge.tonic.level).toBe('unknown');
+    expect(leadPlayer(s).knowledge.tonic.ruleHidden).toBe(true);
     s = applyGmActions(s, [{ type: 'remove_rule', id: 'forgetful', reason: 'x' }], { world: w }).state;
-    expect(s.knowledge.tonic.level).toBe('clear');
+    expect(leadPlayer(s).knowledge.tonic.level).toBe('clear');
   });
 });
 
@@ -317,7 +317,7 @@ describe('copy-on-write state clone', () => {
     expect(s2.area.map.tiles[1 * 14 + 2].kind).toBe('door_open');
     // log entries are shared, the log array is not
     expect(s2.log).not.toBe(s1.log);
-    expect(s1.area.seen).not.toBe(s2.area.seen);
+    expect(leadPlayer(s1).seen).not.toBe(leadPlayer(s2).seen);
   });
 
   it('long fixture runs: every input state survives its step unchanged, and step stays fast', () => {

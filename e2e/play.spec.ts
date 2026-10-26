@@ -34,7 +34,7 @@ function snap(page: Page): Promise<Snap> {
   return page.evaluate(() => {
     const app = window.__anyworld!;
     const s = app.controller!.session.state;
-    const p = s.area.actors.find((a) => a.id === s.player.actorId)!;
+    const p = s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!;
     return { turn: s.turn, x: p.pos.x, y: p.pos.y, layer: app.ui.layer(), screen: document.getElementById('ui-root')!.dataset.screen ?? '', status: s.status, area: s.area.index };
   });
 }
@@ -101,7 +101,7 @@ test('direct world link, camera-relative keys, mouse travel and backpack', async
     const before = await page.evaluate(() => {
       const app = window.__anyworld!;
       const s = app.controller!.session.state;
-      const p = s.area.actors.find((a) => a.id === s.player.actorId)!;
+      const p = s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!;
       return { pos: { ...p.pos }, screen: app.renderer!.tileToScreen(p.pos) };
     });
     await page.keyboard.press('ArrowUp');
@@ -122,9 +122,9 @@ test('direct world link, camera-relative keys, mouse travel and backpack', async
   const dest = await page.evaluate(() => {
     const app = window.__anyworld!;
     const s = app.controller!.session.state;
-    const p = s.area.actors.find((a) => a.id === s.player.actorId)!;
+    const p = s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!;
     const m = s.area.map;
-    const seen = s.area.seen as ArrayLike<number>;
+    const seen = s.players[s.party[0]].seen as ArrayLike<number>;
     let best: { x: number; y: number } | null = null;
     for (let y = 0; y < m.height; y++)
       for (let x = 0; x < m.width; x++) {
@@ -171,7 +171,7 @@ test('talking to an NPC opens the dialogue and leaving closes it', async ({ page
     const npc = s.area.actors.find((a) => ses.world.actors.find((d) => d.id === a.defId)?.npc && a.faction !== 'hostile');
     if (!npc) return false;
     const m = s.area.map;
-    const p = s.area.actors.find((a) => a.id === s.player.actorId)!;
+    const p = s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!;
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]]) {
       const x = npc.pos.x + dx;
       const y = npc.pos.y + dy;

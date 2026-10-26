@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { testWorld, newGame, player, addActor, ctxFor, act, roomMap } from './helpers';
-import { applyGmActions } from '../../src/engine';
+import { applyGmActions, leadPlayer } from '../../src/engine';
 import { playerBaseSight, sightRadius } from '../../src/engine/stats';
 import { ROOM_MEMORY_MAX_TILES, playerSeesTile, updateFov } from '../../src/engine/vision';
 import type { AreaMap, Tile } from '../../src/engine/types';
@@ -65,7 +65,7 @@ describe('fog as memory', () => {
     const rat = addActor(w, s, 'rat', hidden, {});
     const ctx = ctxFor(w, s);
     updateFov(ctx);
-    const at = (x: number, y: number) => s.area.seen[y * map.width + x];
+    const at = (x: number, y: number) => leadPlayer(s).seen[y * map.width + x];
     // behind the wall stub: not in view, but remembered as part of the room
     expect(playerSeesTile(ctx, hidden)).toBe(false);
     expect(at(hidden.x, hidden.y)).toBe(1);
@@ -83,7 +83,7 @@ describe('fog as memory', () => {
     const s = newGame(w, 1, roomMap(40, 20, { start: { x: 2, y: 2 }, exit: { x: 37, y: 17 }, walls }));
     expect(38 * 18).toBeGreaterThan(ROOM_MEMORY_MAX_TILES);
     updateFov(ctxFor(w, s));
-    expect(s.area.seen[2 * 40 + 30]).toBe(0);
+    expect(leadPlayer(s).seen[2 * 40 + 30]).toBe(0);
   });
 
   it('a GM spawn "random" lands where the player can see it', () => {
@@ -106,6 +106,6 @@ describe('fog as memory', () => {
     s = act(w, s, { type: 'move', dir: 'e' }).state;
     s = act(w, s, { type: 'move', dir: 'e' }).state;
     expect(player(s).pos.x).toBeGreaterThanOrEqual(13);
-    expect(s.area.seen[1 * s.area.map.width + 22]).toBeGreaterThan(0);
+    expect(leadPlayer(s).seen[1 * s.area.map.width + 22]).toBeGreaterThan(0);
   });
 });

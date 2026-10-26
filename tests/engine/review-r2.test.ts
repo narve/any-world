@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { GM_BUDGET_PER_AREA, GM_ACTION_COST } from '../../src/schema/gm';
-import { applyGmActions, bfsDistances, legalActions, serialize, deserialize, step, transitionBlocker, type GameState } from '../../src/engine';
+import { applyGmActions, bfsDistances, legalActions, serialize, deserialize, step, transitionBlocker, type GameState, leadPlayer } from '../../src/engine';
 import type { WorldSpecInput } from '../../src/schema';
 import { applyEffectList } from '../../src/engine/effects';
 import { act, addActor, ctxFor, env, newGame, player, roomMap, testWorld } from './helpers';
@@ -34,11 +34,11 @@ describe('review r2: trade labels keep unknown items unknown', () => {
     let s = newGame(world);
     const p = player(s);
     const m = addActor(world, s, 'merchant', { x: p.pos.x + 1, y: p.pos.y });
-    expect(s.knowledge.murk.level).toBe('unknown');
+    expect(leadPlayer(s).knowledge.murk.level).toBe('unknown');
     s = act(world, s, { type: 'talk', targetId: m.id }).state;
-    const labels = s.pendingChoice!.options.map((o) => o.label).join(' | ');
+    const labels = leadPlayer(s).pendingChoice!.options.map((o) => o.label).join(' | ');
     expect(labels).not.toContain('Murky Draught');
-    expect(labels).toContain(s.knowledge.murk.appearance!.label);
+    expect(labels).toContain(leadPlayer(s).knowledge.murk.appearance!.label);
   });
 
   it('GM trade offer does not reveal the real name of an unknown item', () => {
@@ -47,19 +47,19 @@ describe('review r2: trade labels keep unknown items unknown', () => {
     const p = player(s);
     const m = addActor(world, s, 'merchant', { x: p.pos.x + 1, y: p.pos.y });
     s = applyGmActions(s, [{ type: 'trade', actorId: m.id, items: [{ item: 'murk', price: 0 }] }], env(world)).state;
-    const labels = s.pendingChoice!.options.map((o) => o.label).join(' | ');
+    const labels = leadPlayer(s).pendingChoice!.options.map((o) => o.label).join(' | ');
     expect(labels).not.toContain('Murky Draught');
-    expect(labels).toContain(s.knowledge.murk.appearance!.label);
+    expect(labels).toContain(leadPlayer(s).knowledge.murk.appearance!.label);
   });
 
   it('a known item is still labelled by its real name', () => {
     const world = testWorld(withMerchant);
     let s = newGame(world);
-    s.knowledge.murk.level = 'clear';
+    leadPlayer(s).knowledge.murk.level = 'clear';
     const p = player(s);
     const m = addActor(world, s, 'merchant', { x: p.pos.x + 1, y: p.pos.y });
     s = act(world, s, { type: 'talk', targetId: m.id }).state;
-    expect(s.pendingChoice!.options[0].label).toContain('Murky Draught');
+    expect(leadPlayer(s).pendingChoice!.options[0].label).toContain('Murky Draught');
   });
 });
 
@@ -72,15 +72,15 @@ describe('review r2: GM offers cannot soft-lock the run', () => {
   it('an offer whose options all cost more than the player has gets a free way out', () => {
     const world = testWorld();
     let s = newGame(world);
-    expect(s.player.currency).toBe(0);
+    expect(s.purse).toBe(0);
     s = applyGmActions(s, [{ type: 'offer_choice', prompt: 'A stranger offers a bargain.', options: pricey }], env(world)).state;
-    expect(s.pendingChoice).not.toBeNull();
-    expect(s.pendingChoice!.options).toHaveLength(3);
+    expect(leadPlayer(s).pendingChoice).not.toBeNull();
+    expect(leadPlayer(s).pendingChoice!.options).toHaveLength(3);
     const legal = legalActions(s, env(world));
     expect(legal.length).toBeGreaterThan(0);
     for (const a of legal) expect(invalid(step(s, a, env(world)))).toBe(false);
     const r = step(s, legal[0], env(world));
-    expect(r.state.pendingChoice).toBeNull();
+    expect(leadPlayer(r.state).pendingChoice).toBeNull();
     // and play continues
     expect(invalid(step(r.state, { type: 'wait' }, env(world)))).toBe(false);
   });
@@ -89,21 +89,21 @@ describe('review r2: GM offers cannot soft-lock the run', () => {
     const world = testWorld();
     let s = newGame(world);
     s = applyGmActions(s, [{ type: 'offer_choice', prompt: 'Well?', options: [pricey[0], { label: 'No', actions: [] }] }], env(world)).state;
-    expect(s.pendingChoice!.options.map((o) => o.label)).toEqual(['Pay 10', 'No']);
+    expect(leadPlayer(s).pendingChoice!.options.map((o) => o.label)).toEqual(['Pay 10', 'No']);
   });
 
   it('a locked choice from an old save (no affordable option) is declined by any pick', () => {
     const world = testWorld();
     let s = newGame(world);
-    s.pendingChoice = { kind: 'gm_offer', prompt: 'old', options: pricey.map((o) => ({ ...o, actions: [...o.actions] })) };
+    leadPlayer(s).pendingChoice = { kind: 'gm_offer', prompt: 'old', options: pricey.map((o) => ({ ...o, actions: [...o.actions] })) };
     s = deserialize(world, serialize(s));
     const legal = legalActions(s, env(world));
     expect(legal.length).toBeGreaterThan(0);
     const r = step(s, legal[0], env(world));
     expect(invalid(r)).toBe(false);
-    expect(r.state.pendingChoice).toBeNull();
-    expect(r.state.player.currency).toBe(0);
-    expect(r.state.player.slots.some((it) => it?.defId === 'coat')).toBe(false);
+    expect(leadPlayer(r.state).pendingChoice).toBeNull();
+    expect(r.state.purse).toBe(0);
+    expect(leadPlayer(r.state).slots.some((it) => it?.defId === 'coat')).toBe(false);
   });
 
   it('options naming a missing item are left out, so the price can never buy nothing', () => {
@@ -115,7 +115,7 @@ describe('review r2: GM offers cannot soft-lock the run', () => {
       [{ type: 'offer_choice', prompt: '?', options: [{ label: 'Buy ghost', actions: [{ type: 'currency', amount: -10 }, { type: 'give_item', item: 'no-such-item', count: 1 }] }, pricey[0]] }],
       env(world),
     ).state;
-    expect(s.pendingChoice!.options.map((o) => o.label)).toEqual(['Pay 10', 'Decline']);
+    expect(leadPlayer(s).pendingChoice!.options.map((o) => o.label)).toEqual(['Pay 10', 'Decline']);
   });
 });
 
@@ -140,11 +140,11 @@ describe('review r2: paid GM offers are atomic', () => {
     ).state;
     // other GM hooks (async) spend the area budget while the offer is open
     s = applyGmActions(s, [{ type: 'grant_xp', amount: 1 }, { type: 'grant_xp', amount: 1 }, { type: 'grant_xp', amount: 1 }], env(world)).state;
-    while (s.player.pendingPerkChoice) s = step(s, { type: 'choose_perk', perkId: s.player.pendingPerkChoice[0] }, env(world)).state;
-    const before = s.player.currency;
+    while (leadPlayer(s).pendingPerkChoice) s = step(s, { type: 'choose_perk', perkId: leadPlayer(s).pendingPerkChoice![0] }, env(world)).state;
+    const before = s.purse;
     const r = step(s, { type: 'choose_option', index: 0 }, env(world));
-    expect(before - r.state.player.currency).toBe(10);
-    expect(r.state.player.slots.some((it) => it?.defId === 'coat')).toBe(true);
+    expect(before - r.state.purse).toBe(10);
+    expect(leadPlayer(r.state).slots.some((it) => it?.defId === 'coat')).toBe(true);
   });
 
   it('the offer reserves the costliest option and refunds what the chosen one leaves unused', () => {
@@ -161,7 +161,7 @@ describe('review r2: paid GM offers are atomic', () => {
     expect(declined.area.gmBudget).toBe(GM_BUDGET_PER_AREA - GM_ACTION_COST.offer_choice);
     const took = step(s, { type: 'choose_option', index: 0 }, env(world)).state;
     expect(took.area.gmBudget).toBe(GM_BUDGET_PER_AREA - reserved);
-    expect(took.player.slots.some((it) => it?.defId === 'coat')).toBe(true);
+    expect(leadPlayer(took).slots.some((it) => it?.defId === 'coat')).toBe(true);
   });
 
   it('an offer whose goods do not fit the remaining budget is not made', () => {
@@ -173,7 +173,7 @@ describe('review r2: paid GM offers are atomic', () => {
       [{ type: 'offer_choice', prompt: '?', options: [{ label: 'Coat', actions: [{ type: 'give_item', item: 'coat', count: 1 }] }, { label: 'No', actions: [] }] }],
       env(world),
     ).state;
-    expect(s.pendingChoice).toBeNull();
+    expect(leadPlayer(s).pendingChoice).toBeNull();
     expect(s.area.gmBudget).toBe(3);
   });
 });
@@ -215,7 +215,7 @@ describe('review r2: spawned terrain never cuts the player off', () => {
     const world = testWorld((w) => mason(w));
     let s: GameState = newGame(world, 1, roomMap(12, 10, { walls }));
     s.area.items.push({ item: { id: 'ikey', defId: 'key', count: 1 }, pos: { x: 1, y: 8 } });
-    const slot = s.player.slots.findIndex((it) => it?.defId === 'mason');
+    const slot = leadPlayer(s).slots.findIndex((it) => it?.defId === 'mason');
     const r = step(s, { type: 'use', slot, target: { x: 2, y: 6 } }, env(world));
     expect(invalid(r)).toBe(false);
     s = r.state;

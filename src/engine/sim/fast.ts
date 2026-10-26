@@ -18,8 +18,11 @@ import { updateFov } from '../vision';
 
 export function fastStep(state: GameState, action: PlayerAction, world: WorldSpec, mapGenerator?: MapGenerator): StepResult {
   if (state.status !== 'playing') return { state, events: [{ type: 'invalid', reason: 'the run is over' }], tookTurn: false };
-  if (!(state.area.seen instanceof Uint8Array)) state.area.seen = Uint8Array.from(state.area.seen as number[]);
-  const ctx: Ctx = { world, ix: indexWorld(world), s: state, rng: rngFromState(state.rng), events: [], mapGen: mapGenerator ?? generateArea, depth: 0 };
+  for (const id of state.party) {
+    const ps = state.players[id];
+    if (!(ps.seen instanceof Uint8Array)) ps.seen = Uint8Array.from(ps.seen as number[]);
+  }
+  const ctx: Ctx = { world, ix: indexWorld(world), s: state, pid: state.party[0], rng: rngFromState(state.rng), events: [], mapGen: mapGenerator ?? generateArea, depth: 0 };
   const r = doPlayerAction(ctx, action);
   if (!r.ok) {
     const events: GameEvent[] = [{ type: 'invalid', reason: r.reason ?? 'not possible' }];

@@ -17,6 +17,7 @@ import { LlmGmDirector } from '../../src/llm/gm-runtime';
 import { playToSituation } from '../../src/llm/situation';
 import { GameSession } from '../../src/client/session';
 import type { CompletionRequest, CompletionResponse, LLMProvider } from '../../src/llm/types';
+import { leadPlayer } from '../../src/engine';
 
 function fixture(name: string): WorldSpec {
   const r = parseWorld(JSON.parse(readFileSync(`content/worlds/${name}.json`, 'utf8')));
@@ -40,7 +41,7 @@ describe('GM answer checked against the request snapshot, applied to a later sta
     const sit = playToSituation(world, { seed: 2, area: 0, turnsInArea: 2 });
     expect(sit.reached).toBe(true);
     const snap = sit.state;
-    const pl = snap.area.actors.find((a) => a.id === snap.player.actorId)!;
+    const pl = snap.area.actors.find((a) => a.id === leadPlayer(snap).actorId)!;
     // the largest "non-lethal" damage the checks allow at this hp (and within GM_AMOUNT_LIMIT)
     const dmg = Math.min(50, pl.hp - 1);
     expect(dmg).toBeGreaterThan(3);
@@ -64,7 +65,7 @@ describe('GM answer checked against the request snapshot, applied to a later sta
     const s = new GameSession({ world, worldId: 'fixture-western', seed: 2 });
     const later = structuredClone(snap) as GameState;
     later.turn += 4;
-    later.area.actors.find((a) => a.id === later.player.actorId)!.hp = Math.max(1, pl.hp - 6);
+    later.area.actors.find((a) => a.id === leadPlayer(later).actorId)!.hp = Math.max(1, pl.hp - 6);
     s.state = later;
     s.narration = null;
 
@@ -86,26 +87,26 @@ describe('GM re-checks on apply (issues/M5-stale-gm-fiat.md)', () => {
 
   it('keeps the safe actions of an answer and drops the one that would now be lethal', () => {
     const s = session();
-    const hp = s.state.area.actors.find((a) => a.id === s.state.player.actorId)!.hp;
-    const before = s.state.player.currency;
+    const hp = s.state.area.actors.find((a) => a.id === leadPlayer(s.state).actorId)!.hp;
+    const before = s.state.purse;
     s.applyGm([lethal(hp + 5), { type: 'currency', amount: 7 } as never], { hook: 'idle', area: s.state.area.index });
     expect(s.state.status).toBe('playing');
-    expect(s.state.area.actors.find((a) => a.id === s.state.player.actorId)!.hp).toBe(hp);
-    expect(s.state.player.currency).toBe(before + 7);
+    expect(s.state.area.actors.find((a) => a.id === leadPlayer(s.state).actorId)!.hp).toBe(hp);
+    expect(s.state.purse).toBe(before + 7);
   });
 
   it('cumulative damage across actions is checked against the running result', () => {
     const s = session();
-    const hp = s.state.area.actors.find((a) => a.id === s.state.player.actorId)!.hp;
+    const hp = s.state.area.actors.find((a) => a.id === leadPlayer(s.state).actorId)!.hp;
     const half = Math.ceil(hp / 2) + 1;
     s.applyGm([lethal(half), lethal(half)], { hook: 'idle', area: s.state.area.index });
     expect(s.state.status).toBe('playing');
-    expect(s.state.area.actors.find((a) => a.id === s.state.player.actorId)!.hp).toBe(hp - half);
+    expect(s.state.area.actors.find((a) => a.id === leadPlayer(s.state).actorId)!.hp).toBe(hp - half);
   });
 
   it('trusted (debug) applications are not re-checked', () => {
     const s = session();
-    const hp = s.state.area.actors.find((a) => a.id === s.state.player.actorId)!.hp;
+    const hp = s.state.area.actors.find((a) => a.id === leadPlayer(s.state).actorId)!.hp;
     s.applyGm([lethal(hp + 5)], { hook: 'idle', area: s.state.area.index, trusted: true });
     expect(s.state.status).toBe('lost');
   });
@@ -113,16 +114,16 @@ describe('GM re-checks on apply (issues/M5-stale-gm-fiat.md)', () => {
   it('an offer option is re-checked when the player picks it', () => {
     const s = session();
     const st = structuredClone(s.state) as GameState;
-    const pl = st.area.actors.find((a) => a.id === st.player.actorId)!;
+    const pl = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
     pl.hp = 3;
-    st.pendingChoice = { kind: 'gm_offer', prompt: 'A deal?', options: [{ label: 'Take it', actions: [lethal(2), { type: 'currency', amount: 5 } as never] }, { label: 'No', actions: [] }] };
+    leadPlayer(st).pendingChoice = { kind: 'gm_offer', prompt: 'A deal?', options: [{ label: 'Take it', actions: [lethal(2), { type: 'currency', amount: 5 } as never] }, { label: 'No', actions: [] }] };
     s.state = st;
     // safe when offered (hp 3, loss 2); the player is then hit down to 2 before choosing
-    s.state.area.actors.find((a) => a.id === s.state.player.actorId)!.hp = 2;
-    const cur = s.state.player.currency;
+    s.state.area.actors.find((a) => a.id === leadPlayer(s.state).actorId)!.hp = 2;
+    const cur = s.state.purse;
     s.act({ type: 'choose_option', index: 0 });
     expect(s.state.status).toBe('playing');
-    expect(s.state.pendingChoice).toBeNull();
-    expect(s.state.player.currency).toBe(cur + 5);
+    expect(leadPlayer(s.state).pendingChoice).toBeNull();
+    expect(s.state.purse).toBe(cur + 5);
   });
 });

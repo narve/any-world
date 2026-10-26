@@ -13,7 +13,7 @@ import type {
   DamageType,
   RuleVariant,
 } from '../schema/world';
-import type { ActorInstance, GameEvent, GameState, LogMessage, MapGenerator, Pos, Tile } from './types';
+import type { ActorInstance, GameEvent, GameState, LogMessage, MapGenerator, PlayerId, PlayerState, Pos, Tile } from './types';
 import type { SeededRng } from './rng';
 import { inBounds, own, tileAt } from './util';
 import { DEATH_REASON_KEYS, type LogKey, type LogParams, LOG_KEYS, renderTemplate } from './log-keys';
@@ -88,6 +88,11 @@ export interface Ctx {
   world: WorldSpec;
   ix: WorldIndex;
   s: GameState;
+  /**
+   * The acting player: whose input is being resolved, or whom a read query answers for (me(ctx)).
+   * Code that works on an actor (stats, combat, effects, triggers) reads playerOf(ctx, actor) instead.
+   */
+  pid: PlayerId;
   rng: SeededRng;
   events: GameEvent[];
   mapGen: MapGenerator;
@@ -105,7 +110,7 @@ export interface Ctx {
   cow?: TileCow;
   /**
    * What is hurting the player right now besides an attacker (a status ticking, terrain underfoot);
-   * set around those effects so the loss reason can name it (GameState.lastHarm).
+   * set around those effects so the loss reason can name it (PlayerState.lastHarm).
    */
   harmCause?: { status?: string; terrain?: string };
   /** count of tile writes in this call (mutTile), the invalidation stamp of fovCache */
@@ -223,15 +228,76 @@ export function nextId(ctx: Ctx, prefix: 'a' | 'i'): string {
   return `${prefix}${ctx.s.nextId++}`;
 }
 
+// ---------------------------------------------------------------------------
+// Players (a single player is a party of one)
+// ---------------------------------------------------------------------------
+
+/** the acting player (ctx.pid): action entry points and read queries only */
+export function me(ctx: Ctx): PlayerState {
+  const ps = ctx.s.players[ctx.pid];
+  if (!ps) throw new Error(`no player "${ctx.pid}"`);
+  return ps;
+}
+
+/** the lead player (party[0]) */
+export function leadOf(s: GameState): PlayerState {
+  return s.players[s.party[0]];
+}
+
+/** the acting player's actor */
 export function playerActor(ctx: Ctx): ActorInstance {
-  const id = ctx.s.player.actorId;
+  const id = me(ctx).actorId;
   const a = ctx.s.area.actors.find((x) => x.id === id);
   if (!a) throw new Error('player actor missing from area');
   return a;
 }
 
+/** a player's actor (undefined when it is not in the area) */
+export function playerActorOf(ctx: Ctx, pid: PlayerId): ActorInstance | undefined {
+  const id = ctx.s.players[pid]?.actorId;
+  return id === undefined ? undefined : ctx.s.area.actors.find((x) => x.id === id);
+}
+
+/** the player whose actor `a` is (undefined for every other actor) */
+export function playerOf(ctx: Ctx, a: ActorInstance | null | undefined): PlayerState | undefined {
+  if (!a) return undefined;
+  const s = ctx.s;
+  for (const id of s.party) {
+    const ps = s.players[id];
+    if (ps.actorId === a.id) return ps;
+  }
+  return undefined;
+}
+
+/** is `a` the actor of any party member */
 export function isPlayer(ctx: Ctx, a: ActorInstance | null | undefined): boolean {
-  return !!a && a.id === ctx.s.player.actorId;
+  return playerOf(ctx, a) !== undefined;
+}
+
+/** the party's player actors in the area, in party order */
+export function partyActors(ctx: Ctx): ActorInstance[] {
+  const out: ActorInstance[] = [];
+  for (const id of ctx.s.party) {
+    const a = playerActorOf(ctx, id);
+    if (a) out.push(a);
+  }
+  return out;
+}
+
+/** runs `fn` with `pid` as the acting player, then restores the previous one */
+export function withPlayer<T>(ctx: Ctx, pid: PlayerId, fn: () => T): T {
+  const prev = ctx.pid;
+  ctx.pid = pid;
+  try {
+    return fn();
+  } finally {
+    ctx.pid = prev;
+  }
+}
+
+/** a player's name for log lines (the acting player by default) */
+export function playerName(ctx: Ctx, pid: PlayerId = ctx.pid): string {
+  return ctx.s.players[pid]?.name ?? ctx.world.player.name;
 }
 
 export function isAlive(ctx: Ctx, a: ActorInstance | null | undefined): a is ActorInstance {
@@ -248,7 +314,8 @@ export function actorDef(ctx: Ctx, a: ActorInstance): ActorDef | undefined {
 }
 
 export function actorName(ctx: Ctx, a: ActorInstance): string {
-  if (isPlayer(ctx, a)) return ctx.world.player.name;
+  const ps = playerOf(ctx, a);
+  if (ps) return ps.name;
   return ctx.ix.actors.get(a.defId)?.name ?? a.defId;
 }
 

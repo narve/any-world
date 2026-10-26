@@ -5,7 +5,21 @@
  */
 import type { ActorDef } from '../schema/world';
 import type { ActorInstance, Pos } from './types';
-import { type Ctx, actorDef, actorName, emit, isAlive, isFree, isPlayer, logKey, mutTile, passable, playerActor, moveCost } from './ctx';
+import {
+  type Ctx,
+  actorDef,
+  actorName,
+  emit,
+  isAlive,
+  isFree,
+  isPlayer,
+  logKey,
+  moveCost,
+  mutTile,
+  passable,
+  playerActor,
+  playerOf,
+} from './ctx';
 import { getStat, hasFlag, isAlly, isEnemy, maxHp, side, sightRadius } from './stats';
 import { attackOf, inAttackRange, performAttack } from './combat';
 import { POSITIONAL_SHAPES, changeResource, los, resolveTargets, runAction, targetingReach } from './effects';
@@ -19,7 +33,7 @@ import { DIR_LIST, DIRS, cheb, dist2, own, samePos, tileAt } from './util';
 /** perception radius of `a` for `target` */
 export function noticeRadius(ctx: Ctx, a: ActorInstance, target: ActorInstance): number {
   let r = sightRadius(ctx, a);
-  if (isPlayer(ctx, target) && ctx.s.player.sneaking && !a.ai.alerted) r = Math.max(1, Math.ceil(r / 2));
+  if (playerOf(ctx, target)?.sneaking && !a.ai.alerted) r = Math.max(1, Math.ceil(r / 2));
   if (hasFlag(ctx, target, 'invisible')) r = 1;
   return r;
 }

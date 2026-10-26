@@ -79,7 +79,7 @@ async function framing(page: Page, r: number) {
     const rig = d.renderer.rig;
     d.renderer.skipAnimations();
     rig.settle();
-    const p = d.state.area.actors.find((a) => a.id === d.state.player.actorId)!.pos;
+    const p = d.state.area.actors.find((a) => a.id === d.state.players[d.state.party[0]].actorId)!.pos;
     const s = (x: number, y: number) => d.renderer.tileToScreen({ x, y });
     // where auto framing put the player (it may shift the view to free an actor from a panel) …
     const shifted = s(p.x, p.y);
@@ -190,7 +190,7 @@ test.describe('draw-call budget (desktop)', () => {
       r.skipAnimations();
       r.renderNow();
       const d = window.__dev!;
-      const p = d.state.area.actors.find((a) => a.id === d.state.player.actorId)!.pos;
+      const p = d.state.area.actors.find((a) => a.id === d.state.players[d.state.party[0]].actorId)!.pos;
       const sp = r.tileToScreen(p);
       // the floor next to the player and the sky far up must not be the same flat colour (a black / empty canvas)
       const px = r.samplePixels([
@@ -335,10 +335,10 @@ test.describe('touch camera (iPhone)', () => {
       const d = window.__dev!;
       const r = d.renderer;
       r.renderNow();
-      const p = d.state.area.actors.find((a) => a.id === d.state.player.actorId)!;
+      const p = d.state.area.actors.find((a) => a.id === d.state.players[d.state.party[0]].actorId)!;
       const sp = r.tileToScreen(p.pos);
       const onPlayer = r.pick(sp.x, sp.y);
-      const other = d.state.area.actors.find((a) => a.id !== p.id && d.state.area.seen[a.pos.y * d.state.area.map.width + a.pos.x] === 2);
+      const other = d.state.area.actors.find((a) => a.id !== p.id && d.state.players[d.state.party[0]].seen[a.pos.y * d.state.area.map.width + a.pos.x] === 2);
       let onHead: unknown = null;
       let head = null;
       if (other) {
@@ -359,7 +359,7 @@ test.describe('touch camera (iPhone)', () => {
     // a real tap highlights the tapped tile (dev page wiring: click → pick → highlight)
     const sp = await page.evaluate(() => {
       const d = window.__dev!;
-      const p = d.state.area.actors.find((a) => a.id === d.state.player.actorId)!.pos;
+      const p = d.state.area.actors.find((a) => a.id === d.state.players[d.state.party[0]].actorId)!.pos;
       return d.renderer.tileToScreen({ x: p.x + 1, y: p.y });
     });
     await page.touchscreen.tap(sp.x, sp.y);

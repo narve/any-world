@@ -8,6 +8,7 @@ import type { GameState } from '../../src/engine/types';
 import { GameSession } from '../../src/client/session';
 import { explainInvalid } from '../../src/client/invalid';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer } from '../../src/engine';
 
 const western = loadFixture('fixture-western.json');
 const teen = loadFixture('fixture-teen.json');
@@ -20,14 +21,14 @@ function session(world = western, seed = 1) {
 
 function withStatus(s: GameSession, id: string, turnsLeft: number): void {
   const st = structuredClone(s.state) as GameState;
-  st.area.actors.find((a) => a.id === st.player.actorId)!.statuses.push({ id, turnsLeft });
+  st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!.statuses.push({ id, turnsLeft });
   s.state = st;
 }
 
 /** the player alone in the middle of the room, optionally with one hostile actor east of them */
 function setup(s: GameSession, withHostile: boolean): string | null {
   const st = structuredClone(s.state) as GameState;
-  const pid = st.player.actorId;
+  const pid = leadPlayer(st).actorId;
   const hostile = withHostile ? st.area.actors.find((a) => a.id !== pid && a.faction === 'hostile') : undefined;
   if (withHostile && !hostile) throw new Error('fixture area has no hostile actor');
   st.area.actors = st.area.actors.filter((a) => a.id === pid || a.id === hostile?.id);

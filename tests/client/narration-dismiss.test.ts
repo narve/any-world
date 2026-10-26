@@ -7,13 +7,14 @@ import { readFileSync } from 'node:fs';
 import type { GameState } from '../../src/engine/types';
 import { GameSession } from '../../src/client/session';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer } from '../../src/engine';
 
 const western = loadFixture('fixture-western.json');
 const ship = loadFixture('fixture-ship.json');
 
 function alone(s: GameSession): void {
   const st = structuredClone(s.state) as GameState;
-  st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId);
+  st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId);
   s.state = st;
 }
 
@@ -36,7 +37,7 @@ describe('narration gets out of the way once the player acts', () => {
     const s = new GameSession({ world: ship, worldId: 's', seed: 2 });
     alone(s);
     const st = structuredClone(s.state) as GameState;
-    st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { ...st.area.map.exit };
+    st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!.pos = { ...st.area.map.exit };
     s.state = st;
     s.uiAction({ type: 'wait' });
     expect(s.viewModel().game!.narration).toBeNull();

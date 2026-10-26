@@ -4,6 +4,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { act, addActor, loadFixture, newGame, player } from './helpers';
+import { leadPlayer } from '../../src/engine';
 
 const FIXTURES = ['fixture-western.json', 'fixture-ship.json', 'fixture-teen.json', 'fixture-dream.json'];
 
@@ -17,12 +18,12 @@ describe('trader dialogue lists the whole stock', () => {
         const p = player(s);
         const npc = addActor(w, s, def.id, { x: p.pos.x + 1, y: p.pos.y }, { faction: 'friendly' });
         const st = act(w, s, { type: 'talk', targetId: npc.id }).state;
-        const buys = st.pendingChoice!.options.filter((o) => o.tag === 'buy');
+        const buys = leadPlayer(st).pendingChoice!.options.filter((o) => o.tag === 'buy');
         const offered = buys.map((o) => o.actions.find((x) => x.type === 'give_item')).map((x) => (x as { item: string }).item);
         const expected = def.npc!.stock.filter((id) => w.items.some((it) => it.id === id));
         expect(offered).toEqual(expected);
         // goodbye is always there to leave
-        expect(st.pendingChoice!.options.at(-1)!.label).toBe('Goodbye');
+        expect(leadPlayer(st).pendingChoice!.options.at(-1)!.label).toBe('Goodbye');
       });
     }
   }

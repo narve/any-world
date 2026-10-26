@@ -7,7 +7,7 @@
 import type { Amount, Effect, Trigger, WorldSpec } from '../schema/world';
 import { DialogueResponse, GmResponse, type GmAction, type GmHook } from '../schema/gm';
 import type { ActorInstance, GameState } from '../engine/types';
-import { applyGmActions, estimateRuleImpact } from '../engine/index';
+import { applyGmActions, estimateRuleImpact, leadPlayer } from '../engine/index';
 import { toJsonSchema } from './structured';
 import { npcOf } from './prompts/dialogue';
 import { GM_HARMFUL_STATUS_TURNS, goalRefs, type GoalRefs } from './goal-refs';
@@ -321,7 +321,7 @@ export function goalWriteProblem(world: WorldSpec, a: GmAction, allowItems: Read
 function goalActorsInArea(world: WorldSpec, state: GameState): ActorInstance[] {
   const refs = goalRefs(world);
   if (!refs.actors.size) return [];
-  return state.area.actors.filter((x) => x.hp > 0 && x.id !== state.player.actorId && refs.actors.has(x.defId));
+  return state.area.actors.filter((x) => x.hp > 0 && x.id !== leadPlayer(state).actorId && refs.actors.has(x.defId));
 }
 
 /**
@@ -355,7 +355,7 @@ export function stateGoalProblem(world: WorldSpec, state: GameState, a: GmAction
   switch (a.type) {
     case 'effect': {
       if (a.target === 'player') {
-        const pl = state.area.actors.find((x) => x.id === state.player.actorId);
+        const pl = state.area.actors.find((x) => x.id === leadPlayer(state).actorId);
         const loss = maxHpLoss(world, a.effects);
         if (pl && loss > 0 && loss >= pl.hp) return `hp loss up to ${Math.round(loss)} (damage, harmful statuses) could knock the player out (hp ${pl.hp}); the GM never decides the run by fiat`;
         return null;

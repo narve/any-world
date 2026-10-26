@@ -17,7 +17,7 @@ import type { Difficulty, GmHook } from '../schema/gm';
 import { MAX_ACTIVE_RULES, MAX_GM_RULES_PER_AREA } from '../schema/gm';
 import type { ActorInstance, GameState, LogMessage } from './types';
 import { TOTAL_SLOTS } from './types';
-import { type Ctx, actorDef, indexWorld, isPlayer, playerActor, statusName } from './ctx';
+import { type Ctx, actorDef, indexWorld, isPlayer, me, playerActor, statusName } from './ctx';
 import { cloneState } from './clone';
 import { rngFromState } from './rng';
 import { generateArea } from './mapgen/index';
@@ -182,7 +182,7 @@ function inventoryOf(ctx: Ctx): GmContextItem[] {
   const out: GmContextItem[] = [];
   const byDef = new Map<string, GmContextItem>();
   for (let slot = 0; slot < TOTAL_SLOTS; slot++) {
-    const it = ctx.s.player.slots[slot];
+    const it = me(ctx).slots[slot];
     if (!it) continue;
     const eq = equippedKindOf(ctx, slot);
     const prev = byDef.get(it.defId);
@@ -238,7 +238,7 @@ function progressOf(ctx: Ctx): GmContextSummary['progress'] {
   if (refs.counters.size) out.counters = Object.fromEntries([...refs.counters].sort().map((c) => [c, own(ctx.s.counters, c) ?? 0]));
   if (refs.defeats.size) out.defeats = Object.fromEntries([...refs.defeats].sort(([a], [b]) => a.localeCompare(b)).map(([id, n]) => [id, `${own(ctx.s.defeated, id) ?? 0}/${n}`]));
   if (refs.items.size) {
-    const held = new Set(ctx.s.player.slots.filter((x) => !!x).map((x) => x!.defId));
+    const held = new Set(me(ctx).slots.filter((x) => !!x).map((x) => x!.defId));
     out.items = Object.fromEntries([...refs.items].sort().map((id) => [id, held.has(id)]));
   }
   return out;
@@ -248,6 +248,7 @@ function summarize(ctx: Ctx, hook: GmContextHook | undefined, logLines: number):
   const s = ctx.s;
   const w = ctx.world;
   const p = playerActor(ctx);
+  const ps = me(ctx);
   const plan = w.areas[s.area.index];
   const live = activeRuleEntries(w, s);
   const prof = profileOf(s);
@@ -261,19 +262,19 @@ function summarize(ctx: Ctx, hook: GmContextHook | undefined, logLines: number):
     status: s.status,
     world: { title: w.meta.title, genre: w.meta.genre, tone: clip(w.meta.tone, 120), goal: clip(w.goal.summary, 200) },
     player: {
-      name: w.player.name,
-      level: s.player.level,
-      xp: s.player.xp,
-      xpToNext: xpToNext(ctx, s.player.level),
+      name: ps.name,
+      level: ps.level,
+      xp: ps.xp,
+      xpToNext: xpToNext(ctx, ps.level),
       hp: p.hp,
       maxHp: maxHp(ctx, p),
       mp: p.mp,
       maxMp: maxMp(ctx, p),
       stats: { str: getStat(ctx, p, 'str'), dex: getStat(ctx, p, 'dex'), int: getStat(ctx, p, 'int'), ac: getStat(ctx, p, 'ac') },
       statuses: p.statuses.map((st) => `${statusName(ctx, st.id)}(${st.turnsLeft})`),
-      resources: (w.resources ?? []).map((r) => `${r.name} ${own(s.player.resources, r.id) ?? 0}/${r.max}`),
-      currency: s.player.currency,
-      perks: s.player.perks.map((id) => ctx.ix.perks.get(id)?.name ?? id),
+      resources: (w.resources ?? []).map((r) => `${r.name} ${own(ps.resources, r.id) ?? 0}/${r.max}`),
+      currency: s.purse,
+      perks: ps.perks.map((id) => ctx.ix.perks.get(id)?.name ?? id),
       inventory: inventoryOf(ctx),
     },
     area: {
@@ -300,10 +301,10 @@ function summarize(ctx: Ctx, hook: GmContextHook | undefined, logLines: number):
     quests: s.quests.map((q) => ({ id: q.id, title: clip(q.title, 80), status: q.status })),
     progress: progressOf(ctx),
   };
-  if (s.player.sneaking) out.player.sneaking = true;
+  if (ps.sneaking) out.player.sneaking = true;
   if (isLast) out.area.lastArea = true;
   else if (plan?.transitionRequires && !evalCondition(ctx, plan.transitionRequires, { self: p })) out.area.exitLocked = true;
-  if (s.pendingChoice || s.player.pendingPerkChoice) out.gm.choiceOpen = true;
+  if (ps.pendingChoice || ps.pendingPerkChoice) out.gm.choiceOpen = true;
   const h = hookOf(hook);
   if (h) {
     out.hook = h.hook;
@@ -368,7 +369,8 @@ function fit(sum: GmContextSummary, maxTokens: number): GmContextSummary {
  */
 export function buildGmContext(state: GameState, world: WorldSpec, hook?: GmHook | GmContextHook, opts: GmContextOptions = {}): GmContextSummary {
   const { state: s, cow } = cloneState(state);
-  const ctx: Ctx = { world, ix: indexWorld(world), s, rng: rngFromState(s.rng), events: [], mapGen: generateArea, depth: 0, cow };
+  // MP1: the GM sees the run through the lead player (MP4 makes it party-aware)
+  const ctx: Ctx = { world, ix: indexWorld(world), s, pid: s.party[0], rng: rngFromState(s.rng), events: [], mapGen: generateArea, depth: 0, cow };
   const sum = summarize(ctx, hookOf(hook), opts.logLines ?? 8);
   return fit(sum, Math.max(200, opts.maxTokens ?? GM_CONTEXT_MAX_TOKENS));
 }

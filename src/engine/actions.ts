@@ -11,10 +11,12 @@ import {
   isPlayer,
   log,
   logKey,
+  me,
   moveCost,
   mutTile,
   passable,
   playerActor,
+  playerName,
 } from './ctx';
 import {
   type ActionOutcome,
@@ -42,9 +44,9 @@ export function doPlayerAction(ctx: Ctx, action: PlayerAction): ActionOutcome {
   if (!action || typeof action !== 'object' || typeof (action as { type?: unknown }).type !== 'string') return invalid('malformed action');
   const s = ctx.s;
   // a pending perk choice comes first, then any open dialogue/GM choice
-  if (s.player.pendingPerkChoice) {
+  if (me(ctx).pendingPerkChoice) {
     if (action.type !== 'choose_perk') return invalid('choose a perk first');
-  } else if (s.pendingChoice && action.type !== 'choose_option') return invalid('make a choice first');
+  } else if (me(ctx).pendingChoice && action.type !== 'choose_option') return invalid('make a choice first');
   switch (action.type) {
     case 'move':
       return doMove(ctx, action.dir);
@@ -75,8 +77,8 @@ export function doPlayerAction(ctx: Ctx, action: PlayerAction): ActionOutcome {
       return doSearch(ctx);
     case 'toggle_sneak':
       if (!ctx.world.verbs.sneak) return invalid('sneaking is not possible here');
-      s.player.sneaking = !s.player.sneaking;
-      logKey(ctx, s.player.sneaking ? 'log.sneak.on' : 'log.sneak.off', { player: ctx.world.player.name }, 'info');
+      me(ctx).sneaking = !me(ctx).sneaking;
+      logKey(ctx, me(ctx).sneaking ? 'log.sneak.on' : 'log.sneak.off', { player: playerName(ctx) }, 'info');
       return free();
     case 'choose_perk': {
       const err = choosePerk(ctx, action.perkId);
@@ -115,12 +117,12 @@ function doMove(ctx: Ctx, dirIn: Dir): ActionOutcome {
       return done(Math.round(100 * moveCost(ctx, to)));
     }
     if (talkFirst) return doTalk(ctx, other.id);
-    logKey(ctx, 'log.stumble', { player: ctx.world.player.name }, 'info');
+    logKey(ctx, 'log.stumble', { player: playerName(ctx) }, 'info');
     return done();
   }
   if (!tile || !passable(ctx, to.x, to.y)) {
     if (confused && dir !== dirIn) {
-      logKey(ctx, 'log.stumble', { player: ctx.world.player.name }, 'info');
+      logKey(ctx, 'log.stumble', { player: playerName(ctx) }, 'info');
       return done();
     }
     return invalid('blocked');
@@ -137,7 +139,7 @@ function doMove(ctx: Ctx, dirIn: Dir): ActionOutcome {
     const names = here.slice(0, 3).map((fi) => displayItemName(ctx, fi.item.defId));
     logKey(ctx, here.length > 3 ? 'log.here_more' : 'log.here', { items: names.join(', ') }, 'info');
   }
-  if (ctx.s.player.sneaking) return done(Math.round(100 * moveCost(ctx, to)) + 25);
+  if (me(ctx).sneaking) return done(Math.round(100 * moveCost(ctx, to)) + 25);
   return done(Math.round(100 * moveCost(ctx, to)));
 }
 
@@ -192,6 +194,7 @@ function doSearch(ctx: Ctx): ActionOutcome {
   if (!ctx.world.verbs.search) return invalid('searching is not possible here');
   const p = playerActor(ctx);
   const map = ctx.s.area.map;
+  const seen = me(ctx).seen;
   let found = 0;
   for (let dy = -2; dy <= 2; dy++)
     for (let dx = -2; dx <= 2; dx++) {
@@ -199,7 +202,7 @@ function doSearch(ctx: Ctx): ActionOutcome {
       const y = p.pos.y + dy;
       if (x < 0 || y < 0 || x >= map.width || y >= map.height) continue;
       const i = y * map.width + x;
-      if (ctx.s.area.seen[i] === 0) ctx.s.area.seen[i] = 1;
+      if (seen[i] === 0) seen[i] = 1;
       const t = map.tiles[i];
       if (Math.max(Math.abs(dx), Math.abs(dy)) <= 1 && t.terrain && !t.interacted) {
         const td = ctx.ix.terrains.get(t.terrain);
@@ -215,7 +218,7 @@ function doSearch(ctx: Ctx): ActionOutcome {
     if (side(ctx, a) === 'H' && (def?.behaviour.type === 'ambusher' || hasFlag(ctx, a, 'invisible'))) {
       a.ai.alerted = true;
       a.ai.lastSeen = { ...p.pos };
-      logKey(ctx, 'log.search.spot', { player: ctx.world.player.name, target: actorName(ctx, a) }, 'warning');
+      logKey(ctx, 'log.search.spot', { player: playerName(ctx), target: actorName(ctx, a) }, 'warning');
       found++;
     }
   }
@@ -238,7 +241,7 @@ function doInteract(ctx: Ctx, pos: Pos): ActionOutcome {
   const td = t.terrain ? ctx.ix.terrains.get(t.terrain) : undefined;
   if (!td?.interact) return invalid('nothing to do there');
   if (t.interacted) return invalid(`${td.name}: nothing more to find`);
-  logKey(ctx, 'log.interact.use', { player: ctx.world.player.name, terrain: td.name }, 'info');
+  logKey(ctx, 'log.interact.use', { player: playerName(ctx), terrain: td.name }, 'info');
   const terrainId = t.terrain;
   const res = runAction(ctx, td.interact, p, { targetPos: pos });
   // the tile is used up when its action ran, or when a pure luck roll failed (one roll per tile);

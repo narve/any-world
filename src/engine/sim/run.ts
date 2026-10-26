@@ -14,7 +14,7 @@ import type { WorldSpec } from '../../schema/world';
 import type { Difficulty } from '../../schema/gm';
 import type { GameEvent, GameState, MapGenerator, PlayerAction } from '../types';
 import { TOTAL_SLOTS } from '../types';
-import { createGame, step, applyGmActions, transitionBlocker } from '../index';
+import { createGame, step, applyGmActions, leadPlayer, transitionBlocker } from '../index';
 import { type Bot, type BotName, botByName, newMemory } from './bots';
 import { gmActionsForArea, gmIdleActions } from './gm-script';
 import { seenCount } from './view';
@@ -89,21 +89,25 @@ export interface SimResult {
 const MAX_FREE_STREAK = 40;
 
 function progressKey(s: GameState): string {
-  const p = s.player;
+  const p = leadPlayer(s);
   const defeated = Object.values(s.defeated).reduce((a, b) => a + b, 0);
   const items = p.slots.reduce((n, it) => n + (it ? it.count + 1 : 0), 0);
   const flags = Object.keys(s.flags).filter((k) => s.flags[k]).length;
   const counters = Object.entries(s.counters).map(([k, v]) => `${k}${v}`).join(',');
-  const kn = Object.values(s.knowledge).map((k) => k.level[0]).join('');
+  const kn = Object.values(p.knowledge).map((k) => k.level[0]).join('');
   return [s.area.index, seenCount(s), defeated, items, p.xp, p.level, flags, counters, kn, s.stats.damageDealt, s.quests.length, p.equipped.weapon, p.equipped.armour].join('|');
 }
 
 /** cheap structural invariants; returns a description of the first violation */
 export function invariantError(world: WorldSpec, s: GameState): string | null {
   const map = s.area.map;
+  const lead = leadPlayer(s);
+  if (!lead) return 'no lead player';
+  if (s.party.length !== Object.keys(s.players).length || s.party.some((id) => s.players[id]?.id !== id)) return 'party and players disagree';
+  for (const id of s.party) if (s.players[id].seen.length !== map.width * map.height) return `fog of ${id} does not match the map size`;
   if (map.tiles.length !== map.width * map.height) return 'tile count does not match map size';
-  if (s.player.slots.length !== TOTAL_SLOTS) return 'slot array has the wrong length';
-  const p = s.area.actors.find((a) => a.id === s.player.actorId);
+  if (lead.slots.length !== TOTAL_SLOTS) return 'slot array has the wrong length';
+  const p = s.area.actors.find((a) => a.id === lead.actorId);
   if (!p) return 'player actor missing from the area';
   if (s.status === 'playing' && p.hp <= 0) return 'player at 0 hp while the run is playing';
   const taken = new Set<number>();
@@ -116,12 +120,12 @@ export function invariantError(world: WorldSpec, s: GameState): string | null {
     taken.add(k);
   }
   for (const kind of ['weapon', 'armour', 'trinket'] as const) {
-    const i = s.player.equipped[kind];
-    if (i !== null && !s.player.slots[i]) return `equipped ${kind} points at an empty slot`;
+    const i = lead.equipped[kind];
+    if (i !== null && !lead.slots[i]) return `equipped ${kind} points at an empty slot`;
   }
-  for (const it of s.player.slots) if (it && !(it.count > 0)) return `item ${it.id} has count ${it.count}`;
+  for (const it of lead.slots) if (it && !(it.count > 0)) return `item ${it.id} has count ${it.count}`;
   for (const r of world.resources ?? []) {
-    const v = s.player.resources[r.id];
+    const v = lead.resources[r.id];
     if (!(v >= 0 && v <= r.max)) return `resource ${r.id} = ${v} outside 0..${r.max}`;
   }
   if (s.rng.length !== 4) return 'rng state has the wrong length';
@@ -170,7 +174,7 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     return res;
   }
   let lastKey = progressKey(s);
-  const resPrev: Record<string, number> = { ...s.player.resources };
+  const resPrev: Record<string, number> = { ...leadPlayer(s).resources };
   let lastProgress = 0;
   let freeStreak = 0;
   let gmArea = -1;
@@ -186,7 +190,7 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     stats.damageTaken = s.stats.damageTaken;
     stats.itemsUsed = s.stats.itemsUsed;
     stats.areasCleared = s.stats.areasCleared;
-    stats.level = s.player.level;
+    stats.level = leadPlayer(s).level;
     return res;
   };
 
@@ -198,10 +202,10 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     // scripted GM moments
     if (opts.gm) {
       try {
-        if (s.area.index !== gmArea && !s.pendingChoice && !s.player.pendingPerkChoice) {
+        if (s.area.index !== gmArea && !leadPlayer(s).pendingChoice && !leadPlayer(s).pendingPerkChoice) {
           gmArea = s.area.index;
           s = applyGm(s, gmActionsForArea(world, s.area.index), env, stats);
-        } else if (s.turn >= nextIdle && !s.pendingChoice) {
+        } else if (s.turn >= nextIdle && !leadPlayer(s).pendingChoice) {
           nextIdle = s.turn + 150;
           s = applyGm(s, gmIdleActions(s), env, stats);
         }
@@ -235,7 +239,7 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
       count(stats, action);
     }
     for (const e of r.events) {
-      if (e.type === 'damaged' && e.actorId === s.player.actorId) lastHurt = { sourceId: e.sourceId, damageType: e.damageType };
+      if (e.type === 'damaged' && e.actorId === leadPlayer(s).actorId) lastHurt = { sourceId: e.sourceId, damageType: e.damageType };
     }
     s = r.state;
     opts.onStep?.(s, action, r.events);
@@ -246,7 +250,7 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     } else if (++freeStreak > MAX_FREE_STREAK) {
       return finish('stuck', `free-action loop (${JSON.stringify(action)}) in area ${s.area.index}`);
     }
-    const pa = s.area.actors.find((a) => a.id === s.player.actorId);
+    const pa = s.area.actors.find((a) => a.id === leadPlayer(s).actorId);
     if (pa && pa.maxHp > 0) stats.hpLow = Math.min(stats.hpLow, Math.max(0, pa.hp) / pa.maxHp);
     if (checkInv) {
       const err = invariantError(world, s);
@@ -258,8 +262,8 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     const key = progressKey(s);
     // a rising custom resource (refilling oxygen on a moss tile…) counts as progress too
     let rising = false;
-    for (const id of Object.keys(s.player.resources)) {
-      const v = s.player.resources[id] ?? 0;
+    for (const id of Object.keys(leadPlayer(s).resources)) {
+      const v = leadPlayer(s).resources[id] ?? 0;
       if (v > (resPrev[id] ?? Infinity)) rising = true;
       resPrev[id] = v;
     }
@@ -318,7 +322,7 @@ function lossCause(world: WorldSpec, s: GameState, lastHurt: { sourceId?: string
   if (reason === world.goal.summary) return 'lose condition';
   if (lastHurt) {
     if (lastHurt.sourceId) {
-      if (lastHurt.sourceId === s.player.actorId) return 'killed by own action';
+      if (lastHurt.sourceId === leadPlayer(s).actorId) return 'killed by own action';
       const src = s.area.actors.find((a) => a.id === lastHurt.sourceId);
       return `killed by ${src ? actorLabel(world, src.defId) : 'an unseen source'}`;
     }

@@ -18,11 +18,13 @@ import type {
   MapGenerator,
   NewGameOptions,
   PlayerAction,
+  PlayerId,
+  PlayerState,
   StepResult,
 } from './types';
 import { TOTAL_SLOTS } from './types';
 import { generateArea } from './mapgen/index';
-import { type Ctx, indexWorld, log, playerActor } from './ctx';
+import { type Ctx, indexWorld, log, me, playerActor } from './ctx';
 import { createRng, rngFromState } from './rng';
 import { initKnowledge } from './knowledge';
 import { addInstance, equipSlotOf, makeItem } from './inventory';
@@ -50,6 +52,8 @@ export interface EngineEnv {
   world?: WorldSpec;
   /** map generator for area transitions (defaults to mapgen's generateArea) */
   mapGenerator?: MapGenerator;
+  /** the player a call acts or answers for (defaults to the lead player, party[0]) */
+  playerId?: PlayerId;
 }
 
 function worldFor(state: GameState, env?: EngineEnv): WorldSpec {
@@ -71,6 +75,7 @@ function makeCtx(world: WorldSpec, s: GameState, env?: EngineEnv): Ctx {
     world,
     ix: indexWorld(world),
     s,
+    pid: env?.playerId ?? s.party[0],
     rng: rngFromState(s.rng),
     events: [],
     mapGen: env?.mapGenerator ?? generateArea,
@@ -81,6 +86,27 @@ function makeCtx(world: WorldSpec, s: GameState, env?: EngineEnv): Ctx {
 // ---------------------------------------------------------------------------
 // API
 // ---------------------------------------------------------------------------
+
+/** turns of the exit countdown when NewGameOptions.exitCountdownTurns is not given */
+export const DEFAULT_EXIT_COUNTDOWN_TURNS = 5;
+
+/** the lead player (party[0]); a single player is a party of one */
+export function leadPlayer(state: GameState): PlayerState {
+  return state.players[state.party[0]];
+}
+
+/**
+ * A shallow copy of `state` with some of one player's fields replaced (default: the lead), for
+ * callers that preview a state ("as if the choice were closed"); `state` itself is not changed.
+ */
+export function patchPlayer(state: GameState, patch: Partial<PlayerState>, pid: PlayerId = state.party[0]): GameState {
+  return { ...state, players: { ...state.players, [pid]: { ...state.players[pid], ...patch } } };
+}
+
+/** player ids in party (join) order */
+export function playerIds(state: GameState): PlayerId[] {
+  return state.party.slice();
+}
 
 export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
   const worldId = registerWorld(world);
@@ -103,40 +129,48 @@ export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
     tempMods: [],
   };
   const placeholder: AreaMap = { width: 1, height: 1, tiles: [{ kind: 'floor' }], start: { x: 0, y: 0 }, exit: { x: 0, y: 0 }, regions: [] };
+  // appearances are rolled once (before any item id is made) and every player starts with a copy
+  const knowledge = initKnowledge(world, rng);
+  const lead: PlayerState = {
+    id: 'p1',
+    name: world.player.name,
+    actorId: player.id,
+    slots: Array.from({ length: TOTAL_SLOTS }, () => null),
+    equipped: { weapon: null, armour: null, trinket: null },
+    level: 1,
+    xp: 0,
+    perks: [],
+    pendingPerkChoice: null,
+    resources: Object.fromEntries((world.resources ?? []).map((r) => [r.id, Math.min(r.start, r.max)])),
+    sneaking: false,
+    knowledge,
+    pendingChoice: null,
+    seen: new Uint8Array(1),
+  };
   const s: GameState = {
-    version: 1,
+    version: 2,
     worldId,
     seed: opts.seed,
     rng: [],
     turn: 0,
     status: 'playing',
-    area: { index: -1, map: placeholder, actors: [player], items: [], seen: new Uint8Array(1), discoveredRegions: [], gmBudget: 0 },
-    player: {
-      actorId: player.id,
-      slots: Array.from({ length: TOTAL_SLOTS }, () => null),
-      equipped: { weapon: null, armour: null, trinket: null },
-      level: 1,
-      xp: 0,
-      perks: [],
-      pendingPerkChoice: null,
-      resources: Object.fromEntries((world.resources ?? []).map((r) => [r.id, Math.min(r.start, r.max)])),
-      currency: world.player.startCurrency ?? 0,
-      sneaking: false,
-    },
-    knowledge: initKnowledge(world, rng),
+    area: { index: -1, map: placeholder, actors: [player], items: [], discoveredRegions: [], gmBudget: 0 },
+    players: { [lead.id]: lead },
+    party: [lead.id],
+    purse: world.player.startCurrency ?? 0,
+    partyRules: { exitCountdownTurns: Math.max(1, Math.round(opts.exitCountdownTurns ?? DEFAULT_EXIT_COUNTDOWN_TURNS)) },
     flags: {},
     counters: {},
     defeated: {},
     quests: [],
     log: [],
-    pendingChoice: null,
     nextId: 2,
     stats: { kills: 0, itemsUsed: 0, damageDealt: 0, damageTaken: 0, areasCleared: 0 },
     uniquesSpawned: [],
     difficulty: isDifficulty(opts.difficulty) ? opts.difficulty : 'normal',
     activeRules: initialActiveRules(world),
   };
-  const ctx: Ctx = { world, ix: indexWorld(world), s, rng, events: [], mapGen: opts.mapGenerator ?? generateArea, depth: 0 };
+  const ctx: Ctx = { world, ix: indexWorld(world), s, pid: lead.id, rng, events: [], mapGen: opts.mapGenerator ?? generateArea, depth: 0 };
   // starting items
   const toEquip: number[] = [];
   for (const si of ps.startingItems) {
@@ -149,15 +183,15 @@ export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
       const slot = addInstance(ctx, it, si.quick);
       if (slot < 0) continue;
       const kind = equipSlotOf(def);
-      if (si.equipped && kind && s.player.equipped[kind] === null) {
-        s.player.equipped[kind] = slot;
+      if (si.equipped && kind && lead.equipped[kind] === null) {
+        lead.equipped[kind] = slot;
         toEquip.push(slot);
       }
     }
   }
   enterArea(ctx, 0, opts.map);
   for (const slot of toEquip) {
-    const it = s.player.slots[slot];
+    const it = lead.slots[slot];
     const def = it ? ctx.ix.items.get(it.defId) : undefined;
     if (def) fireItemTriggers(ctx, playerActor(ctx), def, 'on_equip');
   }
@@ -267,6 +301,7 @@ export function playerSheet(state: GameState, env?: EngineEnv): PlayerSheet {
   const world = worldFor(state, env);
   const ctx = clonedCtx(world, state, env);
   const p = playerActor(ctx);
+  const ps = me(ctx);
   return {
     str: getStat(ctx, p, 'str'),
     dex: getStat(ctx, p, 'dex'),
@@ -278,9 +313,9 @@ export function playerSheet(state: GameState, env?: EngineEnv): PlayerSheet {
     maxHp: maxHp(ctx, p),
     mp: p.mp,
     maxMp: maxMp(ctx, p),
-    xp: ctx.s.player.xp,
-    xpToNext: xpToNext(ctx, ctx.s.player.level),
-    resources: (world.resources ?? []).map((r) => ({ id: r.id, value: own(ctx.s.player.resources, r.id) ?? 0, max: r.max })),
+    xp: ps.xp,
+    xpToNext: xpToNext(ctx, ps.level),
+    resources: (world.resources ?? []).map((r) => ({ id: r.id, value: own(ps.resources, r.id) ?? 0, max: r.max })),
   };
 }
 
@@ -313,7 +348,7 @@ export function transitionBlocker(state: GameState, env?: EngineEnv): string | n
 export function describeInventory(state: GameState, env?: EngineEnv): (ItemView | null)[] {
   const world = worldFor(state, env);
   const ctx = clonedCtx(world, state, env);
-  return ctx.s.player.slots.map((it, i) => (it ? viewItem(ctx, it, i) : null));
+  return me(ctx).slots.map((it, i) => (it ? viewItem(ctx, it, i) : null));
 }
 
 /** ItemView for an item kind the player doesn't hold (trader stock, rewards), respecting knowledge */
@@ -325,6 +360,7 @@ export function describeItemDef(state: GameState, defId: string, env?: EngineEnv
 }
 
 export { serialize, deserialize } from './serialize';
+export { hashState } from './hash';
 export { LOG_KEYS, END_REASON_KEYS, DEATH_REASON_KEYS, FACTION_KEYS, renderTemplate, renderLogKey, templateParams, type LogKey, type EndReasonKey, type LogParams } from './log-keys';
 export { endingText } from './ctx';
 export {

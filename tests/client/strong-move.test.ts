@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import type { GameState } from '../../src/engine/types';
 import { GameSession } from '../../src/client/session';
 import { attackPower } from '../../src/client/view';
-import { persuadeOdds } from '../../src/engine';
+import { persuadeOdds, leadPlayer } from '../../src/engine';
 import { setLanguage } from '../../src/client/i18n/index';
 import { loadFixture, roomMap } from '../engine/helpers';
 
@@ -21,7 +21,7 @@ function session(map = roomMap(16, 10)) {
 /** a clone of the state with the player at `pos`, a hostile at `foe`, and every tile visible */
 function staged(s: GameSession, foe: { x: number; y: number }, defId = 'dust-coyote') {
   const st = structuredClone(s.state) as GameState;
-  const p = st.area.actors.find((a) => a.id === st.player.actorId)!;
+  const p = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
   p.pos = { x: 3, y: 3 };
   const tmpl = st.area.actors.find((a) => a.id !== p.id);
   st.area.actors = [p];
@@ -39,15 +39,15 @@ function staged(s: GameSession, foe: { x: number; y: number }, defId = 'dust-coy
     allyOf: undefined,
     ai: { alerted: true },
   } as never);
-  st.area.seen = new Uint8Array(st.area.seen.length).fill(2);
-  for (let i = 0; i < st.player.slots.length; i++) {
-    const it = st.player.slots[i];
-    if (it) st.knowledge[it.defId] = { ...st.knowledge[it.defId], level: 'clear' };
+  leadPlayer(st).seen = new Uint8Array(leadPlayer(st).seen.length).fill(2);
+  for (let i = 0; i < leadPlayer(st).slots.length; i++) {
+    const it = leadPlayer(st).slots[i];
+    if (it) leadPlayer(st).knowledge[it.defId] = { ...leadPlayer(st).knowledge[it.defId], level: 'clear' };
   }
   return { st, p, id };
 }
 
-const slotOf = (st: GameState, defId: string) => st.player.slots.findIndex((it) => it?.defId === defId);
+const slotOf = (st: GameState, defId: string) => leadPlayer(st).slots.findIndex((it) => it?.defId === defId);
 
 describe('strong move', () => {
   it('attack items are ranked by the damage they deal (areas count a little more)', () => {
@@ -79,8 +79,8 @@ describe('strong move', () => {
   it('an equipped ranged weapon glows while someone hostile is in its reach but not adjacent', () => {
     const s = session();
     const { st } = staged(s, { x: 7, y: 3 });
-    const gun = st.player.equipped.weapon!;
-    expect(western.items.find((i) => i.id === st.player.slots[gun]!.defId)!.weapon!.range).toBeGreaterThan(3);
+    const gun = leadPlayer(st).equipped.weapon!;
+    expect(western.items.find((i) => i.id === leadPlayer(st).slots[gun]!.defId)!.weapon!.range).toBeGreaterThan(3);
     s.state = st;
     expect(s.viewModel().game!.slots[gun]!.urgent).toBe(true);
     // out of reach: no glow
@@ -93,7 +93,7 @@ describe('strong move', () => {
     const map = roomMap(16, 10, { start: { x: 3, y: 3 }, exit: { x: 14, y: 8 } });
     const s = new GameSession({ world: western, worldId: 'fixture-test', seed: 1, map });
     const st = structuredClone(s.state) as GameState;
-    const p = st.area.actors.find((a) => a.id === st.player.actorId)!;
+    const p = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
     st.area.actors = [p];
     p.pos = { ...st.area.map.exit };
     s.state = st;

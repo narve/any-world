@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import type { GameState } from '../../src/engine/types';
 import { GameSession } from '../../src/client/session';
 import { aimsDirection, objectiveOf, objectiveParts, wastedRestore, xpProgress } from '../../src/client/view';
-import { playerSheet } from '../../src/engine/index';
+import { playerSheet, leadPlayer } from '../../src/engine/index';
 import { loadFixture, roomMap } from '../engine/helpers';
 
 const western = loadFixture('fixture-western.json');
@@ -21,12 +21,12 @@ function session(world = ship, seed = 1) {
 
 function onlyPlayer(s: GameSession): void {
   const st = structuredClone(s.state) as GameState;
-  st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId);
+  st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId);
   s.state = st;
 }
 
 function slotOf(s: GameSession, defId: string): number {
-  const i = s.state.player.slots.findIndex((x) => x?.defId === defId);
+  const i = leadPlayer(s.state).slots.findIndex((x) => x?.defId === defId);
   if (i < 0) throw new Error(`${defId} not carried`);
   return i;
 }
@@ -83,17 +83,17 @@ describe('consumables whose vitals are already full', () => {
     const s = session();
     onlyPlayer(s);
     const slot = slotOf(s, 'o2-canister');
-    const count = s.state.player.slots[slot]!.count ?? 1;
+    const count = leadPlayer(s.state).slots[slot]!.count ?? 1;
     const sheet = playerSheet(s.state);
     const o2 = sheet.resources.find((r) => r.id === 'oxygen')!;
     expect(o2.value).toBe(o2.max);
     const first = s.uiAction({ type: 'use', slot });
     expect(first.changed).toBe(false);
     expect(first.toasts[0].text).toMatch(/already full.*press again/);
-    expect(s.state.player.slots[slot]!.count ?? 1).toBe(count);
+    expect(leadPlayer(s.state).slots[slot]!.count ?? 1).toBe(count);
     const second = s.uiAction({ type: 'use', slot });
     expect(second.changed).toBe(true);
-    expect(s.state.player.slots[slot]?.count ?? 0).toBe(count - 1);
+    expect(leadPlayer(s.state).slots[slot]?.count ?? 0).toBe(count - 1);
   });
 
   it('another action in between re-arms the warning', () => {
@@ -104,7 +104,7 @@ describe('consumables whose vitals are already full', () => {
     s.uiAction({ type: 'wait' });
     // the wait used some O2 (drain), so refill it: the canister is wasted again
     const st = structuredClone(s.state) as GameState;
-    st.player.resources.oxygen = ship.resources.find((r) => r.id === 'oxygen')!.max;
+    leadPlayer(st).resources.oxygen = ship.resources.find((r) => r.id === 'oxygen')!.max;
     s.state = st;
     expect(s.uiAction({ type: 'use', slot }).changed).toBe(false);
   });
@@ -167,10 +167,10 @@ describe('xp progress with queued level-ups', () => {
   it('the HUD never shows more xp than the bar holds after a large grant', () => {
     const s = session(western);
     const st = structuredClone(s.state) as GameState;
-    st.player.xp = 500; // what the engine holds while a perk choice blocks further level-ups
+    leadPlayer(st).xp = 500; // what the engine holds while a perk choice blocks further level-ups
     s.state = st;
     const hud = s.viewModel().game!.hud;
     expect(hud.xpInLevel).toBeLessThanOrEqual(hud.xpForLevel);
-    if (s.state.player.xp >= hud.xpForLevel) expect(hud.pendingLevels).toBeGreaterThan(0);
+    if (leadPlayer(s.state).xp >= hud.xpForLevel) expect(hud.pendingLevels).toBeGreaterThan(0);
   });
 });

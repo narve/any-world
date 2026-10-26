@@ -5,7 +5,7 @@
  */
 import type { GmAction } from '../schema/gm';
 import type { ActorInstance, PendingChoice } from './types';
-import { type Ctx, actorDef, actorName, emit, findActor, isAlive, isPlayer, log, logKey, playerActor } from './ctx';
+import { type Ctx, actorDef, actorName, emit, findActor, isAlive, isPlayer, log, logKey, me, playerActor, playerName } from './ctx';
 import { type ActionOutcome, displayItemName, done, equippedKindOf, free, invalid, removeFromSlot } from './inventory';
 import { TOTAL_SLOTS } from './types';
 import { progressRefs } from './goals';
@@ -34,7 +34,7 @@ export function sellOptions(ctx: Ctx): PendingChoice['options'] {
   const out: PendingChoice['options'] = [];
   const seen = new Set<string>();
   for (let slot = 0; slot < TOTAL_SLOTS && out.length < MAX_SELL_OPTIONS; slot++) {
-    const it = ctx.s.player.slots[slot];
+    const it = me(ctx).slots[slot];
     if (!it || seen.has(it.defId) || equippedKindOf(ctx, slot)) continue;
     const def = ctx.ix.items.get(it.defId);
     if (!def || def.category === 'key' || protectedItems.has(def.id)) continue;
@@ -53,7 +53,7 @@ export function sellOptions(ctx: Ctx): PendingChoice['options'] {
 
 /** the slot to sell from: the offered one if it still holds the item, else any unequipped one */
 function sellSlot(ctx: Ctx, sell: { slot: number; defId: string }): number {
-  const ok = (i: number) => ctx.s.player.slots[i]?.defId === sell.defId && !equippedKindOf(ctx, i);
+  const ok = (i: number) => me(ctx).slots[i]?.defId === sell.defId && !equippedKindOf(ctx, i);
   if (Number.isInteger(sell.slot) && sell.slot >= 0 && sell.slot < TOTAL_SLOTS && ok(sell.slot)) return sell.slot;
   for (let i = 0; i < TOTAL_SLOTS; i++) if (ok(i)) return i;
   return -1;
@@ -80,7 +80,7 @@ export function doTalk(ctx: Ctx, targetId: string): ActionOutcome {
   if (typeof a === 'string') return invalid(a);
   const def = actorDef(ctx, a);
   if (!def?.npc) return invalid(`${actorName(ctx, a)} has nothing to say`);
-  if (ctx.s.pendingChoice) return invalid('finish the current conversation first');
+  if (me(ctx).pendingChoice) return invalid('finish the current conversation first');
   const npc = def.npc;
   const first = !a.talkedTo;
   a.talkedTo = true;
@@ -138,7 +138,7 @@ export function doTalk(ctx: Ctx, targetId: string): ActionOutcome {
     options.push(...sells);
   }
   options.push({ label: 'Goodbye', actions: [] });
-  ctx.s.pendingChoice = { kind: 'dialogue', prompt: line, speakerId: a.id, options };
+  me(ctx).pendingChoice = { kind: 'dialogue', prompt: line, speakerId: a.id, options };
   return free();
 }
 
@@ -148,7 +148,7 @@ function persuadeCheck(ctx: Ctx, a: ActorInstance): { dc: number; bonus: number 
   const stat = def?.npc?.persuadeStat ?? 'int';
   let dc = def ? (def.npc?.persuadeDifficulty ?? def.persuadeDifficulty ?? clamp(10 + Math.floor(def.stats.hp / 6) + (def.unique ? 5 : 0), 8, 25)) : 20;
   if (a.faction === 'hostile') dc += 2;
-  const bonus = statMod(getStat(ctx, playerActor(ctx), stat)) + Math.floor(ctx.s.player.level / 2);
+  const bonus = statMod(getStat(ctx, playerActor(ctx), stat)) + Math.floor(me(ctx).level / 2);
   return { dc, bonus };
 }
 
@@ -201,15 +201,15 @@ export function doPersuade(ctx: Ctx, targetId: string): ActionOutcome {
 }
 
 export function doChooseOption(ctx: Ctx, index: number): ActionOutcome {
-  const pc = ctx.s.pendingChoice;
+  const pc = me(ctx).pendingChoice;
   if (!pc) return invalid('nothing to choose');
   if (!Number.isInteger(index) || index < 0 || index >= pc.options.length) return invalid('no such option');
   const opt = pc.options[index];
-  if (optionPrice(opt.actions) > ctx.s.player.currency) {
+  if (optionPrice(opt.actions) > ctx.s.purse) {
     // a choice with no affordable option (e.g. from a save made before offers always carried a
     // free option) must not lock the run: any pick then declines it
-    if (pc.options.some((o) => optionPrice(o.actions) <= ctx.s.player.currency)) return invalid(`not enough ${ctx.world.vocabulary.currency}`);
-    ctx.s.pendingChoice = null;
+    if (pc.options.some((o) => optionPrice(o.actions) <= ctx.s.purse)) return invalid(`not enough ${ctx.world.vocabulary.currency}`);
+    me(ctx).pendingChoice = null;
     if (pc.kind === 'gm_offer' && pc.reservedBudget) ctx.s.area.gmBudget += pc.reservedBudget;
     logKey(ctx, 'log.trade.cannot_afford', { currency: ctx.world.vocabulary.currency }, 'info');
     return free();
@@ -221,19 +221,19 @@ export function doChooseOption(ctx: Ctx, index: number): ActionOutcome {
     if (slot < 0) return invalid('you no longer have that');
     const price = Math.max(0, opt.actions.reduce((n, x) => n + (x.type === 'currency' && x.amount > 0 ? x.amount : 0), 0));
     const shown = displayItemName(ctx, opt.sell.defId);
-    ctx.s.pendingChoice = null;
+    me(ctx).pendingChoice = null;
     removeFromSlot(ctx, slot, 1);
-    ctx.s.player.currency += price;
-    logKey(ctx, 'log.trade.sold', { player: ctx.world.player.name, item: shown, amount: price, currency: ctx.world.vocabulary.currency }, 'loot');
+    ctx.s.purse += price;
+    logKey(ctx, 'log.trade.sold', { player: playerName(ctx), item: shown, amount: price, currency: ctx.world.vocabulary.currency }, 'loot');
     return free();
   }
-  ctx.s.pendingChoice = null;
+  me(ctx).pendingChoice = null;
   const speaker = findActor(ctx, pc.speakerId);
   if (opt.tag?.startsWith('service:') && speaker) {
     const svc = opt.tag.slice('service:'.length);
     speaker.npcUsed = [...(speaker.npcUsed ?? []), svc];
     if (svc === 'recruit') {
-      speaker.allyOf = ctx.s.player.actorId;
+      speaker.allyOf = me(ctx).actorId;
       speaker.faction = 'friendly';
       logKey(ctx, 'log.ally.joins', { actor: actorName(ctx, speaker) }, 'good');
     }

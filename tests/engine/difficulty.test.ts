@@ -3,7 +3,7 @@
  * damage, natural regeneration; plus the loss reason naming the killer and damage kind.
  */
 import { describe, it, expect } from 'vitest';
-import { createGame, deserialize, serialize, DIFFICULTY_PROFILES } from '../../src/engine';
+import { createGame, deserialize, serialize, DIFFICULTY_PROFILES, leadPlayer } from '../../src/engine';
 import type { GameState } from '../../src/engine/types';
 import { dealDamage } from '../../src/engine/combat';
 import { checkEnd } from '../../src/engine/turn';
@@ -62,7 +62,7 @@ describe('difficulty: hostiles', () => {
       expect(golem.maxHp).toBe(Math.round(40 * DIFFICULTY_PROFILES[d].hostileHp));
       expect(golem.hp).toBe(golem.maxHp);
       expect(makeActor(ctx, 'sage', { x: 4, y: 4 })!.maxHp).toBe(10);
-      expect(makeActor(ctx, 'golem', { x: 5, y: 5 }, { allyOf: s.player.actorId })!.maxHp).toBe(40);
+      expect(makeActor(ctx, 'golem', { x: 5, y: 5 }, { allyOf: leadPlayer(s).actorId })!.maxHp).toBe(40);
     }
   });
 

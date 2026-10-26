@@ -138,7 +138,7 @@ async function fight(page: Page): Promise<boolean> {
   return page.evaluate(async () => {
     const c = window.__anyworld!.controller!;
     const s = c.session;
-    const p = s.state.area.actors.find((a) => a.id === s.state.player.actorId)!;
+    const p = s.state.area.actors.find((a) => a.id === s.state.players[s.state.party[0]].actorId)!;
     const foe = s.state.area.actors.find((a) => a.faction === 'hostile');
     if (!foe) return false;
     const m = s.state.area.map;
@@ -179,8 +179,8 @@ async function talk(page: Page, role?: string): Promise<boolean> {
       if (!t || (t.kind !== 'floor' && t.kind !== 'start')) continue;
       if (s.state.area.actors.some((a) => a.pos.x === x && a.pos.y === y)) continue;
       await c.setStateForTest((st) => {
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.faction !== 'hostile');
-        st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { x, y };
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId || a.faction !== 'hostile');
+        st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.pos = { x, y };
       });
       c.actNow({ type: 'talk', targetId: npc.id });
       return true;
@@ -291,7 +291,7 @@ async function tour(page: Page, worldId: string, seed: number, p: string): Promi
     await page.evaluate(async () => {
       const c = window.__anyworld!.controller!;
       await c.setStateForTest((st) => {
-        st.area.actors.find((a) => a.id === st.player.actorId)!.hp = 1;
+        st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.hp = 1;
       });
       c.gmNow([{ type: 'effect', target: 'player', effects: [{ type: 'damage', amount: { base: 500 }, damageType: c.session.world.damageTypes[0]!.id }] }] as never);
     });
@@ -451,7 +451,7 @@ test('troll world: GM rule, item card, statuses, end screen', async ({ page }) =
     await page.evaluate(async () => {
       const c = window.__anyworld!.controller!;
       await c.setStateForTest((st) => {
-        st.area.actors.find((a) => a.id === st.player.actorId)!.hp = 1;
+        st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.hp = 1;
       });
       c.gmNow([{ type: 'effect', target: 'player', effects: [{ type: 'damage', amount: { base: 3 }, damageType: c.session.world.damageTypes[0]!.id }] }] as never);
     });
@@ -483,8 +483,8 @@ for (const [id, p] of [['nb-troll-direktoratet', 'troll'], ['nb-russetid-bussen'
       await page.evaluate(async () => {
         const c = window.__anyworld!.controller!;
         await c.setStateForTest((st) => {
-          st.mercyUsed = true;
-          st.area.actors.find((a) => a.id === st.player.actorId)!.hp = 1;
+          st.players[st.party[0]].mercyUsed = true;
+          st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.hp = 1;
         });
         for (let i = 0; i < 12 && c.session.state.status === 'playing'; i++) c.actNow({ type: 'wait' } as never);
       });
@@ -545,7 +545,7 @@ for (const [id, p] of [['nb-troll-direktoratet', 'troll'], ['viking-lawspeaker-a
       await page.evaluate(async () => {
         const c = window.__anyworld!.controller!;
         await c.setStateForTest((st) => {
-          const p = st.area.actors.find((a) => a.id === st.player.actorId)!;
+          const p = st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!;
           p.hp = Math.max(1, Math.floor(p.hp / 2));
         });
       });
@@ -602,7 +602,7 @@ async function hostileAt(page: Page, dist: number): Promise<boolean> {
   return page.evaluate(async (dist) => {
     const c = window.__anyworld!.controller!;
     const s = c.session;
-    const p = s.state.area.actors.find((a) => a.id === s.state.player.actorId)!;
+    const p = s.state.area.actors.find((a) => a.id === s.state.players[s.state.party[0]].actorId)!;
     const foe = s.state.area.actors.find((a) => a.faction === 'hostile');
     if (!foe) return false;
     const m = s.state.area.map;
@@ -615,7 +615,7 @@ async function hostileAt(page: Page, dist: number): Promise<boolean> {
       for (let k = 1; k <= dist; k++) if (!open(p.pos.x + dx * k, p.pos.y + dy * k)) ok = false;
       if (!ok) continue;
       await c.setStateForTest((st) => {
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.id === foe.id || a.faction !== 'hostile');
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId || a.id === foe.id || a.faction !== 'hostile');
         const f = st.area.actors.find((a) => a.id === foe.id)!;
         f.pos = { x: p.pos.x + dx * dist, y: p.pos.y + dy * dist };
       });
@@ -641,13 +641,13 @@ for (const [id, p, give] of [['fixture-western', 'en-western', null], ['corporat
       const c = window.__anyworld!.controller!;
       if (give) {
         await c.setStateForTest((st) => {
-          const free = st.player.slots.findIndex((x, i) => i < 8 && !x);
-          (st.player.slots as unknown[])[free] = { defId: give, count: 1, charges: undefined };
+          const free = st.players[st.party[0]].slots.findIndex((x, i) => i < 8 && !x);
+          (st.players[st.party[0]].slots as unknown[])[free] = { defId: give, count: 1, charges: undefined };
         });
-        const i = c.session.state.player.slots.findIndex((x) => x?.defId === give);
+        const i = c.session.me.slots.findIndex((x) => x?.defId === give);
         c.actNow({ type: 'equip', slot: i } as never);
       }
-      return c.session.state.player.equipped.weapon ?? -1;
+      return c.session.me.equipped.weapon ?? -1;
     }, give);
     dump[`r-${p}-slot`] = { text: String(slot), attrs: [], clipped: [], log: [] };
     // the slot tip
@@ -659,7 +659,7 @@ for (const [id, p, give] of [['fixture-western', 'en-western', null], ['corporat
     await page.evaluate(async () => {
       const c = window.__anyworld!.controller!;
       await c.setStateForTest((st) => {
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.faction !== 'hostile');
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId || a.faction !== 'hostile');
       });
     });
     await page.keyboard.press(String(slot + 1));
@@ -706,11 +706,11 @@ for (const [id, p] of [['nb-troll-direktoratet', 'troll'], ['nb-russetid-bussen'
     await page.evaluate(async () => {
       const c = window.__anyworld!.controller!;
       await c.setStateForTest((st) => {
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.faction !== 'hostile');
-        const pl = st.area.actors.find((a) => a.id === st.player.actorId)!;
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId || a.faction !== 'hostile');
+        const pl = st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!;
         pl.hp = 2;
         pl.mp = 0;
-        for (const k of Object.keys(st.player.resources ?? {})) st.player.resources[k] = 0;
+        for (const k of Object.keys(st.players[st.party[0]].resources ?? {})) st.players[st.party[0]].resources[k] = 0;
       });
       c.actNow({ type: 'wait' } as never);
     });

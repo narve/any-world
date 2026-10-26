@@ -6,7 +6,7 @@
  *
  * const audio = createAudio(world, settings.audio);          // silent until unlocked
  * installUnlock(audio);                                      // first tap/click/key unlocks it
- * audio.onEvents(step.events, state.player.actorId);         // after every engine step: sfx + mood
+ * audio.onEvents(step.events, leadPlayer(state).actorId);         // after every engine step: sfx + mood
  * audio.onGmActions(gmResponse.actions);                     // GM 'mood' actions
  * audio.setMood('boss');                                     // or set a mood directly
  * audio.setVolume(0.5); audio.mute(true); audio.mute(false);

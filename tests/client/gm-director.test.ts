@@ -21,6 +21,7 @@ import {
   type GmResult,
 } from '../../src/client/gm-director';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer } from '../../src/engine';
 
 const western = loadFixture('fixture-western.json');
 const ship = loadFixture('fixture-ship.json');
@@ -46,13 +47,13 @@ function pump(s: GameSession, d = new OfflineGmDirector()): { hook: string; resp
 
 function onlyPlayer(s: GameSession): void {
   const st = structuredClone(s.state) as GameState;
-  st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId);
+  st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId);
   s.state = st;
 }
 
 function teleport(s: GameSession, x: number, y: number): void {
   const st = structuredClone(s.state) as GameState;
-  st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { x, y };
+  st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!.pos = { x, y };
   s.state = st;
 }
 
@@ -92,7 +93,7 @@ describe('offline GM director', () => {
       s.act({ type: 'wait' });
       if (s.ended) break;
       for (const x of pump(s)) if (x.response?.actions.some((a) => a.type === 'set_flag' && a.flag === eventFlag(0))) events++;
-      if (s.state.pendingChoice) s.act({ type: 'choose_option', index: s.state.pendingChoice.options.length - 1 });
+      if (leadPlayer(s.state).pendingChoice) s.act({ type: 'choose_option', index: leadPlayer(s.state).pendingChoice!.options.length - 1 });
     }
     expect(events).toBe(1);
     expect(s.state.flags[eventFlag(0)]).toBe(true);
@@ -127,7 +128,7 @@ describe('offline GM director', () => {
     const s = session(western, 2);
     const npcDef = western.actors.find((x) => x.npc && x.npc.lines.length)!;
     const st = structuredClone(s.state) as GameState;
-    const pl = st.area.actors.find((a) => a.id === st.player.actorId)!;
+    const pl = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
     st.area.actors = [pl, { ...structuredClone(pl), id: 'a900', defId: npcDef.id, faction: 'neutral', pos: { x: pl.pos.x + 1, y: pl.pos.y } }];
     s.state = st;
     s.act({ type: 'wait' });

@@ -11,7 +11,7 @@ import { parseWorld } from '../../src/schema/refs';
 import type { WorldSpec } from '../../src/schema/world';
 import { GmAction } from '../../src/schema/gm';
 import type { GameState } from '../../src/engine/types';
-import { applyGmActions, createGame, step } from '../../src/engine/index';
+import { applyGmActions, createGame, step, leadPlayer } from '../../src/engine/index';
 import {
   gmActionProblems,
   isHelpfulAction,
@@ -45,7 +45,7 @@ function bossInSight(world: WorldSpec, area: number, defId: string): GameState |
     const mem = newMemory(seed);
     for (let i = 0; i < 1500 && s.status === 'playing' && s.area.index === area; i++) {
       const boss = s.area.actors.find((a) => a.defId === defId && a.hp > 0);
-      if (boss && s.area.seen[boss.pos.y * s.area.map.width + boss.pos.x] === 2) return s;
+      if (boss && leadPlayer(s).seen[boss.pos.y * s.area.map.width + boss.pos.x] === 2) return s;
       s = step(s, bot.decide(s, world, mem), { world }).state;
     }
   }
@@ -111,7 +111,7 @@ describe('GM fiat through actor_defeated', () => {
   it('corporate-merger-kitchen: one GM action with damage 1e6 cannot win the run', () => {
     const world = fixture('corporate-merger-kitchen');
     let s = createGame(world, { seed: 1 });
-    const p = s.area.actors.find((a) => a.id === s.player.actorId)!;
+    const p = s.area.actors.find((a) => a.id === leadPlayer(s).actorId)!;
     const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]];
     const free = dirs.map(([dx, dy]) => ({ x: p.pos.x + dx!, y: p.pos.y + dy! })).find((q) => {
       const t = s.area.map.tiles[q.y * s.area.map.width + q.x];
@@ -131,7 +131,7 @@ describe('GM fiat through actor_defeated', () => {
 describe('GM fiat on the player and stat lose conditions', () => {
   it('refuses damage that could knock the player out, allows a scratch', () => {
     const sit = playToSituation(teen, { seed: 1, area: 0, turnsInArea: 5 });
-    const pl = sit.state.area.actors.find((a) => a.id === sit.state.player.actorId)!;
+    const pl = sit.state.area.actors.find((a) => a.id === leadPlayer(sit.state).actorId)!;
     const lethal = GmAction.parse({ type: 'effect', target: 'player', effects: [{ type: 'damage', amount: { base: pl.hp } }] });
     expect(gmActionProblems(teen, sit.state, [lethal])[0]?.message).toMatch(/knock the player out/);
     const huge = GmAction.parse({ type: 'effect', target: 'player', effects: [{ type: 'damage', amount: { base: 100000 } }] });
@@ -174,7 +174,7 @@ describe('GM effect amounts are bounded', () => {
 describe('GM trade', () => {
   const sit = playToSituation(teen, { seed: 1, area: 0, turnsInArea: 10 });
   const s0 = sit.state;
-  const other = s0.area.actors.find((a) => a.id !== s0.player.actorId && a.hp > 0 && a.faction !== 'hostile') ?? s0.area.actors.find((a) => a.id !== s0.player.actorId && a.hp > 0)!;
+  const other = s0.area.actors.find((a) => a.id !== leadPlayer(s0).actorId && a.hp > 0 && a.faction !== 'hostile') ?? s0.area.actors.find((a) => a.id !== leadPlayer(s0).actorId && a.hp > 0)!;
 
   it('refuses a trade of the lock item at any price', () => {
     expect(goalRefs(teen).items.has('speech-notebook')).toBe(true);
@@ -199,7 +199,7 @@ describe('GM trade', () => {
   });
 
   it('refuses a trade from a hostile actor', () => {
-    const hostile = s0.area.actors.find((a) => a.id !== s0.player.actorId && a.hp > 0 && a.faction === 'hostile');
+    const hostile = s0.area.actors.find((a) => a.id !== leadPlayer(s0).actorId && a.hp > 0 && a.faction === 'hostile');
     if (!hostile) return;
     const item = teen.items.find((i) => !goalRefs(teen).items.has(i.id))!;
     const trade = GmAction.parse({ type: 'trade', actorId: hostile.id, items: [{ item: item.id, price: item.value }] });

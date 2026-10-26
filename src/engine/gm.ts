@@ -9,7 +9,7 @@ import type { Effect } from '../schema/world';
 import { GM_ACTION_COST } from '../schema/gm';
 import { RuleVariant } from '../schema/world';
 import type { ActorInstance, PendingChoice, Pos, Quest } from './types';
-import { type Ctx, actorName, emit, findActor, findFreeNear, isAlive, isPlayer, log, logKey, playerActor } from './ctx';
+import { type Ctx, actorName, emit, findActor, findFreeNear, isAlive, isPlayer, log, logKey, me, playerActor } from './ctx';
 import { MAX_AREA_ACTORS, areaHasRoom, spawnActor } from './actors';
 import { playerSeesTile } from './vision';
 import { displayItemName, dropItemAt, giveItem } from './inventory';
@@ -194,7 +194,8 @@ export function applyGmList(ctx: Ctx, actions: readonly GmAction[], opts: GmAppl
     if (opts.charge) {
       ctx.s.area.gmBudget -= cost;
       // the goods of an offer are reserved now; refunded in part when a cheaper option is chosen
-      if (a.type === 'offer_choice' && ctx.s.pendingChoice?.kind === 'gm_offer') ctx.s.pendingChoice.reservedBudget = cost - GM_ACTION_COST.offer_choice;
+      const pc = me(ctx).pendingChoice;
+      if (a.type === 'offer_choice' && pc?.kind === 'gm_offer') pc.reservedBudget = cost - GM_ACTION_COST.offer_choice;
     }
   }
 }
@@ -296,10 +297,10 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
     case 'trade': {
       const actor = resolveActor(ctx, a.actorId);
       if (!actor) return `no actor "${a.actorId}"`;
-      if (ctx.s.pendingChoice) return 'a choice is already open';
+      if (me(ctx).pendingChoice) return 'a choice is already open';
       const items = a.items.filter((x) => ix.items.has(x.item));
       if (!items.length) return 'no valid items';
-      ctx.s.pendingChoice = {
+      me(ctx).pendingChoice = {
         kind: 'dialogue',
         prompt: `${actorName(ctx, actor)}:`,
         speakerId: actor.id,
@@ -315,7 +316,7 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
       return null;
     }
     case 'currency':
-      ctx.s.player.currency = Math.max(0, ctx.s.player.currency + a.amount);
+      ctx.s.purse = Math.max(0, ctx.s.purse + a.amount);
       if (a.amount > 0) logKey(ctx, 'log.currency.gain', { amount: a.amount, currency: ctx.world.vocabulary.currency }, 'loot');
       else if (a.amount < 0) logKey(ctx, 'log.currency.spend', { amount: -a.amount, currency: ctx.world.vocabulary.currency }, 'info');
       return null;
@@ -323,7 +324,7 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
       grantXp(ctx, a.amount);
       return null;
     case 'offer_choice': {
-      if (ctx.s.pendingChoice) return 'a choice is already open';
+      if (me(ctx).pendingChoice) return 'a choice is already open';
       // an option is offered whole or not at all: one naming a missing item/actor/status could
       // take the price and fail to deliver, so it is left out
       const options: PendingChoice['options'] = [];
@@ -340,7 +341,7 @@ function applyOne(ctx: Ctx, a: GmAction): string | null {
       // there is always a way out: a choice whose every option costs currency could otherwise
       // become impossible to resolve (and every other player action waits for it)
       if (!options.some((o) => optionPrice(o.actions) === 0)) options.push({ label: DECLINE_LABEL, actions: [], tag: 'decline' });
-      ctx.s.pendingChoice = { kind: 'gm_offer', prompt: a.prompt, options };
+      me(ctx).pendingChoice = { kind: 'gm_offer', prompt: a.prompt, options };
       log(ctx, a.prompt, 'gm');
       return null;
     }

@@ -8,7 +8,7 @@
 import type { Condition, Effect, WorldSpec } from '../schema/world';
 import type { GameState, PlayerAction } from '../engine/types';
 import { QUICK_SLOTS } from '../engine/types';
-import { describeItemDef, persuadeOdds, playerSheet, type PlayerSheet } from '../engine/index';
+import { describeItemDef, persuadeOdds, playerSheet, type PlayerSheet, leadPlayer } from '../engine/index';
 import { catalog, formatMessage, getLanguage, listJoin, normalizeLanguage, t as tUi, type MessageKey, type MessageParams } from './i18n/index';
 import type { ContextActionView, ConditionLineView, GoalStepView, GoalView, OnboardingView } from './ui/viewmodel';
 
@@ -174,12 +174,12 @@ function defeatedOf(state: GameState, id: string): number {
 }
 
 function player(state: GameState) {
-  return state.area.actors.find((a) => a.id === state.player.actorId);
+  return state.area.actors.find((a) => a.id === leadPlayer(state).actorId);
 }
 
 function itemCount(state: GameState, defId: string): number {
   let n = 0;
-  for (const it of state.player.slots) if (it && it.defId === defId) n += it.count ?? 1;
+  for (const it of leadPlayer(state).slots) if (it && it.defId === defId) n += it.count ?? 1;
   return n;
 }
 
@@ -613,7 +613,7 @@ function onExitTile(state: GameState): boolean {
 
 function exitSeen(state: GameState): boolean {
   const m = state.area.map;
-  return ((state.area.seen as ArrayLike<number>)[m.exit.y * m.width + m.exit.x] ?? 0) > 0;
+  return ((leadPlayer(state).seen as ArrayLike<number>)[m.exit.y * m.width + m.exit.x] ?? 0) > 0;
 }
 
 /** the concrete next thing to do */
@@ -727,7 +727,7 @@ export function shortName(name: string): string {
 const LOW_HP_ESCAPE = 0.35;
 
 export function contextActions(world: WorldSpec, state: GameState, x: ContextInput): ContextActionView[] {
-  if (state.status !== 'playing' || state.pendingChoice || state.player.pendingPerkChoice) return [];
+  if (state.status !== 'playing' || leadPlayer(state).pendingChoice || leadPlayer(state).pendingPerkChoice) return [];
   const out: ContextActionView[] = [];
   const p = player(state);
   if (!p) return [];
@@ -774,7 +774,7 @@ export function contextActions(world: WorldSpec, state: GameState, x: ContextInp
   }
   if (x.interact) out.push({ id: 'interact', label: t('ctx.use', { name: x.interact.name }), key: 'Enter', primary: true });
   if (world.verbs.search) out.push({ id: 'search', label: t('ctx.search'), key: 'f', secondary: true });
-  if (world.verbs.sneak) out.push({ id: 'sneak', label: state.player.sneaking ? t('ctx.sneakStop') : t('ctx.sneak'), key: 'c', secondary: true });
+  if (world.verbs.sneak) out.push({ id: 'sneak', label: leadPlayer(state).sneaking ? t('ctx.sneakStop') : t('ctx.sneak'), key: 'c', secondary: true });
   out.push({ id: 'wait', label: t('ctx.wait'), key: '.', secondary: true });
   return out;
 }
@@ -793,9 +793,9 @@ export interface ConflictEntry {
 /** the equipped weapon's reach when it hits from more than one tile away */
 function rangedWeapon(world: WorldSpec, state: GameState | undefined): { item: string; range: number; key?: string } | null {
   if (!state) return null;
-  const slot = state.player.equipped?.weapon;
+  const slot = leadPlayer(state).equipped?.weapon;
   if (slot === null || slot === undefined) return null;
-  const inst = state.player.slots[slot];
+  const inst = leadPlayer(state).slots[slot];
   const def = inst ? world.items.find((i) => i.id === inst.defId) : undefined;
   const range = def?.weapon?.range ?? 1;
   // a weapon in a quick slot is aimed with its key (issues/M5-ranged-keyboard-fire.md)

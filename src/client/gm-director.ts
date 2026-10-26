@@ -28,6 +28,7 @@ import * as engine from '../engine/index';
 
 import type { Difficulty } from './ui/viewmodel';
 import { t as tr } from './i18n/index';
+import { leadPlayer } from '../engine/index';
 export type { Difficulty };
 
 /** extra facts about the moment (all optional; hooks fill what they know) */
@@ -165,11 +166,11 @@ export interface OfflineDirectorOptions {
 }
 
 function player(state: GameState) {
-  return state.area.actors.find((a) => a.id === state.player.actorId);
+  return state.area.actors.find((a) => a.id === leadPlayer(state).actorId);
 }
 
 function seenNow(state: GameState, p: Pos): boolean {
-  const seen = state.area.seen as ArrayLike<number>;
+  const seen = leadPlayer(state).seen as ArrayLike<number>;
   return (seen[p.y * state.area.map.width + p.x] ?? 0) === 2;
 }
 
@@ -239,7 +240,7 @@ export class OfflineGmDirector implements GmDirector {
     const area = state.area.index;
     if (area !== req.area || state.status !== 'playing') return null;
     if (state.flags[eventFlag(area)]) return null;
-    if (state.pendingChoice || state.player.pendingPerkChoice) return null;
+    if (leadPlayer(state).pendingChoice || leadPlayer(state).pendingPerkChoice) return null;
     const since = req.turn - req.ctx.areaEnteredTurn;
     if (since < this.eventDelay) return null;
     const plan = world.areas[area];
@@ -311,7 +312,7 @@ function isHarmful(world: WorldSpec, def: ItemDef): boolean {
 
 /** knowledge-aware item name (unknown items show their appearance, never their identity) */
 function displayName(state: GameState, def: ItemDef): string {
-  const k = state.knowledge[def.id];
+  const k = leadPlayer(state).knowledge[def.id];
   if (k && k.level === 'unknown' && k.appearance) return k.appearance.label;
   return def.name;
 }

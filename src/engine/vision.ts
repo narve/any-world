@@ -1,9 +1,9 @@
 /**
- * Player field of view → area.seen (0 unseen, 1 remembered, 2 visible) and region discovery.
+ * Player field of view → PlayerState.seen (0 unseen, 1 remembered, 2 visible) and region discovery.
  * Stepping into a room (a map region) also remembers its whole layout, walls and doors included,
  * without showing who is in it (docs/playtest/FABLE-GAMEPLAY-REVIEW.md §4: fog as memory).
  */
-import { type Ctx, emit, opaque, playerActor } from './ctx';
+import { type Ctx, emit, me, opaque, playerActor } from './ctx';
 import { computeFov, withinRadius } from './fov';
 import type { Pos } from './types';
 import { sightRadius } from './stats';
@@ -85,13 +85,15 @@ function rememberRoom(ctx: Ctx): void {
   const p = playerActor(ctx);
   const r = area.map.tiles[p.pos.y * area.map.width + p.pos.x]?.region;
   if (r === undefined) return;
-  for (const i of regionLayout(ctx, r)) if (area.seen[i] === 0) area.seen[i] = 1;
+  const seen = me(ctx).seen;
+  for (const i of regionLayout(ctx, r)) if (seen[i] === 0) seen[i] = 1;
 }
 
+/** the acting player's fog: visible tiles become remembered, the current field of view visible */
 export function updateFov(ctx: Ctx): void {
   const area = ctx.s.area;
   const map = area.map;
-  const seen = area.seen;
+  const seen = me(ctx).seen;
   for (let i = 0; i < seen.length; i++) if (seen[i] === 2) seen[i] = 1;
   const p = playerActor(ctx);
   rememberRoom(ctx);

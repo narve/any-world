@@ -1,7 +1,7 @@
 /** Condition evaluation (win/lose, trigger and action conditions, transition locks, quests). */
 import type { Condition } from '../schema/world';
 import type { ActorInstance } from './types';
-import { type Ctx, playerActor } from './ctx';
+import { type Ctx, playerActor, playerOf } from './ctx';
 import { getMax, getStat } from './stats';
 import { countItem } from './inventory';
 import { own, tileAt } from './util';
@@ -71,8 +71,9 @@ export function evalCondition(ctx: Ctx, c: Condition, cc: CondCtx = {}, depth = 
     }
     case 'has_item': {
       const a = who(ctx, c.who, cc);
-      if (!a || a.id !== ctx.s.player.actorId) return false;
-      return countItem(ctx, c.item) >= (c.count ?? 1);
+      const ps = playerOf(ctx, a);
+      if (!ps) return false;
+      return countItem(ps, c.item) >= (c.count ?? 1);
     }
     case 'has_status': {
       const a = who(ctx, c.who, cc);

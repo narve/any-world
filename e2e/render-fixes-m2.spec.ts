@@ -38,12 +38,12 @@ async function wander(page: Page, steps: number) {
     let d = 0;
     for (let i = 0; i < steps; i++) {
       const s = dev.state;
-      const p = s.area.actors.find((a) => a.id === s.player.actorId)!;
+      const p = s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!;
       const before = `${p.pos.x},${p.pos.y}`;
       dev.renderer.skipAnimations();
       await dev.move(dirs[d][0], dirs[d][1]);
       const s2 = window.__dev!.state;
-      const p2 = s2.area.actors.find((a) => a.id === s2.player.actorId)!;
+      const p2 = s2.area.actors.find((a) => a.id === s2.players[s2.party[0]].actorId)!;
       // blocked: turn; also turn now and then to wander through the maze
       if (`${p2.pos.x},${p2.pos.y}` === before || i % 7 === 6) d = (d + 1) % 4;
     }
@@ -76,7 +76,7 @@ for (const area of [0, 1]) {
     await page.evaluate(async () => {
       const dev = window.__dev!;
       const s = structuredClone(dev.state);
-      const p = s.area.actors.find((a) => a.id === s.player.actorId)!;
+      const p = s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!;
       const W = s.area.map.width;
       for (let dy = -2; dy <= 2; dy++)
         for (let dx = -2; dx <= 2; dx++) {

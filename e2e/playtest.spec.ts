@@ -152,7 +152,7 @@ async function driveWorld(page: Page, world: string, seed: number, maxSteps: num
   }
   const fin = await page.evaluate(() => {
     const s = window.__anyworld!.controller!.session;
-    return { status: s.state.status, turn: s.state.turn, area: s.state.area.index, level: s.state.player.level, reason: s.state.endReason ?? '' };
+    return { status: s.state.status, turn: s.state.turn, area: s.state.area.index, level: s.state.players[s.state.party[0]].level, reason: s.state.endReason ?? '' };
   });
   rep.result = `${fin.status} ${fin.reason}`;
   rep.turn = fin.turn;
@@ -186,7 +186,7 @@ for (const [wi, world] of WORLDS.entries()) {
     await driveWorld(page, world, seed, 250, rep);
     const before = await page.evaluate(() => {
       const s = window.__anyworld!.controller!.session;
-      return { turn: s.state.turn, area: s.state.area.index, pos: s.player().pos, hp: s.player().hp, inv: s.state.player.slots.map((x) => x?.defId ?? null) };
+      return { turn: s.state.turn, area: s.state.area.index, pos: s.player().pos, hp: s.player().hp, inv: s.state.players[s.state.party[0]].slots.map((x) => x?.defId ?? null) };
     });
     if (before && (await page.evaluate(() => window.__anyworld!.controller!.session.state.status)) === 'playing') {
       await page.reload();
@@ -196,7 +196,7 @@ for (const [wi, world] of WORLDS.entries()) {
         const c = window.__anyworld?.controller;
         if (!c) return null;
         const s = c.session;
-        return { turn: s.state.turn, area: s.state.area.index, pos: s.player().pos, hp: s.player().hp, inv: s.state.player.slots.map((x) => x?.defId ?? null), url: location.href, layer: window.__anyworld!.ui.layer() };
+        return { turn: s.state.turn, area: s.state.area.index, pos: s.player().pos, hp: s.player().hp, inv: s.state.players[s.state.party[0]].slots.map((x) => x?.defId ?? null), url: location.href, layer: window.__anyworld!.ui.layer() };
       });
       await shot(page, `${world}-reload`);
       if (!after) rep.notes.push('reload: no controller after reload (start screen?)');

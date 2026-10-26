@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
 import { WORLD_DIR, loadFixture, testWorld, newGame, addActor, player, act } from './helpers';
-import { createGame, step, serialize, applyGmActions } from '../../src/engine';
+import { createGame, step, serialize, applyGmActions, leadPlayer } from '../../src/engine';
 import { buildGmContext, estimateTokens, GM_CONTEXT_MAX_TOKENS } from '../../src/engine/gm-context';
 import { botByName, newMemory } from '../../src/engine/sim/bots';
 import type { GameState } from '../../src/engine/types';
@@ -41,7 +41,7 @@ describe('buildGmContext', () => {
     const c = buildGmContext(s, w);
     const murk = c.player.inventory.find((i) => i.id === 'murk')!;
     expect(murk.known).toBe('unknown');
-    expect(murk.name).toBe(s.knowledge.murk.appearance!.label);
+    expect(murk.name).toBe(leadPlayer(s).knowledge.murk.appearance!.label);
     expect(JSON.stringify(c)).not.toContain('Murky Draught');
   });
 

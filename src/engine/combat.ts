@@ -4,7 +4,7 @@
  * xp and durability.
  */
 import type { Attack } from '../schema/world';
-import type { ActorInstance } from './types';
+import type { ActorInstance, PlayerState } from './types';
 import {
   type Ctx,
   actorDef,
@@ -17,8 +17,10 @@ import {
   isPlayer,
   log,
   logKey,
-  playerActor,
+  me,
+  playerOf,
   statusName,
+  withPlayer,
 } from './ctx';
 import { LOW_HP_FRACTION, getStat, maxHp, side, statMod } from './stats';
 import { evalAmount, los } from './effects';
@@ -54,10 +56,11 @@ export const DEFAULT_ACTOR_ATTACK: Attack = {
 
 /** the attack an actor uses; null if it has none (most NPCs) */
 export function attackOf(ctx: Ctx, a: ActorInstance): AttackInfo | null {
-  if (isPlayer(ctx, a)) {
-    const slot = ctx.s.player.equipped.weapon;
+  const ps = playerOf(ctx, a);
+  if (ps) {
+    const slot = ps.equipped.weapon;
     if (slot !== null) {
-      const it = ctx.s.player.slots[slot];
+      const it = ps.slots[slot];
       const def = it ? ctx.ix.items.get(it.defId) : undefined;
       if (def?.weapon) return { attack: def.weapon, slot };
     }
@@ -104,7 +107,8 @@ const PLAYER_MISS_MAX = Math.round(20 * (1 - PLAYER_HIT_CHANCE));
 /** to-hit bonus for an attack */
 export function toHitBonus(ctx: Ctx, a: ActorInstance, atk: Attack): number {
   let b = statMod(getStat(ctx, a, atk.accuracyStat));
-  if (isPlayer(ctx, a)) b += Math.floor(ctx.s.player.level / 2);
+  const ps = playerOf(ctx, a);
+  if (ps) b += Math.floor(ps.level / 2);
   return b;
 }
 
@@ -145,7 +149,8 @@ export function performAttack(ctx: Ctx, attacker: ActorInstance, target: ActorIn
   if (atk === DEFAULT_ACTOR_ATTACK) logKey(ctx, res.crit ? 'log.attack.crit_default' : 'log.attack.hit_default', { attacker: aName, target: tName, amount: dealt }, 'combat');
   else if (atk.damageType === 'physical') logKey(ctx, res.crit ? 'log.attack.crit' : 'log.attack.hit', hitParams, 'combat');
   else logKey(ctx, res.crit ? 'log.attack.crit_typed' : 'log.attack.hit_typed', { ...hitParams, damageType: damageTypeName(ctx, atk.damageType) }, 'combat');
-  if (isPlayer(ctx, attacker) && ai.slot !== null) damageEquipped(ctx, ai.slot);
+  const aps = playerOf(ctx, attacker);
+  if (aps && ai.slot !== null) withPlayer(ctx, aps.id, () => damageEquipped(ctx, ai.slot));
   if (isAlive(ctx, attacker)) fireTriggers(ctx, attacker, 'on_hit', { other: target, pos: target.pos });
   // the kill is announced after the hit line
   if (target.hp <= 0 && ctx.s.area.actors.includes(target)) finishKill(ctx, target, attacker.id);
@@ -194,13 +199,14 @@ export function dealDamage(ctx: Ctx, target: ActorInstance, raw: number, damageT
   target.hp -= dmg;
   emit(ctx, sourceId ? { type: 'damaged', actorId: target.id, amount: dmg, damageType, sourceId } : { type: 'damaged', actorId: target.id, amount: dmg, damageType });
   const src = src0;
-  if (isPlayer(ctx, target)) {
+  const tps = playerOf(ctx, target);
+  if (tps) {
     ctx.s.stats.damageTaken += dmg;
-    const harm: NonNullable<typeof ctx.s.lastHarm> = src && src !== target ? { by: actorName(ctx, src), damageType, turn: ctx.s.turn } : { damageType, turn: ctx.s.turn };
+    const harm: NonNullable<PlayerState['lastHarm']> = src && src !== target ? { by: actorName(ctx, src), damageType, turn: ctx.s.turn } : { damageType, turn: ctx.s.turn };
     if (ctx.harmCause?.status) harm.status = ctx.harmCause.status;
     if (ctx.harmCause?.terrain) harm.terrain = ctx.harmCause.terrain;
-    ctx.s.lastHarm = harm;
-    damageEquipped(ctx, ctx.s.player.equipped.armour);
+    tps.lastHarm = harm;
+    withPlayer(ctx, tps.id, () => damageEquipped(ctx, tps.equipped.armour));
   } else if (src && isPlayer(ctx, src)) {
     ctx.s.stats.damageDealt += dmg;
   }
@@ -261,7 +267,7 @@ export function killActor(ctx: Ctx, victim: ActorInstance, killerId: string | un
 export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | undefined): void {
   if (!ctx.s.area.actors.includes(victim)) return;
   if (isPlayer(ctx, victim)) {
-    killPlayer(ctx, killerId);
+    killPlayer(ctx, victim, killerId);
     return;
   }
   const def = actorDef(ctx, victim);
@@ -300,14 +306,14 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
   }
 }
 
-function killPlayer(ctx: Ctx, killerId: string | undefined): void {
-  const p = playerActor(ctx);
-  // a world's mercy rule, or Gentle's second chance: once per run
-  if ((switchesOf(ctx).permadeathMercy || profileOf(ctx.s).secondChance) && !ctx.s.mercyUsed) {
-    ctx.s.mercyUsed = true;
+function killPlayer(ctx: Ctx, p: ActorInstance, killerId: string | undefined): void {
+  const ps = playerOf(ctx, p)!;
+  // a world's mercy rule, or Gentle's second chance: once per run and player
+  if ((switchesOf(ctx).permadeathMercy || profileOf(ctx.s).secondChance) && !ps.mercyUsed) {
+    ps.mercyUsed = true;
     p.hp = Math.max(1, Math.ceil(maxHp(ctx, p) / 2));
     p.ai.lowHp = false;
-    logKey(ctx, 'log.mercy', { player: ctx.world.player.name }, 'good');
+    logKey(ctx, 'log.mercy', { player: ps.name }, 'good');
     return;
   }
   p.hp = Math.min(p.hp, 0);
@@ -315,7 +321,7 @@ function killPlayer(ctx: Ctx, killerId: string | undefined): void {
   const k = findActor(ctx, killerId);
   const killer = k && k !== p ? k : undefined;
   emit(ctx, killer ? { type: 'died', actorId: p.id, defId: p.defId, killerId: killer.id } : { type: 'died', actorId: p.id, defId: p.defId });
-  const lr = lossReasonKeyed(ctx, killer);
+  const lr = lossReasonKeyed(ctx, killer, ps);
   endGame(ctx, 'lost', lr.text, lr);
 }
 
@@ -324,8 +330,8 @@ function killPlayer(ctx: Ctx, killerId: string | undefined): void {
  * "put in the dirt by Mesa Rattler (Lead)". Uses the killer when known, else the last harm the
  * player took (a status, a rule, terrain or an attacker that has since left).
  */
-export function lossReason(ctx: Ctx, killer?: ActorInstance): string {
-  return lossReasonKeyed(ctx, killer).text;
+export function lossReason(ctx: Ctx, killer?: ActorInstance, ps: PlayerState = me(ctx)): string {
+  return lossReasonKeyed(ctx, killer, ps).text;
 }
 
 /**
@@ -333,9 +339,9 @@ export function lossReason(ctx: Ctx, killer?: ActorInstance): string {
  * or terrain that did it ("Parched, Heat"), else the damage kind when the world names it (an
  * unnamed built-in 'physical' says nothing).
  */
-export function lossReasonKeyed(ctx: Ctx, killer?: ActorInstance): { text: string; key: EndReasonKey; params: LogParams } {
+export function lossReasonKeyed(ctx: Ctx, killer?: ActorInstance, ps: PlayerState = me(ctx)): { text: string; key: EndReasonKey; params: LogParams } {
   const defeated = ctx.world.vocabulary.defeated;
-  const h = ctx.s.lastHarm;
+  const h = ps.lastHarm;
   const by = killer ? actorName(ctx, killer) : h?.by;
   const typeName = h && ctx.ix.damageTypes.has(h.damageType) ? damageTypeName(ctx, h.damageType) : '';
   const source = h?.status ? statusName(ctx, h.status) : h?.terrain ? (ctx.ix.terrains.get(h.terrain)?.name ?? h.terrain) : '';

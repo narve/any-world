@@ -15,7 +15,7 @@ import type { Renderer } from './render/index';
 import type { GameUi, TradeIntent, UiIntent, UiViewModel } from './ui/index';
 import { attachMapInput, tapDecision, type TapDecision } from './ui/touch-input';
 import { coverInsets, isCompact, sameInsets, type Insets } from './ui/layout';
-import { legalActions } from '../engine/index';
+import { legalActions, leadPlayer } from '../engine/index';
 import type { GameSession, Outcome } from './session';
 import { clearRun, markOnboardingSeen, saveRun } from './storage';
 import { GmRunner, OfflineGmDirector, type GmDirector, type GmResult } from './gm-director';
@@ -86,7 +86,7 @@ export class GameController {
   async start(): Promise<void> {
     const { renderer } = this.host;
     renderer.setWorld(this.session.world);
-    renderer.setArea(this.session.state.area);
+    renderer.setArea({ ...this.session.state.area, seen: this.session.me.seen });
     this.session.setCameraStep(renderer.cameraStep);
     // mouse, pen and touch on the map: one input layer (ui/touch-input.ts)
     const pointer = attachMapInput(this.host.canvasHost, {
@@ -211,7 +211,7 @@ export class GameController {
     if (this.disposed) return;
     this.host.ui.hideTooltip();
     const s = this.session;
-    if (s.mode !== 'normal' || s.ended || s.state.pendingChoice || s.state.player.pendingPerkChoice) {
+    if (s.mode !== 'normal' || s.ended || s.me.pendingChoice || s.me.pendingPerkChoice) {
       this.onIntent({ type: 'click_tile', pos, button: 'primary' });
       return;
     }
@@ -260,9 +260,9 @@ export class GameController {
   /** what a tap on `pos` means for the current state (talk / attack an adjacent actor, or travel) */
   tapMeaning(pos: Pos): TapDecision {
     const st = this.session.state;
-    const pid = st.player.actorId;
+    const pid = leadPlayer(st).actorId;
     const a = st.area.actors.find((x) => x.hp > 0 && x.id !== pid && x.pos.x === pos.x && x.pos.y === pos.y);
-    const seen = (st.area.seen as ArrayLike<number>)[pos.y * st.area.map.width + pos.x] ?? 0;
+    const seen = (leadPlayer(st).seen as ArrayLike<number>)[pos.y * st.area.map.width + pos.x] ?? 0;
     if (!a || seen < 2) return { kind: 'travel' };
     const legal = legalActions(st);
     return tapDecision(pos, {
@@ -447,7 +447,7 @@ export class GameController {
     if (r.request.area !== this.session.state.area.index) return; // stale: the player moved on
     const st = this.session.state;
     const opensChoice = r.response.actions.some((a) => a.type === 'offer_choice' || a.type === 'trade');
-    if (opensChoice && (st.pendingChoice || st.player.pendingPerkChoice)) {
+    if (opensChoice && (leadPlayer(st).pendingChoice || leadPlayer(st).pendingPerkChoice)) {
       this.held.push({ result: r, turn: st.turn });
       return;
     }
@@ -464,7 +464,7 @@ export class GameController {
   private applyHeld(): void {
     if (!this.held.length) return;
     const st = this.session.state;
-    if (st.pendingChoice || st.player.pendingPerkChoice) {
+    if (leadPlayer(st).pendingChoice || leadPlayer(st).pendingPerkChoice) {
       this.held = this.held.filter((h) => st.turn - h.turn <= HOLD_TURNS && h.result.request.area === st.area.index);
       return;
     }
@@ -483,12 +483,12 @@ export class GameController {
     ov.setPreview(this.host.ui.isBlocking() ? null : s.preview(this.lastHover));
     const st = s.state;
     const ex = st.area.map.exit;
-    const seen = (st.area.seen as ArrayLike<number>)[ex.y * st.area.map.width + ex.x] ?? 0;
+    const seen = (leadPlayer(st).seen as ArrayLike<number>)[ex.y * st.area.map.width + ex.x] ?? 0;
     const plan = s.world.areas[st.area.index];
     ov.setExit(!s.ended && seen > 0 && plan ? { pos: ex, label: plan.transitionName } : null);
     // until the exit has been seen, a faint chevron beside the player points its general way
     ov.setCompass(!s.ended && seen === 0 ? ex : null);
-    const pc = st.pendingChoice;
+    const pc = leadPlayer(st).pendingChoice;
     const speaker = pc?.kind === 'dialogue' && pc.speakerId ? st.area.actors.find((a) => a.id === pc.speakerId) : undefined;
     ov.setSpeaker(speaker ? speaker.pos : null);
     ov.setPlayer(s.ended ? null : s.player().pos);

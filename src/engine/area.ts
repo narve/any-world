@@ -5,7 +5,7 @@
 import type { AreaPlan } from '../schema/world';
 import { GM_BUDGET_PER_AREA } from '../schema/gm';
 import type { ActorInstance, AreaMap, Pos } from './types';
-import { type Ctx, emit, logKey, tileWalkable } from './ctx';
+import { type Ctx, emit, isPlayer, logKey, me, playerActor, tileWalkable } from './ctx';
 import { spawnActor } from './actors';
 import { dropItemAt } from './inventory';
 import { fireTriggers } from './triggers';
@@ -95,7 +95,7 @@ function choosePos(ctx: Ctx, pl: Placement, where: Where, forItem = false): Pos 
       return ctx.rng.pick(sorted.slice(0, Math.min(5, sorted.length)));
     }
     case 'guarded': {
-      const guards = ctx.s.area.actors.filter((a) => a.faction === 'hostile' && a.id !== ctx.s.player.actorId);
+      const guards = ctx.s.area.actors.filter((a) => a.faction === 'hostile' && !isPlayer(ctx, a));
       const uniques = guards.filter((a) => ctx.ix.actors.get(a.defId)?.unique);
       const pool = uniques.length ? uniques : guards;
       if (pool.length) {
@@ -209,7 +209,7 @@ export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
   if (!plan) throw new Error(`no area ${index}`);
   const map = normaliseMap(injected ?? ctx.mapGen(plan, ctx.world, ctx.rng));
   const prev = ctx.s.area;
-  const player = prev?.actors.find((a) => a.id === ctx.s.player.actorId);
+  const player = prev?.actors.find((a) => a.id === me(ctx).actorId);
   if (!player) throw new Error('player actor missing');
   const allies: ActorInstance[] = prev
     ? prev.actors.filter((a) => a.allyOf === player.id && a.hp > 0 && cheb(a.pos, player.pos) <= 4)
@@ -220,10 +220,10 @@ export function enterArea(ctx: Ctx, index: number, injected?: AreaMap): void {
     map,
     actors: [player],
     items: [],
-    seen: new Uint8Array(map.width * map.height),
     discoveredRegions: [],
     gmBudget: GM_BUDGET_PER_AREA,
   };
+  for (const id of ctx.s.party) ctx.s.players[id].seen = new Uint8Array(map.width * map.height);
   placeTerrain(ctx, plan);
   for (const al of allies) {
     const p = nearestFreeFloor(ctx, map.start);
@@ -260,7 +260,7 @@ function nearestFreeFloor(ctx: Ctx, from: Pos): Pos | null {
 
 /** null if the transition can be taken now, else a reason */
 export function transitionFailure(ctx: Ctx): string | null {
-  const p = ctx.s.area.actors.find((a) => a.id === ctx.s.player.actorId)!;
+  const p = playerActor(ctx);
   const map = ctx.s.area.map;
   const t = map.tiles[p.pos.y * map.width + p.pos.x];
   if (!samePos(p.pos, map.exit) && t?.kind !== 'transition') return 'not at the way onward';

@@ -4,9 +4,9 @@
  * (consumed / charges / reusable with cost+cooldown / passive), requirements and durability.
  */
 import type { ItemDef } from '../schema/world';
-import type { ItemInstance, Pos } from './types';
+import type { ItemInstance, PlayerState, Pos } from './types';
 import { QUICK_SLOTS, TOTAL_SLOTS } from './types';
-import { type Ctx, emit, findFreeNear, itemName, logKey, nextId, playerActor, statName, tileWalkable } from './ctx';
+import { type Ctx, emit, findFreeNear, itemName, logKey, me, nextId, playerActor, playerName, statName, tileWalkable } from './ctx';
 import { getStat, hasFlag, maxHp, maxMp } from './stats';
 import { fireItemTriggers } from './triggers';
 import { type Obs, POSITIONAL_SHAPES, changeResource, isActorEffect, resolveTargets, runAction } from './effects';
@@ -52,14 +52,15 @@ export function makeItem(ctx: Ctx, defId: string, count = 1): ItemInstance | nul
   return it;
 }
 
-export function countItem(ctx: Ctx, defId: string): number {
+/** units of an item kind in a player's pack */
+export function countItem(ps: PlayerState, defId: string): number {
   let n = 0;
-  for (const it of ctx.s.player.slots) if (it && it.defId === defId) n += it.count;
+  for (const it of ps.slots) if (it && it.defId === defId) n += it.count;
   return n;
 }
 
 export function equippedKindOf(ctx: Ctx, slot: number): EquipKind | null {
-  const e = ctx.s.player.equipped;
+  const e = me(ctx).equipped;
   if (e.weapon === slot) return 'weapon';
   if (e.armour === slot) return 'armour';
   if (e.trinket === slot) return 'trinket';
@@ -67,7 +68,7 @@ export function equippedKindOf(ctx: Ctx, slot: number): EquipKind | null {
 }
 
 export function firstFreeSlot(ctx: Ctx, preferQuick = true): number {
-  const slots = ctx.s.player.slots;
+  const slots = me(ctx).slots;
   const order: number[] = [];
   if (preferQuick) for (let i = 0; i < TOTAL_SLOTS; i++) order.push(i);
   else {
@@ -82,7 +83,7 @@ export function firstFreeSlot(ctx: Ctx, preferQuick = true): number {
 export function addInstance(ctx: Ctx, it: ItemInstance, preferQuick = true): number {
   const def = ctx.ix.items.get(it.defId);
   if (!def) return -1;
-  const slots = ctx.s.player.slots;
+  const slots = me(ctx).slots;
   if (def.stackable) {
     const i = slots.findIndex((s) => s && s.defId === it.defId);
     if (i >= 0) {
@@ -114,8 +115,8 @@ export function giveItem(ctx: Ctx, defId: string, count = 1): number {
       placeFloorItem(ctx, it, p.pos);
     }
   }
-  if (given > 1) logKey(ctx, 'log.item.receive_many', { player: ctx.world.player.name, item: displayItemName(ctx, defId), count: given }, 'loot');
-  else if (given) logKey(ctx, 'log.item.receive', { player: ctx.world.player.name, item: displayItemName(ctx, defId) }, 'loot');
+  if (given > 1) logKey(ctx, 'log.item.receive_many', { player: playerName(ctx), item: displayItemName(ctx, defId), count: given }, 'loot');
+  else if (given) logKey(ctx, 'log.item.receive', { player: playerName(ctx), item: displayItemName(ctx, defId) }, 'loot');
   return given;
 }
 
@@ -154,37 +155,37 @@ function clampVitals(ctx: Ctx): void {
 function unequipSlot(ctx: Ctx, slot: number, announce = true): void {
   const kind = equippedKindOf(ctx, slot);
   if (!kind) return;
-  ctx.s.player.equipped[kind] = null;
-  const it = ctx.s.player.slots[slot];
+  me(ctx).equipped[kind] = null;
+  const it = me(ctx).slots[slot];
   const def = it ? ctx.ix.items.get(it.defId) : undefined;
   if (def) {
     fireItemTriggers(ctx, playerActor(ctx), def, 'on_unequip');
-    if (announce) logKey(ctx, 'log.item.unequip', { player: ctx.world.player.name, item: displayItemName(ctx, def.id) }, 'info');
+    if (announce) logKey(ctx, 'log.item.unequip', { player: playerName(ctx), item: displayItemName(ctx, def.id) }, 'info');
   }
   clampVitals(ctx);
 }
 
 /** removes `count` from a slot (unequipping if it empties) */
 export function removeFromSlot(ctx: Ctx, slot: number, count = 1): void {
-  const it = ctx.s.player.slots[slot];
+  const it = me(ctx).slots[slot];
   if (!it) return;
   it.count -= count;
   if (it.count <= 0) {
     if (equippedKindOf(ctx, slot)) unequipSlot(ctx, slot, false);
-    ctx.s.player.slots[slot] = null;
+    me(ctx).slots[slot] = null;
   }
 }
 
 /** durability loss for an equipped item (no-op unless the durability rule is on) */
 export function damageEquipped(ctx: Ctx, slot: number | null): void {
   if (!switchesOf(ctx).durability || slot === null) return;
-  const it = ctx.s.player.slots[slot];
+  const it = me(ctx).slots[slot];
   if (!it || typeof it.durability !== 'number') return;
   it.durability -= 1;
   if (it.durability <= 0) {
     const name = displayItemName(ctx, it.defId);
     unequipSlot(ctx, slot, false);
-    ctx.s.player.slots[slot] = null;
+    me(ctx).slots[slot] = null;
     logKey(ctx, 'log.item.breaks', { item: name }, 'warning');
   }
 }
@@ -199,20 +200,20 @@ export function validSlot(slot: unknown): slot is number {
 
 export function doEquip(ctx: Ctx, slot: number): ActionOutcome {
   if (!validSlot(slot)) return invalid('no such slot');
-  const it = ctx.s.player.slots[slot];
+  const it = me(ctx).slots[slot];
   if (!it) return invalid('that slot is empty');
   const def = ctx.ix.items.get(it.defId);
   if (!def) return invalid('unknown item');
   const kind = equipSlotOf(def);
   if (!kind) return invalid(`${displayItemName(ctx, def.id)} cannot be equipped`);
-  if (ctx.s.player.equipped[kind] === slot) return invalid('already equipped');
+  if (me(ctx).equipped[kind] === slot) return invalid('already equipped');
   const req = requiresFailure(ctx, def);
   if (req) return invalid(req);
-  const prev = ctx.s.player.equipped[kind];
+  const prev = me(ctx).equipped[kind];
   if (prev !== null) unequipSlot(ctx, prev, false);
-  ctx.s.player.equipped[kind] = slot;
+  me(ctx).equipped[kind] = slot;
   emit(ctx, { type: 'equipped', slot });
-  logKey(ctx, 'log.item.equip', { player: ctx.world.player.name, item: displayItemName(ctx, def.id) }, 'info');
+  logKey(ctx, 'log.item.equip', { player: playerName(ctx), item: displayItemName(ctx, def.id) }, 'info');
   fireItemTriggers(ctx, playerActor(ctx), def, 'on_equip');
   clampVitals(ctx);
   return done();
@@ -220,7 +221,7 @@ export function doEquip(ctx: Ctx, slot: number): ActionOutcome {
 
 export function doUnequip(ctx: Ctx, slot: number): ActionOutcome {
   if (!validSlot(slot)) return invalid('no such slot');
-  if (!ctx.s.player.slots[slot]) return invalid('that slot is empty');
+  if (!me(ctx).slots[slot]) return invalid('that slot is empty');
   if (!equippedKindOf(ctx, slot)) return invalid('not equipped');
   unequipSlot(ctx, slot);
   return done();
@@ -229,11 +230,11 @@ export function doUnequip(ctx: Ctx, slot: number): ActionOutcome {
 export function doMoveItem(ctx: Ctx, from: number, to: number): ActionOutcome {
   if (!validSlot(from) || !validSlot(to)) return invalid('no such slot');
   if (from === to) return invalid('same slot');
-  const slots = ctx.s.player.slots;
+  const slots = me(ctx).slots;
   const a = slots[from];
   if (!a) return invalid('that slot is empty');
   const b = slots[to];
-  const eq = ctx.s.player.equipped;
+  const eq = me(ctx).equipped;
   const def = ctx.ix.items.get(a.defId);
   if (b && def?.stackable && b.defId === a.defId && !equippedKindOf(ctx, from) && !equippedKindOf(ctx, to)) {
     b.count += a.count;
@@ -251,13 +252,13 @@ export function doMoveItem(ctx: Ctx, from: number, to: number): ActionOutcome {
 
 export function doDrop(ctx: Ctx, slot: number): ActionOutcome {
   if (!validSlot(slot)) return invalid('no such slot');
-  const it = ctx.s.player.slots[slot];
+  const it = me(ctx).slots[slot];
   if (!it) return invalid('that slot is empty');
   if (equippedKindOf(ctx, slot)) unequipSlot(ctx, slot, false);
-  ctx.s.player.slots[slot] = null;
+  me(ctx).slots[slot] = null;
   const p = playerActor(ctx);
   ctx.s.area.items.push({ item: it, pos: { ...p.pos } });
-  logKey(ctx, 'log.item.drop', { player: ctx.world.player.name, item: displayItemName(ctx, it.defId) }, 'info');
+  logKey(ctx, 'log.item.drop', { player: playerName(ctx), item: displayItemName(ctx, it.defId) }, 'info');
   return done();
 }
 
@@ -277,8 +278,8 @@ export function doPickup(ctx: Ctx): ActionOutcome {
     ctx.s.area.items = ctx.s.area.items.filter((x) => x !== fi);
     picked++;
     emit(ctx, { type: 'item_picked', itemId: fi.item.id, defId: def.id });
-    if (fi.item.count > 1) logKey(ctx, 'log.item.pickup_many', { player: ctx.world.player.name, item: displayItemName(ctx, def.id), count: fi.item.count }, 'loot');
-    else logKey(ctx, 'log.item.pickup', { player: ctx.world.player.name, item: displayItemName(ctx, def.id) }, 'loot');
+    if (fi.item.count > 1) logKey(ctx, 'log.item.pickup_many', { player: playerName(ctx), item: displayItemName(ctx, def.id), count: fi.item.count }, 'loot');
+    else logKey(ctx, 'log.item.pickup', { player: playerName(ctx), item: displayItemName(ctx, def.id) }, 'loot');
     fireItemTriggers(ctx, p, def, 'on_pickup');
   }
   if (!picked) return invalid('no room to carry that');
@@ -289,14 +290,14 @@ export function doPickup(ctx: Ctx): ActionOutcome {
 /** why using this slot would fail (null = usable); `target` validated for positional items */
 export function useFailure(ctx: Ctx, slot: number, target?: Pos): string | null {
   if (!validSlot(slot)) return 'no such slot';
-  const it = ctx.s.player.slots[slot];
+  const it = me(ctx).slots[slot];
   if (!it) return 'that slot is empty';
   const def = ctx.ix.items.get(it.defId);
   if (!def) return 'unknown item';
   const kind = equipSlotOf(def);
   if (def.useMode === 'passive' || !def.onUse) {
     if (kind) {
-      if (ctx.s.player.equipped[kind] === slot) return 'already equipped';
+      if (me(ctx).equipped[kind] === slot) return 'already equipped';
       return requiresFailure(ctx, def);
     }
     return 'nothing happens when you use that';
@@ -322,12 +323,12 @@ export function useFailure(ctx: Ctx, slot: number, target?: Pos): string | null 
 export function doUse(ctx: Ctx, slot: number, target?: Pos): ActionOutcome {
   const fail = useFailure(ctx, slot, target);
   if (fail) return invalid(fail);
-  const it = ctx.s.player.slots[slot]!;
+  const it = me(ctx).slots[slot]!;
   const def = ctx.ix.items.get(it.defId)!;
   if (def.useMode === 'passive' || !def.onUse) return doEquip(ctx, slot);
   const p = playerActor(ctx);
   const shownName = displayItemName(ctx, def.id);
-  logKey(ctx, 'log.item.use', { player: ctx.world.player.name, item: shownName }, 'info');
+  logKey(ctx, 'log.item.use', { player: playerName(ctx), item: shownName }, 'info');
   if (def.cost && def.cost.amount > 0) changeResource(ctx, p, def.cost.resource, -def.cost.amount);
   // consume before effects so the item can't be duplicated by its own effects
   let consumed = false;
@@ -340,7 +341,7 @@ export function doUse(ctx: Ctx, slot: number, target?: Pos): ActionOutcome {
   }
   // the round tick right after this action takes one off, so +1 makes "cooldown N" block the next N turns;
   // for a consumed stack the cooldown sits on what is left of the stack
-  const holder = consumed ? ctx.s.player.slots[slot] : it;
+  const holder = consumed ? me(ctx).slots[slot] : it;
   if (def.cooldown > 0 && holder && holder.defId === def.id) holder.cooldown = def.cooldown + 1;
   const obs: Obs[] = [];
   const res = runAction(ctx, def.onUse, p, { targetPos: target, obs });

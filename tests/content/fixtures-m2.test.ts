@@ -29,7 +29,7 @@ describe('currency is usable without a GM (startCurrency)', () => {
     it(`${name}: the run starts with player.startCurrency in hand`, () => {
       expect(w.player.startCurrency ?? 0).toBeGreaterThan(0);
       const s = createGame(w, { seed: 3 });
-      expect(s.player.currency).toBe(w.player.startCurrency);
+      expect(s.purse).toBe(w.player.startCurrency);
     });
 
     it(`${name}: every trader offers at least one item the starting purse can buy`, () => {
@@ -46,7 +46,7 @@ describe('currency is usable without a GM (startCurrency)', () => {
   it('a world without startCurrency still starts at 0 (backwards compatible)', () => {
     const w = structuredClone(worlds.ship);
     delete w.player.startCurrency;
-    expect(createGame(w, { seed: 1 }).player.currency).toBe(0);
+    expect(createGame(w, { seed: 1 }).purse).toBe(0);
   });
 
   it('startCurrency is validated (non-negative integer)', () => {

@@ -10,6 +10,7 @@
 import type { AreaPlan, WorldSpec } from '../schema/world';
 import type { GameEvent, GameState } from '../engine/types';
 import { visibleHostiles } from './travel';
+import { leadPlayer } from '../engine/index';
 
 export type AudioSituation = 'explore' | 'combat' | 'boss' | 'victory' | 'death';
 
@@ -40,7 +41,7 @@ function situationOf(world: WorldSpec, state: GameState): AudioSituation {
   const visible = visibleHostiles(state);
   if (!visible.size) return 'explore';
   const uniques = new Set(world.actors.filter((d) => d.unique && !d.npc).map((d) => d.id));
-  const player = state.area.actors.find((a) => a.id === state.player.actorId);
+  const player = state.area.actors.find((a) => a.id === leadPlayer(state).actorId);
   let combat = false;
   for (const a of state.area.actors) {
     if (!visible.has(a.id)) continue;

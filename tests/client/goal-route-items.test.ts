@@ -10,6 +10,7 @@ import { GameSession } from '../../src/client/session';
 import { conditionLines, currentStep, flagSource, inHand, routeItemsHere } from '../../src/client/guide';
 import { playToSituation } from '../../src/llm/situation';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer } from '../../src/engine';
 
 const heist = loadFixture('heist-silent-vault.json');
 const kitchen = loadFixture('corporate-merger-kitchen.json');
@@ -23,8 +24,8 @@ function inArea(world: typeof heist, area: number, seed = 3): GameState {
 
 function give(state: GameState, defId: string): GameState {
   const st = structuredClone(state) as GameState;
-  const free = st.player.slots.findIndex((x, i) => i >= 8 && !x);
-  st.player.slots[free] = { id: `test-${defId}`, defId, count: 1 };
+  const free = leadPlayer(st).slots.findIndex((x, i) => i >= 8 && !x);
+  leadPlayer(st).slots[free] = { id: `test-${defId}`, defId, count: 1 };
   st.area.items = st.area.items.filter((f) => f.item.defId !== defId);
   return st;
 }

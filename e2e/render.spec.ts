@@ -100,14 +100,14 @@ for (const world of FIXTURES) {
     const roundTrip = await page.evaluate(() => {
       const r = window.__dev!.renderer;
       const s = window.__dev!.state;
-      const p = s.area.actors.find((a) => a.id === s.player.actorId)!.pos;
+      const p = s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!.pos;
       const sc = r.tileToScreen(p);
       return { p, back: r.screenToTile(sc.x, sc.y) };
     });
     expect(roundTrip.back).toEqual(roundTrip.p);
     await page.evaluate(() => {
       const s = window.__dev!.state;
-      const p = s.area.actors.find((a) => a.id === s.player.actorId)!.pos;
+      const p = s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!.pos;
       window.__dev!.renderer.highlightTiles([{ x: p.x + 1, y: p.y }, { x: p.x + 2, y: p.y }], '#7fe3ff');
     });
     await page.waitForTimeout(200);
@@ -134,7 +134,7 @@ test('hp bar fill is drawn on top of its background', async ({ page }) => {
   const res = await page.evaluate(async () => {
     const d = window.__dev!;
     const next = structuredClone(d.state);
-    const p = next.area.actors.find((a) => a.id === next.player.actorId)!;
+    const p = next.area.actors.find((a) => a.id === next.players[next.party[0]].actorId)!;
     p.hp = Math.max(1, Math.round(p.maxHp * 0.625)); // > 60 %: the green fill
     d.state = next;
     await d.renderer.sync(next, []);
@@ -173,7 +173,7 @@ for (const world of FIXTURES) {
       const door = map.tiles.findIndex((t) => t.kind === 'door' || t.kind === 'door_open');
       if (door < 0) return { skipped: true as const };
       map.tiles[door].kind = 'door_open';
-      const p = next.area.actors.find((a) => a.id === next.player.actorId)!;
+      const p = next.area.actors.find((a) => a.id === next.players[next.party[0]].actorId)!;
       p.pos = { x: door % W, y: Math.floor(door / W) };
       // an enemy on a free tile next to the player
       const other = next.area.actors.find((a) => a.id !== p.id);
@@ -190,9 +190,9 @@ for (const world of FIXTURES) {
           }
         }
       }
-      const seen = Uint8Array.from(next.area.seen as ArrayLike<number>);
+      const seen = Uint8Array.from(next.players[next.party[0]].seen as ArrayLike<number>);
       for (let y = p.pos.y - 3; y <= p.pos.y + 3; y++) for (let x = p.pos.x - 3; x <= p.pos.x + 3; x++) if (x >= 0 && y >= 0 && x < W && y < map.height) seen[y * W + x] = 2;
-      next.area.seen = seen;
+      next.players[next.party[0]].seen = seen;
       d.state = next;
       await d.renderer.sync(next, []);
       d.renderer.skipAnimations();
@@ -247,14 +247,14 @@ test('actors on visible tiles are drawn in dark areas (fixture-ship ductworks)',
         }
       if (!c) continue;
       const next = structuredClone(base);
-      const p = next.area.actors.find((a) => a.id === next.player.actorId)!;
+      const p = next.area.actors.find((a) => a.id === next.players[next.party[0]].actorId)!;
       p.pos = { ...c };
       const e = next.area.actors.find((a) => a.id !== p.id && a.faction === 'hostile')!;
       e.pos = { x: c.x + dx * 5, y: c.y + dy * 5 };
       // the engine's view: everything within 8 tiles (the straight line between them is open floor)
       const seen = new Uint8Array(map.tiles.length);
       for (let y = 0; y < map.height; y++) for (let x = 0; x < W; x++) if (Math.max(Math.abs(x - c.x), Math.abs(y - c.y)) <= 8) seen[y * W + x] = 2;
-      next.area.seen = seen;
+      next.players[next.party[0]].seen = seen;
       d.state = next;
       await d.renderer.sync(next, []);
       d.renderer.skipAnimations();

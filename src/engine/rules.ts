@@ -12,7 +12,7 @@
 import type { Amount, Condition, Effect, RuleVariant, Targeting, Trigger, WorldSpec } from '../schema/world';
 import { MAX_ACTIVE_RULES, MAX_GM_RULES_PER_AREA } from '../schema/gm';
 import type { ActiveRuleEntry, GameState } from './types';
-import { type Ctx, type Switches, computeSwitches } from './ctx';
+import { type Ctx, type Switches, computeSwitches, me } from './ctx';
 import { difficultyOf, profileOf } from './difficulty';
 import { DEFAULT_DURABILITY } from './inventory';
 import { POSITIONAL_SHAPES, isActorEffect } from './effects';
@@ -373,7 +373,7 @@ function triggerParts(world: WorldSpec, tr: Trigger): { harm: number; help: numb
 export interface ImpactOptions {
   /**
    * Whether the rule's permadeathMercy switch would actually help (default true, the static view).
-   * The GM-side checks pass false once the mercy is spent (GameState.mercyUsed) or another rule in
+   * The GM-side checks pass false once the mercy is spent (PlayerState.mercyUsed) or another rule in
    * force already grants it: a switch that changes nothing is no counterweight.
    */
   mercyHelps?: boolean;
@@ -463,7 +463,7 @@ function liveImpacts(ctx: Ctx, live: readonly ActiveRuleEntry[]): Map<ActiveRule
 
 /** the mercy is spent, or the difficulty grants it anyway (Gentle's second chance): a mercy switch changes nothing */
 function mercyGranted(ctx: Ctx): boolean {
-  return !!ctx.s.mercyUsed || profileOf(ctx.s).secondChance;
+  return !!me(ctx).mercyUsed || profileOf(ctx.s).secondChance;
 }
 
 /** whether a mercy switch on a rule joining (or staying in) `others` would help: not spent, not granted elsewhere */
@@ -598,7 +598,7 @@ function applySwitchChange(ctx: Ctx, before: Switches, after: Switches): void {
   if (!before.allConsumablesUnknown && after.allConsumablesUnknown) hideConsumablesForRule(ctx);
   else if (before.allConsumablesUnknown && !after.allConsumablesUnknown) unhideConsumablesForRule(ctx);
   if (before.durability === after.durability) return;
-  const items = [...ctx.s.player.slots, ...ctx.s.area.items.map((f) => f.item)];
+  const items = [...me(ctx).slots, ...ctx.s.area.items.map((f) => f.item)];
   for (const it of items) {
     if (!it) continue;
     if (after.durability) {

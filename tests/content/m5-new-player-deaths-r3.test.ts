@@ -9,7 +9,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
-import { createGame } from '../../src/engine';
+import { createGame, leadPlayer } from '../../src/engine';
 import { dealDamage } from '../../src/engine/combat';
 import { enterArea } from '../../src/engine/area';
 import type { GameState } from '../../src/engine/types';
@@ -93,20 +93,20 @@ describe('heist-silent-vault: an empty Hush rouses the watch at most once per ar
   for (const difficulty of ['gentle', 'normal'] as const) {
     it(`${difficulty}: thirty hits in one area summon one Night Watchman; the next area can summon one more`, () => {
       const s = createGame(w, { seed: 11, map: roomMap(16, 12), difficulty });
-      s.area.actors = s.area.actors.filter((a) => a.id === s.player.actorId);
+      s.area.actors = s.area.actors.filter((a) => a.id === leadPlayer(s).actorId);
       const docent = addActor(w, s, 'night-docent', { x: 10, y: 8 });
-      expect(s.player.resources.hush).toBe(10);
+      expect(leadPlayer(s).resources.hush).toBe(10);
       hurt(s, 30, docent.id);
       expect(watchmen(s)).toBe(1);
       expect(s.flags['watch-roused']).toBe(true);
       // the meter is not drained while the watch is out
-      expect(s.player.resources.hush).toBe(10);
+      expect(leadPlayer(s).resources.hush).toBe(10);
 
       const ctx = ctxFor(w, s);
       enterArea(ctx, 1, roomMap(16, 12));
       s.rng = ctx.rng.state();
       expect(s.flags['watch-roused']).toBe(false);
-      s.area.actors = s.area.actors.filter((a) => a.id === s.player.actorId);
+      s.area.actors = s.area.actors.filter((a) => a.id === leadPlayer(s).actorId);
       const moth = addActor(w, s, 'echo-moth', { x: 10, y: 8 });
       hurt(s, 30, moth.id);
       expect(watchmen(s)).toBe(1);

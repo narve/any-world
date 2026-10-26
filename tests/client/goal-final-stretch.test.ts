@@ -7,6 +7,7 @@ import type { GameState } from '../../src/engine/types';
 import { GameSession } from '../../src/client/session';
 import { currentStep } from '../../src/client/guide';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer } from '../../src/engine';
 
 const teen = loadFixture('fixture-teen.json');
 
@@ -26,7 +27,7 @@ describe('pt-desktop r1: goal tracker in the final stretch', () => {
     const s = session();
     const st = structuredClone(s.state) as GameState;
     st.area.index = 2;
-    st.player.slots[9] = { id: 'test-notebook', defId: 'speech-notebook', count: 1 };
+    leadPlayer(st).slots[9] = { id: 'test-notebook', defId: 'speech-notebook', count: 1 };
     s.state = st;
     const step = currentStep(teen, s.state);
     expect(step.kind).toBe('final');

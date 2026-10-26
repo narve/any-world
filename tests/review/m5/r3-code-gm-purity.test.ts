@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { parseWorld } from '../../../src/schema/refs';
-import { applyGmActions, createGame, legalActions, serialize, step } from '../../../src/engine';
+import { applyGmActions, createGame, legalActions, serialize, step, leadPlayer } from '../../../src/engine';
 import type { GameState } from '../../../src/engine/types';
 import { GmAction } from '../../../src/schema/gm';
 import { createRng } from '../../../src/engine/rng';
@@ -28,7 +28,7 @@ describe('applyGmActions never mutates its input (all action types)', () => {
       let s: GameState = createGame(world, { seed: 5 });
       for (let i = 0; i < 200 && s.status === 'playing'; i++) {
         if (i % 5 === 2) {
-          const other = s.area.actors.find((a) => a.id !== s.player.actorId && a.hp > 0);
+          const other = s.area.actors.find((a) => a.id !== leadPlayer(s).actorId && a.hp > 0);
           const raw: unknown[] = [
             { type: 'effect', target: 'all_visible_enemies', effects: [{ type: 'damage', amount: { base: 3 } }, ...(statuses.length ? [{ type: 'apply_status', status: pick(statuses) }] : [])] },
             { type: 'effect', target: 'nearest_enemy', effects: [{ type: 'push', distance: 2 }, { type: 'transform', into: pick(actors) }] },
@@ -49,7 +49,7 @@ describe('applyGmActions never mutates its input (all action types)', () => {
           const res = applyGmActions(s, sub, { world });
           expect(serialize(s)).toBe(before);
           s = res.state;
-          if (i % 10 === 2 && !s.pendingChoice) {
+          if (i % 10 === 2 && !leadPlayer(s).pendingChoice) {
             const offer = GmAction.parse({ type: 'offer_choice', prompt: 'p', options: [{ label: 'a', actions: [{ type: 'grant_xp', amount: 5 }] }, { label: 'b', actions: [{ type: 'currency', amount: 3 }] }] });
             const b2 = serialize(s);
             const r2 = applyGmActions(s, [offer], { world });

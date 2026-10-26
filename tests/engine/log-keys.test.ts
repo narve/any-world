@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { WORLD_DIR, loadFixture, testWorld, newGame, act, player } from './helpers';
-import { createGame, step, legalActions, applyGmActions } from '../../src/engine';
+import { createGame, step, legalActions, applyGmActions, leadPlayer } from '../../src/engine';
 import { LOG_KEYS, END_REASON_KEYS, FACTION_KEYS, renderLogKey, renderTemplate, templateParams } from '../../src/engine/log-keys';
 import { createRng } from '../../src/engine/rng';
 import { botByName, newMemory } from '../../src/engine/sim/bots';
@@ -60,14 +60,14 @@ function play(world: WorldSpec, seed: number, steps: number, seen: Seen, gmStrin
   let gmArea = -1;
   let nextIdle = 60;
   for (let i = 0; i < steps && s.status === 'playing'; i++) {
-    if (s.area.index !== gmArea && !s.pendingChoice && !s.player.pendingPerkChoice) {
+    if (s.area.index !== gmArea && !leadPlayer(s).pendingChoice && !leadPlayer(s).pendingPerkChoice) {
       gmArea = s.area.index;
       const acts: GmAction[] = gmActionsForArea(world, s.area.index);
       strings(acts, gmStrings);
       const r = applyGmActions(s, acts, env);
       for (const e of r.events) if (e.type === 'message') check(e, seen);
       s = r.state;
-    } else if (s.turn >= nextIdle && !s.pendingChoice) {
+    } else if (s.turn >= nextIdle && !leadPlayer(s).pendingChoice) {
       nextIdle = s.turn + 80;
       const acts = gmIdleActions(s);
       strings(acts, gmStrings);

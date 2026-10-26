@@ -12,6 +12,7 @@
  *   describeItem(state, itemInstanceId): ItemView                   // respects player knowledge
  *   describeActor(state, actorInstanceId): ActorView
  *   serialize(state): string / deserialize(world, json): GameState
+ *   leadPlayer(state): PlayerState / hashState(state): string            // MP1: a party of players
  */
 import type { WorldSpec, Effect, Condition, Knowledge, RuleVariant } from '../schema/world';
 import type { GmAction, Difficulty } from '../schema/gm';
@@ -88,6 +89,8 @@ export interface ActorInstance {
     lowHp?: boolean;
     /** wanderer's current destination */
     wander?: Pos;
+    /** the player actor this hostile is after (sticky target among players, MP1 B2b) */
+    targetId?: string;
   };
   /** temporary stat modifiers with durations */
   tempMods: { stat: string; amount: number; turnsLeft: number }[];
@@ -120,7 +123,17 @@ export const QUICK_SLOTS = 8;
 export const BACKPACK_SLOTS = 20;
 export const TOTAL_SLOTS = QUICK_SLOTS + BACKPACK_SLOTS;
 
+/** a party member's id: "p1", "p2"… (engine-assigned in join order) */
+export type PlayerId = string;
+
+/**
+ * One player of the party (MP1: a single player is a party of one). Everything a player owns or
+ * knows lives here; the world (map, actors, flags, quests, log…) is shared on GameState.
+ */
 export interface PlayerState {
+  id: PlayerId;
+  /** shown in log lines and the roster (world.player.name for a party of one) */
+  name: string;
   actorId: string;           // id of the player's ActorInstance in area.actors
   slots: (ItemInstance | null)[]; // length TOTAL_SLOTS
   /** slot indices of equipped items (items stay in their slot) */
@@ -130,9 +143,36 @@ export interface PlayerState {
   perks: string[];
   /** pending level-up choice (perk ids) — blocks other actions until chosen */
   pendingPerkChoice: string[] | null;
-  resources: Record<string, number>;   // custom resources
-  currency: number;
+  resources: Record<string, number>;   // custom resources (bodily: each player has their own)
   sneaking: boolean;
+  /** what this player knows about each item kind (appearances are the same for every player) */
+  knowledge: Record<string, ItemKnowledgeState>;
+  /** open dialogue/choice this player must resolve (blocks only this player) */
+  pendingChoice: PendingChoice | null;
+  /** this player's fog of the current area, per tile: 0 unseen, 1 remembered, 2 visible now */
+  seen: Uint8Array | number[];
+  /** this player's second chance (permadeathMercy rule, gentle band) is spent */
+  mercyUsed?: boolean;
+  /** down (MP1 B2b): fell without a second chance; gets up when helped or after a while */
+  down?: { since: number; helpedTurns: number } | null;
+  /** turn this player became busy (typing, in a menu; MP1 B2a); null/absent = not busy */
+  busySince?: number | null;
+  /** the last harm this player took (for the loss reason): who and what kind */
+  lastHarm?: {
+    by?: string;
+    damageType: string;
+    turn: number;
+    /** status def id whose per-turn effect did it (the loss line names it) */
+    status?: string;
+    /** terrain def id underfoot that did it */
+    terrain?: string;
+  };
+}
+
+/** party-wide settings fixed when the run starts (kept in the state so replays agree) */
+export interface PartyRules {
+  /** turns between the first player taking an exit and the whole party moving on (MP1 B3) */
+  exitCountdownTurns: number;
 }
 
 /** what the player knows about each ItemDef (by def id) */
@@ -155,8 +195,7 @@ export interface AreaState {
   map: AreaMap;
   actors: ActorInstance[];
   items: FloorItem[];
-  /** per-tile visibility: 0 unseen, 1 remembered, 2 visible now */
-  seen: Uint8Array | number[];
+  /** regions any player has discovered (the fog itself is per player: PlayerState.seen) */
   discoveredRegions: number[];
   /** GM budget remaining for this area */
   gmBudget: number;
@@ -164,6 +203,10 @@ export interface AreaState {
   gmRulesAdded?: number;
   /** rules the GM retired in this area (at most MAX_GM_RULES_PER_AREA; absent = 0) */
   gmRulesRemoved?: number;
+  /** a player took the exit and the party moves on when it reaches 0 (MP1 B3) */
+  exitCountdown?: { turnsLeft: number; by: PlayerId } | null;
+  /** the party size this area was built for (MP1 B3; absent = 1) */
+  partySize?: number;
 }
 
 /** one rule in force (GameState.activeRules) */
@@ -203,7 +246,8 @@ export interface LogMessage {
 }
 
 export interface GameState {
-  version: 1;
+  /** 2: the party model (players, party, purse); version-1 saves are refused */
+  version: 2;
   worldId: string;            // hash/slug of the world spec
   seed: number;
   rng: number[];              // PRNG internal state (4 × uint32, sfc32)
@@ -216,23 +260,24 @@ export interface GameState {
    */
   endReasonKey?: string;
   endReasonParams?: Record<string, string | number>;
-  area: AreaState;
   /** areas already visited are dropped (no backtracking in v1) */
-  player: PlayerState;
-  knowledge: Record<string, ItemKnowledgeState>;
+  area: AreaState;
+  /** every player by id; walk them in `party` order, never by key order */
+  players: Record<PlayerId, PlayerState>;
+  /** player ids in join order: the lead is party[0]; the base of every party loop */
+  party: PlayerId[];
+  /** the party's shared currency */
+  purse: number;
+  partyRules: PartyRules;
   flags: Record<string, boolean>;
   counters: Record<string, number>;
   defeated: Record<string, number>; // actor def id -> count
   quests: Quest[];
   log: LogMessage[];
-  /** open dialogue/choice the player must resolve */
-  pendingChoice: PendingChoice | null;
   nextId: number;
   stats: { kills: number; itemsUsed: number; damageDealt: number; damageTaken: number; areasCleared: number };
   /** unique actor def ids spawned at least once this run (record only: a unique may reappear until defeated, see uniqueSpawnable) */
   uniquesSpawned?: string[];
-  /** permadeathMercy rule already saved the player once */
-  mercyUsed?: boolean;
   /** difficulty band of the run (absent in older saves = 'normal'), see engine/difficulty.ts */
   difficulty?: Difficulty;
   /**
@@ -245,16 +290,6 @@ export interface GameState {
    * Counts toward the difficulty's ruleHarmTotal together with the GM-added rules (rules.ts).
    */
   gmRetiredHarm?: number;
-  /** the last harm the player took (for the loss reason): who and what kind */
-  lastHarm?: {
-    by?: string;
-    damageType: string;
-    turn: number;
-    /** status def id whose per-turn effect did it (the loss line names it) */
-    status?: string;
-    /** terrain def id underfoot that did it */
-    terrain?: string;
-  };
 }
 
 export interface PendingChoice {
@@ -349,6 +384,8 @@ export interface NewGameOptions {
   mapGenerator?: MapGenerator;
   /** difficulty band (default 'normal'); stored in GameState.difficulty, see engine/difficulty.ts */
   difficulty?: Difficulty;
+  /** turns of the party's exit countdown (GameState.partyRules, default 5) */
+  exitCountdownTurns?: number;
 }
 
 /** generator contract (src/engine/mapgen) */
