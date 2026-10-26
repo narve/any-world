@@ -1927,6 +1927,270 @@
           "holding": "none"
         }
       }
+    },
+    {
+      "id": "ida-sekretaer",
+      "name": "Ida, elevrådssekretær",
+      "description": "Fører referat fra alle elevrådsmøter, også de som ikke fant sted. Har tre penner bak øret og et regneark for alt.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Effektiv, lett stresset, snakker i kulepunkter. Heier på deg, men har allerede laget en plan B.",
+        "greeting": "Tiril! Punkt én: talen er borte. Punkt to: jeg vet hvor side én er. Punkt tre: du kommer ikke til å like det.",
+        "lines": [
+          "Side én sitter fast i skriveren på Servicetorget. Den blinker oransje og nekter å innrømme noe.",
+          "Skriveren gir seg hvis du får den målbundet. Den tåler ikke spørsmål om skuff 2."
+        ],
+        "secrets": "Hun har en kopi av talen på mobilen, men bare de to første linjene, og de er feilstavet.",
+        "wants": "At møtet i kveld får et ordentlig referat og at Sondre ikke får siste ord."
+      },
+      "tags": [
+        "elev",
+        "elevråd"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "slim",
+          "skin": "#e8b890",
+          "top": "#2a5a8a",
+          "bottom": "#1a1a1a",
+          "accent": "#e8b33c",
+          "hair": "#3a2418",
+          "hairStyle": "bun",
+          "outfit": "plain",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "miljoarbeider",
+      "name": "Miljøarbeideren",
+      "description": "Kjenner alle elevene ved navn og alle sofaene i Mellombygget ved sitt fornavn. Har alltid en kopp te som ikke blir tom.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Rolig, lun, svarer på spørsmål med et nytt spørsmål. Tror på deg mer enn du gjør selv.",
+        "greeting": "Hei du. Du ser ut som en som har mistet noe viktig. Pust først, så leter vi.",
+        "lines": [
+          "Vaktmesteren vet hvor alt er. Spør ham, han har aldri hastverk, men han har alltid rett.",
+          "Ballet er ikke for talens skyld. Men talen er fin å ha, det skal jeg innrømme."
+        ],
+        "secrets": "Han har sett tjue nestledere prøve å ta talen. Ingen av dem fikk det til.",
+        "wants": "At du spiser en vaffel før du går videre."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.0,
+          "build": "round",
+          "skin": "#c89a70",
+          "top": "#5a7a4a",
+          "bottom": "#3a3a4a",
+          "accent": "#e0d0b0",
+          "hair": "#6a5a4a",
+          "hairStyle": "short",
+          "outfit": "coat",
+          "holding": "bottle"
+        }
+      }
+    },
+    {
+      "id": "latinlektor",
+      "name": "Latinlektoren",
+      "description": "Underviser i latin for fire elever og ett skjelett i biologirommet. Leser Pharsalia for moro skyld, på originalspråket.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Begeistret, ordrik, oversetter seg selv før noen spør. Elsker bøker mer enn regler.",
+        "greeting": "Salve! Det betyr hei. Leter du etter noe i en bok fra 1492? Alle gjør det, før eller siden.",
+        "lines": [
+          "Side to ligger ved Pharsalia, boka fra 1492. Den er sur fordi noen brukte talen din som bokmerke.",
+          "Bella plus quam civilia: kriger som er mer enn borgerkriger. Pharsalia overdriver. Svar den rolig, så blir den målbundet."
+        ],
+        "secrets": "Hun har selv brukt en handleliste som bokmerke i Pharsalia en gang. Boka har ikke tilgitt henne.",
+        "wants": "At noen, bare én, velger latin neste år."
+      },
+      "tags": [
+        "voksen",
+        "lærer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "slim",
+          "skin": "#f0d0b0",
+          "top": "#6a3a5a",
+          "bottom": "#2a2a3a",
+          "accent": "#e8e0c0",
+          "hair": "#c8c8c8",
+          "hairStyle": "long",
+          "outfit": "dress",
+          "holding": "book"
+        }
+      }
+    },
+    {
+      "id": "kontrabassist",
+      "name": "Kontrabassisten uten band",
+      "description": "En malt musiker med en malt kontrabass. Resten av kvartetten gikk ut av rammen i 1966 og kom aldri tilbake.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Avslappet, filosofisk, snakker i takt. Synes punktum er overvurdert, men forstår at du trenger ett.",
+        "greeting": "Hei, katt. Du er ikke malt. Det merkes. Du står helt stille mellom slagene.",
+        "lines": [
+          "Den uendelige setningen holder side tre fast. Alt den trenger, er et punktum. Det er vanskeligere enn det høres ut.",
+          "Beatpoetene knipser når de er enige. Hvis de knipser av deg, er du på rett vei."
+        ],
+        "secrets": "Han vet at kvartetten bare tok en kaffe i Markens og glemte å komme tilbake.",
+        "wants": "Noen å spille med igjen. Eller i det minste noen som knipser i takt."
+      },
+      "tags": [
+        "malt",
+        "musiker"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.05,
+          "build": "average",
+          "skin": "#8a6a4a",
+          "top": "#1a1a2a",
+          "bottom": "#1a1a2a",
+          "accent": "#3ac8c0",
+          "hair": "#1a1a1a",
+          "hairStyle": "short",
+          "outfit": "suit",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "maja-malt",
+      "name": "Maja, malt inn i 1964",
+      "description": "En elev fra 1964 som så for lenge på maleriet, akkurat som deg. Hun er turkis nå, men det kler henne.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Nysgjerrig, litt vemodig, snakker gammeldags. Spør om alt fra din tid: hva er en mobil, og er det fortsatt vafler i kantina?",
+        "greeting": "Å, en til fra skolen! Hvilket år er det der ute? Nei, ikke si det. Si heller om de fortsatt har ball.",
+        "lines": [
+          "Jeg har sett side tre. Den uendelige setningen bruker den som teppe. Gi den et punktum, så slipper den.",
+          "Kaféverten selger ting som hjelper. Han tar kroner, ikke frimerker. Det lærte jeg i 1965."
+        ],
+        "secrets": "Hun kan gå ut av rammen når hun vil. Hun har bare ikke bestemt seg ennå.",
+        "wants": "Å høre talen din. Hun gikk aldri på sitt eget ball."
+      },
+      "tags": [
+        "elev",
+        "malt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "slim",
+          "skin": "#c8e8e0",
+          "top": "#3ac8c0",
+          "bottom": "#e85a9a",
+          "accent": "#f0e0a0",
+          "hair": "#2a1a10",
+          "hairStyle": "braids",
+          "outfit": "dress",
+          "holding": "none"
+        }
+      }
+    },
+    {
+      "id": "dj-en",
+      "name": "DJ-en fra 3STB",
+      "description": "Har spilleliste for ballet ferdig siden august. Står bak miksepulten med hodetelefoner rundt halsen og et blikk som har sett mange taler.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 11
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Kul på utsiden, nervøs på innsiden. Bryr seg mest om overganger, både i musikk og i taler.",
+        "greeting": "Yo. Du har tre minutter mellom låt fire og fem. Bruk dem godt.",
+        "lines": [
+          "Scenemikrofonen står ved scenen. Med alle tre sidene trenger du den bare én gang.",
+          "Sondre har bedt meg spille fanfare når han går opp. Jeg har ikke bestemt meg for om jeg hører etter."
+        ],
+        "secrets": "Hun har allerede lagt inn en stille pause etter talen, i tilfelle den er god.",
+        "wants": "At ingen ber om én låt til klokka tolv."
+      },
+      "tags": [
+        "elev",
+        "musikk"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#d8a878",
+          "top": "#1a1a1a",
+          "bottom": "#3a3a5a",
+          "accent": "#e83a8a",
+          "hair": "#e83a8a",
+          "hairStyle": "mohawk",
+          "outfit": "plain",
+          "holding": "phone"
+        }
+      }
     }
   ],
   "items": [
@@ -3797,6 +4061,14 @@
         {
           "actor": "skriveren",
           "where": "far"
+        },
+        {
+          "actor": "ida-sekretaer",
+          "where": "anywhere"
+        },
+        {
+          "actor": "miljoarbeider",
+          "where": "anywhere"
         }
       ],
       "items": [
@@ -3988,6 +4260,10 @@
         {
           "actor": "pharsalia",
           "where": "far"
+        },
+        {
+          "actor": "latinlektor",
+          "where": "anywhere"
         }
       ],
       "items": [
@@ -4165,6 +4441,14 @@
         {
           "actor": "setningen",
           "where": "far"
+        },
+        {
+          "actor": "kontrabassist",
+          "where": "anywhere"
+        },
+        {
+          "actor": "maja-malt",
+          "where": "anywhere"
         }
       ],
       "items": [
@@ -4334,6 +4618,10 @@
         },
         {
           "actor": "kantinesjef",
+          "where": "anywhere"
+        },
+        {
+          "actor": "dj-en",
           "where": "anywhere"
         }
       ],

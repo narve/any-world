@@ -769,7 +769,7 @@ export const WorldSpec = z.object({
     })
     .default({ talk: true, sneak: false, search: true, persuade: false }),
   player: PlayerSpec,
-  actors: z.array(ActorDef).min(4).max(20),
+  actors: z.array(ActorDef).min(4).max(28),
   items: z.array(ItemDef).min(8).max(32),
   terrains: z.array(TerrainDef).max(10).default([]),
   /** appearance pools for unknown items: { "flask": ["murky green flask", …] } */

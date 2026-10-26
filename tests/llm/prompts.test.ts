@@ -41,7 +41,7 @@ describe('condensed World Spec description', () => {
   });
 
   it('shows ranges, defaults and array bounds', () => {
-    expect(WORLD_SCHEMA_DOC).toContain('actors: ActorDef[4..20]');
+    expect(WORLD_SCHEMA_DOC).toContain('actors: ActorDef[4..28]');
     expect(WORLD_SCHEMA_DOC).toContain('speed?: int 25..400 = 100');
     expect(WORLD_SCHEMA_DOC).toContain('tags: (string≤24)[≤8]');
     expect(WORLD_SCHEMA_DOC).toMatch(/type Id = string≤48 \/ids are lowercase/);
