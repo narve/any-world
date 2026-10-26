@@ -2,6 +2,7 @@
   "name": "anyworld",
   "version": "0.1.0",
   "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
   "type": "module",
   "description": "AnyWorld — a turn-based roguelike whose world, genre and rules are invented by an AI at the start of every run.",
   "scripts": {

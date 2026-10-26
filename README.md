@@ -208,3 +208,15 @@ live API run is left to a human.
 
 Known limits: real-device feel and frame rate on phones, and behaviour with live LLM providers, have
 been tested only in emulation and with recorded or agent-written responses. A human has to confirm them.
+
+## License
+
+Copyright © 2026 Narve Sætre. AnyWorld is **source-available, not OSI open source**. Everything in this
+repository (code, prompts and demo worlds) is licensed under the
+[PolyForm Noncommercial License 1.0.0](LICENSE).
+
+- **Allowed:** personal, hobby, study, research, education, and use by charities and public institutions.
+  You can change the code and share it, as long as you include the license and the `Required Notice` line.
+- **Not allowed without permission:** any commercial use, including running it as a paid or ad-funded service.
+
+For a commercial license, contact the author through [GitHub](https://github.com/narve).
