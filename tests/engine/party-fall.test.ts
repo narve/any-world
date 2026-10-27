@@ -11,7 +11,7 @@ import { createGame, stepTurn } from '../../src/engine';
 import { indexWorld, withPlayer, type Ctx } from '../../src/engine/ctx';
 import { giveItem } from '../../src/engine/inventory';
 import { dealDamage, killPlayer } from '../../src/engine/combat';
-import { REVIVE_SELF_TURNS } from '../../src/engine/turn';
+import { ACT_COST, REVIVE_SELF_TURNS, canTakeTurn } from '../../src/engine/turn';
 import { rngFromState } from '../../src/engine/rng';
 import { invariantError } from '../../src/engine/sim/run';
 import type { Difficulty } from '../../src/schema/gm';
@@ -157,6 +157,19 @@ describe('getting back up', () => {
     expect(r.events.some((e) => e.type === 'revived' && e.playerId === 'p2' && e.helped)).toBe(true);
     expect(r.state.log.some((l) => l.key === 'log.party.up')).toBe(true);
     expect(invariantError(w, r.state)).toBeNull();
+  });
+
+  it('getting up brings no burst: the energy of one action, not that plus the round gain', () => {
+    const s = party(2, 'hard');
+    place(s, { p1: { x: 4, y: 4 }, p2: { x: 5, y: 4 } });
+    fell(w, s, 'p2');
+    let r = turn(s, [act('p1', { type: 'wait' })]);
+    expect(r.state.players.p2.down).toBeFalsy();
+    expect(actorOf(r.state, 'p2').energy).toBeLessThanOrEqual(ACT_COST);
+    // both act once, then both are ready again together (p1 is never left waiting on p2)
+    r = turn(r.state, [act('p1', { type: 'wait' }), act('p2', { type: 'wait' })]);
+    const c = ctxOf(w, r.state);
+    expect(canTakeTurn(c, 'p1')).toBe(canTakeTurn(c, 'p2'));
   });
 
   it('alone they get up after 20 turns', () => {

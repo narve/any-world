@@ -130,6 +130,25 @@ describe('busy players', () => {
     expect(r.state.players.p2.busySince).toBeUndefined();
   });
 
+  it('busy:false while a dialogue stays open does not lift the BUSY_MAX_TURNS cap', () => {
+    const s = party(2, { map: roomMap(20, 12, { walls: Array.from({ length: 10 }, (_, i) => ({ x: 12, y: i + 1 })) }) });
+    place(s, { p1: { x: 3, y: 5 }, p2: { x: 16, y: 5 } });
+    const sage = addActor(w, s, 'sage', { x: 3, y: 4 });
+    const rat = addActor(w, s, 'rat', { x: 5, y: 5 }, { ai: { alerted: true } });
+    rat.hp = rat.maxHp = 99999;
+    let st = stepTurn(s, [act('p1', { type: 'talk', targetId: sage.id })], env(w)).state;
+    expect(st.players.p1.pendingChoice).not.toBeNull();
+    let hits = 0;
+    for (let i = 0; i < BUSY_MAX_TURNS + 10; i++) {
+      const r = turn(st, [{ playerId: 'p1', busy: false }, act('p2', { type: 'wait' })]);
+      hits += attacksOn(r.events, actorOf(st, 'p1').id).length;
+      st = r.state;
+    }
+    expect(st.players.p1.pendingChoice).not.toBeNull();
+    expect(st.players.p1.busySince).toBe(s.turn);
+    expect(hits).toBeGreaterThan(0);
+  });
+
   it('a busy player is skipped for a target who is not busy, but splash still reaches them', () => {
     const world = testWorld((wi) => {
       const archer = wi.actors.find((a) => a.id === 'archer')!;

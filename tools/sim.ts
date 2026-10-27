@@ -9,7 +9,7 @@
  *   --world <file>      world file (repeatable, or comma separated); default all content/worlds/*.json
  *   --seeds <n>         seeds per bot (1..n, or --seed-start s for s..s+n-1); default 20
  *   --bots <list>       explorer,cautious,talker,random; default explorer,cautious
- *   --max-turns <n>     engine turn cap per run (default 3000; random bot: min(cap, 800))
+ *   --max-turns <n>     engine turn cap per run (default 3000; random bot or an all-random party: min(cap, 800))
  *   --gm                feed scripted GM actions (spawn, offer_choice, add_rule/remove_rule)
  *   --jobs <n>          parallel worker processes (default: CPUs - 1)
  *   --exact             step through the public (cloning) step() instead of the in-place fastStep
@@ -254,7 +254,8 @@ async function partyMain(o: Opts, worlds: Map<string, WorldSpec>, bad: number): 
         const seed = o.seedStart + k;
         // the mix is fixed per task (seed rotates the order); the worker rebuilds it from `bot`
         const bots = partyBots(o.bots, n, seed);
-        const maxTurns = bots.includes('random') ? Math.min(o.maxTurns, 800) : o.maxTurns;
+        // the random bot's cap only when nobody else carries the party
+        const maxTurns = bots.every((b) => b === 'random') ? Math.min(o.maxTurns, 800) : o.maxTurns;
         tasks.push({ file, bot: bots.join('+') as BotName, seed, maxTurns, gm: false, exact: o.exact, difficulty: o.difficulty, party: n, timing: o.timing });
       }
   const t0 = Date.now();

@@ -58,14 +58,14 @@ export const TARGET_STICK_TILES = 2;
 export const GUARD_RANGE = 3;
 
 /**
- * Whether hostiles leave this player alone for now: busy (busySince, or an open choice) for less
- * than BUSY_MAX_TURNS. Never in a party of one: there a dialogue never lets the world move.
+ * Whether hostiles leave this player alone for now: busy (busySince, set by a busy input or an opening
+ * choice) for less than BUSY_MAX_TURNS. Never in a party of one: there a dialogue never lets the world move.
  */
 export function isBusy(ctx: Ctx, ps: PlayerState | undefined): boolean {
   if (!ps || ctx.s.party.length < 2 || ps.down) return false;
+  // (an open choice alone is not enough: a busy:false input must not lift the cap, party.ts)
   const since = ps.busySince;
-  if (since == null) return !!ps.pendingChoice;
-  return ctx.s.turn - since < BUSY_MAX_TURNS;
+  return since != null && ctx.s.turn - since < BUSY_MAX_TURNS;
 }
 
 /** the standing player actor nearest to `a` (party order breaks ties) */

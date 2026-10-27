@@ -144,7 +144,8 @@ function runTurnCore(ctx: Ctx, inputs: readonly TurnInput[], opts: TurnOptions):
     if (input.busy && ps.busySince == null) {
       ps.busySince = s.turn;
       changed = true;
-    } else if (!input.busy && ps.busySince != null) {
+    } else if (!input.busy && ps.busySince != null && !ps.pendingChoice) {
+      // (an open choice stays busy from when it opened: clearing it would lift the time cap)
       delete ps.busySince;
       changed = true;
     }

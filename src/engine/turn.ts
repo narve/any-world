@@ -62,10 +62,11 @@ function runWorldLoop(ctx: Ctx): void {
     }
     if (ready) return;
     if (burned) continue;
+    // down players gain no energy, nor do those who get up this round (no burst on getting up)
+    const wasDown = new Set(ctx.s.area.actors.filter((a) => a.hp <= 0 && isPlayer(ctx, a)));
     endRound(ctx);
     if (ctx.s.status !== 'playing') return;
-    // down players gain no energy (no burst when they get up)
-    for (const a of ctx.s.area.actors) if (a.hp > 0 || !isPlayer(ctx, a)) a.energy = Math.min(a.energy + energyGain(ctx, a), 400);
+    for (const a of ctx.s.area.actors) if (!wasDown.has(a) && (a.hp > 0 || !isPlayer(ctx, a))) a.energy = Math.min(a.energy + energyGain(ctx, a), 400);
     checkEnd(ctx);
   }
 }
