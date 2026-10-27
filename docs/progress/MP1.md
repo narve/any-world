@@ -123,5 +123,58 @@ no longer. At 12 players this means 8.15× the hostiles at 4.3× hp on 2.65× th
   gets several coats. MP1 keeps it (rules are per player); the bots now step out of them.
 - **GM in party runs:** `runParty` does not feed scripted GM actions (`--gm` is single player); the
   GM prompt still quotes a budget of 10 per area (MP4).
-- **Client:** single player only, as planned (no multiplayer UI in MP1). Playwright specs typecheck;
-  they were not run in MP1.
+- **Client:** single player only, as planned (no multiplayer UI in MP1). The single-player browser
+  smoke passed at the gate (below).
+
+## Gate (final verification, 2026-10-27, at 1d21f09)
+
+Run by the MP1 gate on a 16-core machine, nothing changed in the code.
+
+| Check | Command | Result |
+|---|---|---|
+| Typecheck | `npx tsc --noEmit -p .` | clean |
+| Unit tests | `npx vitest run` | 163 files, 2010 tests: 2009 passed, 1 failed: the load-sensitive timing assert in `tests/mapgen/generators.test.ts` ("organic / large", sims ran alongside); that file alone: 67/67 pass |
+| New-player gate | `npx tsx tools/sim.ts --gate --seeds 40 --jobs 6` | **21/21 worlds pass** (1680 runs, 147 s). Closest to a floor: both viking worlds at Normal 25 % (floor 25 %); the Gentle minimum is Mørketidsis 65 % (floor 50 %) |
+| Parties of 2, 3, 4 | `npx tsx tools/sim.ts --party-sizes 2,3,4 --seeds 12 --bots explorer,cautious,talker --jobs 8`, all 21 worlds, Normal | **756 runs: 0 crashes, 0 stuck, 0 timeouts, 0 anomalies, 0 `illegal` refusals** (exit code 0) |
+| 12 players, one world | `npx tsx tools/sim.ts --world content/worlds/fixture-western.json --party 12 --seeds 1 --timing --jobs 1` | won in 1099 rounds (1225 party turns), 3 areas, 0 crashes, no soft-lock, 0 anomalies |
+| 12 players, all worlds | `npx tsx tools/sim.ts --party 12 --seeds 2 --jobs 8` | 42 runs: 0 crashes, 0 stuck, 0 timeouts, 0 `illegal`; 40 won, 2 lost (both the yellow triangle's varnish limit), fell 57 % |
+| Browser smoke | dev server (`PORT=8787 ANYWORLD_CLIENT_PORT=5173 npx tsx server/dev.ts`), `xvfb-run -a npx playwright test e2e/play.spec.ts e2e/mobile.spec.ts --reporter=line` | 11 of 12 passed in the first run; `pixel7-portrait: touch-only play of fixture-western` stopped after 64 taps (it needs > 87: the game left `playing` early); rerun alone it passed. A flaky end-of-game condition in the mobile bot, not an MP1 regression |
+
+Win rates by party size (Normal, 21 worlds × 12 seeds):
+
+| party | runs | won | lost | fell | downs | revives (by a teammate) | avg turns |
+|---|---|---|---|---|---|---|---|
+| 2 | 252 | 250 (99 %) | 2 (Trolldirektoratet, seeds 7 and 10) | 19 % | 83 | 75 (55) | 664 |
+| 3 | 252 | 252 (100 %) | 0 | 24 % | 193 | 190 (138) | 616 |
+| 4 | 252 | 252 (100 %) | 0 | 24 % | 283 | 276 (196) | 683 |
+
+12-player turn times (fixture-western seed 1, ms per party turn, `performance.now` injected; the
+median from a separate run of the same game through `runParty` with the same clock, since
+`--timing` prints mean / p95 / max):
+
+| | median | mean | p95 | max |
+|---|---|---|---|---|
+| engine (`stepTurn` with all 12 inputs) | 2.0–2.1 | 2.8 | 7.7–8.7 | 249–572 |
+| whole party turn (engine + 12 bots) | 13.6–13.7 | 12.5 | 22.7–30.1 | 279–613 |
+
+The max is the turn that enters a new area (map generation for 12 players, maps up to 91×65); every
+other turn stays far below the 20 ms engine budget. The spread between runs is machine noise.
+
+## Known gaps for MP2
+
+- **No room server yet:** the engine has the pieces MP2 needs (`stepTurn` with every player's input,
+  `readyPlayers`, refusals by reason, the busy input, `addPlayer` for late joiners, `hashState` for
+  desync checks, saves v2), but the turn deadline, the travel cadence (~100 ms) and mapping seconds to
+  turns for `exitCountdownTurns` (5 turns by default; the plan's 10 s) are the server's job.
+- **Area entry is a spike** at 12 players (up to ~0.6 s for map generation): the room should not count
+  that against anyone's turn deadline, or pre-generate.
+- **Roster data** (names, colours, who is the local player) is not in the engine; the client reads the
+  local player as the lead (`leadPlayer`), which MP3 must replace with the joined player's id.
+- **Busy** comes from the input (dialogue, trade, typing); a typing flag has to come from the chat in
+  MP3. Hostiles leave a busy player alone for 10 turns at most.
+- **GM** targets the lead player and keeps a budget quote of 10 per area (MP4).
+- **Balance:** Normal is near-certain for bot parties (owner question, levers `PARTY_SCALING` and
+  `partySecondChance`); 12 players fall more often than 2–4 (57 % against 19–24 %) and their runs
+  take longer, which costs worlds with a turn limit (the yellow triangle).
+- **Flaky e2e:** the mobile touch-only fixture-western spec can end early; worth a look when the
+  client is touched in MP3.
