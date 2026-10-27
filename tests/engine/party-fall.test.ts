@@ -8,7 +8,8 @@
 import { describe, it, expect } from 'vitest';
 import { addActor, env, roomMap, simpleGenerator, testWorld } from './helpers';
 import { createGame, stepTurn } from '../../src/engine';
-import { indexWorld, type Ctx } from '../../src/engine/ctx';
+import { indexWorld, withPlayer, type Ctx } from '../../src/engine/ctx';
+import { giveItem } from '../../src/engine/inventory';
 import { dealDamage, killPlayer } from '../../src/engine/combat';
 import { REVIVE_SELF_TURNS } from '../../src/engine/turn';
 import { rngFromState } from '../../src/engine/rng';
@@ -231,5 +232,23 @@ describe('fatal resources in a party', () => {
     const r = turn(s, [act('p1', { type: 'wait' })], air);
     expect(r.state.status).toBe('lost');
     expect(r.state.endReasonKey).toBe('end.loss.resource');
+  });
+});
+
+describe('downed by their own action (MP1 B4)', () => {
+  it('a player who fells themselves with an item keeps the down state (no action cost below 0 energy)', () => {
+    const acid = testWorld((input) => {
+      const tonic = input.items.find((i) => i.id === 'tonic')!;
+      input.items.push({ ...tonic, id: 'acid', name: 'Acid', onUse: { targeting: tonic.onUse!.targeting, effects: [{ type: 'damage', amount: { base: 999 }, damageType: 'physical' }] } } as never);
+    });
+    const s = party(2, 'hard', acid);
+    place(s, { p1: { x: 2, y: 2 }, p2: { x: 13, y: 9 } });
+    const c = ctxOf(acid, s, 'p2');
+    withPlayer(c, 'p2', () => giveItem(c, 'acid'));
+    const slot = s.players.p2.slots.findIndex((it) => it?.defId === 'acid');
+    const r = turn(s, [act('p1', { type: 'wait' }), act('p2', { type: 'use', slot })], acid);
+    expect(r.state.players.p2.down).toBeTruthy();
+    expect(actorOf(r.state, 'p2').energy).toBe(0);
+    expect(invariantError(acid, r.state)).toBeNull();
   });
 });

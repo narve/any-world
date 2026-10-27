@@ -39,8 +39,10 @@ export interface PartyRunOptions extends Omit<RunOptions, 'onStep' | 'gm'> {
 }
 
 export interface PartyTiming {
-  /** ms per party turn */
+  /** ms per party turn (bot decisions and engine calls) */
   turnMs: number[];
+  /** ms per party turn spent inside the engine (every stepTurn of that turn, free actions included) */
+  engineMs: number[];
   /** total ms per engine key ('turn', 'world', 'ai', 'fov') */
   split: Record<string, number>;
 }
@@ -62,6 +64,15 @@ export interface PartyResult {
   refusals: Record<Refusal, number>;
   /** engine anomalies worth a bug report (illegal refusals, invariant breaks) */
   anomalies: string[];
+  /** players who went down, and who got back up (events `downed` / `revived`) */
+  downs: number;
+  revives: number;
+  /** revives where a teammate stood next to the down player */
+  helpedRevives: number;
+  /** players who used their second chance (fell once and got straight back up) */
+  secondChances: number;
+  /** players who fell at least once (a second chance used, or down) */
+  playersFell: number;
   timing?: PartyTiming;
 }
 
@@ -89,7 +100,7 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
   const stallSteps = opts.stallSteps ?? 400;
   const checkInv = opts.invariants ?? true;
   const refusals = Object.fromEntries(REFUSALS.map((r) => [r, 0])) as Record<Refusal, number>;
-  const timing: PartyTiming | undefined = opts.now ? { turnMs: [], split: {} } : undefined;
+  const timing: PartyTiming | undefined = opts.now ? { turnMs: [], engineMs: [], split: {} } : undefined;
   const profile = opts.now && timing ? { now: opts.now, add: (k: string, ms: number) => void (timing.split[k] = (timing.split[k] ?? 0) + ms) } : undefined;
   const res: PartyResult = {
     world: world.meta.title,
@@ -104,6 +115,11 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
     cause: '',
     refusals,
     anomalies: [],
+    downs: 0,
+    revives: 0,
+    helpedRevives: 0,
+    secondChances: 0,
+    playersFell: 0,
     ...(timing ? { timing } : {}),
   };
   let s: GameState;
@@ -124,12 +140,24 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
   // the lead's bot gets runGame's memory seed, so a party of one plays the same game as runGame
   const mems = new Map<PlayerId, BotMemory>(s.party.map((id, i) => [id, newMemory(i === 0 ? seed : seed * 31 + i)]));
   const botOf = new Map<PlayerId, Bot>(s.party.map((id, i) => [id, bots[i % bots.length]]));
+  const fell = new Set<PlayerId>();
   const tally = (r: TurnResult) => {
+    for (const e of r.events) {
+      if (e.type === 'downed') {
+        res.downs++;
+        fell.add(e.playerId);
+      }
+      else if (e.type === 'revived') {
+        res.revives++;
+        if (e.helped) res.helpedRevives++;
+      }
+    }
     for (const o of r.outcomes) {
       const m = mems.get(o.playerId);
       if (m) {
         m.lastAction = o.action;
         m.lastInvalid = o.ok ? null : (o.detail ?? 'refused');
+        m.lastReason = o.ok ? null : (o.reason ?? null);
       }
       if (o.ok || !o.reason) continue;
       refusals[o.reason]++;
@@ -140,6 +168,8 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
     res.result = r;
     res.cause = cause;
     res.turns = s.turn;
+    res.secondChances = s.party.filter((id) => s.players[id].mercyUsed).length;
+    res.playersFell = s.party.filter((id) => s.players[id].mercyUsed || fell.has(id)).length;
     res.areaReached = Math.max(res.areaReached, s.area.index);
     return res;
   };
@@ -151,6 +181,7 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
     if (s.status === 'lost') return finish('lost', s.endReason ?? 'lost');
     if (s.turn >= maxTurns) return finish('timeout', `turn cap ${maxTurns} reached in area ${s.area.index}`);
     const t0 = opts.now?.();
+    const engine0 = timing?.split.turn ?? 0;
     const kept = new Map<PlayerId, TurnInput>();
     try {
       const ready = new Set(readyPlayers(s, env));
@@ -211,7 +242,10 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
     res.partyTurns++;
     if (s.area.index > res.areaReached) res.areaReached = s.area.index;
     const ms = t0 !== undefined && opts.now ? opts.now() - t0 : undefined;
-    if (timing && ms !== undefined) timing.turnMs.push(ms);
+    if (timing && ms !== undefined) {
+      timing.turnMs.push(ms);
+      timing.engineMs.push((timing.split.turn ?? 0) - engine0);
+    }
     opts.onTurn?.({ state: s, result: r, ...(ms !== undefined ? { ms } : {}) });
     if (checkInv) {
       const err = invariantError(world, s);
@@ -241,4 +275,174 @@ function errText(e: unknown): string {
     return `${e.message}${where ? ` @ ${where}` : ''}`;
   }
   return String(e);
+}
+
+// ---------------------------------------------------------------------------
+// Summaries (tools/sim.ts --party)
+// ---------------------------------------------------------------------------
+
+export interface TimeStats {
+  /** samples (party turns) */
+  n: number;
+  mean: number;
+  p95: number;
+  max: number;
+}
+
+/** mean / 95th percentile (nearest rank) / max of a list of ms */
+export function timeStats(xs: number[]): TimeStats {
+  if (!xs.length) return { n: 0, mean: 0, p95: 0, max: 0 };
+  const sorted = [...xs].sort((a, b) => a - b);
+  const p95 = sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1)];
+  return { n: xs.length, mean: xs.reduce((a, b) => a + b, 0) / xs.length, p95, max: sorted[sorted.length - 1] };
+}
+
+export interface PartyTimingSummary {
+  /** the whole party turn: bot decisions and engine calls */
+  turn: TimeStats;
+  /** the engine's share of each party turn */
+  engine: TimeStats;
+  /** the bots' share (turn − engine) */
+  bots: TimeStats;
+  /** mean ms per party turn by engine key (turn, world, ai, fov) */
+  split: Record<string, number>;
+}
+
+export interface PartySummary {
+  partySize: number;
+  runs: number;
+  won: number;
+  lost: number;
+  stuck: number;
+  crash: number;
+  timeout: number;
+  winRate: number;
+  avgTurns: number;
+  avgPartyTurns: number;
+  downs: number;
+  revives: number;
+  helpedRevives: number;
+  secondChances: number;
+  /** share of players (over all runs) who fell at least once: a second chance used, or down */
+  fellRate: number;
+  refusals: Record<Refusal, number>;
+  /** outcome → cause → runs (won left out) */
+  causes: Record<Exclude<SimOutcome, 'won'>, Record<string, number>>;
+  /** seeds per outcome (for repros) */
+  seeds: Record<SimOutcome, number[]>;
+  /** area index → runs that ended there */
+  areaHistogram: number[];
+  anomalies: string[];
+  timing?: PartyTimingSummary;
+}
+
+/** one summary per party size, in ascending size */
+export function summarizeParty(results: PartyResult[], areaCount: number): PartySummary[] {
+  const sizes = [...new Set(results.map((r) => r.partySize))].sort((a, b) => a - b);
+  return sizes.map((n) => {
+    const list = results.filter((r) => r.partySize === n);
+    const count = (o: SimOutcome) => list.filter((r) => r.result === o).length;
+    const sum = (f: (r: PartyResult) => number) => list.reduce((a, r) => a + f(r), 0);
+    const refusals = Object.fromEntries(REFUSALS.map((k) => [k, sum((r) => r.refusals[k])])) as Record<Refusal, number>;
+    const causes = { lost: {}, stuck: {}, timeout: {}, crash: {} } as PartySummary['causes'];
+    const seeds = { won: [], lost: [], stuck: [], crash: [], timeout: [] } as Record<SimOutcome, number[]>;
+    const hist = Array.from({ length: Math.max(areaCount, 1) }, () => 0);
+    for (const r of list) {
+      seeds[r.result].push(r.seed);
+      hist[Math.min(r.areaReached, hist.length - 1)]++;
+      if (r.result === 'won') continue;
+      const c = r.result === 'crash' ? r.cause.split(' @ ')[0] : r.cause;
+      causes[r.result][c] = (causes[r.result][c] ?? 0) + 1;
+    }
+    const timed = list.filter((r) => r.timing);
+    let timing: PartyTimingSummary | undefined;
+    if (timed.length) {
+      const turn = timed.flatMap((r) => r.timing!.turnMs);
+      const engine = timed.flatMap((r) => r.timing!.engineMs);
+      const split: Record<string, number> = {};
+      for (const r of timed) for (const [k, v] of Object.entries(r.timing!.split)) split[k] = (split[k] ?? 0) + v;
+      for (const k of Object.keys(split)) split[k] /= Math.max(1, turn.length);
+      timing = { turn: timeStats(turn), engine: timeStats(engine), bots: timeStats(turn.map((t, i) => t - engine[i])), split };
+    }
+    return {
+      partySize: n,
+      runs: list.length,
+      won: count('won'),
+      lost: count('lost'),
+      stuck: count('stuck'),
+      crash: count('crash'),
+      timeout: count('timeout'),
+      winRate: list.length ? count('won') / list.length : 0,
+      avgTurns: list.length ? sum((r) => r.turns) / list.length : 0,
+      avgPartyTurns: list.length ? sum((r) => r.partyTurns) / list.length : 0,
+      downs: sum((r) => r.downs),
+      revives: sum((r) => r.revives),
+      helpedRevives: sum((r) => r.helpedRevives),
+      secondChances: sum((r) => r.secondChances),
+      fellRate: list.length ? sum((r) => r.playersFell) / sum((r) => r.partySize) : 0,
+      refusals,
+      causes,
+      seeds,
+      areaHistogram: hist,
+      anomalies: list.flatMap((r) => r.anomalies),
+      ...(timing ? { timing } : {}),
+    };
+  });
+}
+
+const pct = (x: number) => `${Math.round(x * 100)}%`;
+const ms = (t: TimeStats) => `mean ${t.mean.toFixed(1)}  p95 ${t.p95.toFixed(1)}  max ${t.max.toFixed(1)} ms`;
+
+/** a plain-text table for the CLI and reports */
+export function formatPartySummary(title: string, sums: PartySummary[]): string {
+  const lines = [`== ${title}`, 'party  runs   won  lost stuck crash  t/o  avgTurns  fell  downs  up(helped)  refusals: contested stale area-changed not-ready down ILLEGAL  areas reached (0..n)'];
+  for (const s of sums) {
+    const r = s.refusals;
+    lines.push(
+      [
+        String(s.partySize).padStart(5),
+        String(s.runs).padStart(5),
+        pct(s.winRate).padStart(5),
+        pct(s.lost / s.runs).padStart(5),
+        pct(s.stuck / s.runs).padStart(5),
+        pct(s.crash / s.runs).padStart(5),
+        pct(s.timeout / s.runs).padStart(5),
+        s.avgTurns.toFixed(0).padStart(9),
+        pct(s.fellRate).padStart(5),
+        String(s.downs).padStart(6),
+        `${s.revives}(${s.helpedRevives})`.padStart(11),
+        '          ' + [r.contested, r.stale, r['area changed'], r['not ready'], r.down, r.illegal].join(' / '),
+        '  ' + s.areaHistogram.join(' / '),
+      ].join(' '),
+    );
+  }
+  for (const s of sums) {
+    const top = (t: Record<string, number>) =>
+      Object.entries(t)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([k, v]) => `${v}× ${k}`)
+        .join('; ');
+    if (s.lost) lines.push(`  ${s.partySize}p lost: ${top(s.causes.lost)} (seeds ${s.seeds.lost.slice(0, 8).join(', ')})`);
+    if (s.stuck) lines.push(`  ${s.partySize}p stuck: ${top(s.causes.stuck)} (seeds ${s.seeds.stuck.slice(0, 8).join(', ')})`);
+    if (s.timeout) lines.push(`  ${s.partySize}p timed out: ${top(s.causes.timeout)} (seeds ${s.seeds.timeout.slice(0, 8).join(', ')})`);
+    if (s.crash) lines.push(`  ${s.partySize}p CRASH: ${top(s.causes.crash)} (seeds ${s.seeds.crash.slice(0, 8).join(', ')})`);
+    if (s.anomalies.length) lines.push(`  ${s.partySize}p anomalies:\n    ${s.anomalies.slice(0, 8).join('\n    ')}`);
+    if (s.timing) {
+      const t = s.timing;
+      lines.push(`  ${s.partySize}p party turn ${ms(t.turn)} (${t.turn.n} turns)`);
+      lines.push(`  ${s.partySize}p   engine   ${ms(t.engine)}; per turn: ${Object.entries(t.split).map(([k, v]) => `${k} ${v.toFixed(2)}`).join(', ')}`);
+      lines.push(`  ${s.partySize}p   bots     ${ms(t.bots)}`);
+    }
+  }
+  return lines.join('\n');
+}
+
+/**
+ * The bots of a party of `size`: player i plays `names[(i + offset) % names.length]`. tools/sim.ts
+ * passes the seed as offset, so over a few seeds every bot leads and every pairing is played.
+ */
+export function partyBots(names: BotName[], size: number, offset = 0): BotName[] {
+  const list = names.length ? names : (['explorer'] as BotName[]);
+  return Array.from({ length: size }, (_, i) => list[(i + offset) % list.length]);
 }

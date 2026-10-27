@@ -1,7 +1,8 @@
 # Multiplayer edition — plan
 
-Status (2026-10-26): MP0 (hosting groundwork) is in the code, see [HOSTING.md](HOSTING.md), but not
-yet deployed: its exit check (HTTPS from a phone on 4G) is still open. MP1–MP5 not started.
+Status (2026-10-27): MP0 (hosting groundwork) is in the code, see [HOSTING.md](HOSTING.md), but not
+yet deployed: its exit check (HTTPS from a phone on 4G) is still open. MP1 (engine: parties) is done
+(2026-10-27): its exit checks are met, see [MP1.md](progress/MP1.md). MP2–MP5 not started.
 Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12 (sharing, multiplayer without waiting,
 chat). Hosts: the owner's Dell laptop runs the server, reached over WireGuard; for development and
 testing the server also runs on the owner's development laptop.

@@ -63,9 +63,9 @@ describe('party scaling', () => {
 
   it.each([
     // n, rats (min·f, up to max·f with extras·f), rat hp, floor units, GM budget, actor cap
-    [2, 4, 6, 6, 13, 70],
-    [4, 6, 7, 10, 18, 90],
-    [12, 15, 13, 26, 38, 170],
+    [2, 5, 7, 6, 13, 70],
+    [4, 9, 10, 10, 18, 90],
+    [12, 24, 22, 26, 38, 170],
   ])('a party of %i: bigger map, more and tougher hostiles, more items and GM budget', (n, ratCount, ratHp, units, budget, cap) => {
     const s = game(n);
     expect(s.area.partySize).toBe(n);
@@ -80,8 +80,8 @@ describe('party scaling', () => {
 
   it('the band and the party multiply: Hard for four players', () => {
     const s = game(4, 'hard');
-    // 5 × 1.15 × 1.45
-    for (const r of rats(s)) expect(r.maxHp).toBe(8);
+    // 5 × 1.15 × 1.9
+    for (const r of rats(s)) expect(r.maxHp).toBe(11);
   });
 
   it('spawned hostiles keep 3 tiles from every player', () => {
@@ -107,8 +107,8 @@ describe('party scaling', () => {
     // a GM spawn goes through the same path
     const r = applyGmActions(s, [{ type: 'spawn', actor: 'archer', count: 1, near: 'random' }], { world: w, mapGenerator: generateArea });
     const archer = r.state.area.actors.find((a) => a.defId === 'archer')!;
-    // 8 × 1.45
-    expect(archer.maxHp).toBe(12);
+    // 8 × 1.9
+    expect(archer.maxHp).toBe(15);
   });
 
   it('a late joiner counts from the next area: the current one keeps its size', () => {
@@ -137,10 +137,10 @@ describe('party scaling', () => {
       return s.counters.kills ?? 0;
     };
     expect(killAll(1, 7)).toBe(7);
-    // f = 1.35 for two players: 7 kills count 5 (7 / 1.35 = 5.2)
-    expect(killAll(2, 7)).toBe(5);
-    // f = 2.05 for four
-    expect(killAll(4, 41)).toBe(20);
+    // f = 1.65 for two players: 7 kills count 4 (7 / 1.65 = 4.2)
+    expect(killAll(2, 7)).toBe(4);
+    // f = 2.95 for four
+    expect(killAll(4, 59)).toBe(20);
   });
 
   it('NPCs are not scaled', () => {

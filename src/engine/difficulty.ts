@@ -109,16 +109,21 @@ export const MAX_PARTY_SIZE = 12;
 /**
  * How an area grows with the party it is built for (docs/progress/MP1-DESIGN.md §6): each factor
  * k gives 1 + k·(n − 1) for n players. Applied only for n ≥ 2: a party of one skips the scaling
- * code entirely, so single-player maps, spawns and hp are unchanged. B4 tunes the numbers from bot
- * win rates.
+ * code entirely, so single-player maps, spawns and hp are unchanged.
+ *
+ * Tuned in MP1 B4 (docs/progress/MP1.md) from 2–4 player bot runs on all worlds. A party almost
+ * never loses on Normal (everyone must be down at once), so the measure is how often a player
+ * falls at least once: with hostiles ×(1 + 0.35·(n−1)) and hp ×(1 + 0.15·(n−1)) that share fell
+ * from 14 % (2 players) to 8 % (4), larger parties being safer per player; at 0.65 / 0.3 it stays
+ * about flat, 20–24 %, without longer runs.
  */
 export const PARTY_SCALING = {
   /** map area (width and height each grow by the square root) */
   mapArea: 0.15,
   /** spawn-table minimums and maximums, and the extra spawns of the area size */
-  hostileCount: 0.35,
+  hostileCount: 0.65,
   /** ordinary hostiles' hp */
-  hostileHp: 0.15,
+  hostileHp: 0.3,
   /** bosses' hp (they face the whole party's focus fire) */
   uniqueHp: 0.5,
   /** plan.itemCount (packs are personal); placed items (keys, goal items) stay single */

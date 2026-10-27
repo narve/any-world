@@ -118,7 +118,8 @@ function runTurnCore(ctx: Ctx, inputs: readonly TurnInput[], opts: TurnOptions):
       anyTurn = true;
       acted.add(pid);
       const pa = playerActorOf(ctx, pid);
-      if (pa) pa.energy -= r.cost ?? ACT_COST;
+      // (a player downed by their own action, a self-harming item, keeps the 0 energy of the down)
+      if (pa && !ps.down) pa.energy -= r.cost ?? ACT_COST;
       // busy lasts only between actions
       delete ps.busySince;
     } else if (action.type === 'choose_option' && !ps.pendingChoice) {

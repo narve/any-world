@@ -688,6 +688,29 @@ Files: `engine/sim/party.ts, bots.ts, view.ts, run.ts, index.ts`, `tools/sim.ts`
 New tests: `tests/sim/party.test.ts` extended (4 players, bots never mutate the state, `onTurn` /
 `now` hooks produce numbers), a short 12-player smoke (`tests/sim/party-12.test.ts`, capped turns).
 
+**B4 as built** (2026-10-27; numbers and limits in [MP1.md](MP1.md)):
+- `tools/sim.ts --party / --party-sizes / --timing` as specified; player *i* plays bot
+  `(i + seed) mod |bots|`. Summaries per party size add **fell** (share of players who fell at least
+  once), downs, revives (helped), refusals by reason; `--timing` reports the whole party turn, the
+  engine's share (`PartyTiming.engineMs`) and the bots' share apart. Exit code 1 also on `illegal`
+  refusals and invariant breaks.
+- Bots: goals and locks planned with `evalParty` (packs together; fixed the viking area-2 stall);
+  **addition:** hand-over of the items a goal item's use condition needs to whoever holds it (viking
+  recites the Law-Knot holding three rings: the area-3 timeouts); revive, gather at the exit; +3
+  path cost on a teammate's tile; no target give-up on `contested` / `stale`. All of it is skipped
+  in a party of one. **Single-player bot fix:** resources in a `stat gte` lose condition count as
+  danger (yellow triangle's varnish); only that world's gate numbers moved (up).
+- **Engine fix:** no action cost for a player downed by their own action (energy went below 0).
+- Tuning: `hostileCount` 0.65, `hostileHp` 0.3 (from 0.35 / 0.15): the share of players who fall
+  stays about 20–24 % for 2–4 players instead of falling with party size. Win rate is no target on
+  Normal (≈100 %).
+- The p95 < 20 ms budget is read as the engine's time per party turn (what the server and clients
+  run); the bots' decision time is reported apart.
+- Tests: `tests/sim/party.test.ts` (4 players, bots never mutate the state, engine share of the
+  timing, summaries), `tests/sim/party-bots.test.ts` (objectives, revive, hand-over, gather),
+  `tests/sim/party-12.test.ts` (12-bot smoke, 150 rounds), `party-fall` (self-downed energy),
+  `party-scaling` numbers updated.
+
 ## Review notes (2026-10-26)
 
 Three reviews (rules, engine, risk). Accepted unless stated:

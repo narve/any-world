@@ -7,11 +7,12 @@
  */
 import type { Amount, Condition, Effect, ItemDef, WorldSpec } from '../../schema/world';
 import type { ActorInstance, GameState, PlayerId, Pos } from '../types';
-import { type Ctx, indexWorld, leadOf, me, passable } from '../ctx';
+import { type Ctx, indexWorld, leadOf, me, passable, playerActorOf } from '../ctx';
 import { rngFromState } from '../rng';
 import { generateArea } from '../mapgen/index';
 import { computeLegalActions } from '../legal';
-import { evalCondition } from '../conditions';
+import { evalCondition, evalParty } from '../conditions';
+import { countItem } from '../inventory';
 import { getStat, maxHp, side } from '../stats';
 import { isVisibleToPlayer } from '../effects';
 import { PLAYER_HIT_CHANCE } from '../combat';
@@ -297,14 +298,42 @@ export function hazardCost(ctx: Ctx, i: number): number {
   for (const e of td.onStand) {
     if (e.type === 'damage') c += HAZARD_COST;
     else if (e.type === 'apply_status' && ctx.ix.statuses.get(e.status)?.harmful) c += HAZARD_COST / 2;
-    else if (e.type === 'resource' && avgAmount(e.amount) < 0) c += 2;
+    else if (e.type === 'resource' && (avgAmount(e.amount) < 0) !== loseResources(ctx.world).has(e.resource)) c += 2;
   }
   return c;
 }
 
+const loseResourceCache = new WeakMap<WorldSpec, Map<string, number>>();
+
+/**
+ * Resources that lose the run as they rise (goal.lose has `stat <resource> gte|gt N`, like a
+ * varnish that creeps up), with the threshold: terrain that adds to them is a hazard, not a refill.
+ */
+export function loseResources(world: WorldSpec): Map<string, number> {
+  const hit = loseResourceCache.get(world);
+  if (hit) return hit;
+  const ids = new Set((world.resources ?? []).map((r) => r.id));
+  const out = new Map<string, number>();
+  const walk = (c: Condition | undefined, depth = 0): void => {
+    if (!c || depth > 16) return;
+    if (c.type === 'all' || c.type === 'any') c.of.forEach((x) => walk(x, depth + 1));
+    else if (c.type === 'stat' && (c.cmp === 'gte' || c.cmp === 'gt') && ids.has(c.stat)) out.set(c.stat, c.value);
+  };
+  walk(world.goal.lose);
+  loseResourceCache.set(world, out);
+  return out;
+}
+
+/**
+ * Extra path cost of a tile a standing teammate stands on: stepping there swaps places, which
+ * moves the teammate off their own path (their planned action then comes too late, `stale`), so
+ * bots walk around each other where a way around is about as short.
+ */
+const TEAMMATE_COST = 3;
+
 /**
  * Dijkstra from the player over remembered walkable tiles (8-way). Actors don't block (bumping a
- * hostile attacks it, bumping an NPC talks or swaps).
+ * hostile attacks it, bumping an NPC talks or swaps; in a party, teammates cost TEAMMATE_COST).
  */
 export function pathField(ctx: Ctx, opts: PathOpts = {}): PathField {
   const map = ctx.s.area.map;
@@ -316,6 +345,12 @@ export function pathField(ctx: Ctx, opts: PathOpts = {}): PathField {
   const p = player(ctx);
   const start = p.pos.y * W + p.pos.x;
   dist[start] = 0;
+  const mates = new Set<number>();
+  if (ctx.s.party.length > 1)
+    for (const id of ctx.s.party) {
+      const a = id === ctx.pid || ctx.s.players[id].down ? undefined : playerActorOf(ctx, id);
+      if (a) mates.add(a.pos.y * W + a.pos.x);
+    }
   // binary heap of [cost, index]
   const heapC: number[] = [0];
   const heapI: number[] = [start];
@@ -368,7 +403,7 @@ export function pathField(ctx: Ctx, opts: PathOpts = {}): PathField {
         const j = ny * W + nx;
         if (!opts.throughUnseen && seen[j] === 0) continue;
         if (!passable(ctx, nx, ny)) continue;
-        const nc = c + 1 + hazardCost(ctx, j) + (opts.extraCost ? opts.extraCost(j) : 0);
+        const nc = c + 1 + hazardCost(ctx, j) + (opts.extraCost ? opts.extraCost(j) : 0) + (mates.has(j) ? TEAMMATE_COST : 0);
         if (nc < dist[j]) {
           dist[j] = nc;
           prev[j] = i;
@@ -423,10 +458,10 @@ export function frontierTiles(ctx: Ctx): number[] {
   return out;
 }
 
-/** tiles the lead player has seen in this area */
-export function seenCount(state: GameState): number {
+/** tiles a player (default: the lead) has seen in this area */
+export function seenCount(state: GameState, playerId?: PlayerId): number {
   let n = 0;
-  const seen = leadOf(state).seen;
+  const seen = (playerId ? state.players[playerId] : leadOf(state)).seen;
   for (let i = 0; i < seen.length; i++) if (seen[i]) n++;
   return n;
 }
@@ -446,11 +481,13 @@ export type Objective =
 /**
  * Unmet objectives of a condition. For `any`, the branch with the fewest unmet objectives that
  * doesn't need a later area wins; `not`, stat, chance and the like contribute nothing plannable.
+ * In a party the condition is checked as the engine checks goals and locks (evalParty: the packs
+ * count together), so a bot never hunts for an item a teammate already carries.
  */
 export function unmetObjectives(ctx: Ctx, c: Condition | undefined, depth = 0): Objective[] {
   if (!c || depth > 16) return [];
   const p = player(ctx);
-  if (evalConditionSafe(ctx, c, p)) return [];
+  if (ctx.s.party.length > 1 ? evalPartySafe(ctx, c) : evalConditionSafe(ctx, c, p)) return [];
   switch (c.type) {
     case 'all':
       return c.of.flatMap((x) => unmetObjectives(ctx, x, depth + 1));
@@ -507,6 +544,21 @@ export function evalConditionSafe(ctx: Ctx, c: Condition, self: ActorInstance): 
   }
 }
 
+/** evalParty('win') without throwing (the bot context's rng is a private copy) */
+export function evalPartySafe(ctx: Ctx, c: Condition): boolean {
+  try {
+    return evalParty(ctx, c, 'win');
+  } catch {
+    return false;
+  }
+}
+
+/** how many of an item the bot's player carries (in a party: the whole party's packs) */
+export function packCount(ctx: Ctx, defId: string): number {
+  if (ctx.s.party.length <= 1) return countItem(me(ctx), defId);
+  return ctx.s.party.reduce((n, id) => n + countItem(ctx.s.players[id], defId), 0);
+}
+
 /** item ids the player wants to hold right now (goal + transition lock) */
 export function wantedItems(objs: Objective[]): Set<string> {
   return new Set(objs.filter((o): o is Extract<Objective, { kind: 'item' }> => o.kind === 'item').map((o) => o.item));
@@ -524,7 +576,7 @@ export function wantedDefeats(objs: Objective[]): Set<string> {
 export function lootCarriers(ctx: Ctx, wantItems: Set<string>): Set<string> {
   const out = new Set<string>();
   if (!wantItems.size) return out;
-  const missing = [...wantItems].filter((id) => !ctx.s.area.items.some((fi) => fi.item.defId === id) && !me(ctx).slots.some((it) => it?.defId === id));
+  const missing = [...wantItems].filter((id) => !ctx.s.area.items.some((fi) => fi.item.defId === id) && !packCount(ctx, id));
   if (!missing.length) return out;
   for (const a of ctx.s.area.actors) {
     if (a.hp <= 0 || a.id === me(ctx).actorId || side(ctx, a) !== 'H') continue;
