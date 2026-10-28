@@ -26,6 +26,8 @@ export interface RoomTiming {
   helloTimeoutMs: number;
   /** `clock` messages are sent at most this often */
   clockThrottleMs: number;
+  /** tests only: replaces every room's deadline option (whose protocol bounds stay 1000–5000 ms); 0 = off */
+  deadlineMs: number;
 }
 
 export const DEFAULT_TIMING: RoomTiming = {
@@ -39,6 +41,7 @@ export const DEFAULT_TIMING: RoomTiming = {
   idleSweepMs: 60_000,
   helloTimeoutMs: 5000,
   clockThrottleMs: 200,
+  deadlineMs: 0,
 };
 
 /** the defaults with some durations replaced (unknown keys and non-positive numbers are ignored) */

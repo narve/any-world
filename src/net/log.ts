@@ -5,7 +5,7 @@
  * is data: GM entries carry the director's actions, so nobody but the server runs the director.
  */
 import type { WorldSpec } from '../schema/world';
-import type { GameEvent, GameState } from '../engine/types';
+import type { GameEvent, GameState, TurnOutcome } from '../engine/types';
 import { addPlayer, applyGmActions, leaveMap, returnToMap, setAway, stepTurn } from '../engine/index';
 import type { LogEntry } from './protocol';
 
@@ -14,6 +14,8 @@ export type { LogEntry, LogEntryBody, LogEntryKind } from './protocol';
 export interface Applied {
   state: GameState;
   events: GameEvent[];
+  /** a turn entry's action outcomes (refusals included); empty for the other kinds */
+  outcomes: TurnOutcome[];
 }
 
 /**
@@ -32,29 +34,29 @@ export function applyEntry(world: WorldSpec, state: GameState, e: LogEntry): App
   switch (e.k) {
     case 'turn': {
       const r = stepTurn(state, e.inputs, { ...env, advance: e.advance });
-      return { state: r.state, events: r.events };
+      return { state: r.state, events: r.events, outcomes: r.outcomes };
     }
     case 'gm': {
       const r = applyGmActions(state, e.actions, env);
-      return { state: r.state, events: r.events };
+      return { state: r.state, events: r.events, outcomes: [] };
     }
     case 'join': {
       const r = addPlayer(state, { name: e.name, near: e.near }, env);
       if (r.playerId !== e.pid) throw new Error(`join entry ${e.n}: the engine made ${r.playerId}, the entry says ${e.pid}`);
-      return { state: r.state, events: [] };
+      return { state: r.state, events: [], outcomes: [] };
     }
     case 'away':
     case 'back': {
       const r = setAway(state, e.pid, e.k === 'away', env);
-      return { state: r.state, events: r.events };
+      return { state: r.state, events: r.events, outcomes: [] };
     }
     case 'leave': {
       const r = leaveMap(state, e.pid, env);
-      return { state: r.state, events: r.events };
+      return { state: r.state, events: r.events, outcomes: [] };
     }
     case 'return': {
       const r = returnToMap(state, e.pid, { near: e.near }, env);
-      return { state: r.state, events: r.events };
+      return { state: r.state, events: r.events, outcomes: [] };
     }
   }
 }

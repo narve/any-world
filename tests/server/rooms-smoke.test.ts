@@ -6,15 +6,14 @@
  * shutdown (snapshot + bye) on SIGTERM, and the refusal to start without a usable data directory.
  */
 import { describe, it, expect, afterEach } from 'vitest';
-import { spawn, type ChildProcess } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { hashState } from '../../src/engine/index';
 import type { RoomClient } from '../../src/net/client';
 import { PLAYER_COLOURS } from '../../src/net/protocol';
-import { REPO_ROOT } from '../../server/engine-version';
-import { boot, createDemoRoom, hello, openRaw, postJson, until, wsClient, type Booted } from './rooms-helpers';
+import { boot, createDemoRoom, exited, hello, openRaw, postJson, spawnServer as spawnChild, until, wsClient, type Booted } from './rooms-helpers';
 
 let b: Booted | undefined;
 const clients: RoomClient[] = [];
@@ -82,35 +81,8 @@ describe('rooms: smoke over a real socket', () => {
   });
 });
 
-/** the server entry point as a child process (tsx), resolved with its port once it prints `listening` */
-function spawnServer(env: Record<string, string>): Promise<{ port: number; out: string[] }> {
-  const tsx = resolve(REPO_ROOT, 'node_modules/.bin/tsx');
-  const env2: Record<string, string | undefined> = { ...process.env, PORT: '0', HOST: '127.0.0.1', ...env };
-  delete env2.NODE_ENV;
-  delete env2.STATE_DIRECTORY;
-  const p = spawn(tsx, ['server/index.ts'], { cwd: REPO_ROOT, env: env2 as NodeJS.ProcessEnv, stdio: ['ignore', 'pipe', 'pipe'] });
-  child = p;
-  const out: string[] = [];
-  return new Promise((res, rej) => {
-    const timer = setTimeout(() => rej(new Error(`no listening line: ${out.join('')}`)), 20_000);
-    const onData = (d: Buffer) => {
-      out.push(d.toString());
-      const m = /\[server\] listening (\d+)/.exec(out.join(''));
-      if (m) {
-        clearTimeout(timer);
-        res({ port: Number(m[1]), out });
-      }
-    };
-    p.stdout!.on('data', onData);
-    p.stderr!.on('data', (d: Buffer) => out.push(d.toString()));
-    p.on('exit', (code) => {
-      clearTimeout(timer);
-      rej(Object.assign(new Error(`exited ${code}: ${out.join('')}`), { code, out: out.join('') }));
-    });
-  });
-}
-
-const exited = (p: ChildProcess) => new Promise<number | null>((r) => (p.exitCode !== null ? r(p.exitCode) : p.once('exit', (c) => r(c))));
+/** the server entry point as a child process, tracked for afterEach */
+const spawnServer = (env: Record<string, string>) => spawnChild(env, (p) => (child = p));
 
 describe('rooms: the server process', () => {
   it('prints listening <port>, honours the test knobs, and on SIGTERM snapshots and sends bye', async () => {

@@ -15,7 +15,7 @@
  * Imports only the engine, the schema and the protocol (no DOM, no node: modules).
  */
 import { deserialize, hashState, registerWorld, worldIdOf } from '../engine/index';
-import type { GameEvent, GameState, PlayerAction, PlayerId } from '../engine/types';
+import type { GameEvent, GameState, PlayerAction, PlayerId, TurnOutcome } from '../engine/types';
 import { parseWorld } from '../schema';
 import type { WorldSpec } from '../schema/world';
 import { applyEntry, changedArea } from './log';
@@ -81,8 +81,8 @@ export type RoomClientStatus = 'connecting' | 'joined' | 'reconnecting' | 'stopp
 export type RoomEvent =
   /** joined (also after every reconnect); the replica is ready when the room is playing */
   | { t: 'welcome'; msg: Welcome }
-  /** entries applied to the replica, with the engine events they produced */
-  | { t: 'entries'; entries: LogEntry[]; events: GameEvent[] }
+  /** entries applied to the replica, with the engine events and action outcomes they produced */
+  | { t: 'entries'; entries: LogEntry[]; events: GameEvent[]; outcomes: TurnOutcome[] }
   /** the replica was replaced: a desync snapshot, a new run, or a welcome snapshot */
   | { t: 'state'; reason: 'welcome' | 'snapshot' | 'run' }
   /** refused or closed by the server: the toast to show (MP3); the client has stopped */
@@ -360,6 +360,7 @@ export class RoomClient {
   private applyAll(es: LogEntry[]): void {
     const applied: LogEntry[] = [];
     const events: GameEvent[] = [];
+    const outcomes: TurnOutcome[] = [];
     for (const e of es) {
       if (e.run !== this.run || e.n < this.n) continue;
       if (e.n > this.n) {
@@ -372,6 +373,7 @@ export class RoomClient {
         const r = applyEntry(this.world!, before, e);
         after = r.state;
         events.push(...r.events);
+        outcomes.push(...r.outcomes);
       } catch (err) {
         this.resync('apply', err instanceof Error ? err.message : String(err));
         break;
@@ -382,7 +384,7 @@ export class RoomClient {
       if (changedArea(before, after)) this.sendRaw({ t: 'applied', n: this.n });
       if (this.n % LIMITS.hashEvery === 0) this.sendRaw({ t: 'hash', n: this.n, h: hashState(after) });
     }
-    if (applied.length) this.emit({ t: 'entries', entries: applied, events });
+    if (applied.length) this.emit({ t: 'entries', entries: applied, events, outcomes });
   }
 
   /** the replica is wrong: reconnect and ask for a snapshot */

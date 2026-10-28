@@ -24,7 +24,7 @@ import {
   worldIdOf,
 } from '../../src/engine/index';
 import { FREE_ACTIONS } from '../../src/engine/party';
-import type { GameState, PlayerAction, PlayerId, TurnInput } from '../../src/engine/types';
+import type { GameState, PlayerAction, PlayerId, TurnInput, TurnOutcome } from '../../src/engine/types';
 import { parseWorld } from '../../src/schema';
 import type { WorldSpec } from '../../src/schema/world';
 import { gmHooksFor, newHookTracker, OfflineGmDirector, sanitizeResponse, type GmHookEvent, type GmTranslate, type HookTracker, type OfflineGmKey } from '../../src/gm/offline';
@@ -71,6 +71,8 @@ export const SNAPSHOT_EVERY = 100;
 export const RING_SIZE = 512;
 /** server hashes kept (one per LIMITS.hashEvery entries) */
 export const HASH_RING = 64;
+/** 'illegal' outcomes a minute per player above which the room logs a line (design §9) */
+export const ILLEGAL_LOG_PER_MIN = 20;
 /** the GM's weirdness in rooms (the offline director does not read it) */
 const ROOM_WEIRDNESS = 0.5;
 
@@ -204,6 +206,8 @@ export class Room {
   private lastClockAt = -Infinity;
   private clockDue: number | null = null;
   private evaluating = false;
+  /** 'illegal' outcomes per player in the current minute (design §9: a log line above ILLEGAL_LOG_PER_MIN) */
+  private illegal = new Map<PlayerId, { since: number; count: number }>();
 
   private constructor(
     code: string,
@@ -805,11 +809,23 @@ export class Room {
     this.record(e, r.state);
     this.deps.store?.append(this.code, { e });
     this.broadcast({ t: 'entries', run: this.run, es: [e] });
+    if (e.k === 'turn') this.countIllegal(r.outcomes);
     let hooks: GmHookEvent[] = [];
     if (e.k === 'turn') hooks = gmHooksFor(this.world.world, before, r.state, r.events, this.tracker);
     this.settle(before, r.state);
     if (hooks.length) this.askGm(hooks);
     return { ...r, before };
+  }
+
+  /** a client whose actions keep coming back 'illegal' is out of step with the engine (or a bad bot): one log line a minute */
+  private countIllegal(outcomes: readonly TurnOutcome[]): void {
+    const now = this.deps.scheduler.now();
+    for (const o of outcomes) {
+      if (o.ok || o.reason !== 'illegal') continue;
+      let c = this.illegal.get(o.playerId);
+      if (!c || now - c.since >= 60_000) this.illegal.set(o.playerId, (c = { since: now, count: 0 }));
+      if (++c.count === ILLEGAL_LOG_PER_MIN + 1) this.log(`${o.playerId}: more than ${ILLEGAL_LOG_PER_MIN} illegal actions in a minute (last ${JSON.stringify(o.action)}: ${o.detail ?? ''})`);
+    }
   }
 
   /** a turn entry; a no-op with refused actions sends the actor(s) a `refusal` */
@@ -913,7 +929,7 @@ export class Room {
       pending,
       firstAt: this.firstAt,
       lastResolveAt: this.lastResolveAt,
-      deadlineMs: this.options.deadlineMs,
+      deadlineMs: t.deadlineMs || this.options.deadlineMs,
       travelMs: t.travelMs,
       countdownTurnMs: t.countdownTurnMs,
       countdown: !!state.area.exitCountdown,

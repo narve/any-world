@@ -16,8 +16,8 @@ import { PLAYER_COLOURS, type LogEntry, type ServerMsg } from '../../src/net/pro
 import { applyEntry } from '../../src/net/log';
 import { deserialize } from '../../src/engine';
 import { RoomManager } from '../../server/rooms/manager';
-import { EXIT_COUNTDOWN_TURNS, type Conn, type Room } from '../../server/rooms/room';
-import { DEFAULT_TIMING, ManualScheduler } from '../../server/rooms/timing';
+import { EXIT_COUNTDOWN_TURNS, ILLEGAL_LOG_PER_MIN, type Conn, type Room } from '../../server/rooms/room';
+import { DEFAULT_TIMING, ManualScheduler, type RoomTiming } from '../../server/rooms/timing';
 
 let dir: string;
 beforeEach(() => {
@@ -58,11 +58,11 @@ interface Setup {
 }
 
 /** a room with `n` connected players (the first is the host); started unless `lobby` */
-function setup(n: number, opts: { lobby?: boolean; maxPlayers?: number } = {}): Setup {
+function setup(n: number, opts: { lobby?: boolean; maxPlayers?: number; timing?: Partial<RoomTiming> } = {}): Setup {
   const sch = new ManualScheduler();
   const log: string[] = [];
   let seed = 7;
-  const m = new RoomManager({ dir, engineVersion: 'v1', scheduler: sch, log: (l) => log.push(l), seed: () => ++seed });
+  const m = new RoomManager({ dir, engineVersion: 'v1', scheduler: sch, log: (l) => log.push(l), seed: () => ++seed, ...(opts.timing ? { timing: opts.timing } : {}) });
   const created = m.create({ demo: 'fixture-western', options: opts.maxPlayers ? { maxPlayers: opts.maxPlayers } : {} });
   if (!created.ok) throw new Error(created.error);
   const conns: FakeConn[] = [];
@@ -200,6 +200,23 @@ describe('turns', () => {
     act(room, conns[0], { type: 'wait' });
     expect(room.n).toBe(n1 + 1);
     expect(conns[0].last('roster')!.seats.find((r) => r.seat === 's2')!.presence).toBe('idle');
+  });
+
+  it('takes the test deadline from the timing, and logs a player whose actions keep coming back illegal', () => {
+    const { sch, room, conns, log } = setup(2, { timing: { deadlineMs: 300 } });
+    expect(room.options.deadlineMs).toBe(2000);
+    expect(room.clockView().deadlineMs).toBe(300);
+    act(room, conns[0], { type: 'wait' });
+    const n0 = room.n;
+    sch.advanceBy(300);
+    expect(room.n).toBe(n0 + 1);
+    // an empty slot is 'illegal' (or 'stale' when p2 moved first); p2's wait makes each turn a real entry
+    for (let i = 0; i < 3 * ILLEGAL_LOG_PER_MIN; i++) {
+      act(room, conns[0], { type: 'unequip', slot: 27 });
+      act(room, conns[1], { type: 'wait' });
+    }
+    expect(turns(room).at(-1)!.inputs[0]).toMatchObject({ playerId: 'p1', actions: [{ type: 'unequip', slot: 27 }] });
+    expect(log.filter((l) => l.includes('illegal actions in a minute'))).toHaveLength(1);
   });
 
   it('travel intents resolve at the travel cadence; nothing pending means the world does not move', () => {

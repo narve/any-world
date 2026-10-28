@@ -780,6 +780,58 @@ passing, the golden replay unchanged, and a commit on `multi`.
   `tests/server/rooms-helpers.ts` (`boot`, `openRaw`, `upgradeStatus`, `wsClient`, `until`), usable by
   C5. Not done: the design §9 log line for > 20 `illegal` outcomes per minute per seat (C5 may add it).
 
+### C5 as built
+
+- **`tools/rooms/scripted-client.ts`**: `ScriptedClient(opts)` wraps a `RoomClient` (`client`) with
+  `wsFactory(origin)`; `connect()`, `play(entries)`, `playUntil(done)` (the bot keeps playing until
+  `pause()`), `drop({ stay? })` (`stay`: the socket closes and stays off until `reconnect()`; else
+  `RoomClient.drop()` and it reconnects), `close()`. It records `entries` (contiguous from n = 0 unless a
+  snapshot came: `snapshots`), `runStart` (the replica at the `run` message, for replay checks),
+  `refusals`, `errors`, `notices`, `faults`, `sent`, `said`. The bot: one turn action per ready turn
+  (`readyPlayers` on the replica, intent `decide`), free actions one at a time, each after its entry
+  arrived (at most `MAX_FREE_PER_TURN`, then `wait`), bot memory fed from the turn outcomes; a watchdog
+  re-decides after `retryMs` without a new entry (a lost input, or a stale / refused one). The chat
+  script sends `typing` then a line `typingMs` later, about every `chatEvery` entries, at most one a
+  1.1 s. `FaultyChannel({ delayMs, stallEvery, stallMs, closeEvery, dropInputs, seed })` wraps the
+  socket factory: per-socket ordered delay queues both ways, stalls on the incoming side, a random
+  close calls `RoomClient.drop()` after the frame it follows, and only `input` frames are lost;
+  `stats` counts frames, stalls, closes and lost inputs. Seeded with `rng(seed)` (mulberry32).
+- **`tools/room-bots.ts --url … [--room CODE] [--bots 4] [--bot list] [--entries 150] [--chat-every 25]
+  [--origin] [--engine] [--timeout 300]`**: creates a demo room (the first bot is host and starts) or
+  joins one as guests, plays, waits for every client at one n and prints `[room-bots] ok room <code>
+  n=<n> … hash=<h>` (exit 0) or exits 1 when they disagree, on a refusal or the timeout. The engine
+  version is `computeEngineVersion()` of the checkout unless `--engine`.
+- **Additions outside the step's files** (small, needed by the checks):
+  - `Applied.outcomes` in `src/net/log.ts` (a turn entry's `TurnOutcome[]`, empty for other kinds) and
+    `outcomes` on RoomClient's `entries` event, so a client knows its refused actions (bots, and MP3's
+    UI). This changed the engine version hash, as any `src/net/log.ts` edit does.
+  - `RoomTiming.deadlineMs` (default 0 = off; tests only, through `startServer({ rooms: { timing } })`
+    or `ANYWORLD_TEST_TIMING`): replaces every room's deadline in the clock view, so socket tests run
+    with 300 ms while the protocol bounds stay 1000–5000 ms. Ignored in production like the other knob.
+  - The design §9 log line: a room logs `pN: more than 20 illegal actions in a minute` once per
+    player per minute (`ILLEGAL_LOG_PER_MIN`), counted over appended turn entries.
+  - `tests/server/rooms-helpers.ts`: `spawnTs` (node with `--import tsx` in one process: the `tsx`
+    binary runs the program in a second process and cannot pass SIGKILL on, which left servers
+    behind), `spawnServer(env, onSpawn)` (also removes `ALLOWED_ORIGINS`), `freePort`, `exited`,
+    `killChild`. `rooms-smoke.test.ts` uses them now.
+- **Tests**: `tests/server/rooms-exit.test.ts` (7, ~40 s; the file's tests run in order, `timeout`
+  240 s): play (4 bots, ≥ 150 entries and on to the second area, chat every 25, hashes and chat equal
+  the server's, no snapshots, busy entries from typing, GM `intro` and `area_enter`), restart (SIGKILL
+  a child on a fixed port, the files replay to the clients' entries and to an uninterrupted replay from
+  `runStart`, the restarted child on the same port and dir: reconnect with tokens, same pids, caught up
+  by entries with only `away` / `back` after the replayed n, 50 more entries, SIGTERM snapshot equals
+  the clients' hash), version (`v-one` → `v-two`: files gone, `/api/rooms` empty, open pages refused
+  `net.outdated` with reload, a reloaded page with the old token gets `room_closed / server_updated` →
+  `net.serverUpdated`), outdated (raw hello and an otherwise invalid hello → `outdated, reload` and
+  4001, RoomClient rejects with `net.outdated`, POST from a listed origin → 409), reconnect (roster
+  `off`, `away` entry, ≥ 30 entries without it, no hostile `targetId` on it and no attack from the
+  second turn on, same pid and a `back` entry on return, no snapshot), faults (4 bots with delay
+  20–250 ms, stalls, random closes, 5 % lost inputs, ≥ 100 entries: every client on the server hash;
+  lost inputs, stalls and closes all happened; a typical run had 0 snapshots), bots (`room-bots.ts` as
+  a child against a child server with the computed version). `tests/server/scripted-client.test.ts`
+  (FaultyChannel order, stalls, lost inputs only, dropper; seeded rng); `rooms-room` +1 (the deadline
+  override and the illegal log line).
+
 ## Constants
 
 | Name | Value | Where |

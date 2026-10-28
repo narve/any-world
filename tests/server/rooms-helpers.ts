@@ -2,10 +2,13 @@
  * Shared helpers for the socket-level room tests: a server with rooms on port 0 and a temp data dir,
  * raw ws clients that record what they get, and a RoomClient over `ws`.
  */
+import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
+import { createServer as createNetServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import WebSocket from 'ws';
+import { REPO_ROOT } from '../../server/engine-version';
 import { startServer, type StartedServer } from '../../server/index';
 import type { RoomLimits } from '../../server/rooms/limits';
 import type { RoomTiming } from '../../server/rooms/timing';
@@ -164,4 +167,74 @@ export async function until(cond: () => boolean, ms = 3000, what = 'condition'):
     if (Date.now() > end) throw new Error(`timed out waiting for ${what}`);
     await sleep(10);
   }
+}
+
+/** a port that was free a moment ago (a restarted child server binds the same one, so clients reconnect) */
+export function freePort(): Promise<number> {
+  return new Promise((res, rej) => {
+    const srv = createNetServer();
+    srv.once('error', rej);
+    srv.listen(0, '127.0.0.1', () => {
+      const a = srv.address();
+      const port = typeof a === 'object' && a ? a.port : 0;
+      srv.close(() => res(port));
+    });
+  });
+}
+
+export interface Spawned {
+  proc: ChildProcess;
+  port: number;
+  out: string[];
+}
+
+/**
+ * A TypeScript entry point run by node with the tsx loader in one process, so its PID is the program's
+ * (the tsx binary runs the program in a second process and cannot pass SIGKILL on, leaving it behind).
+ */
+export function spawnTs(args: string[], env: NodeJS.ProcessEnv): ChildProcess {
+  return spawn(process.execPath, ['--import', 'tsx', ...args], { cwd: REPO_ROOT, env, stdio: ['ignore', 'pipe', 'pipe'] });
+}
+
+/**
+ * The server entry point as a child process (server/index.ts, PORT=0 unless given), resolved once
+ * it prints `listening <port>`; rejects with the exit code when it exits first. NODE_ENV,
+ * STATE_DIRECTORY and ALLOWED_ORIGINS are removed from the environment it gets. `onSpawn` receives
+ * the process at once, so a test can kill it by PID in afterEach even when the start fails.
+ */
+export function spawnServer(env: Record<string, string>, onSpawn: (p: ChildProcess) => void): Promise<Spawned> {
+  const env2: Record<string, string | undefined> = { ...process.env, PORT: '0', HOST: '127.0.0.1', ...env };
+  delete env2.NODE_ENV;
+  delete env2.STATE_DIRECTORY;
+  delete env2.ALLOWED_ORIGINS;
+  const p = spawnTs(['server/index.ts'], env2 as NodeJS.ProcessEnv);
+  onSpawn(p);
+  const out: string[] = [];
+  return new Promise((res, rej) => {
+    const timer = setTimeout(() => rej(new Error(`no listening line: ${out.join('')}`)), 20_000);
+    p.stdout!.on('data', (d: Buffer) => {
+      out.push(d.toString());
+      const m = /\[server\] listening (\d+)/.exec(out.join(''));
+      if (m) {
+        clearTimeout(timer);
+        res({ proc: p, port: Number(m[1]), out });
+      }
+    });
+    p.stderr!.on('data', (d: Buffer) => out.push(d.toString()));
+    p.on('exit', (code) => {
+      clearTimeout(timer);
+      rej(Object.assign(new Error(`exited ${code}: ${out.join('')}`), { code, out: out.join('') }));
+    });
+  });
+}
+
+/** resolves with the exit code once the process has exited */
+export const exited = (p: ChildProcess) => new Promise<number | null>((r) => (p.exitCode !== null || p.signalCode !== null ? r(p.exitCode) : p.once('exit', (c) => r(c))));
+
+/** kills a child by PID if it still runs, and waits for it to exit */
+export async function killChild(p: ChildProcess | undefined, signal: NodeJS.Signals = 'SIGKILL'): Promise<void> {
+  if (!p || p.exitCode !== null || p.signalCode !== null || !p.pid) return;
+  const done = exited(p);
+  process.kill(p.pid, signal);
+  await done;
 }

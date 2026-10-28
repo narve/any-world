@@ -123,3 +123,6 @@ The server also runs the multiplayer rooms (WebSocket on `/api/ws`, HTTP on `/ap
   the room durations; both are for the tests and ignored when `NODE_ENV=production`.
 - **Graceful restart.** On SIGTERM (`systemctl restart`) every room saves a snapshot and tells its
   players to reconnect.
+- **Trying a server with bots.** `npx tsx tools/room-bots.ts --url https://any-game.dv8.no --origin
+  https://any.dv8.no --bots 4` creates a demo room and plays it with scripted clients (the engine
+  version of the checkout must match the server's); `--room CODE` joins an existing room as guests.
