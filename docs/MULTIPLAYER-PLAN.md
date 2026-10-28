@@ -59,9 +59,16 @@ browser (each player)                         home laptop (Node 22, systemd)
 - **Desync guard:** clients send a state hash every 10 turns. On a mismatch the server sends a full
   snapshot. Fog of war is a client view (cheating is possible but harmless in co-op).
 - **Engine version:** a hash of the engine source (`src/engine`, `src/schema`) baked in at build time, so
-  any engine change counts as a new version; no hand-kept number to forget.
+  any engine change counts as a new version; no hand-kept number to forget. Both sides carry it: the
+  pages (GitHub Pages) and the server (the Dell) are deployed separately, and every browser runs its own
+  copy of the engine, so a client sends its version when it joins and the server refuses a mismatch with
+  a short "a new version is out, reload the page" toast.
+- **Protocol:** one message schema shared by client and server (zod, like the rest of the code), validated
+  on both sides; invalid or unknown messages are dropped and counted.
 - **Persistence:** each room's world, seed, engine version, a snapshot and the input log since it, in
-  `/var/lib/anyworld/rooms/<id>.json` (the systemd unit's `StateDirectory`). A restart replays the log;
+  `<ANYWORLD_DATA_DIR>/rooms/<id>.json`. `ANYWORLD_DATA_DIR` defaults to `/var/lib/anyworld` (the systemd
+  unit's `StateDirectory`); on the development laptop it points at a gitignored folder in the repo. The
+  server creates the directory at start-up and refuses to start if it cannot. A restart replays the log;
   players reconnect with a token kept in their browser. **After a deploy that changes the engine
   version**, old rooms are closed with a short toast ("the server was updated; start a new room"); no
   replay across versions.
@@ -115,7 +122,7 @@ Plan: design and test for 8; allow up to 12 as an option, tested with bots and a
 |---|---|---|---|
 | MP0 | Hosting groundwork (useful for single player too) | done in code: `systemd` unit and env file, `scripts/deploy.sh`, `/api/health`, **host access code** (`ANYWORLD_HOST_CODE`), split hosting (`ALLOWED_ORIGINS` on the server, `ANYWORLD_SERVER_URL` at build time), Node.js version guard | **open:** the single-player game runs on the laptop, reachable over HTTPS from a phone on 4G |
 | MP1 | Engine: parties | `GameState.players` (map) instead of `player`, per-player inventory, knowledge, levelling, statuses, FOV and remembered rooms, second chance (`mercyUsed`) and `pendingChoice` (dialogue, trade, offers; today one shared field used in ~65 places); `stepTurn(state, inputs[])` with a fixed resolution order; enemy AI picks among players and skips busy ones (§2.1); party-loss rule; exit countdown; hostile strength and map size scaled by party size; single player = a party of one, and all current tests still pass. Size: about 120 `state.player` uses in 24 engine files plus 53 `playerActor(ctx)` calls | engine tests; **multi-player bots** (the sim bots drive one player today) playing 2–4 player runs over all 21 worlds with 0 crashes and no soft-locks, plus at least one full run with the maximum party (12 bots) on one world, with 0 crashes, no soft-locks and turn times reported |
-| MP2 | Room server | WebSocket on the existing `node:http` server (`ws` package, not yet a dependency; `Origin` checked against `ALLOWED_ORIGINS`); rooms and the public room list (`GET /api/rooms`); roster (names, colours, the player id each connection plays) and reconnect tokens; leaving and disconnects (§6); turn pacing: deadline, active/busy players, travel cadence, ~1 s turns during an exit countdown, area entry not counted (§2.1); input validation and message size limits; input log, snapshots and replay; engine-version check; desync hashes (`hashState`); world upload and validation, demo worlds from `content/worlds`; **chat relay** (history of 100 lines, 200 characters, 1 message/s, typing state) so MP3 only adds the UI; rate limits; persistence. Rooms run without a game master until MP4 | server tests with 4 scripted clients, kill and restart mid-run, a deploy with a new engine version closes rooms with a toast, packet delay and loss |
+| MP2 | Room server | WebSocket on the existing `node:http` server (`ws` package, not yet a dependency; `Origin` checked against `ALLOWED_ORIGINS`); rooms and the public room list (`GET /api/rooms`); roster (names, colours, the player id each connection plays) and reconnect tokens; leaving and disconnects (§6); turn pacing: deadline, active/busy players, travel cadence, ~1 s turns during an exit countdown, area entry not counted (§2.1); input validation and message size limits; input log, snapshots and replay; engine-version check; desync hashes (`hashState`); world upload and validation, demo worlds from `content/worlds`; **chat relay** (history of 100 lines, 200 characters, 1 message/s, typing state) so MP3 only adds the UI; rate limits; persistence under `ANYWORLD_DATA_DIR`; shared message protocol; client engine-version check (outdated pages get a reload toast). Rooms run without the AI game master until MP4: the server answers GM moments with the world's canned lines, as the offline demo does | server tests with 4 scripted clients chatting and playing, kill and restart mid-run, a deploy with a new engine version closes rooms with a toast, an outdated client is refused with a reload toast, a disconnect and reconnect, packet delay and loss |
 | MP3 | Client | lobby (create, share link and QR code, public list of open rooms on the start page, roster, ready, world picker); the client plays its own player id (today it plays the lead, `leadPlayer`); other players with name tags and colours; per-player view (fog, compass, hints, persuade odds are already computed per state and become per player); turn indicator ("2 of 3 acted"), never blocking; chat as in §1 (bubbles, side column, typing indicator, emotes and map pings, phone chat button); en and nb strings | Playwright with 3 browser contexts (desktop and phone) playing one run together and chatting |
 | MP4 | GM and dialogue for parties | **move the GM from the browser to the server**: today the request queue (`src/client/gm-director.ts`) runs in the client and may use the player's own key; in rooms it runs next to the room. GM context with all players and per-player hooks (low health); dialogue and trade per player without pausing others; party-aware world-generation prompt; recordings for demo rooms | GM checks still refuse fiat; demo rooms play without AI |
 | MP5 | Verify | review, playtest and fix rounds as in M5; latency playtest through the real exposure path; a short session with real people, judged on "was it fast, did we talk" | DoD table in `docs/progress/MP.md` |
@@ -124,6 +131,12 @@ Order: MP2 next, then MP3, MP4, MP5. Deployment to the real server waits (owner,
 tests run on the development laptop, and MP0's exit check is done when the Dell and the VPS are set up.
 MP1 ran as one workflow (design with critiques, sequential builders, review, fix, gate); MP2 follows the
 same shape. Branch: `multi`.
+
+Possible improvements, not planned yet:
+- **Map generation off the main thread.** Entering an area at 12 players takes up to ~0.6 s of map
+  generation, and Node runs every room on one thread, so other rooms stall for that moment. A worker
+  thread, or generating the next area ahead of time, would remove the stall. Not worth the complexity
+  until rooms are busy (owner, 2026-10-28).
 
 ## 4. Hosting
 
@@ -224,6 +237,12 @@ Decided:
 - 2026-10-26: rooms are listed publicly: the start page shows open rooms (world, players, joinable),
   besides joining by link.
 
+- 2026-10-28 (for MP2): clients and the server compare the engine version, and an outdated page is
+  refused with a reload toast; chat's server side is part of MP2; the exit countdown lasts about 10 s
+  of clock time, the server pacing its turns; no AI game master in rooms until MP4; one shared message
+  protocol; room files under a configurable `ANYWORLD_DATA_DIR`, created at start-up (the server refuses
+  to start if it cannot); map generation in a worker thread is a possible improvement, not planned.
+
 Built in MP1 as proposed in its design, to be confirmed by the owner (2026-10-28):
 - Second chance for a party of one on Normal: none (today's single-player rule, so single player is
   unchanged); parties of 2+ get one per player on Gentle and Normal.
@@ -242,6 +261,8 @@ Open (2026-10-28), needed before or during MP2:
 2. **The host leaves:** proposal: the room goes on; the longest-connected player becomes host.
 3. **Kicking:** proposal: the host can remove a player from the room (public rooms and no accounts make
    this the only moderation).
-4. **Party difficulty on Normal:** bot parties of 2–4 win about 100 % of runs on Normal (a run is lost
+4. **End of a run in a room:** proposal: the end screen offers "play again" in the same room (same
+   players, the same or another world, a new run); the room closes when everyone has left.
+5. **Party difficulty on Normal:** bot parties of 2–4 win about 100 % of runs on Normal (a run is lost
    only when everyone is down at once; MP1.md). Keep it as the relaxed co-op default, or make parties
    harder (levers: `PARTY_SCALING`, `partySecondChance`)?
