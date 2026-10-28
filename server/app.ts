@@ -92,6 +92,8 @@ export interface RoomsOptions {
   /** open rooms at most; default env ANYWORLD_MAX_ROOMS or 10 */
   maxRooms?: number;
   demos?: DemoWorlds;
+  /** run seeds (tests; main() and dev.ts read ANYWORLD_TEST_SEED outside production) */
+  seed?: () => number;
 }
 
 /** the header that carries the host access code */
@@ -438,6 +440,7 @@ export function createApp(opts: AppOptions = {}): App {
       scheduler: opts.rooms.scheduler,
       demos: opts.rooms.demos,
       maxRooms: opts.rooms.maxRooms ?? envInt(env.ANYWORLD_MAX_ROOMS, 1),
+      ...(opts.rooms.seed ? { seed: opts.rooms.seed } : {}),
       log,
     });
     manager.load();

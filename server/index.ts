@@ -12,7 +12,9 @@
  * ANYWORLD_ENGINE_VERSION (overrides the computed engine version, server/engine-version.ts; ignored in production).
  * Rooms (MP2): ANYWORLD_DATA_DIR (else STATE_DIRECTORY from systemd, else .data/ in the repo; the server
  * refuses to start when it cannot write there, server/data-dir.ts), ANYWORLD_MAX_ROOMS (10),
- * ANYWORLD_TEST_TIMING (JSON of RoomTiming durations for the child-process tests; ignored in production).
+ * ANYWORLD_TEST_TIMING (JSON of RoomTiming durations for the child-process tests; ignored in production),
+ * ANYWORLD_TEST_SEED (the first run seed; each later run takes the next one) and ANYWORLD_TEST_LIMITS
+ * (JSON of RoomLimits, plus maxRooms) for the browser specs (MP3; both ignored in production).
  * Prints `[server] listening <port>` once the port is bound (tests read it); SIGTERM/SIGINT snapshot
  * every room and send `bye` before exiting.
  */
@@ -20,11 +22,12 @@ import { assertSafeNode } from './node-check';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Server } from 'node:http';
-import { createApp, type AppOptions } from './app';
+import { createApp, type AppOptions, type RoomsOptions } from './app';
 import { engineVersionFor } from './engine-version';
 import { ensureDataDir, resolveDataDir } from './data-dir';
 import type { RoomManager } from './rooms/manager';
 import type { RoomTiming } from './rooms/timing';
+import type { RoomLimits } from './rooms/limits';
 
 export { createApp, type AppOptions } from './app';
 
@@ -91,6 +94,38 @@ export function testTiming(env: Record<string, string | undefined>): Partial<Roo
   return v as Partial<RoomTiming>;
 }
 
+/** ANYWORLD_TEST_SEED (outside production only) → run seeds from that one on, one per run; throws on a bad number */
+export function testSeed(env: Record<string, string | undefined>): (() => number) | undefined {
+  const raw = env.ANYWORLD_TEST_SEED?.trim();
+  if (!raw || env.NODE_ENV === 'production') return undefined;
+  const first = Number(raw);
+  if (!Number.isInteger(first) || first < 1 || first >= 2 ** 31) throw new Error('ANYWORLD_TEST_SEED must be an integer from 1 to 2^31 - 1');
+  let next = first;
+  return () => {
+    const s = next;
+    next = next >= 2 ** 31 - 1 ? 1 : next + 1;
+    return s;
+  };
+}
+
+/** ANYWORLD_TEST_LIMITS (JSON, outside production only) → per-IP and socket limits, and maxRooms; throws on bad JSON */
+export function testLimits(env: Record<string, string | undefined>): { limits: Partial<RoomLimits>; maxRooms?: number } | undefined {
+  const raw = env.ANYWORLD_TEST_LIMITS?.trim();
+  if (!raw || env.NODE_ENV === 'production') return undefined;
+  const v: unknown = JSON.parse(raw);
+  if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error('ANYWORLD_TEST_LIMITS must be a JSON object');
+  const { maxRooms, ...limits } = v as Partial<RoomLimits> & { maxRooms?: unknown };
+  return { limits, ...(typeof maxRooms === 'number' && Number.isInteger(maxRooms) && maxRooms > 0 ? { maxRooms } : {}) };
+}
+
+/** the test-only room switches of the environment (ANYWORLD_TEST_TIMING, _SEED, _LIMITS), as RoomsOptions fields */
+export function testRoomOptions(env: Record<string, string | undefined>): Omit<RoomsOptions, 'dataDir'> {
+  const timing = testTiming(env);
+  const seed = testSeed(env);
+  const lim = testLimits(env);
+  return { ...(timing ? { timing } : {}), ...(seed ? { seed } : {}), ...(lim ? { limits: lim.limits, ...(lim.maxRooms ? { maxRooms: lim.maxRooms } : {}) } : {}) };
+}
+
 /** the data directory, created and checked; prints the reason and exits 1 when it cannot be used */
 export function dataDirOrExit(env: Record<string, string | undefined>, tag = '[server]'): string {
   const dir = resolveDataDir(env);
@@ -110,8 +145,7 @@ async function main(): Promise<void> {
   // computed once from the deployed checkout (MP2 design §8)
   const engineVersion = engineVersionFor(process.env);
   const dataDir = dataDirOrExit(process.env);
-  const timing = testTiming(process.env);
-  const started = await startServer({ staticDir, engineVersion, rooms: { dataDir, ...(timing ? { timing } : {}) } });
+  const started = await startServer({ staticDir, engineVersion, rooms: { dataDir, ...testRoomOptions(process.env) } });
   const { port, configuredPresets } = started;
   const configured = configuredPresets().join(', ');
   console.log(`[server] AnyWorld API on http://localhost:${port}${staticDir ? ` serving ${staticDir}` : ''}`);

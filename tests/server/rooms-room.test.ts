@@ -739,3 +739,191 @@ describe('review fixes', () => {
     expect(sch.now() - t0).toBeLessThan(DEFAULT_TIMING.areaHoldMaxMs);
   });
 });
+
+describe('MP3 D1: lobby messages, pings, typing busy, test switches', () => {
+  it('ready toggles in the lobby (roster), is refused while playing and resets when a run starts', () => {
+    const { room, conns } = setup(2, { lobby: true });
+    room.message(conns[1], { t: 'ready', on: true });
+    expect(conns[0].last('roster')!.seats.map((r) => r.ready)).toEqual([false, true]);
+    room.message(conns[0], { t: 'ready', on: true });
+    expect(conns[1].last('roster')!.seats.map((r) => r.ready)).toEqual([true, true]);
+    room.message(conns[0], { t: 'start' });
+    expect(conns[1].last('roster')!.seats.map((r) => r.ready)).toEqual([false, false]);
+    room.message(conns[1], { t: 'ready', on: true });
+    expect(conns[1].last('error')?.code).toBe('bad_phase');
+  });
+
+  it('profile changes name and colour with the hello rules (unique), lobby and ended only', () => {
+    const { room, conns } = setup(3, { lobby: true });
+    room.message(conns[2], { t: 'profile', name: 'p1', colour: PLAYER_COLOURS[1] });
+    expect(room.seatList()[2]).toMatchObject({ name: 'p1 2', colour: PLAYER_COLOURS[2] });
+    expect(conns[0].last('roster')!.seats[2]).toMatchObject({ name: 'p1 2', colour: PLAYER_COLOURS[2] });
+    room.message(conns[2], { t: 'profile', name: 'Kari', colour: PLAYER_COLOURS[7] });
+    expect(room.seatList()[2]).toMatchObject({ name: 'Kari', colour: PLAYER_COLOURS[7] });
+    room.message(conns[0], { t: 'start' });
+    expect(room.state!.players.p3.name).toBe('Kari');
+    room.message(conns[2], { t: 'profile', name: 'Other', colour: PLAYER_COLOURS[8] });
+    expect(conns[2].last('error')?.code).toBe('bad_phase');
+    expect(room.seatList()[2].name).toBe('Kari');
+  });
+
+  it('world: the host picks a demo for everyone (room broadcast) and the run plays it; after a run it is staged', () => {
+    const { room, conns } = setup(2, { lobby: true });
+    room.message(conns[1], { t: 'world', demo: 'fixture-teen' });
+    expect(conns[1].last('error')?.code).toBe('not_host');
+    room.message(conns[0], { t: 'world', demo: 'no-such-world' });
+    expect(conns[0].last('error')?.code).toBe('invalid');
+    room.message(conns[0], { t: 'world', demo: 'fixture-teen' });
+    for (const c of conns) expect(c.last('room')).toMatchObject({ room: { code: room.code, world: { title: room.world.world.meta.title } }, options: room.options });
+    expect(room.world.source).toEqual({ demo: 'fixture-teen' });
+    const n = conns[1].of('room').length;
+    // the same world again: nothing to tell
+    room.message(conns[0], { t: 'world', demo: 'fixture-teen' });
+    expect(conns[1].of('room')).toHaveLength(n);
+    room.message(conns[0], { t: 'start' });
+    expect(conns[1].last('run')!.worldId).toBe(room.world.worldId);
+    room.message(conns[0], { t: 'world', demo: 'fixture-western' });
+    expect(conns[0].last('error')?.code).toBe('bad_phase');
+    // the run ends: the next world is staged, listed, and played by the next start
+    const before = room.state!;
+    const lost = { ...before, status: 'lost' as const };
+    (room as unknown as { state: GameState }).state = lost;
+    (room as unknown as { settle: (a: GameState, b: GameState) => void }).settle(before, lost);
+    const teenId = room.world.worldId;
+    room.message(conns[0], { t: 'world', demo: 'fixture-western' });
+    expect(room.world.worldId).toBe(teenId);
+    expect(room.nextWorldId).not.toBe(teenId);
+    expect(conns[1].last('room')!.room.world.id).toBe(room.nextWorldId);
+    expect(room.info().world.id).toBe(room.nextWorldId);
+    room.message(conns[0], { t: 'start' });
+    expect(room.world.source).toEqual({ demo: 'fixture-western' });
+    expect(conns[1].last('run')!.world).toBeTruthy();
+  });
+
+  it('an uploaded world is broadcast as room too', () => {
+    const { m, room, conns, tokens } = setup(2, { lobby: true });
+    const ship = upload(m, 'fixture-ship');
+    expect(room.uploadWorld(tokens[0], ship)).toBe('ok');
+    expect(conns[1].last('room')!.room.world).toMatchObject({ id: ship.worldId, title: ship.world.meta.title });
+  });
+
+  it('difficulty is a host option between runs (room broadcast), refused while playing; the run uses it', () => {
+    const { room, conns } = setup(2, { lobby: true });
+    room.message(conns[1], { t: 'options', difficulty: 'hard' });
+    expect(conns[1].last('error')?.code).toBe('not_host');
+    room.message(conns[0], { t: 'options', difficulty: 'hard' });
+    expect(room.options.difficulty).toBe('hard');
+    expect(conns[1].last('room')!.options).toMatchObject({ difficulty: 'hard' });
+    room.message(conns[0], { t: 'options', deadlineMs: 3000 });
+    expect(conns[1].last('room')!.options).toEqual({ maxPlayers: room.options.maxPlayers, deadlineMs: 3000, difficulty: 'hard' });
+    room.message(conns[0], { t: 'start' });
+    expect(room.state!.difficulty).toBe('hard');
+    room.message(conns[0], { t: 'options', difficulty: 'gentle' });
+    expect(conns[0].last('error')?.code).toBe('bad_phase');
+    expect(room.options.difficulty).toBe('hard');
+    // the deadline may still change during a run
+    room.message(conns[0], { t: 'options', deadlineMs: 1500 });
+    expect(room.options.deadlineMs).toBe(1500);
+  });
+
+  it('a ping is a chat line with no text at a tile of the area, sharing the 1/s chat rate', () => {
+    const { sch, room, conns } = setup(2, { lobby: true });
+    room.message(conns[0], { t: 'ping', kind: 'follow', x: 1, y: 1 });
+    expect(conns[0].last('error')?.code).toBe('bad_phase');
+    room.message(conns[0], { t: 'start' });
+    sch.advanceBy(1000);
+    const pos = actorOf(room.state!, 'p2').pos;
+    room.message(conns[1], { t: 'ping', kind: 'help', x: pos.x, y: pos.y });
+    const line = conns[0].last('chat')!.line;
+    expect(line).toMatchObject({ seat: 's2', name: 'P2', text: '', ping: { kind: 'help', x: pos.x, y: pos.y, area: room.state!.area.index } });
+    expect(room.chat.at(-1)).toEqual(line);
+    // text and pings share the bucket
+    room.message(conns[1], { t: 'chat', text: 'over here' });
+    expect(conns[1].last('error')?.code).toBe('chat_rate');
+    sch.advanceBy(1000);
+    room.message(conns[1], { t: 'chat', text: 'over here' });
+    room.message(conns[1], { t: 'ping', kind: 'wait', x: pos.x, y: pos.y });
+    expect(conns[1].of('error').filter((e) => e.code === 'chat_rate')).toHaveLength(2);
+    sch.advanceBy(1000);
+    const map = room.state!.area.map;
+    room.message(conns[1], { t: 'ping', kind: 'wait', x: map.width, y: 0 });
+    expect(conns[1].last('error')?.code).toBe('invalid');
+    // the socket's buckets: a ping takes from chat's
+    const bk = new ConnBuckets(0);
+    expect(bk.take('chat', 0)).toBe(true);
+    expect(bk.take('ping', 0)).toBe(false);
+    expect(bk.take('ping', 1000)).toBe(true);
+    expect(bk.take('chat', 1000)).toBe(false);
+  });
+
+  it('typing keeps a busy it did not set: stopping it does not end a trade’s or menu’s safety', () => {
+    const { room, conns } = setup(2);
+    const s = () => room.state!;
+    // p2 opens a trade (the client sends busy) and then chats
+    room.message(conns[1], { t: 'input', area: s().area.index, turn: s().turn, actions: [], busy: true, intent: 'decide' });
+    const since = s().players.p2.busySince;
+    expect(since).not.toBeUndefined();
+    room.message(conns[1], { t: 'typing', on: true });
+    room.message(conns[1], { t: 'typing', on: false });
+    expect(s().players.p2.busySince).toBe(since);
+    room.message(conns[1], { t: 'typing', on: true });
+    room.message(conns[1], { t: 'chat', text: 'one sec' });
+    expect(s().players.p2.busySince).toBe(since);
+    // the client ends the trade while still typing: typing holds busy now, and clears it when it stops
+    room.message(conns[1], { t: 'typing', on: true });
+    room.message(conns[1], { t: 'input', area: s().area.index, turn: s().turn, actions: [], busy: false, intent: 'decide' });
+    expect(s().players.p2.busySince).not.toBeUndefined();
+    room.message(conns[1], { t: 'typing', on: false });
+    expect(s().players.p2.busySince ?? null).toBeNull();
+    // typing on a seat that is not busy still sets and clears its own busy
+    room.message(conns[1], { t: 'typing', on: true });
+    expect(s().players.p2.busySince).not.toBeUndefined();
+    room.message(conns[1], { t: 'typing', on: false });
+    expect(s().players.p2.busySince ?? null).toBeNull();
+  });
+
+  it('the welcome of a playing room (late join) has the phase, the pid, its character in the snapshot, roster and chat', () => {
+    const { sch, room, conns } = setup(2);
+    room.message(conns[0], { t: 'chat', text: 'hi' });
+    sch.advanceBy(1000);
+    const late = new FakeConn();
+    setupJoin(room, late, 'Kari');
+    const w = late.last('welcome')!;
+    expect(w).toMatchObject({ phase: 'playing', run: 1, you: { seat: 's3', pid: 'p3', host: false } });
+    expect(w.world).toBeTruthy();
+    expect(w.entries).toBeUndefined();
+    const st = deserialize(room.world.world, w.snapshot!.state);
+    expect(st.party).toEqual(['p1', 'p2', 'p3']);
+    expect(st.players.p3).toMatchObject({ name: 'Kari' });
+    expect(hashState(st)).toBe(hashState(room.state!));
+    expect(w.roster.map((r) => [r.seat, r.pid, r.ready])).toEqual([['s1', 'p1', false], ['s2', 'p2', false], ['s3', 'p3', false]]);
+    expect(w.chat.map((c) => c.text)).toEqual(['hi']);
+  });
+
+  it('the test switches are read only when set, never in production', async () => {
+    const { testLimits, testRoomOptions, testSeed } = await import('../../server/index');
+    expect(testSeed({})).toBeUndefined();
+    expect(testLimits({})).toBeUndefined();
+    expect(testRoomOptions({})).toEqual({});
+    expect(testSeed({ ANYWORLD_TEST_SEED: '42', NODE_ENV: 'production' })).toBeUndefined();
+    expect(testLimits({ ANYWORLD_TEST_LIMITS: '{"createsPer10Min":1000}', NODE_ENV: 'production' })).toBeUndefined();
+    expect(testRoomOptions({ ANYWORLD_TEST_SEED: '42', ANYWORLD_TEST_LIMITS: '{}', ANYWORLD_TEST_TIMING: '{}', NODE_ENV: 'production' })).toEqual({});
+    const seed = testSeed({ ANYWORLD_TEST_SEED: '42' })!;
+    expect([seed(), seed()]).toEqual([42, 43]);
+    expect(() => testSeed({ ANYWORLD_TEST_SEED: 'x' })).toThrow();
+    expect(testLimits({ ANYWORLD_TEST_LIMITS: '{"createsPer10Min":1000,"socketsPerIp":64,"maxRooms":50}' })).toEqual({ limits: { createsPer10Min: 1000, socketsPerIp: 64 }, maxRooms: 50 });
+    expect(() => testLimits({ ANYWORLD_TEST_LIMITS: '[1]' })).toThrow();
+    const o = testRoomOptions({ ANYWORLD_TEST_SEED: '9', ANYWORLD_TEST_LIMITS: '{"upgradesPerMin":500}' });
+    expect(o.limits).toEqual({ upgradesPerMin: 500 });
+    // the seed reaches the runs through RoomDeps.seed
+    const sch = new ManualScheduler();
+    const m = new RoomManager({ dir, engineVersion: 'v1', scheduler: sch, log: () => {}, seed: o.seed });
+    const c = m.create({ demo: 'fixture-western' });
+    if (!c.ok) throw new Error(c.error);
+    const conn = new FakeConn();
+    m.hello(conn, hello(c.code, c.token, 'Ann'));
+    c.room.message(conn, { t: 'start' });
+    expect(c.room.seed).toBe(9);
+    expect(c.room.state!.seed).toBe(9);
+  });
+});

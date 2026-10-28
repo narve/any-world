@@ -7,6 +7,11 @@
  * or a server restart (`bye`), with backoff 0.5–5 s. It never reconnects after `refused`, `closed`,
  * a replaced socket (another tab) or leave(); those end in a `notice` event (noticeFor) or `stopped`.
  *
+ * MP3 adds the lobby messages (ready, profile, world, ping, options with difficulty), keeps the room
+ * info, options, typing seats and the last clock frame, emits the applied entries one step each
+ * (`steps`, with the state before and after, so the browser can derive toasts and narration per
+ * entry; `catchUp` marks the welcome's batch) and records why it stopped (`stopReason`, the close code).
+ *
  * Every frame is validated with parseServerMsg. The world in welcome / run is parsed with parseWorld
  * and its worldIdOf must equal the server's worldId, else the client refuses to play (`fault`).
  * A gap in the entries or an entry the engine refuses means the replica is wrong: the client
@@ -26,14 +31,18 @@ import {
   parseServerMsg,
   PLAYER_COLOURS,
   PROTOCOL,
+  REFUSED_CLOSE,
   type ChatLine,
   type ClientMsg,
+  type ClockMsg,
   type Closed,
   type Intent,
   type LogEntry,
   type Phase,
+  type PingKind,
   type Presence,
   type Refused,
+  type RoomInfo,
   type RoomOptions,
   type RosterEntry,
   type ServerMsg,
@@ -78,19 +87,33 @@ export interface RoomClientOptions {
 
 export type RoomClientStatus = 'connecting' | 'joined' | 'reconnecting' | 'stopped';
 
+/** one applied entry: the replica before and after it, and what the engine said */
+export interface EntryStep {
+  entry: LogEntry;
+  before: GameState;
+  after: GameState;
+  events: GameEvent[];
+  outcomes: TurnOutcome[];
+}
+
 export type RoomEvent =
   /** joined (also after every reconnect); the replica is ready when the room is playing */
   | { t: 'welcome'; msg: Welcome }
-  /** entries applied to the replica, with the engine events and action outcomes they produced */
-  | { t: 'entries'; entries: LogEntry[]; events: GameEvent[]; outcomes: TurnOutcome[] }
+  /**
+   * entries applied to the replica, with the engine events and action outcomes they produced (all
+   * of them, and per entry in `steps`); `catchUp`: the entries of a welcome (a reconnect catching up),
+   * not live play
+   */
+  | { t: 'entries'; entries: LogEntry[]; events: GameEvent[]; outcomes: TurnOutcome[]; steps: EntryStep[]; catchUp: boolean }
   /** the replica was replaced: a desync snapshot, a new run, or a welcome snapshot */
   | { t: 'state'; reason: 'welcome' | 'snapshot' | 'run' }
   /** refused or closed by the server: the toast to show (MP3); the client has stopped */
   | { t: 'notice'; notice: NetNotice; msg: Refused | Closed }
   /** the replica cannot be trusted: a world mismatch stops the client; a gap or a refused entry reconnects */
   | { t: 'fault'; reason: 'world_invalid' | 'world_mismatch' | 'gap' | 'apply' | 'invalid_message'; detail?: string }
-  | { t: 'status'; status: RoomClientStatus }
-  /** every other message (roster, chat, typing, clock, refusal, error, bye) after the client handled it */
+  /** `stopReason` on `stopped`: the close code that ended it (4007 another tab, 1008 policy, a refusal's or close's code); none after stop() or leave() */
+  | { t: 'status'; status: RoomClientStatus; stopReason?: number }
+  /** every other message (roster, room, chat, typing, clock, refusal, error, bye) after the client handled it */
   | { t: 'message'; msg: ServerMsg };
 
 export class RoomClient {
@@ -108,8 +131,16 @@ export class RoomClient {
   worldId: string | null = null;
   state: GameState | null = null;
   options: RoomOptions | null = null;
+  /** the room as the server lists it (welcome, then `room` messages) */
+  room: RoomInfo | null = null;
   roster: RosterEntry[] = [];
   chat: ChatLine[] = [];
+  /** seats typing now (typing frames; cleared on a welcome) */
+  typingSeats = new Set<string>();
+  /** the last clock frame of this run */
+  clock: ClockMsg | null = null;
+  /** the close code that stopped the client (undefined while running, and after stop() or leave()) */
+  stopReason: number | undefined;
   /** snapshots received after a hash mismatch */
   desyncs = 0;
   /** successful joins after the first */
@@ -148,6 +179,7 @@ export class RoomClient {
   /** opens the socket (and keeps it open, reconnecting, until stop / refused / closed) */
   connect(): void {
     if (this.status === 'stopped') this.status = 'connecting';
+    this.stopReason = undefined;
     this.open();
   }
 
@@ -201,7 +233,7 @@ export class RoomClient {
     // the server said why (refused / closed) or we left: no reconnect
     if (this.status === 'stopped') return;
     const final = code === CLOSE.replaced || code === CLOSE.closed || (code >= 4001 && code <= 4006) || code === CLOSE.policy;
-    if (final || this.opts.reconnect === false) return this.stop();
+    if (final || this.opts.reconnect === false) return this.stop(code);
     this.setStatus('reconnecting');
     const ms = this.backoff;
     this.backoff = Math.min(this.opts.backoffMs?.max ?? 5000, this.backoff * 2);
@@ -212,10 +244,11 @@ export class RoomClient {
     }, ms);
   }
 
-  /** closes the socket now and does not reconnect */
-  stop(): void {
+  /** closes the socket now and does not reconnect (`reason`: the close code that ended it, for the stopped status) */
+  stop(reason?: number): void {
     const was = this.status;
     this.status = 'stopped';
+    if (was !== 'stopped') this.stopReason = reason;
     if (this.retryTimer !== null) (this.opts.clearTimer ?? ((h: unknown) => clearTimeout(h as ReturnType<typeof setTimeout>)))(this.retryTimer);
     this.retryTimer = null;
     const ws = this.ws;
@@ -227,7 +260,7 @@ export class RoomClient {
         // already closed
       }
     }
-    if (was !== 'stopped') this.emit({ t: 'status', status: 'stopped' });
+    if (was !== 'stopped') this.emit({ t: 'status', status: 'stopped', ...(reason !== undefined ? { stopReason: reason } : {}) });
   }
 
   /** drops the socket as a network failure would (it reconnects; tests and the fault channel) */
@@ -259,7 +292,7 @@ export class RoomClient {
         return this.onWelcome(msg);
       case 'entries':
         if (msg.run !== this.run || !this.state) return;
-        return this.applyAll(msg.es);
+        return this.applyAll(msg.es, false);
       case 'snapshot':
         if (msg.run !== this.run || !this.world) return;
         this.desyncs++;
@@ -269,11 +302,23 @@ export class RoomClient {
         if (!this.takeWorld(msg.world, msg.worldId)) return;
         this.run = msg.run;
         this.phase = 'playing';
+        this.clock = null;
         this.setState(deserialize(this.world!, msg.snapshot.state), msg.snapshot.n);
         return this.emit({ t: 'state', reason: 'run' });
       }
       case 'roster':
         this.setRoster(msg.seats);
+        break;
+      case 'room':
+        this.room = msg.room;
+        this.options = msg.options;
+        break;
+      case 'clock':
+        this.clock = msg;
+        break;
+      case 'typing':
+        if (msg.on) this.typingSeats.add(msg.seat);
+        else this.typingSeats.delete(msg.seat);
         break;
       case 'chat':
         this.chat.push(msg.line);
@@ -282,7 +327,8 @@ export class RoomClient {
       case 'refused':
       case 'closed':
         this.emit({ t: 'notice', notice: noticeFor(msg), msg });
-        return this.stop();
+        // (the server closes the socket with this code right after the message)
+        return this.stop(msg.t === 'refused' ? REFUSED_CLOSE[msg.code] : CLOSE.closed);
       case 'bye':
         // the server restarts: the socket closes (1012) and onClosed reconnects
         break;
@@ -300,12 +346,15 @@ export class RoomClient {
     this.host = msg.you.host;
     this.phase = msg.phase;
     this.options = msg.options;
+    this.room = msg.room;
     this.chat = msg.chat.slice();
     this.roster = msg.roster;
+    this.typingSeats.clear();
     if (msg.run !== this.run) {
       this.run = msg.run;
       this.state = null;
       this.n = 0;
+      this.clock = null;
     }
     this.fresh = false;
     if (this.joinedOnce) this.reconnects++;
@@ -317,7 +366,7 @@ export class RoomClient {
       this.emit({ t: 'state', reason: 'welcome' });
     }
     this.emit({ t: 'welcome', msg });
-    if (msg.entries?.length) this.applyAll(msg.entries);
+    if (msg.entries?.length) this.applyAll(msg.entries, true);
   }
 
   /** a world from the server (or none: keep ours), checked against its worldId */
@@ -357,10 +406,11 @@ export class RoomClient {
     this.n = n;
   }
 
-  private applyAll(es: LogEntry[]): void {
+  private applyAll(es: LogEntry[], catchUp: boolean): void {
     const applied: LogEntry[] = [];
     const events: GameEvent[] = [];
     const outcomes: TurnOutcome[] = [];
+    const steps: EntryStep[] = [];
     for (const e of es) {
       if (e.run !== this.run || e.n < this.n) continue;
       if (e.n > this.n) {
@@ -374,6 +424,7 @@ export class RoomClient {
         after = r.state;
         events.push(...r.events);
         outcomes.push(...r.outcomes);
+        steps.push({ entry: e, before, after, events: r.events, outcomes: r.outcomes });
       } catch (err) {
         this.resync('apply', err instanceof Error ? err.message : String(err));
         break;
@@ -384,7 +435,7 @@ export class RoomClient {
       if (changedArea(before, after)) this.sendRaw({ t: 'applied', n: this.n });
       if (this.n % LIMITS.hashEvery === 0) this.sendRaw({ t: 'hash', n: this.n, h: hashState(after) });
     }
-    if (applied.length) this.emit({ t: 'entries', entries: applied, events, outcomes });
+    if (applied.length) this.emit({ t: 'entries', entries: applied, events, outcomes, steps, catchUp });
   }
 
   /** the replica is wrong: reconnect and ask for a snapshot */
@@ -434,9 +485,34 @@ export class RoomClient {
     return this.send({ t: 'presence', state });
   }
 
-  /** host only: start a run (or play again), optionally with a demo world */
+  /** host only: start a run (or play again); `demo` is for the scripted clients, the MP3 client picks the world with world() first */
   start(demo?: string): boolean {
     return this.send({ t: 'start', ...(demo !== undefined ? { demo } : {}) });
+  }
+
+  /** the lobby's ready toggle (lobby and ended phases) */
+  ready(on: boolean): boolean {
+    return this.send({ t: 'ready', on });
+  }
+
+  /** a new name and colour (lobby and ended phases; the server makes them unique) */
+  profile(name: string, colour: (typeof PLAYER_COLOURS)[number]): boolean {
+    return this.send({ t: 'profile', name, colour });
+  }
+
+  /** host only: the demo world of the next run (lobby and ended phases) */
+  pickWorld(demo: string): boolean {
+    return this.send({ t: 'world', demo });
+  }
+
+  /** host only: room options (difficulty in the lobby and ended phases only) */
+  setOptions(o: Partial<RoomOptions>): boolean {
+    return this.send({ t: 'options', ...o });
+  }
+
+  /** a map ping at a tile of the current area (playing; shares the chat rate) */
+  ping(kind: PingKind, pos: { x: number; y: number }): boolean {
+    return this.send({ t: 'ping', kind, x: pos.x, y: pos.y });
   }
 
   /** leaves the room (the seat is kept for 2 minutes, design §3) and stops */

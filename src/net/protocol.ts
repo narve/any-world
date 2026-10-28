@@ -55,9 +55,14 @@ export const LIMITS = {
     chat: { perSec: 1, burst: 1 },
     hash: { perSec: 2, burst: 2 },
     applied: { perSec: 2, burst: 2 },
-    /** host options rewrite the room file (an fsync each) */
+    /** host options rewrite the room file (an fsync each); so do profile and world (MP3) */
     options: { perSec: 1, burst: 3 },
+    profile: { perSec: 1, burst: 3 },
+    world: { perSec: 1, burst: 3 },
+    ready: { perSec: 4, burst: 4 },
   },
+  /** message types that take from another type's bucket: pings share chat's 1/s (MP3 design §4) */
+  rateShares: { ping: 'chat' },
 } as const;
 
 /** the 12 player colours (one per seat at most; a taken colour is replaced by the first free one) */
@@ -107,6 +112,9 @@ export type Intent = z.infer<typeof Intent>;
 /** the client's view state; a hidden tab is 'menu' */
 export const Presence = z.enum(['playing', 'menu']);
 export type Presence = z.infer<typeof Presence>;
+/** a map ping (MP3): "follow me", "wait", "help" */
+export const PingKind = z.enum(['follow', 'wait', 'help']);
+export type PingKind = z.infer<typeof PingKind>;
 export const PlayerIdSchema = z.string().regex(/^p\d{1,3}$/);
 export const SeatId = z.string().regex(/^s\d{1,4}$/);
 /** a demo world: a file id in content/worlds (without .json) */
@@ -208,6 +216,8 @@ export const RosterEntry = z.object({
   presence: SeatPresence,
   /** ms timestamp of the last presence change */
   since: z.number(),
+  /** the lobby's ready toggle (MP3; lobby and ended phases, reset when a run starts) */
+  ready: z.boolean(),
 });
 export type RosterEntry = z.infer<typeof RosterEntry>;
 
@@ -218,6 +228,8 @@ export const ChatLine = z.object({
   colour: Colour,
   text: z.string().max(LIMITS.chatRawMax),
   at: z.number(),
+  /** a map ping (MP3): text is '' and the client shows the ping's own words */
+  ping: z.object({ kind: PingKind, x: PosSchema.shape.x, y: PosSchema.shape.y, area: z.number().int().min(0).max(99) }).optional(),
 });
 export type ChatLine = z.infer<typeof ChatLine>;
 
@@ -258,11 +270,24 @@ export const ClientMsg = z.discriminatedUnion('t', [
   z.object({ t: z.literal('hash'), n: Count, h: z.string().regex(/^[0-9a-f]{16}$/) }),
   /** an area-change entry is applied locally: n = the entries applied with it (ends the area hold) */
   z.object({ t: z.literal('applied'), n: Count }),
-  /** host only, lobby or ended phase */
+  /** host only, lobby or ended phase (`demo` is kept for the scripted clients; MP3 picks the world with `world`) */
   z.object({ t: z.literal('start'), demo: DemoId.optional() }),
-  /** host only */
-  z.object({ t: z.literal('options'), deadlineMs: RoomOptions.shape.deadlineMs.optional(), maxPlayers: RoomOptions.shape.maxPlayers.optional() }),
+  /** host only; difficulty in the lobby or ended phase only */
+  z.object({
+    t: z.literal('options'),
+    deadlineMs: RoomOptions.shape.deadlineMs.optional(),
+    maxPlayers: RoomOptions.shape.maxPlayers.optional(),
+    difficulty: Difficulty.optional(),
+  }),
   z.object({ t: z.literal('leave') }),
+  /** lobby or ended phase: the ready toggle (MP3) */
+  z.object({ t: z.literal('ready'), on: z.boolean() }),
+  /** lobby or ended phase: a new name and colour, made unique as in hello (MP3) */
+  z.object({ t: z.literal('profile'), name: Name, colour: Colour }),
+  /** host only, lobby or ended phase: the demo world of the next run (MP3) */
+  z.object({ t: z.literal('world'), demo: DemoId }),
+  /** playing: a map ping at a tile of the current area; shares the chat rate (MP3) */
+  z.object({ t: z.literal('ping'), kind: PingKind, x: PosSchema.shape.x, y: PosSchema.shape.y }),
 ]);
 export type ClientMsg = z.infer<typeof ClientMsg>;
 export type ClientMsgType = ClientMsg['t'];
@@ -307,6 +332,8 @@ export const ServerMsg = z.discriminatedUnion('t', [
   z.object({ t: z.literal('clock'), n: Count, acted: z.array(PlayerIdSchema).max(MAX_PARTY_SIZE), waiting: z.array(PlayerIdSchema).max(MAX_PARTY_SIZE), deadlineInMs: Count.optional() }),
   z.object({ t: z.literal('chat'), line: ChatLine }),
   z.object({ t: z.literal('typing'), seat: SeatId, on: z.boolean() }),
+  /** the room's world (the next run's, in the ended phase) or options changed (MP3) */
+  z.object({ t: z.literal('room'), room: RoomInfo, options: RoomOptions }),
   /** to the acting seat only: its actions the engine refused (nothing was appended) */
   z.object({ t: z.literal('refusal'), reasons: z.array(z.object({ action: PlayerActionSchema, reason: z.string().max(64), detail: z.string().max(400).optional() })).max(LIMITS.actionsPerInput) }),
   /** non-fatal */
@@ -321,6 +348,8 @@ export type ServerMsgType = ServerMsg['t'];
 export type Welcome = Extract<ServerMsg, { t: 'welcome' }>;
 export type Refused = Extract<ServerMsg, { t: 'refused' }>;
 export type Closed = Extract<ServerMsg, { t: 'closed' }>;
+export type RoomMsg = Extract<ServerMsg, { t: 'room' }>;
+export type ClockMsg = Extract<ServerMsg, { t: 'clock' }>;
 
 /** WebSocket close codes */
 export const CLOSE = {

@@ -86,11 +86,13 @@ export class ConnBuckets {
     this.overall = new TokenBucket(LIMITS.rates.overall.perSec, LIMITS.rates.overall.burst, now);
     this.dropsWindowAt = now;
     for (const [t, r] of Object.entries(LIMITS.rates)) if (t !== 'overall') this.byType.set(t, new TokenBucket(r.perSec, r.burst, now));
+    // (LIMITS.rateShares: a ping takes from the chat bucket)
   }
 
   /** true when the message may go on; false: drop it (and count the drop) */
   take(type: ClientMsgType | null, now: number): boolean {
-    const typed = type !== null ? this.byType.get(type as RatedType) : undefined;
+    const shared = type !== null ? (LIMITS.rateShares as Partial<Record<ClientMsgType, RatedType>>)[type] : undefined;
+    const typed = type !== null ? this.byType.get(shared ?? (type as RatedType)) : undefined;
     if (this.overall.take(now) && (!typed || typed.take(now))) return true;
     if (now - this.dropsWindowAt >= 60_000) {
       this.dropsWindowAt = now;

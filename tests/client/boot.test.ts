@@ -34,6 +34,17 @@ describe('bootRoute', () => {
     expect(bootRoute('', saved)).toEqual({ kind: 'start' });
   });
 
+  it('?room= opens the room (MP3): upper-cased, valid codes only, over ?world=, the saved run kept', () => {
+    expect(bootRoute('?room=k7qx', null)).toEqual({ kind: 'room', code: 'K7QX' });
+    expect(bootRoute('?room=K7QX', saved)).toEqual({ kind: 'room', code: 'K7QX' });
+    expect(bootRoute('?room=%20k7qx%20', null)).toEqual({ kind: 'room', code: 'K7QX' });
+    // 0, O, 1, I and L are not in room codes; nor are other lengths
+    for (const bad of ['K7Q0', 'KOQX', 'K7Q', 'K7QXX', '', 'k7-x']) expect(bootRoute(`?room=${bad}`, saved), bad).toEqual({ kind: 'start' });
+    expect(bootRoute('?world=fixture-teen&room=k7qx', saved)).toEqual({ kind: 'room', code: 'K7QX' });
+    expect(bootRoute('?room=k7qx&world=fixture-ship&seed=4', null)).toEqual({ kind: 'room', code: 'K7QX' });
+    expect(saved).toEqual({ worldId: 'fixture-teen', worldTitle: 'Teen Fixture', seed: 4 });
+  });
+
   it('runUrl round-trips through bootRoute', () => {
     const url = runUrl('fixture-teen', 4);
     expect(url).toBe('?world=fixture-teen&seed=4');

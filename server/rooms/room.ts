@@ -129,6 +129,10 @@ interface Seat {
   typingUntil: number | null;
   /** the turn typing started (its busy is re-appended after the typist's own action only within BUSY_MAX_TURNS of it) */
   typingTurn: number | null;
+  /** typing set the busy flag (the seat was not busy already from a dialogue, a trade or a menu): only then does stopping it clear busy */
+  typingBusy: boolean;
+  /** the lobby's ready toggle (MP3; reset when a run starts) */
+  ready: boolean;
   lastChatAt: number;
   lastDesyncAt: number;
   /** the roster presence last shown, and since when */
@@ -323,6 +327,8 @@ export class Room {
       lastActiveAt: now,
       typingUntil: null,
       typingTurn: null,
+      typingBusy: false,
+      ready: false,
       lastChatAt: -Infinity,
       lastDesyncAt: -Infinity,
       shown: null,
@@ -400,6 +406,8 @@ export class Room {
       lastActiveAt: now,
       typingUntil: null,
       typingTurn: null,
+      typingBusy: false,
+      ready: false,
       lastChatAt: -Infinity,
       lastDesyncAt: -Infinity,
       shown: null,
@@ -647,6 +655,18 @@ export class Room {
         case 'options':
           this.setOptions(s, msg);
           break;
+        case 'ready':
+          this.setReady(s, msg.on);
+          break;
+        case 'profile':
+          this.setProfile(s, msg.name, msg.colour);
+          break;
+        case 'world':
+          this.pickWorld(s, msg.demo);
+          break;
+        case 'ping':
+          this.ping(s, msg);
+          break;
         case 'leave':
           s.quit = true;
           this.persistSeat(s);
@@ -682,6 +702,9 @@ export class Room {
     if (free.length || m.busy !== undefined) {
       const input: TurnInput = { playerId: pid, ...(free.length ? { actions: free } : {}), ...(m.busy !== undefined ? { busy: m.busy } : {}) };
       this.pushTurn([input], false, true);
+      // the client's own busy (a trade, a menu) is not typing's to clear; when the client clears it while the seat types, typing holds it
+      if (s.typingUntil !== null && m.busy === true) s.typingBusy = false;
+      else if (s.typingUntil !== null) this.typingHoldsBusy(s);
     }
     if (turnActs.length && this.state && this.state.status === 'playing' && this.state.area.index === area && this.onMap(pid)) {
       this.pending.set(pid, { action: turnActs[0], intent: m.intent, at: now });
@@ -695,15 +718,30 @@ export class Room {
     if (was) return;
     s.typingTurn = this.state?.turn ?? null;
     this.broadcast({ t: 'typing', seat: s.id, on: true });
-    this.busyEntry(s, true);
+    // a seat already busy (a dialogue, a trade, a menu) keeps that busy: typing does not take it over
+    s.typingBusy = false;
+    this.typingHoldsBusy(s);
   }
 
   private stopTyping(s: Seat, entry: boolean): void {
     if (s.typingUntil === null) return;
+    const own = s.typingBusy;
     s.typingUntil = null;
     s.typingTurn = null;
+    s.typingBusy = false;
     this.broadcast({ t: 'typing', seat: s.id, on: false });
-    if (entry) this.busyEntry(s, false);
+    // (only the busy typing set: stopping does not end a dialogue's or a trade's safety)
+    if (entry && own) this.busyEntry(s, false);
+  }
+
+  /** a typing seat that is not busy (and within BUSY_MAX_TURNS of the typing start) becomes busy, and that busy is typing's */
+  private typingHoldsBusy(s: Seat): void {
+    if (s.typingUntil === null || this.phase !== 'playing' || !this.state || this.state.status !== 'playing' || !this.onMap(s.pid)) return;
+    const ps = this.state.players[s.pid];
+    if (ps.busySince != null || ps.down) return;
+    if (s.typingTurn !== null && this.state.turn - s.typingTurn >= BUSY_MAX_TURNS) return;
+    this.busyEntry(s, true);
+    if (this.state.players[s.pid]?.busySince != null) s.typingBusy = true;
   }
 
   private busyEntry(s: Seat, busy: boolean): void {
@@ -715,14 +753,29 @@ export class Room {
     if (clean === null) return this.error(s, 'chat_long', `at most ${LIMITS.chatMax} characters`);
     const now = this.deps.scheduler.now();
     if (now - s.lastChatAt < 1000 / LIMITS.rates.chat.perSec) return this.error(s, 'chat_rate', 'one message a second');
+    this.addLine(s, { text: clean });
+    this.stopTyping(s, true);
+  }
+
+  /** a ping (MP3): a chat line with no text at a tile of the current area; the same 1/s as chat */
+  private ping(s: Seat, m: Extract<ClientMsg, { t: 'ping' }>): void {
+    const state = this.state;
+    if (this.phase !== 'playing' || !state || !this.onMap(s.pid)) return this.error(s, 'bad_phase', 'not playing');
+    if (m.x >= state.area.map.width || m.y >= state.area.map.height) return this.error(s, 'invalid', 'not on the map');
+    if (this.deps.scheduler.now() - s.lastChatAt < 1000 / LIMITS.rates.chat.perSec) return this.error(s, 'chat_rate', 'one message a second');
+    this.addLine(s, { text: '', ping: { kind: m.kind, x: m.x, y: m.y, area: state.area.index } });
+  }
+
+  /** a chat line from `s`: kept (the last LIMITS.chatHistory), logged and sent to everyone */
+  private addLine(s: Seat, body: Pick<ChatLine, 'text' | 'ping'>): void {
+    const now = this.deps.scheduler.now();
     s.lastChatAt = now;
     this.lastActivityAt = now;
-    const line: ChatLine = { id: this.nextChatId++, seat: s.id, name: s.name, colour: s.colour, text: clean, at: now };
+    const line: ChatLine = { id: this.nextChatId++, seat: s.id, name: s.name, colour: s.colour, text: body.text, at: now, ...(body.ping ? { ping: body.ping } : {}) };
     this.chat.push(line);
     if (this.chat.length > LIMITS.chatHistory) this.chat.shift();
     this.append({ chat: line });
     this.broadcast({ t: 'chat', line });
-    this.stopTyping(s, true);
   }
 
   private checkHash(s: Seat, n: number, h: string): void {
@@ -787,6 +840,7 @@ export class Room {
     });
     this.seats.forEach((s, i) => {
       s.pid = state.party[i];
+      s.ready = false;
       this.persistSeat(s);
     });
     this.state = state;
@@ -820,11 +874,50 @@ export class Room {
   private setOptions(s: Seat, m: Extract<ClientMsg, { t: 'options' }>): void {
     if (this.host !== s.id) return this.error(s, 'not_host', 'only the host can change the options');
     if (m.maxPlayers !== undefined && m.maxPlayers < this.seats.length) return this.error(s, 'invalid', 'fewer places than players');
-    const next = { ...this.options, ...(m.deadlineMs !== undefined ? { deadlineMs: m.deadlineMs } : {}), ...(m.maxPlayers !== undefined ? { maxPlayers: m.maxPlayers } : {}) };
-    if (next.deadlineMs === this.options.deadlineMs && next.maxPlayers === this.options.maxPlayers) return;
+    // (the run's difficulty is fixed once it is made)
+    if (m.difficulty !== undefined && m.difficulty !== this.options.difficulty && this.phase === 'playing') return this.error(s, 'bad_phase', 'the difficulty changes between runs');
+    const next: RoomOptions = {
+      ...this.options,
+      ...(m.deadlineMs !== undefined ? { deadlineMs: m.deadlineMs } : {}),
+      ...(m.maxPlayers !== undefined ? { maxPlayers: m.maxPlayers } : {}),
+      ...(m.difficulty !== undefined ? { difficulty: m.difficulty } : {}),
+    };
+    if (next.deadlineMs === this.options.deadlineMs && next.maxPlayers === this.options.maxPlayers && next.difficulty === this.options.difficulty) return;
     this.options = next;
     // (a synchronous fsync'ed rewrite: the options bucket, LIMITS.rates.options, keeps these rare)
     this.persistRoom(false);
+    this.broadcastRoom();
+  }
+
+  /** the ready toggle (MP3): lobby and ended phases */
+  private setReady(s: Seat, on: boolean): void {
+    if (this.phase === 'playing') return this.error(s, 'bad_phase', 'the run is on');
+    s.ready = on;
+  }
+
+  /** a new name and colour (MP3), made unique as in hello: lobby and ended phases (the character keeps its name for the run) */
+  private setProfile(s: Seat, name: string, colour: string): void {
+    if (this.phase === 'playing') return this.error(s, 'bad_phase', 'the run is on');
+    const n = this.uniqueName(name, s);
+    const c = this.uniqueColour(colour, s);
+    if (n === s.name && c === s.colour) return;
+    s.name = n;
+    s.colour = c;
+    this.persistSeat(s);
+  }
+
+  /** the host picks a demo world (MP3): the lobby's world at once, or the next run's after a run */
+  private pickWorld(s: Seat, demo: string): void {
+    if (this.host !== s.id) return this.error(s, 'not_host', 'only the host can change the world');
+    if (this.phase === 'playing') return this.error(s, 'bad_phase', 'the run is on');
+    const d = this.deps.demos.get(demo);
+    if (!d) return this.error(s, 'invalid', `no demo world "${demo}"`);
+    this.setWorld({ world: d.world, worldId: d.worldId, source: { demo: d.id } });
+  }
+
+  /** everyone gets the room's info and options again (a world or options change) */
+  private broadcastRoom(): void {
+    this.broadcast({ t: 'room', room: this.info(), options: { ...this.options } });
   }
 
   /**
@@ -836,19 +929,27 @@ export class Room {
     if (!s) return 'bad_token';
     if (this.host !== s.id) return 'not_host';
     if (this.phase === 'playing' || this.closed) return 'bad_phase';
+    this.setWorld(world);
+    return 'ok';
+  }
+
+  /** the world of the next run (lobby: the room's world at once; ended: staged for the next start); everyone gets `room` */
+  private setWorld(world: RoomWorld): void {
     registerWorld(world.world);
     if (this.phase === 'ended') {
-      if (this.nextWorld?.worldId === world.worldId) return 'ok';
+      if (this.nextWorld?.worldId === world.worldId) return;
       this.dropNextWorld();
-      this.nextWorld = world;
-      return 'ok';
+      // (the world just played again: nothing to stage)
+      if (world.worldId !== this.world.worldId) this.nextWorld = world;
+      return this.broadcastRoom();
     }
     const old = this.world;
+    if (old.worldId === world.worldId && JSON.stringify(old.source) === JSON.stringify(world.source)) return;
     this.world = world;
     this.director = new OfflineGmDirector({ t: gmTranslate(world.world.meta.language) });
     this.deps.store?.writeWorld(this.code, { format: 1, worldId: world.worldId, world: world.world, source: world.source });
     if (old.worldId !== world.worldId) this.deps.releaseWorld?.(old.worldId);
-    return 'ok';
+    this.broadcastRoom();
   }
 
   /** the world staged for the next start, if any */
@@ -1030,12 +1131,7 @@ export class Room {
     // a typing seat whose own turn action cleared its busy flag is busy again
     if (this.state && this.state.status === 'playing') {
       // (only within BUSY_MAX_TURNS of the typing start: a typist who keeps acting does not stay immune)
-      for (const s of this.seats) {
-        if (s.typingUntil === null || !this.onMap(s.pid)) continue;
-        const ps = this.state.players[s.pid];
-        if (s.typingTurn !== null && this.state.turn - s.typingTurn >= BUSY_MAX_TURNS) continue;
-        if (ps.busySince == null && !ps.down) this.busyEntry(s, true);
-      }
+      for (const s of this.seats) this.typingHoldsBusy(s);
     }
   }
 
@@ -1134,7 +1230,7 @@ export class Room {
         s.shown = p;
         s.since = now;
       }
-      return { seat: s.id, pid: s.pid, name: s.name, colour: s.colour, host: this.host === s.id, connected: !!s.conn, presence: p, since: s.since };
+      return { seat: s.id, pid: s.pid, name: s.name, colour: s.colour, host: this.host === s.id, connected: !!s.conn, presence: p, since: s.since, ready: s.ready };
     });
   }
 
@@ -1176,11 +1272,13 @@ export class Room {
   // Info, persistence, closing
   // -------------------------------------------------------------------------
 
+  /** the room as listed; after a run its world is the one the next start plays (a world picked or uploaded since) */
   info(): RoomInfo {
-    const w = this.world.world;
+    const rw = this.phase === 'ended' && this.nextWorld ? this.nextWorld : this.world;
+    const w = rw.world;
     return {
       code: this.code,
-      world: { id: this.world.worldId, title: w.meta.title, genre: w.meta.genre, language: w.meta.language },
+      world: { id: rw.worldId, title: w.meta.title, genre: w.meta.genre, language: w.meta.language },
       players: this.seats.length,
       maxPlayers: this.options.maxPlayers,
       phase: this.phase,

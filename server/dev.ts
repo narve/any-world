@@ -5,13 +5,12 @@
  */
 import { assertSafeNode } from './node-check';
 import { createServer as createViteServer } from 'vite';
-import { dataDirOrExit, startServer, testTiming } from './index';
+import { dataDirOrExit, startServer, testRoomOptions } from './index';
 
 async function main(): Promise<void> {
   assertSafeNode();
   const dataDir = dataDirOrExit(process.env, '[dev]');
-  const timing = testTiming(process.env);
-  const api = await startServer({ rooms: { dataDir, ...(timing ? { timing } : {}) } });
+  const api = await startServer({ rooms: { dataDir, ...testRoomOptions(process.env) } });
   console.log(`[dev] API on http://localhost:${api.port}`);
   console.log(`[dev] LLM presets available: ${api.configuredPresets().join(', ')}`);
   console.log(`[dev] rooms in ${dataDir}`);

@@ -27,6 +27,7 @@ import { GameSession } from './session';
 import { demoWorldsFor, localizedInspiration, promptLibrary } from './prompts';
 import { GameController } from './game-controller';
 import { bootRoute, runUrl } from './boot';
+import { pageBuild, roomsEndpoint } from './room/config';
 
 declare global {
   interface Window {
@@ -567,6 +568,8 @@ async function boot(): Promise<void> {
   const route = bootRoute(location.search, saved && hasWorld(saved.worldId) ? saved : null, worldTitle);
   if (route.kind === 'new') await app.playWorld(route.worldId, route.seed);
   else if (route.kind === 'continue') await app.continueRun();
+  // a room link (MP3): the start page until the room client (D3); a build without a server says so
+  else if (route.kind === 'room') app.showStart(roomsEndpoint(pageBuild(), location) ? undefined : t('room.noServer'));
   else app.showStart(route.notice);
 }
 

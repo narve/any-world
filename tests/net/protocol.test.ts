@@ -2,6 +2,8 @@
  * MP2 C2: the room protocol (src/net/protocol.ts, design §2). Every message parses, bounds hold,
  * unknown or malformed messages are refused, frame and nesting limits, peekHello reads the engine
  * version of any hello leniently, and PlayerActionSchema is the engine's PlayerAction (type check).
+ * MP3 D1: ready, profile, world, ping, the difficulty option, the room message, ready in the roster,
+ * pings in chat lines, and pings sharing chat's rate.
  */
 import { describe, it, expect } from 'vitest';
 import type { z } from 'zod';
@@ -75,11 +77,16 @@ const CLIENT: unknown[] = [
   { t: 'start' },
   { t: 'start', demo: 'fixture-western' },
   { t: 'options', deadlineMs: 3000, maxPlayers: 4 },
+  { t: 'options', difficulty: 'hard' },
   { t: 'leave' },
+  { t: 'ready', on: true },
+  { t: 'profile', name: 'Kari', colour: PLAYER_COLOURS[3] },
+  { t: 'world', demo: 'fixture-teen' },
+  { t: 'ping', kind: 'follow', x: 3, y: 9 },
 ];
 
 const roomInfo = { code: 'K7QX', world: { id: 'w-1', title: 'West', genre: 'western', language: 'en' }, players: 2, maxPlayers: 8, phase: 'playing', joinable: true };
-const roster = [{ seat: 's1', pid: 'p1', name: 'Ann', colour: PLAYER_COLOURS[0], host: true, connected: true, presence: 'active', since: 1 }, { seat: 's2', pid: null, name: 'Bea', colour: PLAYER_COLOURS[1], host: false, connected: false, presence: 'off', since: 2 }];
+const roster = [{ seat: 's1', pid: 'p1', name: 'Ann', colour: PLAYER_COLOURS[0], host: true, connected: true, presence: 'active', since: 1, ready: true }, { seat: 's2', pid: null, name: 'Bea', colour: PLAYER_COLOURS[1], host: false, connected: false, presence: 'off', since: 2, ready: false }];
 const chatLine = { id: 1, seat: 's1', name: 'Ann', colour: PLAYER_COLOURS[0], text: 'hi', at: 5 };
 const options = { maxPlayers: 8, deadlineMs: 2000, difficulty: 'normal' };
 const turnEntry = { n: 3, run: 1, k: 'turn', inputs: [{ playerId: 'p1', actions: [{ type: 'wait' }] }, { playerId: 'p2', busy: true }], advance: true };
@@ -93,6 +100,8 @@ const SERVER: unknown[] = [
   { t: 'roster', seats: roster },
   { t: 'clock', n: 4, acted: ['p1'], waiting: ['p2'], deadlineInMs: 1200 },
   { t: 'chat', line: chatLine },
+  { t: 'chat', line: { ...chatLine, id: 2, text: '', ping: { kind: 'help', x: 4, y: 5, area: 1 } } },
+  { t: 'room', room: roomInfo, options },
   { t: 'typing', seat: 's2', on: false },
   { t: 'refusal', reasons: [{ action: { type: 'move', dir: 'n' }, reason: 'contested' }] },
   { t: 'error', code: 'stale', message: 'decide again' },
@@ -190,6 +199,29 @@ describe('client messages', () => {
     expect(cleanChat('🙂'.repeat(LIMITS.chatMax))).not.toBeNull();
     // the schema lets a long line through so the room can answer chat_long
     expect(parseClientMsg({ t: 'chat', text: 'x'.repeat(LIMITS.chatMax + 1) })).not.toBeNull();
+  });
+});
+
+describe('MP3 D1 additions', () => {
+  it('bounds of the lobby messages and pings', () => {
+    for (const m of [
+      { t: 'ready' },
+      { t: 'ready', on: 'yes' },
+      { t: 'profile', name: '   ', colour: PLAYER_COLOURS[0] },
+      { t: 'profile', name: 'Kari', colour: '#000000' },
+      { t: 'world', demo: 'Not A Demo' },
+      { t: 'world' },
+      { t: 'options', difficulty: 'impossible' },
+      { t: 'ping', kind: 'dance', x: 1, y: 1 },
+      { t: 'ping', kind: 'help', x: -1, y: 1 },
+      { t: 'ping', kind: 'help', x: 1.5, y: 1 },
+    ]) expect(parseClientMsg(m), JSON.stringify(m)).toBeNull();
+    const p = parseClientMsg({ t: 'profile', name: '  Kari\u0007 ', colour: PLAYER_COLOURS[2] });
+    expect(p).toEqual({ t: 'profile', name: 'Kari', colour: PLAYER_COLOURS[2] });
+    // a roster entry must say ready; a ping line's kind is checked
+    expect(parseServerMsg({ t: 'roster', seats: [{ ...roster[0], ready: undefined }] })).toBeNull();
+    expect(parseServerMsg({ t: 'chat', line: { ...chatLine, ping: { kind: 'dance', x: 1, y: 1, area: 0 } } })).toBeNull();
+    expect(LIMITS.rateShares.ping).toBe('chat');
   });
 });
 

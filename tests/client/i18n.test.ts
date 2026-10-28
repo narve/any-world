@@ -212,6 +212,26 @@ describe('other catalogs', () => {
   });
 });
 
+describe('MP3 room keys', () => {
+  it('every room, lobby, party, chat and ping key and every notice key is in en and nb with the same params', async () => {
+    const { default: nb } = await import('../../src/client/i18n/nb');
+    const { NET_NOTICE_KEYS } = await import('../../src/net/messages');
+    const keys = Object.keys(en).filter((k) => /^(room|lobby|party|chat|ping|net)\./.test(k));
+    for (const k of [...NET_NOTICE_KEYS, 'net.reload']) expect(keys).toContain(k);
+    // the design's list (§5) and the hints for Shift+Enter in rooms
+    for (const k of ['room.otherTab', 'room.notAllowed', 'room.worldMismatch', 'lobby.gmReadsChat', 'lobby.youAre', 'party.acted', 'party.deciding', 'party.exitCountdown', 'party.exitTaken', 'chat.slowDown', 'chat.typing', 'ping.follow', 'ping.wait', 'ping.help', 'keys.chat', 'keys.cycleFollow', 'tile.usableHintRoom', 'ctx.interactHintRoom']) expect(k in en, k).toBe(true);
+    expect(keys.length).toBeGreaterThan(80);
+    const cat = nb as Record<string, string>;
+    for (const k of [...keys, 'keys.chat', 'keys.cycleFollow', 'tile.usableHintRoom', 'ctx.interactHintRoom', 'help.interactRoom']) {
+      expect(cat[k], `nb ${k}`).toBeTruthy();
+      const enTpl = (en as Record<string, string>)[k];
+      expect(messageArgs(cat[k]).sort(), k).toEqual(messageArgs(enTpl).sort());
+    }
+    expect(formatMessage(en['party.acted'], { acted: 2, total: 3 })).toBe('2 of 3 acted');
+    expect(formatMessage(en['party.down'], { n: 1 })).toContain('1 turn,');
+  });
+});
+
 describe('no hard-coded English in the overlay', () => {
   it('components pass catalog text, not literal English, as element text', () => {
     const dirs = [join(CLIENT, 'ui/components'), join(CLIENT, 'ui/ui.ts')];

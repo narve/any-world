@@ -595,6 +595,62 @@ re-exported), so the new-player gate is run once at the end as a check.
 | D4 | **In-game party and chat UI**: ring recolour (`setPartyColours`), `renderer.setFollow`, PartyOverlay (name tags, bubbles, typing, pings, teammate arrows, avoid rects), party strip, turn pill (show/hide delays), banner area with priority, spectator camera and pill (`[`/`]`), away / left; ChatPanel, phone chat button in the `tools` row and sheet, log-ticker chat lines, emotes, pings, Enter / `/` in every layer / Shift+Enter with room hints, focus and IME rules, rate feedback on input and emote row | `e2e-mp/mp-chat.spec.ts` (with the phone overlap check), `e2e-mp/mp-party.spec.ts`, render unit tests for ring and follow |
 | D5 | **Exit check and notes**: in-page autoplay (dev/test builds), `e2e-mp/mp-exit.spec.ts` (3 contexts), fixes it finds; `docs/progress/MP3.md` (deferred: NPC-line bubbles for nearby players, the GM line accurate from MP4), plan status; the full gate (typecheck, vitest, golden replay, `--gate --seeds 40`, single-player e2e smoke, all `e2e-mp` specs) | `mp-exit` |
 
+## D1 as built
+
+- **Protocol** (`src/net/protocol.ts`): `ready { on }`, `profile { name, colour }`, `world { demo }`,
+  `ping { kind, x, y }` (`PingKind` follow / wait / help), `options` + `difficulty?`; server → client
+  `room { room, options }`. `RosterEntry.ready` is **required**; `ChatLine.ping?` is
+  `{ kind, x, y, area }` with `text: ''`. New buckets `profile`, `world` (1/s, burst 3) and `ready`
+  (4/s); `LIMITS.rateShares.ping = 'chat'`, so `ConnBuckets` takes a ping from the chat bucket.
+  Types `RoomMsg`, `ClockMsg` exported. The engine version changes (expected).
+- **Server** (`server/rooms/room.ts`): `ready` and `profile` in lobby / ended only (`bad_phase`
+  while playing; profile uses `uniqueName` / `uniqueColour`, persisted as a seat record; the
+  character keeps its name for the run, the next run takes the new one); `ready` is not persisted
+  (a server restart clears it) and resets at every run start. `world` (host, lobby / ended) and the
+  HTTP upload share `setWorld`: lobby → the room's world at once; ended → staged as `nextWorld`
+  (picking the world just played clears the stage). `info()` reports the staged world in the ended
+  phase (also in the public list), so `room.world.id` can differ from `welcome.worldId` (the
+  replica's world) after a run. `room` is broadcast on every world or options change (also the
+  upload). Difficulty changes are `bad_phase` while playing (deadline and max players still may).
+  `ping`: playing only, tile inside the area map (`invalid` otherwise), the same `lastChatAt` 1/s as
+  chat (`chat_rate`); the line is kept in history and the room log like chat. Typing busy:
+  `Seat.typingBusy` records that typing set busy; `stopTyping` clears busy only then; a client
+  `busy: true` input while typing hands busy to the client; a client clearing busy (or a free
+  action ending a dialogue) while typing makes typing hold it again (`typingHoldsBusy`, also used
+  after a resolve, within `BUSY_MAX_TURNS` of the typing start).
+- **Test switches** (`server/index.ts`): `testSeed(env)` (`ANYWORLD_TEST_SEED`: the first run
+  seed, each later run the next integer), `testLimits(env)` (`ANYWORLD_TEST_LIMITS`: JSON of
+  `RoomLimits` plus an optional `maxRooms`), `testRoomOptions(env)` combining them with
+  `ANYWORLD_TEST_TIMING` into `RoomsOptions` fields; `main()` and `dev.ts` spread it into `rooms`.
+  All three return nothing when unset or with `NODE_ENV=production`. `RoomsOptions.seed` reaches
+  `RoomDeps.seed` through the manager.
+- **RoomClient** (`src/net/client.ts`): fields `room`, `typingSeats` (a `Set` of seat ids: named
+  so because `typing(on)` is the existing method), `clock`, `stopReason`; methods `ready(on)`,
+  `profile(name, colour)`, **`pickWorld(demo)`** (not `world()`: `world` is the WorldSpec field),
+  `setOptions(partial)`, `ping(kind, pos)`. The `entries` event keeps `entries / events / outcomes`
+  (the scripted clients read them) and adds `steps: EntryStep[]` (`{ entry, before, after, events,
+  outcomes }`, `steps[i].before === steps[i-1].after`) and `catchUp` (true only for a welcome's
+  entries). `status: 'stopped'` carries `stopReason`: the socket's close code (4007, 1008, 4010),
+  or for a `refused` / `closed` message the code the server closes with (`REFUSED_CLOSE[code]`,
+  4010); none after `stop()` / `leave()`; `connect()` clears it.
+- **Client plumbing** (`src/client/room/`, no UI yet): `config.ts` (`roomsEndpoint(build, loc)`,
+  `pageBuild()`, `roomLink(loc, code)`), `api.ts` (`RoomsApi` with `health / listRooms / getRoom /
+  createRoom / uploadWorld`, results `ok | unavailable | outdated | refused(code, status,
+  message)`; a server without rooms (404 `bad_request`) and 5xx other than `server_full` are
+  `unavailable`; `engineDiffers` treats `'dev'` as matching), `profile.ts` (profile and seat tokens
+  as designed, plus `COLOUR_KEYS` / `colourName` for "You are Kari 2, green"; an injectable
+  `KeyValueStore` for tests), `qr.ts` (`qrMatrix`, `qrSvg(text, label)`; `qrcode-generator` 1.4.4
+  pinned; nothing imports `qr.ts` yet, the lobby should `import()` it).
+- **Boot**: `bootRoute` returns `{ kind: 'room', code }` for a valid `?room=` (any `?room=`
+  parameter wins over `?world=`; an invalid one → `start`); `main.ts` shows the start page for it,
+  with the `room.noServer` notice when the build has no endpoint.
+- **i18n**: ~105 keys in en and nb (`room.*`, `lobby.*` incl. `lobby.options.*` and the 12
+  `lobby.colours.*`, `party.*` incl. `tagAway / tagLeft / tagDown / prevTeammate / nextTeammate`,
+  `chat.*` incl. `close / pings / unread`, `ping.*`, `keys.chat`, `keys.cycleFollow`,
+  `help.interactRoom`, `tile.usableHintRoom`, `ctx.interactHintRoom`). Extra beyond the list:
+  `room.sub`, `.retry`, `.joining`, `.creating`, `lobby.title`, `.you`, `.players`.
+  `lobby.defaultName` is `Player {n}`; `party.down` takes `{n}`.
+
 ## Constants
 
 Turn pill shown for parties of 2+, after 450 ms of waiting, hidden 250 ms after; serial sync timeout

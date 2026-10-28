@@ -4,6 +4,8 @@
  * `applied` after an area change, the worldId check, a gap that reconnects for a fresh snapshot,
  * reconnecting after a drop or `bye` with token, run and lastN, and no reconnect after `refused`,
  * `closed` or a replaced socket (with the notice key for the MP3 toast).
+ * MP3 D1: per-entry steps with the catch-up flag, stopReason in the stopped status, a late join
+ * from a playing welcome, the room / typing / clock state, and the lobby messages.
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -214,5 +216,118 @@ describe('RoomClient', () => {
     t.last().open();
     t.last().deliver({ t: 'refused', code: 'room_closed', message: 'closed', reason: 'server_updated' });
     await expect(p).rejects.toThrow('net.serverUpdated');
+  });
+
+  it('emits per-entry steps (before, after, events, outcomes); a welcome batch is a catch-up', () => {
+    const t = setup();
+    const start = createGame(world, { seed: 3, players: [{ name: 'Ann' }] });
+    const { es, states } = waits(start, 0, 5);
+    t.c.connect();
+    t.last().open();
+    t.last().deliver(welcome(start));
+    t.last().deliver({ t: 'entries', run: 1, es: es.slice(0, 2) });
+    const live = t.events.filter((e): e is Extract<RoomEvent, { t: 'entries' }> => e.t === 'entries');
+    expect(live).toHaveLength(1);
+    expect(live[0].catchUp).toBe(false);
+    expect(live[0].steps.map((x) => x.entry.n)).toEqual([0, 1]);
+    expect(hashState(live[0].steps[0].before)).toBe(hashState(start));
+    expect(hashState(live[0].steps[0].after)).toBe(hashState(states[0]));
+    expect(live[0].steps[1].before).toBe(live[0].steps[0].after);
+    expect(live[0].steps[1].after).toBe(t.c.state);
+    expect(live[0].steps.flatMap((x) => x.outcomes)).toEqual(live[0].outcomes);
+    expect(live[0].steps[0].outcomes[0]).toMatchObject({ playerId: 'p1', ok: true });
+    // a reconnect catches up from the welcome's entries
+    t.c.drop();
+    t.timers.shift()!();
+    t.last().open();
+    t.last().deliver(welcome(start, { snapshot: undefined, world: undefined, entries: es.slice(2) }));
+    const all = t.events.filter((e): e is Extract<RoomEvent, { t: 'entries' }> => e.t === 'entries');
+    expect(all).toHaveLength(2);
+    expect(all[1].catchUp).toBe(true);
+    expect(all[1].steps.map((x) => x.entry.n)).toEqual([2, 3, 4]);
+    expect(hashState(t.c.state!)).toBe(hashState(states[4]));
+  });
+
+  it('records why it stopped: 4007 (another tab), a refusal’s close code, none after leave()', () => {
+    const a = setup(TOKEN);
+    a.c.connect();
+    a.last().open();
+    a.last().deliver(welcome(null));
+    a.last().serverClose(4007);
+    expect(a.c.stopReason).toBe(4007);
+    expect(a.events.at(-1)).toEqual({ t: 'status', status: 'stopped', stopReason: 4007 });
+
+    const b = setup();
+    b.c.connect();
+    b.last().open();
+    b.last().deliver({ t: 'refused', code: 'room_full', message: 'full' });
+    expect(b.c.stopReason).toBe(4003);
+    expect(b.events.find((e) => e.t === 'status' && e.status === 'stopped')).toMatchObject({ stopReason: 4003 });
+
+    const c = setup(TOKEN);
+    c.c.connect();
+    c.last().open();
+    c.last().deliver(welcome(null));
+    c.last().serverClose(1008);
+    expect(c.c.stopReason).toBe(1008);
+    // connecting again forgets the reason
+    c.c.connect();
+    expect(c.c.stopReason).toBeUndefined();
+
+    const d = setup(TOKEN);
+    d.c.connect();
+    d.last().open();
+    d.last().deliver(welcome(null));
+    d.c.leave();
+    expect(d.last().sent.at(-1)).toEqual({ t: 'leave' });
+    expect(d.c.stopReason).toBeUndefined();
+    expect(d.events.at(-1)).toEqual({ t: 'status', status: 'stopped' });
+  });
+
+  it('a late join: a playing welcome gives the replica, the pid and the room at once', () => {
+    const t = setup();
+    const start = createGame(world, { seed: 3, players: [{ name: 'Ann' }, { name: 'Bea' }, { name: 'Kari' }] });
+    const order: string[] = [];
+    t.c.on((e) => order.push(e.t === 'state' ? `state:${e.reason}` : e.t));
+    t.c.connect();
+    t.last().open();
+    t.last().deliver(welcome(start, { you: { seat: 's3', pid: 'p3', token: TOKEN, host: false }, snapshot: { n: 17, state: serialize(start) } }));
+    expect(order).toEqual(['status', 'state:welcome', 'welcome']);
+    expect(t.c).toMatchObject({ pid: 'p3', seat: 's3', host: false, phase: 'playing', n: 17 });
+    expect(t.c.state!.party).toContain('p3');
+    expect(t.c.room).toMatchObject({ code: 'K7QX', phase: 'playing' });
+  });
+
+  it('keeps the room, options, typing seats and the clock; sends the lobby messages', () => {
+    const t = setup();
+    t.c.connect();
+    t.last().open();
+    t.last().deliver(welcome(null));
+    const info = { ...welcome(null).room, world: { ...welcome(null).room.world, title: 'Teen' } };
+    t.last().deliver({ t: 'room', room: info, options: { maxPlayers: 4, deadlineMs: 3000, difficulty: 'hard' } });
+    expect(t.c.room!.world.title).toBe('Teen');
+    expect(t.c.options).toEqual({ maxPlayers: 4, deadlineMs: 3000, difficulty: 'hard' });
+    t.last().deliver({ t: 'typing', seat: 's2', on: true });
+    t.last().deliver({ t: 'typing', seat: 's3', on: true });
+    t.last().deliver({ t: 'typing', seat: 's2', on: false });
+    expect([...t.c.typingSeats]).toEqual(['s3']);
+    t.last().deliver({ t: 'clock', n: 3, acted: ['p1'], waiting: ['p2'], deadlineInMs: 900 });
+    expect(t.c.clock).toMatchObject({ acted: ['p1'], waiting: ['p2'] });
+    expect(t.events.filter((e) => e.t === 'message').map((e) => (e as { msg: ServerMsg }).msg.t)).toEqual(['room', 'typing', 'typing', 'typing', 'clock']);
+    t.c.ready(true);
+    t.c.profile('Kari', PLAYER_COLOURS[4]);
+    t.c.pickWorld('fixture-teen');
+    t.c.setOptions({ difficulty: 'gentle' });
+    t.c.ping('follow', { x: 2, y: 3 });
+    expect(t.last().sent.slice(-5)).toEqual([
+      { t: 'ready', on: true },
+      { t: 'profile', name: 'Kari', colour: PLAYER_COLOURS[4] },
+      { t: 'world', demo: 'fixture-teen' },
+      { t: 'options', difficulty: 'gentle' },
+      { t: 'ping', kind: 'follow', x: 2, y: 3 },
+    ]);
+    // a welcome (a reconnect) forgets who was typing
+    t.last().deliver(welcome(null));
+    expect(t.c.typingSeats.size).toBe(0);
   });
 });
