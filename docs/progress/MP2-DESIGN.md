@@ -710,6 +710,76 @@ passing, the golden replay unchanged, and a commit on `multi`.
   replay to the same hash and reconnect with entries, crash between rewrite and truncate, broken
   room, version closing with `room_closed / server_updated` and `outdated`).
 
+### C4 as built
+
+- **`server/rooms/ws.ts`**: `attachRoomSockets(server, { manager, allowedOrigins, clientIp, limits?,
+  log? })` → `{ size, close(graceMs) }`, called by `createApp` when `AppOptions.rooms` is given. Only
+  `/api/ws` upgrades (other paths 400, 503 while closing); `originAllowed(origin, host, list)`: listed
+  origins only, or (only when the list is empty) `http(s)://<Host>`; a missing Origin is 403. The rule
+  does not read `NODE_ENV`: with `ALLOWED_ORIGINS` set (production) the own host is refused too.
+  `socket.on('error')` is attached first; per IP (the app's `clientIp`, so `TRUST_PROXY` applies)
+  upgrades/min (429 with retry-after) and open sockets (429), sockets in all (503), counted before
+  `handleUpgrade`. `WebSocketServer({ noServer, perMessageDeflate: false, maxPayload: 16 KB })`.
+  `wsConn(ws, bufferBytes)` is the `Conn` (exported, unit-tested with a fake): JSON frames, and a send
+  that leaves more than 4 MB buffered closes with 1009 and terminates. Before a hello, every frame takes
+  from the buckets; a non-hello is `error invalid` (counted); `peekHello` engine mismatch → `refused
+  outdated, reload` + 4001; then `parseClientMsg`; then `manager.hello`. After it: buckets
+  (`ConnBuckets`, a drop sends `error rate`, 200 drops a minute → 1008), invalid → `error invalid`
+  (50 → 1008), then `room.message`. Hello timeout = `timing.helloTimeoutMs` (4000). Pings every
+  `limits.pingMs` (15 s), two missed pongs terminate. `close(graceMs)` stops accepting, waits for the
+  sockets to close, then terminates the rest.
+- **`server/rooms/limits.ts`**: `RoomLimits` (`upgradesPerMin` 20, `socketsPerIp` 16, `socketsTotal`
+  200, `createsPer10Min` 6, `listPerMin` 60, `firstAreaMs` 2000, `socketBufferBytes` 4 MB, `pingMs`
+  15 000), `roomLimits(partial)` (0 allowed), `TokenBucket`, `ConnBuckets`.
+- **Routes in `app.ts`** (only with `AppOptions.rooms = { dataDir, timing?, scheduler?, limits?,
+  maxRooms?, demos? }`; without it nothing changes, so the existing server tests run as before):
+  `GET /api/rooms` → `RoomList` (`max` = the manager's limit), `GET /api/rooms/:code` → `RoomInfo` or
+  404 `no_room` (both 60/min per IP), `POST /api/rooms` (JSON ≤ 1 MB, depth guard; `engine` read first
+  → 409 `{ kind: 'outdated', reload: true }`; then the creation limiter, so invalid bodies and uploads
+  count; `CreateRoomRequest`; 503 `server_full`; an upload goes through `parseWorld` strict and a trial
+  `createGame` for `options.maxPlayers` players, caught and timed against `firstAreaMs` → 400
+  `invalid_world`, and the trial's registry entry is released) → 201 `{ code, token }`; `POST
+  /api/rooms/:code/world { token, world }` (same checks and limiter; 403 `bad_token` / `not_host`, 409
+  `bad_phase`) → 200 `{ ok, worldId }`. `RoomManager.releaseWorld` is now public. `ANYWORLD_MAX_ROOMS`
+  is read in `createApp`. Error kinds: `outdated`, `server_full`, `no_demo`, `no_room`,
+  `invalid_world`, `bad_token`, `not_host`, `bad_phase`, plus the existing `bad_request` / `rate_limit`.
+- **Seen in testing (C3 rule, unchanged):** a guest whose hello arrives before the creator's first
+  hello becomes host (`ensureHost` picks a connected seat). MP3's lobby should connect the creator
+  right after `POST /api/rooms`.
+- **`server/data-dir.ts`**: `resolveDataDir(env, root)` (ANYWORLD_DATA_DIR, then the first entry of
+  STATE_DIRECTORY, then `<repo>/.data`), `ensureDataDir(dir)` → `<dir>/rooms` (mkdir + probe file;
+  throws). `createApp` calls it too (tests pass a temp dir).
+- **`server/index.ts`**: `startServer` returns `rooms: RoomManager | null` and `close(graceMs = 1000)`:
+  `manager.shutdown()` (snapshot + `bye` + 1012), then the sockets get `graceMs` to close and are
+  terminated, then `server.close()`. Exported helpers `testTiming(env)` (ANYWORLD_TEST_TIMING JSON,
+  ignored in production; bad JSON fails the start) and `dataDirOrExit(env, tag)` (prints `[server]
+  cannot use data directory <dir>: <error>`, exit 1). `main()` prints `[server] rooms in <dir>` and,
+  last, `[server] listening <port>`; SIGTERM/SIGINT run `close()` and exit 0. `dev.ts` does the same
+  (data dir, test timing) and its Vite proxy has `ws: true`, as has `vite.config.ts`.
+- **`src/net/client.ts`** (`RoomClient`, not in the engine hash): `new RoomClient({ url, socket:
+  SocketFactory, engine, room, name, colour, token?, reconnect?, backoffMs?, setTimer?, clearTimer?
+  })`; `connect()`, `joined()` (resolves on the first welcome, rejects with the notice key or a world
+  fault), `on(fn)` with `RoomEvent`s (`welcome`, `entries` with engine events, `state` (welcome /
+  snapshot / run), `notice` (noticeFor), `fault` (`world_invalid`, `world_mismatch`, `gap`, `apply`,
+  `invalid_message`), `status`, `message` for everything else). Public fields: `status`, `token`,
+  `seat`, `pid`, `host`, `phase`, `run`, `n`, `world`, `worldId`, `state`, `options`, `roster`, `chat`,
+  `desyncs`, `reconnects`, `invalid`. Senders: `send(msg)`, `input(actions, intent, busy?)` (area and
+  turn from the replica), `say`, `typing`, `presence`, `start(demo?)`, `leave()`; `stop()`, and
+  `drop()` (closes the socket as a network failure would, then reconnects: for C5's FaultyChannel).
+  It registers the parsed world in the engine registry (the bots' and the UI's view helpers need it).
+  Reconnect backoff 0.5 → 5 s; hello carries `token`, `run` and `lastN` (no `lastN` after a gap or a
+  refused entry, so the server sends a snapshot). No reconnect after `refused`, `closed`, 4007, 1008 or
+  `stop()`. `pid` follows the roster (a new run renumbers seats). A `ws` factory in Node:
+  `(url) => new WebSocket(url, { headers: { origin } }) as unknown as RoomSocket`.
+- **Tests**: `tests/server/rooms-limits.test.ts` (24: data dir, rooms off, Origin with and without the
+  list, bad paths, per-IP and total sockets, TRUST_PROXY on upgrades, frame size, pings, close(),
+  hello order and timeout, invalid and rate drops, buckets, backpressure, the HTTP routes and limits),
+  `tests/server/rooms-smoke.test.ts` (two RoomClients play, chat, drop and reconnect, hashes equal the
+  server's; the child process: `listening`, the knobs, SIGTERM snapshot + bye + exit 0, refusal to
+  start on a bad data dir), `tests/net/client.test.ts` (6, fake socket). Shared helpers in
+  `tests/server/rooms-helpers.ts` (`boot`, `openRaw`, `upgradeStatus`, `wsClient`, `until`), usable by
+  C5. Not done: the design §9 log line for > 20 `illegal` outcomes per minute per seat (C5 may add it).
+
 ## Constants
 
 | Name | Value | Where |

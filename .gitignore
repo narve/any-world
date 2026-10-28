@@ -6,6 +6,8 @@ test-results/
 playwright-report/
 *.log
 .saves/
+# room server data on the development laptop (ANYWORLD_DATA_DIR default, server/data-dir.ts)
+.data/
 
 # M5 review screenshots, kept locally only (pruned from git before pushing; see BUILD_LOG 2026-10-25)
 docs/progress/archive/

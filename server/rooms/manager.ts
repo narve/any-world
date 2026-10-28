@@ -23,7 +23,7 @@ export interface ManagerOptions {
   timing?: Partial<RoomTiming>;
   scheduler?: Scheduler;
   demos?: DemoWorlds;
-  /** open rooms at most (default LIMITS.maxRooms; env ANYWORLD_MAX_ROOMS in C4) */
+  /** open rooms at most (default LIMITS.maxRooms; createApp passes env ANYWORLD_MAX_ROOMS) */
   maxRooms?: number;
   log?: (line: string) => void;
   /** seeds, tokens and room codes (tests) */
@@ -248,7 +248,7 @@ export class RoomManager {
   }
 
   /** an uploaded world nobody plays any more leaves the engine registry (demo worlds stay) */
-  private releaseWorld(worldId: string): void {
+  releaseWorld(worldId: string): void {
     for (const r of this.rooms.values()) if (!r.closed && r.world.worldId === worldId) return;
     for (const id of this.demos.loadedWorldIds()) if (id === worldId) return;
     unregisterWorld(worldId);

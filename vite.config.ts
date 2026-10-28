@@ -34,7 +34,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: '0.0.0.0',
     port: envPort('ANYWORLD_CLIENT_PORT', 5173),
-    proxy: { '/api': `http://localhost:${envPort('ANYWORLD_API_PORT', 8787)}` },
+    // ws: true carries the room WebSocket (/api/ws) through the proxy too
+    proxy: { '/api': { target: `http://localhost:${envPort('ANYWORLD_API_PORT', 8787)}`, ws: true } },
   },
   preview: {
     host: '0.0.0.0',

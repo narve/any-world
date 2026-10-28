@@ -70,7 +70,9 @@ port on the home router is opened:
 - **Tailscale Funnel:** `sudo tailscale funnel --bg 8787` gives `https://<machine>.<tailnet>.ts.net`.
 - **Cloudflare Tunnel:** `cloudflared` routes a name such as `any-game.dv8.no` to `http://localhost:8787`.
 - **WireGuard + VPS (chosen):** Caddy on the VPS serves `any-game.dv8.no` and proxies through the tunnel. Set
-  `TRUST_PROXY=1` so rate limits see the real client address. A minimal Caddyfile:
+  `TRUST_PROXY=1` so rate limits see the real client address (required for rooms, §6: without it every
+  player shares the proxy's address and its per-IP socket limit). A minimal Caddyfile (Caddy passes
+  WebSocket upgrades through `reverse_proxy` without extra settings):
 
   ```
   any-game.dv8.no {
@@ -93,3 +95,31 @@ GitHub Pages (at `any.dv8.no`) and only the server at home:
 3. Both must be HTTPS: a page served over HTTPS cannot call an `http://` server.
 
 When the laptop is off, such pages still load and play the demo worlds.
+
+## 6. Multiplayer rooms (MP2)
+
+The server also runs the multiplayer rooms (WebSocket on `/api/ws`, HTTP on `/api/rooms`).
+
+- **Data directory.** Room files live in `<data dir>/rooms`: `ANYWORLD_DATA_DIR` when set (the env
+  example sets `/var/lib/anyworld`), else `STATE_DIRECTORY` (systemd sets it from the unit's
+  `StateDirectory=anyworld`), else `.data/` in the repo (gitignored; the development laptop). The server
+  creates the directory at start-up and refuses to start if it cannot write there
+  (`[server] cannot use data directory …` in `journalctl -u anyworld`). A restart replays each room's
+  log; players reconnect with the token kept in their browser.
+- **Limits.** 10 rooms (`ANYWORLD_MAX_ROOMS`), 8 players per room by default (the host may pick 2–12),
+  idle rooms closed after 2 hours. Per client IP: 20 WebSocket connections a minute, 16 open at once,
+  6 room creations per 10 minutes; 200 sockets in all. Behind Caddy, `TRUST_PROXY=1` is required.
+- **Origins.** CORS does not cover WebSockets, so the server checks the `Origin` of every upgrade
+  itself: with `ALLOWED_ORIGINS` set only those origins may connect (e.g. `https://any.dv8.no`); with
+  it empty only pages served by the server itself (and the Vite dev proxy) may.
+- **Deploy the pages and the server together.** Rooms compare the engine version (a hash of the
+  engine source, `/api/health` reports it as `engine`): a page built from another engine is refused
+  with a "reload the page" message, and a deploy that changes the engine closes the open rooms ("the
+  server was updated"). So publish the Pages build and run `scripts/deploy.sh` at the same time.
+- **Development.** `npm run dev` proxies `/api` (WebSocket included) to the API server, and the rooms
+  use `.data/`. The engine version is computed when Vite and the server start, so after editing
+  `src/engine`, `src/schema` or `src/net`, restart both (else the page is refused as outdated).
+  Outside production, `ANYWORLD_ENGINE_VERSION` overrides the version and `ANYWORLD_TEST_TIMING` (JSON)
+  the room durations; both are for the tests and ignored when `NODE_ENV=production`.
+- **Graceful restart.** On SIGTERM (`systemctl restart`) every room saves a snapshot and tells its
+  players to reconnect.
