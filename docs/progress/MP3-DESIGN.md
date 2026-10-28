@@ -651,6 +651,78 @@ re-exported), so the new-player gate is run once at the end as a check.
   `room.sub`, `.retry`, `.joining`, `.creating`, `lobby.title`, `.you`, `.players`.
   `lobby.defaultName` is `Player {n}`; `party.down` takes `{n}`.
 
+## D2 as built
+
+- **Characterization first** (commit d4f3b0b): `tests/client/session-characterization.test.ts` plays
+  six single-player runs (western ×2, ship, teen ×2, dream; talker / explorer / cautious / newbie bots,
+  300 decisions each) through the controller's calls: `uiAction`, talk / persuade intents,
+  `dialogueReply` / `dialogueLeave` / `trade` (buy and sell), click-to-travel with `travelTick`
+  every 25 steps, the client's `OfflineGmDirector` through `takeHooks` / `applyGm`, and canned NPC
+  voice answers for every other `takeVoiceRequest`. Each step records toasts, narration, history,
+  voice requests and lines, onboarding, trade / mode, new log and GM-log lines and a log hash into
+  `session-characterization.jsonl` (2639 lines). It stayed byte-identical through the refactor;
+  regenerate only with `UPDATE_CHARACTERIZATION=1` and a reason.
+- **`GameSession`** (`src/client/session.ts`): `pid` is a readonly field (`playerId` and `me` read
+  it); `SessionInit.room = { state, pid }` builds a session on a given (perspective) state with
+  `replicaMode` set: no `createGame`, no intro hook, no `drainEngineQueue`, and `afterChange` skips
+  the GM hooks and the drain. `act` = step + `protected absorbStep(before, after, events, mine?,
+  out?)` (`mine = { action, tookTurn }`; without it narration is not cleared, no history, no voice
+  turn, no onboarding count). `applyGm` = recheck + `applyGmActions` + `protected absorbGm(before,
+  after, events, actions, meta, out?)`. `travelTick` = `nextTravelAction()` (pre-step rules) + step
+  + `protected travelGoesOn(out, hpBefore)` (the post-step rules: arrived, new hostile, hurt,
+  choice…; the "new hostile" rule stays post-step, as single player has it). Chains:
+  `replyPlan(index)` / `dialogueReplyActions(index)` / `replyAnswer(plan, gained)` /
+  `keepConversation(...)` and `tradePlan(t)` / `tradeActions(t)` / `keepShop(...)`; `talk` is
+  protected. `Outcome.pending?` (a room's sent action); `confirmCursor` treats it as accepted.
+  `emptyOutcome` and `merge` are exported. `clientLog()` (protected) feeds the view's GM log.
+- **`perspective(state, pid)`** (`room/perspective.ts`): the party rotated (`[pid, …the rest in
+  order]`), shallow (players, area shared), memoised in a WeakMap per state; `state` itself for the
+  lead, a party of one and a pid not in the party.
+- **`RoomSession`** (`room/room-session.ts`): `new RoomSession({ client, prefs? })` from a joined
+  client with a replica (playing welcome or `run`); `replica` (client.state), `cameraState`,
+  `writable` (true only inside `absorb` / `rebuild`), `queued` (`{ action, area, turn, intent }`),
+  `followed`, `overlay` (LogOverlay), `run`. `attach(apply)` subscribes to the client (entries →
+  `absorb`, `state` welcome / snapshot → `rebuild`, refusal / stale → `onMessage`) and ignores events
+  once `client.run` differs from the session's run (D3 relaunches). `act` → dry run (`stepTurn` on
+  the raw replica; `illegal` → `explainInvalid` toast, `down` → nothing; skipped for `transition` and
+  `exitCountdown.turnsLeft <= 1`) → `client.input(actions, intent)` → `{ pending }`; not joined →
+  `room.offline` toast. Intents: `wait` for wait, `travel` for travel steps, else `decide`. The same
+  turn action for the same turn is not resent. `dialogueReply`, `trade` (buy / sell) and persuade
+  from a dialogue send one input (`[choose_option, talk]` / `[choose_option, persuade]`); chain
+  dry runs check only the first action (the reopen `talk` may fail harmlessly). `applyGm` is a no-op
+  in rooms (no local GM, NPC voice actions not applied). The HUD name is the player's own
+  (`players[pid].name`; single player keeps `world.player.name`).
+- **Absorb**: per step, turn → `absorbStep` with this pid's first ok outcome as `mine`, then the
+  chain bookkeeping when the entry carries the pending chain's actions (healer line →
+  `overlay.add`, `keepConversation` / `keepShop` when the talk reopened the dialogue); gm →
+  `absorbGm` (intro card from the GM intro entry, area card from absorbStep then the GM's
+  area_enter text); join / away / back / leave / return → toasts `party.joined / away / back /
+  left` (`return` says "back"), never for the own pid, none in a catch-up batch (which also keeps
+  the narration card as it was, null on an area change). After the batch: a choice ends travel; the
+  next travel step is sent once the previous one resolved (also when the player is short of
+  energy: the server keeps it pending); a refused travel step ends travel without a toast; the
+  followed teammate is updated. `rebuild()` (welcome / desync snapshot) clears narration, queued,
+  chain, travel and the cursor and primes rules without toasts; it returns `areaChanged: true`.
+- **Spectator**: while `me.down`, `followed` = the nearest standing teammate (Euclidean), kept
+  until down or left; `cycleFollow(±1)` over standing teammates in party order; `cameraState` =
+  `perspective(replica, followed)`; back to null on getting up.
+- **ChatModel** (`room/chat-model.ts`): `EMOTES`, `CHAT_TIMING`, `isEmote`, `bubbleMs`; `push(line,
+  now)` (live: bubble, unread, typing cleared; false for a known id), `merge(lines)` (welcome:
+  quiet, no bubbles or unread), `setTyping`, `typing(now)` (a Set without self), `bubbles(now)`,
+  `canSend(now)` / `noteSent(now)` (one shared 1/s), `draft(text)` (`{ count, left, over, counter }`
+  in code points), `setSheetOpen(open)`, `recent(n)`. `self` is the client's seat.
+- **Server fix**: `newRun` sends the roster (with the new pids) before `run`, so a client knows its
+  pid when the run arrives and can build its session before the GM's intro entry.
+- **Harness** (`tests/client/room-harness.ts`): `MemRoom` (RoomManager + ManualScheduler +
+  `TEST_TIMING`, seeds from `seed`), `client(name, { host, token, colour })`, `join(...)`,
+  `flush()`, `advance(ms)`, `sent(c)` / `inputs(c)`, `craft(fn, clients)` (replaces the server
+  state, e.g. a `roomMap` with placed actors, and makes the clients refetch it as a snapshot),
+  `dispose()`. Client timers run on the manual scheduler.
+- For D3: build the session synchronously on `welcome` (playing) and on the `state` event with
+  reason `run`; call `travelTick()` once when an outcome has `travel: true` (later steps come from
+  the entries); route `session.cameraState` to the renderer; use `queued` for the HUD mark; wire
+  ChatModel to `welcome.chat` (merge) and `chat` frames (push).
+
 ## Constants
 
 Turn pill shown for parties of 2+, after 450 ms of waiting, hidden 250 ms after; serial sync timeout

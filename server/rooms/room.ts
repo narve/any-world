@@ -849,6 +849,9 @@ export class Room {
     this.lastResolveAt = now;
     this.hashes.set(0, hashState(state));
     this.snapshot();
+    // the roster with the new player ids first, so a client knows its pid when the run arrives (MP3:
+    // the browser builds its session on `run`, before the GM's intro entry)
+    this.sendRoster(now);
     this.broadcast({ t: 'run', run: this.run, ...(worldChanged || fromLobby ? { world: world.world } : {}), worldId: world.worldId, snapshot: { n: 0, state: serialize(state) } });
     this.log(`run ${this.run} started (${this.seats.length} players, seed ${this.seed})`);
     // a seat that is off at the start gets its character and the 2-minute rule
