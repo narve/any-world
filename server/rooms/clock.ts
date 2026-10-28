@@ -1,0 +1,80 @@
+/**
+ * The turn clock (MP2 design §4), as a pure function of what the room knows: when the next party
+ * turn resolves, and when the room must look again because the set of active players changes on
+ * its own (idle, typing expiry, away timers, the end of an area hold). The room keeps one timer for
+ * the earlier of the two and calls this again after every message, entry and timer.
+ */
+import type { PlayerId } from '../../src/engine/types';
+import type { Intent } from '../../src/net/protocol';
+
+export interface PendingInput {
+  intent: Intent;
+  /** when it arrived (or the resolve that carried it over) */
+  at: number;
+  /** the player is engine-ready (readyPlayers): its turn action can resolve now */
+  ready: boolean;
+}
+
+export interface ClockView {
+  /** players a turn waits for: engine-ready seats that are connected, playing, not typing, not in a dialogue, not idle */
+  active: readonly PlayerId[];
+  /** engine readyPlayers */
+  ready: readonly PlayerId[];
+  /** each player's turn action for the next turn (latest wins) */
+  pending: ReadonlyMap<PlayerId, PendingInput>;
+  /** when the first pending input arrived (not before the end of an area hold); null = none */
+  firstAt: number | null;
+  /** when the last turn resolved (taken after the step, so a slow step shortens no deadline) */
+  lastResolveAt: number;
+  /** room option (1–5 s) */
+  deadlineMs: number;
+  travelMs: number;
+  countdownTurnMs: number;
+  /** state.area.exitCountdown is set */
+  countdown: boolean;
+  /** the area was just entered: no deadline starts and nothing resolves before this */
+  areaHoldUntil: number | null;
+  anyConnected: boolean;
+  /** times at which the active set changes without a message (idle, typing, away, hold, clock throttle) */
+  wakes: readonly number[];
+}
+
+export interface ClockDecision {
+  /** the next turn: at `at` (≤ now = at once), with stepTurn's `advance` */
+  resolve: { at: number; advance: boolean } | null;
+  /** the earliest wake after `now`, or null */
+  wakeAt: number | null;
+}
+
+/**
+ * Rules, in order:
+ *  0. nobody connected: nothing resolves and no wakes (an empty room sleeps, countdown included);
+ *  1. exit countdown: a turn every countdownTurnMs after the last one, advance: true;
+ *  2. area hold: nothing before it ends;
+ *  3. everyone active has acted (true for an empty active set) and something is pending:
+ *     a ready player's input: now when one intent is `decide`, else at the travel cadence, advance:
+ *     false; no pending input from a ready player: at the travel cadence with advance: true (the
+ *     world runs until the slow ones are ready);
+ *  4. something is pending and someone active has not acted: firstAt + deadlineMs, advance: true;
+ *  5. nothing pending: no resolve (while nobody acts the world does not move).
+ */
+export function nextResolve(v: ClockView, now: number): ClockDecision {
+  if (!v.anyConnected) return { resolve: null, wakeAt: null };
+  let wakeAt: number | null = null;
+  for (const w of v.wakes) if (w > now && (wakeAt === null || w < wakeAt)) wakeAt = w;
+  if (v.areaHoldUntil !== null && v.areaHoldUntil > now && (wakeAt === null || v.areaHoldUntil < wakeAt)) wakeAt = v.areaHoldUntil;
+
+  if (v.countdown) return { resolve: { at: v.lastResolveAt + v.countdownTurnMs, advance: true }, wakeAt };
+  if (v.areaHoldUntil !== null && v.areaHoldUntil > now) return { resolve: null, wakeAt };
+  if (v.pending.size === 0) return { resolve: null, wakeAt };
+
+  const allActed = v.active.every((id) => v.pending.has(id));
+  if (allActed) {
+    const fromReady = [...v.pending.values()].filter((p) => p.ready);
+    if (fromReady.length === 0) return { resolve: { at: v.lastResolveAt + v.travelMs, advance: true }, wakeAt };
+    if (fromReady.some((p) => p.intent === 'decide')) return { resolve: { at: now, advance: false }, wakeAt };
+    return { resolve: { at: v.lastResolveAt + v.travelMs, advance: false }, wakeAt };
+  }
+  const start = Math.max(v.firstAt ?? now, v.areaHoldUntil ?? -Infinity);
+  return { resolve: { at: start + v.deadlineMs, advance: true }, wakeAt };
+}

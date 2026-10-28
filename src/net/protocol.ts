@@ -219,7 +219,7 @@ export const ChatLine = z.object({
 });
 export type ChatLine = z.infer<typeof ChatLine>;
 
-/** serialize() of a GameState after entry n */
+/** serialize() of a GameState after n entries (n = the next entry's n) */
 export const Snapshot = z.object({ n: Count, state: z.string().max(16 * 1024 * 1024) });
 export type Snapshot = z.infer<typeof Snapshot>;
 
@@ -236,7 +236,7 @@ export const ClientMsg = z.discriminatedUnion('t', [
     token: Token.optional(),
     name: Name,
     colour: Colour,
-    /** the last entry this client applied (reconnect) */
+    /** how many entries of `run` this client has applied, i.e. the next n it expects (reconnect) */
     lastN: Count.optional(),
     run: Count.optional(),
   }),
@@ -252,8 +252,9 @@ export const ClientMsg = z.discriminatedUnion('t', [
   z.object({ t: z.literal('presence'), state: Presence }),
   z.object({ t: z.literal('typing'), on: z.boolean() }),
   z.object({ t: z.literal('chat'), text: z.string().max(LIMITS.chatRawMax) }),
+  /** hashState after n entries (every LIMITS.hashEvery) */
   z.object({ t: z.literal('hash'), n: Count, h: z.string().regex(/^[0-9a-f]{16}$/) }),
-  /** an area-change entry is applied locally (ends the area hold) */
+  /** an area-change entry is applied locally: n = the entries applied with it (ends the area hold) */
   z.object({ t: z.literal('applied'), n: Count }),
   /** host only, lobby or ended phase */
   z.object({ t: z.literal('start'), demo: DemoId.optional() }),
@@ -291,7 +292,7 @@ export const ServerMsg = z.discriminatedUnion('t', [
     world: z.unknown().optional(),
     worldId: z.string().max(80),
     snapshot: Snapshot.optional(),
-    /** the entries after hello.lastN, when the server still has them */
+    /** the entries from n = hello.lastN on, when the server still has them */
     entries: z.array(LogEntrySchema).optional(),
     chat: z.array(ChatLine).max(LIMITS.chatHistory),
   }),

@@ -643,6 +643,73 @@ passing, the golden replay unchanged, and a commit on `multi`.
   fallback and CRLF give the same hash, sim/messages edits do not change it, the override, and
   `/api/health.engine`).
 
+### C3 as built
+
+- **`n` is a count everywhere** (deviation, clarified in `protocol.ts` comments): the number of
+  entries applied in the run, i.e. the next entry's `n`. A snapshot `{ n, state }`, `hello.lastN`
+  (what the client has applied), `hash.n` (hashState after n entries, sent when `n % 10 === 0`),
+  `applied.n` and `clock.n` all use it; a run starts with a snapshot at `n = 0`. Load skips log
+  entries with `e.n < snapshot.n`. `welcome.entries` = the ring from `lastN` on (empty when the
+  client is current); `lastN > n`, a `lastN` older than the ring (512) or another `run` → snapshot.
+- **`server/rooms/timing.ts`**: `RoomTiming` (§Constants plus `idleSweepMs` 60 000 and
+  `clockThrottleMs` 200), `roomTiming(partial)` (ignores unknown and non-positive values; C4 feeds it
+  `ANYWORLD_TEST_TIMING`), `Scheduler` { `now`, `setTimer(at, fn)`, `cancel` }, `RealScheduler`
+  (unref'ed timeouts), `ManualScheduler` (`advanceTo`, `advanceBy`, `flush`, `pending`, `nextAt`).
+- **`clock.ts`**: `nextResolve(view, now)` → `{ resolve, wakeAt }` exactly as §4 (the view carries
+  `travelMs` and `countdownTurnMs` too); the deadline starts at `max(firstAt, areaHoldUntil)`.
+- **`room.ts`** (`Room`, `Conn { send, close }`, `RoomDeps { timing, scheduler, store | null, demos,
+  log?, onClose?, releaseWorld?, seed?, token? }`). API for C4: `Room.create` / `Room.load` (the
+  manager calls them), `addSeat(name?, colour?)` → `{ seat, token }` (the creator's host seat),
+  `hello(conn, hello)` → `Refused | null` (null: welcome sent and subscribed), `message(conn, msg)`
+  for every other parsed message, `disconnect(conn)` (ignored for a replaced socket),
+  `uploadWorld(token, world)` → `'ok' | 'bad_token' | 'not_host' | 'bad_phase'` (lobby: replaces the
+  world and writes the world file; ended: staged for the next `start`, not persisted), `info()`,
+  `close(reason)`, `shutdown()` (snapshot + `bye`, closes with 1012), `lastActivityAt`. Read-only
+  helpers for tests: `state`, `n`, `run`, `phase`, `host`, `chat`, `seatList()`, `recentEntries()`,
+  `hashAt(n)`, `clockView()`. `EXIT_COUNTDOWN_TURNS` 10, `SNAPSHOT_EVERY` 100, `RING_SIZE` 512,
+  `HASH_RING` 64.
+- Room rules as built (beyond §3–§6): a `leave` message closes the socket with 1000; a removed seat's
+  socket gets 4010. A hello's name and colour apply while the seat has no character (lobby, ended,
+  the creator's first hello). When the first seat connects to a sleeping room, the other seats'
+  2-minute timers start then and `away` entries are appended for their characters (after a restart
+  the engine does not know they are away); `lastResolveAt` is reset too. A due leave blocked by the
+  guards (`canLeave`: run on, ≥ 2 members, someone else standing) is retried after every evaluation,
+  so it happens as soon as the condition clears (not another 2 minutes). The host is re-chosen
+  whenever the host seat is not connected and another is (also on a hello to a room whose host is
+  off). Pending inputs of players no longer in the party or down are dropped (else rule 3b would run
+  the world at the travel cadence forever). `refusal` goes only for a fully refused (no-op) entry;
+  refusals inside an appended turn are visible to clients by replaying. A GM answer that does not
+  pass `LogEntrySchema` is dropped with a log line. The GM is asked after every `turn` entry (busy
+  re-appends included, the same on replay), with `t` from `gmTranslate(world.meta.language)` (en/nb
+  catalogs + `formatMessage`). Engine exceptions in any handler or timer close only that room
+  (`closed { reason: 'error' }`). Not done: the "illegal outcomes > 20/min" log line (§9).
+- **`store.ts`**: `RoomStore(dir = <data>/rooms)`: `writeWorld`, `writeRoom(file, truncate)`
+  (snapshot = rewrite + truncate), `append`, `codes`, `load` (torn line ends the log), `remove`,
+  `moveBroken`, `cleanTmp`, `tombstones(now)` / `addTombstones(add, now)` (7 days); `writeAtomic`;
+  `linesToReplay` (entries of the file's run in sequence from `snapshot.n`, seat records last-wins,
+  chat by id). Seat changes (new, renamed, `left`, pid, `removed: true`) are `{ seat }` log lines;
+  `RoomFile` also has `host` and `nextSeat` (seat ids are never reused). The room file is rewritten
+  without truncating on options changes and seat creation (keeping the stored snapshot and hooks).
+- **`worlds.ts`**: `DemoWorlds(dir = content/worlds)`: `ids()`, `get(id)` (strict `parseWorld`,
+  cached, null when missing or invalid), `loadedWorldIds()`.
+- **`manager.ts`**: `RoomManager({ dir, engineVersion, timing?, scheduler?, demos?, maxRooms?, log?,
+  seed?, token?, code? })`: `load()` → `{ loaded, closed, broken, tmpRemoved }`, `start()` (idle
+  sweep every `idleSweepMs`), `create({ demo? | world?, options?, name? })` → `{ ok, code, token, room
+  }` or `{ ok: false, error: 'server_full' | 'no_demo' }` (the world must already be validated: C4
+  does parseWorld, the createGame timing and the 409), `list()` (newest first), `get(code)`,
+  `tombstone(code)`, `hello(conn, hello)` → the room or null (checks engine → `outdated` with reload,
+  tombstone → `room_closed` with its reason, unknown → `no_room`, then the room; refusals are sent
+  and the conn closed with `REFUSED_CLOSE`), `shutdown()`, `closeAll(reason)`. A closed room's
+  files are removed, a tombstone added and its world unregistered unless another room or a loaded
+  demo uses it. Room codes avoid codes with a tombstone.
+- **Tests**: `rooms-clock` (11), `rooms-room` (20: seats, removal, host, replace race, phases and
+  play again, turns, deadline, idle, travel cadence, stale, no-op and refusal, typing, chat, late
+  join, reconnect with entries, hashes and desync, area change with countdown and hold, the 2-minute
+  path with both guards and the return, empty close, manager limits, idle close, shutdown),
+  `rooms-store` (5: atomic write, tmp cleanup, replay filtering, torn line, tombstones, restart
+  replay to the same hash and reconnect with entries, crash between rewrite and truncate, broken
+  room, version closing with `room_closed / server_updated` and `outdated`).
+
 ## Constants
 
 | Name | Value | Where |
