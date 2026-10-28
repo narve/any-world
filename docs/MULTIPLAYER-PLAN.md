@@ -3,7 +3,7 @@
 Status (2026-10-28): MP0 (hosting groundwork) is in the code, see [HOSTING.md](HOSTING.md), but not
 yet deployed: its exit check (HTTPS from a phone on 4G) is still open. MP1 (engine: parties) is done
 (2026-10-27): its exit checks are met, see [MP1.md](progress/MP1.md). MP2 (room server) is done
-(2026-10-28): its exit checks are met, see [MP2.md](progress/MP2.md); MP3–MP5 not started.
+(2026-10-28): its exit checks are met and verified by the MP2 gate, see [MP2.md](progress/MP2.md); MP3–MP5 not started.
 Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12 (sharing, multiplayer without waiting,
 chat). Hosts: the owner's Dell laptop runs the server, reached over WireGuard; for development and
 testing the server also runs on the owner's development laptop.

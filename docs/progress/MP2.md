@@ -48,6 +48,48 @@ The toast itself (and its reload button) is MP3's UI; MP2 delivers the i18n keys
 By hand: `npx tsx tools/room-bots.ts --url http://127.0.0.1:<port> --bots 4 --entries 200` against a
 dev server played 207 entries in about 4 s, 4 clients on one hash, no desyncs.
 
+## Gate verification (MP2 gate, 2026-10-28, at e6e09c3)
+
+Verified, not built: no code changed. Exit check, item by item:
+
+| Exit check item | Run | Result |
+|---|---|---|
+| 4 scripted clients chatting and playing | `rooms-exit` play (in-process server) and bots (child server process); by hand `tools/room-bots.ts --bots 4 --entries 300 --chat-every 20` against `server/index.ts` as its own process with the **default** timing (2 s deadline, 100 ms travel) | tests pass (10.2 s, 1.6 s); by hand 306 entries, 4 clients on hash `275b3434…`, 5 chat lines each, 0 desyncs, 0 reconnects |
+| kill and restart mid-run | `rooms-exit` restart | pass (2.9 s): SIGKILL mid-run, log replays to the clients' entries, restart on the same port and data dir, token reconnects as the same players, 50 more entries, hashes agree |
+| deploy with a new engine version closes rooms with a toast | `rooms-exit` version | pass (1.6 s): room files gone, `/api/rooms` empty, open pages `net.outdated` (reload), reloaded page `room_closed / server_updated` → `net.serverUpdated` |
+| outdated client refused with a reload toast | `rooms-exit` outdated | pass: `refused outdated, reload: true`, close 4001, POST 409 |
+| disconnect and reconnect within 2 minutes | `rooms-exit` reconnect (1.4 s) and a gate script against a real server process with the **default `awayMs` 120 s** | test passes; script: dropped p2 → `away` at once, the others played 32 entries without it, no `leave` after 60 s, reconnect → same pid p2, `back` entry, 0 snapshots, hashes equal |
+| the 2-minute removal | `rooms-room` "the 2-minute rule" (manual clock) and the same gate script | tests pass; script: off again → `leave` entry after **120.0 s**, p2 off the map, `left` set, seat kept in the roster; rejoin → same pid p2 with a `return` entry, hashes equal |
+| packet delay and loss | `rooms-exit` faults | pass (16.7 s): 20–250 ms jitter, 600 ms stalls, random closes with reconnects, 5 % lost inputs; every client on the server hash |
+
+(A first try of the gate script let the bots play on for the whole minute; fixture-western's run ended
+before the 2 minutes were up, so no `leave` could come: a script problem, not a server one. The rerun
+pauses the bots between steps.)
+
+Gate:
+
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit -p .` | clean |
+| `npx vitest run` | 178 files, 2176 tests: 2175 passed, 1 failed: the load-sensitive mapgen timing assert (`organic / large`, 56 ms against 50); `tests/mapgen/generators.test.ts` alone: 67/67 passed |
+| golden replay | `tests/engine/golden-replay.test.ts` 6/6, file unchanged since MP1 B0 (02f718c) |
+| new-player gate (`--gate --seeds 40 --jobs 6`) | **21/21 worlds pass**, 1680 runs in 91 s |
+| parties (`--party-sizes 2,3,4 --seeds 6 --bots explorer,cautious,talker`, 21 worlds, Normal) | 378 runs, **0 crashes, 0 stuck, 0 timeouts, 0 illegal refusals**, won 100 % / 100 % / 100 % |
+| browser smoke (`e2e/play.spec.ts e2e/modes.spec.ts` against `server/dev.ts`) | 19/19 passed (1.7 m) |
+
+Boss toughness by party size: the same party run with MP1's factors (`uniqueHp` 0.5, `uniqueDamage` 0,
+changed for the run only and restored) against MP2's (0.8, 0.1):
+
+| party | MP1 factors: won / fell / downs / bossRounds (kills) | MP2: won / fell / downs / bossRounds (kills) |
+|---|---|---|
+| 2 | 100 % / 18 % / 40 / 16.4 (44) | 100 % / 20 % / 49 / 19.2 (42) |
+| 3 | 100 % / 24 % / 77 / 18.1 (38) | 100 % / 24 % / 70 / 23.8 (39) |
+| 4 | 100 % / 27 % / 154 / 22.8 (37) | 100 % / 28 % / 165 / 30.6 (30) |
+
+Boss fights last about 17 % / 31 % / 34 % longer for parties of 2 / 3 / 4; win rates stay at 100 % and
+falls move by at most two points, so bosses are a longer fight, not a wall. Bot parties still win almost
+everything at Normal (MP1's finding): party difficulty is for playtests (MP5) to tune.
+
 ## Known gaps for MP3 and later
 
 - **No client UI for rooms yet** (MP3): lobby (create, room list, join by link or code), roster with
@@ -61,5 +103,8 @@ dev server played 207 entries in about 4 s, 4 clients on one hash, no desyncs.
 - **No AI game master in rooms** (MP4): the canned director answers; it reads the lead's fog only.
 - **Map generation on the main thread**: an area change at 12 players stalls every room for up to
   ~0.6 s (a possible improvement in the plan, not planned).
+- **Exit checks run at test timing**: the socket tests use a 300 ms deadline and 20 ms travel; only the
+  hand runs above used the default timing. The 2-minute rule over a socket is a gate script, not a test.
+- **Bot parties win nearly always** at Normal, also with tougher bosses (above).
 - **Not deployed**: MP0's exit check (the Dell and the VPS) is still open; deploy the Pages build and
   the server together (HOSTING.md §6), with `TRUST_PROXY=1` behind Caddy.
