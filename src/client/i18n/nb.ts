@@ -938,6 +938,18 @@ const nb = {
   'gfx.lostHint': 'Nettleseren tok grafikken bort et øyeblikk. Spillet ditt er lagret, og du spiller videre når kartet er tilbake.',
   'gfx.reload': 'Last inn spillet på nytt',
   'world.import.error.noRoom': 'Det er ikke plass i denne nettleseren til å ta vare på «{title}». Glem en verden under Dine verdener og prøv igjen.',
+  // romvarsler (src/net/messages.ts noticeFor; selve varselet kommer i MP3)
+  'net.outdated': 'Denne siden er utdatert: spilltjeneren er oppdatert. Last inn siden på nytt for å spille.',
+  'net.serverUpdated': 'Spilltjeneren ble oppdatert, så dette rommet ble stengt. Start et nytt rom eller bli med i et.',
+  'net.noRoom': 'Det finnes ikke noe rom med den koden.',
+  'net.roomFull': 'Rommet er fullt.',
+  'net.roomClosed': 'Rommet er stengt.',
+  'net.badToken': 'Fant ikke plassen din i rommet, så du blir med som ny spiller.',
+  'net.serverFull': 'Tjeneren har ikke plass til flere rom akkurat nå. Prøv igjen senere.',
+  'net.closedIdle': 'Rommet ble stengt etter to timer uten spill.',
+  'net.closedEmpty': 'Alle har gått, så rommet ble stengt.',
+  'net.closedError': 'Noe gikk galt i rommet, og det ble stengt.',
+  'net.reload': 'Last inn på nytt',
 } satisfies Record<string, string>;
 
 export default nb;

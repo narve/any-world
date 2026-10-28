@@ -790,6 +790,18 @@ const en = {
   'gfx.lostHint': 'The browser took the graphics away for a moment. Your run is saved, and play goes on once the map is back.',
   'gfx.reload': 'Reload the game',
   'world.import.error.noRoom': 'There is no room left in this browser to keep “{title}”. Forget a world under Your worlds and try again.',
+  // room notices (src/net/messages.ts noticeFor; the toast is MP3)
+  'net.outdated': 'This page is out of date: the game server was updated. Reload the page to play.',
+  'net.serverUpdated': 'The game server was updated, so this room was closed. Start or join a new room.',
+  'net.noRoom': 'There is no room with that code.',
+  'net.roomFull': 'That room is full.',
+  'net.roomClosed': 'That room has closed.',
+  'net.badToken': 'Your seat in that room was not found, so you join as a new player.',
+  'net.serverFull': 'The server has no space for more rooms right now. Try again later.',
+  'net.closedIdle': 'The room was closed after two hours without play.',
+  'net.closedEmpty': 'Everyone has left, so the room was closed.',
+  'net.closedError': 'Something went wrong in the room, and it was closed.',
+  'net.reload': 'Reload',
 };
 
 export default en;

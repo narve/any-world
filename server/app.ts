@@ -2,7 +2,7 @@
  * AnyWorld backend: plain node:http, no framework.
  *   POST /api/llm      {preset, model?, request} -> {response}  (keys come from the server env)
  *   GET  /api/presets  which presets this server can serve (never keys)
- *   GET  /api/health
+ *   GET  /api/health  {ok, uptimeS, configured, engine} (engine: the engine version rooms check, MP2)
  *   everything else    dist/client static files with SPA fallback (when staticDir is set)
  * Optional (MP0, home hosting): ANYWORLD_HOST_CODE makes POST /api/llm (real providers, not the
  * recorded "mock") require the header X-AnyWorld-Code, so strangers cannot spend the server's keys;
@@ -21,6 +21,7 @@ import { DEFAULT_TIMEOUT_MS, redact, type FetchLike, type HttpOptions } from '..
 import type { CompletionResponse, LLMProvider, ProviderPreset } from '../src/llm/types';
 import { RateLimiter, type RateLimitOptions } from './rate-limit';
 import { serveStatic } from './static';
+import { engineVersionFor } from './engine-version';
 
 export interface AppOptions {
   /** environment to read keys/config from; default process.env */
@@ -54,6 +55,11 @@ export interface AppOptions {
   hostCode?: string;
   /** origins allowed to call /api from another site (CORS); default env ALLOWED_ORIGINS, comma-separated */
   allowedOrigins?: string[];
+  /**
+   * The engine version this server plays (MP2 design §8), reported by /api/health; default
+   * engineVersionFor(env): the hash of the checkout, or ANYWORLD_ENGINE_VERSION outside production.
+   */
+  engineVersion?: string;
 }
 
 /** the header that carries the host access code */
@@ -213,6 +219,7 @@ export interface App {
 
 export function createApp(opts: AppOptions = {}): App {
   const env = opts.env ?? process.env;
+  const engineVersion = opts.engineVersion ?? engineVersionFor(env);
   const log = opts.log ?? ((l: string) => console.log(l));
   const limiter = new RateLimiter({
     perMinute: opts.rateLimit?.perMinute ?? (Number(env.LLM_RATE_PER_MIN) || 30),
@@ -412,7 +419,7 @@ export function createApp(opts: AppOptions = {}): App {
         }
         if (path === '/api/health') {
           if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET' });
-          return sendJson(res, 200, { ok: true, uptimeS: Math.round(process.uptime()), configured: configuredPresets() });
+          return sendJson(res, 200, { ok: true, uptimeS: Math.round(process.uptime()), configured: configuredPresets(), engine: engineVersion });
         }
         if (path === '/api/presets') {
           if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET' });

@@ -581,6 +581,68 @@ passing, the golden replay unchanged, and a commit on `multi`.
   re-exports the rest; its `OfflineGmDirector` is a subclass passing the client's `t`, so client code,
   `src/llm` and their tests are unchanged. The server (C3) passes a `t` for the world's language.
 
+### C2 as built
+
+- **Dependencies**: `ws` 8.22.0 (dependency, the server needs it at run time) and `@types/ws` 8.18.2
+  (dev), exact pins. Nothing uses `ws` yet (C4).
+- **Engine version** (`server/engine-version.ts`): `computeEngineVersion(root = REPO_ROOT)` as in §8
+  (`git ls-files -z`, a directory walk when git fails, CRLF → LF, `path \0 content \0`, 16 hex);
+  `engineFiles(root)` lists what counts. `engineVersionFor(env, root)` is what every caller uses:
+  `ANYWORLD_ENGINE_VERSION` (trimmed, ≤ 64) when set and `NODE_ENV !== 'production'`, else the
+  computed hash, cached per root. vite.config.ts and vitest.config.ts define
+  `__ANYWORLD_ENGINE_VERSION__` with it (imported as `./server/engine-version.js`: Vite's config loader
+  warns about imports without an extension, and `.ts` is not allowed by tsconfig); `globals.d.ts`
+  declares it. `AppOptions.engineVersion` defaults to `engineVersionFor(env)` inside `createApp`, so
+  every server (tests too) reports it as `/api/health.engine`; `main()` computes it once, passes it and
+  prints `[server] engine version <v>`. Only **tracked** files count: a new engine file changes the
+  version once it is `git add`ed (both the server and Vite read the same index, so they agree).
+- **`src/net/protocol.ts`**: everything in §2, plus what C3–C5 need. Names to know:
+  `LIMITS` (frame/body/buffer sizes, name/chat limits, `actionsPerInput` 4, `staleTurns` 3,
+  `hashEvery` 10, deadline/maxPlayers bounds and defaults, `maxRooms`, `invalidMax` 50,
+  `rateDropsMax` 200, and `rates` per message type: the token buckets of §2), `PLAYER_COLOURS` (12),
+  `cleanText` (strips C0/C1 controls and bidi overrides, trims), `codePoints`, `cleanChat(text)`
+  (string, or null → the room answers `chat_long`; the schema lets up to `chatRawMax` 2000 through so
+  the room can answer instead of counting it invalid). Schemas: `Code`, `Token`, `Name` (cleaned,
+  1–24 code points), `Colour`, `Intent`, `Presence`, `PlayerIdSchema` (`p\d{1,3}`), `SeatId`
+  (`s\d{1,4}`: C3 numbers seats `s1`, `s2`…), `DemoId`, `PlayerActionSchema`, `TurnInputSchema`,
+  `LogEntrySchema` (+ types `LogEntry`, `LogEntryKind`, `LogEntryBody` = an entry without `n`/`run`,
+  distributive), `Phase`, `RoomOptions`, `RoomInfo`, `SeatPresence`, `RosterEntry`, `ChatLine`,
+  `Snapshot`, `ClientMsg`, `ServerMsg` (types `Hello`, `InputMsg`, `Welcome`, `Refused`, `Closed`),
+  `ErrorCode`, `RefusedCode`, `ClosedReason`, `CLOSE` (4000 hello timeout, 4007 replaced, 4010
+  closed, 1008, 1009) and `REFUSED_CLOSE` (4001–4006 by code), and the HTTP bodies
+  `CreateRoomRequest` (exactly one of `demo` / `world`), `CreateRoomResponse`, `RoomList`,
+  `WorldUploadRequest`. `parseClientMsg(raw)` / `parseServerMsg(raw)` take a frame's text or a parsed
+  value (client frames over 16 K characters and anything nested deeper than `MAX_JSON_DEPTH` are
+  null); `peekHello(raw)` → `{ engine }` or null. Extra keys are stripped, not refused.
+- **Type check**: `SameType<A, B>` is the strict identity check (an optional field on one side only
+  fails), applied in `protocol.ts` itself to `PlayerActionSchema` ↔ `PlayerAction` and
+  `TurnInputSchema` ↔ `TurnInput`, so `tsc` fails on a new engine action; the test repeats it and
+  shows with `@ts-expect-error` that it is strict.
+- **Wire details** beyond the §2 table: `welcome.you.token` is always sent (the server knows the raw
+  token from the `hello` on a reconnect); `welcome.world` / `run.world` are `unknown` (the client runs
+  `parseWorld` and checks `worldId`); `refused.reason` is a `ClosedReason`; `refusal.reasons[]` has
+  `{ action, reason, detail? }`; `entries.es` is non-empty; a `gm` entry's actions are `GmAction[]`
+  (≤ 6, as `GmResponse`).
+- **`src/net/log.ts`**: `applyEntry(world, state, e)` → `{ state, events }` with `env.world` passed
+  (no registry needed); a `join` whose engine pid differs from the entry's throws; engine throws
+  (leaveMap refusals) propagate, so the room must check before appending. Also `applyEntries` and
+  `changedArea(before, after)` (area index differs). No-op entries return the same state object
+  (setAway no-op, fully refused turn without busy/advance), which C3 uses to skip appending.
+- **`src/net/messages.ts`**: `noticeFor(refused | closed)` → `{ key, reload }`; `outdated` →
+  `net.outdated` with reload (also without the flag); `closed server_updated` and `refused room_closed`
+  with `reason: 'server_updated'` → `net.serverUpdated`; the other codes and reasons have their own
+  keys (`net.noRoom`, `net.roomFull`, `net.roomClosed`, `net.badToken`, `net.serverFull`,
+  `net.closedIdle`, `net.closedEmpty`, `net.closedError`), listed in `NET_NOTICE_KEYS`; `net.reload`
+  is the button label. en and nb strings are in the catalogs.
+- **`src/net/version.ts`**: `ENGINE_VERSION` (`'dev'` without the define; never read by the server).
+- **Tests**: `tests/net/protocol.test.ts`, `log.test.ts` (an explorer party of 3 on fixture-western
+  with gm, away, back, leave, join and return entries: per-entry hash and events equal the direct
+  calls, also after JSON + `LogEntrySchema` and from a mid-run snapshot; a recorded 2-player loop
+  matches `runParty`'s `onTurn` states; parseWorld idempotent and `worldIdOf` stable on all 21
+  worlds), `messages.test.ts`, `version.test.ts` (vitest define = `engineVersionFor`, the walk
+  fallback and CRLF give the same hash, sim/messages edits do not change it, the override, and
+  `/api/health.engine`).
+
 ## Constants
 
 | Name | Value | Where |

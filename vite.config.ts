@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'node:url';
+import { engineVersionFor } from './server/engine-version.js';
 
 /**
  * Two builds from one client (DESIGN §4.4):
@@ -22,6 +24,8 @@ export default defineConfig(({ mode }) => ({
     // pages hosted apart from the server (e.g. GitHub Pages + a home server): the server's origin, which
     // must list this page's origin in its ALLOWED_ORIGINS; '' = the page's own origin
     __ANYWORLD_SERVER__: JSON.stringify((process.env.ANYWORLD_SERVER_URL ?? '').trim().replace(/\/+$/, '')),
+    // the engine version rooms check at join (MP2 design §8): computed from the checkout, both modes
+    __ANYWORLD_ENGINE_VERSION__: JSON.stringify(engineVersionFor(process.env, fileURLToPath(new URL('.', import.meta.url)))),
   },
   build: {
     outDir: mode === 'static' ? '../../dist/static' : '../../dist/client',

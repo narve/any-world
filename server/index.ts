@@ -8,13 +8,15 @@
  * 429/5xx/network only), LLM_ALLOW_ANY_MODEL, <PRESET>_MODELS (extra allowed model ids, comma-separated; any preset with a key, including custom with CUSTOM_LLM_API_KEY, is restricted), LLM_MAX_CACHED_PROVIDERS (64), TRUST_PROXY (number of trusted reverse-proxy
  * hops; 1 = the proxy's appended right-most X-Forwarded-For entry; the left-most entry is client-controlled
  * and never used), STATIC_DIR (dist/client), ANYWORLD_HOST_CODE (access code for AI calls; unset = open),
- * ALLOWED_ORIGINS (comma-separated origins allowed to call /api from other sites, e.g. GitHub Pages).
+ * ALLOWED_ORIGINS (comma-separated origins allowed to call /api from other sites, e.g. GitHub Pages),
+ * ANYWORLD_ENGINE_VERSION (overrides the computed engine version, server/engine-version.ts; ignored in production).
  */
 import { assertSafeNode } from './node-check';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Server } from 'node:http';
 import { createApp, type AppOptions } from './app';
+import { engineVersionFor } from './engine-version';
 
 export { createApp, type AppOptions } from './app';
 
@@ -55,9 +57,12 @@ async function main(): Promise<void> {
   assertSafeNode();
   const production = process.env.NODE_ENV === 'production';
   const staticDir = production ? resolve(process.env.STATIC_DIR ?? 'dist/client') : undefined;
-  const { port, configuredPresets } = await startServer({ staticDir });
+  // computed once from the deployed checkout (MP2 design §8)
+  const engineVersion = engineVersionFor(process.env);
+  const { port, configuredPresets } = await startServer({ staticDir, engineVersion });
   const configured = configuredPresets().join(', ');
   console.log(`[server] AnyWorld API on http://localhost:${port}${staticDir ? ` serving ${staticDir}` : ''}`);
+  console.log(`[server] engine version ${engineVersion}`);
   console.log(`[server] LLM presets available: ${configured}`);
 }
 
