@@ -29,7 +29,8 @@ New code goes under `src/client/room/` (DOM-free unless noted) and `src/client/u
 | `room/chat-model.ts` | history, bubbles, typing, emotes, pings, send throttle (§4) |
 | `room/link.ts` (DOM) | `RoomLink`: builds the `RoomClient` with `(url) => new WebSocket(url)`, presence from `visibilitychange` and menus, notices → toasts, status → reconnect banner |
 | `room/qr.ts` (DOM) | share link → SVG (§2.5) |
-| `party-overlay.ts` (DOM) | name tags, chat bubbles, typing "…", pings, teammate edge arrows; the MapOverlay pattern (re-projected each frame through `renderer.tileToScreen`) |
+| `room/log-overlay.ts` | client-only log lines (the healer's "helps you" line, §1.1) merged into the log view by turn; never written into `state` |
+| `party-overlay.ts` (DOM) | name tags, chat bubbles, typing "…", pings, teammate edge arrows; the MapOverlay pattern (re-projected each frame through `renderer.tileToScreen`), with `setAvoid` rectangles for every HUD panel (§4) |
 | `ui/components/rooms.ts` | the start page's "Play together" card (room list, create, join by code, profile) |
 | `ui/components/lobby.ts` | `LobbyScreen` (roster, ready, world picker, options, share, chat) |
 | `ui/components/chat.ts` | `ChatPanel` (side column, input, emote row, ping buttons), the phone chat button and sheet |
@@ -43,67 +44,122 @@ them absent every component renders as today.
 
 `RoomClient` (MP2 C4) already keeps the replica: it applies every `entries` frame with `applyEntry`,
 reports hashes, sends `applied` after an area change and reconnects with token and `lastN`.
-`RoomSession` never steps the engine for real and **never writes the replica**: `state` is always the
-object `RoomClient.state` holds (so the `hashState` it reports is the server's). The single-player
-`afterChange` drains `gmQueue` into a new state object; the room session skips that (`replica: true`),
-and narration, rules, dialogue history and audio are derived from `(before, after, events, outcomes)`.
+`RoomSession` never steps the engine for real and **never writes the replica**. Two names:
+
+- `replica` (a getter on `RoomSession`): always `client.state`, the object `RoomClient` hashes. Only
+  the dry run, `absorb` and the tests read it.
+- `state` (the existing `GameSession` field, a plain field because the target is ES2022 and a
+  subclass accessor cannot override it): in a room it is **assigned** `perspective(replica, pid)`
+  (§1.3) in `absorb` and on every `state` event, nowhere else. So every existing read of
+  `this.state` / `session.state` (view.ts, guide.ts, travel.ts, `legalActions(this.state)` in
+  session.ts and game-controller.ts, audio cues) answers for this player without being found one by
+  one. The base-class writers (`drainEngineQueue` in the constructor, `afterChange`, `applyGm`,
+  `reopenConversation`, `setStateForTest`) are overridden or guarded by `this.replicaMode`; a
+  `room-session` test freezes the replica and fails on any write (a setter trap on `state` that only
+  `absorb` may pass).
+
+The single-player `afterChange` drains `gmQueue` into a new state object; the room session skips
+that, and narration, rules, dialogue history and audio are derived per entry (step 4).
 
 Data flow of one turn:
 
 1. A key, tap or click reaches `GameController` as today → `session.uiAction(a)` → `act(a)`.
-2. `RoomSession.act(a)` **dry-runs** `step(state, a, { playerId: pid })` locally: an `invalid` event →
-   the same `explainInvalid` toast as single player and nothing is sent. Otherwise
-   `client.input([a], intent, busy?)` with `intent` = `travel` while click-to-travel runs, `wait` for
-   the wait action, else `decide`. It returns an Outcome with `pending: a` (the HUD marks the queued
-   action; a ghost marker on the target tile) and `changed: false`.
+2. `RoomSession.act(a)` **dry-runs** `stepTurn(replica, [{ playerId: pid, actions: [a] }], { world })`
+   (the raw replica: party order changes engine results, `ctx.pid = party[0]` in `runWorld`) and reads
+   this player's `outcome.reason`: `illegal` → the same `explainInvalid` toast as single player and
+   nothing is sent; `down` → the down card (§3.4), nothing sent; `not ready` (slowed, energy below
+   `ACT_COST`) is **sent** and shown as queued (the server keeps a not-ready player's input pending).
+   The dry run is skipped (the action is sent unchecked) for `transition` and when
+   `area.exitCountdown.turnsLeft <= 1`, since those steps make the next area on the main thread. Then
+   `client.input(actions, intent, busy?)` with `intent` = `travel` while click-to-travel runs, `wait`
+   for the wait action, else `decide`. It returns an Outcome with `pending: a` (the HUD marks the
+   queued action; a ghost marker on the target tile) and `changed: false`. Controller branches that
+   test `out.changed` (the tap-bump fallback, tooltip refresh, travel `more`) treat `pending` as
+   "accepted, nothing to redraw yet".
 3. Coalescing (input bucket 20/s): one turn input per `state.turn`; a different action for the same
    turn replaces it (the server keeps the latest), the same action again is not resent (key repeat).
    Free actions (talk, choose_option, choose_perk, toggle_sneak) are sent at once; the server appends
-   them as `advance: false` entries.
-4. `RoomClient` emits `entries { entries, events, outcomes }` → `RoomLink` → `session.absorb(...)` →
-   one Outcome per batch → `controller.apply(out)` (renderer sync, toasts, tooltips) as today. The
-   controller syncs the renderer **serially** (await each `sync`); with a backlog over 4 batches it
-   syncs the latest state with no animation (a tab that was in the background catches up at once).
+   them as `advance: false` entries. **Chains** that single player builds from several `act` calls
+   (`dialogueReply` / `reopenConversation`: `[choose_option, talk]`; `trade` buy / sell:
+   `[choose_option, talk]`; leave then persuade) go as **one** input of up to `actionsPerInput` (4)
+   free actions, resolved in order by the engine, built from the current state only. The reopen
+   bookkeeping (history kept, voice line = the answer, `tradeOpen`) happens in `absorb` when that
+   entry arrives, keyed by a `pendingChain` record. The reopen's greeting stays in the shared log
+   (accepted: the engine is not changed), and the healer's extra "helps you" line goes into the
+   client-only `log-overlay`, never into `state`. The local GM-offer `recheckOfferOption` is not used
+   in rooms (no local GM).
+4. `RoomClient` emits `entries { steps, catchUp }` (a D1 change: `applyAll` records per entry
+   `{ entry, before, after, events, outcomes }`; `catchUp` is true for the batch from
+   `welcome.entries`) → `RoomLink` → `session.absorb(steps, catchUp)`, which walks the steps (below)
+   and returns one Outcome per batch → `controller.apply(out)` (renderer sync, toasts, tooltips) as
+   today. A catch-up batch rebuilds without toasts, bubbles or narration cards. The controller syncs
+   the renderer **serially** (await each `sync`, bounded by a 1.5 s timeout); with a backlog over 4
+   batches, or while `document.hidden`, it syncs the latest state with no animation (the snap never
+   depends on animation frames).
 5. `state` events (welcome snapshot, desync snapshot, new run) → full rebuild: `renderer.setArea` +
    `sync(state, [])`, narration cleared, travel stopped.
 6. `refusal` (to this seat only) → `explainInvalid` toast; `error stale` → drop the pending mark and
    decide again (travel resends its next step).
 
+`RoomSession` is created **synchronously** on `welcome` (or `run`) and absorbs from that moment;
+`launch` then awaits `ensureRenderer` (the three.js chunk, slow on phones) and `controller.start`
+builds from the session's current state, so entries that arrive while loading are not lost.
+`launch` takes a `WorldEntry`; rooms build one from the server's `WorldSpec` (`roomWorldEntry`:
+`recordingsKey` and `audio.startRun` read it).
+
 ### 1.2 What changes in `GameSession` and `GameController`
 
-`GameSession` (refactor only, single-player behaviour identical, `tests/client/session.test.ts` unchanged):
+`GameSession` (refactor only, single-player behaviour identical, `tests/client/session.test.ts`
+unchanged, and a new characterization test written **before** the refactor, §7):
 
-- `playerId` becomes a field (`pid`, default `state.party[0]`), and `me` reads `state.players[pid]`.
+- `playerId` becomes a field (`pid`, default `state.party[0]`), and `me` reads `state.players[pid]`
+  (in rooms `state` is the perspective, so `party[0]` is `pid` too).
 - `act()` is split into `act(a)` (single player: `step` + `absorbStep`) and `protected absorbStep(before,
   after, events, mine?)` (dialogue history, narration on area change, voice, rules, onboarding count,
   end of run). `applyGm` likewise keeps `applyGmActions` and moves the narration part into
   `protected absorbGm(before, after, events, hook)`.
 - `travelTick()` is split into `nextTravelAction(): PlayerAction | null` (the stop rules: destination
   reached, a new hostile in view, a choice open) and the step.
-- every view helper that reads the lead (`viewModel`, `highlights`, `preview`, `describeAt`,
-  `interactTargets`, `legalActions(...)`) reads `this.view` instead of `this.state`: a getter that is
-  `state` in single player and `perspective(state, pid)` in rooms.
+- the chains in `dialogueReply`, `reopenConversation` and `trade` are split into "which actions"
+  (`dialogueReplyActions`, `tradeActions`) and "the bookkeeping after them", so single player runs
+  them as today and `RoomSession` sends them as one input (§1.1 step 3).
 
 `RoomSession extends GameSession`: constructed from the `welcome` (world, replica, pid); `act` as in
-§1.1; `absorb(entries, events, outcomes)` walks the entries: `turn` → `absorbStep` with this pid's
-outcome as `mine`; `gm` → `absorbGm(hook)` (intro and area cards come from the server's GM entries);
-`join` / `away` / `back` / `leave` / `return` → party toasts ("Kari joined", "Kari is away", "Kari is
-back", "Kari left the map"); after the batch, if travel is on and `pid` is engine-ready on a new
-`state.turn`, `nextTravelAction()` is sent with intent `travel`. It also keeps the clock view, the
-roster, the followed teammate (§3.4) and the queued action. No autosave, no `SavedRun`; the
-single-player autosave is never read, cleared or written by a room.
+§1.1; `absorb(steps, catchUp)` walks the steps: `turn` → `absorbStep(before, after, events, mine)` with
+this pid's outcome as `mine` (and the `pendingChain` bookkeeping); `gm` → `absorbGm(hook)` (intro and
+area cards come from the server's GM entries); `join` / `away` / `back` / `leave` / `return` → party
+toasts ("Kari joined", "Kari is away", "Kari is back", "Kari left the map") — the **entries are the only toast source** for
+these (§3.6 does not toast roster presence again), and catch-up batches give none; after the batch,
+if travel is on and `pid` is engine-ready on a new `state.turn`, `nextTravelAction()` is sent with
+intent `travel`. It also keeps the clock view, the roster, the followed teammate (§3.4) and the
+queued action. No autosave, no `SavedRun`; the single-player autosave is never read, cleared or
+written by a room.
 
 `GameController` gets an optional `room?: RoomLink` in `ControllerHost`:
 
 - no `GmRunner` requests (`pumpGm` returns at once; the server is the GM), no NPC voice (`dialogue:
   null`), no autosave, no `setAddress(runUrl)` (the address bar keeps `?room=CODE`);
-- the travel loop is entry-driven (above) instead of the 70 ms timer;
-- the renderer gets `cameraState` (§1.3), the PartyOverlay is created next to the MapOverlay, and
-  `presence` is sent on menu changes: `menu` while the backpack, help, rules, settings or the phone
-  chat sheet without typing is open, or the tab is hidden; `playing` otherwise (sent on change only).
+- the travel loop is entry-driven (above) instead of the 70 ms timer; the window-capture keydown
+  handler that stops travel (`onKey → stopTravel`) skips `isTextTarget`, so typing "on my way" in
+  chat does not stop a walk;
+- the renderer, the MapOverlay's exit-marker fog and the PartyOverlay get `session.cameraState`
+  (§1.3) wherever they get `session.state` today (`start`/`setArea`, `apply`, `runTravel`,
+  `updateOverlay`); `tapMeaning`, `onTap` and the nearby-tiles code keep `session.state` (the player);
+- `presence` is sent on change only: `menu` while the backpack, help, rules, settings, the phone chat
+  sheet or **the desktop chat input** is open, or the tab is hidden; `playing` otherwise. So a player
+  reading or writing chat never holds up a turn (plan §2.1).
+
+The run lifecycle: on `run` (play again, maybe another world) `RoomSession` and `GameController` are
+disposed and relaunched (their `world`, `seed`, `difficulty`, `endedNotified` and `RuleTracker` are
+per run); `RoomLink` and `ChatModel` live for the whole room.
 
 `App` (main.ts) gets `openRoom(code)`, `createRoom(opts)`, `leaveRoom()`, the `lobby` screen and the
 room callbacks; `launch()` is shared, with the room flavour skipping `clearRun`, `runAi` and autosave.
+`InputLayer` and the `UiViewModel` screen union gain `lobby` (`computeLayer` returns the screen).
+In a room the in-game menu's "New run" / "Back to start" become **"Leave room"**, with the line "You
+leave the party; you get no character in the next run" (`leave` sets `quit`); it never calls
+`clearRun` and never touches the single-player save. The end screen in a room hides "New run" and
+the single-player run link and shows the room block (§2.6) instead.
 
 ### 1.3 The client plays its own player id
 
@@ -125,9 +181,16 @@ playerId: p2 })`, and likewise `playerSheet`, `persuadeOdds`, `transitionBlocker
 chevron, interact hints, "talk" / "persuade" odds and the HUD are then per player for free; party of
 one: `perspective(s, p1) === s`.
 
-Two perspectives exist in a room: `view` (always this player: HUD, hotbar, choices, hints) and
-`cameraState` (this player, or the followed teammate while down, §3.4) for the renderer and the
-PartyOverlay (fog, camera follow, sight radius).
+Two perspectives exist in a room: `state` (always this player: HUD, hotbar, choices, hints, §1.1)
+and `cameraState` (this player, or the followed teammate while down, §3.4) for the renderer and the
+PartyOverlay (fog, camera follow, sight radius). The engine's raw party order (the replica) is used
+only by the dry run and the hashes.
+
+The renderer cannot switch perspectives by state alone: `ActorLayer.ensure(a, isPlayer)` fixes
+`isPlayer` per actor view, and visibility, see-through, ring opacity, HP-bar skipping and ghosting
+(`leadPlayer(state).sneaking`) follow it. A new optional `renderer.setFollow(actorId)` re-flags the
+views (feature-detected; single player never calls it); the controller calls it whenever
+`cameraState`'s lead changes.
 
 ## 2. Start page and lobby
 
@@ -150,22 +213,37 @@ seat token for that code is stored.
 
 ### 2.2 Create
 
-"Create a room" opens a sheet: world (the demo worlds, with the same cards as the start page, or one
-of "Your worlds" from this browser, which is uploaded), max players (2–12, default 8), turn deadline
-(1–5 s, default 2 s), difficulty (the start screen's). `POST /api/rooms { engine, demo | world,
-options }` → `{ code, token }`; the token is stored for the code and the client connects **at once**
-(`hello { token }`, so the creator is host: MP2 gap "connect the creator first"); address bar
-`?room=CODE`. Errors: 409 → `net.outdated` with Reload; 503 → `net.serverFull`; 400 invalid world →
-`room.worldInvalid` with the first error; 429 → `room.tooMany`.
+One tap from the start page: each demo world card (and each of "Your worlds", which is uploaded)
+gets a **"Play with friends"** button, and the "Play together" card a "Create a room" button (the
+selected world). It creates the room with the default options (max players 8, turn deadline 2 s, the
+start screen's difficulty; all editable by the host in the lobby). The only question is the name,
+asked once in a small sheet when no profile is stored (name prefilled `lobby.defaultName` + a number,
+colour = a random `PLAYER_COLOURS` entry, both kept in the profile). `POST /api/rooms { engine, demo |
+world, options }` → `{ code, token }`; the token is stored for the code and the client connects **at
+once** (`hello { token, name, colour }` from the profile, so the creator is host: MP2 gap "connect
+the creator first"); address bar `?room=CODE`. Errors: 409 → `net.outdated` with Reload; 503 →
+`net.serverFull`; 400 invalid world → `room.worldInvalid` with the first error; 429 →
+`room.tooMany`.
 
 ### 2.3 Join
 
 - **Link** `?room=K7QX`: `bootRoute` gets `{ kind: 'room', code }` (a valid `Code` after upper-casing;
   it wins over `?world=`; the saved single-player run is never touched). `GET /api/rooms/:code` → 404
   → start page with `net.noRoom`. With a stored token → connect straight away (a reload rejoins the
-  same seat); without one → the lobby's join step (name and colour) first.
+  same seat). Without one but with a stored profile → connect straight away with it. Only the very
+  first time (no profile) the join step asks for a name (the same small sheet as §2.2).
 - **Code**: a 4-character field on the card (upper-cased, the code alphabet only, Enter submits).
-- `bad_token` → the token is dropped and the client joins as new (toast `net.badToken`).
+- **Name and colour as given**: the server quietly changes a clash (`uniqueName` adds a suffix,
+  `uniqueColour` takes the next free one). After `welcome` the client compares its roster entry with
+  what it asked for; when they differ a short toast says "You are Kari 2, green" (`lobby.youAre`)
+  with a "Change" action that opens the profile sheet (`profile` message). No colour dimming before
+  `hello` (there is no roster to dim from).
+- **By phase of the welcome**: `lobby` → the lobby screen; `playing` → straight to `screen: 'game'`
+  (late join: the server already pushed the `join` entry and the welcome carries the pid and the
+  replica, so `RoomSession` is built from them, §1.1); `ended` → the end screen with the room block
+  (§2.6), waiting for the next run. No lobby step in between.
+- `bad_token` → the token is dropped and the client joins as new (`client.token = undefined;
+  client.connect()`, same name and colour; toast `net.badToken`).
 
 ### 2.4 Lobby screen (`screen: 'lobby'`)
 
@@ -179,18 +257,23 @@ interface LobbyView {
   options: RoomOptions; maxPlayers: number;
   host?: { worlds: DemoWorldView[]; own: RecentWorldView[]; canStart: boolean };
   chat: ChatView;                                           // chat works in the lobby too
-  joining?: { name: string; colour: string; taken: string[] } // the join step
+  joining?: { name: string; colour: string }               // the first-time name sheet
 }
 ```
+
+`world.tagline` and `color` come from the client's demo catalogue by demo id (`RoomInfo` carries only
+title and genre), so a `world` change shows the full card before the run starts.
 
 Top to bottom: the code in large type with Copy link / Share (`navigator.share` on phones, else the
 clipboard with `room.linkCopied`) and the QR code; the world card (host: "Change world"); the roster
 (colour dot, name, "host", ready tick, presence: away / off); options (host: editable, others: read
 only); **the GM line** `lobby.gmReadsChat`: "The game master reads the chat; chat lines are sent to
-the AI provider."; Ready toggle; host: Start ("2 of 3 ready" beside it, never required: the host can
-start any time, fast first); Leave; the chat panel. The join step (no seat yet) asks for name
-(prefilled from the profile, or `lobby.defaultName` + a number) and colour (the 12 `PLAYER_COLOURS`
-as swatches, taken ones dimmed) before `hello`.
+the AI provider." — worded for MP4 on the owner's request: in MP3 the canned director reads nothing
+and nothing is sent to an AI provider, so the line becomes accurate with the AI GM (MP3.md says so);
+Ready toggle; host: Start ("2 of 3 ready" beside it, never required: the host can start any time,
+fast first); Leave; the chat panel. Your own roster row has "Change" → the profile sheet (name and
+the 12 `PLAYER_COLOURS` as swatches; colours other seats hold are dimmed there, from the roster).
+Names are rendered with `textContent`, as chat lines are.
 
 ### 2.5 Share link and QR code
 
@@ -199,15 +282,17 @@ The link is the **page's** origin, not the server's: `${location.origin}${locati
 no dependencies, 1.4.4 pinned exactly like the others, ~20 KB), imported lazily by the lobby so it is
 not in the start bundle; `room/qr.ts` turns its module matrix (`getModuleCount`, `isDark`) into one
 SVG `<path>` (error correction M, 4-module quiet zone, dark on white also in dark themes). A unit test
-checks the matrix size and the three finder patterns for a known link. Fallback if the package cannot
-be added: a byte-mode encoder for versions 1–6 (a link under 100 bytes) in the same file, ~250 lines.
+checks the matrix size and the three finder patterns for a known link. No hand-written fallback
+encoder; if the package truly cannot be installed the lobby shows the link only and MP3.md says so.
 
 ### 2.6 Play again
 
 When the replica's `status` is `won` / `lost` the end screen gets a room block: host → "Play again"
 (same world, `start`) and "Choose another world" (back to the lobby screen's world picker; a demo via
 the new `world` message, an own world via `POST /api/rooms/:code/world`); everyone → Ready toggle,
-"Leave room". The `run` message brings everyone into the new run (full rebuild, §1.1 step 5).
+"Leave room". The `run` message brings everyone into the new run (session and controller
+relaunched, §1.2). "Play again" sends `start` without `demo`; the world is chosen beforehand with
+`world` (below).
 
 ### 2.7 Protocol and server additions (small; part of step D1)
 
@@ -223,49 +308,72 @@ MP2 left four lobby needs uncovered. They change `src/net/protocol.ts`, so the e
 | `ping` (c→s) | `kind: 'follow' \| 'wait' \| 'help'`, `x`, `y` | playing; chat bucket (1/s); a `ChatLine` with `ping: { kind, x, y, area }` and `text: ''` (history, broadcast, GM-readable in MP4) |
 | `room` (s→c) | `room: RoomInfo`, `options` | on any world or options change |
 
+`world` is the canonical way to pick a demo (the lobby shows the pick to everyone); `start { demo }`
+stays accepted by the server for the MP2 scripted clients and bots, but the client never sends it.
+
+Two server fixes found in review: **typing keeps busy** — `stopTyping` clears busy only if
+`startTyping` set it (the seat was not already busy from a dialogue, trade or menu), so typing during
+a dialogue does not end its safety; and the welcome of a `playing` room (late join) is covered by a
+`rooms-room` case.
+
 `RoomClient` keeps `room`, `options`, `typing` (seats typing), `clock` (last frame) and adds
-`ready(on)`, `profile(name, colour)`, `world(demo)`, `ping(kind, pos)`, `setOptions(...)`. Tests: new
-cases in `rooms-room` and `protocol`. Also a test-only `ANYWORLD_TEST_SEED` (ignored in production,
-like `ANYWORLD_TEST_TIMING`) so browser tests get fixed run seeds.
+`ready(on)`, `profile(name, colour)`, `world(demo)`, `ping(kind, pos)`, `setOptions(...)`; `applyAll`
+emits per-entry `steps` and a `catchUp` flag (§1.1 step 4); it records the close code as
+`stopReason` and puts it in the `stopped` status event (4007 → `room.otherTab`, 1008 → the notice
+of a policy close, apart from a plain `leave()`). Tests: new cases in `rooms-room`, `protocol` and
+`net-client`.
+
+Test-only switches (read only when set, ignored in production like `ANYWORLD_TEST_TIMING` in
+`server/index.ts` / `dev.ts`): `ANYWORLD_TEST_SEED` (wired through the existing `RoomDeps.seed`) for
+fixed run seeds, and `ANYWORLD_TEST_LIMITS` (JSON, through `startServer({ rooms: { limits } })`), so
+the browser specs, all on 127.0.0.1, do not hit `createsPer10Min` 6, `upgradesPerMin` 20,
+`socketsPerIp` 16 or the room cap.
 
 ## 3. In game
 
 ### 3.1 Other players
 
-- **Colour**: a flat ring under every player actor in its seat colour (own included), from
-  `renderer.setPartyColours(Map<actorId, colour>)` (a new optional renderer method, feature-detected
-  like `itemThumbnail`; single player never calls it). The seat → pid → actorId map comes from the
+- **Colour**: the existing faction ring under every player actor (`ringMat`) is recoloured to its
+  seat colour (own included; no second ring), from `renderer.setPartyColours(Map<actorId, colour>)`
+  (a new optional renderer method, feature-detected like `itemThumbnail`; single player never calls
+  it). The seat → pid → actorId map comes from the
   roster and the replica.
 - **Name tags**: PartyOverlay DOM labels above other players' actors on visible tiles (`cameraState`
-  fog = 2), in the seat colour with a dark outline; dimmed with "away" for `off` / `idle` seats, and a
+  fog = 2), in the seat colour with a dark outline, text set with `textContent`; dimmed with "away" for `off` / `idle` seats, and a
   "busy" glyph while they are in a dialogue, trade or menu. Own name is not tagged.
 - **Teammates off screen**: a small coloured edge arrow with the name (`edgeArrow` /
   `placeEdgeMarker` from map-overlay.ts, clear of the HUD), so a party can find each other.
-- **Party strip** (top bar, desktop; a row of dots on phones): one chip per party member: colour,
-  name, hp bar, state (acted ✓, deciding, busy, away, down). Tapping a chip centres the camera on
-  them for 2 s (or follows them while down).
+- **Party strip** (top bar, desktop; on phones a row of dots plus "2/3" in the portrait grid's
+  `strip` row, in place of the turn counter): one chip per party member: colour, name, hp bar, state
+  (acted ✓, "Kari: deciding", busy, away, down). While down, tapping a chip follows that teammate.
+  (Tap-to-centre for 2 s while standing is optional, not part of MP3's exit check.)
 
 ### 3.2 Turn indicator, never blocking
 
 From the `clock` message (`acted`, `waiting`, `deadlineInMs`): a pill under the top bar, shown only
-when this player is in a party of 2+ and some active player has not acted: "2 of 3 acted" and a thin
-bar draining over `deadlineInMs`. After this player acted it reads "Waiting for Kari" for at most the
-deadline; keys and taps still work (the new input replaces the queued one, the server keeps the
+when this player is in a party of 2+ and some active player has not acted **for 450 ms** (and hidden
+250 ms after the turn resolves), so normal walking, where turns resolve in 100–600 ms, does not
+flicker it: "2 of 3 acted" and a thin bar draining over `deadlineInMs`. After this player acted it
+reads "Kari is deciding" (never "waiting for") for at most the deadline; keys and taps still work (the new input replaces the queued one, the server keeps the
 latest). Nothing in the client ever waits on the clock: no modal, no input lock. Phones: "2/3" with
-the bar, no names. i18n: `party.acted` (`{acted} of {total} acted`), `party.waitingFor`.
+the bar, no names (in the `strip` row, §3.1). i18n: `party.acted` (`{acted} of {total} acted`),
+`party.deciding` (`{name} is deciding`).
 
 ### 3.3 Per-player view
 
 Fog, the exit marker and compass, interact hints, ranged targets, `persuadeOdds` in the dialogue and
-the HUD all come from `view` (§1.3), so they are this player's. Log lines stay the shared engine log
+the HUD all come from `state`, the perspective (§1.1, §1.3), so they are this player's. Log lines stay the shared engine log
 (it names who did what). The narration card for an area appears for everyone (the server's GM entry);
-the GM's own fog is still the lead's (MP4).
+the GM's own fog is still the lead's (MP4). Plan §2.1's "other players near the speaker see the NPC's
+lines as bubbles" is **deferred to MP4**: the canned director's NPC lines are not in the entries'
+outcomes, and MP4's AI dialogue is where they come from (listed in MP3.md).
 
 ### 3.4 Down players and the spectator camera
 
 `me.down` set → the renderer and PartyOverlay switch to `cameraState = perspective(state, followed)`:
-the nearest standing teammate by path, kept until they go down or leave; `Tab` / `‹ ›` on the
-spectator pill ("Watching Kari") cycles. The HUD stays this player's, with a card "You are down. You
+the nearest standing teammate by straight distance, kept until they go down or leave; `[` / `]` or
+the `‹ ›` buttons on the spectator pill ("Watching Kari") cycle (`Tab` stays the backpack; the key
+help lists `[` `]` in rooms). The controller calls `renderer.setFollow` on every switch (§1.3). The HUD stays this player's, with a card "You are down. You
 get up in {n} turns, or sooner when a teammate stands next to you" (`n` = `REVIVE_SELF_TURNS` −
 (`turn` − `down.since`), exported from the engine index if it is not yet), the hotbar dimmed, chat,
 emotes and pings working. Getting up → camera back with a short tween. A teammate who is down gets a
@@ -275,15 +383,24 @@ pulsing "help" ring under them on every screen (they need someone next to them).
 
 `state.area.exitCountdown { turnsLeft, by }` → a banner over the top bar on every screen: "Kari took
 the exit: the party moves on in {n}" (`party.exitCountdown`), ticking with each turn (the server
-paces them at ~1 s, so turns read as seconds). The player who took it sees "Waiting for the party:
-{n}". No button, nobody waits at the door; the area change rebuilds as today.
+paces them at ~1 s, so turns read as seconds). The player who took it sees "The party moves on in
+{n}" (`party.exitTaken`). No button, nobody waits at the door; the area change rebuilds as today.
 
 ### 3.6 Away and left teammates, reconnect
 
-Roster `presence` `off` → name tag dimmed "away", toast once; `gone` (2-minute rule, `leave` entry)
-→ chip greyed "left", toast `party.left`; `back` / `return` → toast `party.back`. This client's own
+Roster `presence` `off` → name tag and chip dimmed "away" (no toast here: the toasts come from the
+`away` / `leave` / `back` / `return` entries only, §1.2); `gone` (2-minute rule, `leave` entry) → chip
+greyed "left". This client's own
 connection: `RoomClient` status `reconnecting` → a non-blocking banner "Reconnecting…" (input queued
-nowhere: `act` toasts `room.offline` while not joined); after 20 s it adds "Leave room". `joined`
+nowhere: `act` toasts `room.offline` while not joined); after 20 s it adds "Leave room". On reconnect
+`ChatModel` merges the welcome's chat by `ChatLine.id` (no repeated bubbles or unread counts).
+
+**Phone layout** (portrait grid, `ui.css`: hud, strip, goal, banner, map, log + tools, ctx, slots):
+nothing floats. The chat button with its unread badge goes in the `tools` row next to backpack,
+rules and help (the log ticker narrows to ~190 px); off-screen chat lines show in the existing log
+ticker (no second ticker); the party dots and "2/3" in `strip`; exit countdown, spectator pill and
+reconnect banner share the one `banner` area, priority reconnect > down/spectator > exit countdown.
+The chat sheet joins `panelRects` for `coverInsets`, and the PartyOverlay avoids every HUD panel. `joined`
 again → banner gone, state rebuilt from the `welcome` (entries or snapshot).
 
 ## 4. Chat UI
@@ -311,26 +428,37 @@ interface Bubble { seat: string; text: string; emote: boolean; ping?: PingKind; 
 - **Desktop**: the ChatPanel docks on the right under the rules panel (≈ 280 px, the last 6 lines,
   fading after 20 s unless hovered or the input is open; scroll for the 100). **Enter** (in the
   `game` layer of a room) opens the input; Enter sends, Esc closes, an empty Enter closes. In rooms
-  "use next to you" moves from Enter to Shift+Enter (bump and click still use; the key help and the
-  interact hint say so). `/` also opens the input.
-- **Phones**: an always-visible round chat button (bottom right, above the hotbar, unread badge)
-  opens a bottom sheet: history, input, the emote row and ping buttons; off-screen lines also flash
-  for 4 s in a one-line ticker under the top bar. The sheet uses `interactive-widget=resizes-content`
+  "use next to you" moves from Enter to Shift+Enter (bump and click still use; room variants of
+  `tile.usableHint`, `ctx.interactHint` and the key-help line say so). **`/` opens the input in every
+  non-text layer** (dialogue, trade, choice, narration, look, target, backpack), where Enter keeps its
+  meaning (confirm, skip a narration card); the input is also clickable in every layer. Chatting in a
+  dialogue or trade keeps that seat busy (the server fix in §2.7).
+- **Keys inside the input**: its own keydown handler takes Enter and Esc and calls `preventDefault`
+  and `stopPropagation`, so Esc closes only the chat, not the backpack or rules behind it. Sending goes
+  through a `<form>` submit with `enterkeyhint="send"`, and nothing is sent while
+  `isComposing` / key code 229 (Android IME).
+- **Phones**: an always-visible chat button with an unread badge in the `tools` row (§3.6) opens a
+  bottom sheet: history, input, the emote row and ping buttons; off-screen lines also show for 4 s
+  in the existing log ticker. The sheet uses `interactive-widget=resizes-content`
   (already set), so the keyboard pushes the sheet, not the map.
 - **Keyboard focus**: the input is a real `<input>`, so `isTextTarget` puts every key into the `text`
   layer (no game key fires; `tests/client/input.test.ts` gets the room cases). Closing the input
   returns focus to the canvas host. Typing never sends an `input` (it costs no turn).
 - **Typing state**: on the first non-empty `input` event `client.typing(true)`, repeated every 3 s
   while the text changes; `typing(false)` on send, on clearing the field, on blur and on closing.
-  Others see a "…" bubble over the typist (or "Kari is typing…" at the foot of the column).
+  Others see a "…" bubble over the typist (or "Kari is typing…" at the foot of the column). Presence
+  is `menu` the whole time the input or sheet is open, typed in or not (§1.2), so a reader never
+  holds up turns.
 - **Emotes**: six one-tap buttons 👍 😂 😮 ❤️ 👋 ❓ send that emoji as the chat text; a line that is
   exactly one emote renders as a large bubble without a frame. **Pings**: "Follow me", "Wait", "Help"
   send `ping` at the player's own position (one tap, which is what they mean); everyone sees a
   coloured marker with an icon there for 8 s (edge arrow when off screen) and a column line "Kari:
   Follow me" (`ping.follow`, `ping.wait`, `ping.help`).
 - **Limits and feedback**: the counter shows from 160 code points, the field stops at 200
-  (`maxlength` by code points in the input handler); a send within 1 s of the last shows "Wait a
-  moment" under the input and keeps the draft (`chat.slowDown`); `error chat_rate` / `chat_long` from
+  (`maxlength` by code points in the input handler, counted with the protocol's `codePoints`, as
+  `cleanChat` does: ❤️ is two); text, emotes and pings share the 1/s chat bucket, so a send within
+  1 s of the last (an emote right after a ping included) shows "Wait a moment" (`chat.slowDown`) under
+  the input **and on the emote and ping row**, and keeps the draft; `error chat_rate` / `chat_long` from
   the server do the same (never a toast). Lines are rendered as text (`textContent`), never HTML.
 
 ## 5. Notices and errors
@@ -344,10 +472,12 @@ interface Bubble { seat: string; text: string; emote: boolean; ping?: PingKind; 
 | `error not_host / bad_phase / invalid` | warn toast `room.notAllowed` (a UI bug or a race; logged) |
 | `error rate`, `stale` | nothing visible (logged; stale re-decides) |
 | status `reconnecting` / `joined` | the banner of §3.6 |
-| close 4007 (replaced: another tab) | start page, toast `room.otherTab` |
+| close 4007 (replaced: another tab), from the `stopped` status's `stopReason` | start page, toast `room.otherTab` |
+| close 1008 (policy) | start page, toast `room.notAllowed` |
 
 `GameUi.toast(text, tone, action?: { label, run, sticky? })` gains the optional action; ToastStack
-keeps a sticky entry until its button or ✕ is pressed. A test checks that every `NET_NOTICE_KEYS` key
+keeps a sticky entry until its button or ✕ is pressed; a sticky entry does not count toward `max`
+(3) and is never dropped as the oldest. A test checks that every `NET_NOTICE_KEYS` key
 and every new `room.*`, `lobby.*`, `chat.*`, `party.*`, `ping.*` key exists in en and nb with the same
 params (the existing i18n test covers this once the keys are in `en.ts`).
 
@@ -356,10 +486,12 @@ New keys (en and nb, about 70): `room.title`, `.create`, `.joinCode`, `.join`, `
 `.linkCopied`, `.share`, `.copyLink`, `.leave`, `.offline`, `.reconnecting`, `.otherTab`,
 `.worldMismatch`, `.notAllowed`; `lobby.code`, `.phase.*`, `.ready`, `.notReady`, `.readyCount`,
 `.start`, `.host`, `.changeWorld`, `.options.*`, `.gmReadsChat`, `.name`, `.colour`, `.defaultName`,
-`.joinAs`, `.playAgain`, `.anotherWorld`, `.waitingHost`; `party.acted`, `.waitingFor`, `.joined`,
-`.away`, `.back`, `.left`, `.down`, `.watching`, `.exitCountdown`, `.exitWaiting`, `.busy`;
+`.joinAs`, `.youAre`, `.change`, `.playWithFriends`, `.playAgain`, `.anotherWorld`, `.waitingHost`;
+`room.leaveRun`, `.leaveRunHint`; `party.acted`, `.deciding`, `.joined`, `.away`, `.back`, `.left`,
+`.down`, `.watching`, `.exitCountdown`, `.exitTaken`, `.busy`;
 `chat.open`, `.placeholder`, `.send`, `.typing`, `.slowDown`, `.left`, `.emotes`, `.history`;
-`ping.follow`, `.wait`, `.help`; `keys.chat`.
+`ping.follow`, `.wait`, `.help`; `keys.chat`, `keys.cycleFollow`, room variants
+`tile.usableHintRoom`, `ctx.interactHintRoom`.
 
 ## 6. Pages build
 
@@ -382,25 +514,30 @@ passed as JSON strings, delivered on `queueMicrotask`), so tests run the true pr
 | File | Checks |
 |---|---|
 | `room-perspective.test.ts` | perspective equals `{ playerId }` for legal actions, sheet, odds, blocker; identity for a party of one; memoised |
-| `room-session.test.ts` | 3 sessions in one room: each plays its own pid (p2 moves p2, not the lead); the replica is never written (every client's `hashState` equals the server's after 200 entries); dry-run invalid actions are not sent and toast; coalescing (one input per turn, latest wins); travel sends `travel` intents per new turn and stops on a hostile; dialogue history from outcomes; GM entries give intro and area cards; join / away / back toasts; down → followed teammate, back on revive; exit countdown view; reconnect → state rebuilt, no duplicate toasts |
+| `room-session.test.ts` | 3 sessions in one room: each plays its own pid (p2 moves p2, not the lead); a full `RoomSession` as p2 has p2's HUD, hints, persuade odds and legal actions; the replica is never written (a write trap on `state`; every client's `hashState` equals the server's after 200 entries); dry run: `illegal` not sent and toasts, `not ready` sent and queued, skipped on the last countdown turn; coalescing (one input per turn, latest wins); chains: "Ask what they know", a healer's help and a shop buy keep the conversation open, sent as one input, the healer line only in the log overlay; travel sends `travel` intents per new turn and stops on a hostile; dialogue history from per-entry steps; GM entries give intro and area cards; join / away / back toasts once each, none for a catch-up batch; late join from a `playing` welcome; down → nearest teammate followed, `[`/`]` cycle, back on revive; exit countdown view; reconnect → state rebuilt, chat merged by id, no duplicate toasts or bubbles |
 | `session.test.ts` (existing) | unchanged and passing: the refactor keeps single player identical |
-| `chat-model.test.ts` | 100-line cap, bubble per speaker and lifetime, emote detection, ping lines, typing set and expiry, 1/s throttle with `waitMs`, code-point counting (emoji count once) |
+| `session-characterization.test.ts` (new, written **before** the refactor) | a sim bot plays 6 single-player seeds through `uiAction` (dialogue, trade, travel included) and records per step the toasts, narration cards, dialogue history, voice requests, onboarding counts and log; the recording is committed and must stay byte-identical through D2 |
+| `chat-model.test.ts` | 100-line cap, merge by id, bubble per speaker and lifetime, emote detection, ping lines, typing set and expiry, 1/s throttle with `waitMs` shared by text, emotes and pings, the client count equals the protocol's `codePoints` (❤️ is 2) |
 | `room-api.test.ts`, `room-config.test.ts`, `room-profile.test.ts` | ok / unavailable / timeout / outdated / refused results, endpoint per build, ws URL from http(s), token store prune and drop rules, profile defaults |
 | `boot.test.ts` (existing + cases) | `?room=k7qx` → room `K7QX`; an invalid code → start; room wins over `?world=`; saved run kept |
-| `input.test.ts` (existing + cases) | room `game` layer: Enter → chat, Shift+Enter → interact, `/` → chat; `text` layer: WASD, digits, Space give no command |
+| `input.test.ts` (existing + cases) | room `game` layer: Enter → chat, Shift+Enter → interact, `/` → chat, `[`/`]` cycle while down, Tab still the backpack; `/` → chat in the dialogue, choice, narration, look and target layers, Enter unchanged there; `text` layer: WASD, digits, Space give no command; the `lobby` layer |
 | `room-qr.test.ts` | matrix size and finder patterns for a known link |
-| `tests/server/rooms-room.test.ts`, `protocol.test.ts` (+ cases) | `ready`, `profile`, `world`, difficulty option, `ping`, `room` broadcast (§2.7) |
+| `tests/server/rooms-room.test.ts`, `protocol.test.ts`, `net-client.test.ts` (+ cases) | `ready`, `profile`, `world`, difficulty option, `ping`, `room` broadcast; typing during a dialogue keeps busy; late-join welcome; per-entry `steps` and `catchUp`; `stopReason` 4007; test limits and seed read only when set (§2.7) |
 
-**Browser (Playwright, headed Chromium under xvfb).** All room specs share one config
-`e2e/mp/playwright.mp.config.ts`: its own ports (5183 / 8797, so the other specs' dev server and
-other agents are not touched), `ANYWORLD_DATA_DIR=.data/e2e-mp-<run>` (removed in global teardown),
-`ANYWORLD_TEST_TIMING` (deadline 600 ms, travel 30 ms, countdown turn 150 ms), `ANYWORLD_TEST_SEED`,
-`workers: 1`. Pages start with an init script setting `quality: 'low'` and `reduceMotion: true` in
+**Browser (Playwright, headed Chromium under xvfb).** All room specs live in `e2e-mp/` (outside the
+default config's recursive `testDir: 'e2e'`, so `npm run e2e` never runs them against 5173) and
+share one config `e2e-mp/playwright.mp.config.ts`: its own ports (5183 / 8797, so the other specs'
+dev server and other agents are not touched), `ANYWORLD_DATA_DIR=.data/e2e-mp-<run>` (removed in
+global teardown), `ANYWORLD_TEST_TIMING` (deadline 600 ms, travel 30 ms, countdown turn 150 ms),
+`ANYWORLD_TEST_SEED`, `ANYWORLD_TEST_LIMITS` (creates, upgrades, sockets per IP and the room cap
+raised), `workers: 1`, and the Chromium flags `--disable-backgrounding-occluded-windows`,
+`--disable-renderer-backgrounding`, `--disable-background-timer-throttling` (three overlapping
+windows under xvfb would otherwise be throttled or report `hidden`, which sends `presence: menu`). Pages start with an init script setting `quality: 'low'` and `reduceMotion: true` in
 the settings. Tests wait on conditions through the automation handle (`window.__anyworld.room`:
 `state()`, `pid`, `hash()`, `n`, `chat()`, `bubbles()`) with `expect.poll`, never on fixed sleeps,
 and compare hashes after waiting until all pages report the same `n`.
 
-- **`e2e/mp/mp-exit.spec.ts` (the exit check)**: three contexts in one browser: A desktop 1280×800
+- **`e2e-mp/mp-exit.spec.ts` (the exit check)**: three contexts in one browser: A desktop 1280×800
   (host), B desktop 1280×800, C phone 390×844 (`isMobile`, `hasTouch`). A creates a room on
   `fixture-western` from the start page, reads the code and link in the lobby (and the QR SVG is
   there); B opens the link, picks a name and colour; C types the code on the start page. All three
@@ -413,25 +550,35 @@ and compare hashes after waiting until all pages report the same `n`.
   builds only), with a chat line every ~40 entries; the exit countdown banner is seen on all three at
   the first exit; after each area change the three hashes agree; the end screen shows "Play again"
   on all three; A plays again and all three are in the new run's first area. About 3–5 minutes.
-- **`mp-lobby.spec.ts`**: room list (create, it appears, Join), join by link and by code, name and
-  colour uniqueness, ready count, host start, host leaves → B becomes host and starts, server down
-  (`page.route` fails `/api/rooms`) → "unavailable" and single player still starts, outdated health →
-  Reload, `?room=ZZZZ` → `net.noRoom`, reload in a room → same seat.
+- **`mp-lobby.spec.ts`**: room list ("Play with friends" on a card creates, the room appears, Join),
+  join by link and by code, a name clash → the "You are Kari 2" toast and Change, ready count, host
+  start, a third player opens the link **mid-run** and lands in the game with a character, host
+  leaves → B becomes host and starts, server down (`page.route` fails `/api/rooms`) → "unavailable"
+  and single player still starts, outdated health → Reload, `?room=ZZZZ` → `net.noRoom`, reload in a
+  room → same seat, "Leave room" from the in-game menu → start page with the single-player save
+  untouched.
 - **`mp-chat.spec.ts`**: one browser page plus two `ScriptedClient` teammates (tools/rooms) to save
   browsers: Enter, bubble on screen vs column off screen, typing bubble, emotes, pings, rate feedback,
-  200-character stop, phone button and sheet (phone context), keys never move while typing.
+  200-character stop, phone button and sheet (phone context), keys never move while typing, chat
+  opened with `/` during a dialogue keeps the dialogue open, Esc in chat leaves the backpack open; and
+  a 390×844 room-mode overlap check (as `render-phone-panels`) with the chat sheet open and with the
+  keyboard up.
 - **`mp-party.spec.ts`**: one page plus scripted teammates: name tags and colour rings, party strip,
   turn indicator with an idle teammate (no wait after it goes idle), teammate away and back (the bot
   drops its socket), the exit countdown banner, and the spectator pill when the page's player is
-  down: a Hard room (no second chance) with the fixed test seed, the page's player waiting next to the
-  first hostile, so the fall is repeatable; the camera must follow the scripted teammate until it
-  revives the player. No test-only "make me down" call: the state comes from play. The spectator
-  rules themselves are unit-tested in `room-session`.
+  down: a Hard room (no second chance) with the fixed test seed; the scripted teammates stay in
+  `menu` presence (busy, so no hostile picks them) and out of reach while the page's player waits by
+  the first hostile, which makes that player the only target whatever the wall-clock timing; once it
+  is down, one teammate walks over and revives it. The check is only "the spectator pill appears and
+  the camera follows the teammate, then returns"; the bounded overall wait is 90 s. No test-only
+  "make me down" call. The order of events and the spectator rules are unit-tested in
+  `room-session`.
 - the existing specs (`play`, `modes`, `mobile`…) run unchanged against `playwright.config.ts`.
 
 Reliability: fixed seeds and test timing; one browser with three contexts (three WebGL contexts in
 SwiftShader are fine at low quality); no assertions on animation frames, only on state through the
-handle and on DOM text; every wait bounded; the server and data dir torn down by the config.
+handle and on DOM text; every wait bounded; the server and data dir torn down by the config. Suite
+budget for `e2e-mp/`: 10–15 minutes; it runs in D3–D5 only, not at every step.
 
 ## 8. Build plan
 
@@ -442,16 +589,53 @@ re-exported), so the new-player gate is run once at the end as a check.
 
 | Step | Content | Focused tests |
 |---|---|---|
-| D1 | **Net additions and client plumbing (no UI)**: protocol and server for `ready`, `profile`, `world`, difficulty option, `ping`, `room` (§2.7), `ANYWORLD_TEST_SEED`; `RoomClient` additions; `room/config.ts`, `api.ts`, `profile.ts`; `bootRoute` `room` kind (main.ts treats it as the start page until D3); `qrcode-generator` dependency and `room/qr.ts`; en/nb keys for D1–D4 | `rooms-room` and `protocol` cases, `room-api`, `room-config`, `room-profile`, `boot`, `room-qr`, `i18n` |
-| D2 | **Room session core**: `perspective`, the `GameSession` refactor (§1.2, `view`, `absorbStep`, `absorbGm`, `nextTravelAction`), `RoomSession`, `ChatModel`, the in-memory room harness; `GameController` room mode (`ControllerHost.room`, serial sync, entry-driven travel, presence) and `RoomLink`; the automation handle `__anyworld.room` | `room-perspective`, `room-session`, `chat-model`; `session.test.ts` and all client tests unchanged |
-| D3 | **Start page, lobby, notices**: the "Play together" card (list, refresh, unavailable, outdated, create sheet, join by code), `LobbyScreen` (join step, roster, ready, world picker, options, GM line, share link, QR), `App.openRoom/createRoom/leaveRoom` and the `lobby` screen, end-screen play again, toasts with actions for every notice, reconnect banner; phone layouts | `input` cases, `e2e/mp/mp-lobby.spec.ts` |
-| D4 | **In-game party and chat UI**: colour rings (`setPartyColours`), PartyOverlay (name tags, bubbles, typing, pings, teammate arrows), party strip, turn pill, exit-countdown banner, spectator camera and pill, away / left; ChatPanel, phone chat button and sheet, emotes, pings, Enter / `/` / Shift+Enter, focus rules, rate feedback | `e2e/mp/mp-chat.spec.ts`, `e2e/mp/mp-party.spec.ts`, render unit tests for the ring |
-| D5 | **Exit check and notes**: in-page autoplay (dev/test builds), `e2e/mp/mp-exit.spec.ts` (3 contexts), fixes it finds; `docs/progress/MP3.md`, plan status; the full gate (typecheck, vitest, golden replay, `--gate --seeds 40`, single-player e2e smoke, all `e2e/mp` specs) | `mp-exit` |
+| D1 | **Net additions and client plumbing (no UI)**: protocol and server for `ready`, `profile`, `world`, difficulty option, `ping`, `room`; the typing-keeps-busy fix; `ANYWORLD_TEST_SEED` and `ANYWORLD_TEST_LIMITS` (§2.7); `RoomClient` additions (per-entry `steps`, `catchUp`, `stopReason`); `room/config.ts`, `api.ts`, `profile.ts`; `bootRoute` `room` kind (main.ts treats it as the start page until D3); `qrcode-generator` dependency and `room/qr.ts`; en/nb keys for D1–D4 | `rooms-room`, `protocol`, `net-client` cases, `room-api`, `room-config`, `room-profile`, `boot`, `room-qr`, `i18n` |
+| D2 | **Room session core (DOM-free)**: first the single-player characterization recording (committed before any refactor); then `perspective`, the `GameSession` refactor (§1.2: `pid`, `absorbStep`, `absorbGm`, `nextTravelAction`, chain actions split from bookkeeping), `RoomSession` (state = perspective by assignment, guarded writers, dry run, coalescing, one-input chains, `log-overlay`, per-entry absorb, late join), `ChatModel`, the in-memory room harness | `session-characterization` byte-identical, `room-perspective`, `room-session`, `chat-model`; `session.test.ts` and all client tests unchanged |
+| D3 | **Controller room mode, start page, lobby, notices**: `RoomLink`, `ControllerHost.room` (serial sync with timeout and hidden snap, entry-driven travel, presence incl. chat input, `cameraState`, travel-stop skips text targets), run lifecycle (relaunch on `run`, synchronous session on `welcome`), `roomWorldEntry`; the "Play together" card and "Play with friends" buttons, name sheet, `LobbyScreen` (roster, ready, world picker, options, GM line, share link, QR, profile change), welcome by phase (lobby / late join / ended), `App.openRoom/createRoom/leaveRoom`, the `lobby` screen and layer, in-game "Leave room", end-screen room block and play again, toasts with actions (sticky exempt from max), reconnect banner; the `e2e-mp/` config; the automation handle `__anyworld.room` | `input` cases, `e2e-mp/mp-lobby.spec.ts`, single-player e2e smoke |
+| D4 | **In-game party and chat UI**: ring recolour (`setPartyColours`), `renderer.setFollow`, PartyOverlay (name tags, bubbles, typing, pings, teammate arrows, avoid rects), party strip, turn pill (show/hide delays), banner area with priority, spectator camera and pill (`[`/`]`), away / left; ChatPanel, phone chat button in the `tools` row and sheet, log-ticker chat lines, emotes, pings, Enter / `/` in every layer / Shift+Enter with room hints, focus and IME rules, rate feedback on input and emote row | `e2e-mp/mp-chat.spec.ts` (with the phone overlap check), `e2e-mp/mp-party.spec.ts`, render unit tests for ring and follow |
+| D5 | **Exit check and notes**: in-page autoplay (dev/test builds), `e2e-mp/mp-exit.spec.ts` (3 contexts), fixes it finds; `docs/progress/MP3.md` (deferred: NPC-line bubbles for nearby players, the GM line accurate from MP4), plan status; the full gate (typecheck, vitest, golden replay, `--gate --seeds 40`, single-player e2e smoke, all `e2e-mp` specs) | `mp-exit` |
 
 ## Constants
 
-Turn pill shown for parties of 2+; renderer backlog snap after 4 batches; room list refresh 15 s;
+Turn pill shown for parties of 2+, after 450 ms of waiting, hidden 250 ms after; serial sync timeout
+1.5 s; renderer backlog snap after 4 batches; room list refresh 15 s;
 API timeout 5 s; reconnect banner "Leave room" after 20 s; bubble `4 s + 50 ms/char`, max 10 s, ~28
-characters per line, 3 lines; column fades after 20 s, 6 lines; ticker 4 s; ping marker 8 s; typing
+characters per line, 3 lines; column fades after 20 s, 6 lines; chat lines in the log ticker 4 s; ping marker 8 s; typing
 refresh 3 s (server expiry 8 s); counter from 160 of 200 code points; send throttle 1 s; tokens kept
 for 20 rooms / 7 days; emotes 👍 😂 😮 ❤️ 👋 ❓.
+
+## Review notes
+
+Three critiques (rules, client, ux-risk) of the first draft; one line each.
+
+- Accepted: late join / ended welcome go straight to game / end screen, no lobby step (§2.3; rules 1, ux 7).
+- Accepted: the desktop chat input sets `presence: menu` while open, like the phone sheet (§1.2, §4; rules 2, ux 12).
+- Accepted: in-game "Leave room" with the no-character warning; room mode never calls `clearRun`; hidden end-screen buttons named (§1.2; rules 3).
+- Accepted: no colour dimming before `hello`; toast the name and colour actually given with a Change action (`profile` kept for it) (§2.3; rules 4, client 11).
+- Accepted: `/` opens chat in every non-text layer and the input is clickable; added a server fix so stopping typing does not clear a dialogue's busy (§2.7, §4; rules 5, client 10).
+- Accepted: `Tab` stays the backpack; spectator cycles with `[` / `]` and the pill (§3.4; rules 6, client 10, ux 6).
+- Accepted: NPC lines as bubbles for nearby players deferred to MP4 and named in MP3.md (§3.3; rules 7).
+- Accepted: spectator e2e made deterministic by keeping teammates busy and out of reach, check reduced to pill and follow, bounded (§7; rules 8, ux 11). Rejected the separate fixture-world idea: not needed once the page's player is the only target.
+- Accepted: dropped the QR fallback encoder, path-distance follow and tap-to-centre from scope; `world` is canonical, `start.demo` kept server-side for bots only (rules 9).
+- Accepted: code-point counting matches `codePoints` (❤️ is 2); slow-down feedback also on emotes and pings (§4; rules 10).
+- Accepted: the GM line is worded for MP4 and said so (§2.4; rules 11).
+- Accepted: "Kari is deciding" and "The party moves on in {n}" instead of "waiting" (§3.2, §3.5; rules 12).
+- Accepted: `RoomClient` emits per-entry steps and a `catchUp` flag (§1.1; client 1).
+- Accepted: dialogue / trade / persuade chains go as one free-action input with bookkeeping on absorb; greeting stays in the shared log, the healer line in a client-only overlay (§1.1; client 2, ux 1).
+- Accepted (merged): client 3 and ux 2 together — `state` is a plain field *assigned* the perspective in `absorb`, every writer guarded, the raw `replica` for dry run and hashes; the `view` getter is dropped (§1.1).
+- Accepted: dry run reads `outcome.reason` and sends `not ready` as queued; skipped for `transition` and the last countdown turn so it never makes maps (§1.1; client 4, ux 9).
+- Accepted: controller reads routed to `cameraState` for renderer and overlays; travel-stop keydown skips text targets (§1.2; client 5, ux 6). The player reads stay on `state`, now the perspective.
+- Accepted: `renderer.setFollow` re-flags actor views; `setPartyColours` recolours the existing ring (§1.3, §3.1; client 6).
+- Accepted: relaunch session and controller on `run`; session created synchronously on `welcome`; `roomWorldEntry` adapter (§1.1, §1.2; client 7).
+- Accepted: `stopReason` in the stopped status; the bad-token rejoin path written down (§2.3, §2.7, §5; client 8).
+- Accepted: entries are the only presence toast source, none for catch-up; chat merged by id; sticky toasts exempt from `max` (§1.2, §3.6, §5; client 9).
+- Accepted: `lobby` added to `InputLayer` and the screen union (§1.2; client 10).
+- Accepted: lobby world card tagline and colour from the demo catalogue (§2.4; client 11).
+- Accepted: room specs moved to `e2e-mp/` (instead of `testIgnore`), `ANYWORLD_TEST_LIMITS`, test seed via `RoomDeps.seed` (§2.7, §7; client 12, ux 3).
+- Accepted: anti-throttling Chromium flags; sync timeout and a no-animation path while hidden (§1.1, §7; ux 4).
+- Accepted: phone elements merged into the portrait grid (tools, strip, banner rows), chat in the log ticker, `panelRects` and avoid rects, overlap check at 390×844 (§3.6, §4, §7; ux 5).
+- Accepted: Enter / Esc handled in the chat input, form submit with `enterkeyhint`, IME composition skipped; room variants of the interact hints (§4; ux 6).
+- Accepted: "Play with friends" on the world cards with defaults, name asked once, joiners go straight in with the stored profile (§2.2, §2.3; ux 7).
+- Accepted: turn pill shows after 450 ms, hides after 250 ms (§3.2; ux 8).
+- Accepted: a single-player characterization recording before the refactor; the controller room mode moves from D2 to D3, where the first browser spec reaches it (§7, §8; ux 10).
+- Accepted: names via `textContent`; `/` opens chat from narration while Enter still skips the card; e2e-mp budget 10–15 min, run in D3–D5 only (ux 12).
