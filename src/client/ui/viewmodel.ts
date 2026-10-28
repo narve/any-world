@@ -418,7 +418,118 @@ export interface StartView {
   recent?: RecentWorldView[];
   /** M4: true when a world file can be imported (onImportWorld is wired) */
   canImport?: boolean;
+  /** MP3: the "Play together" card (absent: this build has no game server) */
+  rooms?: RoomsCardView;
 }
+
+// ---------------------------------------------------------------------------
+// Rooms (MP3)
+// ---------------------------------------------------------------------------
+
+export type RoomPhase = 'lobby' | 'playing' | 'ended';
+
+/** one open room on the start page */
+export interface RoomRowView {
+  code: string;
+  title: string;
+  genre: string;
+  players: number;
+  maxPlayers: number;
+  phase: RoomPhase;
+  joinable: boolean;
+  /** this browser holds a seat there */
+  rejoin: boolean;
+}
+
+/** the start page's "Play together" card */
+export interface RoomsCardView {
+  /** ok: the list; unavailable: the server is offline; outdated: this page is older than the server */
+  status: 'loading' | 'ok' | 'unavailable' | 'outdated';
+  rooms: RoomRowView[];
+  /** a create or join is under way ("Joining room K7QX…") */
+  busy?: string | null;
+}
+
+/** the name and colour sheet (first create or join, and "Change" in a room) */
+export interface ProfileSheetView {
+  name: string;
+  colour: string;
+  /** every player colour, with its name */
+  colours: { value: string; label: string }[];
+  /** colours other seats hold (dimmed) */
+  taken: string[];
+  purpose: 'create' | 'join' | 'change';
+}
+
+export interface RoomRosterView {
+  seat: string;
+  name: string;
+  colour: string;
+  host: boolean;
+  ready: boolean;
+  /** the server's seat presence (active, busy, menu, idle, off, gone) */
+  presence: string;
+  you: boolean;
+}
+
+export interface RoomOptionsView {
+  maxPlayers: number;
+  deadlineMs: number;
+  difficulty: Difficulty;
+}
+
+/** the lobby screen (screen: 'lobby') */
+export interface LobbyView {
+  code: string;
+  /** the share link (the page's own origin) */
+  link: string;
+  /** the QR code's SVG markup (made lazily; null until then) */
+  qr: string | null;
+  world: { title: string; genre: string; tagline: string; color?: string };
+  phase: RoomPhase;
+  you: { seat: string; host: boolean; ready: boolean };
+  roster: RoomRosterView[];
+  readyCount: number;
+  options: RoomOptionsView;
+  limits: { maxPlayers: { min: number; max: number }; deadlineMs: { min: number; max: number } };
+  /** the host's world picker (open while `picking`) */
+  host?: { worlds: DemoWorldView[]; own: RecentWorldView[]; picking: boolean };
+}
+
+/** the room around a run: the end screen's room block, the in-game "Leave room", the reconnect banner */
+export interface RoomView {
+  code: string;
+  phase: RoomPhase;
+  host: boolean;
+  ready: boolean;
+  readyCount: number;
+  total: number;
+  /** this client lost its connection and is trying again */
+  reconnecting: boolean;
+  /** reconnecting for a while: the banner offers "Leave room" */
+  canLeave: boolean;
+}
+
+/** what the rooms UI asks the app to do */
+export type RoomIntent =
+  | { type: 'refresh' }
+  /** a new room on `worldId` (a demo or a world kept in this browser; absent: the default demo) */
+  | { type: 'create'; worldId?: string }
+  | { type: 'join'; code: string }
+  | { type: 'profile'; name: string; colour: string }
+  | { type: 'profile_cancel' }
+  | { type: 'change_profile' }
+  | { type: 'ready'; on: boolean }
+  /** host: start the run (or play again) */
+  | { type: 'start' }
+  /** host: the next run's world (a demo id, or a world kept in this browser) */
+  | { type: 'world'; id: string }
+  /** host: open or close the world picker (the end screen's "Choose another world" opens the lobby with it) */
+  | { type: 'pick_world'; open: boolean }
+  | { type: 'options'; options: Partial<RoomOptionsView> }
+  | { type: 'share' }
+  | { type: 'leave' }
+  | { type: 'reload' };
 
 /** M4: the start screen's provider status line */
 export interface ProviderStatusView {
@@ -554,12 +665,18 @@ export interface LanguageOptionView {
 // ---------------------------------------------------------------------------
 
 export interface UiViewModel {
-  screen: 'start' | 'loading' | 'game' | 'end';
+  screen: 'start' | 'loading' | 'lobby' | 'game' | 'end';
   theme: ThemeView;
   start?: StartView;
   loading?: LoadingView;
   game?: GameView;
   end?: EndView;
+  /** MP3: the lobby screen */
+  lobby?: LobbyView;
+  /** MP3: in a room (the end screen's room block, "Leave room" in game, the reconnect banner) */
+  room?: RoomView | null;
+  /** MP3: the name and colour sheet, over any screen */
+  profileSheet?: ProfileSheetView | null;
   /** settings dialog open when non-null (over any screen) */
   settings?: SettingsView | null;
   /** animation preferences (from Settings), applied to every screen */
@@ -640,4 +757,6 @@ export interface UiCallbacks {
   onForgetWorld?(worldId: string): void;
   /** M4: the settings dialog's music slot (SettingsView.music) was rendered: put the panel in it */
   onMountMusic?(host: HTMLElement): void;
+  /** MP3: the rooms UI (start page card, lobby, profile sheet, end-screen room block, Leave room) */
+  onRoom?(intent: RoomIntent): void;
 }

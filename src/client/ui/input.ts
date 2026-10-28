@@ -39,6 +39,7 @@ export type InputLayer =
   | 'none'
   | 'start'
   | 'loading'
+  | 'lobby'
   | 'end'
   | 'game'
   | 'narration'
@@ -201,6 +202,7 @@ export function resolveKey(ev: KeyLike, layer: InputLayer, verbs: InputVerbs): U
     case 'none':
     case 'start':
     case 'loading':
+    case 'lobby':
     case 'end':
       return null;
     case 'text':
@@ -481,7 +483,7 @@ export function attachPointer(
 // ---------------------------------------------------------------------------
 
 export interface LayerState {
-  screen: 'start' | 'loading' | 'game' | 'end';
+  screen: 'start' | 'loading' | 'lobby' | 'game' | 'end';
   settingsOpen: boolean;
   helpOpen: boolean;
   rulesOpen: boolean;

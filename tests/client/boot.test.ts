@@ -70,3 +70,16 @@ describe('main.ts boot never clears the run', () => {
     expect(boot.slice(0, boot.indexOf('\n}\n'))).not.toContain('clearRun');
   });
 });
+
+describe('room codes (MP3)', () => {
+  it("boot's plain regex accepts exactly the protocol's codes", async () => {
+    const { ROOM_CODE } = await import('../../src/client/boot');
+    const { Code } = await import('../../src/net/protocol');
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcz';
+    for (const a of chars) for (const b of 'K7QZ0') {
+      const code = `${a}${b}Q2`;
+      expect(ROOM_CODE.test(code)).toBe(Code.safeParse(code).success);
+    }
+    for (const code of ['K7QX', 'K7Q', 'K7QXX', '', 'k7qx']) expect(ROOM_CODE.test(code)).toBe(Code.safeParse(code).success);
+  });
+});

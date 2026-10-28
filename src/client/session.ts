@@ -256,6 +256,11 @@ export class GameSession {
     return this.pid;
   }
 
+  /** what the renderer and the map overlays show (single player: `state`; a room's spectator: the followed teammate) */
+  get cameraState(): GameState {
+    return this.state;
+  }
+
   /** this session's player state */
   get me(): PlayerState {
     return this.state.players[this.pid];

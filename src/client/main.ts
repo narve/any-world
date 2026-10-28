@@ -3,6 +3,12 @@
  * the end screen. URL shortcuts: `?world=<bundled id>&seed=<n>` starts that world straight away
  * (demo links, e2e tests) or resumes its autosaved run; `?continue=1` resumes the autosaved run.
  * The address bar always names the run on screen (see boot.ts), so a reload continues it.
+ *
+ * Rooms (MP3 design §1.2, §2): with a game server (roomsEndpoint), the start page lists the open
+ * rooms ("Play together"), every world card can make a room ("Play with friends"), and `?room=CODE`
+ * joins one. All of that lives in room/flow.ts (RoomFlow), a lazy chunk fetched at boot only when
+ * the build has a server; the App hands it its screens, renderer and controller (RoomAppHost). A room
+ * never reads, clears or writes the single-player save; the address bar keeps `?room=CODE`.
  */
 import { createUi, type GameUi, type Settings, type StartView, type UiCallbacks, type UiViewModel, type InspirationPrompt, type DemoWorldView, type SettingsView, type StartOptions, type Difficulty } from './ui/index';
 import { DEFAULT_PALETTE } from './ui/index';
@@ -27,7 +33,8 @@ import { GameSession } from './session';
 import { demoWorldsFor, localizedInspiration, promptLibrary } from './prompts';
 import { GameController } from './game-controller';
 import { bootRoute, runUrl } from './boot';
-import { pageBuild, roomsEndpoint } from './room/config';
+import { pageBuild, roomsEndpoint, type RoomsEndpoint } from './room/config';
+import type { RoomFlow, RoomHandle } from './room/flow';
 
 declare global {
   interface Window {
@@ -35,6 +42,9 @@ declare global {
     __anyworld?: App;
   }
 }
+
+/** the room list on the start page refreshes this often while it is visible (ms) */
+const ROOM_LIST_MS = 15_000;
 
 /** the server's origin when the page is hosted elsewhere (build: ANYWORLD_SERVER_URL); '' = same origin */
 const SERVER_URL: string = typeof __ANYWORLD_SERVER__ !== 'undefined' ? __ANYWORLD_SERVER__ : '';
@@ -58,7 +68,7 @@ export class App {
   controller: GameController | null = null;
   private settings: Settings;
   private settingsOpen = false;
-  private screen: 'start' | 'loading' | 'game' = 'start';
+  screen: 'start' | 'loading' | 'lobby' | 'game' = 'start';
   /** what the backend said about the presets it can serve */
   private server: ServerState = { kind: 'unknown' };
   /** advice shown under a failed world generation (modes.ts generationHint) */
@@ -69,11 +79,18 @@ export class App {
   private lastStart: StartOptions | null = null;
   private startError: string | null = null;
   /** the start screen's last difficulty/weirdness (used for demo runs and "same world again") */
-  private runOptions: { difficulty: Difficulty; weirdness: number } = { difficulty: 'normal', weirdness: 0.4 };
+  runOptions: { difficulty: Difficulty; weirdness: number } = { difficulty: 'normal', weirdness: 0.4 };
+
+  // rooms (MP3) --------------------------------------------------------------
+  /** the game server's room endpoints (null: a static build without a server) */
+  private readonly endpoint: RoomsEndpoint | null = roomsEndpoint(pageBuild(), location);
+  private flow: RoomFlow | null = null;
+  private flowLoad: Promise<RoomFlow | null> | null = null;
+  private flowFailed = false;
 
   constructor(
     private uiRoot: HTMLElement,
-    private canvasHost: HTMLElement,
+    readonly canvasHost: HTMLElement,
   ) {
     this.settings = loadSettings(DEFAULT_TRANSPORT, TRANSPORTS);
     this.audio = new AudioBridge(this.settings.audio);
@@ -81,6 +98,12 @@ export class App {
     this.ui = createUi(uiRoot, this.callbacks());
     void this.refreshServerPresets();
     preloadRenderer();
+    if (this.endpoint) {
+      void this.roomFlow().then((f) => f?.refreshRooms());
+      setInterval(() => {
+        if (this.screen === 'start' && !this.flow?.link && !document.hidden) void this.flow?.refreshRooms();
+      }, ROOM_LIST_MS);
+    }
   }
 
   /** asks the backend which presets it holds keys for (backend transport only) */
@@ -116,7 +139,7 @@ export class App {
   }
 
   /** the UI language picker (start screen, settings) */
-  private languageView(): UiViewModel['language'] {
+  languageView(): UiViewModel['language'] {
     return { current: getLanguage(), options: availableLanguages() };
   }
 
@@ -132,7 +155,7 @@ export class App {
   // view
   // ---------------------------------------------------------------------------
 
-  private settingsView(): SettingsView | null {
+  settingsView(): SettingsView | null {
     if (!this.settingsOpen) return null;
     return {
       // labels, regions and notes in the UI language (issues/M5-settings-presets-english.md)
@@ -146,7 +169,7 @@ export class App {
     };
   }
 
-  private prefs() {
+  prefs(): { animationSpeed: number; reduceMotion: boolean } {
     return { animationSpeed: this.settings.animationSpeed, reduceMotion: this.settings.reduceMotion };
   }
 
@@ -186,12 +209,18 @@ export class App {
       recent,
       canImport: true,
       defaults: { difficulty: this.runOptions.difficulty, weirdness: this.runOptions.weirdness },
+      ...(this.endpoint ? { rooms: this.flow?.roomsCardView() ?? { status: this.flowFailed ? 'unavailable' : 'loading', rooms: [] } } : {}),
     };
   }
 
   render(): void {
     if (this.screen === 'game' && this.controller) {
       this.controller.render();
+      return;
+    }
+    // (in a room between two runs, the controller is being relaunched: the lobby view meanwhile)
+    if ((this.screen === 'lobby' || this.screen === 'game') && this.flow?.link) {
+      this.ui.render(this.flow.lobbyVm());
       return;
     }
     if (this.screen === 'loading' && this.generation) {
@@ -213,6 +242,7 @@ export class App {
       settings: this.settingsView(),
       prefs: this.prefs(),
       language: this.languageView(),
+      ...(this.flow?.sheetView ? { profileSheet: this.flow.sheetView } : {}),
     };
     this.ui.render(vm);
     if (this.startError) {
@@ -226,7 +256,7 @@ export class App {
   // ---------------------------------------------------------------------------
 
   /** three.js lives in its own chunk (render/lazy.ts): fetched while the start screen is up */
-  private async ensureRenderer(): Promise<Renderer> {
+  async ensureRenderer(): Promise<Renderer> {
     if (!this.renderer) {
       const { Renderer } = await loadRenderer();
       this.renderer ??= new Renderer(this.canvasHost, { quality: this.settings.quality ?? 'auto', reduceMotion: this.settings.reduceMotion || undefined });
@@ -399,6 +429,7 @@ export class App {
   }
 
   showStart(error?: string): void {
+    this.flow?.closeRoom();
     this.generation?.cancel();
     this.generation = null;
     this.audio.stopRun();
@@ -502,6 +533,7 @@ export class App {
       },
       onOpenSettings: (open) => {
         this.settingsOpen = open;
+        this.flow?.link?.setMenu('settings', open);
         this.render();
       },
       onSettings: (saved) => {
@@ -515,6 +547,7 @@ export class App {
         if (s.reduceMotion !== before.reduceMotion) this.renderer?.setReduceMotion(s.reduceMotion);
         if (this.controller) this.controller.session.prefs = this.prefs();
         this.settingsOpen = false;
+        this.flow?.link?.setMenu('settings', false);
         this.render();
         void this.refreshServerPresets();
       },
@@ -530,8 +563,51 @@ export class App {
       onImportWorld: (file) => void this.importWorld(file),
       onForgetWorld: (id) => void this.forgetWorld(id),
       onMountMusic: (host) => void this.audio.mountPanel(host),
+      onRoom: (i) => void this.roomFlow().then((f) => f?.onRoom(i)),
     };
   }
+
+  // ---------------------------------------------------------------------------
+  // rooms (MP3): the flow lives in room/flow.ts, loaded lazily with the room runtime
+  // ---------------------------------------------------------------------------
+
+  /** the room flow (null: this build has no server, or its code could not be loaded) */
+  private roomFlow(): Promise<RoomFlow | null> {
+    if (!this.endpoint) return Promise.resolve(null);
+    const endpoint = this.endpoint;
+    this.flowLoad ??= import('./room/flow').then(
+      (m) => (this.flow = new m.RoomFlow(this, endpoint)),
+      (e) => {
+        console.warn('[anyworld] the room code could not be loaded:', e);
+        this.flowFailed = true;
+        if (this.screen === 'start') this.render();
+        return null;
+      },
+    );
+    return this.flowLoad;
+  }
+
+  /** the automation handle of the room this page is in (e2e-mp specs, debugging) */
+  get room(): RoomHandle | null {
+    return this.flow?.handle ?? null;
+  }
+
+  /** joins a room by its code (a ?room= link) */
+  async joinRoom(code: string): Promise<boolean> {
+    const f = await this.roomFlow();
+    if (!f) {
+      this.showStart(t(this.endpoint ? 'room.unavailable' : 'room.noServer'));
+      return false;
+    }
+    return f.joinRoom(code);
+  }
+
+  /** "Leave room" (the single-player save is untouched) */
+  leaveRoom(): void {
+    if (this.flow) this.flow.leaveRoom();
+    else this.showStart();
+  }
+
 }
 
 /**
@@ -568,8 +644,15 @@ async function boot(): Promise<void> {
   const route = bootRoute(location.search, saved && hasWorld(saved.worldId) ? saved : null, worldTitle);
   if (route.kind === 'new') await app.playWorld(route.worldId, route.seed);
   else if (route.kind === 'continue') await app.continueRun();
-  // a room link (MP3): the start page until the room client (D3); a build without a server says so
-  else if (route.kind === 'room') app.showStart(roomsEndpoint(pageBuild(), location) ? undefined : t('room.noServer'));
+  // a room link (MP3): join it (the stored seat or profile; the name sheet the first time); a build
+  // without a server says so
+  else if (route.kind === 'room') {
+    if (!roomsEndpoint(pageBuild(), location)) app.showStart(t('room.noServer'));
+    else {
+      app.showStart();
+      await app.joinRoom(route.code);
+    }
+  }
   else app.showStart(route.notice);
 }
 

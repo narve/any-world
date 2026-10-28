@@ -14,7 +14,12 @@
  *  - anything else opens the start screen.
  */
 import { t } from './i18n/index';
-import { Code } from '../net/protocol';
+
+/**
+ * a room code (the protocol's Code: 4 characters without 0/O/1/I/L), kept here as a plain regex so
+ * the start bundle does not pull in the protocol's schemas (tests/client/boot.test.ts checks they agree)
+ */
+export const ROOM_CODE = /^[2-9A-HJ-NP-Z]{4}$/;
 
 export interface SavedRunInfo {
   worldId: string;
@@ -41,7 +46,7 @@ export function bootRoute(search: string, saved: SavedRunInfo | null, worldTitle
   const room = q.get('room');
   if (room !== null) {
     const code = room.trim().toUpperCase();
-    return Code.safeParse(code).success ? { kind: 'room', code } : { kind: 'start' };
+    return ROOM_CODE.test(code) ? { kind: 'room', code } : { kind: 'start' };
   }
   const world = q.get('world');
   if (world) {

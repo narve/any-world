@@ -9,12 +9,22 @@
  * its answers are applied between turns through session.applyGm. Answers for an area the player
  * has already left are dropped; an answer that would open a choice while another is open waits
  * until the player is free.
+ *
+ * Room mode (MP3 design §1.2; `host.room` set, the session a RoomSession): no GM requests (the
+ * server is the GM), no NPC voice, no autosave. The room's entries arrive through `applyRemote`;
+ * the renderer is synced serially (one sync at a time, each bounded by SYNC_TIMEOUT_MS; batches that
+ * piled up meanwhile go in one sync, and more than SYNC_BACKLOG of them, or a hidden tab, snap to
+ * the latest state without animation). Click-to-travel is driven by the entries (the session sends
+ * the next step when the last one resolved), and a key typed into a text field (chat) does not stop
+ * it. The renderer and the exit marker follow `session.cameraState` (a down player watches a
+ * teammate); the menus a player opens are reported as presence (`room.setMenu`).
  */
-import type { Dir, PlayerAction, Pos } from '../engine/types';
+import type { Dir, GameEvent, GameState, PlayerAction, Pos } from '../engine/types';
 import type { Renderer } from './render/index';
 import type { GameUi, TradeIntent, UiIntent, UiViewModel } from './ui/index';
 import { attachMapInput, tapDecision, type TapDecision } from './ui/touch-input';
 import { coverInsets, isCompact, sameInsets, type Insets } from './ui/layout';
+import { isTextTarget } from './ui/input';
 import { legalActions, leadPlayer } from '../engine/index';
 import type { GameSession, Outcome } from './session';
 import { clearRun, markOnboardingSeen, saveRun } from './storage';
@@ -30,6 +40,15 @@ const DIR_DELTA: Record<Dir, [number, number]> = { n: [0, -1], s: [0, 1], e: [1,
 const DIRS = Object.keys(DIR_DELTA) as Dir[];
 /** GM answers waiting for the player to finish a choice are kept at most this long (turns) */
 const HOLD_TURNS = 30;
+/** room mode: one renderer sync waits at most this long before the next batch goes (ms) */
+export const SYNC_TIMEOUT_MS = 1500;
+/** room mode: more batches than this waiting for the renderer snap to the latest state */
+export const SYNC_BACKLOG = 4;
+
+/** what the controller needs of a room (RoomLink): the presence of the menus it opens */
+export interface RoomPresence {
+  setMenu(reason: string, open: boolean): void;
+}
 
 export interface ControllerHost {
   ui: GameUi;
@@ -46,6 +65,8 @@ export interface ControllerHost {
   gmTimeoutMs?: number;
   /** NPC voice (ai.ts): each conversation turn is voiced by the LLM; absent = the engine's lines */
   dialogue?: LlmDialogue | null;
+  /** MP3: the room this run is played in (room mode: see the file comment) */
+  room?: RoomPresence;
 }
 
 /** renderer methods newer renderers may offer (feature-detected) */
@@ -66,6 +87,11 @@ export class GameController {
   private thumbCache = new Map<string, string | null>();
   private voiceAbort: AbortController | null = null;
   private insets: Insets | null = null;
+  /** room mode: event batches waiting for the renderer, and whether a sync is running */
+  private syncQueue: GameEvent[][] = [];
+  private syncing = false;
+  /** room mode: the panels open now (presence) */
+  private panels = new Set<string>();
 
   constructor(
     readonly session: GameSession,
@@ -86,7 +112,8 @@ export class GameController {
   async start(): Promise<void> {
     const { renderer } = this.host;
     renderer.setWorld(this.session.world);
-    renderer.setArea({ ...this.session.state.area, seen: this.session.me.seen });
+    const cam = this.camera();
+    renderer.setArea({ ...cam.area, seen: leadPlayer(cam).seen });
     this.session.setCameraStep(renderer.cameraStep);
     // mouse, pen and touch on the map: one input layer (ui/touch-input.ts)
     const pointer = attachMapInput(this.host.canvasHost, {
@@ -123,8 +150,12 @@ export class GameController {
       const d = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
       renderer.zoom(Math.max(-3, Math.min(3, d / 60)));
     };
-    // any key press stops click-to-travel (the UI handles the key itself)
-    const onKey = () => this.stopTravel();
+    // any key press stops click-to-travel (the UI handles the key itself); in a room, typing in
+    // the chat does not ("on my way" must not stop the walk)
+    const onKey = (e: KeyboardEvent) => {
+      if (this.host.room && isTextTarget(e.target)) return;
+      this.stopTravel();
+    };
     this.host.canvasHost.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('keydown', onKey, true);
     this.overlay = new MapOverlay(this.host.canvasHost, (p) => renderer.tileToScreen(p as Pos));
@@ -149,11 +180,16 @@ export class GameController {
     );
     this.render();
     this.updateInsets();
-    await renderer.sync(this.session.state, []);
+    await renderer.sync(this.camera(), []);
     renderer.rig.settle();
     this.autosave();
     this.loop();
     this.pumpGm(false);
+  }
+
+  /** the state the renderer and the map overlays show (a room's spectator: the followed teammate) */
+  private camera(): GameState {
+    return this.session.cameraState;
   }
 
   dispose(): void {
@@ -162,6 +198,9 @@ export class GameController {
     this.stopTravel();
     cancelAnimationFrame(this.raf);
     this.gm.dispose();
+    for (const p of this.panels) this.host.room?.setMenu(`panel:${p}`, false);
+    this.panels.clear();
+    this.syncQueue = [];
     for (const d of this.disposers.splice(0)) d();
     this.overlay = null;
     this.host.renderer.highlightTiles([]);
@@ -193,6 +232,12 @@ export class GameController {
       return;
     }
     if (i.type === 'click_tile' || i.type === 'begin_target' || i.type === 'look' || i.type === 'interact') this.stopTravel();
+    if (i.type === 'panel' && this.host.room) {
+      // a player in a menu never holds up the party's turns (plan §2.1)
+      if (i.open) this.panels.add(i.panel);
+      else this.panels.delete(i.panel);
+      this.host.room.setMenu(`panel:${i.panel}`, i.open);
+    }
     if (i.type === 'panel' && i.panel === 'rules' && i.open) {
       this.session.acknowledgeRules();
       queueMicrotask(() => this.render());
@@ -333,12 +378,56 @@ export class GameController {
     if (out.changed) {
       // the hovered tile may hold someone whose state just changed (a hit, a status): refresh
       if (!opts.quiet) this.refreshTooltip();
-      void renderer.sync(this.session.state, out.events);
+      if (this.host.room) this.queueSync(out.events);
+      else void renderer.sync(this.session.state, out.events);
       this.autosave();
       this.afterTurn();
     }
-    if (out.travel) void this.runTravel();
+    if (out.travel) {
+      // a room sends the first step now; the next ones follow the entries (RoomSession)
+      if (this.host.room) this.apply(this.session.travelTick().outcome);
+      else void this.runTravel();
+    }
     this.pumpVoice();
+  }
+
+  /**
+   * Room mode: an Outcome the room produced (entries absorbed, a rebuilt replica, a refusal). Applied
+   * like a local one; a walk stops when a panel took the input (as the travel loop does in single player).
+   */
+  applyRemote(out: Outcome): void {
+    if (this.disposed) return;
+    if (this.session.travelDest && this.host.ui.isBlocking()) this.session.stopTravel();
+    this.apply(out, { quiet: !out.changed });
+  }
+
+  /** room mode: the renderer follows the replica one sync at a time (never two at once) */
+  private queueSync(events: GameEvent[]): void {
+    this.syncQueue.push(events);
+    if (!this.syncing) void this.drainSync();
+  }
+
+  private async drainSync(): Promise<void> {
+    const r = this.host.renderer;
+    this.syncing = true;
+    try {
+      while (this.syncQueue.length && !this.disposed) {
+        const batches = this.syncQueue.splice(0);
+        // a backlog, or a hidden tab (no animation frames): the latest state at once, no animation
+        const snap = batches.length > SYNC_BACKLOG || (typeof document !== 'undefined' && document.hidden);
+        const p = r.sync(this.camera(), snap ? [] : batches.flat());
+        if (snap) {
+          r.skipAnimations();
+          void p.catch((e) => console.warn('[anyworld] renderer sync failed:', e));
+          continue;
+        }
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        await Promise.race([p.catch((e) => console.warn('[anyworld] renderer sync failed:', e)), new Promise<void>((res) => (timer = setTimeout(res, SYNC_TIMEOUT_MS)))]);
+        if (timer !== null) clearTimeout(timer);
+      }
+    } finally {
+      this.syncing = false;
+    }
   }
 
   /** asks the NPC voice for the conversation turn the session is waiting on (never blocks play) */
@@ -393,6 +482,8 @@ export class GameController {
   }
 
   private autosave(): void {
+    // a room's run is the server's: the single-player save is never read, cleared or written by it
+    if (this.host.room) return;
     if (this.session.ended) clearRun();
     else saveRun(this.session.savedRun(Date.now()));
   }
@@ -432,7 +523,8 @@ export class GameController {
 
   /** sends the session's new GM hooks to the runner; an area change drops stale requests first */
   private pumpGm(applyHeld: boolean): void {
-    if (this.disposed) return;
+    // (a room's GM is the server's)
+    if (this.disposed || this.host.room) return;
     const hooks = this.session.takeHooks();
     if (hooks.some((h) => h.hook === 'area_enter')) {
       this.gm.cancelAll();
@@ -483,7 +575,9 @@ export class GameController {
     ov.setPreview(this.host.ui.isBlocking() ? null : s.preview(this.lastHover));
     const st = s.state;
     const ex = st.area.map.exit;
-    const seen = (leadPlayer(st).seen as ArrayLike<number>)[ex.y * st.area.map.width + ex.x] ?? 0;
+    // (the exit marker's fog is the camera's: a spectator sees what the followed teammate sees)
+    const cam = this.camera();
+    const seen = (leadPlayer(cam).seen as ArrayLike<number>)[ex.y * cam.area.map.width + ex.x] ?? 0;
     const plan = s.world.areas[st.area.index];
     ov.setExit(!s.ended && seen > 0 && plan ? { pos: ex, label: plan.transitionName } : null);
     // until the exit has been seen, a faint chevron beside the player points its general way
@@ -563,6 +657,8 @@ export class GameController {
 
   /** replaces the engine state (e2e set-ups: teleports, injected rules) and redraws */
   async setStateForTest(mutate: (s: GameSession['state']) => void): Promise<void> {
+    // a room's state is the replica's view: never written here
+    if (this.host.room) throw new Error('setStateForTest is not available in a room');
     const st = structuredClone(this.session.state);
     mutate(st);
     this.session.state = st;

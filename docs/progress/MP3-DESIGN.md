@@ -723,6 +723,89 @@ re-exported), so the new-player gate is run once at the end as a check.
   the entries); route `session.cameraState` to the renderer; use `queued` for the HUD mark; wire
   ChatModel to `welcome.chat` (merge) and `chat` frames (push).
 
+## D3 as built
+
+- **RoomLink** (`room/link.ts`): builds the `RoomClient` (browser `WebSocket` by default; `socket`, `store`,
+  `doc`, `engine`, timers injectable, so `tests/client/room-link.test.ts` runs it on the in-memory harness).
+  It saves the seat token on every welcome, owns the room's `ChatModel` (welcome chat merged, chat frames
+  pushed, typing frames to `setTyping`; `self` = seat), and sends `presence` on change only:
+  `setMenu(reason, open)` plus `document.hidden` give `menu`, else `playing` (resent after a reconnect
+  only when it is `menu`). Events: `welcome { first, renamed }`, `run`, `changed`, `chat`, `status`,
+  `toast`, `reload` (outdated: sticky Reload toast, the view stays), `end { key }` (back to the start
+  page; the token is dropped except for a full room, another tab or a world fault). A bad token drops
+  the seat, toasts `net.badToken` and reconnects as new after the client's own stop. Close 4007 →
+  `room.otherTab`, 1008 → `room.notAllowed`, any other stop without a notice → `net.roomClosed`.
+  `error not_host / bad_phase / invalid` → `room.notAllowed` toast. `leave()` drops the seat token.
+  `roomWorldEntry(world, worldId, worldIndex())` names the bundled demo (matched by title and language)
+  as `origin`.
+- **Menu reasons in use**: `panel:backpack|help|rules` (the controller, from the `panel` intents),
+  `settings` and `profile` (main.ts). **D4: the chat input and the phone sheet call
+  `link.setMenu('chat', open)`**; the controller gets the link as `host.room` (`RoomPresence`).
+- **GameController** (`host.room` set): `pumpGm` and `autosave` return at once, `dialogue: null`;
+  `applyRemote(out)` for the room's outcomes (stops a walk when a panel took the input); renderer syncs
+  are serial (`queueSync`: batches waiting while one runs go in one sync with their events joined; more
+  than `SYNC_BACKLOG` (4) of them or a hidden tab → `sync(state, [])` + `skipAnimations()`, not
+  awaited; each awaited sync bounded by `SYNC_TIMEOUT_MS` 1.5 s). `out.travel` → one
+  `session.travelTick()` (no 70 ms loop). The keydown that stops travel skips `isTextTarget`. The
+  renderer (`start`, syncs) and the exit marker's fog read `session.cameraState` (a new base getter on
+  `GameSession` returning `state`; RoomSession overrides it). `setStateForTest` throws in a room. The
+  open panels are reported as presence and cleared on dispose. `renderer.setFollow` is not called yet (D4).
+- **RoomFlow** (`room/flow.ts`, a lazy chunk with link, session, api, profile and the net client;
+  main.ts loads it at boot only when `roomsEndpoint` gives an endpoint, and through `RoomAppHost` it
+  drives the App's screens, renderer and controller). main.ts keeps thin hooks: `roomFlow()`, `room`
+  (the handle), `joinRoom(code)` (?room= links), `leaveRoom()`, the card view, `lobbyVm()` and the
+  sheet in `render()`, `flow.closeRoom()` in `showStart`, `setMenu('settings')`. The start page's
+  card refreshes on boot, on ↻ / Retry and every 15 s while the start page is visible. `createRoom(worldId?)` (default:
+  the first demo of the start page; a world kept in this browser is sent as `world`), `joinRoom(code)`
+  (`getRoom` first: 404 → start page + `net.noRoom`; then the stored token, else the stored profile,
+  else the name sheet), `openRoom`, `leaveRoom` (`link.leave()` + `showStart()`; never `clearRun`).
+  `showStart` closes any room. The address bar is `?room=CODE` while in a room. Screens: the welcome's
+  phase decides (`syncRoomScreen`): playing → `startRoomRun` (a `RoomSession` at once, attached; its
+  outcomes buffered until `controller.start()` resolved, then applied merged); lobby → `screen: 'lobby'`;
+  ended → the end screen of this page's session if it played the run, else `endView(client.world,
+  client.state)` with the room block. `run` → the session and controller are disposed and relaunched
+  (between them the lobby view shows). `extraVm` adds `room` (RoomView) for the end screen's room block,
+  the help overlay's "Leave room" and the reconnect banner (20 s → its "Leave room"). The renamed toast
+  ("You are Kari 2, green") carries "Change" in lobby / ended only. `__anyworld.room` (RoomHandle):
+  `code, status, phase, seat, pid, host, run, n, state(), hash(), chat(), roster(), session, link`
+  (`bubbles()` and `autoplay` are D4 / D5).
+- **UI**: `UiViewModel.screen` + `'lobby'`, `lobby?: LobbyView`, `room?: RoomView | null`,
+  `profileSheet?`; `StartView.rooms?: RoomsCardView`; one callback `onRoom(RoomIntent)` (refresh, create,
+  join, profile / profile_cancel / change_profile, ready, start, world, pick_world, options, share,
+  leave, reload). `components/rooms.ts`: `RoomsCard` (kept across re-renders so the code field keeps
+  its text; `cleanCode` upper-cases to the code alphabet), `ProfileSheet` (name + 12 swatches, taken
+  ones dimmed; takes the keys like the settings dialog, Esc cancels). `components/lobby.ts`:
+  `LobbyScreen`, re-rendered per part (share, world, roster, options, actions) so a roster change
+  never takes the focus from an option select. "Play with friends" sits under each demo card and in
+  "Your worlds"' tools while the card status is ok. `EndScreen.update(v, vocab, room?)` swaps "New
+  world" / "Same world again" for the room block (host: Play again, Choose another world; everyone:
+  Ready, Leave room). `HelpOverlay` has "Leave room" with `room.leaveRunHint` in a room (the in-game
+  menu; single player has no menu with "New run"). `GameUi.toast(text, tone, action?)`;
+  `ToastStack.push(text, tone, action?)` and `dismiss(id)`, sticky entries without timers and outside
+  `max`. Styles in `styles/rooms.css`. `InputLayer` + `'lobby'` (no game keys).
+- **Bundle**: the static start bundle is 298.6 kB gzip (budget 300; 297.8 before D3). Lazy: `room/flow.ts`
+  (~14 kB), `components/lobby.ts` (LobbyScreen and ProfileSheet, ~2.8 kB, imported by ui.ts the first
+  time a view has `screen: 'lobby'` or a `profileSheet`), `room/qr.ts`. `boot.ts` checks `?room=` with
+  its own `ROOM_CODE` regex (a test checks it equals the protocol's `Code`), so the start bundle no
+  longer pulls in the protocol's zod schemas. **D4: keep new room UI out of the entry the same way**
+  (ChatPanel, PartyOverlay in lazy modules); the entry has under 1.5 kB left.
+- **Deviations**: only the "Play together" card, the end screen's room block, the help's "Leave room",
+  the banner and toast actions are in the main UI bundle. The lobby has no chat panel yet: D4's `ChatPanel` must
+  be mounted in the lobby screen too. The host-leaves test expects the player connected longest to
+  take over (the server's rule), which after a reload is not always the second player.
+- **Tests**: `tests/client/room-link.test.ts` (presence, tokens, rename, bad token, another tab, no
+  room, leave, chat merge, `roomWorldEntry`); `tests/ui/input.test.ts` (lobby layer, text layer);
+  `tests/ui/toasts.test.ts` (action, sticky). The harness now delivers frames sent just before a close
+  (as a real socket does) and offers `socketFactory(sent)` and `timers()`. **e2e-mp**:
+  `e2e-mp/playwright.mp.config.ts` (5183 / 8797, `.data/e2e-mp-<time>` removed by `teardown.ts`,
+  `MP_TIMING`, `MP_SEED` 4242, `MP_LIMITS`, anti-throttling flags, `reuseExistingServer: false`) and
+  `mp-lobby.spec.ts` (3 tests, ~1.5 min): card create with the name sheet, list join, name clash toast
+  and Change, ready count, start, own pids and hash agreement, a phone mid-run join by link after a
+  single-player run, reload keeps the seat, host handover, "Leave room" from help keeps the
+  single-player save, phone lobby by code without horizontal overflow, `?room=ZZZZ`, server down
+  (single player still starts), outdated server (Reload). Run with
+  `xvfb-run -a npx playwright test -c e2e-mp/playwright.mp.config.ts --reporter=line`.
+
 ## Constants
 
 Turn pill shown for parties of 2+, after 450 ms of waiting, hidden 250 ms after; serial sync timeout

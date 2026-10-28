@@ -14,15 +14,17 @@ export class HelpOverlay {
     private howToPlay?: () => void,
     /** M4: open settings (volume, music panel, language, quality) from inside a run */
     private openSettings?: () => void,
+    /** MP3: leave the room (shown in a room only) */
+    private leaveRoom?: () => void,
   ) {}
 
   get el(): HTMLElement {
     return this.modal.el;
   }
 
-  update(open: boolean, verbs: InputVerbs, ctx: UiContext, transitionName?: string): void {
+  update(open: boolean, verbs: InputVerbs, ctx: UiContext, transitionName?: string, inRoom = false): void {
     if (!open) return this.modal.hide();
-    if (!this.modal.show([verbs, ctx.vocab.conflict, transitionName])) return;
+    if (!this.modal.show([verbs, ctx.vocab.conflict, transitionName, inRoom])) return;
     const sections = keyHelp(verbs, ctx.vocab, transitionName);
     setChildren(
       this.modal.card,
@@ -63,6 +65,26 @@ export class HelpOverlay {
           : null,
         h('button', { type: 'button', class: 'aw-icon-btn', 'aria-label': t('help.closeAria'), 'data-autofocus': true, onclick: () => this.close() }, icon(ICONS.close)),
       ),
+      // in a room, the way out of the run is leaving the room (it never touches the single-player save)
+      inRoom && this.leaveRoom
+        ? h(
+            'div',
+            { class: 'aw-help-room' },
+            h(
+              'button',
+              {
+                type: 'button',
+                class: 'aw-btn aw-btn-small aw-help-leave',
+                onclick: () => {
+                  this.close();
+                  this.leaveRoom?.();
+                },
+              },
+              t('room.leaveRun'),
+            ),
+            h('span', { class: 'aw-muted aw-small' }, t('room.leaveRunHint')),
+          )
+        : null,
       h(
         'div',
         { class: 'aw-help-grid' },

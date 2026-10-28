@@ -70,4 +70,23 @@ describe('ToastStack', () => {
     expect(t.entries).toHaveLength(0);
     expect(vi.getTimerCount()).toBe(0);
   });
+
+  it('a toast can carry an action; a sticky one has no timer and is exempt from the cap (MP3)', () => {
+    vi.useFakeTimers();
+    const t = new ToastStack({ max: 3, showMs: 1000, fadeMs: 200 });
+    const run = vi.fn();
+    const sticky = t.push('outdated', 'warn', { label: 'Reload', run, sticky: true });
+    for (const s of ['a', 'b', 'c', 'd']) t.push(s);
+    // three timed ones plus the sticky one: the sticky one was never dropped as the oldest
+    expect(t.entries.map((e) => e.text)).toEqual(['outdated', 'b', 'c', 'd']);
+    vi.advanceTimersByTime(5000);
+    expect(t.entries.map((e) => e.text)).toEqual(['outdated']);
+    expect(t.entries[0].action?.label).toBe('Reload');
+    t.dismiss(sticky.id);
+    expect(t.entries).toEqual([]);
+    const change = t.push('You are Kari 2', 'info', { label: 'Change', run });
+    expect(change.action?.sticky).toBeUndefined();
+    vi.advanceTimersByTime(1300);
+    expect(t.entries).toEqual([]);
+  });
 });

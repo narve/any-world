@@ -104,7 +104,7 @@ export class RoomSession extends GameSession {
   }
 
   /** what the renderer and the party overlay show: this player, or the followed teammate while down */
-  get cameraState(): GameState {
+  override get cameraState(): GameState {
     return this.followed ? perspective(this.replica, this.followed) : this.state;
   }
 

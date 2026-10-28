@@ -2,9 +2,20 @@
  * Toast stack model (DOM-free, testable). Identical toasts merge into one entry with a count and a
  * restarted timer instead of piling up, and at most `max` entries are visible: the oldest goes
  * first. See issues/M1-toast-pileup.md.
+ *
+ * A toast may carry one action button (MP3: "Reload", "Change"). A sticky one stays until its button
+ * or its close button is pressed: it has no timer, does not count toward `max` and is never dropped
+ * as the oldest.
  */
 
 export type ToastTone = 'info' | 'warn';
+
+export interface ToastAction {
+  label: string;
+  run: () => void;
+  /** stays until the button or ✕ is pressed */
+  sticky?: boolean;
+}
 
 export interface ToastEntry {
   id: number;
@@ -14,6 +25,7 @@ export interface ToastEntry {
   count: number;
   /** bumped on every change, so a stale timer can tell it was superseded */
   gen: number;
+  action?: ToastAction;
 }
 
 export interface ToastTimers {
@@ -63,22 +75,35 @@ export class ToastStack {
     return this.leaving.has(id);
   }
 
-  push(text: string, tone: ToastTone = 'info'): ToastEntry {
+  push(text: string, tone: ToastTone = 'info', action?: ToastAction): ToastEntry {
     const same = this.list.find((e) => e.text === text && e.tone === tone);
     let entry: ToastEntry;
     if (same) {
       // merge: count it, bring it to the front of the stack, and start its timer again
       this.list = this.list.filter((e) => e !== same);
-      entry = { ...same, count: same.count + 1, gen: same.gen + 1 };
+      entry = { ...same, count: same.count + 1, gen: same.gen + 1, ...(action ? { action } : {}) };
       this.leaving.delete(same.id);
     } else {
-      entry = { id: ++this.seq, text, tone, count: 1, gen: 0 };
+      entry = { id: ++this.seq, text, tone, count: 1, gen: 0, ...(action ? { action } : {}) };
     }
     this.list.push(entry);
-    while (this.list.length > this.max) this.drop(this.list[0].id);
-    this.schedule(entry);
+    // sticky entries neither count toward the cap nor are dropped for it
+    for (;;) {
+      const timed = this.list.filter((e) => !e.action?.sticky);
+      if (timed.length <= this.max) break;
+      this.drop(timed[0].id);
+    }
+    if (entry.action?.sticky) this.cancel(entry.id);
+    else this.schedule(entry);
     this.emit();
     return entry;
+  }
+
+  /** removes one entry now (its close or action button) */
+  dismiss(id: number): void {
+    if (!this.list.some((e) => e.id === id)) return;
+    this.drop(id);
+    this.emit();
   }
 
   clear(): void {

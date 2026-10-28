@@ -273,3 +273,35 @@ describe('computeLayer', () => {
     }
   });
 });
+
+describe('the lobby layer (MP3)', () => {
+  const base: LayerState = {
+    screen: 'lobby',
+    settingsOpen: false,
+    helpOpen: false,
+    rulesOpen: false,
+    backpackOpen: false,
+    menuOpen: false,
+    narrationVisible: false,
+    choice: false,
+    levelUp: false,
+    dialogue: false,
+    trade: false,
+    mode: 'normal',
+  };
+
+  it('the lobby screen is its own layer; settings (and the name sheet) go over it', () => {
+    expect(computeLayer(base)).toBe('lobby');
+    expect(computeLayer({ ...base, helpOpen: true, backpackOpen: true })).toBe('lobby');
+    expect(computeLayer({ ...base, settingsOpen: true })).toBe('settings');
+  });
+
+  it('no game key fires in the lobby (the page keeps Tab, Enter and typing)', () => {
+    for (const key of ['w', 'a', 's', 'd', 'ArrowUp', '1', ' ', '.', 'Enter', 'Tab', 'i', 'g', '>', 'Escape', '?', 'r']) expect(resolveKey(k(key), 'lobby', ALL)).toBeNull();
+  });
+
+  it('in the text layer (the name sheet, the code field) only Esc means something', () => {
+    for (const key of ['w', 'a', 's', 'd', '1', ' ', 'Enter', 'Tab']) expect(resolveKey(k(key), 'text', ALL)).toBeNull();
+    expect(resolveKey(k('Escape'), 'text', ALL)).toEqual({ type: 'close' });
+  });
+});

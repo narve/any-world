@@ -1,0 +1,512 @@
+/*
+ * MP3 rooms: the start page's "Play together" card and "Play with friends" buttons, the name and
+ * colour sheet, the lobby screen, the end screen's room block, the in-game "Leave room", toasts
+ * with a button and the reconnect banner. Imported by ui/components/rooms.ts and lobby.ts; uses the
+ * theme variables from ui.css.
+ */
+
+/* "Play together" card ------------------------------------------------------ */
+.aw-rooms {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--c-secondary);
+  background: rgba(var(--c-panel-rgb), 0.75);
+}
+
+.aw-rooms-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.aw-rooms-head h2 {
+  margin: 0;
+}
+
+.aw-rooms > p {
+  margin: 0;
+}
+
+.aw-rooms-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.aw-rooms-note > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--c-danger);
+}
+
+.aw-rooms-note > span {
+  flex: 1 1 160px;
+}
+
+.aw-room-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.aw-room-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.aw-room-info {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.aw-room-title {
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aw-room-sub {
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.aw-rooms-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.aw-room-join {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.aw-ui .aw-room-code {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  min-height: 40px;
+}
+
+.aw-rooms-busy {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-accent);
+}
+
+/* "Play with friends" beside a world card */
+.aw-demo-item.has-friends {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+
+.aw-demo-item.has-friends .aw-friends {
+  justify-self: end;
+}
+
+.aw-recent-tools .aw-friends {
+  white-space: nowrap;
+}
+
+/* name and colour sheet ------------------------------------------------------ */
+.aw-profile-sheet {
+  width: min(420px, 100%);
+}
+
+.aw-profile-form {
+  display: grid;
+  gap: 10px;
+}
+
+.aw-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.aw-swatch {
+  aspect-ratio: 1;
+  min-height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: var(--swatch);
+  cursor: pointer;
+}
+
+.aw-swatch.is-taken {
+  opacity: 0.3;
+}
+
+.aw-swatch.is-on {
+  border-color: var(--c-text);
+  box-shadow: 0 0 0 3px rgba(var(--c-accent-rgb), 0.6);
+}
+
+.aw-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* lobby ---------------------------------------------------------------------- */
+.aw-lobby-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+
+.aw-lobby-col {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  min-width: 0;
+}
+
+.aw-lobby-col h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.aw-lobby-share {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.aw-lobby-codebox {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.aw-lobby-code {
+  font-family: var(--font-mono);
+  font-size: clamp(40px, 8vw, 64px);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  color: var(--c-accent);
+}
+
+.aw-ui .aw-lobby-link {
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.aw-lobby-copy {
+  justify-self: start;
+}
+
+.aw-lobby-qr {
+  width: 148px;
+  height: 148px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #fff;
+}
+
+.aw-lobby-qr.is-empty {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.aw-lobby-qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.aw-lobby-world {
+  --demo: var(--c-primary);
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--demo);
+  background: rgba(var(--c-panel-rgb), 0.75);
+}
+
+.aw-lobby-world-title {
+  font-family: var(--font-story);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.aw-lobby-change-world {
+  justify-self: start;
+  margin-top: 6px;
+}
+
+.aw-lobby-picker {
+  margin-top: 10px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.aw-lobby-picker .aw-demo.is-current {
+  background: var(--c-panel-3);
+  border-color: var(--c-accent);
+}
+
+.aw-lobby-roster-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aw-lobby-roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.aw-roster-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(var(--c-panel-rgb), 0.75);
+  border: 1px solid var(--c-border);
+}
+
+.aw-roster-row.is-you {
+  border-color: rgba(var(--c-accent-rgb), 0.6);
+}
+
+.aw-roster-row.is-away {
+  opacity: 0.6;
+}
+
+.aw-roster-dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4);
+}
+
+.aw-roster-name {
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.aw-roster-ready {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--c-border);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.aw-roster-ready.is-ready {
+  border-color: var(--c-good);
+  color: var(--c-good);
+}
+
+.aw-roster-ready svg {
+  width: 14px;
+  height: 14px;
+}
+
+.aw-lobby-optgrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.aw-lobby-optlist {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.aw-lobby-optlist dt {
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.aw-lobby-optlist dd {
+  margin: 2px 0 0;
+  font-weight: 650;
+}
+
+.aw-lobby-gm {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0;
+}
+
+.aw-lobby-gm svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+.aw-lobby-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.aw-lobby-ready.is-on,
+.aw-end-room .aw-lobby-ready.is-on {
+  border-color: var(--c-good);
+  color: var(--c-good);
+}
+
+.aw-lobby-waiting {
+  margin: 0;
+}
+
+.aw-lobby-count {
+  font-size: 13px;
+}
+
+.aw-lobby-leave {
+  margin-left: auto;
+}
+
+/* end screen room block */
+.aw-end-room {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.aw-end-room p {
+  margin: 0;
+}
+
+/* in-game "Leave room" (help overlay) */
+.aw-help-room {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border);
+}
+
+/* toasts with a button (Reload, Change) take clicks */
+.aw-toast.has-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  border-radius: var(--radius);
+  text-align: left;
+  padding: 6px 8px 6px 14px;
+}
+
+.aw-toast .aw-toast-close {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+}
+
+/* reconnect banner: over every screen of a room, never blocking */
+.aw-room-banner {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--c-accent);
+  background: rgba(var(--c-panel-rgb), 0.95);
+  box-shadow: 0 6px 20px var(--c-shadow);
+  font-size: 13px;
+  pointer-events: auto;
+}
+
+.aw-room-banner[hidden] {
+  display: none;
+}
+
+/* phones and narrow windows -------------------------------------------------- */
+@media (max-width: 760px) {
+  .aw-lobby-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  }
+
+  .aw-lobby-share {
+    grid-template-columns: minmax(0, 1fr) 112px;
+    gap: 12px;
+  }
+
+  .aw-lobby-qr {
+    width: 112px;
+    height: 112px;
+  }
+
+  .aw-lobby-optgrid,
+  .aw-lobby-optlist {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aw-lobby-actions .aw-btn-lg {
+    flex: 1 1 140px;
+  }
+
+  .aw-lobby-leave {
+    margin-left: 0;
+  }
+
+  .aw-room-join {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .aw-room-join .aw-label {
+    grid-column: 1 / -1;
+  }
+}

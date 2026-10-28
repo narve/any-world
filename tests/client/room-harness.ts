@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { RoomManager } from '../../server/rooms/manager';
 import type { Conn, Room } from '../../server/rooms/room';
 import { ManualScheduler, type RoomTiming } from '../../server/rooms/timing';
-import { RoomClient, type RoomSocket } from '../../src/net/client';
+import { RoomClient, type RoomSocket, type SocketFactory } from '../../src/net/client';
 import { parseClientMsg, PLAYER_COLOURS, type ClientMsg, type RoomOptions, type ServerMsg } from '../../src/net/protocol';
 import type { GameState } from '../../src/engine/types';
 
@@ -26,6 +26,7 @@ class MemPipe {
   readonly conn: Conn;
   private room: Room | null = null;
   private closed = false;
+  private closeDelivered = false;
 
   constructor(private readonly h: MemRoom) {
     const pipe = this;
@@ -52,8 +53,9 @@ class MemPipe {
       send(msg: ServerMsg) {
         if (pipe.closed) return;
         const data = JSON.stringify(msg);
+        // (a frame sent before the close still arrives first, as over a real socket)
         pipe.h.queue(() => {
-          if (!pipe.closed) socket.onmessage?.({ data });
+          if (!pipe.closeDelivered) socket.onmessage?.({ data });
         });
       },
       close(code: number) {
@@ -73,6 +75,7 @@ class MemPipe {
     this.closed = true;
     this.socket.readyState = 3;
     this.h.queue(() => {
+      this.closeDelivered = true;
       this.socket.onclose?.({ code });
       const room = this.room;
       this.room = null;
@@ -161,6 +164,25 @@ export class MemRoom {
     });
     this.pipes.set(c, []);
     return c;
+  }
+
+  /** a socket factory on this room (for code that builds its own RoomClient, such as RoomLink); `sent` collects what it sent */
+  socketFactory(sent: ClientMsg[] = []): SocketFactory {
+    return () => {
+      const p = new MemPipe(this);
+      const send = p.socket.send.bind(p.socket);
+      p.socket.send = (data: string) => {
+        const before = p.socket.sent.length;
+        send(data);
+        sent.push(...p.socket.sent.slice(before));
+      };
+      return p.socket;
+    };
+  }
+
+  /** client timers on the room's manual clock */
+  timers(): { setTimer: (fn: () => void, ms: number) => unknown; clearTimer: (h: unknown) => void } {
+    return { setTimer: (fn, ms) => this.sch.setTimer(this.sch.now() + ms, fn), clearTimer: (h) => this.sch.cancel(h as number) };
   }
 
   /** every message a client sent (all its sockets), oldest first */
