@@ -2,7 +2,8 @@
 
 Status (2026-10-28): MP0 (hosting groundwork) is in the code, see [HOSTING.md](HOSTING.md), but not
 yet deployed: its exit check (HTTPS from a phone on 4G) is still open. MP1 (engine: parties) is done
-(2026-10-27): its exit checks are met, see [MP1.md](progress/MP1.md). MP2–MP5 not started.
+(2026-10-27): its exit checks are met, see [MP1.md](progress/MP1.md). MP2 is planned with no open
+questions and ready to start; MP3–MP5 not started.
 Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12 (sharing, multiplayer without waiting,
 chat). Hosts: the owner's Dell laptop runs the server, reached over WireGuard; for development and
 testing the server also runs on the owner's development laptop.
@@ -251,8 +252,10 @@ Decided:
   the same or another world, a new run); the room closes when everyone has left.
 - 2026-10-28: party difficulty: bosses (unique hostiles) get tougher with the number of players; the
   rest of the party scaling stays as MP1 tuned it (relaxed co-op on Normal). To do in MP2 (engine).
+- 2026-10-28: the host leaves: the room goes on; the longest-connected player becomes host.
+- 2026-10-28: no kicking yet (possible later moderation).
 
-Built in MP1 as proposed in its design, to be confirmed by the owner (2026-10-28):
+Built in MP1 as proposed in its design, confirmed by the owner (2026-10-28):
 - Second chance for a party of one on Normal: none (today's single-player rule, so single player is
   unchanged); parties of 2+ get one per player on Gentle and Normal.
 - On Hard and Brutal (no second chance) a player's first fall makes them down, with the same revive
@@ -262,7 +265,4 @@ Built in MP1 as proposed in its design, to be confirmed by the owner (2026-10-28
 - Currency is one shared party purse (items stay personal).
 - XP is shared in full: every player gets each kill's XP; levels and perks stay per player.
 
-Open (2026-10-28), needed before or during MP2:
-1. **The host leaves:** proposal: the room goes on; the longest-connected player becomes host.
-2. **Kicking:** proposal: the host can remove a player from the room (public rooms and no accounts make
-   this the only moderation).
+Open: none (2026-10-28). MP2 is ready to start.
