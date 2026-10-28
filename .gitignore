@@ -9,3 +9,6 @@ playwright-report/
 
 # M5 review screenshots, kept locally only (pruned from git before pushing; see BUILD_LOG 2026-10-25)
 docs/progress/archive/
+
+# local agent instructions (machine-specific, see AGENTS.md)
+AGENTS.local.md
