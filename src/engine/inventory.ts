@@ -262,6 +262,22 @@ export function doDrop(ctx: Ctx, slot: number): ActionOutcome {
   return done();
 }
 
+/**
+ * The acting player's whole pack onto the floor where they stand (a player leaving the map, MP2):
+ * equipped items are taken off first (on_unequip fires, no log line), in slot order.
+ */
+export function dropPack(ctx: Ctx): void {
+  const ps = me(ctx);
+  const pos = { ...playerActor(ctx).pos };
+  for (let slot = 0; slot < ps.slots.length; slot++) {
+    const it = ps.slots[slot];
+    if (!it) continue;
+    if (equippedKindOf(ctx, slot)) unequipSlot(ctx, slot, false);
+    ps.slots[slot] = null;
+    ctx.s.area.items.push({ item: it, pos: { ...pos } });
+  }
+}
+
 export function doPickup(ctx: Ctx): ActionOutcome {
   const p = playerActor(ctx);
   const here = ctx.s.area.items.filter((fi) => samePos(fi.pos, p.pos));

@@ -8,7 +8,8 @@
  *   - whether the first defeat of a run is a second chance (combat.killPlayer), and in a party of
  *     two or more whether every player has one (partySecondChance)
  * Party scaling (PARTY_SCALING, MP1 B3) sits on top of the band for parties of two or more: map
- * size, hostile numbers and hp, items, GM budget and the actor cap grow with the party.
+ * size, hostile numbers and hp, items, GM budget and the actor cap grow with the party, and bosses'
+ * hp and damage (MP2).
  * Saves keep the band in GameState.difficulty; states without one play as 'normal'.
  */
 import { Difficulty } from '../schema/gm';
@@ -116,6 +117,9 @@ export const MAX_PARTY_SIZE = 12;
  * falls at least once: with hostiles ×(1 + 0.35·(n−1)) and hp ×(1 + 0.15·(n−1)) that share fell
  * from 14 % (2 players) to 8 % (4), larger parties being safer per player; at 0.65 / 0.3 it stays
  * about flat, 20–24 %, without longer runs.
+ *
+ * MP2 C1 (docs/progress/MP2-DESIGN.md §10b): bosses got tougher with the party, on top of that:
+ * uniqueHp 0.5 → 0.8 and a new uniqueDamage. A party of one is still untouched.
  */
 export const PARTY_SCALING = {
   /** map area (width and height each grow by the square root) */
@@ -124,8 +128,10 @@ export const PARTY_SCALING = {
   hostileCount: 0.65,
   /** ordinary hostiles' hp */
   hostileHp: 0.3,
-  /** bosses' hp (they face the whole party's focus fire) */
-  uniqueHp: 0.5,
+  /** bosses' hp (they face the whole party's focus fire; MP2 C1: 0.5 → 0.8) */
+  uniqueHp: 0.8,
+  /** damage bosses deal to the party's side (MP2 C1, combat.dealDamage) */
+  uniqueDamage: 0.1,
   /** plan.itemCount (packs are personal); placed items (keys, goal items) stay single */
   itemCount: 0.5,
   /** the GM's budget per area */

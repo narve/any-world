@@ -103,7 +103,9 @@ export function invariantError(world: WorldSpec, s: GameState): string | null {
   const map = s.area.map;
   const lead = leadPlayer(s);
   if (!lead) return 'no lead player';
-  if (s.party.length !== Object.keys(s.players).length || s.party.some((id) => s.players[id]?.id !== id)) return 'party and players disagree';
+  // (players who left the map, MP2 leaveMap, are kept outside the party with their actor)
+  if (s.party.length !== Object.keys(s.players).filter((id) => !s.players[id].left).length || s.party.some((id) => s.players[id]?.id !== id || s.players[id].left)) return 'party and players disagree';
+  for (const [id, ps] of Object.entries(s.players)) if (ps.left && s.area.actors.some((a) => a.id === ps.left!.actor.id)) return `${id} left the map but its actor is in the area`;
   if (new Set(s.party).size !== s.party.length) return 'a player is in the party twice';
   if (map.tiles.length !== map.width * map.height) return 'tile count does not match map size';
   for (const id of s.party) {

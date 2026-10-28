@@ -98,12 +98,12 @@ describe('party scaling', () => {
     const free = s.area.map.tiles.findIndex((t, i) => t.kind === 'floor' && !s.area.actors.some((a) => a.pos.y * s.area.map.width + a.pos.x === i));
     const pos = { x: free % s.area.map.width, y: Math.floor(free / s.area.map.width) };
     const boss = spawnActor(c, 'boss', pos)!;
-    // 20 × 1.25 (UNIQUE_HOSTILE_HP) × 2.5
-    expect(boss.maxHp).toBe(63);
+    // 20 × 1.25 (UNIQUE_HOSTILE_HP) × 3.4 (uniqueHp 0.8, MP2 C1)
+    expect(boss.maxHp).toBe(85);
     expect(transformActor(c, boss, 'boss2')).toBe(true);
-    // 30 × 1.25 × 2.5
-    expect(boss.maxHp).toBe(94);
-    expect(boss.hp).toBe(94);
+    // 30 × 1.25 × 3.4
+    expect(boss.maxHp).toBe(128);
+    expect(boss.hp).toBe(128);
     // a GM spawn goes through the same path
     const r = applyGmActions(s, [{ type: 'spawn', actor: 'archer', count: 1, near: 'random' }], { world: w, mapGenerator: generateArea });
     const archer = r.state.area.actors.find((a) => a.defId === 'archer')!;

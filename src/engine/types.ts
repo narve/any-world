@@ -164,6 +164,17 @@ export interface PlayerState {
    * busy. Hostiles do not pick a busy player as their target for BUSY_MAX_TURNS (ai.ts).
    */
   busySince?: number | null;
+  /**
+   * Away (a room seat disconnected, MP2 setAway): hostiles never pick this player as a target, with
+   * no BUSY_MAX_TURNS cap. Absent in single player (setAway is a no-op in a party of one).
+   */
+  away?: boolean;
+  /**
+   * Left the map (MP2 leaveMap): the player is out of `party` but kept in `players` until it
+   * returns (returnToMap). `actor` is its actor as it left (level-ups and perks in its stats, the
+   * hp it returns with); its pack is empty, the items lie where it stood.
+   */
+  left?: { turn: number; actor: ActorInstance };
   /** the last harm this player took (for the loss reason): who and what kind */
   lastHarm?: {
     by?: string;

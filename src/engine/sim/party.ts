@@ -73,6 +73,8 @@ export interface PartyResult {
   secondChances: number;
   /** players who fell at least once (a second chance used, or down) */
   playersFell: number;
+  /** per boss killed (unique hostile): engine rounds from the first time a player saw it to its death */
+  bossRounds: number[];
   timing?: PartyTiming;
 }
 
@@ -120,6 +122,7 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
     helpedRevives: 0,
     secondChances: 0,
     playersFell: 0,
+    bossRounds: [],
     ...(timing ? { timing } : {}),
   };
   let s: GameState;
@@ -141,9 +144,27 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
   const mems = new Map<PlayerId, BotMemory>(s.party.map((id, i) => [id, newMemory(i === 0 ? seed : seed * 31 + i)]));
   const botOf = new Map<PlayerId, Bot>(s.party.map((id, i) => [id, bots[i % bots.length]]));
   const fell = new Set<PlayerId>();
+  // boss fights: actor id → the round a player first saw it (bossRounds)
+  const uniques = new Set(world.actors.filter((d) => d.unique && !d.npc).map((d) => d.id));
+  const bossSeen = new Map<string, number>();
+  const watchBosses = () => {
+    if (!uniques.size) return;
+    const width = s.area.map.width;
+    for (const a of s.area.actors) {
+      if (a.hp <= 0 || a.faction !== 'hostile' || !uniques.has(a.defId) || bossSeen.has(a.id)) continue;
+      const i = a.pos.y * width + a.pos.x;
+      if (s.party.some((id) => s.players[id].seen[i] === 2)) bossSeen.set(a.id, s.turn);
+    }
+  };
   const tally = (r: TurnResult) => {
     for (const e of r.events) {
-      if (e.type === 'downed') {
+      if (e.type === 'died') {
+        const since = bossSeen.get(e.actorId);
+        if (since !== undefined) {
+          res.bossRounds.push(r.state.turn - since);
+          bossSeen.delete(e.actorId);
+        }
+      } else if (e.type === 'downed') {
         res.downs++;
         fell.add(e.playerId);
       }
@@ -173,6 +194,7 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
     res.areaReached = Math.max(res.areaReached, s.area.index);
     return res;
   };
+  watchBosses();
   let lastKey = partyProgressKey(s);
   let lastProgress = 0;
 
@@ -239,6 +261,7 @@ export function runParty(world: WorldSpec, seed: number, botsIn: (Bot | BotName)
     }
     tally(r);
     s = r.state;
+    watchBosses();
     res.partyTurns++;
     if (s.area.index > res.areaReached) res.areaReached = s.area.index;
     const ms = t0 !== undefined && opts.now ? opts.now() - t0 : undefined;
@@ -325,6 +348,9 @@ export interface PartySummary {
   secondChances: number;
   /** share of players (over all runs) who fell at least once: a second chance used, or down */
   fellRate: number;
+  /** bosses killed, and the mean rounds from a boss's first sight to its death */
+  bossKills: number;
+  bossRounds: number;
   refusals: Record<Refusal, number>;
   /** outcome → cause → runs (won left out) */
   causes: Record<Exclude<SimOutcome, 'won'>, Record<string, number>>;
@@ -380,6 +406,8 @@ export function summarizeParty(results: PartyResult[], areaCount: number): Party
       helpedRevives: sum((r) => r.helpedRevives),
       secondChances: sum((r) => r.secondChances),
       fellRate: list.length ? sum((r) => r.playersFell) / sum((r) => r.partySize) : 0,
+      bossKills: sum((r) => r.bossRounds.length),
+      bossRounds: sum((r) => r.bossRounds.length) ? sum((r) => r.bossRounds.reduce((a, b) => a + b, 0)) / sum((r) => r.bossRounds.length) : 0,
       refusals,
       causes,
       seeds,
@@ -395,7 +423,7 @@ const ms = (t: TimeStats) => `mean ${t.mean.toFixed(1)}  p95 ${t.p95.toFixed(1)}
 
 /** a plain-text table for the CLI and reports */
 export function formatPartySummary(title: string, sums: PartySummary[]): string {
-  const lines = [`== ${title}`, 'party  runs   won  lost stuck crash  t/o  avgTurns  fell  downs  up(helped)  refusals: contested stale area-changed not-ready down ILLEGAL  areas reached (0..n)'];
+  const lines = [`== ${title}`, 'party  runs   won  lost stuck crash  t/o  avgTurns  fell  downs  up(helped)  bossRounds(kills)  refusals: contested stale area-changed not-ready down ILLEGAL  areas reached (0..n)'];
   for (const s of sums) {
     const r = s.refusals;
     lines.push(
@@ -411,6 +439,7 @@ export function formatPartySummary(title: string, sums: PartySummary[]): string 
         pct(s.fellRate).padStart(5),
         String(s.downs).padStart(6),
         `${s.revives}(${s.helpedRevives})`.padStart(11),
+        `${s.bossRounds.toFixed(1)}(${s.bossKills})`.padStart(18),
         '          ' + [r.contested, r.stale, r['area changed'], r['not ready'], r.down, r.illegal].join(' / '),
         '  ' + s.areaHistogram.join(' / '),
       ].join(' '),

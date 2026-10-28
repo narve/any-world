@@ -72,7 +72,8 @@ export function deserialize(world: WorldSpec, json: string): GameState {
   const n = s.area.map.width * s.area.map.height;
   for (const pid of Object.keys(s.players)) {
     const ps = s.players[pid] as PlayerState;
-    ps.seen = unpackSeen((ps as { seen: unknown }).seen, n);
+    // (a player who left the map keeps an empty grid, as in the live state, so hashes agree)
+    ps.seen = unpackSeen((ps as { seen: unknown }).seen, ps.left ? 0 : n);
   }
   registerWorld(world);
   return s as GameState;

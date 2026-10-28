@@ -14,15 +14,16 @@
  *   6. end check, every player's fog, rng saved.
  * A refused action changes nothing (rng, log and events are put back) and gets a reason.
  */
-import type { PlayerAction, PlayerId, Refusal, TurnInput, TurnOptions, TurnOutcome } from './types';
-import { type Ctx, actorAt, findActor, isAlive, playerActorOf, timed, withPlayer } from './ctx';
+import type { PlayerAction, PlayerId, Pos, Refusal, TurnInput, TurnOptions, TurnOutcome } from './types';
+import { type Ctx, actorAt, findActor, findFreeNear, isAlive, playerActorOf, timed, withPlayer } from './ctx';
 import { doPlayerAction, moveOn } from './actions';
-import { exitPending } from './area';
+import { exitPending, nearestFreeFloor } from './area';
 import { ACT_COST, canTakeTurn, checkEnd, isStanding, runWorld } from './turn';
 import { checkQuests } from './gm';
 import { updateFov } from './vision';
 import { hasFlag } from './stats';
-import { talkingWith } from './npc';
+import { closeChoice, talkingWith } from './npc';
+import { dropPack } from './inventory';
 import { rngFromState } from './rng';
 import { DIR_LIST, addDir, samePos } from './util';
 
@@ -199,4 +200,85 @@ function refusalAfterChange(ctx: Ctx, pid: PlayerId, action: PlayerAction): Refu
     default:
       return 'stale';
   }
+}
+
+// ---------------------------------------------------------------------------
+// Leaving and returning (MP2: a room seat away for 2 minutes, docs/progress/MP2-DESIGN.md §10a)
+// ---------------------------------------------------------------------------
+
+/**
+ * A free tile next to `near`'s actor (the lead's when `near` is not a party member on the map), for
+ * a late joiner or a returning player.
+ */
+export function spotNear(ctx: Ctx, near: PlayerId | undefined): Pos {
+  const s = ctx.s;
+  const anchor = (near !== undefined && s.party.includes(near) ? playerActorOf(ctx, near) : undefined) ?? playerActorOf(ctx, s.party[0]);
+  return (anchor && (findFreeNear(ctx, anchor.pos, 3) ?? nearestFreeFloor(ctx, anchor.pos))) ?? nearestFreeFloor(ctx, s.area.map.start) ?? { ...s.area.map.start };
+}
+
+/** why `pid` cannot leave the map now (null = it can) */
+export function leaveFailure(ctx: Ctx, pid: PlayerId): string | null {
+  const s = ctx.s;
+  if (s.status !== 'playing') return 'the run is over';
+  if (!s.party.includes(pid) || !playerActorOf(ctx, pid)) return `no player "${pid}" on the map`;
+  if (s.party.length < 2) return 'the last party member cannot leave';
+  if (s.party.every((id) => id === pid || s.players[id].down)) return 'every other party member is down';
+  return null;
+}
+
+/**
+ * `pid`'s character leaves the map (in place): its pack and equipment drop where it stood, its open
+ * choice closes, hostiles drop it as a target and its allies follow the lead. It leaves `party` but
+ * stays in `players` with `left` (its actor as it left, without statuses or temporary mods).
+ */
+export function leaveCore(ctx: Ctx, pid: PlayerId): void {
+  const err = leaveFailure(ctx, pid);
+  if (err) throw new Error(err);
+  const s = ctx.s;
+  const ps = s.players[pid];
+  const a = playerActorOf(ctx, pid)!;
+  withPlayer(ctx, pid, () => {
+    closeChoice(ctx, ps);
+    dropPack(ctx);
+  });
+  s.area.actors = s.area.actors.filter((x) => x !== a);
+  s.party = s.party.filter((id) => id !== pid);
+  const lead = playerActorOf(ctx, s.party[0])!;
+  for (const x of s.area.actors) {
+    if (x.ai.targetId === a.id) delete x.ai.targetId;
+    if (x.allyOf === a.id) x.allyOf = lead.id;
+  }
+  if (s.area.exitCountdown?.by === pid) s.area.exitCountdown.by = s.party[0];
+  a.statuses = [];
+  a.tempMods = [];
+  a.energy = 0;
+  a.ai = { alerted: false };
+  ps.left = { turn: s.turn, actor: a };
+  ps.sneaking = false;
+  ps.seen = new Uint8Array(0);
+  delete ps.away;
+  delete ps.busySince;
+  delete ps.down;
+  ctx.pid = s.party[0];
+}
+
+/**
+ * A player who left comes back next to `near` (in place): the actor it left with (level, perks, the
+ * hp it had, at least 1), an empty pack, fresh fog, at the end of the party order.
+ */
+export function returnCore(ctx: Ctx, pid: PlayerId, near: PlayerId | undefined, maxParty: number): void {
+  const s = ctx.s;
+  const ps = s.players[pid];
+  if (s.status !== 'playing') throw new Error('the run is over');
+  if (!ps?.left) throw new Error(`player "${pid}" has not left the map`);
+  if (s.party.length >= maxParty) throw new Error(`the party is full (${maxParty})`);
+  const a = ps.left.actor;
+  a.pos = spotNear(ctx, near);
+  a.hp = Math.max(1, a.hp);
+  a.energy = ACT_COST;
+  a.ai = { alerted: false };
+  s.area.actors.push(a);
+  delete ps.left;
+  ps.seen = new Uint8Array(s.area.map.width * s.area.map.height);
+  s.party.push(pid);
 }

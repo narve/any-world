@@ -190,7 +190,14 @@ export function dealDamage(ctx: Ctx, target: ActorInstance, raw: number, damageT
   }
   const src0 = findActor(ctx, sourceId);
   // difficulty: hostiles hit the player's side harder or softer (engine/difficulty.ts)
-  if (src0 && src0 !== target && side(ctx, src0) === 'H' && side(ctx, target) === 'P') mult *= profileOf(ctx.s).hostileDamage;
+  if (src0 && src0 !== target && side(ctx, src0) === 'H' && side(ctx, target) === 'P') {
+    mult *= profileOf(ctx.s).hostileDamage;
+    // a boss hits a party harder (PARTY_SCALING.uniqueDamage; parties of two or more only; a
+    // unique NPC keeps its strength, as it keeps its hp in scaledHostileHp)
+    const n = ctx.s.area.partySize ?? 1;
+    const def = n > 1 ? actorDef(ctx, src0) : undefined;
+    if (def?.unique && !def.npc) mult *= partyFactor(n, PARTY_SCALING.uniqueDamage);
+  }
   let dmg = raw * mult;
   dmg = mult <= 0 ? 0 : Math.max(1, Math.round(dmg));
   const tName = actorName(ctx, target);

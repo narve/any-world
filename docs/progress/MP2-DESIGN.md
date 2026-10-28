@@ -529,6 +529,58 @@ passing, the golden replay unchanged, and a commit on `multi`.
 | C4 | **Network**: `server/rooms/ws.ts` on the existing server (Origin, per-IP and per-connection limits, backpressure, pings, `hello` order and timeout, terminate on close), HTTP routes in `app.ts`, `data-dir.ts` and start-up failure, test env knobs, shutdown, dev proxies with `ws: true`; `src/net/client.ts` (`RoomClient`); `.gitignore` `.data/`; HOSTING.md and `deploy/anyworld.env.example` (`ANYWORLD_DATA_DIR`, `ANYWORLD_MAX_ROOMS`, `TRUST_PROXY=1`, deploy Pages and server together) | `rooms-limits`, a smoke join over a real socket, existing `server` tests unchanged |
 | C5 | **Scripted client and exit checks**: `tools/rooms/scripted-client.ts`, `FaultyChannel`, `tools/room-bots.ts`; `tests/server/rooms-exit.test.ts` (§11); `docs/progress/MP2.md` (the toast itself is MP3); plan status | `rooms-exit`; then the full suite and the gate |
 
+### C1 as built
+
+- **API** (`src/engine/index.ts`, core in `party.ts`): `setAway(state, pid, away, env?)` returns
+  `state` itself when nothing changes (party of one, a pid outside the party, the flag already as
+  asked, run over), so the room can skip no-op entries by identity. `leaveMap(state, pid, env?)` and
+  `returnToMap(state, pid, { near? }, env?)` throw on refusal (`the last party member cannot leave`,
+  `every other party member is down`, `no player "pN" on the map`, `has not left the map`, `the party
+  is full`, `the run is over`); the room checks first (or catches). `addPlayer(state, { name, near? })`;
+  `near` that is not a party member on the map falls back to the lead. `unregisterWorld(id)` returns
+  whether it was registered. Shared placement: `spotNear` in `party.ts`.
+- **Deviation:** `PlayerState.left` is `{ turn, actor }` (the whole actor as it left, without statuses,
+  temporary mods or energy) instead of `{ turn, hp }`, so level-up hp, perk stats and the actor id come
+  back with it; the hp it returns with is `max(1, actor.hp)`. A left player's `seen` is an empty array
+  (also after `deserialize`, so hashes of a loaded snapshot agree). It returns at the end of the party
+  order with energy 100 and fresh fog. Leaving also clears `away`, `busySince`, `down` and sneaking;
+  a down player may leave while someone else stands. An exit countdown started by the leaver passes
+  to the new lead.
+- **isBusy**: `ps.away` makes a party member busy with no turn cap (still not when down, never in a
+  party of one). Away does not change `readyPlayers`: the room's clock decides who it waits for.
+- **Invariants** (`sim/run.ts invariantError`) accept players outside the party that have `left`.
+- **Boss scaling**: `PARTY_SCALING.uniqueHp` 0.8, new `uniqueDamage` 0.1 in `combat.dealDamage`
+  (hostile source with a unique def, target on the player side, `area.partySize > 1`). **Unique NPCs
+  (rivals) are left out of the damage factor too**, as they are of the hp factor (`scaledHostileHp`).
+- **Sim**: `PartyResult.bossRounds` (per boss killed: rounds from a player first seeing it to its
+  death), `PartySummary.bossKills` / `bossRounds`, a `bossRounds(kills)` column.
+- **Tuning** (`npx tsx tools/sim.ts --party-sizes 1,2,3,4 --seeds 10 --bots explorer,cautious,talker
+  --jobs 15`, 21 worlds, Normal, 210 runs per size). The design's starting numbers held; no further
+  change:
+
+  | party | MP1 factors (uniqueHp 0.5): won / fell / downs / bossRounds (kills) | C1 (0.8, damage 0.1) |
+  |---|---|---|
+  | 1 | 60 % / 6 % / 0 / 11.7 (70) | identical |
+  | 2 | 99 % / 20 % / 72 / 15.6 (69) | 99 % / 21 % / 89 / 18.5 (67) |
+  | 3 | 100 % / 25 % / 159 / 19.6 (62) | 100 % / 24 % / 146 / 23.8 (60) |
+  | 4 | 100 % / 24 % / 248 / 21.5 (63) | 99.5 % / 25 % / 265 / 29.9 (54) |
+
+  0 crashes, 0 stuck, 0 `illegal` refusals, 0 anomalies; fell within one point of MP1. bossRounds runs
+  from first sight, so in a party it includes teammates walking over (the bots explore apart): raw
+  fight length was already above single player with MP1's factor; per player (bossRounds / n) it
+  moves from 7.8 / 6.5 / 5.4 to 9.3 / 7.9 / 7.5 rounds against 11.7 alone. One 4-player run timed out
+  (folk-horror-scarecrow-wedding seed 10): the rival NPC Gaffer Hob "backs down" at low hp and the
+  bots do not attack a neutral actor the goal needs; he is an NPC, so C1 does not scale him (the run
+  diverged by chance). A bot limit, not an engine fault.
+- **GM move**: `src/gm/offline.ts` holds the director contract (`GmDirector`, `GmRequest`,
+  `GmContext`, `GmHookEvent`, `GmHookDetail`), `OfflineGmDirector({ eventDelay?, t? })` (`t:
+  GmTranslate`, keys `gm.offer.take` / `gm.offer.leave`, English without one), `gmHooksFor`,
+  `HookTracker`, `newHookTracker`, `IDLE_TURNS`, `FIRST_IDLE_TURNS`, `eventFlag`, `saidFlag`,
+  `hashOf`, `responseCost`, `isGmActionType`, `engineQueuedHooks`, `drainEngineQueue`,
+  `sanitizeResponse`, `narrationOf`. `src/client/gm-director.ts` keeps `GmRunner` / `GmResult` and
+  re-exports the rest; its `OfflineGmDirector` is a subclass passing the client's `t`, so client code,
+  `src/llm` and their tests are unchanged. The server (C3) passes a `t` for the world's language.
+
 ## Constants
 
 | Name | Value | Where |

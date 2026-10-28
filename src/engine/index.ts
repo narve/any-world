@@ -27,14 +27,14 @@ import type {
 } from './types';
 import { TOTAL_SLOTS } from './types';
 import { generateArea } from './mapgen/index';
-import { type Ctx, type EngineProfile, findFreeNear, indexWorld, leadOf, me, nextId, playerActor, playerActorOf, withPlayer } from './ctx';
+import { type Ctx, type EngineProfile, indexWorld, leadOf, me, nextId, playerActor, withPlayer } from './ctx';
 import { createRng, rngFromState } from './rng';
 import { initKnowledge } from './knowledge';
 import { addInstance, equipSlotOf, makeItem } from './inventory';
-import { enterArea, nearestFreeFloor } from './area';
+import { enterArea } from './area';
 import { updateFov } from './vision';
 import { ACT_COST, checkEnd } from './turn';
-import { readyIds, runTurn } from './party';
+import { leaveCore, readyIds, returnCore, runTurn, spotNear } from './party';
 import { applyGmList, checkQuests, gmSkip } from './gm';
 import { computeLegalActions } from './legal';
 import { findItemInstance, viewActor, viewItem } from './describe';
@@ -266,20 +266,19 @@ export function createGame(world: WorldSpec, opts: NewGameOptions): GameState {
 
 /**
  * Adds a player to a running game (a late joiner, MP2): level 1 with the world's starting kit and
- * the party's item appearances, placed on a free tile next to the lead. Pure: `state` is not
- * changed. The party grows to at most MAX_PARTY_SIZE.
+ * the party's item appearances, placed on a free tile next to `near` (default: the lead). Pure:
+ * `state` is not changed. The party grows to at most MAX_PARTY_SIZE.
  */
-export function addPlayer(state: GameState, opts: { name: string }, env?: EngineEnv): { state: GameState; playerId: PlayerId } {
+export function addPlayer(state: GameState, opts: { name: string; near?: PlayerId }, env?: EngineEnv): { state: GameState; playerId: PlayerId } {
   const world = worldFor(state, env);
   if (state.status !== 'playing') throw new Error('the run is over');
   if (state.party.length >= MAX_PARTY_SIZE) throw new Error(`the party is full (${MAX_PARTY_SIZE})`);
   const ctx = clonedCtx(world, state, env);
   const s = ctx.s;
   const lead = leadOf(s);
-  const leadActor = playerActorOf(ctx, lead.id);
   const id = nextPlayerId(s);
   const a = newPlayerActor(world, nextId(ctx, 'a'));
-  a.pos = (leadActor && (findFreeNear(ctx, leadActor.pos, 3) ?? nearestFreeFloor(ctx, leadActor.pos))) ?? nearestFreeFloor(ctx, s.area.map.start) ?? { ...s.area.map.start };
+  a.pos = spotNear(ctx, opts?.near);
   s.area.actors.push(a);
   const ps = newPlayerState(world, id, String(opts?.name || `${world.player.name} ${s.party.length + 1}`), a.id, freshKnowledge(ctx, lead.knowledge));
   ps.seen = new Uint8Array(s.area.map.width * s.area.map.height);
@@ -289,6 +288,46 @@ export function addPlayer(state: GameState, opts: { name: string }, env?: Engine
   updateFov(ctx);
   s.rng = ctx.rng.state();
   return { state: s, playerId: id };
+}
+
+/**
+ * Marks a player away (a room seat disconnected, MP2) or back. Away: hostiles never pick it as a
+ * target (ai.ts isBusy, with no turn cap). Pure; returns `state` itself when nothing changes: a
+ * party of one (so solo saves and hashes are unchanged), a player not in the party, or the flag
+ * already as asked.
+ */
+export function setAway(state: GameState, pid: PlayerId, away: boolean, env?: EngineEnv): StepResult {
+  const ps = state.players[pid];
+  if (state.status !== 'playing' || state.party.length < 2 || !state.party.includes(pid) || !ps || !!ps.away === away) return { state, events: [], tookTurn: false };
+  const ctx = clonedCtx(worldFor(state, env), state, env);
+  if (away) ctx.s.players[pid].away = true;
+  else delete ctx.s.players[pid].away;
+  return { state: ctx.s, events: [], tookTurn: false };
+}
+
+/**
+ * The player's character leaves the map (a room seat away for 2 minutes, MP2): its items drop where
+ * it stood (pack and equipment), its dialogue ends, hostiles drop it as a target, its allies follow
+ * the lead; it leaves `party` but stays in `players` with `left`. Pure. Throws for the last party
+ * member, and when every other party member is down (that would end the run).
+ */
+export function leaveMap(state: GameState, pid: PlayerId, env?: EngineEnv): StepResult {
+  const world = worldFor(state, env);
+  const ctx = clonedCtx(world, state, env);
+  leaveCore(ctx, pid);
+  return finish(ctx, false);
+}
+
+/**
+ * A player who left the map comes back next to `near` (as addPlayer): the hp it left with (at least
+ * 1), level, xp, perks and knowledge kept, an empty pack (its items lie where it left them), fresh
+ * fog. Pure. Throws when the player has not left, the run is over or the party is full.
+ */
+export function returnToMap(state: GameState, pid: PlayerId, opts: { near?: PlayerId } = {}, env?: EngineEnv): StepResult {
+  const world = worldFor(state, env);
+  const ctx = clonedCtx(world, state, env);
+  returnCore(ctx, pid, opts?.near, MAX_PARTY_SIZE);
+  return finish(ctx, false);
 }
 
 function finish(ctx: Ctx, tookTurn: boolean): StepResult {
@@ -485,7 +524,7 @@ export {
   type DifficultyProfile,
 } from './difficulty';
 export { estimateRuleImpact, activeRuleEntries, type RuleImpact } from './rules';
-export { registerWorld, getWorld, worldIdOf } from './registry';
+export { registerWorld, unregisterWorld, getWorld, worldIdOf } from './registry';
 export { createRng, rngFromState, SeededRng } from './rng';
 export { computeFov, hasLos, withinRadius, withinReach } from './fov';
 export { MAX_AREA_ACTORS, areaActorCap } from './actors';
