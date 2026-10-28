@@ -149,10 +149,17 @@ export class RoomManager {
     tick();
   }
 
-  /** closes rooms without input or chat for timing.idleCloseMs */
+  /**
+   * Closes rooms without input or chat for timing.idleCloseMs, and lobbies nobody has been connected
+   * to for timing.awayMs (a creator who never connects, or a lobby everyone left: its seats would be
+   * removed by the 2-minute rule anyway, and an unclaimed room must not hold a place for 2 hours).
+   */
   sweep(): void {
     const now = this.scheduler.now();
-    for (const room of [...this.rooms.values()]) if (now - room.lastActivityAt >= this.timing.idleCloseMs) room.close('idle');
+    for (const room of [...this.rooms.values()]) {
+      if (now - room.lastActivityAt >= this.timing.idleCloseMs) room.close('idle');
+      else if (room.phase === 'lobby' && room.emptySince !== null && now - room.emptySince >= this.timing.awayMs) room.close('empty');
+    }
   }
 
   get size(): number {
@@ -247,9 +254,9 @@ export class RoomManager {
     this.releaseWorld(room.world.worldId);
   }
 
-  /** an uploaded world nobody plays any more leaves the engine registry (demo worlds stay) */
+  /** an uploaded world nobody plays (or has staged for the next run) any more leaves the engine registry (demo worlds stay) */
   releaseWorld(worldId: string): void {
-    for (const r of this.rooms.values()) if (!r.closed && r.world.worldId === worldId) return;
+    for (const r of this.rooms.values()) if (!r.closed && (r.world.worldId === worldId || r.nextWorldId === worldId)) return;
     for (const id of this.demos.loadedWorldIds()) if (id === worldId) return;
     unregisterWorld(worldId);
   }

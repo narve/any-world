@@ -291,8 +291,8 @@ export function addPlayer(state: GameState, opts: { name: string; near?: PlayerI
 }
 
 /**
- * Marks a player away (a room seat disconnected, MP2) or back. Away: hostiles never pick it as a
- * target (ai.ts isBusy, with no turn cap). Pure; returns `state` itself when nothing changes: a
+ * Marks a player away (a room seat disconnected, MP2) or back. Away: hostiles do not pick it as a
+ * target for BUSY_MAX_TURNS from the turn it went away (ai.ts isBusy, the same cap as busy). Pure; returns `state` itself when nothing changes: a
  * party of one (so solo saves and hashes are unchanged), a player not in the party, or the flag
  * already as asked.
  */
@@ -300,8 +300,14 @@ export function setAway(state: GameState, pid: PlayerId, away: boolean, env?: En
   const ps = state.players[pid];
   if (state.status !== 'playing' || state.party.length < 2 || !state.party.includes(pid) || !ps || !!ps.away === away) return { state, events: [], tookTurn: false };
   const ctx = clonedCtx(worldFor(state, env), state, env);
-  if (away) ctx.s.players[pid].away = true;
-  else delete ctx.s.players[pid].away;
+  const p = ctx.s.players[pid];
+  if (away) {
+    p.away = true;
+    p.awaySince = ctx.s.turn;
+  } else {
+    delete p.away;
+    delete p.awaySince;
+  }
   return { state: ctx.s, events: [], tookTurn: false };
 }
 

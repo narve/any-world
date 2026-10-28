@@ -55,6 +55,8 @@ export const LIMITS = {
     chat: { perSec: 1, burst: 1 },
     hash: { perSec: 2, burst: 2 },
     applied: { perSec: 2, burst: 2 },
+    /** host options rewrite the room file (an fsync each) */
+    options: { perSec: 1, burst: 3 },
   },
 } as const;
 

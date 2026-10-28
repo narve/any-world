@@ -167,8 +167,9 @@ places them next to the host's character (`near` = the host's pid when it is on 
 **Disconnect and the 2-minute rule** (`timing.awayMs = 120 000`):
 
 1. The socket closes (or misses two `ws` pings, 15 s apart): the seat is `off`; the server appends
-   `{ k: 'away', pid }` (engine `setAway`, §10a): hostiles leave the character alone for as long as it
-   is away, with no turn cap; it never counts as active (§4).
+   `{ k: 'away', pid }` (engine `setAway`, §10a): hostiles leave the character alone for
+   `BUSY_MAX_TURNS` turns from when it went away (`awaySince`; the plan's "the 10-turn cap applies");
+   it never counts as active (§4).
 2. Reconnect within 2 minutes with the token: the 2-minute timer is cancelled first, then the seat is
    bound; a `back` entry (unless the seat has already left the map, checked by `seat.leftAt`, not by
    timer order); `welcome` with the missing entries or a snapshot.
@@ -546,7 +547,7 @@ passing, the golden replay unchanged, and a commit on `multi`.
   order with energy 100 and fresh fog. Leaving also clears `away`, `busySince`, `down` and sneaking;
   a down player may leave while someone else stands. An exit countdown started by the leaver passes
   to the new lead.
-- **isBusy**: `ps.away` makes a party member busy with no turn cap (still not when down, never in a
+- **isBusy**: `ps.away` makes a party member busy for `BUSY_MAX_TURNS` from `awaySince` (still not when down, never in a
   party of one). Away does not change `readyPlayers`: the room's clock decides who it waits for.
 - **Invariants** (`sim/run.ts invariantError`) accept players outside the party that have `left`.
 - **Boss scaling**: `PARTY_SCALING.uniqueHp` 0.8, new `uniqueDamage` 0.1 in `combat.dealDamage`

@@ -257,6 +257,7 @@ export function leaveCore(ctx: Ctx, pid: PlayerId): void {
   ps.sneaking = false;
   ps.seen = new Uint8Array(0);
   delete ps.away;
+  delete ps.awaySince;
   delete ps.busySince;
   delete ps.down;
   ctx.pid = s.party[0];

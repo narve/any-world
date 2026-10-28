@@ -165,10 +165,12 @@ export interface PlayerState {
    */
   busySince?: number | null;
   /**
-   * Away (a room seat disconnected, MP2 setAway): hostiles never pick this player as a target, with
-   * no BUSY_MAX_TURNS cap. Absent in single player (setAway is a no-op in a party of one).
+   * Away (a room seat disconnected, MP2 setAway): busy for hostiles, for BUSY_MAX_TURNS from
+   * `awaySince` (the turn it went away), as a busy input. Absent in single player (setAway is a
+   * no-op in a party of one).
    */
   away?: boolean;
+  awaySince?: number;
   /**
    * Left the map (MP2 leaveMap): the player is out of `party` but kept in `players` until it
    * returns (returnToMap). `actor` is its actor as it left (level-ups and perks in its stats, the

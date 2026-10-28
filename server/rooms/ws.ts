@@ -170,7 +170,15 @@ export function attachRoomSockets(server: Server, opts: RoomSocketsOptions): Roo
     ws.on('pong', () => {
       c.missedPongs = 0;
     });
-    ws.on('message', (data: RawData, isBinary: boolean) => onMessage(c, data, isBinary));
+    ws.on('message', (data: RawData, isBinary: boolean) => {
+      // (rooms guard their own work; this keeps any other throw from ending the process and every room)
+      try {
+        onMessage(c, data, isBinary);
+      } catch (e) {
+        log(`[rooms] ${c.ip}: message failed: ${e instanceof Error ? e.message : String(e)}`);
+        c.ws.terminate();
+      }
+    });
     ws.on('close', () => {
       clients.delete(c);
       uncount();

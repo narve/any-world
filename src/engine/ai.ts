@@ -6,8 +6,8 @@
  *
  * Among several players (MP1): a hostile goes for the nearest player it perceives, but keeps its
  * current player target (`ai.targetId`) while that one is at most TARGET_STICK_TILES farther. Busy
- * players (typing, in a dialogue or trade) are never chosen as a target for BUSY_MAX_TURNS, away
- * players (disconnected) not at all; a hostile that perceives only busy players closes in to BUSY_WAIT_RANGE and waits. During a
+ * players (typing, in a dialogue or trade, or away: disconnected) are not chosen as a target for
+ * BUSY_MAX_TURNS; a hostile that perceives only busy players closes in to BUSY_WAIT_RANGE and waits. During a
  * hostile's or ally's turn "the player" (conditions, effects) is its target or owner (withPlayer).
  */
 import type { ActorDef } from '../schema/world';
@@ -58,13 +58,13 @@ export const TARGET_STICK_TILES = 2;
 export const GUARD_RANGE = 3;
 
 /**
- * Whether hostiles leave this player alone for now: away (disconnected, setAway: no turn cap), or
+ * Whether hostiles leave this player alone for now: away (disconnected, setAway: since awaySince) or
  * busy (busySince, set by a busy input or an opening choice) for less than BUSY_MAX_TURNS. Never in
  * a party of one: there a dialogue never lets the world move.
  */
 export function isBusy(ctx: Ctx, ps: PlayerState | undefined): boolean {
   if (!ps || ctx.s.party.length < 2 || ps.down) return false;
-  if (ps.away) return true;
+  if (ps.away && ps.awaySince != null && ctx.s.turn - ps.awaySince < BUSY_MAX_TURNS) return true;
   // (an open choice alone is not enough: a busy:false input must not lift the cap, party.ts)
   const since = ps.busySince;
   return since != null && ctx.s.turn - since < BUSY_MAX_TURNS;

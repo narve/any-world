@@ -6,17 +6,21 @@
  * (countdown at the countdown cadence, pending cleared, area hold), and the 2-minute rule with its
  * guards.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { hashState } from '../../src/engine';
 import type { GameState, PlayerAction, PlayerId } from '../../src/engine/types';
 import { PLAYER_COLOURS, type LogEntry, type ServerMsg } from '../../src/net/protocol';
 import { applyEntry } from '../../src/net/log';
-import { deserialize } from '../../src/engine';
+import { deserialize, worldIdOf } from '../../src/engine';
 import { RoomManager } from '../../server/rooms/manager';
-import { EXIT_COUNTDOWN_TURNS, ILLEGAL_LOG_PER_MIN, type Conn, type Room } from '../../server/rooms/room';
+import { DESYNC_SNAPSHOT_MS, EXIT_COUNTDOWN_TURNS, ILLEGAL_LOG_PER_MIN, LOG_COMPACT_LINES, type Conn, type Room } from '../../server/rooms/room';
+import { BUSY_MAX_TURNS } from '../../src/engine/ai';
+import { registry } from '../../src/engine/registry';
+import { ConnBuckets } from '../../server/rooms/limits';
+import { LIMITS } from '../../src/net/protocol';
 import { DEFAULT_TIMING, ManualScheduler, type RoomTiming } from '../../server/rooms/timing';
 
 let dir: string;
@@ -536,9 +540,10 @@ describe('manager', () => {
     expect(m.list().map((r) => r.code)).toEqual(['BBBB', 'AAAA']);
     expect(m.list()[0]).toMatchObject({ maxPlayers: 3, players: 1, phase: 'lobby', joinable: true });
     m.start();
-    // a connected player keeps chatting in AAAA: only BBBB goes idle
+    // a connected player keeps chatting in AAAA: only BBBB (connected, silent) goes idle
     const c = new FakeConn();
     m.hello(c, hello('AAAA', a.ok ? a.token : undefined, 'Ann'));
+    m.hello(new FakeConn(), hello('BBBB', b.ok ? b.token : undefined, 'Ben'));
     for (let t = 0; t < 130; t++) {
       sch.advanceBy(60_000);
       m.get('AAAA')?.message(c, { t: 'chat', text: `minute ${t}` });
@@ -551,5 +556,186 @@ describe('manager', () => {
     // shutdown: a snapshot and bye to every connection
     m.shutdown();
     expect(c.last('bye')).toEqual({ t: 'bye', reason: 'restart' });
+  });
+});
+
+/** ends the run as if the last entry had lost it */
+function endRun(room: Room): void {
+  const before = room.state!;
+  const lost = { ...before, status: 'lost' as const };
+  (room as unknown as { state: GameState }).state = lost;
+  (room as unknown as { settle: (a: GameState, b: GameState) => void }).settle(before, lost);
+}
+
+/** a demo world as an upload (a copy with another title, so its id differs) */
+function upload(m: RoomManager, demo: string, title?: string) {
+  const d = m.demos.get(demo)!;
+  const world = title ? { ...d.world, meta: { ...d.world.meta, title } } : d.world;
+  return { world, worldId: worldIdOf(world), source: { upload: true as const } };
+}
+
+describe('review fixes', () => {
+  it('a world uploaded in the lobby reaches everyone in the run message', () => {
+    const { m, room, conns, tokens } = setup(2, { lobby: true });
+    const ship = upload(m, 'fixture-ship');
+    expect(room.uploadWorld(tokens[0], ship)).toBe('ok');
+    room.message(conns[0], { t: 'start' });
+    for (const c of conns) expect(c.last('run')).toMatchObject({ worldId: ship.worldId, world: { meta: { title: ship.world.meta.title } } });
+  });
+
+  it('closes a lobby nobody has been connected to for 2 minutes (a creator who never connects), not a running room', () => {
+    const sch = new ManualScheduler();
+    const m = new RoomManager({ dir, engineVersion: 'v1', scheduler: sch, log: () => {} });
+    m.start();
+    const a = m.create({ demo: 'fixture-western' });
+    const b = m.create({ demo: 'fixture-western' });
+    if (!a.ok || !b.ok) throw new Error('create');
+    const c = new FakeConn();
+    m.hello(c, hello(b.code, b.token, 'Bo'));
+    b.room.message(c, { t: 'start' });
+    b.room.disconnect(c);
+    sch.advanceBy(DEFAULT_TIMING.awayMs + DEFAULT_TIMING.idleSweepMs);
+    expect(m.get(a.code)).toBeUndefined();
+    expect(m.tombstone(a.code)?.reason).toBe('empty');
+    expect(m.get(b.code)).toBe(b.room);
+  });
+
+  it('a host options message that changes nothing is not written, and options have their own rate', () => {
+    const { m, room, conns } = setup(1, { lobby: true });
+    const spy = vi.spyOn(m.store, 'writeRoom');
+    room.message(conns[0], { t: 'options', deadlineMs: room.options.deadlineMs });
+    expect(spy).not.toHaveBeenCalled();
+    room.message(conns[0], { t: 'options', deadlineMs: 1000 });
+    expect(spy).toHaveBeenCalledTimes(1);
+    const bk = new ConnBuckets(0);
+    let ok = 0;
+    for (let i = 0; i < 40; i++) if (bk.take('options', 0)) ok++;
+    expect(ok).toBe(LIMITS.rates.options.burst);
+  });
+
+  it('a store failure during a hello closes that room, it does not throw', () => {
+    const { m, room } = setup(1, { lobby: true });
+    vi.spyOn(m.store, 'append').mockImplementation(() => {
+      throw new Error('ENOSPC');
+    });
+    const c = new FakeConn();
+    expect(() => m.hello(c, hello(room.code, undefined, 'Bo'))).not.toThrow();
+    expect(room.closed).toBe(true);
+    expect(c.last('refused')?.code).toBe('room_closed');
+  });
+
+  it('chat in the lobby does not grow the log without bound, and a reload keeps the last lines', () => {
+    const { sch, m, room, conns } = setup(1, { lobby: true });
+    for (let i = 0; i < LOG_COMPACT_LINES * 2 + 50; i++) {
+      sch.advanceBy(1000);
+      room.message(conns[0], { t: 'chat', text: `line ${i}` });
+    }
+    const lines = readFileSync(join(dir, `${room.code}.log`), 'utf8').split('\n').filter(Boolean);
+    expect(lines.length).toBeLessThan(LOG_COMPACT_LINES);
+    m.shutdown();
+    const m2 = new RoomManager({ dir, engineVersion: 'v1', scheduler: sch, log: () => {} });
+    m2.load();
+    const chat = m2.get(room.code)!.chat;
+    expect(chat).toHaveLength(LIMITS.chatHistory);
+    expect(chat.at(-1)!.text).toBe(`line ${LOG_COMPACT_LINES * 2 + 49}`);
+  });
+
+  it('a world staged after a run and then replaced, overridden or left by a closing room leaves the registry', () => {
+    const { m, room, conns, tokens } = setup(1);
+    endRun(room);
+    const base = registry.size;
+    const w1 = upload(m, 'fixture-ship', 'Staged one');
+    const w2 = upload(m, 'fixture-ship', 'Staged two');
+    expect(room.uploadWorld(tokens[0], w1)).toBe('ok');
+    expect(room.uploadWorld(tokens[0], w2)).toBe('ok');
+    expect(registry.has(w1.worldId)).toBe(false);
+    expect(registry.has(w2.worldId)).toBe(true);
+    // start with a demo instead: the staged one goes
+    room.message(conns[0], { t: 'start', demo: 'fixture-teen' });
+    expect(registry.has(w2.worldId)).toBe(false);
+    endRun(room);
+    const w3 = upload(m, 'fixture-ship', 'Staged three');
+    room.uploadWorld(tokens[0], w3);
+    room.close('idle');
+    expect(registry.has(w3.worldId)).toBe(false);
+    expect(registry.size).toBeLessThanOrEqual(base);
+  });
+
+  it('a wrong hash gets at most one snapshot per seat every few seconds', () => {
+    const { sch, room, conns } = setup(2);
+    for (let i = 0; i < 10; i++) room.message(conns[1], { t: 'hash', n: 0, h: '0000000000000000' });
+    expect(conns[1].of('snapshot')).toHaveLength(1);
+    sch.advanceBy(DESYNC_SNAPSHOT_MS);
+    room.message(conns[1], { t: 'hash', n: 0, h: '0000000000000000' });
+    expect(conns[1].of('snapshot')).toHaveLength(2);
+  });
+
+  it('a late joiner whose join entry was lost (a kill between seat record and entry) gets one character on reconnect', () => {
+    const { sch, room } = setup(2);
+    const late = new FakeConn();
+    setupJoin(room, late);
+    const token = late.last('welcome')!.you.token;
+    const path = join(dir, `${room.code}.log`);
+    const lines = readFileSync(path, 'utf8').split('\n').filter(Boolean);
+    const at = lines.findIndex((l) => l.includes('"k":"join"'));
+    expect(at).toBeGreaterThan(0);
+    // the seat record with its pid comes before the entry
+    expect(JSON.parse(lines[at - 1])).toMatchObject({ seat: { seat: 's3', pid: 'p3' } });
+    writeFileSync(path, lines.slice(0, at).map((l) => `${l}\n`).join(''));
+    const m2 = new RoomManager({ dir, engineVersion: 'v1', scheduler: sch, log: () => {} });
+    m2.load();
+    const r2 = m2.get(room.code)!;
+    expect(r2.state!.party).toEqual(['p1', 'p2']);
+    m2.hello(new FakeConn(), hello(room.code, token, 'Late', PLAYER_COLOURS[5]));
+    expect(r2.state!.party).toEqual(['p1', 'p2', 'p3']);
+    expect(r2.seatList().find((x) => x.seat === 's3')!.pid).toBe('p3');
+  });
+
+  it('a typist who keeps acting is busy again only within BUSY_MAX_TURNS of the typing start', () => {
+    const { sch, room, conns } = setup(2);
+    room.message(conns[1], { t: 'typing', on: true });
+    const from = room.state!.turn;
+    for (let i = 0; i < BUSY_MAX_TURNS + 5; i++) {
+      if (i % 4 === 0) room.message(conns[1], { t: 'typing', on: true }); // refreshed within the expiry
+      act(room, conns[1], { type: 'wait' });
+      act(room, conns[0], { type: 'wait' });
+      sch.advanceBy(100);
+    }
+    const s = room.state!;
+    expect(s.turn - from).toBeGreaterThanOrEqual(BUSY_MAX_TURNS);
+    expect(s.players.p2.busySince ?? null).toBeNull();
+  });
+
+  it('a seat that sent leave gets no character when the host starts soon after', () => {
+    const { room, conns } = setup(3, { lobby: true });
+    room.message(conns[2], { t: 'leave' });
+    room.message(conns[0], { t: 'start' });
+    expect(room.state!.party).toEqual(['p1', 'p2']);
+    expect(room.seatList().map((x) => x.seat)).toEqual(['s1', 's2']);
+  });
+
+  it('a first action during the area hold starts its deadline when the hold ends, not at the hold maximum', () => {
+    const { sch, room, conns } = setup(3);
+    const s = room.state!;
+    actorOf(s, 'p1').pos = { ...s.area.map.exit };
+    act(room, conns[0], { type: 'transition' });
+    let guard = 0;
+    while (room.state!.area.index === 0 && guard++ < EXIT_COUNTDOWN_TURNS * 3) {
+      for (const c of conns) room.message(c, { t: 'presence', state: 'playing' });
+      sch.advanceBy(DEFAULT_TIMING.countdownTurnMs);
+    }
+    expect(room.state!.area.index).toBe(1);
+    const n1 = room.n;
+    const t0 = sch.now();
+    sch.advanceBy(100);
+    room.message(conns[0], { t: 'applied', n: n1 });
+    act(room, conns[0], { type: 'wait' });
+    sch.advanceBy(100);
+    room.message(conns[1], { t: 'applied', n: n1 });
+    room.message(conns[2], { t: 'applied', n: n1 });
+    for (const c of conns.slice(1)) room.message(c, { t: 'presence', state: 'playing' });
+    sch.advanceBy(room.options.deadlineMs + 50);
+    expect(room.n).toBe(n1 + 1);
+    expect(sch.now() - t0).toBeLessThan(DEFAULT_TIMING.areaHoldMaxMs);
   });
 });

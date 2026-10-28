@@ -75,13 +75,14 @@ describe('setAway', () => {
     expect(hashState(b.state)).toBe(hashState(s));
   });
 
-  it('hostiles never pick an away player, with no turn cap; back, it is a target again', () => {
+  it('hostiles leave an away player alone for BUSY_MAX_TURNS (the busy cap); back, it is a target again', () => {
     let s = party(2);
     place(s, { p1: { x: 2, y: 2 }, p2: { x: 10, y: 9 } });
     const rat = addActor(w, s, 'rat', { x: 10, y: 7 }, { ai: { alerted: true } });
     s = setAway(s, 'p2', true, env(w)).state;
+    expect(s.players.p2.awaySince).toBe(s.turn);
     const p2 = actorOf(s, 'p2')!.id;
-    for (let i = 0; i < BUSY_MAX_TURNS + 5; i++) {
+    for (let i = 0; i < BUSY_MAX_TURNS - 1; i++) {
       const r = turn(s, waitAll(s));
       expect(attacksOn(r.events, p2)).toEqual([]);
       s = r.state;
@@ -91,14 +92,24 @@ describe('setAway', () => {
     expect(cheb(byId(s, rat.id).pos, actorOf(s, 'p2')!.pos)).toBeLessThanOrEqual(2);
     // away does not change who the turn waits for
     expect(readyPlayers(s, env(w))).toEqual(['p1', 'p2']);
-    s = setAway(s, 'p2', false, env(w)).state;
-    let hit = false;
-    for (let i = 0; i < 4 && !hit; i++) {
-      const r = turn(s, waitAll(s));
-      hit = attacksOn(r.events, p2).length > 0;
-      s = r.state;
-    }
-    expect(hit).toBe(true);
+    // the cap runs out: still away, but a target again
+    const capped = (x: typeof s) => {
+      let hit = false;
+      for (let i = 0; i < 6 && !hit; i++) {
+        const r = turn(x, waitAll(x));
+        hit = attacksOn(r.events, p2).length > 0;
+        x = r.state;
+      }
+      return { hit, x };
+    };
+    const later = capped(s);
+    expect(later.hit).toBe(true);
+    expect(later.x.players.p2.away).toBe(true);
+    expect(isBusy(ctxOf(later.x), later.x.players.p2)).toBe(false);
+    // back, it is a target at once
+    const back = setAway(s, 'p2', false, env(w)).state;
+    expect('awaySince' in back.players.p2).toBe(false);
+    expect(capped(back).hit).toBe(true);
   });
 });
 

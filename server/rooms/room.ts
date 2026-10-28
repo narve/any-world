@@ -23,6 +23,7 @@ import {
   stepTurn,
   worldIdOf,
 } from '../../src/engine/index';
+import { BUSY_MAX_TURNS } from '../../src/engine/ai';
 import { FREE_ACTIONS } from '../../src/engine/party';
 import type { GameState, PlayerAction, PlayerId, TurnInput, TurnOutcome } from '../../src/engine/types';
 import { parseWorld } from '../../src/schema';
@@ -60,7 +61,7 @@ import en from '../../src/client/i18n/en';
 import nb from '../../src/client/i18n/nb';
 import { nextResolve, type ClockDecision, type ClockView, type PendingInput } from './clock';
 import type { RoomTiming, Scheduler, TimerId } from './timing';
-import { linesToReplay, type LoadedRoom, type RoomFile, type RoomStore, type SeatRecord, type WorldFile } from './store';
+import { linesToReplay, type LoadedRoom, type LogLine, type RoomFile, type RoomStore, type SeatRecord, type WorldFile } from './store';
 import type { DemoWorlds } from './worlds';
 
 /** rooms create their runs with this exit countdown (≈ 10 s at countdownTurnMs; a constant, not derived from the timing) */
@@ -71,6 +72,10 @@ export const SNAPSHOT_EVERY = 100;
 export const RING_SIZE = 512;
 /** server hashes kept (one per LIMITS.hashEvery entries) */
 export const HASH_RING = 64;
+/** log lines (seat records, chat) appended since the last room file rewrite above which it is rewritten (lobby, ended, or chat between snapshots) */
+export const LOG_COMPACT_LINES = 200;
+/** a seat gets at most one desync snapshot this often (a wrong hash report is otherwise a cheap amplifier) */
+export const DESYNC_SNAPSHOT_MS = 5000;
 /** 'illegal' outcomes a minute per player above which the room logs a line (design §9) */
 export const ILLEGAL_LOG_PER_MIN = 20;
 /** the GM's weirdness in rooms (the offline director does not read it) */
@@ -122,7 +127,10 @@ interface Seat {
   /** the last input or presence change */
   lastActiveAt: number;
   typingUntil: number | null;
+  /** the turn typing started (its busy is re-appended after the typist's own action only within BUSY_MAX_TURNS of it) */
+  typingTurn: number | null;
   lastChatAt: number;
+  lastDesyncAt: number;
   /** the roster presence last shown, and since when */
   shown: SeatPresence | null;
   since: number;
@@ -198,6 +206,10 @@ export class Room {
   private timer: TimerId | null = null;
   /** the last input or chat (the 2-hour idle close) */
   lastActivityAt: number;
+  /** since when no seat is connected (null while one is): the manager closes a lobby empty for timing.awayMs */
+  emptySince: number | null;
+  /** log lines appended since the room file was last rewritten */
+  private logLines = 0;
   closed = false;
   /** the stored snapshot (a room file rewrite between snapshots keeps it) */
   private stored: { snapshot: RoomFile['snapshot']; hooks: HookTracker | null } = { snapshot: null, hooks: null };
@@ -224,6 +236,7 @@ export class Room {
     this.createdAt = createdAt;
     this.lastResolveAt = createdAt;
     this.lastActivityAt = createdAt;
+    this.emptySince = createdAt;
     this.director = new OfflineGmDirector({ t: gmTranslate(world.world.meta.language) });
   }
 
@@ -283,6 +296,8 @@ export class Room {
     }
     room.lastResolveAt = now;
     room.lastActivityAt = now;
+    room.emptySince = now;
+    room.logLines = loaded.lines.length;
     return room;
   }
 
@@ -307,7 +322,9 @@ export class Room {
       presence: 'playing',
       lastActiveAt: now,
       typingUntil: null,
+      typingTurn: null,
       lastChatAt: -Infinity,
+      lastDesyncAt: -Infinity,
       shown: null,
       since: now,
     };
@@ -328,7 +345,22 @@ export class Room {
   }
 
   private persistSeat(s: Seat, removed = false): void {
-    this.deps.store?.append(this.code, { seat: this.seatRecord(s, removed) });
+    this.append({ seat: this.seatRecord(s, removed) });
+  }
+
+  /**
+   * Appends a log line. Seat records and chat lines also come in the lobby and the ended phase, where
+   * no snapshot truncates the log: after LOG_COMPACT_LINES lines the room file (seats, chat, the
+   * stored snapshot, or a fresh one while there is a state) is rewritten and the log emptied.
+   */
+  private append(line: LogLine): void {
+    const store = this.deps.store;
+    if (!store) return;
+    store.append(this.code, line);
+    // (entries snapshot on their own cadence, after the GM tracker has seen them: settle)
+    if (++this.logLines < LOG_COMPACT_LINES || 'e' in line) return;
+    if (this.state) this.snapshot();
+    else this.persistRoom(true);
   }
 
   /** `name` made unique in the room (" 2", " 3"…), within LIMITS.nameMax code points */
@@ -367,7 +399,9 @@ export class Room {
       presence: 'playing',
       lastActiveAt: now,
       typingUntil: null,
+      typingTurn: null,
       lastChatAt: -Infinity,
+      lastDesyncAt: -Infinity,
       shown: null,
       since: now,
     };
@@ -448,10 +482,12 @@ export class Room {
       if (this.seats.length >= this.options.maxPlayers) return refused('room_full', 'This room is full.');
       token = (this.deps.token ?? newToken)();
       seat = this.makeSeat(h.name, h.colour, token);
-      this.persistSeat(seat);
     }
+    const fresh = !h.token;
     return this.guard(() => {
       const s = seat!;
+      // (inside the guard: a full disk closes this room, never the process)
+      if (fresh) this.persistSeat(s);
       // a second socket with the same token replaces the first (a new tab)
       if (s.conn) {
         const old = s.conn;
@@ -475,10 +511,13 @@ export class Room {
       }
       if (wasEmpty) this.wake(s);
       if (this.phase === 'playing' && this.state && this.state.status === 'playing') {
-        if (s.pid === null) {
+        // (a pid without a player: a crash between the seat record and its join entry)
+        if (s.pid === null || !this.state.players[s.pid]) {
           const pid = nextPid(this.state);
           s.pid = pid;
-          changed = true;
+          // the seat record before the entry, so a replay never sees the join without its seat
+          this.persistSeat(s);
+          changed = false;
           this.push({ k: 'join', seat: s.id, name: s.name, pid, near: this.nearPid() });
         } else if (this.state.players[s.pid]?.left) {
           this.push({ k: 'return', pid: s.pid, near: this.nearPid() });
@@ -493,6 +532,7 @@ export class Room {
       s.offSince = null;
       s.presence = 'playing';
       s.lastActiveAt = now;
+      this.emptySince = null;
       this.ensureHost();
       conn.send(this.welcome(s, token, h));
       this.evaluate();
@@ -554,9 +594,22 @@ export class Room {
     s.connectedSince = null;
     s.offSince = now;
     s.awayAt = now + this.deps.timing.awayMs;
-    this.hold?.waitFor.delete(s.id);
+    this.dropFromHold(s);
     if (this.phase === 'playing' && this.onMap(s.pid)) this.push({ k: 'away', pid: s.pid });
+    if (!this.anyConnected) this.emptySince = now;
     this.ensureHost();
+  }
+
+  /** a seat that no longer holds the area hold (applied, or gone); when none is left the hold ends now */
+  private dropFromHold(s: Seat): void {
+    const hold = this.hold;
+    if (!hold) return;
+    hold.waitFor.delete(s.id);
+    if (hold.waitFor.size) return;
+    this.hold = null;
+    // a first action taken during the hold starts its deadline when the hold actually ends
+    const now = this.deps.scheduler.now();
+    if (this.firstAt !== null && this.firstAt > now) this.firstAt = now;
   }
 
   /** a message from a bound connection (hello is handled by hello()) */
@@ -586,10 +639,7 @@ export class Room {
           this.checkHash(s, msg.n, msg.h);
           break;
         case 'applied':
-          if (this.hold && msg.n >= this.hold.n) {
-            this.hold.waitFor.delete(s.id);
-            if (this.hold.waitFor.size === 0) this.hold = null;
-          }
+          if (this.hold && msg.n >= this.hold.n) this.dropFromHold(s);
           break;
         case 'start':
           this.start(s, msg.demo);
@@ -643,6 +693,7 @@ export class Room {
     const was = s.typingUntil !== null;
     s.typingUntil = this.deps.scheduler.now() + this.deps.timing.typingExpiryMs;
     if (was) return;
+    s.typingTurn = this.state?.turn ?? null;
     this.broadcast({ t: 'typing', seat: s.id, on: true });
     this.busyEntry(s, true);
   }
@@ -650,6 +701,7 @@ export class Room {
   private stopTyping(s: Seat, entry: boolean): void {
     if (s.typingUntil === null) return;
     s.typingUntil = null;
+    s.typingTurn = null;
     this.broadcast({ t: 'typing', seat: s.id, on: false });
     if (entry) this.busyEntry(s, false);
   }
@@ -668,7 +720,7 @@ export class Room {
     const line: ChatLine = { id: this.nextChatId++, seat: s.id, name: s.name, colour: s.colour, text: clean, at: now };
     this.chat.push(line);
     if (this.chat.length > LIMITS.chatHistory) this.chat.shift();
-    this.deps.store?.append(this.code, { chat: line });
+    this.append({ chat: line });
     this.broadcast({ t: 'chat', line });
     this.stopTyping(s, true);
   }
@@ -676,6 +728,9 @@ export class Room {
   private checkHash(s: Seat, n: number, h: string): void {
     const expected = this.hashes.get(n);
     if (!this.state || expected === undefined || expected === h) return;
+    const now = this.deps.scheduler.now();
+    if (now - s.lastDesyncAt < DESYNC_SNAPSHOT_MS) return;
+    s.lastDesyncAt = now;
     this.log(`desync seat ${s.id} at n=${n}`);
     s.conn?.send({ t: 'snapshot', run: this.run, n: this.n, state: serialize(this.state) });
   }
@@ -699,12 +754,13 @@ export class Room {
   /** a new run with every seat in the lobby, or (play again) every seat connected or off for less than 2 minutes */
   private newRun(world: RoomWorld): void {
     const now = this.deps.scheduler.now();
-    if (this.phase === 'ended') {
-      for (const s of this.seats.slice()) {
-        if (s.conn || (s.offSince !== null && now - s.offSince < this.deps.timing.awayMs)) continue;
-        this.removeSeat(s);
-      }
+    for (const s of this.seats.slice()) {
+      if (s.conn) continue;
+      // a seat that sent `leave` gets no character; after a run, nor one off for 2 minutes
+      if (s.quit || (this.phase === 'ended' && !(s.offSince !== null && now - s.offSince < this.deps.timing.awayMs))) this.removeSeat(s);
     }
+    // from the lobby the run always carries the world: an upload there replaced it without telling anyone
+    const fromLobby = this.phase === 'lobby';
     const worldChanged = world.worldId !== this.world.worldId;
     if (worldChanged) {
       const old = this.world;
@@ -714,7 +770,7 @@ export class Room {
       this.deps.store?.writeWorld(this.code, { format: 1, worldId: world.worldId, world: world.world, source: world.source });
       this.deps.releaseWorld?.(old.worldId);
     }
-    this.nextWorld = null;
+    this.dropNextWorld();
     this.run++;
     this.seed = (this.deps.seed ?? newSeed)();
     this.n = 0;
@@ -739,7 +795,7 @@ export class Room {
     this.lastResolveAt = now;
     this.hashes.set(0, hashState(state));
     this.snapshot();
-    this.broadcast({ t: 'run', run: this.run, ...(worldChanged ? { world: world.world } : {}), worldId: world.worldId, snapshot: { n: 0, state: serialize(state) } });
+    this.broadcast({ t: 'run', run: this.run, ...(worldChanged || fromLobby ? { world: world.world } : {}), worldId: world.worldId, snapshot: { n: 0, state: serialize(state) } });
     this.log(`run ${this.run} started (${this.seats.length} players, seed ${this.seed})`);
     // a seat that is off at the start gets its character and the 2-minute rule
     for (const s of this.seats) {
@@ -764,7 +820,10 @@ export class Room {
   private setOptions(s: Seat, m: Extract<ClientMsg, { t: 'options' }>): void {
     if (this.host !== s.id) return this.error(s, 'not_host', 'only the host can change the options');
     if (m.maxPlayers !== undefined && m.maxPlayers < this.seats.length) return this.error(s, 'invalid', 'fewer places than players');
-    this.options = { ...this.options, ...(m.deadlineMs !== undefined ? { deadlineMs: m.deadlineMs } : {}), ...(m.maxPlayers !== undefined ? { maxPlayers: m.maxPlayers } : {}) };
+    const next = { ...this.options, ...(m.deadlineMs !== undefined ? { deadlineMs: m.deadlineMs } : {}), ...(m.maxPlayers !== undefined ? { maxPlayers: m.maxPlayers } : {}) };
+    if (next.deadlineMs === this.options.deadlineMs && next.maxPlayers === this.options.maxPlayers) return;
+    this.options = next;
+    // (a synchronous fsync'ed rewrite: the options bucket, LIMITS.rates.options, keeps these rare)
     this.persistRoom(false);
   }
 
@@ -779,6 +838,8 @@ export class Room {
     if (this.phase === 'playing' || this.closed) return 'bad_phase';
     registerWorld(world.world);
     if (this.phase === 'ended') {
+      if (this.nextWorld?.worldId === world.worldId) return 'ok';
+      this.dropNextWorld();
       this.nextWorld = world;
       return 'ok';
     }
@@ -788,6 +849,18 @@ export class Room {
     this.deps.store?.writeWorld(this.code, { format: 1, worldId: world.worldId, world: world.world, source: world.source });
     if (old.worldId !== world.worldId) this.deps.releaseWorld?.(old.worldId);
     return 'ok';
+  }
+
+  /** the world staged for the next start, if any */
+  get nextWorldId(): string | null {
+    return this.nextWorld?.worldId ?? null;
+  }
+
+  /** forgets the staged world; the manager unregisters it when nobody else plays it */
+  private dropNextWorld(): void {
+    const staged = this.nextWorld;
+    this.nextWorld = null;
+    if (staged && staged.worldId !== this.world.worldId) this.deps.releaseWorld?.(staged.worldId);
   }
 
   // -------------------------------------------------------------------------
@@ -807,7 +880,7 @@ export class Room {
     if (r.state === before) return null;
     this.state = r.state;
     this.record(e, r.state);
-    this.deps.store?.append(this.code, { e });
+    this.append({ e });
     this.broadcast({ t: 'entries', run: this.run, es: [e] });
     if (e.k === 'turn') this.countIllegal(r.outcomes);
     let hooks: GmHookEvent[] = [];
@@ -956,9 +1029,11 @@ export class Room {
     this.firstAt = this.pending.size ? now : null;
     // a typing seat whose own turn action cleared its busy flag is busy again
     if (this.state && this.state.status === 'playing') {
+      // (only within BUSY_MAX_TURNS of the typing start: a typist who keeps acting does not stay immune)
       for (const s of this.seats) {
         if (s.typingUntil === null || !this.onMap(s.pid)) continue;
         const ps = this.state.players[s.pid];
+        if (s.typingTurn !== null && this.state.turn - s.typingTurn >= BUSY_MAX_TURNS) continue;
         if (ps.busySince == null && !ps.down) this.busyEntry(s, true);
       }
     }
@@ -1151,6 +1226,7 @@ export class Room {
   /** rewrites the room file (keeping the stored snapshot) */
   private persistRoom(truncate: boolean): void {
     this.deps.store?.writeRoom(this.roomFile(), truncate);
+    if (truncate) this.logLines = 0;
   }
 
   /** a snapshot of the state now: the room file is rewritten and the log truncated */
@@ -1185,6 +1261,7 @@ export class Room {
     }
     this.log(`closed (${reason})`);
     this.deps.onClose?.(this, reason);
+    this.dropNextWorld();
   }
 
   /** graceful shutdown: a snapshot (or the room file), then `bye` to every connection */
