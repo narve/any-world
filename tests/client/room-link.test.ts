@@ -157,6 +157,26 @@ describe('RoomLink', () => {
     expect(a.events.some((e) => e.t === 'end')).toBe(false);
   });
 
+  it('bad_phase toasts while the run is on (a host action), not for an input that crossed the end of the run', async () => {
+    const { room, make } = setup();
+    const a = make('Kari', { token: room.hostToken });
+    a.link.connect();
+    await room.flush();
+    const notAllowed = () => a.events.filter((e) => e.t === 'toast' && e.key === 'room.notAllowed').length;
+    // the lobby: an input (as one sent just before the run ended) is answered bad_phase, quietly
+    a.link.client.send({ t: 'input', area: 0, turn: 0, actions: [{ type: 'wait' }], intent: 'wait' });
+    await room.flush();
+    expect(a.sent.at(-1)?.t).toBe('input');
+    expect(notAllowed()).toBe(0);
+    // the run is on: `ready` is refused with the toast
+    a.link.client.start();
+    await room.flush();
+    expect(a.link.client.phase).toBe('playing');
+    a.link.client.ready(true);
+    await room.flush();
+    expect(notAllowed()).toBe(1);
+  });
+
   it('chat frames reach the ChatModel; a welcome merges the history quietly', async () => {
     const { room, make } = setup();
     const a = make('Kari', { token: room.hostToken });

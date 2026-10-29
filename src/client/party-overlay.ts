@@ -144,9 +144,21 @@ export class PartyOverlay {
         el.classList.toggle('is-emote', !!b?.emote);
         el.classList.toggle('is-typing', typing);
         el.style.setProperty('--who', m.colour);
-        // (above the name tag of a teammate; right over the head of the own player)
-        el.classList.toggle('is-below', below);
-        place(el, at!.x, below ? at!.y + (m.you ? 0 : 20) : at!.y - (m.you ? 6 : 24));
+        // (above the name tag of a teammate; right over the head of the own player; under the feet
+        // when a HUD panel would cover the bubble itself, though not the head)
+        let bAt = at!;
+        let bBelow = below;
+        if (!below) {
+          const top = at!.y - (m.you ? 6 : 24) - el.offsetHeight;
+          const half = el.offsetWidth / 2;
+          if (!inView({ x: at!.x - half, y: top }) || !inView({ x: at!.x + half, y: top })) {
+            const feet = local(this.project.tile(m.pos));
+            const under = { x: feet.x, y: feet.y + 30 };
+            if (inView(under)) [bAt, bBelow] = [under, true];
+          }
+        }
+        el.classList.toggle('is-below', bBelow);
+        place(el, bAt.x, bBelow ? bAt.y + (m.you || !below ? 0 : 20) : bAt.y - (m.you ? 6 : 24));
         used.bubbles.add(m.seat);
         shown.push({ seat: m.seat, text, kind: typing ? 'typing' : 'bubble' });
       }

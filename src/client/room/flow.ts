@@ -29,6 +29,7 @@ import { RoomsApi, type ApiResult } from './api';
 import { RECONNECT_LEAVE_MS, RoomLink, roomWorldEntry, type LinkEvent } from './link';
 import { RoomSession } from './room-session';
 import { RoomUi } from './room-ui';
+import type { Autoplay, AutoplayOptions, AutoplayStats } from './autoplay';
 import { colourName, defaultProfile, loadProfile, saveProfile, saveSeat, seatCodes, seatToken, type PlayerColour, type Profile } from './profile';
 
 /** what the room flow needs of the App (main.ts) */
@@ -70,6 +71,13 @@ export interface RoomHandle {
   roster(): { seat: string; name: string; colour: string; host: boolean; ready: boolean; pid: string | null; presence: string }[];
   session: RoomSession | null;
   link: RoomLink;
+  /**
+   * Dev and test builds: a sim bot plays this page's player through the session (the exit check);
+   * resolves once it is on or off. Rejects in other builds.
+   */
+  autoplay(on: boolean, opts?: AutoplayOptions): Promise<void>;
+  /** what the autoplay did (null before the first autoplay call) */
+  autoplayStats(): AutoplayStats | null;
 }
 
 export class RoomFlow {
@@ -92,6 +100,8 @@ export class RoomFlow {
   /** the name and colour sheet, and what happens with its answer */
   private sheet: { view: ProfileSheetView; done: (p: Profile | null) => void } | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  /** the in-page bot of the room this page is in (dev and test builds) */
+  private autoplayer: Autoplay | null = null;
 
   constructor(
     private readonly app: RoomAppHost,
@@ -127,7 +137,35 @@ export class RoomFlow {
       roster: () => c.roster.map((r) => ({ seat: r.seat, name: r.name, colour: r.colour, host: r.host, ready: r.ready, pid: r.pid, presence: r.presence })),
       session: this.roomSession,
       link: l,
+      autoplay: (on, opts) => this.setAutoplay(l, on, opts),
+      autoplayStats: () => (this.link === l ? (this.autoplayer?.snapshot() ?? null) : null),
     };
+  }
+
+  private async setAutoplay(link: RoomLink, on: boolean, opts?: AutoplayOptions): Promise<void> {
+    if (typeof __ANYWORLD_AUTOPLAY__ === 'undefined' || !__ANYWORLD_AUTOPLAY__) throw new Error('autoplay is only in dev and test builds');
+    if (!this.autoplayer && !on) return;
+    if (!this.autoplayer) {
+      const { Autoplay } = await import('./autoplay');
+      if (this.link !== link) return;
+      this.autoplayer ??= new Autoplay(
+        {
+          client: link.client,
+          live: () => {
+            const session = this.roomLive;
+            const controller = this.app.controller;
+            return session && controller?.session === session ? { session, controller } : null;
+          },
+          say: (text) => {
+            if (!this.roomUi) return false;
+            this.roomUi.say(text);
+            return true;
+          },
+        },
+        opts,
+      );
+    }
+    this.autoplayer.set(on);
   }
 
   roomsCardView(): RoomsCardView {
@@ -496,6 +534,8 @@ export class RoomFlow {
     this.sheet = null;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.reconnectTimer = null;
+    this.autoplayer?.dispose();
+    this.autoplayer = null;
     this.app.audio.stopRun();
   }
 

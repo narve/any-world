@@ -188,6 +188,14 @@ export class RoomUi {
     return 'ok';
   }
 
+  /** a line sent as the chat panel sends it, after `typingMs` of typing (the autoplay's chat) */
+  say(text: string, typingMs = 300): void {
+    this.typing(true);
+    setTimeout(() => {
+      if (!this.disposed && this.trySend(() => this.link.client.say(text)) !== 'ok') this.typing(false);
+    }, typingMs);
+  }
+
   /** a map ping at this player's own position (one tap: that is what they mean) */
   private sendPing(kind: PingKind): SendResult {
     const s = this.run?.session;

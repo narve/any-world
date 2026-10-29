@@ -670,10 +670,12 @@ export class GameController {
     this.apply(this.session.act({ type: 'move', dir }));
   }
 
-  /** an engine action in map terms, applied like a UI action (e2e tests) */
-  actNow(a: PlayerAction): void {
+  /** an engine action in map terms, applied like a UI action (e2e tests, a room's autoplay); returns its outcome */
+  actNow(a: PlayerAction): Outcome {
     this.stopTravel();
-    this.apply(this.session.act(a));
+    const out = this.session.act(a);
+    this.apply(out);
+    return out;
   }
 
   /** applies GM actions now, as if a director had answered `hook` (e2e tests, debugging) */

@@ -3,3 +3,5 @@ declare const __ANYWORLD_DEFAULT_TRANSPORT__: "direct" | "backend";
 declare const __ANYWORLD_SERVER__: string;
 /** build-time engine version (server/engine-version.ts, MP2): a hash of the lockstep code */
 declare const __ANYWORLD_ENGINE_VERSION__: string;
+/** dev and test builds: `__anyworld.room.autoplay` (src/client/room/autoplay.ts) is available */
+declare const __ANYWORLD_AUTOPLAY__: boolean;

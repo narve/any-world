@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => ({
     __ANYWORLD_SERVER__: JSON.stringify((process.env.ANYWORLD_SERVER_URL ?? '').trim().replace(/\/+$/, '')),
     // the engine version rooms check at join (MP2 design §8): computed from the checkout, both modes
     __ANYWORLD_ENGINE_VERSION__: JSON.stringify(engineVersionFor(process.env, fileURLToPath(new URL('.', import.meta.url)))),
+    // the rooms' in-page autoplay (MP3 exit check): the dev server, or a build with ANYWORLD_AUTOPLAY=1
+    __ANYWORLD_AUTOPLAY__: JSON.stringify(mode === 'development' || process.env.ANYWORLD_AUTOPLAY === '1'),
   },
   build: {
     outDir: mode === 'static' ? '../../dist/static' : '../../dist/client',
