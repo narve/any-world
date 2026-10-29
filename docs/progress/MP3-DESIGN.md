@@ -869,6 +869,35 @@ re-exported), so the new-player gate is run once at the end as a check.
 - **For D5.** `autoplay` on the handle is still to add. A player held in place (lassoed) has its moves
   refused locally (no input sent): an autoplay bot must fall back to `wait`, as `mp-party` does.
 
+## D5 as built
+
+- **Autoplay** (`room/autoplay.ts`, its own lazy chunk behind the flow chunk): `Autoplay` with an
+  `AutoplayHost` (`client`, `live()` → the run's session and controller, `say(text)`). A sim bot
+  (`botByName`, default explorer) decides on the raw replica for this pid, as `ScriptedClient` does:
+  one turn action per ready turn, free actions one at a time (the wait ends on the entry carrying this
+  player's own free action, a refusal of a free action, or a 1 s watchdog), an open choice first, a
+  locally refused action replaced by a wait. Every action goes `controller.actNow(a)` (now returns its
+  Outcome) → `RoomSession.act`. A chat line about every `chatEvery` (40) entries through `RoomUi.say`
+  (typing for 300 ms, then the panel's send path). It records area changes and the run end as
+  `{ area, n, hash }` (n = entries after that entry; area -1 for the end) from the moment it is made.
+  Handle: `__anyworld.room.autoplay(on, { bot, seed, chatEvery })` (a Promise) and `autoplayStats()`
+  (`sent`, `refused` locally with `refusals` by text, `serverRefused`, `said`, `areas`, `faults`).
+  Build gate: `__ANYWORLD_AUTOPLAY__` (vite.config.ts: the dev server, or `ANYWORLD_AUTOPLAY=1`); the
+  static and production builds contain neither the module nor the sim bots (checked on `--mode static`).
+- **`e2e-mp/mp-exit.spec.ts`**: as §7, with these choices. B joins by the link with no stored profile
+  (the sheet, a swatch); A and C have stored profiles. C's tap is checked as "C moved", since the first
+  touch can shift the camera's insets so the step is not always onto the tapped tile. Short-lived UI
+  (the pill, typing, bubbles, the exit banner) is recorded by a 40 ms sampler in each page and asserted
+  afterwards. The bots are explorer / cautious / explorer with seeds 11–13. The autoplay is turned off
+  before "Play again" (it would play the new run). About 2.5 minutes in all; the run itself 90–125 s.
+- **Fixes**: `PartyOverlay` puts a bubble under the feet when its own top corners are under a HUD
+  panel (before, only the head point was checked, so a bubble could hide under the goal bar);
+  `RoomLink` logs `bad_phase` quietly once the client is out of the playing phase (an input or ping that
+  crossed the run's end no longer toasts "not allowed").
+- **Tests**: `tests/client/autoplay.test.ts` (two autoplayed sessions on the in-memory room reach the
+  next area with equal marks, the chat script speaks, off stops the inputs), `room-link` (bad_phase
+  quiet after the run, a toast while playing), `mp-exit`.
+
 ## Constants
 
 Turn pill shown for parties of 2+, after 450 ms of waiting, hidden 250 ms after; serial sync timeout
