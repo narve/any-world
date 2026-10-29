@@ -1,0 +1,797 @@
+/*
+ * MP3: a room's in-game party and chat UI (room/room-ui.ts, ui/components/chat.ts, party.ts,
+ * party-overlay.ts). Loaded with the lazy room chunk, so single player never downloads it. The
+ * elements sit in the game layout's room slots (ui.ts RoomSlots); on phones nothing floats: the
+ * party dots and "2/3" are in the strip row, the banner in the banner row, the chat button in the
+ * tools row and the chat a bottom sheet.
+ */
+
+/* ------------------------------------------------------------------------ */
+/* party strip (end of the status strip)                                    */
+/* ------------------------------------------------------------------------ */
+
+.aw-party {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.aw-party-chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.aw-party-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 132px;
+  padding: 2px 8px 2px 5px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--who) 55%, transparent);
+  background: rgba(var(--c-panel-rgb), 0.6);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.aw-party-chip:not(:disabled) {
+  cursor: pointer;
+  border-style: dashed;
+}
+
+.aw-party-chip.is-followed {
+  box-shadow: 0 0 0 2px var(--who);
+}
+
+.aw-party-chip:is([data-state='away'], [data-state='left']) {
+  opacity: 0.55;
+}
+
+.aw-party-chip[data-state='left'] .aw-party-dot {
+  background: var(--c-muted);
+}
+
+.aw-party-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--who);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.aw-party-chip.is-you .aw-party-dot {
+  box-shadow: 0 0 0 2px rgba(var(--c-panel-rgb), 1), 0 0 0 3px var(--who);
+}
+
+.aw-party-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aw-party-hp {
+  flex: none;
+  width: 22px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.aw-party-hp > span {
+  display: block;
+  height: 100%;
+  background: var(--c-danger);
+}
+
+.aw-party-state {
+  flex: none;
+  font-size: 11px;
+  color: var(--c-muted);
+}
+
+.aw-party-chip[data-state='acted'] .aw-party-state {
+  color: var(--c-good);
+}
+
+.aw-party-chip[data-state='down'] .aw-party-state {
+  color: var(--c-danger);
+}
+
+.aw-party-turn {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------------ */
+/* turn pill and banner                                                     */
+/* ------------------------------------------------------------------------ */
+
+.aw-turn-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 12px 4px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: rgba(var(--c-panel-rgb), 0.82);
+  box-shadow: 0 4px 14px var(--c-shadow);
+  font-size: 12px;
+  color: var(--c-text);
+  pointer-events: none;
+}
+
+.aw-turn-bar {
+  display: block;
+  width: 72px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(var(--c-accent-rgb), 0.18);
+  overflow: hidden;
+}
+
+.aw-turn-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+  transform-origin: left center;
+  animation-name: aw-turn-drain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes aw-turn-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.aw-party-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 12px;
+  max-width: min(560px, 92vw);
+  padding: 5px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--c-accent);
+  background: rgba(var(--c-panel-rgb), 0.92);
+  box-shadow: 0 6px 20px var(--c-shadow);
+  font-size: 13px;
+  text-align: center;
+  pointer-events: auto;
+}
+
+/* above a narration card (the GM's lines must not hide the countdown) */
+.aw-slot-banner {
+  position: relative;
+  z-index: 3;
+}
+
+.aw-party-banner[data-kind='down'] {
+  border-color: var(--c-danger);
+}
+
+.aw-spectate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.aw-spectate-cycle {
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* down: the hotbar and context bar are dimmed (chat, emotes and pings still work) */
+.aw-ui[data-room-down] :is(.aw-hotbar-slots, .aw-ctx) {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+/* ------------------------------------------------------------------------ */
+/* chat panel                                                               */
+/* ------------------------------------------------------------------------ */
+
+.aw-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  pointer-events: auto;
+  font-size: 13px;
+}
+
+.aw-chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.aw-chat-title {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+}
+
+.aw-chat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.aw-chat-line {
+  display: block;
+  padding: 2px 6px;
+  border-radius: 8px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.aw-chat-line.is-own {
+  text-align: right;
+}
+
+.aw-chat-line.is-new {
+  background: color-mix(in srgb, var(--who) 18%, transparent);
+  box-shadow: inset 2px 0 0 var(--who);
+}
+
+.aw-chat-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--who);
+  vertical-align: 1px;
+}
+
+.aw-chat-name {
+  margin-right: 6px;
+  font-weight: 650;
+  color: color-mix(in srgb, var(--who) 70%, var(--c-text));
+}
+
+.aw-chat-line.is-emote .aw-chat-text {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.aw-chat-line.is-ping .aw-chat-text {
+  font-style: italic;
+}
+
+.aw-chat-typing {
+  min-height: 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--c-muted);
+}
+
+.aw-chat-typing:empty {
+  display: none;
+}
+
+.aw-chat-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aw-chat-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.aw-chat-counter {
+  flex: none;
+  font-size: 11px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.aw-chat-counter.is-full {
+  color: var(--c-danger);
+}
+
+.aw-chat-slow {
+  font-size: 12px;
+  color: var(--c-danger);
+}
+
+.aw-chat-quick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.aw-chat-emotes {
+  display: flex;
+  gap: 2px;
+}
+
+.aw-chat-emote {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgba(var(--c-panel-rgb), 0.5);
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.aw-chat-emote:hover,
+.aw-chat-emote:focus-visible {
+  border-color: var(--c-border-strong);
+}
+
+.aw-chat-pings {
+  display: flex;
+  gap: 4px;
+}
+
+.aw-ping-glyph {
+  margin-right: 4px;
+  font-weight: 700;
+}
+
+.aw-chat.is-slow :is(.aw-chat-emotes, .aw-chat-pings) {
+  opacity: 0.55;
+}
+
+.aw-chat-open kbd {
+  margin-left: 6px;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* the desktop game: docked on the right under the rules (the last lines; fades when quiet) */
+.aw-chat[data-mode='dock'] {
+  width: 280px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border);
+  background: rgba(var(--c-panel-rgb), 0.78);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 18px var(--c-shadow);
+  transition: opacity calc(var(--dur, 200ms) / var(--anim-speed)) ease;
+}
+
+.aw-chat[data-mode='dock'] .aw-chat-head {
+  display: none;
+}
+
+.aw-chat[data-mode='dock'] .aw-chat-list {
+  max-height: calc(6 * 1.45em);
+}
+
+.aw-chat[data-mode='dock'].is-empty .aw-chat-list {
+  display: none;
+}
+
+.aw-chat[data-mode='dock'].is-quiet:not(.is-open):not(.is-hover) {
+  opacity: 0.4;
+}
+
+.aw-chat[data-mode='dock']:not(.is-open) :is(.aw-chat-quick, .aw-chat-slow) {
+  display: none;
+}
+
+.aw-chat[data-mode='dock'] .aw-chat-open {
+  align-self: flex-start;
+}
+
+/* inline: the lobby and the end screen */
+.aw-chat[data-mode='inline'] {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border);
+  background: rgba(var(--c-panel-rgb), 0.6);
+}
+
+.aw-chat[data-mode='inline'] .aw-chat-list {
+  max-height: 220px;
+}
+
+.aw-chat[data-mode='inline'].is-empty .aw-chat-list {
+  display: none;
+}
+
+.aw-slot-end {
+  width: min(560px, 100%);
+  margin: 18px auto 0;
+  pointer-events: auto;
+}
+
+/* the phone's sheet */
+.aw-chat-sheet {
+  position: fixed;
+  left: var(--safe-l, 6px);
+  right: var(--safe-r, 6px);
+  bottom: 0;
+  z-index: 27;
+  max-height: 46vh;
+  max-height: 46dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  border-radius: 16px 16px 0 0;
+  border: 1px solid var(--c-border);
+  border-bottom: 0;
+  background: rgba(var(--c-panel-rgb), 0.97);
+  box-shadow: 0 -12px 40px var(--c-shadow);
+  pointer-events: auto;
+  animation: aw-sheet-in calc(220ms / var(--anim-speed)) ease-out;
+}
+
+.aw-chat-sheet .aw-chat {
+  flex: 1;
+  min-height: 0;
+}
+
+.aw-chat-sheet .aw-chat-list {
+  flex: 1;
+  min-height: 60px;
+}
+
+.aw-chat-sheet .aw-chat-emote {
+  width: 44px;
+  height: 44px;
+}
+
+.aw-chat-sheet .aw-chat-ping {
+  min-height: 40px;
+}
+
+.aw-chat-sheet .aw-chat-close {
+  width: 40px;
+  height: 40px;
+}
+
+.aw-chat-sheet .aw-chat-input {
+  min-height: 44px;
+  font-size: 16px; /* no zoom on focus (iOS) */
+}
+
+.aw-chat-sheet .aw-chat-open {
+  display: none;
+}
+
+/* the phone's chat button (tools row) */
+.aw-slot-tools {
+  display: contents;
+}
+
+.aw-chat-button {
+  position: relative;
+}
+
+.aw-chat-button.is-on {
+  color: var(--c-accent) !important;
+  border-color: var(--c-accent) !important;
+}
+
+.aw-chat-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--c-danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* a chat line over the phone's log ticker for a few seconds */
+.aw-log-chat {
+  display: none;
+}
+
+/* ------------------------------------------------------------------------ */
+/* the map overlay: name tags, bubbles, pings, edge arrows, help rings      */
+/* ------------------------------------------------------------------------ */
+
+.aw-party-overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+  font-family: var(--font-ui, system-ui, sans-serif);
+}
+
+.aw-party-overlay > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.aw-name-tag {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+  translate: -50% -100%;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(10, 10, 14, 0.55);
+  color: color-mix(in srgb, var(--who) 80%, #fff);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+
+.aw-name-tag.is-away {
+  opacity: 0.5;
+}
+
+/* (under the feet: the head is behind a HUD panel) */
+:is(.aw-name-tag, .aw-bubble).is-below {
+  translate: -50% 0;
+}
+
+.aw-name-tag.is-fogged {
+  opacity: 0.6;
+  translate: -50% -50%;
+  background: rgba(10, 10, 14, 0.35);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.aw-name-tag-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #ddd;
+}
+
+.aw-bubble {
+  translate: -50% -100%;
+  max-width: 28ch;
+  padding: 5px 9px;
+  border-radius: 12px;
+  border: 2px solid var(--who);
+  background: rgba(250, 250, 252, 0.96);
+  color: #15151a;
+  font-size: 13px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+.aw-bubble.is-typing {
+  padding: 2px 10px 6px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.aw-bubble.is-emote {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font-size: 34px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+
+.aw-edge-arrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  translate: -50% -50%;
+  color: var(--who);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000, 0 0 3px #000;
+}
+
+.aw-edge-arrow.is-away {
+  opacity: 0.55;
+}
+
+.aw-edge-tip {
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 12px solid var(--who);
+  filter: drop-shadow(0 0 2px #000);
+}
+
+.aw-help-ring {
+  width: 54px;
+  height: 30px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 3px solid var(--who);
+  animation: aw-help-pulse calc(1.2s / var(--anim-speed, 1)) ease-in-out infinite;
+}
+
+@keyframes aw-help-pulse {
+  50% {
+    scale: 1.25;
+    opacity: 0.45;
+  }
+}
+
+.aw-ping {
+  translate: -50% -110%;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 2px solid var(--who);
+  background: rgba(10, 10, 14, 0.78);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: aw-ping-in calc(300ms / var(--anim-speed, 1)) ease-out;
+}
+
+.aw-ping.is-edge {
+  translate: -50% -50%;
+}
+
+@keyframes aw-ping-in {
+  from {
+    scale: 1.6;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aw-help-ring,
+  .aw-ping {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* phones                                                                   */
+/* ------------------------------------------------------------------------ */
+
+/* the strip shows dots (no names) and "2/3" instead of the turn counter */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape'])[data-room] .aw-strip-turn {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party {
+  gap: 5px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-chip {
+  padding: 0;
+  border: 0;
+  background: none;
+  min-width: 14px;
+  min-height: 18px;
+  justify-content: center;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-chip:not(:disabled) {
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-chip :is(.aw-party-name, .aw-party-hp, .aw-party-state) {
+  display: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-turn:not([hidden]) {
+  display: inline-flex;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-turn .aw-turn-bar {
+  width: 28px;
+}
+
+/* the pill is in the strip on phones */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-slot-pill {
+  display: none !important;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-slot-banner {
+  grid-area: banner;
+  align-self: start;
+  justify-self: center;
+  margin-top: 4px;
+  max-width: 100%;
+  z-index: 3;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-banner {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-slot-sheet {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 27;
+}
+
+/* the ticker narrows for the chat button; a chat line covers it for a few seconds */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log {
+  position: relative;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log-chat:not([hidden]) {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: inherit;
+  background: var(--c-panel);
+  box-shadow: inset 3px 0 0 var(--who);
+  color: var(--c-text);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-log.is-expanded .aw-log-chat {
+  display: none;
+}
+
+/* (the map overlay is outside the UI root: narrow screens by width) */
+@media (max-width: 640px) {
+  .aw-name-tag {
+    font-size: 11px;
+  }
+
+  .aw-bubble {
+    max-width: 22ch;
+    font-size: 12px;
+  }
+}
+
+/* the lobby on narrow screens: the chat under the actions */
+.aw-lobby-chat:empty {
+  display: none;
+}

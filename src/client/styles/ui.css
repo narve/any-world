@@ -69,6 +69,11 @@ body {
   display: none !important;
 }
 
+/* MP3: hosts for a room's party and chat UI (room/room-ui.ts, styles/party.css); empty outside a room */
+.aw-room-slot:empty {
+  display: none !important;
+}
+
 .aw-ui *,
 .aw-ui *::before,
 .aw-ui *::after {

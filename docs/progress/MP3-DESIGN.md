@@ -749,7 +749,7 @@ re-exported), so the new-player gate is run once at the end as a check.
   `session.travelTick()` (no 70 ms loop). The keydown that stops travel skips `isTextTarget`. The
   renderer (`start`, syncs) and the exit marker's fog read `session.cameraState` (a new base getter on
   `GameSession` returning `state`; RoomSession overrides it). `setStateForTest` throws in a room. The
-  open panels are reported as presence and cleared on dispose. `renderer.setFollow` is not called yet (D4).
+  open panels are reported as presence and cleared on dispose. (`renderer.setFollow`: see D4 as built.)
 - **RoomFlow** (`room/flow.ts`, a lazy chunk with link, session, api, profile and the net client;
   main.ts loads it at boot only when `roomsEndpoint` gives an endpoint, and through `RoomAppHost` it
   drives the App's screens, renderer and controller). main.ts keeps thin hooks: `roomFlow()`, `room`
@@ -805,6 +805,69 @@ re-exported), so the new-player gate is run once at the end as a check.
   single-player save, phone lobby by code without horizontal overflow, `?room=ZZZZ`, server down
   (single player still starts), outdated server (Reload). Run with
   `xvfb-run -a npx playwright test -c e2e-mp/playwright.mp.config.ts --reporter=line`.
+
+## D4 as built
+
+- **Start bundle relief (deviation, outside the step's list).** The entry was at 299.4 / 300 kB gzip.
+  It carried the world-generation balance step (`engine/balance`, the sim bots, zod's JSON-schema
+  code) only for the on-page fallback when workers fail. `balanceWorld` moved to `src/llm/balance-run.ts`;
+  `generate.ts` defaults to `balanceHere` (a dynamic import of it); the page-side `workerBalancer`
+  moved to `src/llm/balance-client.ts` (main.ts imports it; `balance-worker.ts` re-exports it and stays
+  the worker entry). The entry is now about 246 kB gzip. Generation behaves the same; `tools.test.ts`
+  and the generate tests pass unchanged.
+- **Main bundle (small hooks only).** `input.ts`: `resolveKey(ev, layer, verbs, room)`; in a room Enter →
+  `chat`, Shift+Enter → `interact`, `[` / `]` → `follow`, `/` → `chat` in every layer but `none`, `text`,
+  `settings`, `start`, `loading` (so also in the lobby and on the end screen); `attachKeyboard(..., inRoom)`;
+  `keyHelp(..., room)` shows ⇧ Enter, Enter / `/` chat and `[` `]`. `ui.ts`: `RoomIntent` `chat` and
+  `follow` (handled before the gfx-lost guard), `GameUi.roomSlots()` — empty hosts `strip` (inside the
+  status strip, `Hud.party`), `pill`, `banner` (top-centre), `side` (right column under the rules),
+  `tools` (start of the hotbar tools), `sheet` (game screen, measured by `panelRects`), `log`, `lobby`
+  (`LobbyScreen.chatHost`), `end` (after the end screen's body); `.aw-room-slot:empty` is hidden in
+  ui.css (phones' grid would otherwise place them). Room hint variants: `tileCard(tile, room)`,
+  `GameSession.interactHintKey` (`ctx.interactHintRoom` in `RoomSession`).
+- **Renderer.** `setPartyColours(Map<actorId, colour>)` recolours the existing ring (and the pulse)
+  through `ActorLayer.setPartyColours`, kept across `setWorld`; `setFollow(actorId)` sets `playerId` and
+  re-flags the views (`ActorLayer.setFollow`: `isPlayer`, pulse added / removed, ring opacity). The
+  controller calls `setFollow` from `syncFollow` before each room sync (and at start) when
+  `leadPlayer(cameraState)` changes; `cameraChanged()` redraws after a cycle.
+- **Lazy room UI** (in the `room/flow.ts` chunk, with `styles/party.css` as its own CSS chunk):
+  `room/party-view.ts` (DOM-free: `partyMembers`, `turnView`, `PillTimer` 450 / 250 ms, `bannerView`,
+  `partyColours`), `ui/components/chat.ts` (`ChatPanel` with modes dock / sheet / inline, `ChatButton`),
+  `ui/components/party.ts` (`PartyStrip`, `TurnPill`, `PartyBanner`), `party-overlay.ts`
+  (`PartyOverlay`), `room/room-ui.ts` (`RoomUi`, one per link, made in `openRoom`, `attachRun` after
+  `controller.start`, disposed in `closeRoom`; one rAF loop re-projects the overlay and refreshes the
+  rest every 100 ms with keyed renders).
+- **Behaviour choices.**
+  - "Off screen" is in practice "out of sight": the camera keeps every visible actor framed, so a
+    visible teammate is always on screen unless a HUD panel covers them. A teammate in the fog but
+    inside the view gets a faint italic tag where they stand (`.aw-name-tag.is-fogged`) instead of
+    an edge arrow; edge arrows are for points outside the view.
+  - The desktop dock closes after a sent line (the keys are the game's again); an empty dock input
+    closes on blur unless the focus went to its own emote / ping buttons. The phone sheet stays
+    open after a line; the chat button opens it without the keyboard (Enter on a hardware keyboard
+    focuses the input). Presence `menu` while the dock input or the sheet is open (`setMenu('chat')`).
+  - The own player's lines also get a bubble (over their own head). Ping lines get markers, not
+    bubbles; markers come only from live lines (a welcome's history shows none).
+  - The down card is the banner (`party.down` + "Watching Kari ‹ ›"); the hotbar and context bar are
+    dimmed (`data-room-down`). The turn pill is hidden while down. The banner sits above a narration
+    card (z-index), and is empty while reconnecting (the root's reconnect banner shows).
+  - `RoomLink` emits `chatError` (`chat_rate` / `chat_long`) → "Wait a moment" in the panel.
+    `RoomSession.follow(pid)` (a party chip while down).
+  - The pill shows "2 of 3 acted" while the turn waits, "Kari is deciding" once this player acted;
+    phones show "2/3" + bar in the strip instead (the pill slot is hidden there).
+- **Handle.** `__anyworld.room.bubbles()` (shown bubbles: `{ seat, text, kind: bubble | typing }`) and
+  `onScreen(seat)`.
+- **Tests.** Unit: `tests/client/party-view.test.ts`, `src/client/render/party.test.ts` (ring and
+  follow on `ActorLayer`), `tests/ui/input.test.ts` (room keys). e2e-mp: `e2e-mp/mates.ts` (scripted
+  teammates as bare `RoomClient`s through the dev proxy, `walkTo` / `walkAwayFrom` on BFS distances,
+  `act` that answers open choices first, a `room(page, fn, arg)` handle helper), `mp-chat.spec.ts`
+  (3 tests: desktop chat, dialogue + backpack, phone sheet / ticker / overlap with the keyboard up),
+  `mp-party.spec.ts` (2 tests: rings, tags, strip, pill, idle teammates, away / back, exit countdown;
+  spectator in a Hard room within the 90 s bound). Deviation: in the spectator test the page's player
+  gets up by itself (the teammates wait out `REVIVE_SELF_TURNS`) instead of a teammate walking over,
+  which keeps it deterministic; the help-revive rule is engine-tested.
+- **For D5.** `autoplay` on the handle is still to add. A player held in place (lassoed) has its moves
+  refused locally (no input sent): an autoplay bot must fall back to `wait`, as `mp-party` does.
 
 ## Constants
 

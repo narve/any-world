@@ -17,7 +17,9 @@
  * the latest state without animation). Click-to-travel is driven by the entries (the session sends
  * the next step when the last one resolved), and a key typed into a text field (chat) does not stop
  * it. The renderer and the exit marker follow `session.cameraState` (a down player watches a
- * teammate); the menus a player opens are reported as presence (`room.setMenu`).
+ * teammate; the renderer's actor views are re-flagged for it with `renderer.setFollow`, and
+ * `cameraChanged()` redraws after `[` / `]`); the menus a player opens are reported as presence
+ * (`room.setMenu`). The party and chat UI around the run is room/room-ui.ts (lazy).
  */
 import type { Dir, GameEvent, GameState, PlayerAction, Pos } from '../engine/types';
 import type { Renderer } from './render/index';
@@ -92,6 +94,8 @@ export class GameController {
   private syncing = false;
   /** room mode: the panels open now (presence) */
   private panels = new Set<string>();
+  /** room mode: the actor the renderer's views are flagged for (renderer.setFollow) */
+  private followActor: string | null = null;
 
   constructor(
     readonly session: GameSession,
@@ -114,6 +118,7 @@ export class GameController {
     renderer.setWorld(this.session.world);
     const cam = this.camera();
     renderer.setArea({ ...cam.area, seen: leadPlayer(cam).seen });
+    this.syncFollow(cam);
     this.session.setCameraStep(renderer.cameraStep);
     // mouse, pen and touch on the map: one input layer (ui/touch-input.ts)
     const pointer = attachMapInput(this.host.canvasHost, {
@@ -415,7 +420,9 @@ export class GameController {
         const batches = this.syncQueue.splice(0);
         // a backlog, or a hidden tab (no animation frames): the latest state at once, no animation
         const snap = batches.length > SYNC_BACKLOG || (typeof document !== 'undefined' && document.hidden);
-        const p = r.sync(this.camera(), snap ? [] : batches.flat());
+        const cam = this.camera();
+        this.syncFollow(cam);
+        const p = r.sync(cam, snap ? [] : batches.flat());
         if (snap) {
           r.skipAnimations();
           void p.catch((e) => console.warn('[anyworld] renderer sync failed:', e));
@@ -428,6 +435,26 @@ export class GameController {
     } finally {
       this.syncing = false;
     }
+  }
+
+  /**
+   * Room mode: the views of the camera's player follow `cameraState`'s lead (a down player watches a
+   * teammate, then comes back), re-flagged once per change (renderer.setFollow, feature-detected).
+   */
+  private syncFollow(cam: GameState): void {
+    const r = this.host.renderer;
+    if (!this.host.room || typeof r.setFollow !== 'function') return;
+    const id = leadPlayer(cam).actorId;
+    if (id === this.followActor) return;
+    this.followActor = id;
+    r.setFollow(id);
+  }
+
+  /** room mode: the camera's player changed without an entry (`[` / `]`, a party chip): redraw from it */
+  cameraChanged(): void {
+    if (this.disposed || !this.host.room) return;
+    this.render();
+    this.queueSync([]);
   }
 
   /** asks the NPC voice for the conversation turn the session is waiting on (never blocks play) */

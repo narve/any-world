@@ -46,6 +46,8 @@
  *   r.autoOverlays: boolean                            // default true; false = only setOverlayRects
  *   r.itemThumbnail(defId): string | null              // cached PNG data URL of the item's model
  *   r.onContextChange = (lost: boolean) => …           // WebGL context lost / restored (rebuilt in place)
+ *   r.setPartyColours(Map<actorId, colour>)            // MP3 rooms: players' rings in their seat colours
+ *   r.setFollow(actorId)                               // MP3 rooms: the camera's player (a spectator's teammate)
  *   attachTouchCamera(r, el)                           // pinch + twist gestures (see touch.ts)
  *
  * Coordinates: tile (x, y) is centred at world (x, 0, y); see coords.ts. Models: see models/index.ts.
@@ -148,6 +150,8 @@ export class Renderer {
   private cutKey = '';
   private focus = new THREE.Vector3();
   private playerId: string | null = null;
+  /** MP3: a room's ring colours by actor id (kept across worlds) */
+  private partyColours = new Map<string, string>();
   private modelLightReqs: ModelLightRequest[] = [];
   private raycaster = new THREE.Raycaster();
   private syncGen = 0;
@@ -253,6 +257,7 @@ export class Renderer {
     if (this.actors) this.scene.remove(this.actors.group);
     if (this.items) this.scene.remove(this.items.group);
     this.actors = new ActorLayer(world);
+    if (this.partyColours.size) this.actors.setPartyColours(this.partyColours);
     this.items = new ItemLayer(world);
     this.scene.add(this.actors.group, this.items.group);
     this.areaIndex = -1;
@@ -292,6 +297,27 @@ export class Renderer {
     this.rig.follow(this.focus, true);
     this.rig.settle();
     this.area.setFocus(p, this.rig.yawStep, true);
+  }
+
+  /**
+   * MP3 (rooms): the players' ring colours by actor id (their seat colours, the own player's
+   * included); recolours the existing rings. Single player never calls it.
+   */
+  setPartyColours(colours: ReadonlyMap<string, string>): void {
+    this.partyColours = new Map(colours);
+    this.actors?.setPartyColours(this.partyColours);
+  }
+
+  /**
+   * MP3 (rooms): the camera's player is now `actorId` (a down player watches a teammate, then comes
+   * back). The actor views are re-flagged at once (which one is always shown, has the full ring and
+   * the pulse); the next sync moves the camera with the new state's lead. Single player never calls it.
+   */
+  setFollow(actorId: string): void {
+    this.playerId = actorId;
+    this.actors?.setFollow(actorId);
+    this.probeDue = true;
+    this.seeThroughDue = true;
   }
 
   /** Freeze (true) or resume cosmetic motion: backdrop animation and liquid ripples. */

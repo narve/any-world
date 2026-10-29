@@ -185,6 +185,8 @@ export class ActorLayer {
   /** floor colour of the current area (for the automatic contrast lift) */
   groundColor: string | undefined;
   private outlineMats = new Map<string, THREE.MeshBasicMaterial>();
+  /** MP3: ring colours of a room's players by actor id (their seat colours), over the faction colour */
+  private partyColours = new Map<string, string>();
 
   constructor(world: WorldSpec) {
     this.world = world;
@@ -339,7 +341,7 @@ export class ActorLayer {
     const faction = faction0;
     // the faction ring is a status marker: fog and tone mapping must not darken it in dim areas; it
     // sits above floor decals (patches, liquids) so terrain never covers it
-    const ringMat = new THREE.MeshBasicMaterial({ color: col(FACTION_COLORS[faction]), transparent: true, opacity: isPlayer ? 1 : 0.72, depthWrite: false, fog: false, toneMapped: false });
+    const ringMat = new THREE.MeshBasicMaterial({ color: col(this.partyColours.get(a.id) ?? FACTION_COLORS[faction]), transparent: true, opacity: isPlayer ? 1 : 0.72, depthWrite: false, fog: false, toneMapped: false });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.045;
@@ -350,16 +352,8 @@ export class ActorLayer {
     disc.position.set(0, 0, -0.002); // ring-local: just below the ring
     ring.add(disc);
     root.add(ring);
-    let pulse: THREE.Mesh | undefined;
-    if (isPlayer) {
-      pulseGeo ??= new THREE.RingGeometry(0.42, 0.47, 40);
-      pulse = new THREE.Mesh(pulseGeo, new THREE.MeshBasicMaterial({ color: col(FACTION_COLORS.player), transparent: true, opacity: 0.5, depthWrite: false, fog: false, toneMapped: false }));
-      pulse.rotation.x = -Math.PI / 2;
-      pulse.position.y = 0.05;
-      pulse.renderOrder = 4;
-      pulse.name = 'player-pulse';
-      root.add(pulse);
-    }
+    const pulse = isPlayer ? this.makePulse(this.partyColours.get(a.id) ?? FACTION_COLORS.player) : undefined;
+    if (pulse) root.add(pulse);
 
     const height = natural * actorScaleFor(natural);
     const hp = new HpBar();
@@ -394,10 +388,63 @@ export class ActorLayer {
     return view;
   }
 
+  /** the player's expanding second ring */
+  private makePulse(colour: string): THREE.Mesh {
+    pulseGeo ??= new THREE.RingGeometry(0.42, 0.47, 40);
+    const pulse = new THREE.Mesh(pulseGeo, new THREE.MeshBasicMaterial({ color: col(colour), transparent: true, opacity: 0.5, depthWrite: false, fog: false, toneMapped: false }));
+    pulse.rotation.x = -Math.PI / 2;
+    pulse.position.y = 0.05;
+    pulse.renderOrder = 4;
+    pulse.name = 'player-pulse';
+    return pulse;
+  }
+
+  /** the ring colour of a view: its seat colour in a room, else its faction's */
+  ringColour(v: Pick<ActorView, 'id' | 'faction'>): string {
+    return this.partyColours.get(v.id) ?? FACTION_COLORS[v.faction];
+  }
+
+  /**
+   * MP3: a room's players by actor id → seat colour. Their existing rings (and the followed player's
+   * pulse) are recoloured at once and new views take the colour; actors not in the map keep their
+   * faction colour. Single player never calls this.
+   */
+  setPartyColours(colours: ReadonlyMap<string, string>): void {
+    this.partyColours = new Map(colours);
+    for (const v of this.views.values()) {
+      v.ringMat.color.set(this.ringColour(v));
+      if (v.pulse) (v.pulse.material as THREE.MeshBasicMaterial).color.set(this.partyColours.get(v.id) ?? FACTION_COLORS.player);
+    }
+  }
+
+  /**
+   * MP3: the camera now follows `actorId` (a room's spectator watches a teammate). Views were flagged
+   * as "the player" when made (always shown, full ring, pulse, see-through, ghosted when sneaking);
+   * this moves the flag to `actorId`'s view and clears it on every other one.
+   */
+  setFollow(actorId: string | null): void {
+    for (const v of this.views.values()) this.setPlayerFlag(v, v.id === actorId);
+  }
+
+  private setPlayerFlag(v: ActorView, on: boolean): void {
+    if (v.isPlayer === on) return;
+    v.isPlayer = on;
+    if (on && !v.pulse) {
+      v.pulse = this.makePulse(this.partyColours.get(v.id) ?? FACTION_COLORS.player);
+      v.root.add(v.pulse);
+    } else if (!on && v.pulse) {
+      v.root.remove(v.pulse);
+      (v.pulse.material as THREE.Material).dispose();
+      v.pulse = undefined;
+      v.ring.scale.set(1, 1, 1);
+    }
+    v.ringMat.opacity = (on ? 1 : 0.72) * v.opacity;
+  }
+
   setFaction(v: ActorView, f: Faction | 'ally'): void {
     if (v.faction === f) return;
     v.faction = f;
-    v.ringMat.color.set(FACTION_COLORS[f]);
+    v.ringMat.color.set(this.ringColour(v));
     const m = this.outlineMat(f, v.lowContrast);
     for (const o of v.outlines) if (!(o.material as THREE.Material).userData.fade) o.material = m;
   }

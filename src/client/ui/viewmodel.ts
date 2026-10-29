@@ -529,7 +529,11 @@ export type RoomIntent =
   | { type: 'options'; options: Partial<RoomOptionsView> }
   | { type: 'share' }
   | { type: 'leave' }
-  | { type: 'reload' };
+  | { type: 'reload' }
+  /** Enter / `/`: open the chat input (the phone's sheet) */
+  | { type: 'chat' }
+  /** `[` / `]`: watch the previous / next teammate while down */
+  | { type: 'follow'; dir: -1 | 1 };
 
 /** M4: the start screen's provider status line */
 export interface ProviderStatusView {

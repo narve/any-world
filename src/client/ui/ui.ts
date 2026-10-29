@@ -72,7 +72,35 @@ export interface GameUi {
   layoutMode(): LayoutMode;
   /** called after the layout or the panels' sizes may have changed (viewport insets) */
   onLayoutChange(cb: (() => void) | null): void;
+  /** MP3: where a room's party and chat UI (a lazy module) puts its elements */
+  roomSlots(): RoomSlots;
   destroy(): void;
+}
+
+/**
+ * MP3: empty hosts in the game layout for the room UI (room/room-ui.ts), so the party and chat
+ * code stays out of the start bundle. Everything in them is measured by panelRects (the phone's
+ * chat sheet too), so the camera insets and the map overlays keep clear of them.
+ */
+export interface RoomSlots {
+  /** the end of the status strip (party chips; phones: dots) */
+  strip: HTMLElement;
+  /** under the status strip (the turn pill, desktop) */
+  pill: HTMLElement;
+  /** the banner row (spectator, exit countdown) */
+  banner: HTMLElement;
+  /** the right column under the rules (the desktop chat panel) */
+  side: HTMLElement;
+  /** the start of the hotbar's tools row (the phone's chat button) */
+  tools: HTMLElement;
+  /** over the bottom of the game screen (the phone's chat sheet) */
+  sheet: HTMLElement;
+  /** the log panel (phones: a chat line over its ticker) */
+  log: HTMLElement;
+  /** the lobby screen's chat host (null until the lobby module has loaded) */
+  lobby: HTMLElement | null;
+  /** under the end screen's text (a room's chat after a run) */
+  end: HTMLElement;
 }
 
 export interface CreateUiOptions {
@@ -141,6 +169,7 @@ class UiRoot implements GameUi {
   private roomUiLoading = false;
   private roomBanner: HTMLElement;
   private roomBannerKey = '';
+  private slots_: Omit<RoomSlots, 'strip' | 'log' | 'lobby'>;
 
   private mapTools: HTMLElement;
   private gfxLost = false;
@@ -212,6 +241,16 @@ class UiRoot implements GameUi {
     this.end = new EndScreen(cb);
     this.settings = new SettingsDialog(cb);
     this.roomBanner = h('div', { class: 'aw-room-banner', role: 'status', hidden: true });
+    this.slots_ = {
+      pill: h('div', { class: 'aw-room-slot aw-slot-pill' }),
+      banner: h('div', { class: 'aw-room-slot aw-slot-banner' }),
+      side: h('div', { class: 'aw-room-slot aw-slot-side' }),
+      tools: h('span', { class: 'aw-room-slot aw-slot-tools' }),
+      sheet: h('div', { class: 'aw-room-slot aw-slot-sheet' }),
+      end: h('div', { class: 'aw-room-slot aw-slot-end' }),
+    };
+    this.hotbar.el.querySelector('.aw-hotbar-tools')?.prepend(this.slots_.tools);
+    this.end.el.append(this.slots_.end);
 
     this.modeBanner = h('div', { class: 'aw-mode-banner', role: 'status', hidden: true });
     this.busyEl = h('div', { class: 'aw-busy', role: 'status', hidden: true });
@@ -231,7 +270,7 @@ class UiRoot implements GameUi {
     this.onboard = new OnboardingCard((forever) => this.intent({ type: 'dismiss_onboarding', forever }));
     this.slotTip = new SlotTip(root);
     this.vignette = h('div', { class: 'aw-vignette', 'aria-hidden': 'true', hidden: true });
-    this.stripWrap = h('div', { class: 'aw-top-centre' }, this.hud.strip, this.goal.el, this.modeBanner, this.busyEl);
+    this.stripWrap = h('div', { class: 'aw-top-centre' }, this.hud.strip, this.slots_.pill, this.goal.el, this.modeBanner, this.busyEl, this.slots_.banner);
     this.rulesBadgeWrap = h('div', { class: 'aw-top-right' });
     this.toasts = h('div', { class: 'aw-toasts', 'aria-live': 'polite' });
     // camera buttons over the map edge (touch: a twist needs two hands, a button needs one thumb)
@@ -255,7 +294,7 @@ class UiRoot implements GameUi {
       this.vignette,
       h('div', { class: 'aw-top-left' }, this.hud.panel),
       this.stripWrap,
-      h('div', { class: 'aw-top-right-col' }, this.rulesBadgeWrap, this.rules.el),
+      h('div', { class: 'aw-top-right-col' }, this.rulesBadgeWrap, this.rules.el, this.slots_.side),
       h('div', { class: 'aw-bottom-left' }, this.log.el),
       h('div', { class: 'aw-bottom-centre' }, this.ctxBar.el, this.hotbar.el),
       this.mapTools,
@@ -266,6 +305,7 @@ class UiRoot implements GameUi {
       this.trade.el,
       this.levelUp.el,
       this.choice.el,
+      this.slots_.sheet,
       this.help.el,
       this.gfxEl,
     );
@@ -351,6 +391,7 @@ class UiRoot implements GameUi {
       () => this.vm?.game?.verbs ?? NO_VERBS,
       (cmd) => this.command(cmd),
       opts.keyboardTarget,
+      () => !!this.vm?.room,
     );
   }
 
@@ -623,7 +664,7 @@ class UiRoot implements GameUi {
   showTileTooltip(tile: TileTooltipView | null, at?: { x: number; y: number }, avoid?: { x: number; y: number } | null): void {
     if (!tile || !at) return this.tooltip.hideAt();
     this.tooltip.setSheet(isCompact(this.layoutValue));
-    this.tooltip.showAt(tileCard(tile), at.x, at.y, avoid);
+    this.tooltip.showAt(tileCard(tile, !!this.vm?.room), at.x, at.y, avoid);
   }
 
   placeDialogue(at: { speaker: { x: number; y: number } | null; player: { x: number; y: number } } | null): void {
@@ -663,8 +704,10 @@ class UiRoot implements GameUi {
         }
       }
     }
-    if (!this.mapTools.hidden) {
-      const rc = this.mapTools.getBoundingClientRect();
+    // (the room's chat sheet on phones sits over the map like the corner panels)
+    for (const el of [this.mapTools, ...Array.from(this.slots_.sheet.children)] as HTMLElement[]) {
+      if (el.hidden) continue;
+      const rc = el.getBoundingClientRect();
       if (rc.width > 0 && rc.height > 0) hud.push(rc);
     }
     return { log: this.log.el.getBoundingClientRect(), hud };
@@ -672,6 +715,10 @@ class UiRoot implements GameUi {
 
   hideTooltip(): void {
     this.tooltip.hideAt();
+  }
+
+  roomSlots(): RoomSlots {
+    return { ...this.slots_, strip: this.hud.party, log: this.log.el, lobby: this.lobby?.chatHost ?? null };
   }
 
   setGraphicsLost(lost: boolean): void {
@@ -950,6 +997,8 @@ class UiRoot implements GameUi {
   }
 
   private command(cmd: UiCommand): void {
+    // (a room's chat and spectator keys: never a turn, so also while the map is not drawn)
+    if (cmd.type === 'chat' || cmd.type === 'follow') return this.cb.onRoom?.(cmd.type === 'chat' ? { type: 'chat' } : { type: 'follow', dir: cmd.dir });
     // the map is not drawn: no turn may pass blind (settings stay reachable through the overlay)
     if (this.gfxLost) return;
     const layer = this.layer();

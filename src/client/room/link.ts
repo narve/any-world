@@ -63,7 +63,9 @@ export type LinkEvent =
   | { t: 'reload' }
   | { t: 'toast'; key: MessageKey; tone: 'info' | 'warn' }
   | { t: 'status'; status: RoomClientStatus }
-  | { t: 'chat'; line: ChatLine };
+  | { t: 'chat'; line: ChatLine }
+  /** the server refused a chat line, emote or ping (too fast, too long): the chat shows "Wait a moment" */
+  | { t: 'chatError'; code: 'chat_rate' | 'chat_long' };
 
 /** how long a reconnect may take before the banner offers "Leave room" (design constants) */
 export const RECONNECT_LEAVE_MS = 20_000;
@@ -255,6 +257,7 @@ export class RoomLink {
           this.chat.setTyping(m.seat, m.on, this.now());
           this.emit({ t: 'changed' });
         } else if (m.t === 'roster' || m.t === 'room') this.emit({ t: 'changed' });
+        else if (m.t === 'error' && (m.code === 'chat_rate' || m.code === 'chat_long')) this.emit({ t: 'chatError', code: m.code });
         else if (m.t === 'error' && NOT_ALLOWED.has(m.code)) {
           console.warn(`[anyworld] room refused an action (${m.code}): ${m.message}`);
           this.emit({ t: 'toast', key: 'room.notAllowed', tone: 'warn' });

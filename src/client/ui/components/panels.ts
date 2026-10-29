@@ -25,7 +25,7 @@ export class HelpOverlay {
   update(open: boolean, verbs: InputVerbs, ctx: UiContext, transitionName?: string, inRoom = false): void {
     if (!open) return this.modal.hide();
     if (!this.modal.show([verbs, ctx.vocab.conflict, transitionName, inRoom])) return;
-    const sections = keyHelp(verbs, ctx.vocab, transitionName);
+    const sections = keyHelp(verbs, ctx.vocab, transitionName, inRoom);
     setChildren(
       this.modal.card,
       h(

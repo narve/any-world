@@ -32,6 +32,8 @@ export class LobbyScreen {
   private rosterEl: HTMLElement;
   private optionsEl: HTMLElement;
   private actionsEl: HTMLElement;
+  /** where the room UI puts the chat panel (chat works in the lobby too) */
+  readonly chatHost: HTMLElement;
   private keys: Record<string, string> = {};
 
   constructor(private onRoom: (i: RoomIntent) => void) {
@@ -40,6 +42,7 @@ export class LobbyScreen {
     this.rosterEl = h('section', { class: 'aw-lobby-rosterbox', 'aria-labelledby': 'aw-lobby-players' });
     this.optionsEl = h('section', { class: 'aw-lobby-options', 'aria-labelledby': 'aw-lobby-options-title' });
     this.actionsEl = h('div', { class: 'aw-lobby-actions' });
+    this.chatHost = h('section', { class: 'aw-lobby-chat', 'aria-label': t('chat.history') });
     this.el = h(
       'main',
       { class: 'aw-screen aw-lobby', 'aria-label': t('room.title') },
@@ -47,7 +50,7 @@ export class LobbyScreen {
         'div',
         { class: 'aw-lobby-inner' },
         h('div', { class: 'aw-lobby-col' }, this.shareEl, this.worldEl, this.optionsEl),
-        h('div', { class: 'aw-lobby-col' }, this.rosterEl, h('p', { class: 'aw-lobby-gm aw-muted aw-small' }, icon(ICONS.alert), h('span', null, t('lobby.gmReadsChat'))), this.actionsEl),
+        h('div', { class: 'aw-lobby-col' }, this.rosterEl, h('p', { class: 'aw-lobby-gm aw-muted aw-small' }, icon(ICONS.alert), h('span', null, t('lobby.gmReadsChat'))), this.actionsEl, this.chatHost),
       ),
     );
   }

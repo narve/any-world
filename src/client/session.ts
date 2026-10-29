@@ -286,13 +286,16 @@ export class GameSession {
       tradeOpen: this.tradeOpen,
       rules: this.rules,
       legal,
-      interactHint: it && !it.door ? tr('ctx.interactHint', { name: it.name }) : null,
+      interactHint: it && !it.door ? tr(this.interactHintKey, { name: it.name }) : null,
       interact: it && !it.door ? { name: it.name } : null,
       onboarding: this.onboardingVisible() ? inWorldLanguage(this.world, () => onboardingView(this.world, this.worldId, this.state)) : null,
       ...(this.thumbs ? { thumbs: this.thumbs } : {}),
     });
     return { screen: 'game', theme, game, prefs: this.prefs, ...extra };
   }
+
+  /** the context bar's "use" hint (a room uses Shift+Enter: Enter is its chat) */
+  protected readonly interactHintKey: 'ctx.interactHint' | 'ctx.interactHintRoom' = 'ctx.interactHint';
 
   /** the client's own log lines merged into the engine log (GM and rule lines; a room adds its overlay) */
   protected clientLog(): LogMessage[] {

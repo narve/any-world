@@ -28,6 +28,7 @@ import { roomLink, type RoomsEndpoint } from './config';
 import { RoomsApi, type ApiResult } from './api';
 import { RECONNECT_LEAVE_MS, RoomLink, roomWorldEntry, type LinkEvent } from './link';
 import { RoomSession } from './room-session';
+import { RoomUi } from './room-ui';
 import { colourName, defaultProfile, loadProfile, saveProfile, saveSeat, seatCodes, seatToken, type PlayerColour, type Profile } from './profile';
 
 /** what the room flow needs of the App (main.ts) */
@@ -62,6 +63,10 @@ export interface RoomHandle {
   /** hashState of the replica */
   hash(): string | null;
   chat(): { seat: string; name: string; text: string }[];
+  /** the speech and typing bubbles shown over the map now */
+  bubbles(): { seat: string; text: string; kind: 'bubble' | 'typing' }[];
+  /** whether `seat`'s player is on screen (bubble) or not (the line goes to the chat column) */
+  onScreen(seat: string): boolean;
   roster(): { seat: string; name: string; colour: string; host: boolean; ready: boolean; pid: string | null; presence: string }[];
   session: RoomSession | null;
   link: RoomLink;
@@ -74,6 +79,8 @@ export class RoomFlow {
   private roomBusy: string | null = null;
   /** the room this page is in */
   link: RoomLink | null = null;
+  /** its party and chat UI */
+  private roomUi: RoomUi | null = null;
   /** the current run's session in the room, and the outcomes that came before its controller was ready */
   private roomSession: RoomSession | null = null;
   private roomDetach: (() => void) | null = null;
@@ -115,6 +122,8 @@ export class RoomFlow {
       state: () => c.state,
       hash: () => (c.state ? hashState(c.state) : null),
       chat: () => l.chat.lines.map((x) => ({ seat: x.seat, name: x.name, text: x.text })),
+      bubbles: () => this.roomUi?.bubbles() ?? [],
+      onScreen: (seat) => !!this.roomUi?.onScreen(seat),
       roster: () => c.roster.map((r) => ({ seat: r.seat, name: r.name, colour: r.colour, host: r.host, ready: r.ready, pid: r.pid, presence: r.presence })),
       session: this.roomSession,
       link: l,
@@ -211,6 +220,12 @@ export class RoomFlow {
         return;
       case 'reload':
         location.reload();
+        return;
+      case 'chat':
+        this.roomUi?.openChat();
+        return;
+      case 'follow':
+        this.roomUi?.follow(i.dir);
         return;
     }
   }
@@ -323,6 +338,7 @@ export class RoomFlow {
     this.roomBusy = t('room.joining', { code });
     const link = new RoomLink({ code, url: this.endpoint.ws, profile, token });
     this.link = link;
+    this.roomUi = new RoomUi(link, this.app.ui);
     link.on((e) => this.onLink(link, e));
     setAddress(`${location.pathname}?room=${encodeURIComponent(code)}`);
     this.app.render();
@@ -445,6 +461,7 @@ export class RoomFlow {
     await controller.start();
     if (this.roomSession !== session || this.app.controller !== controller) return;
     this.roomLive = session;
+    this.roomUi?.attachRun({ session, controller, renderer, canvasHost: this.app.canvasHost });
     // what arrived while the renderer loaded: the controller already started from the session's state
     const held = this.roomBuffered.splice(0);
     if (held.length) controller.applyRemote(held.reduce((a, b) => merge(a, b), emptyOutcome()));
@@ -452,6 +469,7 @@ export class RoomFlow {
   }
 
   private disposeRoomRun(): void {
+    this.roomUi?.detachRun();
     this.roomDetach?.();
     this.roomDetach = null;
     this.roomSession = null;
@@ -467,6 +485,8 @@ export class RoomFlow {
   closeRoom(): void {
     if (!this.link) return;
     this.disposeRoomRun();
+    this.roomUi?.dispose();
+    this.roomUi = null;
     this.link.dispose();
     this.link = null;
     this.lobbyPicking = false;

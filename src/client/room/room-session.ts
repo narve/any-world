@@ -134,6 +134,8 @@ export class RoomSession extends GameSession {
     return vm;
   }
 
+  protected override readonly interactHintKey = 'ctx.interactHintRoom' as const;
+
   protected override clientLog(): LogMessage[] {
     return this.overlay.merge(this.gmLog);
   }
@@ -428,6 +430,12 @@ export class RoomSession extends GameSession {
     if (!this.me.down || !standing.length) return this.followed;
     const i = this.followed ? standing.indexOf(this.followed) : -1;
     this.followed = standing[(((i + dir) % standing.length) + standing.length) % standing.length];
+    return this.followed;
+  }
+
+  /** a party chip tapped while down: watch that teammate (a standing one); returns who is followed */
+  follow(pid: PlayerId): PlayerId | null {
+    if (this.me.down && this.standingTeammates().includes(pid)) this.followed = pid;
     return this.followed;
   }
 

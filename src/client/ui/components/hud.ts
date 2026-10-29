@@ -8,11 +8,14 @@ import { t } from '../../i18n/index';
 export class Hud {
   readonly panel: HTMLElement;
   readonly strip: HTMLElement;
+  /** MP3: the room's party chips at the end of the strip (filled by the room UI, kept across updates) */
+  readonly party: HTMLElement;
   private key = '';
 
   constructor() {
     this.panel = h('section', { class: 'aw-panel aw-hud', 'aria-label': t('hud.character') });
     this.strip = h('div', { class: 'aw-strip', role: 'status', 'aria-live': 'off' });
+    this.party = h('span', { class: 'aw-strip-party' });
   }
 
   update(v: HudView, ctx: UiContext): void {
@@ -101,6 +104,7 @@ export class Hud {
       ),
       v.sneaking ? plainChip(t('hud.sneaking'), 'good', t('hud.sneakingTip')) : null,
       speed ? plainChip(speed, v.speed === 'fast' ? 'good' : 'danger') : null,
+      this.party,
     );
   }
 }
