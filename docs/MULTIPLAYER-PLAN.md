@@ -5,8 +5,8 @@ yet deployed: its exit check (HTTPS from a phone on 4G) is still open. MP1 (engi
 (2026-10-27): its exit checks are met, see [MP1.md](progress/MP1.md). MP2 (room server) is done
 (2026-10-28): its exit checks are met and verified by the MP2 gate, see [MP2.md](progress/MP2.md). MP3
 (multiplayer client) is done (2026-10-29): its exit check is met and verified by the MP3 gate, see
-[MP3.md](progress/MP3.md). MP4 (the game master for parties) is built (2026-10-29), see
-[MP4.md](progress/MP4.md); its review and gate are still to run; MP5 not started.
+[MP3.md](progress/MP3.md). MP4 (the game master for parties) is done (2026-10-29): its exit check is met and verified by the MP4
+gate, see [MP4.md](progress/MP4.md). MP5 not started.
 Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12 (sharing, multiplayer without waiting,
 chat). Hosts: the owner's Dell laptop runs the server, reached over WireGuard; for development and
 testing the server also runs on the owner's development laptop.
