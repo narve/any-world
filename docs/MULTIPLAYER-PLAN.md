@@ -5,7 +5,8 @@ yet deployed: its exit check (HTTPS from a phone on 4G) is still open. MP1 (engi
 (2026-10-27): its exit checks are met, see [MP1.md](progress/MP1.md). MP2 (room server) is done
 (2026-10-28): its exit checks are met and verified by the MP2 gate, see [MP2.md](progress/MP2.md). MP3
 (multiplayer client) is done (2026-10-29): its exit check is met and verified by the MP3 gate, see
-[MP3.md](progress/MP3.md); MP4–MP5 not started.
+[MP3.md](progress/MP3.md). MP4 (the game master for parties) is built (2026-10-29), see
+[MP4.md](progress/MP4.md); its review and gate are still to run; MP5 not started.
 Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12 (sharing, multiplayer without waiting,
 chat). Hosts: the owner's Dell laptop runs the server, reached over WireGuard; for development and
 testing the server also runs on the owner's development laptop.
@@ -130,7 +131,7 @@ Plan: design and test for 8; allow up to 12 as an option, tested with bots and a
 | MP4 | GM and dialogue for parties | **move the GM from the browser to the server**: today the request queue (`src/client/gm-director.ts`) runs in the client and may use the player's own key; in rooms it runs next to the room. GM context with all players and per-player hooks (low health); dialogue and trade per player without pausing others; party-aware world-generation prompt; recordings for demo rooms | GM checks still refuse fiat; demo rooms play without AI |
 | MP5 | Verify | review, playtest and fix rounds as in M5; latency playtest through the real exposure path; a short session with real people, judged on "was it fast, did we talk" | DoD table in `docs/progress/MP.md` |
 
-Order: MP4 next, then MP5. Deployment to the real server waits (owner, 2026-10-26): work and
+Order: MP4 is built (review and gate pending); MP5 next. Deployment to the real server waits (owner, 2026-10-26): work and
 tests run on the development laptop, and MP0's exit check is done when the Dell and the VPS are set up.
 MP1 ran as one workflow (design with critiques, sequential builders, review, fix, gate); MP2 and MP3
 had the same shape. Branch: `multi`.
@@ -267,4 +268,4 @@ Built in MP1 as proposed in its design, confirmed by the owner (2026-10-28):
 - Currency is one shared party purse (items stay personal).
 - XP is shared in full: every player gets each kill's XP; levels and perks stay per player.
 
-Open: none (2026-10-29). MP3 is built (exit check met); MP4 is next.
+Open: none (2026-10-29). MP4 is built; its review and gate are pending; MP5 is next.

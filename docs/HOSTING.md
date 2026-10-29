@@ -52,8 +52,9 @@ settings.
 
 ## 3. Access code
 
-With `ANYWORLD_HOST_CODE` set, the server makes every AI call (creating worlds, the game master, NPC
-voices) carry that code. Players enter it once in **Settings → Server access code**; it is kept in their
+With `ANYWORLD_HOST_CODE` set, the server makes every AI call from a browser (creating worlds, the
+single-player game master, NPC voices) carry that code. The game master of a multiplayer room runs on
+the server and needs no code (§7). Players enter it once in **Settings → Server access code**; it is kept in their
 browser. Without it, demo worlds still play and "Surprise me" picks one, so strangers who find the
 address cannot spend the API key. Wrong codes count against the per-IP rate limit
 (`LLM_RATE_PER_MIN`, `LLM_RATE_BURST`).
@@ -126,3 +127,31 @@ The server also runs the multiplayer rooms (WebSocket on `/api/ws`, HTTP on `/ap
 - **Trying a server with bots.** `npx tsx tools/room-bots.ts --url https://any-game.dv8.no --origin
   https://any.dv8.no --bots 4` creates a demo room and plays it with scripted clients (the engine
   version of the checkout must match the server's); `--room CODE` joins an existing room as guests.
+
+## 7. The rooms' game master (MP4)
+
+In a room the game master runs on the server, next to the room: the key stays on the server, and its
+answers enter the room's log like every other input, so every player sees the same thing. Single
+player is unchanged (the browser's own game master, with the server's provider or the player's key).
+
+- **Opt-in.** `ANYWORLD_GM_PRESET` turns it on: a preset with a key in the env file (`mistral`,
+  `anthropic`, `openai`, …). A key alone never does. Unset: demo rooms play their recorded lines and
+  other rooms the canned offline lines. `off`: every room plays canned lines.
+- **Every room**, also rooms made without the access code, gets the AI game master once it is on
+  (making a new AI world still needs the code). The provider key's spending limit is the safeguard.
+- **Model.** `ANYWORLD_GM_MODEL` sets the game master's model; by default it is the preset's cheap and
+  fast one (`mistral-small-latest`, `claude-haiku-5-5`, `gpt-5-mini`), separate from the model that
+  creates worlds (`<PRESET>_MODEL`, e.g. `MISTRAL_MODEL`; Mistral's default is `mistral-medium-latest`).
+- **Nobody waits.** An answer later than `ANYWORLD_GM_TIMEOUT_MS` (5000) is dropped, and the room's
+  canned lines answer instead. After 3 failed calls in a row a room uses its canned lines for 2 minutes.
+  At most `ANYWORLD_GM_CONCURRENCY` calls run at once (default twice `ANYWORLD_MAX_ROOMS`), at most
+  `ANYWORLD_GM_CALLS_PER_HOUR` (3000) in all and `ANYWORLD_GM_ROOM_CALLS_PER_HOUR` (400) per room.
+- **Chat.** The game master reads the room's chat (the lobby says so) and may answer a line; chat
+  lines are quoted to the model as data, and the same rule checks as in single player refuse anything
+  unfair or game-breaking.
+- **Logs.** One line per area with the calls, tokens and average latency (`gm area 1: 12 calls, …`),
+  plus `gm breaker open` / `closed` and dropped answers. `/api/health` reports `gm: "ai"` or
+  `"offline"`.
+- **Trying a key.** `npx tsx tools/gm-smoke.ts --preset mistral --calls 3 --env-file /etc/anyworld.env`
+  sends 3 small game-master requests for a test party and prints latency, tokens and what the checks
+  kept (at most 5 calls; it never prints the key).

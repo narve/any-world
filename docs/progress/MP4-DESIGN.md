@@ -697,6 +697,29 @@ gate).
   Mistral was not called. The voice has no breaker or log line of its own: its calls count in the
   area's `gm area` stats line and the hourly caps, and its errors log as `gm voice: …`.
 
+## G5 as built
+
+- **Exit check end to end** (`tests/server/mp4-exit.test.ts`): (1) a party of 3 on an uploaded world
+  whose mock GM answers every moment (and every repair) with fiat that obeys the hostile chat line, each
+  seat sending the line twice: the line is in the GM's requests, the obedient words arrive, but no `gm`
+  entry holds the goal item, a 999 amount, a goal write or anything the recheck refuses; chat answers are
+  words only; nobody is knocked down by the GM; lockstep; the files replay with 0 calls. Disabling
+  `gmActionProblems` makes it fail (checked by hand, not committed). (2) the real server process with
+  `ANYWORLD_GM_PRESET` unset and a fake `MISTRAL_API_KEY`: `/api/health.gm` `offline`, the demo room
+  `recorded`, the recording's intro as the first `gm` entry, two scripted clients on one hash, no GM
+  stats/voice/breaker log line. The mock party room, its restarts and the browser part stay in
+  rooms-gm.test.ts and mp-gm.spec.ts.
+- The room-GM test helpers (configs, lateClock, bots driving RoomSessions, quiet, expectLockstep,
+  gmChecks, OBEDIENT / HOSTILE_LINE, Forbidden) moved from rooms-gm.test.ts to
+  `tests/server/rooms-gm-helpers.ts`, unchanged.
+- **Mistral smoke**: 3 real calls with mistral-small-latest (plain JSON mode), all valid first time,
+  955–2457 ms, ~5.4k input tokens each, nothing refused by the recheck; the chat answer did not obey the
+  hostile line. Results in MP4.md.
+- Docs: `docs/progress/MP4.md` (modes table: demo rooms are `ai` with a provider, `recorded` without),
+  plan status, HOSTING.md §3 (room GM needs no access code) and new §7, `deploy/anyworld.env.example`
+  (commented GM lines, `MISTRAL_API_KEY`), `server/index.ts` header.
+- No product code changed in G5.
+
 ## Review notes
 
 Three critiques (rules, engine, risk) of the first draft; one line per point.
