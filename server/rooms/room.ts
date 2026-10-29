@@ -41,7 +41,7 @@ import { recheckGmActions, recheckOfferOption } from '../../src/gm/recheck';
 import { chatQuotes } from '../../src/gm/chat';
 import { voiceMoment } from '../../src/gm/voice';
 import type { DialogueLine } from '../../src/llm/prompts/dialogue';
-import { applyHelpCeiling, isHelpfulAction, isWordAction } from '../../src/llm/gm-checks';
+import { applyHelpCeiling, isHelpfulAction, isWordAction, threatensPlayer } from '../../src/llm/gm-checks';
 import { helpCeiling } from '../../src/llm/prompts/gm';
 import { worldKeyOf } from '../../src/llm/recording-keys';
 import { applyEntry, changedArea, type Applied } from '../../src/net/log';
@@ -322,6 +322,10 @@ export class Room {
     room.nextSeat = Math.max(f.nextSeat ?? 1, 1 + Math.max(0, ...seats.map((s) => Number(s.seat.slice(1)) || 0)));
     room.chat = [...f.chat, ...chat].slice(-LIMITS.chatHistory);
     room.nextChatId = 1 + Math.max(0, ...room.chat.map((c) => c.id));
+    // the chat bookkeeping is not stored: every restored line counts as seen (the GM may have answered
+    // it before the kill) and the room's chat throttle starts again at the restart, so nothing re-asks
+    if (room.chat.length) room.lastChatAnswerAt = Math.max(...room.chat.map((c) => c.at));
+    room.lastChatHookAt = now;
     room.stored = { snapshot: f.snapshot, hooks: f.hooks };
     if (f.snapshot) {
       let state = deserialize(pw.world, f.snapshot.state);
@@ -1257,7 +1261,7 @@ export class Room {
    * A GM answer becomes a gm entry (MP4 design §1.4), checked against the CURRENT state: dropped when
    * the room moved on (closed, not playing, another run or area) or the moment passed (wall clock);
    * a target no longer on the map keeps only words (for the lead); a target with a choice open loses
-   * offers and trades; a chat answer keeps only words; then the stale-fiat recheck and the help
+   * offers and trades; a chat answer keeps only words; a target who is down loses harm and threats; then the stale-fiat recheck and the help
    * ceiling against the tracker's count (two answers in flight both saw the same count). A no-op is
    * not appended.
    */
@@ -1276,6 +1280,8 @@ export class Room {
       pid = state.party[0]!;
     }
     if (a.hook.hook === 'chat') actions = actions.filter(isWordAction);
+    // the target may have gone down while the answer was in flight: no harm or threat lands on them
+    if (state.players[pid]?.down) actions = actions.filter((x) => !threatensPlayer(world, x));
     if (state.players[pid]?.pendingChoice) actions = actions.filter((x) => x.type !== 'offer_choice' && x.type !== 'trade');
     const re = recheckGmActions(world, state, actions, pid);
     if (re.dropped.length) this.log(`gm answer to ${a.hook.hook}: ${re.dropped.map((d) => `${d.type} (${d.reason})`).join(', ').slice(0, 300)} dropped by the recheck`);

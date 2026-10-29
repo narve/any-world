@@ -145,7 +145,12 @@ export function partyTargetProblem(world: WorldSpec, state: GameState, pid: stri
   if (!ps || !state.party.includes(pid) || !state.area.actors.some((a) => a.id === ps.actorId)) {
     return `player: "${pid}" is not a party member on the map (ids: ${state.party.join(', ')}); omit "player" for the moment's player`;
   }
-  if (ps.down && actions.some((a) => threatensPlayer(world, a))) return `player: "${pid}" is down; never aim harm or a threat at a member who is down`;
+  return downTargetProblem(world, state, pid, actions);
+}
+
+/** the down half of partyTargetProblem: harm or a threat aimed at a member who is down (also the moment's own player) */
+export function downTargetProblem(world: WorldSpec, state: GameState, pid: string, actions: readonly GmAction[]): string | null {
+  if (state.players[pid]?.down && actions.some((a) => threatensPlayer(world, a))) return `player: "${pid}" is down; never aim harm or a threat at a member who is down`;
   return null;
 }
 
@@ -234,14 +239,17 @@ export class LlmGmDirector implements GmDirector {
     // party mode: the reply's target (v.player ?? focus), checked against the party, and every check
     // on that member's perspective; a bad target leaves only words (a repair turn may fix it)
     const targetOf = (v: { player?: string }): PlayerId => (v.player === undefined ? focus : v.player);
+    // the focus is a member too: a low_hp moment on a member who went down must not aim harm at them
+    const targetProblem = (pid: PlayerId, actions: readonly GmAction[]): string | null =>
+      pid === focus ? downTargetProblem(world, state, pid, actions) : partyTargetProblem(world, state, pid, actions);
     const checksFor = (v: RoomGmResponse): string[] => {
       const pid = targetOf(v);
-      const problem = pid === focus ? null : partyTargetProblem(world, state, pid, v.actions);
+      const problem = targetProblem(pid, v.actions);
       return problem ? [problem] : gmResponseErrors(world, perspective(state, pid), { actions: v.actions }, req.hook);
     };
     const keepFor = (v: RoomGmResponse): PartyGmResponse => {
       const pid = targetOf(v);
-      if (pid !== focus && partyTargetProblem(world, state, pid, v.actions)) {
+      if (targetProblem(pid, v.actions)) {
         return { actions: keepValidActions(world, state, v.actions.filter(isWordAction), req.hook) };
       }
       const kept = keepValidActions(world, perspective(state, pid), v.actions, req.hook);

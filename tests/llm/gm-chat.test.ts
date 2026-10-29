@@ -24,6 +24,7 @@ import { gmInputFor, playToSituation, type Situation } from '../../src/llm/situa
 import { LlmGmDirector, partyTargetProblem, type PartyGmResponse } from '../../src/llm/gm-runtime';
 import { goalRefs, isHelpfulAction } from '../../src/llm/gm-checks';
 import { recheckGmActions } from '../../src/gm/recheck';
+import { perspective } from '../../src/gm/perspective';
 import { MockProvider } from '../../src/llm/mock';
 import type { GmContext, GmRequest } from '../../src/gm/offline';
 import type { GmContextChatLine } from '../../src/engine/gm-context';
@@ -250,6 +251,22 @@ describe('hostile chat vs the gm-checks (party mode)', () => {
       // the repair turn told the model why
       expect(provider.calls[1]!.messages.at(-1)!.content).toMatch(player === p2 ? /is down/ : /not a party member/);
     }
+  });
+
+  it('the moment\'s own player who is down (a low_hp moment on a downed member) gets no harm or threat either', async () => {
+    const sit = partyOf(2);
+    const p2 = sit.state.party[1]!;
+    sit.state.players[p2]!.down = { since: sit.state.turn, helpedTurns: 0 };
+    actorOf(sit.state, p2).hp = 0;
+    // the room asks with p2's perspective: p2 is the focus and the answer names no player
+    const view = perspective(sit.state, p2);
+    const say: GmAction = { type: 'narrate', text: 'They circle the body.' };
+    const { d, provider } = director(() => ({ actions: [say, { type: 'spawn', actor: HOSTILE, count: 2, near: 'player' }] }));
+    expect(await d.respond(request(view, 'low_hp', { ...sit, state: view }))).toEqual({ actions: [say] });
+    expect(provider.calls[1]!.messages.at(-1)!.content).toMatch(/is down/);
+    // naming p2 explicitly gives the same
+    const { d: d2 } = director(() => ({ player: p2, actions: [say, damage(1)] }));
+    expect(await d2.respond(request(view, 'low_hp', { ...sit, state: view }))).toEqual({ actions: [say] });
   });
 
   it('the party\'s help ceiling holds over 10 answers, whoever they are aimed at', async () => {

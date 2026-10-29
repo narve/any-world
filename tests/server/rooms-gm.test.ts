@@ -21,7 +21,8 @@ import { createGame, hashState } from '../../src/engine';
 import type { GameState, PlayerId } from '../../src/engine/types';
 import type { GmAction } from '../../src/schema/gm';
 import { RoomSession } from '../../src/client/room/room-session';
-import { PLAYER_COLOURS, type LogEntry } from '../../src/net/protocol';
+import { PLAYER_COLOURS, type ChatLine, type LogEntry } from '../../src/net/protocol';
+import { chatQuotes } from '../../src/gm/chat';
 import { MockProvider, type MockProviderOptions } from '../../src/llm/mock';
 import type { CompletionRequest, CompletionResponse, LLMProvider } from '../../src/llm/types';
 import { goalWriteProblem, isWordAction } from '../../src/llm/gm-checks';
@@ -310,6 +311,31 @@ describe('drops, staleness, the pool, the breaker and the caps (manual clock)', 
     for (const c of clients) expect(hashState(c.state!)).toBe(hashState(h.room.state!));
   });
 
+  it('a target who went down while the answer was in flight gets no harm or threat (words and help still land)', async () => {
+    h = new MemRoom({ seed: 5, gm: aiConfig(new Forbidden()) });
+    const clients = [h.client('Ann', { host: true }), h.client('Bo')];
+    await h.join(...clients);
+    clients[0]!.start();
+    await h.flush();
+    await quiet(h);
+    const room = h.room as unknown as { gmAnswer(a: GmAnswer): void };
+    const st = h.room.state!;
+    const hurt: GmAction = { type: 'effect', target: 'player', effects: [{ type: 'damage', amount: { base: 1 }, damageType: 'physical' }] };
+    const answer: GmAnswer = { run: 1, area: st.area.index, askedAt: h.sch.now(), hook: { hook: 'low_hp', area: st.area.index, turn: st.turn }, pid: 'p1', response: { player: 'p2', actions: [narrate('A rat bites.'), hurt] }, source: 'test' };
+    const n0 = h.room.n;
+    // p2 goes down on the server only for this check (the entry it makes holds no down-dependent action)
+    st.players.p2!.down = { since: st.turn, helpedTurns: 0 };
+    room.gmAnswer(answer);
+    delete h.room.state!.players.p2!.down; // (the entry's new state carried it over)
+    const es = h.room.recentEntries().slice(n0);
+    expect(es.map((e) => (e.k === 'gm' ? [e.hook, e.pid, e.actions] : e.k))).toEqual([['low_hp', 'p2', [narrate('A rat bites.')]]]);
+    // the same answer on a p2 who is up keeps the damage
+    room.gmAnswer({ ...answer, response: { player: 'p2', actions: [hurt] } });
+    expect(h.room.recentEntries().slice(n0 + 1).map((e) => e.k === 'gm' && e.actions)).toEqual([[hurt]]);
+    await h.advance(100);
+    for (const c of clients) expect(hashState(c.state!)).toBe(hashState(h.room.state!));
+  });
+
   it('the push-time help ceiling holds when two answers in flight both saw the same count, and survives a restart', async () => {
     const dir = tempDir();
     h = new MemRoom({ seed: 5, gm: aiConfig(new Forbidden()), dir, options: { difficulty: 'hard' } });
@@ -334,6 +360,29 @@ describe('drops, staleness, the pool, the breaker and the caps (manual clock)', 
     const back = m2.get(h.code)!;
     expect(helpOf(back)).toEqual(helpOf(h.room));
     expect(hashState(back.state!)).toBe(hashState(h.room.state!));
+    m2.closeAll('idle');
+  });
+
+  it('after a restart the restored chat counts as seen and the room\'s chat throttle starts again', async () => {
+    const dir = tempDir();
+    h = new MemRoom({ seed: 5, gm: aiConfig(new Forbidden()), dir });
+    const clients = [h.client('Ann', { host: true }), h.client('Bo')];
+    await h.join(...clients);
+    clients[0]!.start();
+    await h.flush();
+    await quiet(h);
+    for (let i = 0; i < 4; i++) {
+      clients[i % 2]!.say(`line ${i}`);
+      await h.advance(3000);
+    }
+    const sch = new ManualScheduler(h.sch.now() + 1000);
+    const m2 = new RoomManager({ dir, engineVersion: ENGINE, scheduler: sch, log: () => {}, gm: aiConfig(new Forbidden()) });
+    m2.load();
+    const back = m2.get(h.code)! as unknown as { chat: ChatLine[]; lastChatAnswerAt: number | undefined; lastChatHookAt: number };
+    expect(back.chat.length).toBeGreaterThan(0);
+    expect(back.chat).toEqual(h.room.chat);
+    expect(chatQuotes(back.chat, sch.now(), back.lastChatAnswerAt).filter((q) => q.new)).toEqual([]);
+    expect(back.lastChatHookAt).toBe(sch.now());
     m2.closeAll('idle');
   });
 
