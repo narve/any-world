@@ -270,6 +270,7 @@ export class RoomLink {
         }
         // (an input or a ping that crossed the end of the run on the wire: nothing the player did wrong)
         else if (m.t === 'error' && m.code === 'bad_phase' && this.client.phase !== 'playing') console.info(`[anyworld] room: ${m.code} ${m.message}`);
+        else if (m.t === 'error' && m.code === 'offer_gone') this.emit({ t: 'toast', key: 'room.offerGone', tone: 'warn' });
         else if (m.t === 'error' && NOT_ALLOWED.has(m.code)) {
           console.warn(`[anyworld] room refused an action (${m.code}): ${m.message}`);
           this.emit({ t: 'toast', key: 'room.notAllowed', tone: 'warn' });

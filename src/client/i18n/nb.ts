@@ -975,6 +975,7 @@ const nb = {
   'room.otherTab': 'Du åpnet rommet i en annen fane, så denne forlot det.',
   'room.worldMismatch': 'Siden klarte ikke å laste verdenen til rommet. Last inn siden på nytt og prøv igjen.',
   'room.notAllowed': 'Det går ikke akkurat nå.',
+  'room.offerGone': 'Det tilbudet er ikke lenger gyldig.',
   'room.leaveRun': 'Forlat rommet',
   'room.leaveRunHint': 'Du forlater laget og får ingen figur i neste runde.',
   'room.joining': 'Blir med i rom {code} …',

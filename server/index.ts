@@ -15,6 +15,11 @@
  * ANYWORLD_TEST_TIMING (JSON of RoomTiming durations for the child-process tests; ignored in production),
  * ANYWORLD_TEST_SEED (the first run seed; each later run takes the next one) and ANYWORLD_TEST_LIMITS
  * (JSON of RoomLimits, plus maxRooms) for the browser specs (MP3; both ignored in production).
+ * The rooms' game master (MP4, server/gm-config.ts): ANYWORLD_GM_PRESET (opt-in: a configured preset such as
+ * mistral or anthropic, or off; unset = no AI GM: demo rooms play recorded lines, other rooms the offline
+ * director), ANYWORLD_GM_MODEL (default the preset's cheap gmModel), ANYWORLD_GM_TIMEOUT_MS (5000),
+ * ANYWORLD_GM_CONCURRENCY (ANYWORLD_MAX_ROOMS x 2), ANYWORLD_GM_CALLS_PER_HOUR (3000),
+ * ANYWORLD_GM_ROOM_CALLS_PER_HOUR (400), ANYWORLD_TEST_GM (a JSON file of scripted answers; ignored in production).
  * Prints `[server] listening <port>` once the port is bound (tests read it); SIGTERM/SIGINT snapshot
  * every room and send `bye` before exiting.
  */

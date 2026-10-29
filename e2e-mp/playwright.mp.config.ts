@@ -51,6 +51,8 @@ export default defineConfig({
       ANYWORLD_TEST_TIMING: JSON.stringify(MP_TIMING),
       ANYWORLD_TEST_SEED: String(MP_SEED),
       ANYWORLD_TEST_LIMITS: JSON.stringify(MP_LIMITS),
+      // the room specs keep MP2's offline GM entries (never a provider from the developer's environment)
+      ANYWORLD_GM_PRESET: 'off',
     },
   },
 });

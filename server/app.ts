@@ -2,7 +2,8 @@
  * AnyWorld backend: plain node:http, no framework.
  *   POST /api/llm      {preset, model?, request} -> {response}  (keys come from the server env)
  *   GET  /api/presets  which presets this server can serve (never keys)
- *   GET  /api/health  {ok, uptimeS, configured, engine} (engine: the engine version rooms check, MP2)
+ *   GET  /api/health  {ok, uptimeS, configured, engine, gm?} (engine: the engine version rooms check, MP2;
+ *                     gm: 'ai' | 'offline', whether the rooms have an AI GM, MP4)
  *   rooms (MP2, only when AppOptions.rooms is given): GET /api/rooms, GET /api/rooms/:code,
  *   POST /api/rooms, POST /api/rooms/:code/world, and the WebSocket upgrade on /api/ws (rooms/ws.ts)
  *   everything else    dist/client static files with SPA fallback (when staticDir is set)
@@ -39,6 +40,7 @@ import type { RoomTiming, Scheduler } from './rooms/timing';
 import type { DemoWorlds } from './rooms/worlds';
 import { roomLimits, type RoomLimits } from './rooms/limits';
 import { attachRoomSockets, type RoomSockets } from './rooms/ws';
+import { gmConfigFor, type GmConfig } from './gm-config';
 
 export interface AppOptions {
   /** environment to read keys/config from; default process.env */
@@ -94,6 +96,8 @@ export interface RoomsOptions {
   demos?: DemoWorlds;
   /** run seeds (tests; main() and dev.ts read ANYWORLD_TEST_SEED outside production) */
   seed?: () => number;
+  /** the rooms' game master; default gmConfigFor(env) (ANYWORLD_GM_PRESET, gm-config.ts) */
+  gm?: GmConfig;
 }
 
 /** the header that carries the host access code */
@@ -433,13 +437,18 @@ export function createApp(opts: AppOptions = {}): App {
   if (opts.rooms) {
     // throws when the directory cannot be made or written: main() reports it and exits
     const dir = ensureDataDir(opts.rooms.dataDir);
+    const maxRooms = opts.rooms.maxRooms ?? envInt(env.ANYWORLD_MAX_ROOMS, 1);
+    // the GM's model is its own setting (a cheap, fast one), apart from world generation's
+    const gm = opts.rooms.gm ?? gmConfigFor(env, { maxRooms: maxRooms ?? LIMITS.maxRooms, providerFor, isConfigured, log });
+    if (gm.setting !== 'off') log(`[gm] rooms: ${gm.provider ? `AI GM ${gm.label}` : 'no GM provider (demo rooms play recorded lines, others the offline director)'}`);
     manager = new RoomManager({
       dir,
       engineVersion,
       timing: opts.rooms.timing,
       scheduler: opts.rooms.scheduler,
       demos: opts.rooms.demos,
-      maxRooms: opts.rooms.maxRooms ?? envInt(env.ANYWORLD_MAX_ROOMS, 1),
+      maxRooms,
+      gm,
       ...(opts.rooms.seed ? { seed: opts.rooms.seed } : {}),
       log,
     });
@@ -602,7 +611,7 @@ export function createApp(opts: AppOptions = {}): App {
         }
         if (path === '/api/health') {
           if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET' });
-          return sendJson(res, 200, { ok: true, uptimeS: Math.round(process.uptime()), configured: configuredPresets(), engine: engineVersion });
+          return sendJson(res, 200, { ok: true, uptimeS: Math.round(process.uptime()), configured: configuredPresets(), engine: engineVersion, ...(rooms ? { gm: rooms.gm.capability } : {}) });
         }
         if (path === '/api/presets') {
           if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET' });

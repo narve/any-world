@@ -50,6 +50,13 @@ export interface GmRunnerOptions {
   coalesce?: (a: GmHookEvent, b: GmHookEvent) => boolean;
   /** true when a request is too old to ask any more; checked when it is dequeued (default: never) */
   dropStale?: (hook: GmHookEvent, askedAt: number) => boolean;
+  /**
+   * A slot to run a dequeued request in (rooms: the server-wide GmPool); resolves with its release,
+   * or null when `signal` aborted while waiting. The request keeps its place as the running one, so
+   * newer hooks wait (and coalesce) in the queue; the timeout starts once the slot is held, and
+   * `dropStale` is checked again after the wait. Default: no gate.
+   */
+  acquire?: (signal: AbortSignal) => Promise<(() => void) | null>;
 }
 
 interface Queued {
@@ -164,12 +171,19 @@ export class GmRunner {
     }
     const ctrl = new AbortController();
     this.running = { q, ctrl };
+    let release: (() => void) | null = null;
     try {
+      if (this.opts.acquire) {
+        release = await this.opts.acquire(ctrl.signal);
+        // (waited for a slot: the area may have changed or the moment passed meanwhile)
+        if (!release || ctrl.signal.aborted || this.disposed || q.epoch !== this.epoch || stale?.(q.hook, q.at)) return;
+      }
       const res = await this.ask(q, ctrl);
       if (res && !this.disposed && q.epoch === this.epoch && !ctrl.signal.aborted) {
         this.opts.onResult({ request: { ...q.hook, id: q.id }, response: res.response, source: res.source, askedAt: q.at });
       }
     } finally {
+      release?.();
       this.running = null;
       if (this.queue.length) void this.pump();
       else this.flushIdle();
@@ -184,7 +198,9 @@ export class GmRunner {
         const r = await this.withTimeout(d, q, ctrl);
         if (ctrl.signal.aborted || q.epoch !== this.epoch) return null;
         const clean = sanitizeResponse(r);
-        if (clean) return { response: clean, source: d.name };
+        // (a room answer's target, PartyGmResponse.player, survives the clean-up; single player never has one)
+        const player = (r as { player?: unknown } | null)?.player;
+        if (clean) return { response: typeof player === 'string' ? ({ ...clean, player } as GmResponse) : clean, source: d.name };
         if (r === null) return null; // "nothing to add" is an answer, not a failure
       } catch (err) {
         if (ctrl.signal.aborted && !(err instanceof TimeoutError)) return null;

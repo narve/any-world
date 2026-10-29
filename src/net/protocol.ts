@@ -201,6 +201,8 @@ export const RoomInfo = z.object({
   maxPlayers: z.number().int().min(1).max(MAX_PARTY_SIZE),
   phase: Phase,
   joinable: z.boolean(),
+  /** the room's game master (MP4): the AI GM (reads the chat), recorded lines (a demo world without a provider) or the offline director */
+  gm: z.enum(['ai', 'recorded', 'offline']).optional(),
 });
 export type RoomInfo = z.infer<typeof RoomInfo>;
 
@@ -299,7 +301,8 @@ export type InputMsg = Extract<ClientMsg, { t: 'input' }>;
 // Server → client
 // ---------------------------------------------------------------------------
 
-export const ErrorCode = z.enum(['rate', 'invalid', 'not_host', 'chat_rate', 'chat_long', 'bad_phase', 'stale']);
+/** offer_gone (MP4): a chosen GM offer option the room's recheck would trim ("that offer has passed"; another option still works) */
+export const ErrorCode = z.enum(['rate', 'invalid', 'not_host', 'chat_rate', 'chat_long', 'bad_phase', 'stale', 'offer_gone']);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 /** a refused hello; the socket is then closed with REFUSED_CLOSE[code] */
 export const RefusedCode = z.enum(['outdated', 'no_room', 'room_full', 'room_closed', 'bad_token', 'server_full']);

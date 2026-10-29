@@ -5,6 +5,7 @@
  * argument (main() computes it once; tests pass their own).
  */
 import { randomInt } from 'node:crypto';
+import { resolve } from 'node:path';
 import type { WorldSpec } from '../../src/schema/world';
 import { unregisterWorld, worldIdOf } from '../../src/engine/index';
 import { LIMITS, REFUSED_CLOSE, type ClosedReason, type Hello, type Refused, type RoomInfo, type RoomOptions } from '../../src/net/protocol';
@@ -12,6 +13,9 @@ import { refused, Room, type Conn, type RoomDeps, type RoomWorld } from './room'
 import { RoomStore, type Tombstone } from './store';
 import { DEFAULT_TIMING, RealScheduler, roomTiming, type RoomTiming, type Scheduler, type TimerId } from './timing';
 import { DemoWorlds } from './worlds';
+import { GmServer } from './gm';
+import { offGmConfig, type GmConfig } from '../gm-config';
+import { REPO_ROOT } from '../engine-version';
 
 /** room code characters (Code in protocol.ts: no 0, 1, I or O) */
 const CODE_CHARS = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -26,6 +30,10 @@ export interface ManagerOptions {
   /** open rooms at most (default LIMITS.maxRooms; createApp passes env ANYWORLD_MAX_ROOMS) */
   maxRooms?: number;
   log?: (line: string) => void;
+  /** the rooms' game master (gm-config.ts); default: every room offline (MP2) */
+  gm?: GmConfig;
+  /** demo recordings for 'recorded' rooms (default content/recordings) */
+  recordingsDir?: string;
   /** seeds, tokens and room codes (tests) */
   seed?: () => number;
   token?: () => string;
@@ -66,6 +74,7 @@ export class RoomManager {
   readonly store: RoomStore;
   readonly demos: DemoWorlds;
   readonly maxRooms: number;
+  readonly gm: GmServer;
   private readonly rooms = new Map<string, Room>();
   private tombs: Record<string, Tombstone> = {};
   private sweepTimer: TimerId | null = null;
@@ -79,6 +88,8 @@ export class RoomManager {
     this.demos = opts.demos ?? new DemoWorlds();
     this.maxRooms = opts.maxRooms ?? LIMITS.maxRooms;
     this.logFn = opts.log ?? console.log;
+    const scheduler = this.scheduler;
+    this.gm = new GmServer(opts.gm ?? offGmConfig(this.maxRooms), () => scheduler.now(), opts.recordingsDir ?? resolve(REPO_ROOT, 'content/recordings'));
   }
 
   private deps(): RoomDeps {
@@ -87,6 +98,7 @@ export class RoomManager {
       scheduler: this.scheduler,
       store: this.store,
       demos: this.demos,
+      gm: this.gm,
       log: this.logFn,
       onClose: (room, reason) => this.onClosed(room, reason),
       releaseWorld: (id) => this.releaseWorld(id),

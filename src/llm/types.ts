@@ -51,6 +51,8 @@ export interface ProviderPreset {
   kind: 'anthropic' | 'openai-compatible';
   baseUrl: string;
   defaultModel: string;
+  /** the room server's GM model (cheap and fast; one of `models`), MP4 design §6 */
+  gmModel?: string;
   models?: string[];
   structuredOutput: 'json_schema' | 'json_object' | 'none';
   /** endpoint allows browser CORS calls */

@@ -38,7 +38,8 @@ export async function boot(
   const s = await startServer({
     port: 0,
     host: '127.0.0.1',
-    env: {},
+    // (the GM off: the room tests keep MP2's offline entries; tests/server/rooms-gm.test.ts turns it on)
+    env: { ANYWORLD_GM_PRESET: 'off' },
     recordings: [],
     log: (l) => logs.push(l),
     engineVersion: ENGINE,
@@ -199,11 +200,13 @@ export function spawnTs(args: string[], env: NodeJS.ProcessEnv): ChildProcess {
 /**
  * The server entry point as a child process (server/index.ts, PORT=0 unless given), resolved once
  * it prints `listening <port>`; rejects with the exit code when it exits first. NODE_ENV,
- * STATE_DIRECTORY and ALLOWED_ORIGINS are removed from the environment it gets. `onSpawn` receives
+ * STATE_DIRECTORY and ALLOWED_ORIGINS are removed from the environment it gets, and ANYWORLD_GM_PRESET is
+ * off unless `env` sets it. `onSpawn` receives
  * the process at once, so a test can kill it by PID in afterEach even when the start fails.
  */
 export function spawnServer(env: Record<string, string>, onSpawn: (p: ChildProcess) => void): Promise<Spawned> {
-  const env2: Record<string, string | undefined> = { ...process.env, PORT: '0', HOST: '127.0.0.1', ...env };
+  // (the GM off unless the test asks for it: never a real provider from the developer's environment)
+  const env2: Record<string, string | undefined> = { ...process.env, PORT: '0', HOST: '127.0.0.1', ANYWORLD_GM_PRESET: 'off', ...env };
   delete env2.NODE_ENV;
   delete env2.STATE_DIRECTORY;
   delete env2.ALLOWED_ORIGINS;

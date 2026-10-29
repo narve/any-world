@@ -827,6 +827,7 @@ const en = {
   'room.otherTab': 'You opened this room in another tab, so this one left it.',
   'room.worldMismatch': 'This page could not load the room’s world. Reload the page and try again.',
   'room.notAllowed': 'That is not possible right now.',
+  'room.offerGone': 'That offer has passed.',
   'room.leaveRun': 'Leave room',
   'room.leaveRunHint': 'You leave the party; you get no character in the next run.',
   'room.joining': 'Joining room {code}…',

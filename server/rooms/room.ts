@@ -1,7 +1,12 @@
 /**
  * One room (MP2 design §3–§6): seats and roster, phases (lobby → playing → ended → play again),
  * the engine state moved only by log entries (src/net/log.ts applyEntry), the turn clock
- * (clock.ts), chat, typing, canned GM entries, hash checks and the 2-minute rule.
+ * (clock.ts), chat, typing, GM entries, hash checks and the 2-minute rule.
+ *
+ * The game master (MP4 design §1): a RoomGm per run (gm.ts) answers each moment for one target
+ * player, synchronously ('offline' as MP2, 'recorded' for a demo world without a provider) or later
+ * ('ai'); every answer is checked again against the current state (Room.gmAnswer) and becomes a gm
+ * entry, so clients and a restart replay apply it like any other entry and nothing ever re-asks.
  *
  * Transport-agnostic: a connection is a `Conn` (send a ServerMsg, close with a code); the socket
  * layer (ws.ts) parses frames and calls hello / message / disconnect. Time comes from an injected
@@ -28,7 +33,13 @@ import { FREE_ACTIONS } from '../../src/engine/party';
 import type { GameState, PlayerAction, PlayerId, TurnInput, TurnOutcome } from '../../src/engine/types';
 import { parseWorld } from '../../src/schema';
 import type { WorldSpec } from '../../src/schema/world';
-import { cloneTracker, gmHooksFor, newHookTracker, OfflineGmDirector, sanitizeResponse, type GmHookEvent, type GmTranslate, type HookTracker, type OfflineGmKey } from '../../src/gm/offline';
+import { cloneTracker, gmHooksFor, newHookTracker, OfflineGmDirector, sanitizeResponse, type GmContext, type GmHookEvent, type GmTranslate, type HookTracker, type OfflineGmKey } from '../../src/gm/offline';
+import { perspective } from '../../src/gm/perspective';
+import { recheckGmActions, recheckOfferOption } from '../../src/gm/recheck';
+import { chatQuotes } from '../../src/gm/chat';
+import { applyHelpCeiling, isHelpfulAction, isWordAction } from '../../src/llm/gm-checks';
+import { helpCeiling } from '../../src/llm/prompts/gm';
+import { worldKeyOf } from '../../src/llm/recording-keys';
 import { applyEntry, changedArea, type Applied } from '../../src/net/log';
 import {
   cleanChat,
@@ -63,6 +74,7 @@ import { nextResolve, type ClockDecision, type ClockView, type PendingInput } fr
 import type { RoomTiming, Scheduler, TimerId } from './timing';
 import { linesToReplay, type LoadedRoom, type LogLine, type RoomFile, type RoomStore, type SeatRecord, type WorldFile } from './store';
 import type { DemoWorlds } from './worlds';
+import { addressesGm, gmAnswerStale, roomGmMode, RoomGm, type GmAnswer, type GmServer, type RoomGmMode } from './gm';
 
 /** rooms create their runs with this exit countdown (≈ 10 s at countdownTurnMs; a constant, not derived from the timing) */
 export const EXIT_COUNTDOWN_TURNS = 10;
@@ -80,6 +92,13 @@ export const DESYNC_SNAPSHOT_MS = 5000;
 export const ILLEGAL_LOG_PER_MIN = 20;
 /** the GM's weirdness in rooms (the offline director does not read it) */
 const ROOM_WEIRDNESS = 0.5;
+/** the chat hook (MP4 design §3.2): at most one per room this often */
+export const CHAT_HOOK_ROOM_MS = 20_000;
+/** a seat addressing the GM fires the chat hook at most this often */
+export const CHAT_ADDRESS_SEAT_MS = 60_000;
+/** or this many new lines since the GM's last chat answer, and this long since the last chat hook */
+export const CHAT_HOOK_LINES = 4;
+export const CHAT_HOOK_QUIET_MS = 60_000;
 
 /** one connection as the room sees it */
 export interface Conn {
@@ -104,6 +123,8 @@ export interface RoomDeps {
   onClose?: (room: Room, reason: ClosedReason) => void;
   /** a world the room no longer plays (the manager unregisters an upload nobody else uses) */
   releaseWorld?: (worldId: string) => void;
+  /** the GM pieces every room shares (gm.ts); absent: every room offline */
+  gm?: GmServer;
   /** run seeds and seat tokens (default: node:crypto) */
   seed?: () => number;
   token?: () => string;
@@ -134,6 +155,8 @@ interface Seat {
   /** the lobby's ready toggle (MP3; reset when a run starts) */
   ready: boolean;
   lastChatAt: number;
+  /** the last chat line of this seat that addressed the GM and fired the chat hook */
+  lastGmCallAt: number;
   lastDesyncAt: number;
   /** the roster presence last shown, and since when */
   shown: SeatPresence | null;
@@ -197,6 +220,16 @@ export class Room {
   private hashes = new Map<number, string>();
   private tracker: HookTracker = newHookTracker();
   private director: OfflineGmDirector;
+  /** this run's game master (null in the lobby and before a loaded room's run has one) */
+  private gm: RoomGm | null = null;
+  /** party-wide moments go to the member least recently targeted (pid → sequence number) */
+  private targeted = new Map<PlayerId, number>();
+  private targetSeq = 0;
+  /** wall-clock time of the GM's last answer to a chat hook, and of the last chat hook */
+  private lastChatAnswerAt: number | undefined = undefined;
+  private lastChatHookAt = -Infinity;
+  /** set while askGm runs: a synchronous answer is pushed in its caller's guard */
+  private askingGm = false;
   chat: ChatLine[] = [];
   private nextChatId = 1;
   private seats: Seat[] = [];
@@ -291,11 +324,14 @@ export class Room {
         const e = LogEntrySchema.parse(raw);
         const r = applyEntry(pw.world, state, e);
         if (e.k === 'turn') gmHooksFor(pw.world, state, r.state, r.events, room.tracker);
+        const prev = state;
         state = r.state;
-        room.record(e, state);
+        room.record(e, prev, state);
       }
       room.state = state;
       if (room.phase === 'playing' && state.status !== 'playing') room.phase = 'ended';
+      // (the director is never asked while loading: a request in flight at the kill is simply lost)
+      if (room.phase === 'playing') room.gm = room.makeGm();
     } else if (room.phase !== 'lobby') {
       throw new Error(`phase ${room.phase} without a snapshot`);
     }
@@ -331,13 +367,16 @@ export class Room {
       typingBusy: false,
       ready: false,
       lastChatAt: -Infinity,
+      lastGmCallAt: -Infinity,
       lastDesyncAt: -Infinity,
       shown: null,
       since: now,
     };
   }
 
-  private record(e: LogEntry, state: GameState): void {
+  /** an applied entry: n, the ring, the hash cadence and the GM's help count (on the state before a gm entry, §1.5) */
+  private record(e: LogEntry, before: GameState, state: GameState): void {
+    if (e.k === 'gm') this.countHelp(e, before);
     this.n = e.n + 1;
     this.ring.push(e);
     if (this.ring.length > RING_SIZE) this.ring.shift();
@@ -410,6 +449,7 @@ export class Room {
       typingBusy: false,
       ready: false,
       lastChatAt: -Infinity,
+      lastGmCallAt: -Infinity,
       lastDesyncAt: -Infinity,
       shown: null,
       since: now,
@@ -777,6 +817,29 @@ export class Room {
     if (this.chat.length > LIMITS.chatHistory) this.chat.shift();
     this.append({ chat: line });
     this.broadcast({ t: 'chat', line });
+    if (!body.ping && body.text) this.chatHook(s, body.text, now);
+  }
+
+  /**
+   * The chat hook (MP4 design §3.2, AI rooms only; wall clock, never replayed: only its answer is):
+   * a line that addresses the GM (at most once per seat a minute), or CHAT_HOOK_LINES new lines since
+   * the GM's last chat answer and a quiet minute; never more than one per CHAT_HOOK_ROOM_MS, while a
+   * chat request is queued, or during the area-entry hold.
+   */
+  private chatHook(s: Seat, text: string, now: number): void {
+    const gm = this.gm;
+    const state = this.state;
+    if (!gm || this.phase !== 'playing' || !state || state.status !== 'playing' || this.hold) return;
+    if (now - this.lastChatHookAt < CHAT_HOOK_ROOM_MS || gm.pendingHooks().some((h) => h.hook === 'chat')) return;
+    if (gm.current() !== 'ai') return;
+    const addressed = now - s.lastGmCallAt >= CHAT_ADDRESS_SEAT_MS && addressesGm(text, this.world.world.gm.persona);
+    if (!addressed) {
+      const fresh = chatQuotes(this.chat, now, this.lastChatAnswerAt).filter((q) => q.new).length;
+      if (fresh < CHAT_HOOK_LINES || now - this.lastChatHookAt < CHAT_HOOK_QUIET_MS) return;
+    } else s.lastGmCallAt = now;
+    this.lastChatHookAt = now;
+    const subject = addressed && this.onMap(s.pid) ? s.pid : null;
+    this.askGm([{ hook: 'chat', area: state.area.index, turn: state.turn, ...(subject ? { detail: { playerId: subject } } : {}) }]);
   }
 
   private checkHash(s: Seat, n: number, h: string): void {
@@ -846,6 +909,12 @@ export class Room {
     });
     this.state = state;
     this.tracker = newHookTracker(state.turn);
+    this.targeted.clear();
+    this.lastChatAnswerAt = undefined;
+    this.lastChatHookAt = -Infinity;
+    // the old run's GM is gone (its late answers too); the intro is asked on the new one
+    this.gm?.dispose();
+    this.gm = this.makeGm();
     this.phase = 'playing';
     this.lastResolveAt = now;
     this.hashes.set(0, hashState(state));
@@ -984,7 +1053,7 @@ export class Room {
     const r = applyEntry(this.world.world, before, e);
     if (r.state === before) return null;
     this.state = r.state;
-    this.record(e, r.state);
+    this.record(e, before, r.state);
     this.append({ e });
     this.broadcast({ t: 'entries', run: this.run, es: [e] });
     if (e.k === 'turn') this.countIllegal(r.outcomes);
@@ -1010,6 +1079,9 @@ export class Room {
   private pushTurn(inputs: TurnInput[], advance: boolean, tellRefusals: boolean): boolean {
     const before = this.state;
     if (!before) return false;
+    const asked = inputs.length;
+    inputs = this.refusePassedOffers(before, inputs);
+    if (asked && !inputs.length && !advance) return false;
     const r = this.push({ k: 'turn', inputs, advance });
     if (r) return true;
     if (tellRefusals && inputs.some((i) => i.actions?.length)) {
@@ -1025,25 +1097,184 @@ export class Room {
     return false;
   }
 
-  /** the canned GM answers each moment; a non-empty answer becomes a gm entry */
+  /**
+   * A chosen GM offer option was checked when the offer was made but runs now (MP4 design §1.4):
+   * when the recheck on the exact state this turn applies to would trim it, the choice (and what the
+   * input sent after it) is refused with `offer_gone`; the player can still pick another option.
+   */
+  private refusePassedOffers(state: GameState, inputs: TurnInput[]): TurnInput[] {
+    return inputs.flatMap((inp) => {
+      const pc = state.players[inp.playerId]?.pendingChoice;
+      const i = pc?.kind === 'gm_offer' && inp.actions ? inp.actions.findIndex((a) => a.type === 'choose_option') : -1;
+      if (i < 0) return [inp];
+      const a = inp.actions![i] as Extract<PlayerAction, { type: 'choose_option' }>;
+      if (!recheckOfferOption(this.world.world, state, a.index, inp.playerId).dropped.length) return [inp];
+      const seat = this.seats.find((x) => x.pid === inp.playerId);
+      if (seat) this.error(seat, 'offer_gone', 'that offer has passed');
+      const actions = inp.actions!.slice(0, i);
+      const { actions: _all, ...rest } = inp;
+      if (!actions.length) return rest.busy !== undefined ? [rest] : [];
+      return [{ ...rest, actions }];
+    });
+  }
+
+  /** the room's GM for a new run (or a loaded one) */
+  private makeGm(): RoomGm {
+    const w = this.world;
+    const demo = 'demo' in w.source ? w.source.demo : null;
+    return new RoomGm({
+      mode: roomGmMode(this.deps.gm?.config, w.source),
+      server: this.deps.gm ?? null,
+      room: this.code,
+      run: this.run,
+      world: w.world,
+      demo,
+      worldKey: demo ?? worldKeyOf(w.world),
+      // the count lives in the tracker (updated per gm entry); the push-time check is the real guard
+      ledger: { get: (s) => this.helpUsed(s), add: () => {} },
+      scheduler: this.deps.scheduler,
+      offline: this.director,
+      onAnswer: (a) => (this.askingGm ? this.gmAnswer(a) : this.guard(() => (this.gmAnswer(a), this.evaluate()), undefined)),
+      log: (l) => this.log(l),
+    });
+  }
+
+  /** this run's GM mode now ('ai' rooms on their fallback while the breaker is open or a cap reached) */
+  gmMode(): RoomGmMode {
+    return this.gm?.current() ?? roomGmMode(this.deps.gm?.config, this.world.source);
+  }
+
+  /** resolves when the room's GM has nothing queued or in flight (tests) */
+  gmIdle(): Promise<void> {
+    return this.gm?.idle() ?? Promise.resolve();
+  }
+
+  /** helpful GM actions so far in `state`'s area (the tracker's count, §1.5) */
+  private helpUsed(state: GameState): number {
+    const h = this.tracker.help;
+    return h && h.area === state.area.index ? h.used : 0;
+  }
+
+  /** a gm entry's helpful actions, judged on the state before it from its target's perspective */
+  private countHelp(e: Extract<LogEntry, { k: 'gm' }>, before: GameState): void {
+    const area = before.area.index;
+    const pid = e.pid !== undefined && before.party.includes(e.pid) ? e.pid : before.party[0];
+    const view = pid ? perspective(before, pid) : before;
+    const n = e.actions.filter((a) => isHelpfulAction(this.world.world, a, view)).length;
+    const h = this.tracker.help;
+    if (!n && (!h || h.area === area)) return;
+    this.tracker.help = { area, used: (h && h.area === area ? h.used : 0) + n };
+  }
+
+  /**
+   * Each moment is answered for one target player (MP4 design §1.4): offline exactly as MP2 (the
+   * lead, no pid); otherwise the target is picked first and the context is built from its perspective
+   * (with the chat in AI rooms); 'recorded' answers at once, 'ai' later (Room.gmAnswer).
+   */
   private askGm(hooks: GmHookEvent[]): void {
     for (const h of hooks) {
       const state = this.state;
       if (!state || state.status !== 'playing') return;
-      const res = this.director.respondSync({
-        ...h,
-        ctx: { world: this.world.world, state, difficulty: state.difficulty ?? this.options.difficulty, weirdness: ROOM_WEIRDNESS, recentLog: state.log.slice(-12), areaEnteredTurn: this.tracker.areaEnteredTurn },
-      });
-      const clean = res ? sanitizeResponse(res) : null;
-      if (!clean) continue;
-      const body = { k: 'gm' as const, hook: h.hook, actions: clean.actions };
-      // (clients validate entries with the same schema: an entry they would drop is never sent)
-      if (!LogEntrySchema.safeParse({ ...body, n: 0, run: 0 }).success) {
-        this.log(`gm answer to ${h.hook} dropped (does not match the protocol)`);
+      const mode = this.gm ? this.gm.current() : 'offline';
+      if (mode === 'offline') {
+        this.askOffline(h, state);
         continue;
       }
-      this.push(body);
+      // (the run has ended: the end screen has the world's endings)
+      if (h.hook === 'death' || h.hook === 'victory') continue;
+      const pid = this.targetFor(h, state);
+      const ctx = this.gmContext(state, pid, mode === 'ai');
+      this.askingGm = true;
+      try {
+        this.gm!.ask(h, pid, ctx, mode);
+      } finally {
+        this.askingGm = false;
+      }
     }
+  }
+
+  /** MP2's canned GM: the offline director for the lead; a non-empty answer becomes a gm entry */
+  private askOffline(h: GmHookEvent, state: GameState): void {
+    const res = this.director.respondSync({
+      ...h,
+      ctx: { world: this.world.world, state, difficulty: state.difficulty ?? this.options.difficulty, weirdness: ROOM_WEIRDNESS, recentLog: state.log.slice(-12), areaEnteredTurn: this.tracker.areaEnteredTurn },
+    });
+    const clean = res ? sanitizeResponse(res) : null;
+    if (!clean) return;
+    const body = { k: 'gm' as const, hook: h.hook, actions: clean.actions };
+    // (clients validate entries with the same schema: an entry they would drop is never sent)
+    if (!LogEntrySchema.safeParse({ ...body, n: 0, run: 0 }).success) {
+      this.log(`gm answer to ${h.hook} dropped (does not match the protocol)`);
+      return;
+    }
+    this.push(body);
+  }
+
+  /**
+   * The player a moment is for: its subject when on the map; else (party-wide moments) the member
+   * least recently targeted who is on the map and not down, preferring one without an open choice
+   * (an offer or a trade for a member with a choice open would be refused); else the lead.
+   */
+  private targetFor(h: GmHookEvent, state: GameState): PlayerId {
+    const subject = h.detail?.playerId;
+    let pid: PlayerId | undefined = subject !== undefined && state.party.includes(subject) ? subject : undefined;
+    if (!pid) {
+      const cands = state.party.filter((id) => !state.players[id]?.down && !state.players[id]?.left);
+      const busy = (id: PlayerId) => (state.players[id]?.pendingChoice ? 1 : 0);
+      cands.sort((a, b) => busy(a) - busy(b) || (this.targeted.get(a) ?? 0) - (this.targeted.get(b) ?? 0));
+      pid = cands[0] ?? state.party[0]!;
+    }
+    this.targeted.set(pid, ++this.targetSeq);
+    return pid;
+  }
+
+  /** the GM's context for `pid`: the state from its perspective (a snapshot), the recent log and, for the AI GM, the chat */
+  private gmContext(state: GameState, pid: PlayerId, withChat: boolean): GmContext {
+    const chat = withChat ? chatQuotes(this.chat, this.deps.scheduler.now(), this.lastChatAnswerAt) : [];
+    return {
+      world: this.world.world,
+      state: perspective(state, pid),
+      difficulty: state.difficulty ?? this.options.difficulty,
+      weirdness: ROOM_WEIRDNESS,
+      recentLog: state.log.slice(-12),
+      areaEnteredTurn: this.tracker.areaEnteredTurn,
+      ...(chat.length ? { chat } : {}),
+    };
+  }
+
+  /**
+   * A GM answer becomes a gm entry (MP4 design §1.4), checked against the CURRENT state: dropped when
+   * the room moved on (closed, not playing, another run or area) or the moment passed (wall clock);
+   * a target no longer on the map keeps only words (for the lead); a target with a choice open loses
+   * offers and trades; a chat answer keeps only words; then the stale-fiat recheck and the help
+   * ceiling against the tracker's count (two answers in flight both saw the same count). A no-op is
+   * not appended.
+   */
+  private gmAnswer(a: GmAnswer): void {
+    const state = this.state;
+    const now = this.deps.scheduler.now();
+    if (this.closed || this.phase !== 'playing' || !state || state.status !== 'playing') return;
+    if (a.run !== this.run || a.area !== state.area.index) return this.log(`gm answer to ${a.hook.hook} dropped (asked in run ${a.run} area ${a.area})`);
+    if (gmAnswerStale(a.hook.hook, a.askedAt, now)) return this.log(`gm answer to ${a.hook.hook} dropped (${Math.round((now - a.askedAt) / 1000)} s old)`);
+    if (a.hook.hook === 'chat') this.lastChatAnswerAt = now;
+    const world = this.world.world;
+    let pid = a.response.player ?? a.pid;
+    let actions = a.response.actions;
+    if (!state.party.includes(pid)) {
+      actions = actions.filter(isWordAction);
+      pid = state.party[0]!;
+    }
+    if (a.hook.hook === 'chat') actions = actions.filter(isWordAction);
+    if (state.players[pid]?.pendingChoice) actions = actions.filter((x) => x.type !== 'offer_choice' && x.type !== 'trade');
+    const re = recheckGmActions(world, state, actions, pid);
+    if (re.dropped.length) this.log(`gm answer to ${a.hook.hook}: ${re.dropped.map((d) => `${d.type} (${d.reason})`).join(', ').slice(0, 300)} dropped by the recheck`);
+    const ceiling = helpCeiling(state.difficulty ?? this.options.difficulty, state.area.partySize ?? 1);
+    const capped = applyHelpCeiling(world, re.actions, Math.max(0, ceiling - this.helpUsed(state)), perspective(state, pid));
+    const clean = sanitizeResponse({ actions: capped.actions });
+    if (!clean) return;
+    const body = { k: 'gm' as const, hook: a.hook.hook, pid, actions: clean.actions };
+    if (!LogEntrySchema.safeParse({ ...body, n: 0, run: 0 }).success) return this.log(`gm answer to ${a.hook.hook} dropped (does not match the protocol)`);
+    this.push(body);
   }
 
   /** after an entry: run end, area change (snapshot, hold, pending cleared), snapshot cadence */
@@ -1051,6 +1282,7 @@ export class Room {
     const now = this.deps.scheduler.now();
     if (after.status !== 'playing' && this.phase === 'playing') {
       this.phase = 'ended';
+      this.gm?.cancelAll();
       this.pending.clear();
       this.firstAt = null;
       this.hold = null;
@@ -1059,6 +1291,8 @@ export class Room {
       return;
     }
     if (changedArea(before, after)) {
+      // (before the new area's area_enter is asked: push asks after settle)
+      this.gm?.cancelAll();
       this.pending.clear();
       this.firstAt = null;
       const waitFor = new Set(this.connected().map((s) => s.id));
@@ -1287,6 +1521,7 @@ export class Room {
       maxPlayers: this.options.maxPlayers,
       phase: this.phase,
       joinable: !this.closed && this.seats.length < this.options.maxPlayers,
+      gm: this.phase === 'playing' && rw === this.world ? this.gmMode() : roomGmMode(this.deps.gm?.config, rw.source),
     };
   }
 
@@ -1355,6 +1590,7 @@ export class Room {
     this.closed = true;
     this.deps.scheduler.cancel(this.timer);
     this.timer = null;
+    this.gm?.dispose();
     for (const s of this.seats) {
       if (!s.conn) continue;
       safeSend(s.conn, { t: 'closed', reason, message });
@@ -1371,6 +1607,7 @@ export class Room {
     if (this.closed) return;
     this.deps.scheduler.cancel(this.timer);
     this.timer = null;
+    this.gm?.dispose();
     try {
       if (this.state) this.snapshot();
       else this.persistRoom(false);

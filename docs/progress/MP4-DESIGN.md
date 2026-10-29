@@ -562,6 +562,68 @@ gate).
   down/unknown targets, party ceiling over 10 answers, room-of-one request equality). Frozen hashes
   unchanged. Also fixed a G1 test type error (`mood` action in `tests/llm/gm-shared.test.ts`).
 
+## G3 as built
+
+- **Config** (`server/gm-config.ts`): `gmConfigFor(env, { maxRooms, providerFor, isConfigured, log })` →
+  `GmConfig { setting: 'unset' | 'off' | 'ai', provider, label, timeoutMs, deadlineMs, concurrency,
+  callsPerHour, roomCallsPerHour }`. Opt-in by `ANYWORLD_GM_PRESET` (never `mock`; unknown or unconfigured
+  presets log a line and give no provider); `gmModelFor` = `ANYWORLD_GM_MODEL`, preset `gmModel`,
+  `<PRESET>_MODEL`, `defaultModel`. Defaults 5000 / 4000 ms, `maxRooms × 2`, 3000 / 400 per hour (also
+  `ANYWORLD_GM_ROOM_CALLS_PER_HOUR`, not in §6). `ANYWORLD_TEST_GM` (outside production; `off` still
+  wins) scripts a MockProvider. `offGmConfig()` is the RoomManager's default, so every in-process room
+  test without a `gm` option stays MP2. `createApp` builds it from env (`RoomsOptions.gm` overrides);
+  `/api/health.gm` is `'ai' | 'offline'` (only when rooms run). `ProviderPreset.gmModel`: anthropic
+  `claude-haiku-5-5`, openai `gpt-5-mini`, mistral `mistral-small-latest`. Mistral: `json_object`,
+  default `mistral-medium-latest` (tests in `tests/server/gm-config.test.ts`).
+- **`server/rooms/gm.ts`**: `roomGmMode(config, source)` (the §1.2 table), `GmPool` (FIFO, aborted
+  waiters skipped), `GmBudget` (fixed hour windows on the scheduler's clock, server-wide and per room
+  code), `GmServer` (pool, budget, demo recordings read synchronously from
+  `content/recordings/<demo>/`, cached; `capability`), `RoomGm` (one per run), `addressesGm` /
+  `personaName`, `gmAnswerStale` (`GM_STALE_MS`: low_hp, region_discovered, boss_seen 15 s; chat 20 s).
+  `RoomGm.current()` gives the mode a moment is answered in now ('ai' falls back to 'recorded' for a demo,
+  else 'offline', while the breaker is open or a cap is reached; one log line each way).
+  `ask(hook, pid, ctx, mode)`: 'ai' queues in a `GmRunner` over a tracked `LlmGmDirector` (`party: true`,
+  `maxTokens` 700, retries 1, the room's timers); 'recorded' calls `onAnswer` synchronously. The provider
+  is wrapped (`MeteredProvider`) to charge the budget per call and count tokens and latency (one log line
+  per area with calls).
+- **Runner** (`src/gm/runner.ts`): new option `acquire(signal)` (the pool slot is taken after dequeue,
+  before the timeout starts; `dropStale` is checked again after the wait). The runner now keeps a
+  response's `player` field through `sanitizeResponse` (it was silently dropped, so a gift for p2 landed
+  on the focus); single player never has one.
+- **Room** (`server/rooms/room.ts`): `askGm` asks the offline director exactly as MP2 (lead, no pid) when
+  the mode is 'offline'; otherwise `targetFor` (subject on the map, else least recently targeted standing
+  member, members without an open choice first) and `gmContext` (perspective; chat only for 'ai').
+  `death`/`victory` are not asked outside offline. `gmAnswer` (private; tests call it directly) drops on
+  closed / not playing / run / area / wall-clock staleness (logged), words only for a target off the map
+  (for the lead) and for `chat`, strips offers and trades when the target has a choice open, then
+  `recheckGmActions` and `applyHelpCeiling` against `tracker.help` and pushes `{ k: 'gm', hook, pid,
+  actions }`. Async answers run in `guard` + `evaluate`. `settle` calls `gm.cancelAll()` on an area change
+  and on the run end (before `area_enter` is asked); `newRun` disposes the old RoomGm and makes the new one
+  before the intro; `Room.load` makes one for a playing room and never asks. `HookTracker.help?: { area,
+  used }` (optional, rooms only), counted in `record(e, before, after)` (push and the load loop) with
+  `isHelpfulAction` on `perspective(before, pid)`. `refusePassedOffers` in `pushTurn` (all modes): a
+  `choose_option` on an open `gm_offer` whose `recheckOfferOption` drops anything is removed with error
+  `offer_gone` (new `ErrorCode`; the client toasts `room.offerGone`). Chat hook from `addLine` ('ai' only)
+  with the §3.2 gates (`CHAT_HOOK_ROOM_MS` 20 s, `CHAT_ADDRESS_SEAT_MS` 60 s, `CHAT_HOOK_LINES` 4 +
+  `CHAT_HOOK_QUIET_MS` 60 s, not during the hold, not while a chat request is pending); an addressed
+  line's subject is the speaker. `RoomInfo.gm` (optional in the protocol), `room.gmMode()`,
+  `room.gmIdle()`.
+- Tests stay offline: `boot()` passes `ANYWORLD_GM_PRESET: 'off'`, `spawnServer` sets it unless the test
+  does, and the e2e-mp `webServer` env sets it. `MemRoom` (tests/client/room-harness.ts) takes `gm`,
+  `world` (an upload) and `dir`.
+- `tools/gm-smoke.ts --preset mistral --model mistral-small-latest --calls 3 --env-file .env` (≤ 5 calls;
+  `--preset mock` tries the tool offline). Not run against a real provider in G3.
+- Tests: `tests/server/rooms-gm.test.ts` (party of 4 on an upload with seeded latency/failures, a slow
+  call that ignores its signal, hostile chat from three seats; demo world on the mock; restart with a
+  provider that throws: same hash, n and help count, 0 calls; child-process SIGKILL with `ANYWORLD_TEST_GM`;
+  demo without a provider = recording's intro synchronously; off party of one = fnv of the entries taken
+  with the MP3 room code (worktree of 2e9f5f7); cancelAll before area_enter; intro on the new run;
+  gmAnswer drops; push-time ceiling and its restart; dequeue staleness and pool waiting; breaker and
+  caps; offer refusal; addressesGm; the mode table) and `tests/server/gm-config.test.ts`.
+- For G4: the client does not show `chat` answers specially yet, and the lobby does not read
+  `RoomInfo.gm`; RoomGm has no `voice` yet. `room.gmIdle()` only resolves when the manual clock moves
+  (use a loop like `quiet()` in rooms-gm.test.ts).
+
 ## Review notes
 
 Three critiques (rules, engine, risk) of the first draft; one line per point.

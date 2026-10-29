@@ -14,6 +14,8 @@ import { ManualScheduler, type RoomTiming } from '../../server/rooms/timing';
 import { RoomClient, type RoomSocket, type SocketFactory } from '../../src/net/client';
 import { parseClientMsg, PLAYER_COLOURS, type ClientMsg, type RoomOptions, type ServerMsg } from '../../src/net/protocol';
 import type { GameState } from '../../src/engine/types';
+import type { WorldSpec } from '../../src/schema/world';
+import type { GmConfig } from '../../server/gm-config';
 
 export const ENGINE = 'v-test';
 
@@ -97,6 +99,12 @@ class MemPipe {
 
 export interface MemRoomOptions {
   demo?: string;
+  /** an uploaded world instead of a demo */
+  world?: WorldSpec;
+  /** the rooms' game master (default: every room offline) */
+  gm?: GmConfig;
+  /** the data directory (a restart test loads a second manager from it); default a temp dir removed by dispose */
+  dir?: string;
   /** the first run's seed (each later run takes the next) */
   seed?: number;
   timing?: Partial<RoomTiming>;
@@ -110,12 +118,14 @@ export class MemRoom {
   /** the creator's (host) seat token */
   readonly hostToken: string;
   readonly logs: string[] = [];
-  private readonly dir: string;
+  readonly dir: string;
+  private readonly ownDir: boolean;
   private inflight = 0;
   private pipes = new Map<RoomClient, MemPipe[]>();
 
   constructor(o: MemRoomOptions = {}) {
-    this.dir = mkdtempSync(join(tmpdir(), 'anyworld-memroom-'));
+    this.ownDir = !o.dir;
+    this.dir = o.dir ?? mkdtempSync(join(tmpdir(), 'anyworld-memroom-'));
     let seed = (o.seed ?? 7) - 1;
     this.manager = new RoomManager({
       dir: this.dir,
@@ -124,8 +134,9 @@ export class MemRoom {
       timing: { ...TEST_TIMING, ...o.timing },
       log: (l) => this.logs.push(l),
       seed: () => ++seed,
+      ...(o.gm ? { gm: o.gm } : {}),
     });
-    const created = this.manager.create({ demo: o.demo ?? 'fixture-western', options: o.options ?? {} });
+    const created = this.manager.create({ ...(o.world ? { world: o.world } : { demo: o.demo ?? 'fixture-western' }), options: o.options ?? {} });
     if (!created.ok) throw new Error(created.error);
     this.code = created.code;
     this.hostToken = created.token;
@@ -232,6 +243,6 @@ export class MemRoom {
   dispose(): void {
     for (const c of this.pipes.keys()) c.stop();
     this.manager.closeAll('idle');
-    rmSync(this.dir, { recursive: true, force: true });
+    if (this.ownDir) rmSync(this.dir, { recursive: true, force: true });
   }
 }

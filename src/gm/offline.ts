@@ -343,6 +343,11 @@ export interface HookTracker {
   lowHpAt?: Record<PlayerId, number>;
   lastLowHpTurn?: number;
   lastRegionTurn?: number;
+  /**
+   * Rooms only (MP4 design §1.5): the helpful GM actions of the current area, counted from the gm
+   * entries (on the state before each), so the help ceiling survives a restart. Absent in single player.
+   */
+  help?: { area: number; used: number };
 }
 
 export function newHookTracker(turn = 0): HookTracker {
