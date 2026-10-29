@@ -160,7 +160,7 @@ describe('injected timers', () => {
 
 describe('the room-only chat hook', () => {
   it('is words only: narrate, say and mood pass, anything else is refused', () => {
-    const words: GmAction[] = [{ type: 'narrate', text: 'The wind turns.' }, { type: 'mood', mood: 'calm' } as GmAction];
+    const words: GmAction[] = [{ type: 'narrate', text: 'The wind turns.' }, { type: 'mood', music: 'calm' }];
     const gift = { type: 'currency', amount: 50 } as GmAction;
     expect(keepValidActions(ship, sit.state, [...words, gift], 'chat')).toEqual(words);
     expect(gmResponseErrors(ship, sit.state, { actions: [gift] }, 'chat').length).toBeGreaterThan(0);

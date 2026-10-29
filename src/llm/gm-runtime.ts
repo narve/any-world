@@ -18,8 +18,10 @@
  *    offline director / canned NPC lines when nothing is recorded.
  */
 import { z } from 'zod';
-import { DialogueResponse, GmResponse, type GmAction, type GmHook } from '../schema/gm';
-import type { GameState } from '../engine/types';
+import { DialogueResponse, GmResponse, RoomGmResponse, type GmAction, type GmHook } from '../schema/gm';
+import type { WorldSpec } from '../schema/world';
+import type { GameState, PlayerId } from '../engine/types';
+import { perspective } from '../gm/perspective';
 import {
   applyHelpCeiling,
   dialogueJsonSchema,
@@ -27,14 +29,17 @@ import {
   dropTrades,
   gmJsonSchema,
   gmResponseErrors,
+  isWordAction,
   keepValidActions,
   npcStock,
+  roomGmJsonSchema,
+  threatensPlayer,
 } from './gm-checks';
 import { OfflineGmDirector, sanitizeResponse, type GmDirector, type GmRequest } from '../gm/offline';
 import type { LLMProvider } from './types';
 import { LLMAbortedError } from './errors';
 import { completeStructured, extractJson, StructuredOutputError } from './structured';
-import { gmRequest, helpCeiling } from './prompts/gm';
+import { gmRequest, helpCeiling, ROOM_WORLD_SUMMARY_MAX } from './prompts/gm';
 import { dialogueRequest, npcOf, type DialogueLine, type DialoguePromptInput } from './prompts/dialogue';
 import { dialoguePurpose, gmPurpose, worldKeyOf } from './recording-keys';
 import { MockProvider, type Recording } from './mock';
@@ -118,6 +123,30 @@ export interface LlmGmDirectorOptions {
   /** timer hooks for the deadline (default the globals; the room passes its scheduler's) */
   setTimer?: (fn: () => void, ms: number) => unknown;
   clearTimer?: (h: unknown) => void;
+  /**
+   * Room mode (MP4 design §2.3, §1.4): the world facts are clipped (ROOM_WORLD_SUMMARY_MAX), the
+   * context's chat is quoted, and for a party of 2+ the prompt gets the party section and the reply
+   * is a RoomGmResponse whose `player` names the member the actions are for (validated against the
+   * party; the checks run again on that member's perspective). The request's state is the
+   * perspective of the moment's player (the focus). Single player leaves it off.
+   */
+  party?: boolean;
+}
+
+/** a room answer's target: the member its actions land on (absent = the moment's player) */
+export type PartyGmResponse = GmResponse & { player?: PlayerId };
+
+/**
+ * Why `pid` cannot be the target of `actions` in `state` (null = fine): it must be a party member on
+ * the map (not left) and, for an answer that harms or threatens, not down.
+ */
+export function partyTargetProblem(world: WorldSpec, state: GameState, pid: string, actions: readonly GmAction[]): string | null {
+  const ps = state.players[pid];
+  if (!ps || !state.party.includes(pid) || !state.area.actors.some((a) => a.id === ps.actorId)) {
+    return `player: "${pid}" is not a party member on the map (ids: ${state.party.join(', ')}); omit "player" for the moment's player`;
+  }
+  if (ps.down && actions.some((a) => threatensPlayer(world, a))) return `player: "${pid}" is down; never aim harm or a threat at a member who is down`;
+  return null;
 }
 
 /** default LlmGmDirectorOptions.deadlineMs; below the client's live GM timeout (30 s) */
@@ -171,11 +200,16 @@ export class LlmGmDirector implements GmDirector {
     return d instanceof CappedGmDirector && d.ledger === this.ledger ? d : new CappedGmDirector(d, this.ledger);
   }
 
-  async respond(req: GmRequest): Promise<GmResponse | null> {
+  async respond(req: GmRequest): Promise<PartyGmResponse | null> {
     const { world, state, difficulty } = req.ctx;
     const worldKey = this.opts.worldKey ?? worldKeyOf(world);
     const helpfulUsed = this.ledger.get(state);
     const ceiling = ceilingOf(state, difficulty);
+    const room = !!this.opts.party;
+    const players = Object.keys(state.players).length;
+    // the party text and the `player` field only for a party of 2+: a room of one sends single player's text
+    const party = room && players > 1;
+    const focus = state.party[0]!;
     const input = {
       world,
       state,
@@ -188,14 +222,33 @@ export class LlmGmDirector implements GmDirector {
       turn: req.turn,
       detail: req.detail,
       helpfulUsed,
+      ...(party ? { party: players } : {}),
+      ...(room ? { worldSummaryMax: ROOM_WORLD_SUMMARY_MAX, ...(req.ctx.chat?.length ? { chat: req.ctx.chat } : {}) } : {}),
     };
     const request = gmRequest(input, gmPurpose(req.hook, worldKey, req.area), {
       signal: req.signal,
-      jsonSchema: gmJsonSchema(),
+      jsonSchema: party ? roomGmJsonSchema() : gmJsonSchema(),
       schemaInPrompt: false,
       ...(this.opts.maxTokens ? { maxTokens: this.opts.maxTokens } : {}),
     });
+    // party mode: the reply's target (v.player ?? focus), checked against the party, and every check
+    // on that member's perspective; a bad target leaves only words (a repair turn may fix it)
+    const targetOf = (v: { player?: string }): PlayerId => (v.player === undefined ? focus : v.player);
+    const checksFor = (v: RoomGmResponse): string[] => {
+      const pid = targetOf(v);
+      const problem = pid === focus ? null : partyTargetProblem(world, state, pid, v.actions);
+      return problem ? [problem] : gmResponseErrors(world, perspective(state, pid), { actions: v.actions }, req.hook);
+    };
+    const keepFor = (v: RoomGmResponse): PartyGmResponse => {
+      const pid = targetOf(v);
+      if (pid !== focus && partyTargetProblem(world, state, pid, v.actions)) {
+        return { actions: keepValidActions(world, state, v.actions.filter(isWordAction), req.hook) };
+      }
+      const kept = keepValidActions(world, perspective(state, pid), v.actions, req.hook);
+      return pid === focus ? { actions: kept } : { actions: kept, player: pid };
+    };
     let actions: GmAction[] | null = null;
+    let target: PlayerId = focus;
     // the model's own deadline (below the runner's timeout): past it the capped fallback answers here
     const ctrl = new AbortController();
     const onAbort = () => ctrl.abort();
@@ -208,18 +261,35 @@ export class LlmGmDirector implements GmDirector {
       ctrl.abort();
     }, this.opts.deadlineMs ?? DEFAULT_GM_DEADLINE_MS);
     try {
-      const r = await completeStructured(this.opts.provider, { ...request, signal: ctrl.signal }, GmResponse, {
-        retries: this.opts.retries ?? 1,
-        validate: (v) => gmResponseErrors(world, state, v, req.hook),
-      });
-      actions = r.value.actions;
+      if (party) {
+        const r = await completeStructured(this.opts.provider, { ...request, signal: ctrl.signal }, RoomGmResponse, {
+          retries: this.opts.retries ?? 1,
+          validate: checksFor,
+        });
+        actions = r.value.actions;
+        target = targetOf(r.value);
+      } else {
+        const r = await completeStructured(this.opts.provider, { ...request, signal: ctrl.signal }, GmResponse, {
+          retries: this.opts.retries ?? 1,
+          validate: (v) => gmResponseErrors(world, state, v, req.hook),
+        });
+        actions = r.value.actions;
+      }
     } catch (e) {
       if (req.signal.aborted) return null;
       if (e instanceof LLMAbortedError && !late) return null;
       this.opts.onError?.(e, req.hook);
       if (e instanceof StructuredOutputError && e.lastText) {
-        const s = salvage(e.lastText, GmResponse, (v) => ({ actions: keepValidActions(world, state, v.actions, req.hook) }));
-        if (s && s.actions.length) actions = s.actions;
+        if (party) {
+          const s = salvage<PartyGmResponse>(e.lastText, RoomGmResponse, keepFor);
+          if (s && s.actions.length) {
+            actions = s.actions;
+            target = s.player ?? focus;
+          }
+        } else {
+          const s = salvage(e.lastText, GmResponse, (v) => ({ actions: keepValidActions(world, state, v.actions, req.hook) }));
+          if (s && s.actions.length) actions = s.actions;
+        }
       }
       if (!actions) return this.fallback ? this.fallback.respond(req) : null;
     } finally {
@@ -228,9 +298,11 @@ export class LlmGmDirector implements GmDirector {
     }
     // re-read the shared ledger: an NPC voice turn (or another director) may have spent help while
     // this request was in flight, and `helpfulUsed` above is the number from before the await
-    const capped = applyHelpCeiling(world, actions, Math.max(0, ceiling - this.ledger.get(state)), state);
+    const view = target === focus ? state : perspective(state, target);
+    const capped = applyHelpCeiling(world, actions, Math.max(0, ceiling - this.ledger.get(state)), view);
     this.ledger.add(state, capped.used);
-    return capped.actions.length ? sanitizeResponse({ actions: capped.actions }) : null;
+    const out = capped.actions.length ? sanitizeResponse({ actions: capped.actions }) : null;
+    return out && target !== focus ? { ...out, player: target } : out;
   }
 }
 

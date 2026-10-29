@@ -97,6 +97,16 @@ export const GmResponse = z.object({
 });
 export type GmResponse = z.infer<typeof GmResponse>;
 
+/**
+ * A room GM's answer (MP4 design §1.4): a GmResponse that may name the party member its actions
+ * are for (default: the player the moment is about). Room-only: single player's schema, doc and
+ * prompts never mention `player`.
+ */
+export const RoomGmResponse = GmResponse.extend({
+  player: z.string().max(8).optional(),
+});
+export type RoomGmResponse = z.infer<typeof RoomGmResponse>;
+
 /** NPC dialogue turn: in-character reply + up to 3 player reply options + actions. */
 export const DialogueResponse = z.object({
   reply: z.string().max(600),

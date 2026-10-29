@@ -24,6 +24,20 @@ export interface WorldPromptOptions {
   surpriseSeed?: number;
   /** titles / premises of recent worlds the player has seen, to steer away from them */
   recentWorlds?: string[];
+  /**
+   * A world for a room of this many players (2–12; MP4 design §5): adds the party paragraph to the
+   * user message (the system prompt is unchanged). Absent or 1 = single player's text exactly.
+   */
+  party?: number;
+}
+
+/** the largest party a room world is made for (engine MAX_PARTY_SIZE) */
+const MAX_WORLD_PARTY = 12;
+
+/** the user message's paragraph for a party world */
+export function partyWorldGuidance(n: number): string {
+  const k = Math.max(2, Math.min(MAX_WORLD_PARTY, Math.round(n)));
+  return `PARTY: up to ${k} players share one run (co-op, no PvP; everyone on the map at once). Make room for a crowd: prefer open generators and larger params, wide corridors and rooms rather than one-tile passages, 3–5 NPCs per area so several players can talk at once, hostiles in packs. The goal is reached by the party: any one player can take the key, item or step that wins; never require every player to stand somewhere, hold the same item or do the same thing; goal and lock items stay single (one player carries them), so place them where a party can share the work. The world must still play well for a single player.`;
 }
 
 export interface BuiltPrompt {
@@ -235,6 +249,7 @@ export function worldUserMessage(opts: WorldPromptOptions): string {
   if (recent.length) {
     lines.push(`The player recently played these worlds; make this one clearly different in genre, setting, tone and structure:\n${recent.map((r) => `- ${r.slice(0, 160)}`).join('\n')}`);
   }
+  if (opts.party !== undefined && opts.party > 1) lines.push(partyWorldGuidance(opts.party));
   lines.push('Write the complete World Spec JSON now.');
   return lines.join('\n\n');
 }

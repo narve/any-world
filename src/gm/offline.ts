@@ -15,6 +15,7 @@ import type { WorldSpec, ItemDef } from '../schema/world';
 import type { Difficulty, GmAction, GmHook, GmResponse } from '../schema/gm';
 import { GM_ACTION_COST } from '../schema/gm';
 import type { GameEvent, GameState, LogMessage, PlayerId, Pos } from '../engine/types';
+import type { GmContextChatLine } from '../engine/gm-context';
 import * as engine from '../engine/index';
 import { leadPlayer } from '../engine/index';
 
@@ -58,6 +59,8 @@ export interface GmContext {
   recentLog: LogMessage[];
   /** turn the player entered the current area */
   areaEnteredTurn: number;
+  /** rooms: the players' recent chat (src/gm/chat.ts chatQuotes), quoted in the prompt as untrusted data */
+  chat?: GmContextChatLine[];
 }
 
 export interface GmRequest extends GmHookEvent {

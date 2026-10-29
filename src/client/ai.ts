@@ -146,6 +146,8 @@ export interface GenerationRequest {
   recentWorlds?: string[];
   /** "surprise me" draw */
   surpriseSeed?: number;
+  /** a world for a room of this many players (2–12; MP4 design §5); absent = single player */
+  party?: number;
 }
 
 /** loading-screen lines of the offline demo generator for the stages that would talk to an AI */
@@ -229,6 +231,7 @@ export class WorldGeneration {
         weirdness: this.req.weirdness,
         ...(this.req.surprise ? { surpriseSeed: this.req.surpriseSeed ?? 1 } : {}),
         ...(this.req.recentWorlds?.length ? { recentWorlds: this.req.recentWorlds } : {}),
+        ...(this.req.party && this.req.party > 1 ? { party: this.req.party } : {}),
         signal: this.abort.signal,
         ...(this.opts.timeoutMs ? { timeoutMs: this.opts.timeoutMs } : {}),
         ...(this.opts.balancer ? { balancer: this.opts.balancer } : {}),

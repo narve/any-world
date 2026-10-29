@@ -1,13 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { WorldSpec, ActorDef, ItemDef, Generator, type WorldSpec as WorldSpecT } from '../../src/schema/world';
-import { GmResponse, DialogueResponse, GmHook } from '../../src/schema/gm';
+import { GmResponse, DialogueResponse, GmHook, RoomGmResponse, GM_BUDGET_PER_AREA } from '../../src/schema/gm';
 import { parseWorld } from '../../src/schema/refs';
 import { schemaVocabulary, namedFields } from '../../src/llm/prompts/schema-doc';
 import { WORLD_SCHEMA_DOC, WORLD_NAMED, WORLD_NOTES, GM_SCHEMA_DOC, DIALOGUE_SCHEMA_DOC } from '../../src/llm/prompts/world-schema';
 import { buildWorldPrompt, worldRequest, surpriseDraw, worldSystemPrompt, WORLD_EXAMPLE } from '../../src/llm/prompts/world';
 import { languageInstruction, languageName, normaliseLanguage, weirdnessBand } from '../../src/llm/prompts/common';
-import { buildGmPrompt, HOOK_BRIEF, HELPFUL_CEILING } from '../../src/llm/prompts/gm';
+import { buildGmPrompt, gmSystemPrompt, HOOK_BRIEF, HELPFUL_CEILING, ROOM_WORLD_SUMMARY_MAX } from '../../src/llm/prompts/gm';
+import { gmJsonSchema, roomGmJsonSchema } from '../../src/llm/gm-checks';
+import { addPlayer } from '../../src/engine/index';
 import { buildDialoguePrompt } from '../../src/llm/prompts/dialogue';
 import { gmInputFor, dialogueInputFor, playToSituation, npcsInArea } from '../../src/llm/situation';
 
@@ -184,5 +186,87 @@ describe('GM and dialogue prompts', () => {
     expect(p.user).toContain('The player says: "Where is the notebook?"');
     expect(p.system).toContain('type DialogueResponse =');
     expect(() => dialogueInputFor(teen, s2, 'nobody-here')).toThrow(/no NPC "nobody-here"/);
+  });
+});
+
+describe('room GM prompts (MP4 G2)', () => {
+  const ship = fixture('fixture-ship');
+  const sit = playToSituation(ship, { seed: 3, area: 0, turnsInArea: 25 });
+  const party = (n: number) => {
+    let s = sit.state;
+    for (let i = 1; i < n; i++) s = addPlayer(s, { name: `P${i + 1}` }, { world: ship }).state;
+    return { ...sit, state: s };
+  };
+
+  it('a party of one (or no party) gets single player\'s text exactly', () => {
+    const one = gmInputFor(ship, sit, 'idle');
+    const sp = buildGmPrompt(one);
+    expect(buildGmPrompt({ ...one, party: 1 })).toEqual(sp);
+    expect(gmSystemPrompt(ship, 'normal', { party: 1 })).toBe(gmSystemPrompt(ship, 'normal'));
+    // a clip longer than the facts changes nothing
+    expect(buildGmPrompt({ ...one, worldSummaryMax: ROOM_WORLD_SUMMARY_MAX })).toEqual(sp);
+    for (const text of [sp.system, sp.user]) {
+      expect(text).not.toContain('RoomGmResponse');
+      expect(text).not.toContain('PARTY');
+      expect(text).not.toContain('PLAYER CHAT');
+      expect(text).not.toMatch(/"player": "<their id>"|"id":"p1"/);
+    }
+  });
+
+  it('a party of 2+ gets the party section, the budget wording and the RoomGmResponse doc', () => {
+    const p = buildGmPrompt({ ...gmInputFor(ship, party(3), 'idle'), party: 3 });
+    expect(p.system).toContain('PARTY\n- 3 players share this run');
+    expect(p.system).toContain('the area\'s budget is bigger for a party; gm.budget');
+    expect(p.system).toContain('The help ceiling is for the whole party');
+    expect(p.system).toContain('the root value is a RoomGmResponse');
+    expect(p.system.match(/^type RoomGmResponse = \{/gm)).toHaveLength(1);
+    expect(p.system).not.toMatch(/^type GmResponse = /m);
+    // the single-player budget line is kept (it is right for one player)
+    expect(p.system).toContain(`each area has ${GM_BUDGET_PER_AREA} points`);
+    expect(p.user).toMatch(/Reply with the RoomGmResponse JSON\.$/);
+    const sitJson = JSON.parse(p.user.split('\n')[1]!);
+    expect(sitJson.party).toHaveLength(2);
+    expect(sitJson.player.id).toBe('p1');
+    // log lines carry their source
+    expect(sitJson.log.every((l: unknown) => typeof l === 'object' && l !== null && 'by' in l)).toBe(true);
+  });
+
+  it('the room reply schema adds `player`; single player\'s schema does not have it', () => {
+    const props = (o: object) => Object.keys((o as { properties: object }).properties).sort();
+    expect(props(roomGmJsonSchema())).toEqual(['actions', 'player']);
+    expect(props(gmJsonSchema())).toEqual(['actions']);
+    expect(RoomGmResponse.parse({ actions: [], player: 'p2' })).toEqual({ actions: [], player: 'p2' });
+    expect(RoomGmResponse.safeParse({ actions: [], player: 'x'.repeat(9) }).success).toBe(false);
+  });
+
+  it('the chat hook brief only appears on a chat hook', () => {
+    const p = buildGmPrompt({ ...gmInputFor(ship, party(2), 'idle'), party: 2 });
+    expect(p.system).not.toContain(HOOK_BRIEF.chat);
+    expect(p.user).not.toContain(HOOK_BRIEF.chat);
+    const c = buildGmPrompt({ ...gmInputFor(ship, party(2), 'chat'), party: 2, chat: [{ from: 'Ada', said: 'hello GM', ageS: 3, new: true }] });
+    expect(c.user).toContain(HOOK_BRIEF.chat);
+  });
+
+  it('the world facts are clipped in rooms', () => {
+    const big: WorldSpecT = { ...ship, meta: { ...ship.meta, premise: 'p'.repeat(600), tagline: 't'.repeat(140) } };
+    const facts = (sys: string) => sys.split('WORLD FACTS\n')[1]!.split('\n\nOUTPUT FORMAT')[0]!;
+    const full = facts(gmSystemPrompt(big, 'normal'));
+    expect(full.length).toBeGreaterThan(400);
+    const clipped = facts(gmSystemPrompt(big, 'normal', { worldSummaryMax: 400 }));
+    expect(clipped.length).toBe(400);
+    expect(clipped.endsWith('…')).toBe(true);
+  });
+
+  it('the world user message gets the party paragraph only for a party', () => {
+    const base = { prompt: 'a lighthouse', language: 'en' };
+    const sp = buildWorldPrompt(base);
+    expect(buildWorldPrompt({ ...base, party: 1 })).toEqual(sp);
+    const p = buildWorldPrompt({ ...base, party: 6 });
+    expect(p.system).toBe(sp.system);
+    expect(p.user).toContain('PARTY: up to 6 players share one run');
+    expect(p.user).toContain('never require every player');
+    expect(p.user.length - sp.user.length).toBeLessThan(900);
+    expect(buildWorldPrompt({ ...base, party: 40 }).user).toContain('up to 12 players');
+    expect(p.user.trimEnd().endsWith('Write the complete World Spec JSON now.')).toBe(true);
   });
 });

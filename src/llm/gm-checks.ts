@@ -5,7 +5,7 @@
  * Schemas attached to GM / dialogue requests. Browser-safe; no client imports.
  */
 import type { Amount, Effect, Trigger, WorldSpec } from '../schema/world';
-import { DialogueResponse, GmResponse, type GmAction, type GmHook } from '../schema/gm';
+import { DialogueResponse, GmResponse, RoomGmResponse, type GmAction, type GmHook } from '../schema/gm';
 import type { ActorInstance, GameState } from '../engine/types';
 import { applyGmActions, estimateRuleImpact, leadPlayer } from '../engine/index';
 import { toJsonSchema } from './structured';
@@ -497,11 +497,44 @@ export function applyHelpCeiling(world: WorldSpec, actions: readonly GmAction[],
   return { actions: out, used };
 }
 
+/**
+ * Whether an action threatens or harms whoever it lands on (a room never aims one at a member who is
+ * down): harmful effects on the player, hostile spawns, and offers or rules that carry them.
+ */
+export function threatensPlayer(world: WorldSpec, a: GmAction): boolean {
+  switch (a.type) {
+    case 'effect':
+      return a.target === 'player' && a.effects.some((e) => hindersTarget(world, e) && e.type !== 'change_faction');
+    case 'spawn':
+      return (world.actors.find((d) => d.id === a.actor)?.faction ?? 'hostile') === 'hostile';
+    case 'add_rule':
+      try {
+        return estimateRuleImpact(world, a.rule).hpPer100 > 0;
+      } catch {
+        return true;
+      }
+    case 'offer_choice':
+      return a.options.some((o) => o.actions.some((x) => threatensPlayer(world, x)));
+    default:
+      return false;
+  }
+}
+
+/** whether an action is words only (narrate, say, mood) */
+export function isWordAction(a: GmAction): boolean {
+  return WORD_ACTIONS.has(a.type);
+}
+
 let gmSchemaCache: object | null = null;
+let roomGmSchemaCache: object | null = null;
 let dialogueSchemaCache: object | null = null;
 /** JSON Schemas attached to GM / dialogue requests (native structured output where supported) */
 export function gmJsonSchema(): object {
   return (gmSchemaCache ??= toJsonSchema(GmResponse));
+}
+/** the room GM's reply schema (RoomGmResponse: GmResponse plus the optional `player`) */
+export function roomGmJsonSchema(): object {
+  return (roomGmSchemaCache ??= toJsonSchema(RoomGmResponse));
 }
 export function dialogueJsonSchema(): object {
   return (dialogueSchemaCache ??= toJsonSchema(DialogueResponse));

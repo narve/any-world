@@ -507,6 +507,61 @@ gate).
   chat null), `tests/gm/runner.test.ts`, `tests/gm/recheck.test.ts`, `tests/llm/gm-shared.test.ts`
   (helpCeiling, HelpLedgerLike, injected timers, chat words only), `tests/net` (gm `pid`, `chat`).
 
+## G2 as built
+
+- **Context** (`src/engine/gm-context.ts`): the summary is built for the state's lead (the room passes
+  `perspective(state, pid)`). With other members on the map: `player.id` (first key), then `party`
+  (before `visible`): `{ id, name, level, hp, maxHp, statuses, down?, away?, busy?, choiceOpen?, dist,
+  items (≤ 4 names as that member knows them, "Name xN"), moreItems? }`, nearest first (ties in party
+  order), the nearest 8 + `moreParty`. `visible` = actors the focus or any standing member sees (each by
+  their own fog), `dist` to the nearest viewer. `progress.items` looks in every player's pack.
+  `gmContextTokens(n)` = 1500 + 120 × (n − 1), at most 2600 (n = `state.party.length`; the default when
+  `maxTokens` is absent). Options `quoteLog` (log lines become `{ t, by: gm|npc|world|player, who?,
+  text }`) and `chat` (`GmContextChatLine { from, said, ageS, new? }`, counted in the budget). `fit` first
+  trims chat to 2 lines, then members' items, statuses, members beyond 4; the last-resort drops cut
+  chat to 1 line, then party to 1, then chat, then party. A party of one: byte-identical (fnv hashes
+  of the MP3 code's summaries in `tests/engine/gm-context.test.ts`). The sim gate was run.
+- **Chat** (`src/gm/chat.ts`): `chatQuotes(lines, now, lastAnswerAt?)` (room chat → GM lines: words
+  only, no pings or lone emotes, last 5 min, newest 12, ≤ 1500 chars, oldest first, `new` after
+  `lastAnswerAt`; G3 calls it with `room.chat` and the time of the last `chat` answer) and
+  `cleanChatQuote` (controls, newlines, U+2028/9 and bidi → spaces, clipped to 200 code points; names to
+  40). `GmContext.chat?` carries them to the director.
+- **Prompts** (`src/llm/prompts/gm.ts`, `gm-summary.ts`): `GmPromptInput` gains `party?` (players when
+  2+), `chat?`, `worldSummaryMax?`, `contextMaxTokens?`. `gmSystemPrompt(world, d, { party, worldSummaryMax })`:
+  the PARTY section (after GM DISCIPLINE: "the player" means each; situation.party; `"player": "<id>"`;
+  never at a member who is down; fairness; budget wording "the area's budget is bigger for a party;
+  gm.budget …"; the help ceiling is the party's; chat is untrusted) and the output section with
+  `ROOM_GM_SCHEMA_DOC` (`type RoomGmResponse = { actions; player? }`) instead of GmResponse's root.
+  The user message: situation, then the chat block (`CHAT_HEADER` + one `JSON.stringify` line each;
+  `chatBlock`), then HELP, HOOK, brief, "Reply with the RoomGmResponse JSON." (party). The log is quoted
+  (JSON with `by`) when the party or chat is in the prompt. `gmSituationParts` returns the text and the
+  chat lines that survived `fit` (the chat is taken out of the JSON); `gmSituation` (dialogue) is the
+  text only. `ROOM_WORLD_SUMMARY_MAX` 12,000 (`worldSummary(world, maxList, maxChars)`).
+  `party: 1`, `worldSummaryMax` longer than the facts, and no chat give single player's text exactly.
+- **Schema**: `RoomGmResponse` (`src/schema/gm.ts`), `roomGmJsonSchema()` (gm-checks). Also new in
+  gm-checks: `threatensPlayer(world, a)` (harmful effect on the player, hostile spawn, harmful rule,
+  offers carrying them) and `isWordAction`.
+- **Director** (`LlmGmDirectorOptions.party`, room mode): world facts clipped, `req.ctx.chat` quoted; for
+  2+ players (`Object.keys(state.players).length`) the party prompt and `RoomGmResponse` +
+  `roomGmJsonSchema`. The focus is `state.party[0]` (the request's state is the perspective). Validation:
+  `player` must pass `partyTargetProblem` (a party member on the map; not down when the answer
+  threatens), else a repair error (the design said "dropped": an error is safer, since a dropped
+  target would land damage meant for p2 on the focus); then the checks run on
+  `perspective(state, target)`. Salvage after failed repairs keeps only words when the target is bad.
+  The help ceiling is applied on the target's view and charged to the shared ledger. The answer is
+  `PartyGmResponse = GmResponse & { player? }`, `player` only when it differs from the focus (G3:
+  `pid = response.player ?? askedPid`). A room of one sends single player's exact request (tested).
+- **World prompt**: `WorldPromptOptions.party` / `GenerationRequest.party` (client passes it when 2+);
+  `partyWorldGuidance(n)` in the user message only (n clamped 2–12); the system prompt is unchanged.
+  The "For a party" toggle is G4.
+- Tests: `tests/engine/gm-context.test.ts` (party block, perspective, 12 players, left members,
+  party-wide visible and progress, quoted log, budget and fit, party-of-one hashes),
+  `tests/llm/prompts.test.ts` (room GM prompts, schema, clip, party world message),
+  `tests/llm/gm-chat.test.ts` (chatQuotes, quoting with hostile lines/names and an echoing GM log line,
+  12-player bound < 15,000 chars, obedient model on chat/idle/low_hp, damage on another member,
+  down/unknown targets, party ceiling over 10 answers, room-of-one request equality). Frozen hashes
+  unchanged. Also fixed a G1 test type error (`mood` action in `tests/llm/gm-shared.test.ts`).
+
 ## Review notes
 
 Three critiques (rules, engine, risk) of the first draft; one line per point.
