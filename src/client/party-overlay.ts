@@ -12,7 +12,9 @@
  *    HUD panels (`avoid`, placeEdgeMarker); a teammate in the fog inside the view gets a faint tag
  *    where they stand instead (the camera keeps everyone it can see on screen, so out of sight is
  *    the usual "off screen");
- *  - a pulsing help ring under a teammate who is down (they need someone next to them).
+ *  - a pulsing help ring under a teammate who is down (they need someone next to them);
+ *  - NPC lines over the NPC for nearby teammates (MP4: room/npc-bubbles.ts picks them), keyed by
+ *    actor id, neutral, only while the NPC's head is on screen.
  *
  * "On screen" is: on a visible tile of the camera's state, projected inside the viewport and outside
  * every HUD rectangle. A line whose speaker is not on screen goes to the chat column instead
@@ -58,6 +60,8 @@ export interface OverlayFrame {
   /** seats typing now (not this player) */
   typing: ReadonlySet<string>;
   pings: readonly OverlayPing[];
+  /** NPC lines to show over their NPC (MP4; absent: none) */
+  npcBubbles?: readonly { actorId: string; text: string }[];
   /** HUD panels over the map (viewport rectangles) */
   avoid: readonly DOMRect[];
   /** the camera's player on screen (edge arrows start there) */
@@ -85,8 +89,10 @@ export class PartyOverlay {
   private arrows = new Map<string, HTMLElement>();
   private rings = new Map<string, HTMLElement>();
   private pings = new Map<number, HTMLElement>();
+  private npcs = new Map<string, HTMLElement>();
   private onScreenSeats = new Set<string>();
   private shownNow: Shown[] = [];
+  private shownNpcNow: { actorId: string; text: string }[] = [];
 
   constructor(
     host: HTMLElement,
@@ -106,6 +112,11 @@ export class PartyOverlay {
   /** the bubbles shown in the last frame (the automation handle's bubbles()) */
   shown(): Shown[] {
     return this.shownNow.map((b) => ({ ...b }));
+  }
+
+  /** the NPC bubbles shown in the last frame (the automation handle's npcBubbles()) */
+  shownNpc(): { actorId: string; text: string }[] {
+    return this.shownNpcNow.map((b) => ({ ...b }));
   }
 
   frame(f: OverlayFrame): void {
@@ -222,12 +233,27 @@ export class PartyOverlay {
       } else place(el, at.x, at.y);
     }
     for (const [id, el] of this.pings) if (!livePings.has(id)) (el.remove(), this.pings.delete(id));
+    // NPC lines over the NPC's head while it is on screen
+    const npcShown: { actorId: string; text: string }[] = [];
+    const liveNpcs = new Set<string>();
+    for (const b of f.npcBubbles ?? []) {
+      const head = this.project.actor(b.actorId, 1.08);
+      const at = head ? local(head) : null;
+      if (!at || !inView(at)) continue;
+      const el = this.get(this.npcs, b.actorId, 'aw-bubble aw-bubble-npc');
+      if (el.textContent !== b.text) el.textContent = b.text;
+      place(el, at.x, at.y - 6);
+      liveNpcs.add(b.actorId);
+      npcShown.push({ actorId: b.actorId, text: b.text });
+    }
+    for (const [id, el] of this.npcs) if (!liveNpcs.has(id)) (el.remove(), this.npcs.delete(id));
     for (const [k, map] of [['tags', this.tags], ['bubbles', this.bubbles], ['arrows', this.arrows], ['rings', this.rings]] as const) {
       const keep = used[k];
       for (const [seat, el] of map) if (!keep.has(seat)) (el.remove(), map.delete(seat));
     }
     this.onScreenSeats = onScreen;
     this.shownNow = shown;
+    this.shownNpcNow = npcShown;
   }
 
   private get<K>(map: Map<K, HTMLElement>, key: K, cls: string): HTMLElement {
@@ -243,12 +269,13 @@ export class PartyOverlay {
 
   /** nothing shown (a screen without the map) */
   clear(): void {
-    for (const map of [this.tags, this.bubbles, this.arrows, this.rings, this.pings] as Map<unknown, HTMLElement>[]) {
+    for (const map of [this.tags, this.bubbles, this.arrows, this.rings, this.pings, this.npcs] as Map<unknown, HTMLElement>[]) {
       for (const el of map.values()) el.remove();
       map.clear();
     }
     this.onScreenSeats.clear();
     this.shownNow = [];
+    this.shownNpcNow = [];
   }
 
   dispose(): void {

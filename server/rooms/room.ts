@@ -7,6 +7,8 @@
  * player, synchronously ('offline' as MP2, 'recorded' for a demo world without a provider) or later
  * ('ai'); every answer is checked again against the current state (Room.gmAnswer) and becomes a gm
  * entry, so clients and a restart replay apply it like any other entry and nothing ever re-asks.
+ * In 'ai' rooms a player's conversation turns are also voiced (words only, the cosmetic `npc`
+ * message, never an entry: Room.voiceTurns).
  *
  * Transport-agnostic: a connection is a `Conn` (send a ServerMsg, close with a code); the socket
  * layer (ws.ts) parses frames and calls hello / message / disconnect. Time comes from an injected
@@ -37,6 +39,8 @@ import { cloneTracker, gmHooksFor, newHookTracker, OfflineGmDirector, sanitizeRe
 import { perspective } from '../../src/gm/perspective';
 import { recheckGmActions, recheckOfferOption } from '../../src/gm/recheck';
 import { chatQuotes } from '../../src/gm/chat';
+import { voiceMoment } from '../../src/gm/voice';
+import type { DialogueLine } from '../../src/llm/prompts/dialogue';
 import { applyHelpCeiling, isHelpfulAction, isWordAction } from '../../src/llm/gm-checks';
 import { helpCeiling } from '../../src/llm/prompts/gm';
 import { worldKeyOf } from '../../src/llm/recording-keys';
@@ -230,6 +234,11 @@ export class Room {
   private lastChatHookAt = -Infinity;
   /** set while askGm runs: a synchronous answer is pushed in its caller's guard */
   private askingGm = false;
+  /**
+   * the NPC voice per player (design §4.3): the open conversation's NPC, the entry of its last turn,
+   * the lines so far and the NPC's latest line (voiced, else the engine's). Not persisted.
+   */
+  private voiceHistory = new Map<PlayerId, { npcId: string; n: number; lines: DialogueLine[]; last: string }>();
   chat: ChatLine[] = [];
   private nextChatId = 1;
   private seats: Seat[] = [];
@@ -910,6 +919,7 @@ export class Room {
     this.state = state;
     this.tracker = newHookTracker(state.turn);
     this.targeted.clear();
+    this.voiceHistory.clear();
     this.lastChatAnswerAt = undefined;
     this.lastChatHookAt = -Infinity;
     // the old run's GM is gone (its late answers too); the intro is asked on the new one
@@ -1061,6 +1071,7 @@ export class Room {
     if (e.k === 'turn') hooks = gmHooksFor(this.world.world, before, r.state, r.events, this.tracker);
     this.settle(before, r.state);
     if (hooks.length) this.askGm(hooks);
+    if (e.k === 'turn') this.voiceTurns(e, before, r);
     return { ...r, before };
   }
 
@@ -1275,6 +1286,53 @@ export class Room {
     const body = { k: 'gm' as const, hook: a.hook.hook, pid, actions: clean.actions };
     if (!LogEntrySchema.safeParse({ ...body, n: 0, run: 0 }).success) return this.log(`gm answer to ${a.hook.hook} dropped (does not match the protocol)`);
     this.push(body);
+  }
+
+  /**
+   * The NPC voice (design §4.3): after a turn entry, each conversation that opened or moved on
+   * (voiceMoment, the rule the player's page shares) is voiced by the AI GM; a closed one is
+   * forgotten. Words only, so nothing here makes an entry.
+   */
+  private voiceTurns(e: Extract<LogEntry, { k: 'turn' }>, before: GameState, r: Applied): void {
+    const state = this.state;
+    for (const pid of [...this.voiceHistory.keys()]) {
+      const pc = state?.players[pid]?.pendingChoice;
+      if (pc?.kind === 'dialogue' && pc.speakerId === this.voiceHistory.get(pid)!.npcId) continue;
+      this.voiceHistory.delete(pid);
+      this.gm?.dropVoice(pid);
+    }
+    const gm = this.gm;
+    if (!gm || gm.mode !== 'ai' || !state || state.status !== 'playing' || this.phase !== 'playing') return;
+    for (const inp of e.inputs) {
+      const m = voiceMoment(before, r.state, inp.playerId, inp.actions, r.outcomes);
+      if (!m) continue;
+      const pc = state.players[inp.playerId]!.pendingChoice!;
+      const prev = this.voiceHistory.get(inp.playerId);
+      let lines: DialogueLine[] = [];
+      if (m.kind === 'reply' && prev && prev.npcId === m.npcId) {
+        lines = [...prev.lines, { speaker: 'npc' as const, text: prev.last }, ...(m.playerLine ? [{ speaker: 'player' as const, text: m.playerLine }] : [])].slice(-8);
+      }
+      this.voiceHistory.set(inp.playerId, { npcId: m.npcId, n: e.n, lines, last: pc.prompt });
+      const pid = inp.playerId;
+      const n = e.n;
+      const run = this.run;
+      gm.voice(
+        { pid, n, npcId: m.npcId, state: perspective(state, pid), difficulty: state.difficulty ?? this.options.difficulty, history: lines, ...(m.kind === 'reply' && m.playerLine ? { playerLine: m.playerLine } : {}) },
+        (text) => this.guard(() => this.sendVoice(run, pid, n, m.npcId, text), undefined),
+      );
+    }
+  }
+
+  /** a voiced line goes out only while that conversation is still on that turn (else the canned line stays) */
+  private sendVoice(run: number, pid: PlayerId, n: number, npcId: string, text: string): void {
+    const v = this.voiceHistory.get(pid);
+    const pc = this.state?.players[pid]?.pendingChoice;
+    if (this.closed || run !== this.run || this.phase !== 'playing' || !v || v.n !== n || v.npcId !== npcId || pc?.kind !== 'dialogue' || pc.speakerId !== npcId) {
+      this.log(`gm voice for ${pid} dropped (the conversation moved on)`);
+      return;
+    }
+    v.last = text;
+    this.broadcast({ t: 'npc', run, n, pid, actorId: npcId, text });
   }
 
   /** after an entry: run end, area change (snapshot, hold, pending cleared), snapshot cadence */

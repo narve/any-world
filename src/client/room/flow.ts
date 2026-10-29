@@ -66,6 +66,8 @@ export interface RoomHandle {
   chat(): { seat: string; name: string; text: string }[];
   /** the speech and typing bubbles shown over the map now */
   bubbles(): { seat: string; text: string; kind: 'bubble' | 'typing' }[];
+  /** the NPC lines shown over the map now (MP4) */
+  npcBubbles(): { actorId: string; text: string }[];
   /** whether `seat`'s player is on screen (bubble) or not (the line goes to the chat column) */
   onScreen(seat: string): boolean;
   roster(): { seat: string; name: string; colour: string; host: boolean; ready: boolean; pid: string | null; presence: string }[];
@@ -133,6 +135,7 @@ export class RoomFlow {
       hash: () => (c.state ? hashState(c.state) : null),
       chat: () => l.chat.lines.map((x) => ({ seat: x.seat, name: x.name, text: x.text })),
       bubbles: () => this.roomUi?.bubbles() ?? [],
+      npcBubbles: () => this.roomUi?.npcBubbles() ?? [],
       onScreen: (seat) => !!this.roomUi?.onScreen(seat),
       roster: () => c.roster.map((r) => ({ seat: r.seat, name: r.name, colour: r.colour, host: r.host, ready: r.ready, pid: r.pid, presence: r.presence })),
       session: this.roomSession,
@@ -611,6 +614,7 @@ export class RoomFlow {
       readyCount: c.roster.filter((r) => r.ready).length,
       options: { maxPlayers: o.maxPlayers, deadlineMs: o.deadlineMs, difficulty: o.difficulty },
       limits: { maxPlayers: { ...LIMITS.maxPlayers }, deadlineMs: { ...LIMITS.deadlineMs } },
+      gm: info.gm ?? null,
       ...(c.host ? { host: { worlds: start.demos, own: start.recent ?? [], picking: this.lobbyPicking } } : {}),
     };
   }

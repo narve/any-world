@@ -624,6 +624,79 @@ gate).
   `RoomInfo.gm`; RoomGm has no `voice` yet. `room.gmIdle()` only resolves when the manual clock moves
   (use a loop like `quiet()` in rooms-gm.test.ts).
 
+## G4 as built
+
+- **Per-player dialogue and trade** (`tests/server/rooms-dialogue.test.ts`): verified, no fixes needed.
+  p1 talks to the preacher, p2 trades with the widow: both are `busy` and not active, so p3's steps
+  resolve at once; p1's replies never change p2's open choice; p2's buy goes through. One trader serves
+  one player at a time (the engine's `talkingWith`: "talking with someone else"), so the "two players at
+  the same trader" case is sequential: the second is refused while the first talks, then both buy and
+  the shared purse ends at the sum of the two prices. Replicas agree throughout.
+- **NPC bubbles** (`src/client/room/npc-bubbles.ts`, DOM-free): `NpcBubbles` keeps one line per NPC
+  (clipped to 160 code points, timed by chat-model's `bubbleMs`). Sources: (a) `observe(before, after,
+  me, now)` on every live entry, for a teammate's conversation that opened or moved on (speaker or
+  prompt changed); (b) the `npc` voice message for a teammate; (c) `gm(actions, state, now)` for a gm
+  entry's `say` lines, for everyone. An area change, a catch-up batch or a rebuild clears them.
+  `visible(cam, now)` is the camera's view: within `NPC_BUBBLE_RANGE` (8, Chebyshev) of the camera
+  player, on a visible tile, and not the NPC the camera player is talking to. `RoomSession.npcBubbles`
+  owns it (`RoomSessionInit.now`, default Date.now). `OverlayFrame.npcBubbles` → `PartyOverlay` keeps
+  an element map keyed by actor id (`aw-bubble aw-bubble-npc`, neutral dashed style), cleaned up each
+  frame and in `clear()`. The automation handle has `npcBubbles()`.
+- **Chat answers** go to the chat panel and the log, never a card: `absorbGm` skips the event card for
+  `meta.hook === 'chat'` (single player never has that hook). `RoomUi` listens to live `entries`, and
+  `GmChatLog` (chat-model.ts) keeps each `chat` gm entry's narrate and say lines (≤ 20). Each line is
+  placed after the chat line that was newest when it arrived (negative ids), shown as "Game master"
+  (or the NPC's name for `say`), class `is-gm`, highlighted, and on the phone's ticker. The game log
+  already has the narrate line from the engine.
+- **Lobby**: `LobbyView.gm` is filled from `RoomInfo.gm`. The "reads the chat" line is shown only for
+  `'ai'` (`[hidden]` CSS added). mp-lobby.spec now expects it hidden, because e2e-mp's main server runs
+  with the GM off.
+- **"For a party"** (`#aw-party`, start form): shown only when the build has a game server (`v.rooms`)
+  and off by default. When it is checked, `StartOptions.party` (default 4, or `StartView.defaults.party`,
+  which also checks it) goes to `GenerationRequest.party` in `createWorld`. Deviation: the lobby's world
+  picker lists demo and stored worlds only and never opens the form, so nothing sets
+  `defaults.party` yet.
+- **NPC voice** (words only):
+  - `src/gm/voice.ts` `voiceMoment(before, after, pid, actions, outcomes)` is the rule shared by the
+    server and RoomSession. A moment is the player's own input in a turn entry, with its first outcome
+    ok, that leaves a dialogue open: an open, a switch to another NPC, or a reply that is not a buy or
+    a sell.
+  - The server: `Room.voiceTurns` after each turn entry keeps `voiceHistory` (npcId, entry n, lines
+    ≤ 8, last line; not persisted). It forgets closed conversations (`gm.dropVoice`) and calls
+    `RoomGm.voice`. That runs only in 'ai' mode while `current() === 'ai'`. It uses `LlmDialogue`
+    over the metered provider (retries 0, maxTokens 300, the room ledger, actions never used). One
+    request per player is in flight; a newer moment aborts the older. Requests are at least
+    `VOICE_GAP_MS` (2 s) apart per player; a quicker moment is not asked. `GmServer.voiceSlot()` (≤
+    half the pool, `GmPool.tryAcquire`, never waits) and `VOICE_TIMEOUT_MS` (5 s, abort on the room's
+    clock) apply. Only `source === 'llm'` lines are sent.
+  - `Room.sendVoice` checks that the run, the moment's n, the speaker and the open dialogue are all
+    unchanged, then broadcasts `{ t: 'npc', run, n, pid, actorId, text ≤ 600 }`. Deviation from §4.3:
+    the message carries the entry `n` of the moment instead of a game turn, because turns move on while
+    a dialogue is open. `RoomGm.cancelAll` / `dispose` abort the voice too. `idle()` waits for the
+    voice, and returns the runner's own promise when no voice is in flight, so quiet() loops still see
+    it one tick later.
+  - The client: RoomSession sets `voiceN` from `voiceMoment` on its own turn entries. An `npc` message
+    for itself with `n === voiceN`, while that dialogue is open, sets `this.voice` (single player's
+    voice line replaces the prompt). One for a teammate whose dialogue with that NPC is open sets a
+    bubble.
+- **Tests**: `tests/server/rooms-dialogue.test.ts`, `tests/client/npc-bubbles.test.ts` (sources, range,
+  fog, own speaker, expiry, area change, clip, GmChatLog order and cap), `tests/server/rooms-voice.test.ts`
+  (a voiced turn with the speaker's line, a teammate's bubble, no actions and no entry; dropped when the
+  conversation closed; a newer turn aborts the older; the gap; the timeout; offline rooms never voice;
+  half the pool) and a protocol sample for `npc`. In the party-of-4 test in rooms-gm.test.ts, the voice
+  calls now go to their own mock (`byPurpose`) so the GM's seeded failure sequence is unchanged, and the
+  test asserts that the voice was called.
+- **e2e-mp**: the config has a second dev server (`E2E_MP_GM_PORT` 5184 / `E2E_MP_GM_API_PORT` 8798,
+  data dir `<E2E_MP_DATA>-gm`, removed by the teardown) with `ANYWORLD_GM_PRESET=''` and
+  `ANYWORLD_TEST_GM=e2e-mp/test-gm.json`. `e2e-mp/mp-gm.spec.ts` (two pages and a scripted teammate)
+  checks the "For a party" toggle (off), the lobby GM line, the scripted intro card on both pages, the
+  scripted chat answer as an `is-gm` chat line (no card), the teammate talking to the NPC nearest Kari
+  (Kari walks within 3 tiles) with the voiced line as a bubble on Kari's page, and one hash for all
+  three. Screenshots are in test-results/shots/MP4.
+- For G5: the full e2e-mp suite (12 specs), e2e/play.spec.ts and e2e/modes.spec.ts passed with G4.
+  Mistral was not called. The voice has no breaker or log line of its own: its calls count in the
+  area's `gm area` stats line and the hourly caps, and its errors log as `gm voice: …`.
+
 ## Review notes
 
 Three critiques (rules, engine, risk) of the first draft; one line per point.

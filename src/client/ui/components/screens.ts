@@ -20,6 +20,8 @@ const SHELL_ICONS = {
 
 /** how many theme tags the inspiration filter offers */
 const TAG_CHIPS = 8;
+/** "For a party" without a room to size it: a world for this many players */
+const DEFAULT_PARTY = 4;
 
 /** the language and theme filter of the inspiration cards; 'all' / null = no filter */
 export interface InspirationFilter {
@@ -80,6 +82,10 @@ export class StartScreen {
   private diffOut: HTMLOutputElement;
   private weirdOut: HTMLOutputElement;
   private diffHint: HTMLElement;
+  private party: HTMLInputElement;
+  private partyEl: HTMLElement;
+  private partySize = DEFAULT_PARTY;
+  private partyDefault: number | undefined;
   private cardsEl: HTMLElement;
   private sideEl: HTMLElement;
   private noteEl: HTMLElement;
@@ -127,6 +133,8 @@ export class StartScreen {
       oninput: () => this.syncOut(),
     });
     this.diffHint = h('p', { id: 'aw-diff-hint', class: 'aw-range-hint' });
+    this.party = h('input', { id: 'aw-party', type: 'checkbox' });
+    this.partyEl = h('label', { class: 'aw-check aw-start-party', for: 'aw-party', hidden: true }, this.party, h('span', null, t('start.forParty')), h('span', { class: 'aw-muted' }, t('start.forPartyHint')));
     this.weird = h('input', { id: 'aw-weird', type: 'range', min: '0', max: '1', step: '0.05', value: '0.4', oninput: () => this.syncOut() });
     this.cardsEl = h('div', { class: 'aw-insp-cards' });
     this.filterEl = h('div', { class: 'aw-insp-filters' });
@@ -168,6 +176,7 @@ export class StartScreen {
             h('label', { class: 'aw-range', for: 'aw-weird' }, h('span', null, t('start.weirdness')), this.weird, this.weirdOut),
           ),
           this.diffHint,
+          this.partyEl,
           h(
             'div',
             { class: 'aw-start-actions' },
@@ -229,6 +238,7 @@ export class StartScreen {
       weirdness: clamp(Number(this.weird.value), 0, 1),
       surprise,
       ...(fromCard ? { language: this.filled!.language } : {}),
+      ...(this.party.checked && !this.partyEl.hidden ? { party: this.partySize } : {}),
     };
   }
 
@@ -359,6 +369,13 @@ export class StartScreen {
       if (v.defaults?.weirdness !== undefined) this.weird.value = String(v.defaults.weirdness);
       this.syncOut();
     }
+    // "For a party": only with a game server (off by default; on for a room's world, sized to its maxPlayers)
+    this.partyEl.hidden = !v.rooms;
+    if (v.defaults?.party !== undefined && v.defaults.party !== this.partyDefault) {
+      this.partyDefault = v.defaults.party;
+      this.party.checked = true;
+    }
+    this.partySize = Math.min(12, Math.max(2, v.defaults?.party ?? DEFAULT_PARTY));
     if (v.rooms) this.rooms.update(v.rooms);
     const key = dataKey([v.prompts, v.demos, v.savedRun, v.providerLabel, v.canGenerate, v.providerStatus, v.recent, v.canImport, v.rooms ? v.rooms.status : null]);
     if (key === this.listKey) return;

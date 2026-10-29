@@ -376,6 +376,10 @@
   margin: 0;
 }
 
+.aw-lobby-gm[hidden] {
+  display: none;
+}
+
 .aw-lobby-gm svg {
   flex: none;
   width: 16px;

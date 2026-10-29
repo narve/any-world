@@ -32,6 +32,7 @@ export class LobbyScreen {
   private rosterEl: HTMLElement;
   private optionsEl: HTMLElement;
   private actionsEl: HTMLElement;
+  private gmEl: HTMLElement;
   /** where the room UI puts the chat panel (chat works in the lobby too) */
   readonly chatHost: HTMLElement;
   private keys: Record<string, string> = {};
@@ -43,6 +44,8 @@ export class LobbyScreen {
     this.optionsEl = h('section', { class: 'aw-lobby-options', 'aria-labelledby': 'aw-lobby-options-title' });
     this.actionsEl = h('div', { class: 'aw-lobby-actions' });
     this.chatHost = h('section', { class: 'aw-lobby-chat', 'aria-label': t('chat.history') });
+    // (only for the AI GM: recorded lines and the offline director send nothing anywhere)
+    this.gmEl = h('p', { class: 'aw-lobby-gm aw-muted aw-small', hidden: true }, icon(ICONS.alert), h('span', null, t('lobby.gmReadsChat')));
     this.el = h(
       'main',
       { class: 'aw-screen aw-lobby', 'aria-label': t('room.title') },
@@ -50,7 +53,7 @@ export class LobbyScreen {
         'div',
         { class: 'aw-lobby-inner' },
         h('div', { class: 'aw-lobby-col' }, this.shareEl, this.worldEl, this.optionsEl),
-        h('div', { class: 'aw-lobby-col' }, this.rosterEl, h('p', { class: 'aw-lobby-gm aw-muted aw-small' }, icon(ICONS.alert), h('span', null, t('lobby.gmReadsChat'))), this.actionsEl, this.chatHost),
+        h('div', { class: 'aw-lobby-col' }, this.rosterEl, this.gmEl, this.actionsEl, this.chatHost),
       ),
     );
   }
@@ -66,6 +69,7 @@ export class LobbyScreen {
   update(v: LobbyView): void {
     this.el.dataset.phase = v.phase;
     this.el.dataset.code = v.code;
+    this.gmEl.hidden = v.gm !== 'ai';
     this.part('share', [v.code, v.link, v.qr], this.shareEl, () => this.share(v));
     this.part('world', [v.world, v.you.host, v.host], this.worldEl, () => this.world(v));
     this.part('roster', [v.roster, v.phase], this.rosterEl, () => this.roster(v));

@@ -2337,6 +2337,15 @@ body {
   cursor: pointer;
 }
 
+.aw-start-party {
+  flex-wrap: wrap;
+  margin: 4px 0 12px;
+}
+
+.aw-start-party[hidden] {
+  display: none;
+}
+
 /* demo switcher (mountUiDemo only) */
 .aw-demo-switch {
   position: fixed;

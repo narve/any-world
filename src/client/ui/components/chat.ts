@@ -29,6 +29,8 @@ export interface ChatLineView {
   own: boolean;
   emote: boolean;
   ping?: PingKind;
+  /** the game master's answer to the chat (MP4) */
+  gm?: boolean;
   /** the speaker was not on screen when it came: highlighted for a while */
   fresh: boolean;
 }
@@ -328,7 +330,7 @@ export class ChatPanel {
 function lineEl(l: ChatLineView): HTMLElement {
   return h(
     'li',
-    { class: ['aw-chat-line', l.own && 'is-own', l.emote && 'is-emote', l.ping && 'is-ping', l.fresh && 'is-new'], dataset: { id: l.id }, style: { '--who': l.colour } },
+    { class: ['aw-chat-line', l.own && 'is-own', l.emote && 'is-emote', l.ping && 'is-ping', l.gm && 'is-gm', l.fresh && 'is-new'], dataset: { id: l.id }, style: { '--who': l.colour } },
     h('span', { class: 'aw-chat-dot', 'aria-hidden': 'true' }),
     h('span', { class: 'aw-chat-name' }, l.name),
     h('span', { class: 'aw-chat-text' }, l.ping ? `${PING_GLYPH[l.ping]} ${lineText(l)}` : l.text),

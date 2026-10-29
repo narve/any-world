@@ -396,6 +396,7 @@ export class App {
           .slice(-5)
           .map((w) => w.world.meta.title),
         surpriseSeed,
+        ...(opts.party ? { party: opts.party } : {}),
       },
       {
         balancer: workerBalancer(() => new Worker(new URL('../llm/balance-worker.ts', import.meta.url), { type: 'module' })),

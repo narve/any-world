@@ -78,7 +78,8 @@ test('create from a world card, join from the list, clash, ready, start, mid-run
   expect(A.page.url()).toContain(`?room=${code}`);
   await expect(A.page.locator('.aw-lobby-link')).toHaveValue(new RegExp(`\\?room=${code}$`));
   await expect(A.page.locator('.aw-lobby-qr svg path')).toHaveCount(1);
-  await expect(A.page.locator('.aw-lobby-gm')).toContainText('game master');
+  // (the e2e-mp server runs with the GM off: the "reads the chat" line is for the AI GM only, mp-gm.spec.ts)
+  await expect(A.page.locator('.aw-lobby-gm')).toBeHidden();
   await expect(A.page.locator('.aw-lobby-start')).toBeVisible();
   await A.page.screenshot({ path: `${OUT}/lobby-host-desktop.png` });
 

@@ -15,15 +15,19 @@
  * that cannot start waits in its room's runner queue, nothing is answered early) and the GmBudget
  * (hourly caps, server-wide and per room). Per room: a circuit breaker (3 failed or timed-out calls
  * in a row put the room on its fallback for 2 minutes). Every clock is the room's scheduler.
+ *
+ * The NPC voice (design §4.3, 'ai' rooms only): words for a player's conversation turn, sent as a
+ * cosmetic `npc` message (never an entry), within its own half of the pool; late lines are dropped.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { WorldSpec } from '../../src/schema/world';
 import { GmResponse, type GmHook } from '../../src/schema/gm';
-import type { PlayerId } from '../../src/engine/types';
+import type { Difficulty, GameState, PlayerId } from '../../src/engine/types';
 import { GmRunner, partyCoalesce } from '../../src/gm/runner';
 import type { GmContext, GmDirector, GmHookEvent, OfflineGmDirector } from '../../src/gm/offline';
-import { capResponse, LlmGmDirector, type HelpLedgerLike, type PartyGmResponse } from '../../src/llm/gm-runtime';
+import { capResponse, LlmDialogue, LlmGmDirector, type DialogueLine, type HelpLedgerLike, type PartyGmResponse } from '../../src/llm/gm-runtime';
+import { VOICE_TEXT_MAX } from '../../src/gm/voice';
 import { gmResponseErrors } from '../../src/llm/gm-checks';
 import { gmPurpose } from '../../src/llm/recording-keys';
 import { extractJson } from '../../src/llm/structured';
@@ -42,6 +46,12 @@ export const BREAKER_FAILURES = 3;
 export const BREAKER_OPEN_MS = 2 * 60_000;
 /** answers to these moments are dropped when older than this (wall clock; the moment has passed) */
 export const GM_STALE_MS: Partial<Record<GmHook, number>> = { low_hp: 15_000, region_discovered: 15_000, boss_seen: 15_000, chat: 20_000 };
+/** NPC voice: requests for one player at least this far apart (a quicker turn keeps its canned line) */
+export const VOICE_GAP_MS = 2000;
+/** NPC voice: a line later than this is dropped (the canned line stays) */
+export const VOICE_TIMEOUT_MS = 5000;
+/** NPC voice answers carry at most this many output tokens */
+export const VOICE_MAX_TOKENS = 300;
 const HOUR_MS = 3_600_000;
 
 /** the mode a room gets for a world (design §1.2): AI with a provider, recordings for a demo without one, else offline */
@@ -119,6 +129,13 @@ export class GmPool {
     });
   }
 
+  /** a slot now, or null when every slot is taken (the NPC voice never waits) */
+  tryAcquire(): (() => void) | null {
+    if (this.active >= this.size) return null;
+    this.active++;
+    return this.releaser();
+  }
+
   private releaser(): () => void {
     let done = false;
     return () => {
@@ -178,6 +195,8 @@ export class GmBudget {
 export class GmServer {
   readonly pool: GmPool;
   readonly budget: GmBudget;
+  /** NPC voice calls in flight (at most half the pool, so the GM's own moments always find a slot) */
+  private voices = 0;
   private readonly recs = new Map<string, Recording[]>();
 
   constructor(
@@ -187,6 +206,21 @@ export class GmServer {
   ) {
     this.pool = new GmPool(Math.max(1, config.concurrency));
     this.budget = new GmBudget(config.callsPerHour, config.roomCallsPerHour, now);
+  }
+
+  /** a pool slot for an NPC voice call, within the voice's half of the pool; null: none free (the canned line stays) */
+  voiceSlot(): (() => void) | null {
+    if (this.voices >= Math.max(1, Math.floor(this.pool.size / 2))) return null;
+    const release = this.pool.tryAcquire();
+    if (!release) return null;
+    this.voices++;
+    let done = false;
+    return () => {
+      if (done) return;
+      done = true;
+      this.voices--;
+      release();
+    };
   }
 
   /** the server's capability (/api/health) */
@@ -235,6 +269,18 @@ export interface GmAnswer {
   source: string;
 }
 
+/** one conversation turn to voice (design §4.3): `state` is the room's state from pid's perspective */
+export interface VoiceAsk {
+  pid: PlayerId;
+  /** the turn entry that opened or moved the conversation on (VoiceMoment) */
+  n: number;
+  npcId: string;
+  state: GameState;
+  difficulty: Difficulty;
+  history: DialogueLine[];
+  playerLine?: string;
+}
+
 export interface RoomGmDeps {
   mode: RoomGmMode;
   /** null: offline (no pool, no budget) */
@@ -277,6 +323,10 @@ export class RoomGm {
   readonly mode: RoomGmMode;
   private readonly runner: GmRunner | null = null;
   private readonly director: LlmGmDirector | null = null;
+  private readonly dialogue: LlmDialogue | null = null;
+  /** the voice request in flight per player (a newer turn aborts it) and when each player's last one started */
+  private readonly voices = new Map<PlayerId, { ctrl: AbortController; done: Promise<void> }>();
+  private readonly voiceAt = new Map<PlayerId, number>();
   private readonly pids = new Map<number, { pid: PlayerId; run: number }>();
   private readonly recs = new Map<string, Recording[]>();
   private readonly served = new Map<string, number>();
@@ -318,6 +368,8 @@ export class RoomGm {
         deps.log(`gm ${hook}: ${e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200)}`);
       },
     });
+    // the NPC voice: words only (the room never applies its actions), no repair turn, the same metered provider
+    this.dialogue = new LlmDialogue({ provider: new MeteredProvider(provider, this), worldKey: deps.worldKey, ledger: deps.ledger, retries: 0, maxTokens: VOICE_MAX_TOKENS, onError: (e) => deps.log(`gm voice: ${e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200)}`) });
     const director = this.director;
     // the breaker sees how each primary call went (an abort by an area change is neither)
     const tracked: GmDirector = {
@@ -429,6 +481,51 @@ export class RoomGm {
     return { name: 'recorded', respond: async (req) => this.recordedRespond(req, req.ctx) };
   }
 
+  /**
+   * Voices one conversation turn ('ai' rooms only, and only while the AI GM answers): one request
+   * per player in flight (a newer turn aborts the older), at least VOICE_GAP_MS apart per player, a
+   * slot in the voice's half of the pool or nothing (the voice never waits), VOICE_TIMEOUT_MS at most.
+   * `deliver` gets the NPC's words (never its actions); the room checks the conversation is still on
+   * that turn. A failed, late or offline answer delivers nothing: the canned line stays.
+   */
+  voice(v: VoiceAsk, deliver: (text: string) => void): void {
+    if (this.disposed || !this.dialogue || this.current() !== 'ai') return;
+    const sch = this.deps.scheduler;
+    const now = sch.now();
+    this.voices.get(v.pid)?.ctrl.abort();
+    this.voices.delete(v.pid);
+    const last = this.voiceAt.get(v.pid);
+    if (last !== undefined && now - last < VOICE_GAP_MS) return;
+    const release = this.deps.server!.voiceSlot();
+    if (!release) return;
+    this.voiceAt.set(v.pid, now);
+    const ctrl = new AbortController();
+    const timer = sch.setTimer(now + VOICE_TIMEOUT_MS, () => ctrl.abort());
+    const dialogue = this.dialogue;
+    const job: { ctrl: AbortController; done: Promise<void> } = { ctrl, done: Promise.resolve() };
+    job.done = (async () => {
+      try {
+        const r = await dialogue.turn({ world: this.deps.world, state: v.state, npcId: v.npcId, difficulty: v.difficulty, history: v.history, ...(v.playerLine ? { playerLine: v.playerLine } : {}), signal: ctrl.signal });
+        if (ctrl.signal.aborted || this.disposed || r.source !== 'llm') return;
+        const text = r.response.reply.trim().slice(0, VOICE_TEXT_MAX);
+        if (text) deliver(text);
+      } catch {
+        // (aborted: a newer turn, the timeout, an area change)
+      } finally {
+        release();
+        sch.cancel(timer);
+        if (this.voices.get(v.pid) === job) this.voices.delete(v.pid);
+      }
+    })();
+    this.voices.set(v.pid, job);
+  }
+
+  /** a player's conversation closed: its voice request (if any) is dropped */
+  dropVoice(pid: PlayerId): void {
+    this.voices.get(pid)?.ctrl.abort();
+    this.voices.delete(pid);
+  }
+
   /** the hooks waiting or running ('ai'; rooms: "a chat request is already queued") */
   pendingHooks(): GmHookEvent[] {
     return this.runner?.pendingHooks() ?? [];
@@ -437,6 +534,8 @@ export class RoomGm {
   /** the area changed or the run ended: everything queued or in flight is dropped */
   cancelAll(): void {
     this.runner?.cancelAll();
+    for (const v of this.voices.values()) v.ctrl.abort();
+    this.voices.clear();
     this.pids.clear();
     this.flushStats(-1);
   }
@@ -447,12 +546,17 @@ export class RoomGm {
     this.flushStats(-1);
     this.disposed = true;
     this.runner?.dispose();
+    for (const v of this.voices.values()) v.ctrl.abort();
+    this.voices.clear();
     this.pids.clear();
   }
 
-  /** resolves when nothing is queued, waiting for a slot or running (tests) */
+  /** resolves when nothing is queued, waiting for a slot or running, and no voice request is in flight (tests) */
   idle(): Promise<void> {
-    return this.runner?.idle() ?? Promise.resolve();
+    const runner = this.runner?.idle() ?? Promise.resolve();
+    // (no voice in flight: the runner's own promise, so a caller's check one tick later sees it settled)
+    if (!this.voices.size) return runner;
+    return Promise.all([runner, ...[...this.voices.values()].map((v) => v.done)]).then(() => this.idle());
   }
 
   /** one provider call: charged to the budget, counted for the area's log line */

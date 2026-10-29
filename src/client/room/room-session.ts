@@ -20,6 +20,10 @@
  * cards from the server's GM), join / away / back / leave / return give the party toasts. A catch-up
  * batch (a reconnect) rebuilds without toasts or narration cards.
  *
+ * MP4: NPC lines of the teammates' conversations and the GM's `say` lines become bubbles over the NPC
+ * (npcBubbles); the server's `npc` voice line for this player's conversation turn stands in for the
+ * canned prompt, as single player's voice does.
+ *
  * DOM-free: the browser's RoomLink (D3) owns the client and applies the outcomes.
  */
 import type { GmAction, GmHook } from '../../schema/gm';
@@ -35,6 +39,8 @@ import { explainInvalid } from '../invalid';
 import { t as tr } from '../i18n/index';
 import { perspective } from './perspective';
 import { LogOverlay } from './log-overlay';
+import { NpcBubbles } from './npc-bubbles';
+import { voiceMoment } from '../../gm/voice';
 
 /** a chain sent as one input, waiting for its entry (its bookkeeping happens on absorb) */
 type PendingChain =
@@ -53,6 +59,8 @@ export interface RoomSessionInit {
   /** a joined client in the playing phase (state, world and pid set) */
   client: RoomClient;
   prefs?: { animationSpeed: number; reduceMotion: boolean };
+  /** the clock of the NPC bubbles (default Date.now) */
+  now?: () => number;
 }
 
 const key = (a: PlayerAction) => JSON.stringify(a);
@@ -67,6 +75,11 @@ export class RoomSession extends GameSession {
   readonly run: number;
   /** client-only log lines (the healer's line), merged into the log view */
   readonly overlay = new LogOverlay();
+  /** NPC lines over the NPC for nearby teammates (MP4 design §4.2): the party overlay draws `visible` */
+  readonly npcBubbles = new NpcBubbles();
+  private readonly now: () => number;
+  /** the entry of this player's current conversation turn (voiceMoment): the server's `npc` line for it is the NPC's voice */
+  private voiceN: number | null = null;
   /** the turn action waiting for its turn */
   queued: Queued | null = null;
   /** the teammate the camera follows while this player is down (null: this player) */
@@ -90,6 +103,7 @@ export class RoomSession extends GameSession {
     });
     this.client = c;
     this.run = c.run;
+    this.now = init.now ?? (() => Date.now());
     this.updateFollow();
   }
 
@@ -300,6 +314,13 @@ export class RoomSession extends GameSession {
     const e = st.entry;
     const before = perspective(st.before, this.pid);
     const after = perspective(st.after, this.pid);
+    // (a catch-up repeats nothing: its lines are old)
+    if (catchUp) this.npcBubbles.clear();
+    else {
+      const now = this.now();
+      this.npcBubbles.observe(st.before, st.after, this.pid, now);
+      if (e.k === 'gm') this.npcBubbles.gm(e.actions as GmAction[], st.after, now);
+    }
     switch (e.k) {
       case 'turn':
         return this.absorbTurn(st, before, after, e.inputs.find((i) => i.playerId === this.pid)?.actions);
@@ -319,6 +340,9 @@ export class RoomSession extends GameSession {
 
   private absorbTurn(st: EntryStep, before: GameState, after: GameState, myActions: PlayerAction[] | undefined): Outcome {
     const mine = st.outcomes.filter((o) => o.playerId === this.pid);
+    // (the same rule as the server's: a new conversation turn waits for its voice line)
+    if (voiceMoment(st.before, st.after, this.pid, myActions, st.outcomes)) this.voiceN = st.entry.n;
+    else if (after.players[this.pid]?.pendingChoice?.kind !== 'dialogue') this.voiceN = null;
     const chain = this.chain && sameActions(myActions, this.chain.actions) ? this.chain : null;
     if (chain) this.chain = null;
     const q = this.queued;
@@ -360,6 +384,8 @@ export class RoomSession extends GameSession {
   /** the replica was replaced (a welcome or desync snapshot): the view is rebuilt, nothing in flight is kept */
   rebuild(): Outcome {
     this.view(this.replica);
+    this.npcBubbles.clear();
+    this.voiceN = null;
     this.narration = null;
     this.queued = null;
     this.chain = null;
@@ -372,8 +398,27 @@ export class RoomSession extends GameSession {
     return { ...emptyOutcome(), changed: true, areaChanged: true };
   }
 
+  /**
+   * The NPC voice (MP4 design §4.3): a line for this player's conversation on its current turn stands
+   * in for the canned prompt (single player's voice line); a teammate's is a bubble over the NPC while
+   * that conversation is open. Words only.
+   */
+  private onVoice(msg: Extract<ServerMsg, { t: 'npc' }>): Outcome | null {
+    if (msg.run !== this.run || this.ended) return null;
+    if (msg.pid === this.pid) {
+      const pc = this.me.pendingChoice;
+      if (msg.n !== this.voiceN || pc?.kind !== 'dialogue' || pc.speakerId !== msg.actorId) return null;
+      this.voice = { token: this.voiceToken, line: msg.text.trim() };
+      return { ...emptyOutcome(), changed: true };
+    }
+    const pc = this.replica.players[msg.pid]?.pendingChoice;
+    if (pc?.kind === 'dialogue' && pc.speakerId === msg.actorId) this.npcBubbles.set(msg.actorId, msg.text, this.now());
+    return null;
+  }
+
   /** refusals (to this seat) toast as in single player; a stale (or rate-dropped) input is decided again */
   onMessage(msg: ServerMsg): Outcome | null {
+    if (msg.t === 'npc') return this.onVoice(msg);
     if (msg.t === 'refusal') {
       const q = this.queued;
       const mine = q ? msg.reasons.find((r) => key(r.action) === key(q.action)) : undefined;

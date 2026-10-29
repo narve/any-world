@@ -31,7 +31,7 @@ import { t } from '../i18n/index';
 import { ChatButton, ChatPanel, lineText, type ChatLineView, type ChatMode, type SendResult } from '../ui/components/chat';
 import { PartyBanner, PartyStrip, TurnPill } from '../ui/components/party';
 import { PartyOverlay, type OverlayMember, type OverlayPing } from '../party-overlay';
-import { CHAT_TIMING, isEmote } from './chat-model';
+import { CHAT_TIMING, GmChatLog, isEmote } from './chat-model';
 import { bannerView, partyColours, partyMembers, PillTimer, turnView, type PartyMember, type TurnView } from './party-view';
 import type { LinkEvent, RoomLink } from './link';
 import type { RoomSession } from './room-session';
@@ -44,6 +44,9 @@ export interface RoomUiRun {
   renderer: Renderer;
   canvasHost: HTMLElement;
 }
+
+/** the GM's lines in the chat panel (a neutral gold, no seat has it) */
+export const GM_CHAT_COLOUR = '#c9a54a';
 
 /** design constants: typing is repeated this often while the draft changes; ticker lines show this long */
 export const ROOM_UI_TIMING = { typingRefreshMs: 3000, tickerMs: 4000, freshMs: 6000, refreshMs: 100 } as const;
@@ -71,6 +74,8 @@ export class RoomUi {
   private fresh = new Map<number, number>();
   /** ping line id → when it arrived (live pings only: a welcome's history shows no markers) */
   private pingAt = new Map<number, number>();
+  /** the GM's answers to the chat (shown among the lines, never as a card) */
+  readonly gmChat = new GmChatLog();
   private typingOn = false;
   private typingAt = 0;
   private coloursKey = '';
@@ -102,7 +107,7 @@ export class RoomUi {
         this.clockSeen = { msg: e.msg, at: this.now() };
         this.pillBar = null;
         this.refresh(true);
-      }
+      } else if (e.t === 'entries' && !e.catchUp) this.gmEntries(e.steps);
     });
     ui.root.dataset.room = '1';
     this.loop();
@@ -135,6 +140,11 @@ export class RoomUi {
   /** what the automation handle's bubbles() reads: the bubbles shown over the map now */
   bubbles(): { seat: string; text: string; kind: 'bubble' | 'typing' }[] {
     return this.overlay?.shown() ?? [];
+  }
+
+  /** the NPC lines shown over the map now (the automation handle) */
+  npcBubbles(): { actorId: string; text: string }[] {
+    return this.overlay?.shownNpc() ?? [];
   }
 
   /** whether `seat`'s player is on screen now (the automation handle) */
@@ -243,6 +253,33 @@ export class RoomUi {
       }
     }
     this.refresh(true);
+  }
+
+  /** the GM's chat answers (gm entries of the `chat` hook): into the panel, highlighted, on the phone's ticker */
+  private gmEntries(steps: readonly { entry: { k: string }; after: { area: { actors: readonly { id: string; defId: string }[] } } }[]): void {
+    const world = this.link.client.world;
+    let added = false;
+    for (const st of steps) {
+      const e = st.entry as { k: string; hook?: string; actions?: { type: string; text?: string; actorId?: string }[] };
+      if (e.k !== 'gm' || e.hook !== 'chat' || !e.actions) continue;
+      const afterId = this.link.chat.lines[this.link.chat.lines.length - 1]?.id ?? 0;
+      const names = (id: string) => {
+        const a = st.after.area.actors.find((x) => x.id === id || x.defId === id);
+        return (a && world?.actors.find((d) => d.id === a.defId)?.name) ?? null;
+      };
+      const now = this.now();
+      for (const l of this.gmChat.add(e.actions, afterId, names)) {
+        added = true;
+        this.fresh.set(l.id, now + ROOM_UI_TIMING.freshMs);
+        if (this.screen() === 'game' && this.compact() && !this.sheetOpen) {
+          this.ticker.textContent = `${l.name ?? t('chat.gm')}: ${l.text}`;
+          this.ticker.style.setProperty('--who', GM_CHAT_COLOUR);
+          this.ticker.hidden = false;
+          this.tickerUntil = now + ROOM_UI_TIMING.tickerMs;
+        }
+      }
+    }
+    if (added) this.refresh(true);
   }
 
   // ---------------------------------------------------------------------------
@@ -355,7 +392,7 @@ export class RoomUi {
     const model = this.link.chat;
     const self = this.link.client.seat;
     for (const [id, until] of this.fresh) if (until <= now) this.fresh.delete(id);
-    const lines: ChatLineView[] = model.lines.map((l) => ({
+    const players: ChatLineView[] = model.lines.map((l) => ({
       id: l.id,
       name: l.name,
       colour: l.colour,
@@ -365,6 +402,7 @@ export class RoomUi {
       ...(l.ping ? { ping: l.ping.kind } : {}),
       fresh: this.fresh.has(l.id),
     }));
+    const lines = this.gmChat.merge(players, (g) => ({ id: g.id, name: g.name ?? t('chat.gm'), colour: GM_CHAT_COLOUR, text: g.text, own: false, emote: false, gm: true, fresh: this.fresh.has(g.id) }));
     this.chat.setLines(lines, now);
     const roster = this.link.client.roster;
     this.chat.setTyping([...model.typing(now)].map((seat) => roster.find((r) => r.seat === seat)?.name ?? '').filter(Boolean));
@@ -443,6 +481,7 @@ export class RoomUi {
       bubbles: model.bubbles(now).filter((b) => !b.ping).map((b) => ({ id: b.id, seat: b.seat, text: b.text, emote: b.emote })),
       typing: model.typing(now),
       pings,
+      npcBubbles: run.session.npcBubbles.visible(cam, now),
       avoid: this.ui.panelRects().hud,
       from: leadPos ? run.renderer.tileToScreen(leadPos) : null,
       labels: { away: t('party.tagAway'), busy: t('party.busy'), down: t('party.tagDown') },

@@ -125,6 +125,11 @@ class SlowOnce implements LLMProvider {
   }
 }
 
+/** GM calls to `gm`, NPC voice calls to `voice` */
+function byPurpose(gm: LLMProvider, voice: LLMProvider): LLMProvider {
+  return { id: gm.id, model: gm.model, complete: (req) => (req.purpose.startsWith('dialogue') ? voice : gm).complete(req) };
+}
+
 /** a provider that must never be called (restart replays) */
 class Forbidden implements LLMProvider {
   readonly id = 'forbidden';
@@ -235,7 +240,9 @@ describe('the AI GM in a party room (mock provider)', () => {
     let sch: ManualScheduler | null = null;
     const slow = new SlowOnce(mock, 1, () => sch!);
     const dir = tempDir();
-    h = new MemRoom({ world: western, seed: 11, gm: process.env.DBG_OFF ? offGmConfig() : aiConfig(slow), dir });
+    // (the NPC voice of the talking bots goes to its own mock, so the GM's seeded failures stay as they were)
+    const voice = new MockProvider({ responses: { dialogue: { json: { reply: 'AI: a voiced line', options: [], actions: [] } } }, latencyMs: [20, 200], seed: 4, ...clock.timers });
+    h = new MemRoom({ world: western, seed: 11, gm: process.env.DBG_OFF ? offGmConfig() : aiConfig(byPurpose(slow, voice)), dir });
     sch = h.sch;
     clock.set(h.sch);
     if (!process.env.DBG_OFF) expect(h.room.info().gm).toBe('ai');
@@ -281,6 +288,8 @@ describe('the AI GM in a party room (mock provider)', () => {
     expect(gms.some((e) => e.hook === 'chat'), h.logs.join('\n')).toBe(true);
     expect(gifts).toBeGreaterThanOrEqual(1);
     expect(slow.calls).toBeGreaterThan(3);
+    // the talking bots' conversations were voiced (words only: no entry above came from the voice)
+    expect(voice.callCount).toBeGreaterThan(0);
 
     // restart: the files replay to the same hash and help count, and nobody asks the GM
     const forbidden = new Forbidden();

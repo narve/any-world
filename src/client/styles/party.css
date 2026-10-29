@@ -291,6 +291,11 @@
   font-style: italic;
 }
 
+/* the game master's answer to the chat (MP4) */
+.aw-chat-line.is-gm .aw-chat-text {
+  font-style: italic;
+}
+
 .aw-chat-typing {
   min-height: 0;
   font-size: 12px;
@@ -615,6 +620,14 @@
   font-size: 34px;
   line-height: 1;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+
+/* an NPC's line (MP4): neutral, a little smaller, the speaker's name is the NPC on the map */
+.aw-bubble.aw-bubble-npc {
+  --who: #8a7d62;
+  border-style: dashed;
+  background: rgba(245, 240, 228, 0.95);
+  font-size: 12px;
 }
 
 .aw-edge-arrow {

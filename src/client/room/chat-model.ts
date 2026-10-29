@@ -164,3 +164,51 @@ export class ChatModel {
     return this.lines.slice(-n);
   }
 }
+
+/** a GM answer to the chat (MP4 design §3): shown in the chat panel among the players' lines, never as a card */
+export interface GmChatLine {
+  /** negative, so it never meets a ChatLine id */
+  id: number;
+  /** the chat line it came after (the newest one when it arrived; 0: before any) */
+  afterId: number;
+  /** the GM (narrate) or the NPC's name (say) */
+  name: string | null;
+  text: string;
+}
+
+/** at most this many GM chat lines are kept */
+export const GM_CHAT_KEEP = 20;
+
+/**
+ * The GM's chat answers on this page: the words of each `chat` gm entry (narrate and say lines, in
+ * order), placed after the chat line that was newest when it arrived, so the panel reads in order.
+ */
+export class GmChatLog {
+  readonly lines: GmChatLine[] = [];
+  private seq = 0;
+
+  /** a `chat` gm entry's actions; `names`: an NPC's name by actor id (say lines); returns the lines added */
+  add(actions: readonly { type: string; text?: string; actorId?: string }[], afterId: number, names: (actorId: string) => string | null): GmChatLine[] {
+    const out: GmChatLine[] = [];
+    for (const a of actions) {
+      const text = typeof a.text === 'string' ? a.text.trim() : '';
+      if (!text || (a.type !== 'narrate' && a.type !== 'say')) continue;
+      out.push({ id: -++this.seq, afterId, name: a.type === 'say' && a.actorId ? names(a.actorId) : null, text });
+    }
+    this.lines.push(...out);
+    if (this.lines.length > GM_CHAT_KEEP) this.lines.splice(0, this.lines.length - GM_CHAT_KEEP);
+    return out;
+  }
+
+  /** the players' lines (oldest first) with the GM's lines in their places */
+  merge<T extends { id: number }>(chat: readonly T[], gm: (l: GmChatLine) => T): T[] {
+    const out: T[] = [];
+    let i = 0;
+    for (const l of chat) {
+      while (i < this.lines.length && this.lines[i]!.afterId < l.id) out.push(gm(this.lines[i++]!));
+      out.push(l);
+    }
+    while (i < this.lines.length) out.push(gm(this.lines[i++]!));
+    return out;
+  }
+}

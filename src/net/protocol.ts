@@ -336,6 +336,12 @@ export const ServerMsg = z.discriminatedUnion('t', [
   z.object({ t: z.literal('clock'), n: Count, acted: z.array(PlayerIdSchema).max(MAX_PARTY_SIZE), waiting: z.array(PlayerIdSchema).max(MAX_PARTY_SIZE), deadlineInMs: Count.optional() }),
   z.object({ t: z.literal('chat'), line: ChatLine }),
   z.object({ t: z.literal('typing'), seat: SeatId, on: z.boolean() }),
+  /**
+   * the NPC voice (MP4): `pid`'s conversation turn of entry `n` with NPC `actorId`, voiced by the AI
+   * GM. Cosmetic (words only, never in the log): the player sees it in place of the canned line, the
+   * teammates as a bubble over the NPC
+   */
+  z.object({ t: z.literal('npc'), run: Count, n: Count, pid: PlayerIdSchema, actorId: z.string().max(80), text: z.string().min(1).max(600) }),
   /** the room's world (the next run's, in the ended phase) or options changed (MP3) */
   z.object({ t: z.literal('room'), room: RoomInfo, options: RoomOptions }),
   /** to the acting seat only: its actions the engine refused (nothing was appended) */

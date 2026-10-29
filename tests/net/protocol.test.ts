@@ -103,6 +103,7 @@ const SERVER: unknown[] = [
   { t: 'chat', line: { ...chatLine, id: 2, text: '', ping: { kind: 'help', x: 4, y: 5, area: 1 } } },
   { t: 'room', room: roomInfo, options },
   { t: 'typing', seat: 's2', on: false },
+  { t: 'npc', run: 1, n: 12, pid: 'p2', actorId: 'a7', text: 'Welcome, stranger.' },
   { t: 'refusal', reasons: [{ action: { type: 'move', dir: 'n' }, reason: 'contested' }] },
   { t: 'error', code: 'stale', message: 'decide again' },
   { t: 'refused', code: 'outdated', message: 'reload', reload: true },
@@ -248,6 +249,9 @@ describe('server messages and log entries', () => {
     expect([...types].sort()).toEqual(ServerMsg.options.map((o) => o.shape.t.value).sort());
     expect(parseServerMsg({ t: 'refused', code: 'outdated', message: 'x', reload: false })).toBeNull();
     expect(parseServerMsg({ t: 'entries', run: 1, es: [] })).toBeNull();
+    // the NPC voice: words only, at most 600 characters, never empty
+    expect(parseServerMsg({ t: 'npc', run: 1, n: 1, pid: 'p1', actorId: 'a1', text: '' })).toBeNull();
+    expect(parseServerMsg({ t: 'npc', run: 1, n: 1, pid: 'p1', actorId: 'a1', text: 'x'.repeat(601) })).toBeNull();
     expect(parseServerMsg({ t: 'nope' })).toBeNull();
   });
 

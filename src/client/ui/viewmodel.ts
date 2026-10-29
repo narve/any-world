@@ -411,7 +411,7 @@ export interface StartView {
   providerLabel?: string | null;
   /** false when no LLM is configured: create buttons show a hint and open settings */
   canGenerate: boolean;
-  defaults?: { prompt?: string; difficulty?: Difficulty; weirdness?: number };
+  defaults?: { prompt?: string; difficulty?: Difficulty; weirdness?: number; /** "For a party" on, for this many players (a room's maxPlayers) */ party?: number };
   /** M4: one status line about the AI provider (replaces providerLabel when present) */
   providerStatus?: ProviderStatusView;
   /** M4: worlds kept in this browser (AI-made or imported), newest first */
@@ -492,6 +492,8 @@ export interface LobbyView {
   readyCount: number;
   options: RoomOptionsView;
   limits: { maxPlayers: { min: number; max: number }; deadlineMs: { min: number; max: number } };
+  /** the room's game master (RoomInfo.gm, MP4): the "reads the chat" line shows only for the AI GM */
+  gm: 'ai' | 'recorded' | 'offline' | null;
   /** the host's world picker (open while `picking`) */
   host?: { worlds: DemoWorldView[]; own: RecentWorldView[]; picking: boolean };
 }
@@ -575,6 +577,8 @@ export interface StartOptions {
   surprise: boolean;
   /** language for the generated world when the prompt came from an inspiration card in another language */
   language?: string;
+  /** "For a party" (MP4 design §5): a world for a room of this many players (absent: single player) */
+  party?: number;
 }
 
 export interface LoadingStepView {

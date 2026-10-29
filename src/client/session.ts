@@ -430,8 +430,9 @@ export class GameSession {
         const plan = this.world.areas[this.state.area.index];
         this.narration = { id: `gm-${meta.hook}-${++this.narrationSeq}`, kind: meta.hook === 'intro' ? 'intro' : 'area_enter', title: meta.hook === 'intro' ? this.world.meta.title : plan?.name, text };
         this.narrationHook = { hook: meta.hook, area: this.state.area.index };
-      } else if (meta.hook !== 'low_hp' && !this.me.pendingChoice) {
-        // an event: a short card the next action clears (offers show their own panel instead)
+      } else if (meta.hook !== 'low_hp' && meta.hook !== 'chat' && !this.me.pendingChoice) {
+        // an event: a short card the next action clears (offers show their own panel instead; a
+        // room's answer to the chat is in the log and the chat panel, never a card)
         this.narration = { id: `gm-event-${++this.narrationSeq}`, kind: 'event', text };
         this.narrationHook = { hook: meta.hook, area: this.state.area.index };
       }
