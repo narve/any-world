@@ -255,6 +255,8 @@ describe('server messages and log entries', () => {
     const entries = [
       turnEntry,
       { n: 4, run: 1, k: 'gm', hook: 'intro', actions: [{ type: 'narrate', text: 'Dust.' }] },
+      // MP4: the player a GM answer is for, and the room-only chat hook
+      { n: 4, run: 1, k: 'gm', hook: 'chat', pid: 'p2', actions: [{ type: 'narrate', text: 'Quiet.' }] },
       { n: 5, run: 1, k: 'join', seat: 's3', name: 'Cid', pid: 'p3', near: 'p1' },
       { n: 6, run: 1, k: 'away', pid: 'p2' },
       { n: 7, run: 1, k: 'back', pid: 'p2' },
@@ -269,6 +271,7 @@ describe('server messages and log entries', () => {
       { ...turnEntry, advance: undefined },
       { n: 1, run: 1, k: 'gm', hook: 'lunch', actions: [] },
       { n: 1, run: 1, k: 'gm', hook: 'intro', actions: [{ type: 'explode' }] },
+      { n: 1, run: 1, k: 'gm', hook: 'idle', pid: 'x1', actions: [] },
       { n: 1, run: 1, k: 'away', pid: 'x1' },
       { n: 1, run: 1, k: 'return', pid: 'p2' },
     ]) expect(LogEntrySchema.safeParse(e).success, JSON.stringify(e)).toBe(false);

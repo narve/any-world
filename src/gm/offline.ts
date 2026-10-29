@@ -14,7 +14,7 @@
 import type { WorldSpec, ItemDef } from '../schema/world';
 import type { Difficulty, GmAction, GmHook, GmResponse } from '../schema/gm';
 import { GM_ACTION_COST } from '../schema/gm';
-import type { GameEvent, GameState, LogMessage, Pos } from '../engine/types';
+import type { GameEvent, GameState, LogMessage, PlayerId, Pos } from '../engine/types';
 import * as engine from '../engine/index';
 import { leadPlayer } from '../engine/index';
 
@@ -33,6 +33,8 @@ export interface GmHookDetail {
   questId?: string;
   level?: number;
   reason?: string;
+  /** the player the moment is about (parties of 2+ only: low_hp, boss_seen, area_enter, milestone) */
+  playerId?: PlayerId;
 }
 
 /** one GM moment, as queued for the director */
@@ -167,9 +169,9 @@ function player(state: GameState) {
   return state.area.actors.find((a) => a.id === leadPlayer(state).actorId);
 }
 
-function seenNow(state: GameState, p: Pos): boolean {
-  const seen = leadPlayer(state).seen as ArrayLike<number>;
-  return (seen[p.y * state.area.map.width + p.x] ?? 0) === 2;
+function seenNow(state: GameState, p: Pos, pid: PlayerId = state.party[0]): boolean {
+  const seen = state.players[pid]?.seen as ArrayLike<number> | undefined;
+  return (seen?.[p.y * state.area.map.width + p.x] ?? 0) === 2;
 }
 
 /**
@@ -213,6 +215,7 @@ export class OfflineGmDirector implements GmDirector {
         return null;
       }
       default:
+        // low_hp (the engine speaks), death / victory (the end screen), chat (rooms' AI GM only)
         return null;
     }
   }
@@ -329,11 +332,29 @@ export interface HookTracker {
   areaEnteredTurn: number;
   /** unique/boss actor instance ids already announced */
   bossesSeen: string[];
+  /**
+   * Party throttles (parties of 2+ only, MP4 design §2.2; absent in single player's saves): the area
+   * each player last had a low_hp hook in, and the turns of the party's last low_hp and
+   * region_discovered hooks. Turn-based, so a replay rebuilds the same tracker.
+   */
+  lowHpAt?: Record<PlayerId, number>;
+  lastLowHpTurn?: number;
+  lastRegionTurn?: number;
 }
 
 export function newHookTracker(turn = 0): HookTracker {
   return { lastHookTurn: turn, areaEnteredTurn: turn, bossesSeen: [] };
 }
+
+/** a deep copy (stored snapshots never share nested objects with the live tracker) */
+export function cloneTracker(t: HookTracker): HookTracker {
+  return structuredClone(t);
+}
+
+/** party hooks: at most one low_hp hook per player per area, and one per this many turns for the party */
+export const PARTY_LOW_HP_TURNS = 12;
+/** party hooks: at most one region_discovered hook per this many turns */
+export const PARTY_REGION_TURNS = 10;
 
 /** turns without any hook before an 'idle' hook (DESIGN §4.3 "occasionally on a timer") */
 export const IDLE_TURNS = 60;
@@ -404,7 +425,13 @@ export function gmHooksFor(world: WorldSpec, before: GameState, after: GameState
   return out;
 }
 
+/** a party of 2+ (anyone ever joined): the party rules of deriveHooks apply */
+function isParty(state: GameState): boolean {
+  return Object.keys(state.players).length > 1;
+}
+
 function deriveHooks(world: WorldSpec, before: GameState, after: GameState, events: GameEvent[], tracker: HookTracker): GmHookEvent[] {
+  if (isParty(after)) return derivePartyHooks(world, before, after, events, tracker);
   const out: GmHookEvent[] = [];
   const area = after.area.index;
   const turn = after.turn;
@@ -448,6 +475,89 @@ function deriveHooks(world: WorldSpec, before: GameState, after: GameState, even
       if (!seenNow(after, a.pos)) continue;
       tracker.bossesSeen.push(a.id);
       push('boss_seen', { actorId: a.id });
+    }
+  }
+  return out;
+}
+
+/**
+ * deriveHooks for a party of 2+ (MP4 design §2.2), from state diffs (no engine change): low_hp per
+ * player (its actor's ai.lowHp turning on, or a downed event), throttled per player and area and per
+ * PARTY_LOW_HP_TURNS for the party; boss_seen by the first member who sees it; one milestone for a
+ * shared level-up; region_discovered at most once per PARTY_REGION_TURNS; area_enter's subject the
+ * player whose exit countdown moved the party on.
+ */
+function derivePartyHooks(world: WorldSpec, before: GameState, after: GameState, events: GameEvent[], tracker: HookTracker): GmHookEvent[] {
+  const out: GmHookEvent[] = [];
+  const area = after.area.index;
+  const turn = after.turn;
+  const push = (hook: GmHook, detail?: GmHookDetail) => {
+    if (!out.some((h) => h.hook === hook)) out.push({ hook, area, turn, ...(detail ? { detail } : {}) });
+  };
+  const pidOfActor = (state: GameState, actorId: string | undefined): PlayerId | undefined =>
+    actorId ? Object.values(state.players).find((p) => p.actorId === actorId)?.id : undefined;
+  const lowHp: { pid: PlayerId; reason?: string }[] = [];
+  for (const e of events) {
+    switch (e.type) {
+      case 'area_entered':
+        if (e.index > 0 || before.area.index !== after.area.index) {
+          const by = before.area.exitCountdown?.by;
+          push('area_enter', by && after.players[by] ? { playerId: by } : undefined);
+        }
+        break;
+      case 'region_discovered': {
+        if (tracker.lastRegionTurn !== undefined && turn - tracker.lastRegionTurn < PARTY_REGION_TURNS) break;
+        if (out.some((h) => h.hook === 'region_discovered')) break;
+        const r = after.area.map.regions.find((x) => x.id === e.regionId);
+        push('region_discovered', { regionId: e.regionId, ...(r?.name ? { regionName: r.name } : {}) });
+        tracker.lastRegionTurn = turn;
+        break;
+      }
+      case 'downed':
+        lowHp.push({ pid: e.playerId, reason: 'downed' });
+        break;
+      case 'level_up':
+        // XP is shared: one hook for the party, whoever's level-up came first
+        push('milestone', { level: e.level, reason: 'party_level_up' });
+        break;
+      case 'quest_updated':
+        if (e.status === 'done') push('milestone', { questId: e.questId, reason: 'quest_done' });
+        break;
+      case 'died': {
+        const def = world.actors.find((d) => d.id === e.defId);
+        if (!def?.unique) break;
+        const killer = pidOfActor(after, e.killerId);
+        push('milestone', { actorId: e.actorId, reason: 'unique_defeated', ...(killer ? { playerId: killer } : {}) });
+        break;
+      }
+      case 'game_over':
+        push(e.result === 'won' ? 'victory' : 'death', { reason: e.reason });
+        break;
+    }
+  }
+  // a member's actor went below the low-hp line this step (the engine's low_hp event names nobody)
+  for (const pid of after.party) {
+    const id = after.players[pid]?.actorId;
+    const now = after.area.actors.find((a) => a.id === id);
+    const was = before.area.actors.find((a) => a.id === id);
+    if (now?.ai.lowHp && was && !was.ai.lowHp && !lowHp.some((x) => x.pid === pid)) lowHp.push({ pid });
+  }
+  const lowFree = tracker.lastLowHpTurn === undefined || turn - tracker.lastLowHpTurn >= PARTY_LOW_HP_TURNS;
+  const low = lowFree ? lowHp.find((x) => (tracker.lowHpAt ?? {})[x.pid] !== area) : undefined;
+  if (low && after.status === 'playing') {
+    push('low_hp', { playerId: low.pid, ...(low.reason ? { reason: low.reason } : {}) });
+    tracker.lowHpAt = { ...(tracker.lowHpAt ?? {}), [low.pid]: area };
+    tracker.lastLowHpTurn = turn;
+  }
+  // a unique (boss) comes into view of any member for the first time
+  if (after.status === 'playing') {
+    const uniques = new Set(world.actors.filter((d) => d.unique && !d.npc).map((d) => d.id));
+    for (const a of after.area.actors) {
+      if (a.hp <= 0 || !uniques.has(a.defId) || tracker.bossesSeen.includes(a.id)) continue;
+      const who = after.party.find((pid) => !after.players[pid]?.down && seenNow(after, a.pos, pid));
+      if (!who) continue;
+      tracker.bossesSeen.push(a.id);
+      push('boss_seen', { actorId: a.id, playerId: who });
     }
   }
   return out;

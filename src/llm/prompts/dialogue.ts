@@ -11,7 +11,7 @@ import type { ActorInstance, GameState } from '../../engine/types';
 import { DIALOGUE_SCHEMA_DOC, SCHEMA_NOTATION } from './world-schema';
 import { JSON_ONLY, languageInstruction } from './common';
 import { gmPersona, gmSituation, worldSummary, knownItemName } from './gm-summary';
-import { HELPFUL_CEILING } from './gm';
+import { HELPFUL_CEILING, helpCeiling } from './gm';
 import { protectedGoalLine } from '../goal-refs';
 
 export const DIALOGUE_MAX_TOKENS = 1200;
@@ -100,7 +100,7 @@ export function dialogueUserMessage(input: DialoguePromptInput): string {
   if (found) parts.push(npcBlock(input.world, input.state, found.inst, found.def));
   else parts.push(`NPC ${input.npcId} (not in this area any more: say a brief farewell and end).`);
   const used = input.helpfulUsed ?? 0;
-  parts.push(`HELP USED this area: ${used} of ${HELPFUL_CEILING[input.difficulty]}`);
+  parts.push(`HELP USED this area: ${used} of ${helpCeiling(input.difficulty, input.state.area.partySize ?? 1)}`);
   const hist = (input.history ?? []).slice(-DIALOGUE_HISTORY_TURNS);
   if (hist.length) parts.push(`CONVERSATION SO FAR\n${hist.map((h) => `${h.speaker === 'npc' ? 'NPC' : 'PLAYER'}: ${h.text}`).join('\n')}`);
   const said = (input.playerLine ?? '').trim();

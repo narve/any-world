@@ -9,8 +9,10 @@
  *    refusals are sent back to the model for one repair turn. If the model still fails, the valid
  *    actions of its last reply are kept, and otherwise the offline director answers.
  *  - Discipline the model cannot be trusted with is enforced here too: a ceiling on helpful actions
- *    per area (HELPFUL_CEILING by difficulty, the M2 "helpful ceiling" known issue) and the hook rules
- *    (death / victory only narrate).
+ *    per area (helpCeiling by difficulty and party size, the M2 "helpful ceiling" known issue) and
+ *    the hook rules (intro / death / victory / chat only words).
+ *  - Browser- and server-safe: the offline fallback is src/gm/offline's (English offer labels);
+ *    the client passes its i18n-labelled director as `fallback`.
  *  - Demo mode: `createDemoGm` serves recorded responses (content/recordings/<worldKey>/, see
  *    recording-keys.ts) through the MockProvider, each recorded moment once, and falls back to the
  *    offline director / canned NPC lines when nothing is recorded.
@@ -28,11 +30,11 @@ import {
   keepValidActions,
   npcStock,
 } from './gm-checks';
-import { OfflineGmDirector, sanitizeResponse, type GmDirector, type GmRequest } from '../client/gm-director';
+import { OfflineGmDirector, sanitizeResponse, type GmDirector, type GmRequest } from '../gm/offline';
 import type { LLMProvider } from './types';
 import { LLMAbortedError } from './errors';
 import { completeStructured, extractJson, StructuredOutputError } from './structured';
-import { gmRequest, HELPFUL_CEILING } from './prompts/gm';
+import { gmRequest, helpCeiling } from './prompts/gm';
 import { dialogueRequest, npcOf, type DialogueLine, type DialoguePromptInput } from './prompts/dialogue';
 import { dialoguePurpose, gmPurpose, worldKeyOf } from './recording-keys';
 import { MockProvider, type Recording } from './mock';
@@ -59,7 +61,22 @@ function salvage<T extends { actions: GmAction[] }>(text: string, schema: z.ZodT
 // Help ledger (per run and area)
 // ---------------------------------------------------------------------------
 
-class HelpLedger {
+/**
+ * Where the helpful actions of an area are counted: `get` the number used in `state`'s area, `add`
+ * charges more. The HelpLedger class keeps them in memory; a room backs it with its tracker, so the
+ * count survives a restart (MP4 design §1.5).
+ */
+export interface HelpLedgerLike {
+  get(state: GameState): number;
+  add(state: GameState, n: number): void;
+}
+
+/** the ceiling of `state`'s area (its party size) */
+function ceilingOf(state: GameState, difficulty: GameState['difficulty'] | undefined): number {
+  return helpCeiling(difficulty ?? 'normal', state.area.partySize ?? 1);
+}
+
+class HelpLedger implements HelpLedgerLike {
   private used = new Map<string, number>();
   private key(state: GameState): string {
     return `${state.worldId}:${state.seed}:${state.area.index}`;
@@ -90,7 +107,7 @@ export interface LlmGmDirectorOptions {
   /** errors (logging only; the director never throws them) */
   onError?: (err: unknown, hook: GmHook) => void;
   /** shared with LlmDialogue so gifts in conversations and GM moments share one ceiling */
-  ledger?: HelpLedger;
+  ledger?: HelpLedgerLike;
   maxTokens?: number;
   /**
    * Time the model gets before the director gives up on it and answers through its (capped)
@@ -98,6 +115,9 @@ export interface LlmGmDirectorOptions {
    * runner's own fallback answers outside this director and so outside the help ceiling.
    */
   deadlineMs?: number;
+  /** timer hooks for the deadline (default the globals; the room passes its scheduler's) */
+  setTimer?: (fn: () => void, ms: number) => unknown;
+  clearTimer?: (h: unknown) => void;
 }
 
 /** default LlmGmDirectorOptions.deadlineMs; below the client's live GM timeout (30 s) */
@@ -113,7 +133,7 @@ export class CappedGmDirector implements GmDirector {
   readonly name: string;
   constructor(
     private readonly inner: GmDirector,
-    readonly ledger: HelpLedger,
+    readonly ledger: HelpLedgerLike,
   ) {
     this.name = inner.name;
   }
@@ -125,10 +145,10 @@ export class CappedGmDirector implements GmDirector {
 }
 
 /** goal protection + engine checks + help ceiling (charged to the ledger) for one answer */
-function capResponse(ledger: HelpLedger, req: GmRequest, actions: readonly GmAction[]): GmResponse | null {
+export function capResponse(ledger: HelpLedgerLike, req: Pick<GmRequest, 'hook' | 'ctx'>, actions: readonly GmAction[]): GmResponse | null {
   const { world, state, difficulty } = req.ctx;
   const valid = keepValidActions(world, state, actions, req.hook);
-  const ceiling = HELPFUL_CEILING[difficulty] ?? 2;
+  const ceiling = ceilingOf(state, difficulty);
   const capped = applyHelpCeiling(world, valid, Math.max(0, ceiling - ledger.get(state)), state);
   ledger.add(state, capped.used);
   return capped.actions.length ? sanitizeResponse({ actions: capped.actions }) : null;
@@ -136,7 +156,7 @@ function capResponse(ledger: HelpLedger, req: GmRequest, actions: readonly GmAct
 
 export class LlmGmDirector implements GmDirector {
   readonly name: string;
-  readonly ledger: HelpLedger;
+  readonly ledger: HelpLedgerLike;
   private readonly fallback: GmDirector | null;
 
   constructor(private readonly opts: LlmGmDirectorOptions) {
@@ -155,7 +175,7 @@ export class LlmGmDirector implements GmDirector {
     const { world, state, difficulty } = req.ctx;
     const worldKey = this.opts.worldKey ?? worldKeyOf(world);
     const helpfulUsed = this.ledger.get(state);
-    const ceiling = HELPFUL_CEILING[difficulty] ?? 2;
+    const ceiling = ceilingOf(state, difficulty);
     const input = {
       world,
       state,
@@ -181,7 +201,9 @@ export class LlmGmDirector implements GmDirector {
     const onAbort = () => ctrl.abort();
     req.signal.addEventListener('abort', onAbort, { once: true });
     let late = false;
-    const timer = setTimeout(() => {
+    const setTimer = this.opts.setTimer ?? ((fn: () => void, ms: number) => setTimeout(fn, ms));
+    const clearTimer = this.opts.clearTimer ?? ((h: unknown) => clearTimeout(h as ReturnType<typeof setTimeout>));
+    const timer = setTimer(() => {
       late = true;
       ctrl.abort();
     }, this.opts.deadlineMs ?? DEFAULT_GM_DEADLINE_MS);
@@ -201,7 +223,7 @@ export class LlmGmDirector implements GmDirector {
       }
       if (!actions) return this.fallback ? this.fallback.respond(req) : null;
     } finally {
-      clearTimeout(timer);
+      clearTimer(timer);
       req.signal.removeEventListener('abort', onAbort);
     }
     // re-read the shared ledger: an NPC voice turn (or another director) may have spent help while
@@ -244,12 +266,12 @@ export interface LlmDialogueOptions {
   worldKey?: string;
   retries?: number;
   onError?: (err: unknown) => void;
-  ledger?: HelpLedger;
+  ledger?: HelpLedgerLike;
   maxTokens?: number;
 }
 
 export class LlmDialogue {
-  readonly ledger: HelpLedger;
+  readonly ledger: HelpLedgerLike;
   constructor(private readonly opts: LlmDialogueOptions) {
     this.ledger = opts.ledger ?? new HelpLedger();
   }
@@ -260,7 +282,7 @@ export class LlmDialogue {
     const found = npcOf(world, state, input.npcId);
     const worldKey = this.opts.worldKey ?? worldKeyOf(world);
     const helpfulUsed = this.ledger.get(state);
-    const ceiling = HELPFUL_CEILING[input.difficulty] ?? 2;
+    const ceiling = ceilingOf(state, input.difficulty);
     const request = dialogueRequest({ ...input, helpfulUsed }, dialoguePurpose(worldKey, found?.def.id ?? input.npcId), {
       ...(input.signal ? { signal: input.signal } : {}),
       jsonSchema: dialogueJsonSchema(),

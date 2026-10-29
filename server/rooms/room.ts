@@ -28,7 +28,7 @@ import { FREE_ACTIONS } from '../../src/engine/party';
 import type { GameState, PlayerAction, PlayerId, TurnInput, TurnOutcome } from '../../src/engine/types';
 import { parseWorld } from '../../src/schema';
 import type { WorldSpec } from '../../src/schema/world';
-import { gmHooksFor, newHookTracker, OfflineGmDirector, sanitizeResponse, type GmHookEvent, type GmTranslate, type HookTracker, type OfflineGmKey } from '../../src/gm/offline';
+import { cloneTracker, gmHooksFor, newHookTracker, OfflineGmDirector, sanitizeResponse, type GmHookEvent, type GmTranslate, type HookTracker, type OfflineGmKey } from '../../src/gm/offline';
 import { applyEntry, changedArea, type Applied } from '../../src/net/log';
 import {
   cleanChat,
@@ -284,7 +284,8 @@ export class Room {
     if (f.snapshot) {
       let state = deserialize(pw.world, f.snapshot.state);
       room.n = f.snapshot.n;
-      room.tracker = f.hooks ? { ...f.hooks, bossesSeen: [...f.hooks.bossesSeen] } : newHookTracker(state.turn);
+      // defaults merged under the file's fields: an older room file loads without the new ones
+      room.tracker = f.hooks ? cloneTracker({ ...newHookTracker(state.turn), ...f.hooks }) : newHookTracker(state.turn);
       if (room.n % LIMITS.hashEvery === 0) room.hashes.set(room.n, hashState(state));
       for (const raw of entries) {
         const e = LogEntrySchema.parse(raw);
@@ -1333,7 +1334,7 @@ export class Room {
   /** a snapshot of the state now: the room file is rewritten and the log truncated */
   snapshot(): void {
     if (!this.state) return;
-    this.stored = { snapshot: { n: this.n, state: serialize(this.state) }, hooks: { ...this.tracker, bossesSeen: [...this.tracker.bossesSeen] } };
+    this.stored = { snapshot: { n: this.n, state: serialize(this.state) }, hooks: cloneTracker(this.tracker) };
     this.persistRoom(true);
   }
 

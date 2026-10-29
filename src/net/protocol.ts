@@ -167,7 +167,8 @@ void inputsMatch;
 const entry = { n: Count, run: Count };
 export const LogEntrySchema = z.discriminatedUnion('k', [
   z.object({ ...entry, k: z.literal('turn'), inputs: z.array(TurnInputSchema).max(MAX_PARTY_SIZE), advance: z.boolean() }),
-  z.object({ ...entry, k: z.literal('gm'), hook: GmHook, actions: z.array(GmAction).max(6) }),
+  // pid: the player the actions are for (EngineEnv.playerId; absent = the lead, as in MP2 entries)
+  z.object({ ...entry, k: z.literal('gm'), hook: GmHook, pid: PlayerIdSchema.optional(), actions: z.array(GmAction).max(6) }),
   z.object({ ...entry, k: z.literal('join'), seat: SeatId, name: Name, pid: PlayerIdSchema, near: PlayerIdSchema }),
   z.object({ ...entry, k: z.literal('away'), pid: PlayerIdSchema }),
   z.object({ ...entry, k: z.literal('back'), pid: PlayerIdSchema }),

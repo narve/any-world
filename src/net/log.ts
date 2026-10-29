@@ -22,7 +22,7 @@ export interface Applied {
  * Applies one entry to `state` (never mutated) with the world passed explicitly, so the engine
  * registry is not needed:
  *  - turn: stepTurn(inputs, { advance })
- *  - gm: applyGmActions(actions)
+ *  - gm: applyGmActions(actions) for `pid` (absent, or no longer on the map: the lead)
  *  - join: addPlayer({ name, near }); throws when the engine gives another player id than the entry's
  *  - away / back: setAway
  *  - leave: leaveMap; return: returnToMap({ near })
@@ -37,7 +37,8 @@ export function applyEntry(world: WorldSpec, state: GameState, e: LogEntry): App
       return { state: r.state, events: r.events, outcomes: r.outcomes };
     }
     case 'gm': {
-      const r = applyGmActions(state, e.actions, env);
+      const pid = e.pid !== undefined && state.party.includes(e.pid) ? e.pid : undefined;
+      const r = applyGmActions(state, e.actions, pid ? { ...env, playerId: pid } : env);
       return { state: r.state, events: r.events, outcomes: [] };
     }
     case 'join': {

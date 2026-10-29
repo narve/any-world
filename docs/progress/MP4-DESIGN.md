@@ -454,6 +454,59 @@ except where party hook throttles (§2.2) change which offline lines a party of 
 lines updated in G1, named in the commit); the engine touch is `gm-context.ts` only (G2 runs the sim
 gate).
 
+## G1 as built
+
+- **Frozen hashes** (`tests/llm/frozen-prompts.test.ts`, first commit): fnv1a64 of the GM system prompt
+  (4 worlds/difficulties), the GM user message for every single-player hook, `gmJsonSchema`,
+  `dialogueJsonSchema`, `GM_SCHEMA_DOC`, `DIALOGUE_SCHEMA_DOC`, the dialogue prompts, the world prompts,
+  and the `requestHash` of the whole requests `LlmGmDirector` / `LlmDialogue` send. `FROZEN_PRINT=1 npx
+  vitest run tests/llm/frozen-prompts.test.ts --silent=false` prints the current values (deliberate
+  updates only). Still equal after the rest of G1.
+- `src/gm/runner.ts`: `GmRunner` moved (client re-exports it from `gm-director.ts`). It never used `t`
+  (only the client's `OfflineGmDirector` does), so **no `text` option**. New options: `now` (clock,
+  default `Date.now`), `coalesce(a, b)` (a queued hook replaced **in place** by the newer one),
+  `dropStale(hook, askedAt)` (checked at dequeue, skips to the next). `GmResult.askedAt?`,
+  `runner.pendingHooks()` (running first; for the room's "a chat request is already queued").
+  `partyCoalesce`: same kind and same `detail.playerId`; `low_hp` per party; `KEEP` hooks never.
+- `src/gm/recheck.ts`: `recheckGmActions(world, state, actions, pid?)` and
+  **`recheckOfferOption(world, state, index, pid?)`** (pid last, not second as in §1.1, so the client's
+  call is unchanged); checks run on `perspective(state, pid)`, the returned state keeps party order.
+- `src/gm/perspective.ts`: moved; `src/client/room/perspective.ts` and `src/client/gm-recheck.ts`
+  re-export.
+- `src/llm/gm-runtime.ts`: imports the shared `src/gm/offline` (no client/i18n import any more, so the
+  server can use it). Its default fallback is therefore the English-labelled offline director;
+  `src/client/ai.ts` passes the client's i18n `OfflineGmDirector` explicitly (live and demo), so single
+  player is unchanged. `HelpLedgerLike { get(state): number; add(state, n): void }` (the existing
+  `HelpLedger` method names, not `used`/`add()` as sketched in §1.5); `ledger` options take it.
+  `capResponse(ledger, req, actions)` is exported (G3's recorded mode). `setTimer`/`clearTimer` on
+  `LlmGmDirectorOptions` (the deadline).
+- `helpCeiling(d, n)` in `src/llm/prompts/gm.ts` (`partyScaled(HELPFUL_CEILING[d], n, 0.25)`), n from
+  `state.area.partySize`; used by `capResponse`, `LlmGmDirector`, `LlmDialogue`, `gmUserMessage` and
+  `dialogueUserMessage` (the "HELP USED: x of N" lines). The system prompts still quote
+  `HELPFUL_CEILING[d]` (party wording is G2's party section).
+- `MockProvider`: `seed` (latency and failure draws; default `failure.seed` as before), `setTimer` /
+  `clearTimer`.
+- `src/gm/offline.ts`: `GmHookDetail.playerId`; `HookTracker` gains **optional** `lowHpAt`,
+  `lastLowHpTurn`, `lastRegionTurn` (absent for a party of one, so single player's saves and trackers
+  are unchanged); `cloneTracker` (structuredClone), used by `Room.load` (merged onto
+  `newHookTracker()`) and the room snapshot. Party rules (`derivePartyHooks`) apply when the state has
+  2+ players (`Object.keys(state.players).length`, so also after someone left): `low_hp` from the
+  member's `ai.lowHp` false → true or a `downed` event, per player per area and one per
+  `PARTY_LOW_HP_TURNS` (12); `region_discovered` one per `PARTY_REGION_TURNS` (10); `milestone`
+  `party_level_up` once; `unique_defeated` names the killer; `boss_seen` the first non-down member
+  whose fog sees it; `area_enter` names `before.area.exitCountdown.by`. A party of one is checked
+  against hashes taken with the MP3 code (4 bot runs). `respondSync('chat')` is `null`.
+- `GmHook` gains `'chat'` (schema enum; not in `gmJsonSchema`/`GM_SCHEMA_DOC`, hashes equal);
+  `HOOK_BRIEF.chat` exists (only shown on a `chat` hook, i.e. rooms); `WORDS_ONLY` has `chat`.
+- Protocol: `gm` entries take `pid?`; `applyEntry` applies with `playerId: pid` when that player is on
+  the map, else the lead (deterministic on every replica).
+- The room itself is unchanged apart from `cloneTracker`: it still asks the offline director for the
+  lead and pushes no `pid` (target choice is G3). No existing room test needed new expected lines (they
+  assert no party-specific offline GM lines).
+- Tests: `tests/gm/offline.test.ts` (party of one = MP3 hashes, throttles, subjects, cloneTracker,
+  chat null), `tests/gm/runner.test.ts`, `tests/gm/recheck.test.ts`, `tests/llm/gm-shared.test.ts`
+  (helpCeiling, HelpLedgerLike, injected timers, chat words only), `tests/net` (gm `pid`, `chat`).
+
 ## Review notes
 
 Three critiques (rules, engine, risk) of the first draft; one line per point.

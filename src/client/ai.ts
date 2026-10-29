@@ -21,7 +21,7 @@ import { generateWorld, WorldGenerationError, type Balancer, type GenerateProgre
 import type { WorldSpec } from '../schema/world';
 import type { Difficulty } from '../schema/gm';
 import type { GameState } from '../engine/types';
-import type { GmDirector } from './gm-director';
+import { OfflineGmDirector, type GmDirector } from './gm-director';
 import type { LoadingStepView, LoadingView } from './ui/viewmodel';
 import { t, tx } from './i18n/index';
 
@@ -81,7 +81,8 @@ export interface RunAiOptions {
 export async function runAi(opts: RunAiOptions): Promise<RunAi> {
   const onError = opts.onError ?? ((e: unknown) => console.warn('[anyworld] AI:', e));
   if (opts.provider) {
-    const director = new LlmGmDirector({ provider: opts.provider, worldKey: opts.worldId, onError: (e) => onError(e) });
+    // the fallback labels its offers with the client's i18n
+    const director = new LlmGmDirector({ provider: opts.provider, worldKey: opts.worldId, fallback: new OfflineGmDirector(), onError: (e) => onError(e) });
     // GM moments and conversations share one help ceiling
     const dialogue = new LlmDialogue({ provider: opts.provider, worldKey: opts.worldId, ledger: director.ledger, onError });
     return { mode: 'live', director, dialogue, gmTimeoutMs: LIVE_GM_TIMEOUT_MS };
@@ -93,7 +94,7 @@ export async function runAi(opts: RunAiOptions): Promise<RunAi> {
     onError(e);
   }
   if (recordings.length) {
-    const demo = createDemoGm({ recordings, worldKey: opts.worldId, onError });
+    const demo = createDemoGm({ recordings, worldKey: opts.worldId, fallback: new OfflineGmDirector(), onError });
     return { mode: 'demo', director: demo.director, dialogue: demo.dialogue, gmTimeoutMs: DEMO_GM_TIMEOUT_MS };
   }
   return { mode: 'offline', director: null, dialogue: null, gmTimeoutMs: DEMO_GM_TIMEOUT_MS };

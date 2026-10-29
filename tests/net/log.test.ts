@@ -211,6 +211,24 @@ describe('applyEntry', () => {
     expect(applyEntry(western, s, { n: 0, run: 1, k: 'turn', inputs: [{ playerId: 'p1', actions: [{ type: 'unequip', slot: 27 }] }], advance: false }).state).toBe(s);
   });
 
+  it('a gm entry with pid applies its actions to that player (MP4); absent or off the map, to the lead', () => {
+    let s = createGame(western, { seed: 4 });
+    s = addPlayer(s, { name: 'Bo' }, { world: western }).state;
+    const [p1, p2] = s.party as [PlayerId, PlayerId];
+    const item = western.items.find((i) => i.onUse)!.id;
+    const give: GmAction[] = [{ type: 'give_item', item, count: 1 }];
+    const count = (st: GameState, pid: PlayerId) => st.players[pid]!.slots.filter((x) => x?.defId === item).reduce((n, x) => n + (x?.count ?? 1), 0);
+    const e = (pid?: PlayerId): LogEntry => LogEntrySchema.parse(JSON.parse(JSON.stringify({ n: 3, run: 1, k: 'gm', hook: 'idle', ...(pid ? { pid } : {}), actions: give })));
+    const toP2 = applyEntry(western, s, e(p2)).state;
+    expect([count(toP2, p1), count(toP2, p2)]).toEqual([count(s, p1), count(s, p2) + 1]);
+    expect(hashState(toP2)).toBe(hashState(applyGmActions(s, give, { world: western, playerId: p2 }).state));
+    const toLead = applyEntry(western, s, e()).state;
+    expect([count(toLead, p1), count(toLead, p2)]).toEqual([count(s, p1) + 1, count(s, p2)]);
+    // p2 left the map: the answer goes to the lead, the same on every replica
+    const left = leaveMap(s, p2, { world: western }).state;
+    expect(hashState(applyEntry(western, left, e(p2)).state)).toBe(hashState(applyEntry(western, left, e()).state));
+  });
+
   it('changedArea compares the area index', () => {
     expect(changedArea(rec.start, rec.start)).toBe(false);
     expect(changedArea(rec.start, rec.final)).toBe(rec.start.area.index !== rec.final.area.index);

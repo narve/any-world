@@ -14,8 +14,8 @@ import { GM_HARMFUL_STATUS_TURNS, goalRefs, type GoalRefs } from './goal-refs';
 
 export { GM_HARMFUL_STATUS_TURNS, goalRefs, type GoalRefs };
 
-/** hooks after which nothing but words may happen */
-const WORDS_ONLY: ReadonlySet<GmHook> = new Set(['intro', 'death', 'victory']);
+/** hooks after which nothing but words may happen (chat: a hostile line can at most make the GM talk) */
+const WORDS_ONLY: ReadonlySet<GmHook> = new Set(['intro', 'death', 'victory', 'chat']);
 const WORD_ACTIONS: ReadonlySet<GmAction['type']> = new Set(['narrate', 'say', 'mood']);
 
 function isHarmfulStatus(world: WorldSpec, id: string): boolean {

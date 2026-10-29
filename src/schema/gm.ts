@@ -118,5 +118,6 @@ export const GmHook = z.enum([
   'idle',           // every ~60 turns without other hooks
   'death',          // epitaph
   'victory',
+  'chat',           // rooms only (MP4): the players' chat addresses the GM; words only, never in single player
 ]);
 export type GmHook = z.infer<typeof GmHook>;
