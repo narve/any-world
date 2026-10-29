@@ -31,11 +31,12 @@ export { sanitizeSchemaForAnthropic, isRecursiveSchema, jsonInstruction, findOpe
 export { checkStructuredText, type CheckResult } from './structured';
 // M3: prompts, world generation pipeline, GM runtime, recording keys
 export * from './recording-keys';
+export { balanceWorld } from './balance-run';
 export {
   generateWorld,
   checkWorldReply,
   finaliseWorld,
-  balanceWorld,
+  balanceHere,
   balanceFeedbackMessage,
   worldErrors,
   peekTitle,

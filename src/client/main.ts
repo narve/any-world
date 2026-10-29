@@ -18,7 +18,7 @@ import { loadRenderer, preloadRenderer } from './render/lazy';
 import { listPresets } from '../llm/presets';
 import { fetchServerInfo } from '../llm/transport';
 import type { LLMProvider } from '../llm/types';
-import { workerBalancer } from '../llm/balance-worker';
+import { workerBalancer } from '../llm/balance-client';
 import { loadBundledRecordings, recordedWorldKeys } from '../llm/recordings-bundle';
 import { findStoredWorld, forgetWorld, generatedWorlds, hasWorld, loadBundledWorld, loadWorld, recordingsKey, rememberWorld, worldIndex, worldTitle, type WorldEntry } from './worlds';
 import { providerFromSettings, providerLabel, runAi, WorldGeneration } from './ai';
