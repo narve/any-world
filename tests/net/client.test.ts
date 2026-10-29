@@ -6,6 +6,7 @@
  * `closed` or a replaced socket (with the notice key for the MP3 toast).
  * MP3 D1: per-entry steps with the catch-up flag, stopReason in the stopped status, a late join
  * from a playing welcome, the room / typing / clock state, and the lobby messages.
+ * The phase ends with an entry that wins or loses the run.
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -329,5 +330,27 @@ describe('RoomClient', () => {
     // a welcome (a reconnect) forgets who was typing
     t.last().deliver(welcome(null));
     expect(t.c.typingSeats.size).toBe(0);
+  });
+
+  it('an entry that wins or loses the run ends the phase, as the server does (no message says so)', () => {
+    const t = setup();
+    const start = createGame(world, { seed: 3, players: [{ name: 'Ann' }] });
+    t.c.connect();
+    t.last().open();
+    t.last().deliver(welcome(start));
+    t.last().deliver({ t: 'entries', run: 1, es: waits(start, 0, 1).es });
+    expect(t.c.phase).toBe('playing');
+    // a snapshot where the player is at 0 hp: the next turn loses the run
+    const s1 = t.c.state!;
+    const id = s1.players.p1.actorId;
+    const dying = { ...s1, area: { ...s1.area, actors: s1.area.actors.map((x) => (x.id === id ? { ...x, hp: 0 } : x)) } };
+    t.last().deliver({ t: 'snapshot', run: 1, n: 1, state: serialize(dying) });
+    expect(t.c.phase).toBe('playing');
+    t.last().deliver({ t: 'entries', run: 1, es: waits(dying, 1, 1).es });
+    expect(t.c.state!.status).not.toBe('playing');
+    expect(t.c.phase).toBe('ended');
+    // a new run plays again
+    t.last().deliver({ t: 'run', run: 2, worldId: WORLD_ID, snapshot: { n: 0, state: serialize(start) } });
+    expect(t.c.phase).toBe('playing');
   });
 });

@@ -69,6 +69,11 @@ export class ChatModel {
   private typingUntil = new Map<string, number>();
   private bubbleBy = new Map<string, Bubble>();
   private lastSentAt = -Infinity;
+  /**
+   * a line, emote or ping was sent and its echo has not come back yet: a `rate` error now (the
+   * socket's message bucket dropped something) counts as a chat error, since it may have been this
+   */
+  awaitingEcho = false;
 
   constructor(opts: { self?: string | null; lines?: readonly ChatLine[] } = {}) {
     this.self = opts.self ?? null;
@@ -78,6 +83,7 @@ export class ChatModel {
   /** a live line (a chat frame): kept, the speaker's bubble, typing ended, unread counted; false for a line already kept */
   push(line: ChatLine, now: number): boolean {
     if (!this.add(line)) return false;
+    if (line.seat === this.self) this.awaitingEcho = false;
     this.typingUntil.delete(line.seat);
     if (line.seat !== this.self && !this.sheetOpen) this.unread++;
     const prev = this.bubbleBy.get(line.seat);
@@ -138,6 +144,7 @@ export class ChatModel {
   /** a line, emote or ping was sent at `now` */
   noteSent(now: number): void {
     this.lastSentAt = now;
+    this.awaitingEcho = true;
   }
 
   /** the draft's length against LIMITS.chatMax, in code points */

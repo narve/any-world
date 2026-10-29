@@ -404,6 +404,12 @@ export class RoomClient {
   private setState(state: GameState, n: number): void {
     this.state = state;
     this.n = n;
+    this.settle();
+  }
+
+  /** a run that is won or lost has ended, as the server's settle() marks it (no message says so) */
+  private settle(): void {
+    if (this.phase === 'playing' && this.state && this.state.status !== 'playing') this.phase = 'ended';
   }
 
   private applyAll(es: LogEntry[], catchUp: boolean): void {
@@ -431,6 +437,7 @@ export class RoomClient {
       }
       this.state = after;
       this.n = e.n + 1;
+      this.settle();
       applied.push(e);
       if (changedArea(before, after)) this.sendRaw({ t: 'applied', n: this.n });
       if (this.n % LIMITS.hashEvery === 0) this.sendRaw({ t: 'hash', n: this.n, h: hashState(after) });

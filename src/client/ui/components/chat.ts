@@ -83,6 +83,8 @@ export class ChatPanel {
   private linesKey = '';
   private slowTimer: ReturnType<typeof setTimeout> | null = null;
   private lastLineAt = 0;
+  /** the last line sent, until its echo comes back: given back to the input if the server drops it */
+  private unsent: string | null = null;
   /** what had the focus before the input took it (given back on close) */
   private returnFocus: HTMLElement | null = null;
 
@@ -171,6 +173,8 @@ export class ChatPanel {
   setMode(mode: ChatMode): void {
     if (mode === this.mode) return;
     const was = this.inputOpen;
+    // (an open dock input that leaves the dock closes as the dock's: its presence `menu` ends)
+    if (was && this.mode === 'dock') this.handlers.opened(false);
     this.mode = mode;
     this.el.dataset.mode = mode;
     this.inputOpen = mode !== 'dock' ? true : false;
@@ -251,6 +255,7 @@ export class ChatPanel {
     }
     const r = this.handlers.send(text);
     if (r !== 'ok') return this.sent(r);
+    this.unsent = text;
     this.input.value = '';
     this.onInput();
     this.handlers.typing(false);
@@ -272,6 +277,24 @@ export class ChatPanel {
       for (const el of this.slowEls) el.hidden = true;
       this.el.classList.remove('is-slow');
     }, Math.max(1200, ms + 200));
+  }
+
+  /** the own line came back from the server: it was not lost */
+  confirmSent(text: string): void {
+    if (text === this.unsent) this.unsent = null;
+  }
+
+  /**
+   * the server dropped a send (chat_rate, chat_long, or the socket's rate): "Wait a moment", and the
+   * last line sent goes back into an empty input, so the player only has to send it again
+   */
+  refused(ms: number): void {
+    this.slowDown(ms);
+    const text = this.unsent;
+    this.unsent = null;
+    if (!text || this.input.value.trim()) return;
+    this.input.value = text;
+    this.onInput();
   }
 
   /** the history (re-rendered when it changed); the dock fades after a quiet while */

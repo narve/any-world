@@ -64,8 +64,12 @@ export type LinkEvent =
   | { t: 'toast'; key: MessageKey; tone: 'info' | 'warn' }
   | { t: 'status'; status: RoomClientStatus }
   | { t: 'chat'; line: ChatLine }
-  /** the server refused a chat line, emote or ping (too fast, too long): the chat shows "Wait a moment" */
-  | { t: 'chatError'; code: 'chat_rate' | 'chat_long' };
+  /**
+   * the server refused a chat line, emote or ping (too fast, too long, or dropped by the socket's
+   * message bucket while a send waited for its echo): the chat shows "Wait a moment" and gives the
+   * draft back
+   */
+  | { t: 'chatError'; code: 'chat_rate' | 'chat_long' | 'rate' };
 
 /** how long a reconnect may take before the banner offers "Leave room" (design constants) */
 export const RECONNECT_LEAVE_MS = 20_000;
@@ -88,6 +92,8 @@ export class RoomLink {
   private welcomes = 0;
   /** a bad token: the client stopped and joins again as new (its stop is not the end) */
   private rejoining = false;
+  /** this page is outdated (a reload notice): the client's stop that follows is not the end of the room view */
+  private outdated = false;
   private readonly now: () => number;
   private readonly store: KeyValueStore | null | undefined;
   private readonly doc: VisibilityDoc | null;
@@ -229,6 +235,7 @@ export class RoomLink {
           return;
         }
         if (e.notice.reload) {
+          this.outdated = true;
           this.emit({ t: 'reload' });
           return;
         }
@@ -240,7 +247,7 @@ export class RoomLink {
       case 'status':
         if (e.status === 'reconnecting') this.reconnectingSince ??= this.now();
         else if (e.status === 'joined') this.reconnectingSince = null;
-        else if (e.status === 'stopped' && !this.rejoining) {
+        else if (e.status === 'stopped' && !this.rejoining && !this.outdated) {
           if (e.stopReason === CLOSE.replaced) return this.end('room.otherTab', true);
           if (e.stopReason === CLOSE.policy) return this.end('room.notAllowed', true);
           // (any other stop without a notice: the room is gone for this page)
@@ -257,7 +264,10 @@ export class RoomLink {
           this.chat.setTyping(m.seat, m.on, this.now());
           this.emit({ t: 'changed' });
         } else if (m.t === 'roster' || m.t === 'room') this.emit({ t: 'changed' });
-        else if (m.t === 'error' && (m.code === 'chat_rate' || m.code === 'chat_long')) this.emit({ t: 'chatError', code: m.code });
+        else if (m.t === 'error' && (m.code === 'chat_rate' || m.code === 'chat_long' || (m.code === 'rate' && this.chat.awaitingEcho))) {
+          this.chat.awaitingEcho = false;
+          this.emit({ t: 'chatError', code: m.code });
+        }
         // (an input or a ping that crossed the end of the run on the wire: nothing the player did wrong)
         else if (m.t === 'error' && m.code === 'bad_phase' && this.client.phase !== 'playing') console.info(`[anyworld] room: ${m.code} ${m.message}`);
         else if (m.t === 'error' && NOT_ALLOWED.has(m.code)) {

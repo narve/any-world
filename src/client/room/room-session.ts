@@ -372,7 +372,7 @@ export class RoomSession extends GameSession {
     return { ...emptyOutcome(), changed: true, areaChanged: true };
   }
 
-  /** refusals (to this seat) toast as in single player; a stale input is decided again */
+  /** refusals (to this seat) toast as in single player; a stale (or rate-dropped) input is decided again */
   onMessage(msg: ServerMsg): Outcome | null {
     if (msg.t === 'refusal') {
       const q = this.queued;
@@ -385,7 +385,8 @@ export class RoomSession extends GameSession {
       if (this.chain && msg.reasons.some((r) => this.chain!.actions.some((a) => key(a) === key(r.action)))) this.chain = null;
       return toasts.length ? { ...emptyOutcome(), toasts } : null;
     }
-    if (msg.t === 'error' && msg.code === 'stale') {
+    // (an input the socket's message bucket dropped never reached the room: decided again, as a stale one)
+    if (msg.t === 'error' && (msg.code === 'stale' || msg.code === 'rate')) {
       this.queued = null;
       this.chain = null;
       if (!this.travelDest) return null;

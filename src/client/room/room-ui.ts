@@ -124,6 +124,8 @@ export class RoomUi {
   }
 
   detachRun(): void {
+    // (the renderer outlives the room: a later single-player run must not keep the seat colours)
+    this.run?.renderer.setPartyColours(new Map());
     this.overlay?.dispose();
     this.overlay = null;
     this.run = null;
@@ -159,6 +161,9 @@ export class RoomUi {
     if (open === this.sheetOpen) return;
     this.sheetOpen = open;
     this.sheet.hidden = !open;
+    // (phones: toasts move to the top while it is open, as for the game's own sheets: ui.css)
+    if (open) this.ui.root.dataset.roomChat = '1';
+    else delete this.ui.root.dataset.roomChat;
     this.link.chat.setSheetOpen(open);
     this.link.setMenu('chat', open);
     if (!open && this.sheet.contains(document.activeElement)) (document.activeElement as HTMLElement).blur();
@@ -220,12 +225,13 @@ export class RoomUi {
   }
 
   private onLink(e: LinkEvent): void {
-    if (e.t === 'chatError') return this.chat.slowDown(CHAT_TIMING.sendGapMs);
+    if (e.t === 'chatError') return this.chat.refused(CHAT_TIMING.sendGapMs);
     if (e.t !== 'chat') return;
     const now = this.now();
     const line = e.line;
     if (line.ping) this.pingAt.set(line.id, now);
     const mine = line.seat === this.link.client.seat;
+    if (mine && !line.ping) this.chat.confirmSent(line.text);
     // a speaker who is not on screen (or anyone outside the game): the line is highlighted in the history
     if (!mine && !(this.screen() === 'game' && this.overlay?.onScreen(line.seat))) {
       this.fresh.set(line.id, now + ROOM_UI_TIMING.freshMs);

@@ -241,6 +241,19 @@ describe('RoomSession: lockstep', () => {
     const last = h.inputs(b.c).at(-1)!;
     expect(last.intent).toBe('wait');
   });
+
+  it('an input the socket dropped for its rate (error rate) is sent again on the next key press', async () => {
+    const { h, seats } = await started(['Ann', 'Bo']);
+    await h.craft(smallRoom(['Ann', 'Bo'], [{ x: 4, y: 4 }, { x: 10, y: 6 }]), seats.map((x) => x.c));
+    const [a] = seats;
+    const n0 = h.inputs(a.c).length;
+    a.s.uiAction({ type: 'move', dir: 'e' });
+    expect(a.s.queued?.action).toEqual({ type: 'move', dir: 'e' });
+    a.s.onMessage({ t: 'error', code: 'rate', message: 'too many messages; slow down' });
+    expect(a.s.queued).toBeNull();
+    a.s.uiAction({ type: 'move', dir: 'e' });
+    expect(h.inputs(a.c)).toHaveLength(n0 + 2);
+  });
 });
 
 describe('RoomSession: dialogue and trade chains', () => {

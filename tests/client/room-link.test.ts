@@ -40,7 +40,7 @@ function setup() {
   const room = new MemRoom();
   rooms.push(room);
   const store = memStore();
-  const make = (name: string, o: { token?: string | null; colour?: '#e6194b' | '#3cb44b' | '#4363d8'; doc?: FakeDoc | null; code?: string } = {}) => {
+  const make = (name: string, o: { token?: string | null; colour?: '#e6194b' | '#3cb44b' | '#4363d8'; doc?: FakeDoc | null; code?: string; engine?: string } = {}) => {
     const sent: ClientMsg[] = [];
     const events: LinkEvent[] = [];
     const link = new RoomLink({
@@ -51,7 +51,7 @@ function setup() {
       socket: room.socketFactory(sent),
       store,
       doc: o.doc ?? null,
-      engine: ENGINE,
+      engine: o.engine ?? ENGINE,
       ...room.timers(),
     });
     link.on((e) => events.push(e));
@@ -175,6 +175,38 @@ describe('RoomLink', () => {
     a.link.client.ready(true);
     await room.flush();
     expect(notAllowed()).toBe(1);
+  });
+
+  it('an outdated page only asks for a reload: the room view stays (no end, no roomClosed)', async () => {
+    const { room, make } = setup();
+    const a = make('Kari', { token: room.hostToken, engine: 'v-older' });
+    a.link.connect();
+    await room.flush();
+    expect(a.link.client.status).toBe('stopped');
+    expect(a.events.filter((e) => e.t === 'reload' || e.t === 'end').map((e) => e.t)).toEqual(['reload']);
+  });
+
+  it('a socket rate drop while a chat line waits for its echo is a chat error; otherwise it is quiet', async () => {
+    const { room, make } = setup();
+    const a = make('Kari', { token: room.hostToken });
+    a.link.connect();
+    await room.flush();
+    const rate = () => (a.link.client as unknown as { onFrame(d: string): void }).onFrame(JSON.stringify({ t: 'error', code: 'rate', message: 'too many messages; slow down' }));
+    const chatErrors = () => a.events.filter((e) => e.t === 'chatError').length;
+    rate();
+    expect(chatErrors()).toBe(0);
+    a.link.chat.noteSent(Date.now());
+    a.link.client.say('lost line');
+    rate();
+    expect(a.events.at(-1)).toEqual({ t: 'chatError', code: 'rate' });
+    // (one error per send; the echo of a line that got through clears the wait too)
+    rate();
+    expect(chatErrors()).toBe(1);
+    await room.flush();
+    a.link.chat.noteSent(Date.now());
+    a.link.client.say('kept');
+    await room.flush();
+    expect(a.link.chat.awaitingEcho).toBe(false);
   });
 
   it('chat frames reach the ChatModel; a welcome merges the history quietly', async () => {
