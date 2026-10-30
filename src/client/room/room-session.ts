@@ -55,6 +55,9 @@ export interface Queued {
   intent: Intent;
 }
 
+/** a teammate's race ("Someone got there first") toasts at most once in this long (MP5: "Blocked ×4" over the vitals) */
+export const RACE_TOAST_MS = 8000;
+
 export interface RoomSessionInit {
   /** a joined client in the playing phase (state, world and pid set) */
   client: RoomClient;
@@ -82,6 +85,9 @@ export class RoomSession extends GameSession {
   private voiceN: number | null = null;
   /** the turn action waiting for its turn */
   queued: Queued | null = null;
+  /** the last input sent passed the dry run on the replica (a refusal of it is a race with a teammate) */
+  private sentChecked = false;
+  private raceToastAt = -Infinity;
   /** the teammate the camera follows while this player is down (null: this player) */
   followed: PlayerId | null = null;
   private chain: PendingChain | null = null;
@@ -185,7 +191,8 @@ export class RoomSession extends GameSession {
     // the same turn action again for this turn (key repeat) is not resent
     const q = this.queued;
     if (turnAct && actions.length === 1 && q && q.turn === replica.turn && q.area === area && key(q.action) === key(turnAct)) return { ...out, pending: turnAct };
-    if (!this.skipDryRun(replica, actions)) {
+    const checked = !this.skipDryRun(replica, actions);
+    if (checked) {
       const r = stepTurn(replica, [{ playerId: this.pid, actions }], { world: this.world });
       const mine = r.outcomes.filter((x) => x.playerId === this.pid);
       const checked = o.check === 'all' ? mine : mine.slice(0, 1);
@@ -195,6 +202,7 @@ export class RoomSession extends GameSession {
       if (checked.some((x) => !x.ok && x.reason === 'down')) return out;
     }
     if (!this.client.input(actions, intent)) return { ...out, toasts: [{ text: tr('room.offline'), tone: 'warn' }] };
+    this.sentChecked = checked;
     if (turnAct) this.queued = { action: turnAct, area, turn: replica.turn, intent };
     this.chain = o.chain ?? null;
     return { ...out, pending: turnAct ?? actions[actions.length - 1] };
@@ -425,7 +433,14 @@ export class RoomSession extends GameSession {
       // a refused travel step ends the walk quietly (something came up: single player stops there too)
       const travel = !!mine && q!.intent === 'travel';
       if (travel) this.stopTravel();
-      const toasts = msg.reasons.filter((r) => r.reason === 'illegal' && !(travel && r === mine)).map((r) => this.invalidToast(r));
+      let toasts = msg.reasons.filter((r) => r.reason === 'illegal' && !(travel && r === mine)).map((r) => this.invalidToast(r));
+      // an input that passed the dry run and was refused anyway lost a race in a party (a teammate took
+      // the tile, the item or the kill first): one quiet line now and then, not a warning per refusal
+      if (toasts.length && this.sentChecked && this.replica.party.length > 1) {
+        const now = this.now();
+        toasts = now - this.raceToastAt >= RACE_TOAST_MS ? [{ text: tr('room.raced'), tone: 'info' }] : [];
+        if (toasts.length) this.raceToastAt = now;
+      }
       if (mine) this.queued = null;
       if (this.chain && msg.reasons.some((r) => this.chain!.actions.some((a) => key(a) === key(r.action)))) this.chain = null;
       return toasts.length ? { ...emptyOutcome(), toasts } : null;

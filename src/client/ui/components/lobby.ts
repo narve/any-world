@@ -22,8 +22,8 @@ import '../../styles/rooms.css';
 
 const COPY_ICON = ['M9 9h11v11H9z', 'M5 15H4V4h11v1'];
 
-/** presences shown as "away" on a roster row */
-const AWAY = new Set(['off', 'idle', 'gone']);
+/** presences shown as "away" on a roster row (not `idle`: nobody acts in the lobby, chatting counts as here) */
+const AWAY = new Set(['off', 'gone']);
 
 export class LobbyScreen {
   readonly el: HTMLElement;
@@ -131,6 +131,8 @@ export class LobbyScreen {
             'div',
             { class: 'aw-lobby-picker' },
             h('ul', { class: 'aw-demo-list' }, v.host.worlds.map((d) => pick(d.id, d.title, d.tagline, d.color)), v.host.own.map((d) => pick(d.id, d.title, d.tagline, d.color))),
+            // (the new-world form lives on the start page; a world made there is kept and listed above)
+            h('p', { class: 'aw-muted aw-small aw-lobby-newworld' }, t('lobby.newPartyWorld')),
           )
         : null,
     ];
@@ -241,6 +243,9 @@ export class ProfileSheet {
       enterkeyhint: 'done',
       'data-autofocus': true,
       oninput: () => this.syncGo(),
+      // (the field holds a name, often the generated "Player 92": a tap then typing replaces it, MP5)
+      // (after the tap's own caret placement, so the selection stays)
+      onfocus: () => setTimeout(() => document.activeElement === this.nameInput && this.nameInput.select(), 0),
     });
     this.swatches = h('div', { class: 'aw-swatches', role: 'radiogroup', 'aria-label': t('lobby.colour') });
     this.go = h('button', { type: 'submit', class: 'aw-btn aw-btn-primary aw-profile-go' });

@@ -206,6 +206,26 @@ describe('turns', () => {
     expect(conns[0].last('roster')!.seats.find((r) => r.seat === 's2')!.presence).toBe('idle');
   });
 
+  it('in the lobby, chat, typing and Ready count as activity (not idle); in a run only inputs do (MP5)', () => {
+    const { sch, room, conns } = setup(2, { lobby: true });
+    const presence = (seat: string) => room.roster().find((r) => r.seat === seat)!.presence;
+    sch.advanceBy(DEFAULT_TIMING.idleActiveMs - 1000);
+    room.message(conns[0], { t: 'chat', text: 'hei' });
+    room.message(conns[1], { t: 'ready', on: true });
+    sch.advanceBy(2000);
+    expect([presence('s1'), presence('s2')]).toEqual(['active', 'active']);
+    room.message(conns[0], { t: 'typing', on: true });
+    room.message(conns[0], { t: 'typing', on: false });
+    sch.advanceBy(DEFAULT_TIMING.idleActiveMs - 1000);
+    expect([presence('s1'), presence('s2')]).toEqual(['active', 'idle']);
+    // in a run a chat line does not make the seat one the clock waits on
+    room.message(conns[0], { t: 'start' });
+    sch.advanceBy(DEFAULT_TIMING.idleActiveMs);
+    sch.advanceBy(1100);
+    room.message(conns[1], { t: 'chat', text: 'chatting only' });
+    expect(presence('s2')).toBe('idle');
+  });
+
   it('takes the test deadline from the timing, and logs a player whose actions keep coming back illegal', () => {
     const { sch, room, conns, log } = setup(2, { timing: { deadlineMs: 300 } });
     expect(room.options.deadlineMs).toBe(2000);

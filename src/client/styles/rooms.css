@@ -483,6 +483,40 @@
     padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
   }
 
+  /* one column, the things a player acts on first (MP5: Start and the chat were below the fold):
+     players, Ready / Start, the chat, then the link, the world and the options */
+  .aw-lobby-col {
+    display: contents;
+  }
+
+  .aw-lobby-rosterbox {
+    order: 1;
+  }
+
+  .aw-lobby-gm {
+    order: 2;
+  }
+
+  .aw-lobby-actions {
+    order: 3;
+  }
+
+  .aw-lobby-chat {
+    order: 4;
+  }
+
+  .aw-lobby-share {
+    order: 5;
+  }
+
+  .aw-lobby-worldbox {
+    order: 6;
+  }
+
+  .aw-lobby-options {
+    order: 7;
+  }
+
   .aw-lobby-share {
     grid-template-columns: minmax(0, 1fr) 112px;
     gap: 12px;

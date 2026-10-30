@@ -706,10 +706,12 @@ export class Room {
           s.lastActiveAt = now;
           break;
         case 'typing':
+          this.lobbyActive(s, now);
           if (msg.on) this.startTyping(s);
           else this.stopTyping(s, true);
           break;
         case 'chat':
+          this.lobbyActive(s, now);
           this.say(s, msg.text);
           break;
         case 'hash':
@@ -725,6 +727,7 @@ export class Room {
           this.setOptions(s, msg);
           break;
         case 'ready':
+          this.lobbyActive(s, now);
           this.setReady(s, msg.on);
           break;
         case 'profile':
@@ -747,6 +750,15 @@ export class Room {
       }
       this.evaluate();
     }, undefined);
+  }
+
+  /**
+   * chat, typing and Ready count as activity in the lobby and after a run (MP5: a chatting player read
+   * as idle 10 s after joining); in a run only inputs and presence do, so the clock never waits on a
+   * player who only chats
+   */
+  private lobbyActive(s: Seat, now: number): void {
+    if (this.phase !== 'playing') s.lastActiveAt = now;
   }
 
   private error(s: Seat, code: ErrorCode, message: string): void {

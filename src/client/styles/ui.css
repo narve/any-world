@@ -1757,6 +1757,18 @@ body {
   color: var(--c-muted);
 }
 
+/* "2 open rooms ↓": only while the rooms card sits below the form (one column) */
+.aw-start-rooms-jump {
+  margin-top: 10px;
+  border-color: var(--c-secondary);
+}
+
+@media (min-width: 1001px) {
+  .aw-start-rooms-jump {
+    display: none;
+  }
+}
+
 .aw-start-settings {
   position: absolute;
   top: 0;

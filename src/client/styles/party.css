@@ -67,6 +67,10 @@
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
+.aw-party-initial {
+  display: none;
+}
+
 .aw-party-chip.is-you .aw-party-dot {
   box-shadow: 0 0 0 2px rgba(var(--c-panel-rgb), 1), 0 0 0 3px var(--who);
 }
@@ -477,6 +481,29 @@
   height: 44px;
 }
 
+/* emotes and pings in one row that scrolls sideways: the history keeps the room (MP5) */
+.aw-chat-sheet .aw-chat-quick {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.aw-chat-sheet :is(.aw-chat-emotes, .aw-chat-pings) {
+  flex: none;
+}
+
+.aw-chat-sheet .aw-chat-ping {
+  white-space: nowrap;
+}
+
+/* the keyboard is up on a short screen: the one-tap row (for no-keyboard use) gives its room to the history */
+@media (max-height: 560px) {
+  .aw-chat-sheet .aw-chat:has(.aw-chat-input:focus) .aw-chat-quick {
+    display: none;
+  }
+}
+
 .aw-chat-sheet .aw-chat-ping {
   min-height: 40px;
 }
@@ -725,8 +752,43 @@
 }
 
 .aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-chip:not(:disabled) {
+  position: relative;
   min-width: 28px;
   min-height: 28px;
+}
+
+/* a dot with the player's first letter (MP5: bare dots did not say who is who) */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-initial {
+  display: block;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1;
+  text-shadow: 0 0 2px #000, 0 0 1px #000;
+}
+
+/* touch targets of about 44 px: the chips while down and the spectator's ‹ › (a larger hit area, the
+   same look), and the sheet's Send */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-spectate-cycle {
+  position: relative;
+}
+
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) :is(.aw-party-chip:not(:disabled), .aw-spectate-cycle)::after {
+  content: '';
+  position: absolute;
+  inset: -8px -2px;
+}
+
+.aw-chat-sheet .aw-chat-send {
+  width: 44px;
+  height: 44px;
 }
 
 .aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-party-chip :is(.aw-party-name, .aw-party-hp, .aw-party-state) {

@@ -242,6 +242,28 @@ describe('RoomSession: lockstep', () => {
     expect(last.intent).toBe('wait');
   });
 
+  it('a refusal of an input that passed the dry run (a teammate got there first) toasts one quiet line now and then (MP5)', async () => {
+    const { h, seats } = await started(['Ann', 'Bo']);
+    await h.craft(smallRoom(['Ann', 'Bo'], [{ x: 4, y: 4 }, { x: 10, y: 6 }]), seats.map((x) => x.c));
+    const [a] = seats;
+    const refuse = (action: PlayerAction) => a.s.onMessage({ t: 'refusal', reasons: [{ action, reason: 'illegal', detail: 'blocked' }] });
+    a.s.uiAction({ type: 'move', dir: 'e' });
+    expect(refuse({ type: 'move', dir: 'e' })?.toasts).toEqual([{ text: 'Someone got there first.', tone: 'info' }]);
+    a.s.uiAction({ type: 'move', dir: 's' });
+    expect(refuse({ type: 'move', dir: 's' })).toBeNull();
+    // an input sent without the dry run (the last countdown turn) keeps the full reason
+    const real = a.c.state!;
+    const cd = structuredClone(real) as GameState;
+    cd.area.exitCountdown = { turnsLeft: 1, by: 'p2' };
+    a.c.state = cd;
+    a.s.uiAction({ type: 'move', dir: 'n' });
+    a.c.state = real;
+    const full = refuse({ type: 'move', dir: 'n' })?.toasts ?? [];
+    expect(full).toHaveLength(1);
+    expect(full[0]).toMatchObject({ tone: 'warn' });
+    expect(full[0].text).not.toBe('Someone got there first.');
+  });
+
   it('an input the socket dropped for its rate (error rate) is sent again on the next key press', async () => {
     const { h, seats } = await started(['Ann', 'Bo']);
     await h.craft(smallRoom(['Ann', 'Bo'], [{ x: 4, y: 4 }, { x: 10, y: 6 }]), seats.map((x) => x.c));

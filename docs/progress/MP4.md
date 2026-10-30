@@ -139,6 +139,9 @@ per busy room. Input tokens dominate.
   per run (a restart may repeat one).
 - **"For a party" defaults**: the lobby's world picker lists demo and stored worlds and never opens the
   new-world form, so a party world is made from the start page's form with the toggle on.
+  MP5: the picker now says so ("A new world for the party? Make it on the start page with “For a
+  party” on: worlds made in this browser are listed here."); opening the form from the lobby is still
+  open.
 - **Chat lines without an answer** (corrected in MP5): a line queued behind the intro *is* answered.
   Lines were lost when they came inside the room's 20 s chat window or a seat's 60 s window (dropped,
   not deferred), during the area-entry hold, or when the chat call failed or timed out (the fallback

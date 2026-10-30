@@ -12,7 +12,7 @@ import { REVIVE_SELF_TURNS } from '../../engine/turn';
 import type { ClockMsg, RosterEntry } from '../../net/protocol';
 
 /** what a party chip and name tag say about a member, most important first */
-export type MemberState = 'left' | 'down' | 'away' | 'busy' | 'acted' | 'deciding' | 'playing';
+export type MemberState = 'left' | 'down' | 'away' | 'busy' | 'acted' | 'deciding' | 'idle' | 'playing';
 
 export interface PartyMember {
   pid: PlayerId;
@@ -36,8 +36,12 @@ export const NO_SEAT_COLOUR = '#8a8f98';
 /** the turn pill shows after this much waiting and hides this long after the turn resolved (design constants) */
 export const PILL_TIMING = { showMs: 450, hideMs: 250 } as const;
 
-/** roster presences that read as "away" on a chip or tag */
-const AWAY = new Set(['off', 'idle']);
+/**
+ * roster presences that read as "away" on a chip or tag: a dropped connection only. A connected
+ * player without input for a while (`idle`: reading the prologue, a level-up card, chatting) is
+ * `idle`, shown without a tag (MP5: a party that just started looked absent)
+ */
+const AWAY = new Set(['off']);
 /** roster presences of a player in a dialogue, a trade, a menu or the chat */
 const BUSY = new Set(['busy', 'menu']);
 
@@ -59,10 +63,12 @@ export function partyMembers(s: GameState, roster: readonly RosterEntry[], clock
     let state: MemberState = 'playing';
     if (ps.left || !seat || seat.presence === 'gone') state = 'left';
     else if (ps.down) state = 'down';
-    else if (AWAY.has(seat.presence) || !seat.connected) state = 'away';
+    else if (pid !== me && (AWAY.has(seat.presence) || !seat.connected)) state = 'away';
     else if (acted.has(pid)) state = 'acted';
     else if (BUSY.has(seat.presence)) state = 'busy';
     else if (waiting.has(pid)) state = 'deciding';
+    // (this page's own player is never tagged idle or away: they are here)
+    else if (pid !== me && seat.presence === 'idle') state = 'idle';
     return {
       pid,
       seat: seat?.seat ?? null,

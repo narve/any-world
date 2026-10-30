@@ -119,7 +119,9 @@ as designed for idle seats (MP3 design §4); with the 600 ms test deadline a sea
   "the game master reads the chat" line is worded for MP4 (see Deferred).
 - **NPC lines as bubbles for nearby teammates** (see Deferred).
 
-- **Refusal toasts from races.** A turn action that passed the dry run on the replica can still be
+- ~~**Refusal toasts from races.**~~ (MP5: a refusal of an input that passed the dry run, in a party,
+  shows one quiet "Someone got there first." at most every 8 s instead of a warning per refusal; an
+  input sent unchecked keeps its full reason.) A turn action that passed the dry run on the replica can still be
   refused when the turn resolves: a teammate stepped onto the tile first ("Blocked"), took the item
   ("Nothing here to pick up") or killed the target ("No target"). The toast is accurate but can surprise;
   in the exit check the bots, acting within milliseconds of every entry, got about 20–50 each per run.

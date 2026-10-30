@@ -102,9 +102,12 @@ export class StartScreen {
   private fileInput: HTMLInputElement;
   /** MP3: the "Play together" card (kept across re-renders: its code field keeps what was typed) */
   private rooms: RoomsCard;
+  /** narrow screens (one column): "2 open rooms ↓" at the top, as the rooms card sits below the form (MP5) */
+  private roomsJump: HTMLButtonElement;
 
   constructor(private cb: UiCallbacks, private rand: () => number = Math.random) {
     this.rooms = new RoomsCard((i) => this.cb.onRoom?.(i));
+    this.roomsJump = h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-start-rooms-jump', hidden: true, onclick: () => this.rooms.el.scrollIntoView({ behavior: 'smooth', block: 'start' }) }) as HTMLButtonElement;
     this.langEl = h('div', { class: 'aw-start-lang' });
     this.textarea = h('textarea', {
       id: 'aw-prompt',
@@ -164,6 +167,7 @@ export class StartScreen {
             { class: 'aw-brand' },
             h('h1', { class: 'aw-logo' }, 'Any', h('span', null, 'World')),
             h('p', { class: 'aw-brand-sub' }, t('start.tagline')),
+            this.roomsJump,
             this.langEl,
             h('button', { type: 'button', class: 'aw-icon-btn aw-start-settings', 'aria-label': t('settings.title'), dataset: { tip: t('settings.title') }, onclick: () => this.cb.onOpenSettings?.(true) }, icon(ICONS.gear)),
           ),
@@ -377,6 +381,9 @@ export class StartScreen {
     }
     this.partySize = Math.min(12, Math.max(2, v.defaults?.party ?? DEFAULT_PARTY));
     if (v.rooms) this.rooms.update(v.rooms);
+    const open = v.rooms?.status === 'ok' ? v.rooms.rooms.length : 0;
+    this.roomsJump.hidden = !open;
+    if (open) this.roomsJump.textContent = t('room.openRooms', { n: open });
     const key = dataKey([v.prompts, v.demos, v.savedRun, v.providerLabel, v.canGenerate, v.providerStatus, v.recent, v.canImport, v.rooms ? v.rooms.status : null]);
     if (key === this.listKey) return;
     const promptsChanged = dataKey(v.prompts) !== dataKey(JSON.parse(this.listKey || '[[]]')[0]);

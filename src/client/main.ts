@@ -45,6 +45,8 @@ declare global {
 
 /** the room list on the start page refreshes this often while it is visible (ms) */
 const ROOM_LIST_MS = 15_000;
+/** while the game server is down the refresh backs off (15, 30, 60 s): fewer failed requests in the console (MP5) */
+const ROOM_LIST_MAX_MS = 60_000;
 
 /** the server's origin when the page is hosted elsewhere (build: ANYWORLD_SERVER_URL); '' = same origin */
 const SERVER_URL: string = typeof __ANYWORLD_SERVER__ !== 'undefined' ? __ANYWORLD_SERVER__ : '';
@@ -100,9 +102,15 @@ export class App {
     preloadRenderer();
     if (this.endpoint) {
       void this.roomFlow().then((f) => f?.refreshRooms());
-      setInterval(() => {
-        if (this.screen === 'start' && !this.flow?.link && !document.hidden) void this.flow?.refreshRooms();
-      }, ROOM_LIST_MS);
+      let wait = ROOM_LIST_MS;
+      const tick = (): void => {
+        setTimeout(async () => {
+          if (this.screen === 'start' && !this.flow?.link && !document.hidden) await this.flow?.refreshRooms().catch(() => undefined);
+          wait = this.flow?.roomsCardView().status === 'unavailable' ? Math.min(ROOM_LIST_MAX_MS, wait * 2) : ROOM_LIST_MS;
+          tick();
+        }, wait);
+      };
+      tick();
     }
   }
 

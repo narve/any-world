@@ -131,6 +131,16 @@ export class PartyOverlay {
     const onScreen = new Set<string>();
     const shown: Shown[] = [];
     const bubbleBy = new Map(f.bubbles.map((b) => [b.seat, b]));
+    // teammates' name tags never cover the own character or each other (MP5: adjacent players):
+    // a tag that would lifts above what it meets
+    const tagBoxes: Rect[] = [];
+    const me = f.members.find((m) => m.you && m.visible && m.actorId && m.pos);
+    const myHead = me ? this.project.actor(me.actorId!, 1.08) : null;
+    if (me && myHead) {
+      const h0 = local(myHead);
+      const feet = local(this.project.tile(me.pos!));
+      if (feet.y > h0.y) tagBoxes.push({ x: h0.x - 18, y: h0.y, w: 36, h: feet.y - h0.y });
+    }
 
     for (const m of f.members) {
       if (!m.seat || m.left || !m.actorId || !m.pos) continue;
@@ -196,7 +206,19 @@ export class PartyOverlay {
         el.classList.toggle('is-fogged', fogged);
         el.classList.toggle('is-below', below);
         el.style.setProperty('--who', m.colour);
-        place(el, seen ? at!.x : to.x, seen ? at!.y : to.y);
+        const x = seen ? at!.x : to.x;
+        let y = seen ? at!.y : to.y;
+        if (!below) {
+          const w = el.offsetWidth;
+          const h = el.offsetHeight;
+          for (let i = 0; i < 4; i++) {
+            const hit = tagBoxes.find((o) => x - w / 2 < o.x + o.w && x + w / 2 > o.x && y - h < o.y + o.h && y > o.y);
+            if (!hit) break;
+            y = hit.y - 2;
+          }
+          tagBoxes.push({ x: x - w / 2, y: y - h, w, h });
+        }
+        place(el, x, y);
         used.tags.add(m.seat);
         continue;
       }

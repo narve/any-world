@@ -559,11 +559,13 @@ export function questsView(state: GameState): QuestView[] {
 
 /** engine log + controller GM lines, oldest first, trimmed */
 export function mergedLog(state: GameState, gmLog: LogMessage[]): LogMessage[] {
-  if (!gmLog.length) return state.log.slice(-LOG_LIMIT);
+  // (a party: a line about one player, "Here: …", is shown only to them; party[0] is this page's player)
+  const me = state.party[0];
+  const a = state.log.some((m) => m.pid !== undefined) ? state.log.filter((m) => m.pid === undefined || m.pid === me) : state.log;
+  if (!gmLog.length) return a.slice(-LOG_LIMIT);
   const out: LogMessage[] = [];
   let i = 0;
   let j = 0;
-  const a = state.log;
   // stable merge by turn; GM lines go after engine lines of the same turn
   while (i < a.length || j < gmLog.length) {
     if (j >= gmLog.length || (i < a.length && a[i].turn <= gmLog[j].turn)) out.push(a[i++]);

@@ -98,20 +98,39 @@ test('desktop: lobby chat, Enter, keys stay in the input, bubbles and typing, of
   for (let i = 0; i < 4; i++) await A.page.keyboard.press('-');
 
   // --- emotes and a ping (one shared 1/s bucket: the second within the second says "Wait a moment") ---
+  // (an emote sent closes the dock as a line does: presence back to playing, the keys are the game's, MP5)
   await A.page.keyboard.press('Enter');
   await expect(dock.locator('.aw-chat-emotes')).toBeVisible();
   await dock.locator('[data-emote="👍"]').click();
+  await expect(input).toBeHidden();
+  expect(await handle(A.page, (r) => r.link.presence)).toBe('playing');
+  await A.page.keyboard.press('Enter');
   await dock.locator('[data-emote="😂"]').click();
   await expect(dock.locator('.aw-chat-quick .aw-chat-slow')).toBeVisible();
   await expect(dock.locator('.aw-chat-form ~ .aw-chat-slow')).toBeVisible();
+  // (refused: the dock stays open with the focus back in the input)
+  await expect(input).toBeFocused();
   await expect.poll(() => heard(ola)).toContain('👍');
   expect(heard(ola)).not.toContain('😂');
   await A.page.waitForTimeout(1100);
   await dock.locator('[data-ping="follow"]').click();
   await expect.poll(() => heard(ola)).toContain('ping:follow');
+  await expect(input).toBeHidden();
+  expect(await handle(A.page, (r) => r.link.presence)).toBe('playing');
   await expect(A.page.locator('.aw-party-overlay .aw-ping[data-kind="follow"]')).toBeVisible();
   await expect(dock.locator('.aw-chat-line.is-ping')).toContainText('Follow me');
+  // Esc with the focus on an emote button closes the dock too
+  await A.page.keyboard.press('Enter');
+  await dock.locator('[data-emote="👋"]').focus();
+  await A.page.keyboard.press('Escape');
+  await expect(input).toBeHidden();
+  expect(await handle(A.page, (r) => r.link.presence)).toBe('playing');
   // a typed line within the second keeps its draft
+  await A.page.waitForTimeout(1100);
+  await A.page.keyboard.press('Enter');
+  await input.fill('first');
+  await input.press('Enter');
+  await A.page.keyboard.press('Enter');
   await input.fill('too soon');
   await input.press('Enter');
   await expect(dock.locator('.aw-chat-form ~ .aw-chat-slow')).toBeVisible();
@@ -127,6 +146,21 @@ test('desktop: lobby chat, Enter, keys stay in the input, bubbles and typing, of
   await input.press('Escape');
   await expect(input).toBeHidden();
   expect(await layer(A.page)).toBe('game');
+
+  // --- a reload: the dock's history opens at the newest line, not the lobby's first one (MP5) ---
+  for (let i = 0; i < 6; i++) {
+    ola.client.say(`line ${i} ${'and some more words to fill the column '.repeat(2)}`);
+    await A.page.waitForTimeout(1050);
+  }
+  ola.client.say('the newest line');
+  await expect(dock.locator('.aw-chat-line', { hasText: 'the newest line' })).toBeAttached();
+  await A.page.reload();
+  await expect.poll(() => handle(A.page, (r) => r?.status ?? null), { timeout: 30_000 }).toBe('joined');
+  await expect.poll(() => layer(A.page), { timeout: 60_000 }).toBe('game');
+  const list = A.page.locator('.aw-slot-side .aw-chat[data-mode="dock"] .aw-chat-list');
+  await expect(list.locator('.aw-chat-line', { hasText: 'the newest line' })).toBeAttached();
+  expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+  await expect.poll(() => list.evaluate((el) => el.scrollHeight - el.scrollTop - el.clientHeight)).toBeLessThan(24);
 
   expect(A.errors).toEqual([]);
   ola.leave();
@@ -259,6 +293,8 @@ test('phone 390×844: chat button and sheet, emotes and pings, ticker and unread
   await expect(sheet).toBeVisible();
   await expect(button.locator('.aw-chat-badge')).toBeHidden();
   await expect(sheet.locator('.aw-chat-line', { hasText: 'where are you?' })).toBeVisible();
+  // (it opens at the newest line, MP5)
+  await expect.poll(() => sheet.locator('.aw-chat-list').evaluate((el) => el.scrollHeight - el.scrollTop - el.clientHeight)).toBeLessThan(24);
   expect(await room(P.page, (r) => r.link.presence)).toBe('menu');
   await sheet.locator('[data-emote="👋"]').tap();
   await expect.poll(() => ola.client.chat.map((l) => l.text)).toContain('👋');

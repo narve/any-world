@@ -70,7 +70,8 @@ export class PartyStrip {
             'aria-label': label ? `${m.name}, ${label}` : m.name,
             onclick: () => canFollow && this.onFollow(m.pid),
           },
-          h('span', { class: 'aw-party-dot', 'aria-hidden': 'true' }),
+          // (phones show the dot alone: with the name's first letter in it, MP5)
+          h('span', { class: 'aw-party-dot', 'aria-hidden': 'true' }, h('span', { class: 'aw-party-initial' }, Array.from(m.name)[0]?.toUpperCase() ?? '')),
           h('span', { class: 'aw-party-name' }, m.name),
           h('span', { class: 'aw-party-hp', 'aria-hidden': 'true' }, h('span', { style: { width: `${m.maxHp ? Math.round((Math.max(0, m.hp) / m.maxHp) * 100) : 0}%` } })),
           STATE_GLYPH[m.state] ? h('span', { class: 'aw-party-state', 'aria-hidden': 'true' }, STATE_GLYPH[m.state]) : null,

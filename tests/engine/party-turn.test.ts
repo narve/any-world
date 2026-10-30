@@ -13,6 +13,8 @@ import { indexWorld, type Ctx } from '../../src/engine/ctx';
 import { getStat } from '../../src/engine/stats';
 import { rngFromState } from '../../src/engine/rng';
 import type { AreaMap, GameState, PlayerAction, PlayerId } from '../../src/engine/types';
+import { mergedLog } from '../../src/client/view';
+import { perspective } from '../../src/gm/perspective';
 import type { WorldSpec } from '../../src/schema/world';
 
 const w = testWorld();
@@ -313,5 +315,28 @@ describe('teammates and per-player rules', () => {
     expect(legalActions(down, { ...env(w), playerId: 'p2' })).toEqual([]);
     expect(turn(down, [act('p2', { type: 'toggle_sneak' })]).outcomes[0]).toMatchObject({ ok: false, reason: 'down' });
     expect(ACT_COST).toBe(100);
+  });
+});
+
+describe('"Here: …" in a party (MP5)', () => {
+  it('is the mover\'s own line: only their log view shows it; a party of one keeps no pid', () => {
+    const s0 = structuredClone(party(2)) as GameState;
+    const p2 = actorOf(s0, 'p2').pos;
+    const at = { x: p2.x + 1, y: p2.y };
+    expect(s0.area.actors.some((a) => a.pos.x === at.x && a.pos.y === at.y)).toBe(false);
+    s0.area.items.push({ item: { id: 'ihere', defId: 'tonic', count: 1 }, pos: at });
+    const s1 = turn(s0, [act('p1', { type: 'wait' }), act('p2', { type: 'move', dir: 'e' })]).state;
+    const line = s1.log.find((m) => m.key === 'log.here');
+    expect(line?.pid).toBe('p2');
+    expect(mergedLog(perspective(s1, 'p2'), []).some((m) => m.key === 'log.here')).toBe(true);
+    expect(mergedLog(perspective(s1, 'p1'), []).some((m) => m.key === 'log.here')).toBe(false);
+    // single player: the same line without a pid
+    const one = structuredClone(party(1)) as GameState;
+    const p1 = actorOf(one, 'p1').pos;
+    one.area.items.push({ item: { id: 'ihere', defId: 'tonic', count: 1 }, pos: { x: p1.x + 1, y: p1.y } });
+    const o1 = turn(one, [act('p1', { type: 'move', dir: 'e' })]).state;
+    const solo = o1.log.find((m) => m.key === 'log.here');
+    expect(solo).toBeDefined();
+    expect('pid' in solo!).toBe(false);
   });
 });

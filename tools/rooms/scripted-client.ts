@@ -352,6 +352,9 @@ export class ScriptedClient {
           this.mem.lastAction = o.action;
           this.mem.lastInvalid = o.ok ? null : (o.detail ?? 'refused');
           this.mem.lastReason = o.ok ? null : (o.reason ?? null);
+          // (this player's turn action resolved: a hasted player may be ready again within the same
+          // engine turn, so "sent for this turn" ends here, not only when the turn number changes)
+          if (!FREE_ACTIONS.has(o.action.type)) this.turnSent = false;
         }
         this.outstanding = null;
         this.chatScript();

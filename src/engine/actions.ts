@@ -148,7 +148,8 @@ function doMove(ctx: Ctx, dirIn: Dir): ActionOutcome {
   const here = ctx.s.area.items.filter((fi) => samePos(fi.pos, to));
   if (here.length) {
     const names = here.slice(0, 3).map((fi) => displayItemName(ctx, fi.item.defId));
-    logKey(ctx, here.length > 3 ? 'log.here_more' : 'log.here', { items: names.join(', ') }, 'info');
+    // (in a party the line is the mover's own: "Here" is under their feet, not a teammate's)
+    logKey(ctx, here.length > 3 ? 'log.here_more' : 'log.here', { items: names.join(', ') }, 'info', Object.keys(ctx.s.players).length > 1 ? ctx.pid : undefined);
   }
   if (me(ctx).sneaking) return done(Math.round(100 * moveCost(ctx, to)) + 25);
   return done(Math.round(100 * moveCost(ctx, to)));

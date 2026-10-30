@@ -322,7 +322,8 @@ export class ActorLayer {
     const model = ct.model.clone();
     model.userData.phase = (hashStr(a.id) % 628) / 100;
     const outlines: THREE.Mesh[] = [];
-    const omat = this.outlineMat(faction0, weak);
+    const party = this.partyColours.get(a.id);
+    const omat = party ? this.seatOutlineMat(party) : this.outlineMat(faction0, weak);
     model.traverse((o) => {
       if ((o as THREE.Mesh).isMesh && o.userData.outline) {
         (o as THREE.Mesh).material = omat;
@@ -413,6 +414,7 @@ export class ActorLayer {
     this.partyColours = new Map(colours);
     for (const v of this.views.values()) {
       v.ringMat.color.set(this.ringColour(v));
+      this.setOutline(v, this.outlineFor(v));
       if (v.pulse) (v.pulse.material as THREE.MeshBasicMaterial).color.set(this.partyColours.get(v.id) ?? FACTION_COLORS.player);
     }
   }
@@ -445,8 +447,28 @@ export class ActorLayer {
     if (v.faction === f) return;
     v.faction = f;
     v.ringMat.color.set(this.ringColour(v));
-    const m = this.outlineMat(f, v.lowContrast);
+    this.setOutline(v, this.outlineFor(v));
+  }
+
+  /** a room's player is outlined in their seat colour (MP5: same models side by side), anyone else in their faction's */
+  private outlineFor(v: Pick<ActorView, 'id' | 'faction' | 'lowContrast'>): THREE.MeshBasicMaterial {
+    const seat = this.partyColours.get(v.id);
+    return seat ? this.seatOutlineMat(seat) : this.outlineMat(v.faction, v.lowContrast);
+  }
+
+  private setOutline(v: ActorView, m: THREE.MeshBasicMaterial): void {
     for (const o of v.outlines) if (!(o.material as THREE.Material).userData.fade) o.material = m;
+  }
+
+  private seatOutlineMat(colour: string): THREE.MeshBasicMaterial {
+    const key = `seat|${colour}`;
+    let m = this.outlineMats.get(key);
+    if (!m) {
+      m = new THREE.MeshBasicMaterial({ color: col(mixHex(colour, '#000000', 0.08)), side: THREE.BackSide, fog: false, toneMapped: false });
+      m.userData.outline = true;
+      this.outlineMats.set(key, m);
+    }
+    return m;
   }
 
   private outlineMat(f: Faction | 'ally', strong: boolean): THREE.MeshBasicMaterial {

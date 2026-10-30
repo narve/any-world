@@ -85,6 +85,8 @@ export class ChatPanel {
   private linesKey = '';
   private slowTimer: ReturnType<typeof setTimeout> | null = null;
   private lastLineAt = 0;
+  /** the history is scrolled to its newest line (kept there as lines come and the panel is laid out) */
+  private pinned = true;
   /** the last line sent, until its echo comes back: given back to the input if the server drops it */
   private unsent: string | null = null;
   /** what had the focus before the input took it (given back on close) */
@@ -115,7 +117,7 @@ export class ChatPanel {
     this.pingsEl = h(
       'div',
       { class: 'aw-chat-pings', role: 'group', 'aria-label': t('chat.pings') },
-      PING_KINDS.map((k) => h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-chat-ping', dataset: { ping: k }, onclick: () => this.sent(this.handlers.ping(k)) }, h('span', { class: 'aw-ping-glyph', 'aria-hidden': 'true' }, PING_GLYPH[k]), t(`ping.${k}`))),
+      PING_KINDS.map((k) => h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-chat-ping', dataset: { ping: k }, onclick: () => this.quick(this.handlers.ping(k)) }, h('span', { class: 'aw-ping-glyph', 'aria-hidden': 'true' }, PING_GLYPH[k]), t(`ping.${k}`))),
     );
     const emotes = h(
       'div',
@@ -123,7 +125,7 @@ export class ChatPanel {
       h(
         'div',
         { class: 'aw-chat-emotes', role: 'group', 'aria-label': t('chat.emotes') },
-        EMOTES.map((e) => h('button', { type: 'button', class: 'aw-chat-emote', dataset: { emote: e }, 'aria-label': e, onclick: () => this.sent(this.handlers.emote(e)) }, e)),
+        EMOTES.map((e) => h('button', { type: 'button', class: 'aw-chat-emote', dataset: { emote: e }, 'aria-label': e, onclick: () => this.quick(this.handlers.emote(e)) }, e)),
       ),
       this.pingsEl,
       this.slowEls[1],
@@ -148,11 +150,24 @@ export class ChatPanel {
       this.composing = false;
       this.onInput();
     });
-    this.input.addEventListener('blur', (e: FocusEvent) => {
-      this.handlers.typing(false);
-      // (a dock input left empty for the map closes; a draft, or an emote or ping pressed, keeps it open)
+    this.input.addEventListener('blur', () => this.handlers.typing(false));
+    // (an open dock left for the map, from the input or an emote or ping button, closes when its
+    // draft is empty: its presence `menu` ends; a draft keeps it open)
+    this.el.addEventListener('focusout', (e: FocusEvent) => {
       const to = e.relatedTarget as Node | null;
-      if (this.mode === 'dock' && !this.input.value.trim() && !(to && this.el.contains(to))) queueMicrotask(() => document.activeElement !== this.input && this.closeInput(false));
+      if (this.mode !== 'dock' || !this.inputOpen || this.input.value.trim() || (to && this.el.contains(to))) return;
+      queueMicrotask(() => !this.el.contains(document.activeElement) && this.closeInput(false));
+    });
+    // Esc anywhere in the panel (an emote button has the focus) closes the chat, as in the input
+    this.el.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.target === this.input || this.mode === 'inline') return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.closeInput();
+    });
+    // the history follows the newest line unless the player scrolled up to read
+    this.list.addEventListener('scroll', () => {
+      if (this.list.clientHeight) this.pinned = this.atBottom();
     });
     this.form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -217,7 +232,8 @@ export class ChatPanel {
       this.syncOpen();
       this.handlers.opened(false);
     } else if (this.mode === 'sheet') this.handlers.opened(false);
-    if (document.activeElement === this.input) this.input.blur();
+    const a = document.activeElement as HTMLElement | null;
+    if (a && this.el.contains(a)) a.blur();
     const back = this.returnFocus;
     this.returnFocus = null;
     // the focus goes back where it was (a dialogue's option); else nowhere, so game keys work at once
@@ -269,6 +285,21 @@ export class ChatPanel {
     if (r === 'slow') this.slowDown(CHAT_TIMING.sendGapMs);
   }
 
+  /**
+   * an emote or a ping: in the desktop dock it closes as a sent line does (the keys are the game's
+   * again, presence `menu` ends); one refused, or with a draft waiting, gives the focus back to the input
+   */
+  private quick(r: SendResult): void {
+    this.sent(r);
+    if (this.mode !== 'dock' || !this.inputOpen) return;
+    if (r === 'ok' && !this.input.value.trim()) this.closeInput();
+    else this.input.focus({ preventScroll: true });
+  }
+
+  private atBottom(): boolean {
+    return this.list.scrollHeight - this.list.scrollTop - this.list.clientHeight < 24;
+  }
+
   /** "Wait a moment" under the input and on the emote row (a send too soon, or the server's chat_rate / chat_long) */
   slowDown(ms: number): void {
     for (const el of this.slowEls) el.hidden = false;
@@ -307,10 +338,11 @@ export class ChatPanel {
       const grew = !this.linesKey.startsWith(`${lines.length}|${last?.id ?? ''}|`);
       this.linesKey = key;
       if (grew) this.lastLineAt = now;
-      const atBottom = this.list.scrollHeight - this.list.scrollTop - this.list.clientHeight < 24;
+      if (grew) this.pinned = true;
       setChildren(this.list, ...lines.map((l) => lineEl(l)));
-      if (atBottom || grew) this.list.scrollTop = this.list.scrollHeight;
     }
+    // (also once the panel is laid out or shown: a reload's history, the phone's sheet opening)
+    if (this.pinned && this.list.clientHeight && !this.atBottom()) this.list.scrollTop = this.list.scrollHeight;
     this.el.classList.toggle('is-quiet', now - this.lastLineAt > 20_000);
     this.el.classList.toggle('is-empty', !lines.length);
   }

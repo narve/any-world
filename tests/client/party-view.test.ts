@@ -61,6 +61,11 @@ describe('partyMembers', () => {
     const roster: RosterEntry[] = kari.roster.map((r) => (r.pid === ola.pid ? { ...r, presence: 'menu' } : r.pid === siv.pid ? { ...r, presence: 'off', connected: false } : r));
     ms = partyMembers(s, roster, c, n, kari.pid!, null);
     expect(ms.map((m) => m.state)).toEqual(['acted', 'busy', 'away']);
+    // idle (connected, no input for a while) is not away; this page's own player is never tagged away or idle
+    const idle: RosterEntry[] = kari.roster.map((r) => ({ ...r, presence: 'idle' }));
+    expect(partyMembers(s, idle, null, n, kari.pid!, null).map((m) => m.state)).toEqual(['playing', 'idle', 'idle']);
+    const offMe: RosterEntry[] = kari.roster.map((r) => (r.pid === kari.pid ? { ...r, presence: 'off', connected: false } : r));
+    expect(partyMembers(s, offMe, null, n, kari.pid!, null)[0].state).toBe('playing');
     const down: GameState = { ...s, players: { ...s.players, [ola.pid!]: { ...s.players[ola.pid!], down: { since: s.turn, helpedTurns: 0 } } } };
     expect(partyMembers(down, kari.roster, null, n, kari.pid!, ola.pid!).find((m) => m.pid === ola.pid)).toMatchObject({ state: 'down', followed: true });
     // a player who left the map is out of `party` but keeps a greyed chip

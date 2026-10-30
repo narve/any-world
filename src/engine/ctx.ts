@@ -210,9 +210,9 @@ export function log(ctx: Ctx, text: string, kind: LogMessage['kind'] = 'info', s
  * Appends an engine sentence: a catalog key (log-keys.ts) + params, with `text` rendered from the
  * English template as the fallback.
  */
-export function logKey(ctx: Ctx, key: LogKey, params: LogParams, kind: LogMessage['kind'] = 'info'): void {
+export function logKey(ctx: Ctx, key: LogKey, params: LogParams, kind: LogMessage['kind'] = 'info', pid?: PlayerId): void {
   const text = renderTemplate(LOG_KEYS[key], params);
-  const msg: LogMessage = { turn: ctx.s.turn, text, kind, key, params: { ...params } };
+  const msg: LogMessage = { turn: ctx.s.turn, text, kind, key, params: { ...params }, ...(pid ? { pid } : {}) };
   pushLog(ctx, msg);
   ctx.events.push({ type: 'message', text, kind, key, params: { ...params } });
 }

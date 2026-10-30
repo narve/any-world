@@ -265,6 +265,8 @@ export interface LogMessage {
   key?: string;
   /** catalog params: numbers, or strings that are already world-language names (actor/item/damage names) */
   params?: Record<string, string | number>;
+  /** a party (MP5): the one player this line is about ("Here: …" under their feet); others' logs leave it out */
+  pid?: PlayerId;
 }
 
 export interface GameState {
