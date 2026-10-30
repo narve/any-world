@@ -155,3 +155,39 @@ player is unchanged (the browser's own game master, with the server's provider o
 - **Trying a key.** `npx tsx tools/gm-smoke.ts --preset mistral --calls 3 --env-file /etc/anyworld.env`
   sends 3 small game-master requests for a test party and prints latency, tokens and what the checks
   kept (at most 5 calls; it never prints the key).
+
+## 8. Go-live checklist (Dell + VPS, `any.dv8.no` / `any-game.dv8.no`)
+
+In this order; each step has a check. Verified locally on 2026-10-30 (production build, `npm start` with
+`NODE_ENV=production`, a room of 4 bots from `https://any.dv8.no`, a refused foreign origin, rooms kept
+across a SIGTERM restart, the Pages build carrying the server's engine version).
+
+1. **Code on `main`.** The multiplayer edition is on the `multi` branch. Merge it into `main` (pull
+   request), because the Pages workflow publishes `main` and the Dell's checkout pulls `main`.
+2. **Dell: install** as in §1–2 (patched Node.js, user `anyworld`, `/opt/anyworld`, `npm ci && npm run
+   build`, the systemd unit). Check: `node -v` is a patched release; `systemctl status anyworld` is
+   active; `curl -s http://127.0.0.1:8787/api/health` answers `ok` with an `engine` hash.
+3. **Dell: `/etc/anyworld.env`** from `deploy/anyworld.env.example`: provider key(s) with a spending
+   limit, `ANYWORLD_HOST_CODE` (long random), `HOST`/`PORT` for the WireGuard address (§4),
+   `ALLOWED_ORIGINS=https://any.dv8.no`, `TRUST_PROXY=1`, `ANYWORLD_DATA_DIR=/var/lib/anyworld`, and for
+   the AI game master in rooms `ANYWORLD_GM_PRESET=mistral` (or `anthropic`) with `ANYWORLD_GM_MODEL`
+   left at the cheap default. Check: `npx tsx tools/gm-smoke.ts --preset mistral --calls 3 --env-file
+   /etc/anyworld.env`, then `sudo systemctl restart anyworld` and `/api/health` shows `gm: "ai"`.
+4. **WireGuard** Dell ↔ VPS (§4, `PersistentKeepalive`). Check: from the VPS,
+   `curl http://<Dell WireGuard address>:8787/api/health`.
+5. **VPS: Caddy** with the `any-game.dv8.no` block (§4; WebSockets need nothing extra). **DNS:** an A
+   record `any-game` → the VPS. Check: `curl https://any-game.dv8.no/api/health` from anywhere.
+6. **Pages:** a CNAME record `any` → `narve.github.io`; the repo's Pages settings → custom domain
+   `any.dv8.no` (enforce HTTPS); Settings → Variables → `ANYWORLD_SERVER_URL=https://any-game.dv8.no`;
+   then re-run the Pages workflow. Check: `https://any.dv8.no` loads, and its start page lists rooms
+   (not "Rooms are unavailable").
+7. **Rooms end to end.** From a checkout of the same commit:
+   `npx tsx tools/room-bots.ts --url https://any-game.dv8.no --origin https://any.dv8.no --bots 4`
+   ends with `[room-bots] ok room … hash=…`. Then MP0's exit check: open `https://any.dv8.no` on a phone
+   on 4G, create a room, join it from a second device, chat, play.
+8. **Updates later:** merge to `main` (the Pages workflow publishes it), then `./scripts/deploy.sh` on
+   the Dell at the same time (§6: pages and server must share the engine version; open rooms close with
+   "the server was updated" when the engine changed).
+
+What stays open after go-live (docs/progress/MP.md): the latency playtest through this path and a
+session with real people.
