@@ -21,6 +21,7 @@ import { gmSystemPrompt, gmUserMessage } from '../../src/llm/prompts/gm';
 import { dialogueSystemPrompt } from '../../src/llm/prompts/dialogue';
 import { languageInstruction } from '../../src/llm/prompts/common';
 import { estimateRuleImpact, CONDITIONAL_SHARE } from '../../src/engine/balance/rules';
+import { leadPlayer, patchPlayer } from '../../src/engine';
 
 function fixture(name: string): WorldSpec {
   const r = parseWorld(JSON.parse(readFileSync(`content/worlds/${name}.json`, 'utf8')));
@@ -33,7 +34,7 @@ describe('trades inside a conversation', () => {
   const sit = playToSituation(ship, { seed: 5, area: 0, turnsInArea: 0 });
   const bosun = npcsInArea(ship, sit.state).find((n) => n.defId === 'bosun-kettering')!;
   // the live game: the conversation is the open choice while the NPC speaks
-  const live: GameState = { ...sit.state, pendingChoice: { kind: 'dialogue', prompt: 'Bosun:', speakerId: bosun.id, options: [{ label: 'Goodbye', actions: [] }] } };
+  const live: GameState = patchPlayer(sit.state, { pendingChoice: { kind: 'dialogue', prompt: 'Bosun:', speakerId: bosun.id, options: [{ label: 'Goodbye', actions: [] }] } });
   const reply = {
     reply: 'Air, food, or trouble? I sell all three.',
     options: ['Air, please.'],
@@ -66,7 +67,7 @@ describe('trades inside a conversation', () => {
 
 describe('hook-shaped GM snapshots', () => {
   const sit = playToSituation(ship, { seed: 5, area: 0, turnsInArea: 5 });
-  const hpOf = (s: GameState) => s.area.actors.find((a) => a.id === s.player.actorId)!;
+  const hpOf = (s: GameState) => s.area.actors.find((a) => a.id === leadPlayer(s).actorId)!;
 
   it('low_hp shows a badly hurt player; death and victory show the run ended', () => {
     const low = stateForHook(sit, 'low_hp');

@@ -7,6 +7,7 @@ import { loadFixture, testWorld, newGame, addActor } from '../engine/helpers';
 import { newMemory, trackProgress } from '../../src/engine/sim/bots';
 import { botCtx, lootCarriers } from '../../src/engine/sim/view';
 import { runGame } from '../../src/engine/sim/run';
+import { leadPlayer } from '../../src/engine';
 
 describe('navigation target progress', () => {
   it('gives up on a target pursued without getting closer, as before', () => {
@@ -72,7 +73,7 @@ describe('navigation target progress', () => {
   it('a hostile carrying a needed item is worth defeating until a copy is in reach', () => {
     const world = testWorld();
     const s = newGame(world);
-    s.player.slots = s.player.slots.map((it) => (it?.defId === 'tonic' ? null : it));
+    leadPlayer(s).slots = leadPlayer(s).slots.map((it) => (it?.defId === 'tonic' ? null : it));
     addActor(world, s, 'archer', { x: 6, y: 5 });
     addActor(world, s, 'sage', { x: 3, y: 3 });
     const want = new Set(['tonic']);

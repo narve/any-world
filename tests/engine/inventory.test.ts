@@ -4,7 +4,7 @@ import { addInstance, giveItem, makeItem, countItem } from '../../src/engine/inv
 import { initKnowledge, describeObservations } from '../../src/engine/knowledge';
 import { createRng } from '../../src/engine/rng';
 import { getStat } from '../../src/engine/stats';
-import { describeItem } from '../../src/engine';
+import { describeItem, leadPlayer } from '../../src/engine';
 import { TOTAL_SLOTS, QUICK_SLOTS } from '../../src/engine/types';
 import type { GameState } from '../../src/engine/types';
 
@@ -13,15 +13,15 @@ function setup(patch?: Parameters<typeof testWorld>[0]) {
   const s = newGame(w);
   return { w, s, ctx: ctxFor(w, s), p: player(s) };
 }
-const slotOf = (s: GameState, defId: string) => s.player.slots.findIndex((x) => x?.defId === defId);
+const slotOf = (s: GameState, defId: string) => leadPlayer(s).slots.findIndex((x) => x?.defId === defId);
 
 describe('inventory', () => {
   it('starting items: equipped weapon, stacked consumables in quick slots', () => {
     const { s } = setup();
-    expect(s.player.slots).toHaveLength(TOTAL_SLOTS);
-    expect(s.player.slots[0]).toMatchObject({ defId: 'stick', count: 1 });
-    expect(s.player.slots[1]).toMatchObject({ defId: 'tonic', count: 2 });
-    expect(s.player.equipped).toEqual({ weapon: 0, armour: null, trinket: null });
+    expect(leadPlayer(s).slots).toHaveLength(TOTAL_SLOTS);
+    expect(leadPlayer(s).slots[0]).toMatchObject({ defId: 'stick', count: 1 });
+    expect(leadPlayer(s).slots[1]).toMatchObject({ defId: 'tonic', count: 2 });
+    expect(leadPlayer(s).equipped).toEqual({ weapon: 0, armour: null, trinket: null });
   });
 
   it('pickup goes to the first free quick slot, then the backpack; stacks; full inventory refuses', () => {
@@ -30,22 +30,22 @@ describe('inventory', () => {
     const drop = (defId: string, n = 1) => s.area.items.push({ item: makeItem(ctx, defId, n)!, pos: { ...p.pos } });
     drop('coat');
     let st = act(w, s, { type: 'pickup' }).state;
-    expect(st.player.slots[2]?.defId).toBe('coat');
+    expect(leadPlayer(st).slots[2]?.defId).toBe('coat');
     // fill all quick slots
     const c2 = ctxFor(w, st);
     for (let i = 3; i < QUICK_SLOTS; i++) addInstance(c2, makeItem(c2, 'key')!);
     st.area.items.push({ item: makeItem(c2, 'ring')!, pos: { ...player(st).pos } });
     st = act(w, st, { type: 'pickup' }).state;
-    expect(st.player.slots[QUICK_SLOTS]?.defId).toBe('ring');
+    expect(leadPlayer(st).slots[QUICK_SLOTS]?.defId).toBe('ring');
     // stacking into the existing tonic stack
     const c3 = ctxFor(w, st);
     st.area.items.push({ item: makeItem(c3, 'tonic', 3)!, pos: { ...player(st).pos } });
     st = act(w, st, { type: 'pickup' }).state;
-    expect(st.player.slots[1]).toMatchObject({ defId: 'tonic', count: 5 });
+    expect(leadPlayer(st).slots[1]).toMatchObject({ defId: 'tonic', count: 5 });
     // fill everything, then pickup fails
     const c4 = ctxFor(w, st);
     for (let i = 0; i < TOTAL_SLOTS; i++) addInstance(c4, makeItem(c4, 'key')!);
-    expect(st.player.slots.every((x) => x)).toBe(true);
+    expect(leadPlayer(st).slots.every((x) => x)).toBe(true);
     st.area.items.push({ item: makeItem(c4, 'coat')!, pos: { ...player(st).pos } });
     expect(act(w, st, { type: 'pickup' }).events[0]).toMatchObject({ type: 'invalid', reason: 'no room to carry that' });
     expect(act(w, st, { type: 'pickup' }).state).toBe(st);
@@ -61,9 +61,9 @@ describe('inventory', () => {
     p.hp = 10;
     let st = act(w, s, { type: 'use', slot: 1 }).state;
     expect(player(st).hp).toBe(16);
-    expect(st.player.slots[1]?.count).toBe(1);
+    expect(leadPlayer(st).slots[1]?.count).toBe(1);
     st = act(w, st, { type: 'use', slot: 1 }).state;
-    expect(st.player.slots[1]).toBeNull();
+    expect(leadPlayer(st).slots[1]).toBeNull();
     expect(st.stats.itemsUsed).toBe(2);
     expect(act(w, st, { type: 'use', slot: 1 }).events[0]).toMatchObject({ type: 'invalid', reason: 'that slot is empty' });
   });
@@ -74,12 +74,12 @@ describe('inventory', () => {
     addActor(w, s, 'rat', { x: 4, y: 4 }, { hp: 99, maxHp: 99 });
     const slot = slotOf(s, 'wand');
     let st = act(w, s, { type: 'use', slot, target: { x: 4, y: 4 } }).state;
-    expect(st.player.slots[slot]?.charges).toBe(1);
+    expect(leadPlayer(st).slots[slot]?.charges).toBe(1);
     const rat = st.area.actors.find((a) => a.defId === 'rat')!;
     st = act(w, st, { type: 'use', slot, target: { ...rat.pos } }).state;
-    expect(st.player.slots[slot]?.charges).toBe(0);
+    expect(leadPlayer(st).slots[slot]?.charges).toBe(0);
     expect(act(w, st, { type: 'use', slot, target: { ...rat.pos } }).events[0]).toMatchObject({ type: 'invalid', reason: 'no charges left' });
-    expect(describeItem(st, st.player.slots[slot]!.id, { world: w }).usable).toBe(false);
+    expect(describeItem(st, leadPlayer(st).slots[slot]!.id, { world: w }).usable).toBe(false);
   });
 
   it('reusable: pays its cost and respects the cooldown', () => {
@@ -90,7 +90,7 @@ describe('inventory', () => {
     let st = act(w, s, { type: 'use', slot }).state;
     expect(player(st).mp).toBe(7);
     // cooldown 2 = blocked for the next 2 turns
-    expect(st.player.slots[slot]).toMatchObject({ defId: 'spark', cooldown: 2 });
+    expect(leadPlayer(st).slots[slot]).toMatchObject({ defId: 'spark', cooldown: 2 });
     expect(act(w, st, { type: 'use', slot }).events[0]).toMatchObject({ type: 'invalid' });
     st = act(w, st, { type: 'wait' }).state;
     expect(act(w, st, { type: 'use', slot }).events[0]).toMatchObject({ type: 'invalid' });
@@ -119,8 +119,8 @@ describe('inventory', () => {
     expect(act(w, s, { type: 'use', slot: bow }).events[0]).toMatchObject({ type: 'invalid', reason: 'requires Grace 14' });
     p.base.dex = 14;
     const st = act(w, s, { type: 'use', slot: bow }).state;
-    expect(st.player.equipped.weapon).toBe(bow);
-    expect(st.player.slots[bow]?.defId).toBe('bow'); // stays in its slot
+    expect(leadPlayer(st).equipped.weapon).toBe(bow);
+    expect(leadPlayer(st).slots[bow]?.defId).toBe('bow'); // stays in its slot
     expect(act(w, st, { type: 'use', slot: bow }).events[0]).toMatchObject({ type: 'invalid', reason: 'already equipped' });
     expect(act(w, st, { type: 'use', slot: slotOf(st, 'key') }).events[0]).toMatchObject({ type: 'invalid', reason: 'nothing happens when you use that' });
   });
@@ -131,13 +131,13 @@ describe('inventory', () => {
     giveItem(ctx, 'ring', 1);
     let st = act(w, s, { type: 'equip', slot: slotOf(s, 'coat') }).state;
     st = act(w, st, { type: 'equip', slot: slotOf(st, 'ring') }).state;
-    expect(st.player.equipped.armour).toBe(slotOf(st, 'coat'));
+    expect(leadPlayer(st).equipped.armour).toBe(slotOf(st, 'coat'));
     expect(st.flags['ring-on']).toBe(true);
     const c = ctxFor(w, st);
     expect(getStat(c, player(st), 'ac')).toBe(12);
     expect(getStat(c, player(st), 'dex')).toBe(14);
     st = act(w, st, { type: 'unequip', slot: slotOf(st, 'coat') }).state;
-    expect(st.player.equipped.armour).toBeNull();
+    expect(leadPlayer(st).equipped.armour).toBeNull();
     expect(getStat(ctxFor(w, st), player(st), 'ac')).toBe(10);
     expect(act(w, st, { type: 'unequip', slot: slotOf(st, 'coat') }).events[0]).toMatchObject({ type: 'invalid', reason: 'not equipped' });
     expect(act(w, st, { type: 'equip', slot: slotOf(st, 'tonic') }).events[0]).toMatchObject({ type: 'invalid' });
@@ -146,17 +146,17 @@ describe('inventory', () => {
   it('move_item swaps slots and keeps equipment tracking; stacks merge', () => {
     const { w, s, ctx } = setup();
     let st = act(w, s, { type: 'move_item', from: 0, to: 20 }).state;
-    expect(st.player.slots[20]?.defId).toBe('stick');
-    expect(st.player.equipped.weapon).toBe(20);
+    expect(leadPlayer(st).slots[20]?.defId).toBe('stick');
+    expect(leadPlayer(st).equipped.weapon).toBe(20);
     st = act(w, st, { type: 'move_item', from: 1, to: 20 }).state;
-    expect(st.player.slots[1]?.defId).toBe('stick');
-    expect(st.player.slots[20]?.defId).toBe('tonic');
-    expect(st.player.equipped.weapon).toBe(1);
+    expect(leadPlayer(st).slots[1]?.defId).toBe('stick');
+    expect(leadPlayer(st).slots[20]?.defId).toBe('tonic');
+    expect(leadPlayer(st).equipped.weapon).toBe(1);
     const c = ctxFor(w, st);
-    st.player.slots[5] = makeItem(c, 'tonic', 4);
+    leadPlayer(st).slots[5] = makeItem(c, 'tonic', 4);
     st = act(w, st, { type: 'move_item', from: 5, to: 20 }).state;
-    expect(st.player.slots[20]?.count).toBe(6);
-    expect(st.player.slots[5]).toBeNull();
+    expect(leadPlayer(st).slots[20]?.count).toBe(6);
+    expect(leadPlayer(st).slots[5]).toBeNull();
     for (const bad of [{ from: 0, to: 0 }, { from: -1, to: 3 }, { from: 3, to: 28 }, { from: 7, to: 3 }]) {
       expect(act(w, st, { type: 'move_item', ...bad }).events[0]).toMatchObject({ type: 'invalid' });
     }
@@ -166,12 +166,12 @@ describe('inventory', () => {
   it('drop puts the stack on the floor and unequips', () => {
     const { w, s, p } = setup();
     const st = act(w, s, { type: 'drop', slot: 0 }).state;
-    expect(st.player.slots[0]).toBeNull();
-    expect(st.player.equipped.weapon).toBeNull();
+    expect(leadPlayer(st).slots[0]).toBeNull();
+    expect(leadPlayer(st).equipped.weapon).toBeNull();
     expect(st.area.items).toEqual([{ item: expect.objectContaining({ defId: 'stick' }), pos: p.pos }]);
     const back = act(w, st, { type: 'pickup' }).state;
-    expect(back.player.slots[0]?.defId).toBe('stick');
-    expect(countItem(ctxFor(w, back), 'stick')).toBe(1);
+    expect(leadPlayer(back).slots[0]?.defId).toBe('stick');
+    expect(countItem(leadPlayer(back), 'stick')).toBe(1);
   });
 });
 
@@ -205,15 +205,15 @@ describe('knowledge', () => {
     const { w, s, ctx, p } = setup();
     giveItem(ctx, 'murk', 1);
     const slot = slotOf(s, 'murk');
-    const id = s.player.slots[slot]!.id;
+    const id = leadPlayer(s).slots[slot]!.id;
     const before = describeItem(s, id, { world: w });
     expect(before.knowledge).toBe('unknown');
-    expect(before.name).toBe(s.knowledge.murk.appearance!.label.replace(/^./, (c) => c.toUpperCase()));
+    expect(before.name).toBe(leadPlayer(s).knowledge.murk.appearance!.label.replace(/^./, (c) => c.toUpperCase()));
     expect(before.effectLines).toEqual([]);
     expect(before.description).not.toContain('secretly');
     p.hp = 10;
     const r = act(w, s, { type: 'use', slot });
-    const k = r.state.knowledge.murk;
+    const k = leadPlayer(r.state).knowledge.murk;
     expect(k.level).toBe('clear');
     expect(k.timesUsed).toBe(1);
     expect(k.notes).toEqual(['You felt better (+6 Health).']);
@@ -225,12 +225,12 @@ describe('knowledge', () => {
     giveItem(ctx, 'fog', 2);
     const slot = slotOf(s, 'fog');
     const st = act(w, s, { type: 'use', slot }).state;
-    const k = st.knowledge.fog;
+    const k = leadPlayer(st).knowledge.fog;
     expect(k.level).toBe('vague');
     expect(k.notes).toEqual(['You became Burning.']);
-    const view = describeItem(st, st.player.slots[slot]!.id, { world: w });
+    const view = describeItem(st, leadPlayer(st).slots[slot]!.id, { world: w });
     expect(view).toMatchObject({ name: 'Fog Draught', knowledge: 'vague', vagueText: 'Warm going down.', effectLines: [] });
-    const tonic = describeItem(st, st.player.slots[1]!.id, { world: w });
+    const tonic = describeItem(st, leadPlayer(st).slots[1]!.id, { world: w });
     expect(tonic.effectLines).toEqual(['Restores 6 Health']);
   });
 
@@ -242,8 +242,8 @@ describe('knowledge', () => {
     giveItem(ctxFor(w, s), 'murk', 1);
     player(s).hp = 10;
     const st = act(w, s, { type: 'use', slot: slotOf(s, 'murk') }).state;
-    expect(st.knowledge.murk.level).toBe('unknown');
-    expect(st.knowledge.murk.notes).toEqual(['You felt better.']);
+    expect(leadPlayer(st).knowledge.murk.level).toBe('unknown');
+    expect(leadPlayer(st).knowledge.murk.notes).toEqual(['You felt better.']);
   });
 
   it('describeObservations summarises outcomes', () => {
@@ -257,12 +257,12 @@ describe('knowledge', () => {
     const { w, s, ctx } = setup();
     giveItem(ctx, 'spark', 1);
     giveItem(ctx, 'wand', 1);
-    const spark = describeItem(s, s.player.slots[slotOf(s, 'spark')]!.id, { world: w });
+    const spark = describeItem(s, leadPlayer(s).slots[slotOf(s, 'spark')]!.id, { world: w });
     expect(spark.effectLines).toEqual(['Deals 3 fire damage', 'Target: line, range 5', 'Costs 3 Focus', 'Cooldown 2 turns']);
-    const stick = describeItem(s, s.player.slots[0]!.id, { world: w });
+    const stick = describeItem(s, leadPlayer(s).slots[0]!.id, { world: w });
     expect(stick.equipped).toBe(true);
     expect(stick.effectLines[0]).toBe('Attack: 1d4+2 blunt (Might)');
-    const wand = describeItem(s, s.player.slots[slotOf(s, 'wand')]!.id, { world: w });
+    const wand = describeItem(s, leadPlayer(s).slots[slotOf(s, 'wand')]!.id, { world: w });
     expect(wand.charges).toBe(2);
     expect(() => describeItem(s, 'nope', { world: w })).toThrow();
   });

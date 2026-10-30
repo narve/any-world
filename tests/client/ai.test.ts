@@ -12,6 +12,7 @@ import { WorldGenerationError } from '../../src/llm/generate';
 import { providerFromSettings, runAi, voiceTurn, WorldGeneration } from '../../src/client/ai';
 import { GameSession } from '../../src/client/session';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer } from '../../src/engine';
 
 const teenText = readFileSync(join(__dirname, '../../content/worlds/fixture-teen.json'), 'utf8');
 const western = loadFixture('fixture-western.json');
@@ -111,8 +112,8 @@ describe('NPC voice in the session', () => {
     const s = new GameSession({ world: western, worldId: 'fixture-western', seed: 1, map: roomMap(14, 10) });
     const st = structuredClone(s.state) as GameState;
     const me: Pos = { x: 5, y: 5 };
-    st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.defId === 'widow-oquendo');
-    st.area.actors.find((a) => a.id === st.player.actorId)!.pos = me;
+    st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId || a.defId === 'widow-oquendo');
+    st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!.pos = me;
     const npc = st.area.actors.find((a) => a.defId === 'widow-oquendo')!;
     npc.pos = { x: 6, y: 5 };
     s.state = st;
@@ -123,7 +124,7 @@ describe('NPC voice in the session', () => {
 
   it('asks for a turn when a conversation opens, shows the voiced line, and drops stale answers', () => {
     const { s, npcId } = talking();
-    expect(s.state.pendingChoice?.kind).toBe('dialogue');
+    expect(leadPlayer(s.state).pendingChoice?.kind).toBe('dialogue');
     const engineLine = s.viewModel().game!.dialogue!.reply;
     const req = s.takeVoiceRequest();
     expect(req).toMatchObject({ npcId });
@@ -132,13 +133,13 @@ describe('NPC voice in the session', () => {
 
     s.setVoice(req!.token, { reply: 'Rain is a debt, stranger.', actions: [] });
     expect(s.viewModel().game!.dialogue!.reply).toBe('Rain is a debt, stranger.');
-    expect(s.state.pendingChoice!.prompt).toBe(engineLine); // the engine state is untouched
+    expect(leadPlayer(s.state).pendingChoice!.prompt).toBe(engineLine); // the engine state is untouched
 
     // "Ask what they know": the conversation stays open with the engine's answer as the line, and
     // the next turn asks the voice with the player's question; a late answer to the old turn is dropped
     const asked = s.viewModel().game!.dialogue!.options[0];
     s.dialogueReply(0);
-    expect(s.state.pendingChoice?.kind).toBe('dialogue');
+    expect(leadPlayer(s.state).pendingChoice?.kind).toBe('dialogue');
     const next = s.takeVoiceRequest();
     expect(next!.token).toBeGreaterThan(req!.token);
     expect(next!.playerLine).toBe(asked);
@@ -147,13 +148,13 @@ describe('NPC voice in the session', () => {
     expect(s.voiceLine()).toBe(s.state.log[s.state.log.length - 1].text);
     // leaving ends it; talking again is a new conversation and a new turn
     s.dialogueLeave();
-    expect(s.state.pendingChoice).toBeNull();
+    expect(leadPlayer(s.state).pendingChoice).toBeNull();
     expect(s.voiceLine()).toBeNull();
     s.intent({ type: 'talk' });
     const again = s.takeVoiceRequest();
     expect(again!.token).toBeGreaterThan(next!.token);
     expect(again!.history).toEqual([]);
-    expect(s.viewModel().game!.dialogue!.reply).toBe(s.state.pendingChoice!.prompt);
+    expect(s.viewModel().game!.dialogue!.reply).toBe(leadPlayer(s.state).pendingChoice!.prompt);
   });
 
   it('keeps the voice when the shop reopens the conversation after a purchase', () => {
@@ -161,9 +162,9 @@ describe('NPC voice in the session', () => {
     const req = s.takeVoiceRequest()!;
     s.setVoice(req.token, { reply: 'Buy or go.', actions: [] });
     s.intent({ type: 'open_trade', npcId });
-    s.state = { ...s.state, player: { ...s.state.player, currency: 500 } };
+    s.state = { ...s.state, purse: 500 };
     s.trade({ type: 'buy', offerIndex: 0 });
-    expect(s.state.pendingChoice?.kind).toBe('dialogue');
+    expect(leadPlayer(s.state).pendingChoice?.kind).toBe('dialogue');
     expect(s.takeVoiceRequest()).toBeNull();
     expect(s.voiceLine()).toBe('Buy or go.');
     expect(s.viewModel().game!.trade).toBeTruthy();
@@ -172,10 +173,10 @@ describe('NPC voice in the session', () => {
   it('applies the voice actions through the GM path', () => {
     const { s } = talking();
     const req = s.takeVoiceRequest()!;
-    const before = s.state.player.currency;
+    const before = s.state.purse;
     const out = s.setVoice(req.token, { reply: 'Take this.', actions: [{ type: 'currency', amount: 5 }] });
     expect(out.changed).toBe(true);
-    expect(s.state.player.currency).toBe(before + 5);
+    expect(s.state.purse).toBe(before + 5);
   });
 
   it('voiceTurn uses the LLM line and ignores canned fallbacks', async () => {

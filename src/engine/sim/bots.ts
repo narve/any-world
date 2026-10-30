@@ -16,12 +16,12 @@
  * A bot keeps a small BotMemory (its own seeded RNG, targets it gave up on, stuck counters). The
  * runner reports whether the previous action was refused through `memory.lastInvalid`.
  */
-import type { WorldSpec, ItemDef } from '../../schema/world';
+import type { Condition, WorldSpec, ItemDef } from '../../schema/world';
 import type { GmAction } from '../../schema/gm';
-import type { Dir, GameState, PlayerAction, Pos } from '../types';
-import type { Ctx } from '../ctx';
+import type { Dir, GameState, PlayerAction, PlayerId, Pos, Refusal } from '../types';
+import { type Ctx, me, playerActorOf } from '../ctx';
 import { SeededRng, createRng } from '../rng';
-import { equipSlotOf } from '../inventory';
+import { countItem, equipSlotOf } from '../inventory';
 import { getStat, maxHp, side } from '../stats';
 import { TALK_RANGE } from '../npc';
 import {
@@ -43,6 +43,7 @@ import {
   known,
   knownHostiles,
   loseCounters,
+  loseResources,
   lootCarriers,
   modValue,
   pathField,
@@ -86,6 +87,10 @@ export interface BotMemory {
   lastAction: PlayerAction | null;
   /** set by the runner: refusal reason of the last action (null = accepted) */
   lastInvalid: string | null;
+  /** set by the party runner: why the last action was refused (contested / stale refusals are transient) */
+  lastReason?: Refusal | null;
+  /** item ids this bot dropped for a teammate this area (it leaves them lying for the teammate) */
+  handedOver: Set<string>;
   /** progress tracking for stuck detection */
   lastSeenCount: number;
   lastProgressAt: number;
@@ -130,6 +135,7 @@ export function newMemory(seed: number): BotMemory {
     progress: new Map(),
     lastAction: null,
     lastInvalid: null,
+    handedOver: new Set(),
     lastSeenCount: 0,
     lastProgressAt: 0,
     wanderUntil: 0,
@@ -177,28 +183,29 @@ const STALL_LIMIT = 60;
 
 export interface Bot {
   name: BotName;
-  decide(state: GameState, world: WorldSpec, memory: BotMemory): PlayerAction;
+  /** the next action of `playerId` (default: the lead player); never mutates `state` */
+  decide(state: GameState, world: WorldSpec, memory: BotMemory, playerId?: PlayerId): PlayerAction;
 }
 
 export function botByName(name: string): Bot {
   if (name === 'random') return { name: 'random', decide: randomDecide };
   const persona = PERSONAS[name as Exclude<BotName, 'random'>];
   if (!persona) throw new Error(`unknown bot "${name}" (known: ${BOT_NAMES.join(', ')})`);
-  return { name: persona.name, decide: (s, w, m) => personaDecide(persona, s, w, m) };
+  return { name: persona.name, decide: (s, w, m, pid) => personaDecide(persona, s, w, m, pid) };
 }
 
 // ---------------------------------------------------------------------------
 // Random bot
 // ---------------------------------------------------------------------------
 
-function randomDecide(state: GameState, world: WorldSpec, mem: BotMemory): PlayerAction {
-  const ctx = botCtx(world, state);
+function randomDecide(state: GameState, world: WorldSpec, mem: BotMemory, playerId?: PlayerId): PlayerAction {
+  const ctx = botCtx(world, state, playerId);
   const legal = fastLegal(ctx);
   mem.decisions++;
   if (!legal.length) return { type: 'wait' };
   const tr = legal.find((a) => a.type === 'transition');
   if (tr && mem.rng.chance(0.5)) return tr;
-  if (state.pendingChoice || state.player.pendingPerkChoice) return mem.rng.pick(legal);
+  if (me(ctx).pendingChoice || me(ctx).pendingPerkChoice) return mem.rng.pick(legal);
   // moves dominate the list; weight other verbs up a bit so items/talk/interact get exercised
   const moves = legal.filter((a) => a.type === 'move');
   const other = legal.filter((a) => a.type !== 'move');
@@ -221,32 +228,34 @@ interface Turn {
   wantDefeat: Set<string>;
 }
 
-function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem: BotMemory): PlayerAction {
-  const ctx = botCtx(world, state);
+function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem: BotMemory, playerId?: PlayerId): PlayerAction {
+  const ctx = botCtx(world, state, playerId);
   const legal = fastLegal(ctx);
   mem.decisions++;
   if (!legal.length) return { type: 'wait' };
-  if (state.player.pendingPerkChoice) return pickPerk(ctx, legal);
-  if (state.pendingChoice) return pickOption(ctx, legal, persona);
+  if (me(ctx).pendingPerkChoice) return pickPerk(ctx, legal);
+  if (me(ctx).pendingChoice) return pickOption(ctx, legal, persona);
 
   if (state.area.index !== mem.areaIndex) {
     mem.areaIndex = state.area.index;
     mem.areaDecisions = 0;
     mem.blacklist.clear();
     mem.onceThisArea.clear();
+    mem.handedOver.clear();
     mem.target = null;
     mem.progress.clear();
     mem.lastProgressAt = mem.decisions;
     mem.wanderUntil = 0;
   }
   mem.areaDecisions++;
-  const seenNow = seenCount(state);
+  const seenNow = seenCount(state, ctx.pid);
   if (seenNow !== mem.lastSeenCount) {
     mem.lastSeenCount = seenNow;
     mem.lastProgressAt = mem.decisions;
   }
-  // a refused move: give up on the current target
-  if (mem.lastInvalid && mem.lastAction?.type === 'move' && mem.target) {
+  // a refused move: give up on the current target (not when a teammate merely got there first)
+  const transient = mem.lastReason === 'contested' || mem.lastReason === 'stale';
+  if (mem.lastInvalid && mem.lastAction?.type === 'move' && mem.target && !transient) {
     mem.blacklist.add(mem.target.key);
     mem.target = null;
   }
@@ -266,12 +275,17 @@ function personaDecide(persona: Persona, state: GameState, world: WorldSpec, mem
   const wantItems = wantedItems(all);
   // a needed item that only a hostile carries: defeating it is part of the objective
   const wantDefeat = new Set([...wantedDefeats(all), ...lootCarriers(ctx, wantItems)]);
+  // in a party, the items a teammate brings for this bot's goal item are wanted too
+  for (const id of collectorWants(ctx, objectives)) wantItems.add(id);
   const t: Turn = { ctx, legal, persona: restrained(ctx, persona), mem, world, objectives, wantItems, wantDefeat };
 
   const act =
     survive(t) ??
+    revive(t) ??
     goalUse(t) ??
     fight(t) ??
+    handOver(t) ??
+    gather(t) ??
     equipUpgrade(t) ??
     pickup(t) ??
     sneak(t) ??
@@ -366,7 +380,7 @@ function gmActionValue(ctx: Ctx, a: GmAction, want: Set<string>): number {
 
 function heldHeals(ctx: Ctx): number {
   let n = 0;
-  for (const it of ctx.s.player.slots) {
+  for (const it of me(ctx).slots) {
     if (!it) continue;
     const def = ctx.ix.items.get(it.defId);
     if (def && known(ctx, def.id) !== 'unknown' && itemProfile(ctx.world, def).heal > 0) n += it.count;
@@ -375,8 +389,8 @@ function heldHeals(ctx: Ctx): number {
 }
 
 function equippedDef(ctx: Ctx, kind: 'weapon' | 'armour' | 'trinket'): ItemDef | null {
-  const slot = ctx.s.player.equipped[kind];
-  const it = slot !== null ? ctx.s.player.slots[slot] : null;
+  const slot = me(ctx).equipped[kind];
+  const it = slot !== null ? me(ctx).slots[slot] : null;
   return it ? (ctx.ix.items.get(it.defId) ?? null) : null;
 }
 
@@ -389,7 +403,7 @@ function upgradeValue(ctx: Ctx, def: ItemDef): number {
 }
 
 function pickOption(ctx: Ctx, legal: PlayerAction[], persona: Persona): PlayerAction {
-  const pc = ctx.s.pendingChoice!;
+  const pc = me(ctx).pendingChoice!;
   const objs = currentObjectives(ctx);
   const want = wantedItems([...objs.goal, ...objs.lock]);
   const hurt = hpFrac(ctx) < 0.8;
@@ -439,7 +453,7 @@ function useActions(t: Turn): UseAction[] {
 }
 
 function defAt(t: Turn, slot: number): ItemDef | undefined {
-  const it = t.ctx.s.player.slots[slot];
+  const it = me(t.ctx).slots[slot];
   return it ? t.ctx.ix.items.get(it.defId) : undefined;
 }
 
@@ -494,7 +508,7 @@ function survive(t: Turn): PlayerAction | null {
   // vital resources (oxygen, light…) running low: an item, else terrain that refills it
   for (const res of vitalResources(t.world)) {
     const r = ctx.ix.resources.get(res)!;
-    const v = ctx.s.player.resources[res] ?? 0;
+    const v = me(ctx).resources[res] ?? 0;
     const onRefill = refillTiles(ctx, res).has(p.pos.y * ctx.s.area.map.width + p.pos.x);
     // topping up on a refill tile: stay until nearly full
     if (onRefill && v < r.max * 0.8 && !hostiles.some((h) => cheb(h.pos, p.pos) <= 2)) {
@@ -513,6 +527,12 @@ function survive(t: Turn): PlayerAction | null {
     const v = ctx.s.counters[counter] ?? 0;
     if (v < limit - 1 || v <= 0) continue;
     const fix = knownUses(t).find((u) => (itemProfile(t.world, u.def).counters[counter] ?? 0) < 0);
+    if (fix) return fix.a;
+  }
+  // a resource that loses the run as it rises (varnish) is past 70% of its limit: lower it
+  for (const [res, limit] of loseResources(t.world)) {
+    if ((me(ctx).resources[res] ?? 0) < limit * 0.7) continue;
+    const fix = knownUses(t).find((u) => (itemProfile(t.world, u.def).resources[res] ?? 0) < 0);
     if (fix) return fix.a;
   }
   // a cautious bot steps away from melee when hurt (if a safe tile exists)
@@ -572,6 +592,8 @@ function equipUpgrade(t: Turn): PlayerAction | null {
 function pickup(t: Turn): PlayerAction | null {
   const p = player(t.ctx);
   if (visibleHostiles(t.ctx).some((h) => cheb(h.pos, p.pos) <= 1) && t.persona.fight !== 'avoid') return null;
+  // what this bot put down for a teammate stays there
+  if (t.mem.handedOver.size && t.ctx.s.area.items.every((fi) => fi.pos.x !== p.pos.x || fi.pos.y !== p.pos.y || t.mem.handedOver.has(fi.item.defId))) return null;
   return t.legal.find((a) => a.type === 'pickup') ?? null;
 }
 
@@ -579,8 +601,8 @@ function sneak(t: Turn): PlayerAction | null {
   // sneaking makes every step slower: not worth it while a vital resource drains each turn
   const draining = vitalResources(t.world).some((r) => (t.ctx.ix.resources.get(r)?.perTurn ?? 0) < 0);
   const want = t.persona.sneak && !draining;
-  if (want === t.ctx.s.player.sneaking) return null;
-  if (!want && !t.ctx.s.player.sneaking) return null;
+  if (want === me(t.ctx).sneaking) return null;
+  if (!want && !me(t.ctx).sneaking) return null;
   return t.legal.find((a) => a.type === 'toggle_sneak') ?? null;
 }
 
@@ -623,7 +645,7 @@ function refillTiles(ctx: Ctx, res: string): Set<number> {
   );
   if (!good.size) return out;
   const tiles = ctx.s.area.map.tiles;
-  for (let i = 0; i < tiles.length; i++) if (tiles[i].terrain && good.has(tiles[i].terrain!) && ctx.s.area.seen[i]) out.add(i);
+  for (let i = 0; i < tiles.length; i++) if (tiles[i].terrain && good.has(tiles[i].terrain!) && me(ctx).seen[i]) out.add(i);
   return out;
 }
 
@@ -651,7 +673,7 @@ function hurry(t: Turn): boolean {
   for (const res of vitalResources(t.world)) {
     const r = ctx.ix.resources.get(res)!;
     if (r.perTurn >= 0) continue;
-    const v = ctx.s.player.resources[res] ?? 0;
+    const v = me(ctx).resources[res] ?? 0;
     if (v > r.max * 0.4) continue;
     const refill = knownUses(t).some((u) => (itemProfile(t.world, u.def).resources[res] ?? 0) > 0);
     if (!refill && !refillTiles(ctx, res).size) return true;
@@ -818,6 +840,194 @@ function fight(t: Turn): PlayerAction | null {
 }
 
 // ---------------------------------------------------------------------------
+// Party (MP1): revive a down teammate, bring a teammate the items their goal item needs, gather
+// at the exit while the countdown runs. Each returns null at once in a party of one, so single
+// player plays exactly as before.
+// ---------------------------------------------------------------------------
+
+/** a down teammate farther than this (path cost) is left to get up by themselves */
+const REVIVE_REACH = 40;
+
+function waitAction(t: Turn): PlayerAction | null {
+  return t.legal.find((a) => a.type === 'wait') ?? null;
+}
+
+/** the cheapest reachable tile next to `pos` (a teammate, a body) */
+function cheapestNeighbour(field: PathField, pos: Pos, height: number): { goal: number; cost: number } | null {
+  const W = field.width;
+  let goal = -1;
+  let cost = Infinity;
+  for (let dy = -1; dy <= 1; dy++)
+    for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = pos.x + dx;
+      const ny = pos.y + dy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= height) continue;
+      const j = ny * W + nx;
+      if (field.dist[j] < cost) {
+        cost = field.dist[j];
+        goal = j;
+      }
+    }
+  return goal >= 0 && Number.isFinite(cost) ? { goal, cost } : null;
+}
+
+/** standing teammates' actors (not this bot's) */
+function standingMates(ctx: Ctx): { id: PlayerId; pos: Pos }[] {
+  const out: { id: PlayerId; pos: Pos }[] = [];
+  for (const id of ctx.s.party) {
+    if (id === ctx.pid || ctx.s.players[id].down) continue;
+    const a = playerActorOf(ctx, id);
+    if (a && a.hp > 0) out.push({ id, pos: a.pos });
+  }
+  return out;
+}
+
+/**
+ * A teammate is down: walk next to the body and stand there for a turn (REVIVE_HELP_TURNS), unless
+ * another teammate already stands by it or it is far away (they get up by themselves after
+ * REVIVE_SELF_TURNS). A hostile next to the bot is dealt with first.
+ */
+function revive(t: Turn): PlayerAction | null {
+  const { ctx } = t;
+  const s = ctx.s;
+  if (s.party.length <= 1 || !s.party.some((id) => s.players[id].down)) return null;
+  const p = player(ctx);
+  if (visibleHostiles(ctx).some((h) => cheb(h.pos, p.pos) <= 1)) return null;
+  const mates = standingMates(ctx);
+  let field: PathField | null = null;
+  let best: { goal: number; cost: number } | null = null;
+  for (const id of s.party) {
+    if (id === ctx.pid || !s.players[id].down) continue;
+    const body = playerActorOf(ctx, id);
+    if (!body) continue;
+    if (cheb(body.pos, p.pos) <= 1) return waitAction(t);
+    if (mates.some((m) => cheb(m.pos, body.pos) <= 1)) continue;
+    field ??= pathField(ctx);
+    const n = cheapestNeighbour(field, body.pos, s.area.map.height);
+    if (n && n.cost <= REVIVE_REACH && (!best || n.cost < best.cost)) best = n;
+  }
+  if (!best || !field) return null;
+  return stepTowards(t, field, best.goal, p.pos.y * s.area.map.width + p.pos.x);
+}
+
+/** has_item leaves about the user ("player" / "self") of a condition, outside `not`: item → count */
+function heldItemLeaves(c: Condition | undefined, out = new Map<string, number>(), depth = 0): Map<string, number> {
+  if (!c || depth > 16) return out;
+  if (c.type === 'all' || c.type === 'any') for (const x of c.of) heldItemLeaves(x, out, depth + 1);
+  else if (c.type === 'has_item' && (c.who === 'player' || c.who === 'self')) out.set(c.item, Math.max(out.get(c.item) ?? 0, c.count ?? 1));
+  return out;
+}
+
+/** the condition with those leaves taken as met: what else the item waits for (the right area…) */
+function withoutHeldItems(c: Condition): Condition {
+  if (c.type === 'all' || c.type === 'any') return { ...c, of: c.of.map(withoutHeldItems) };
+  if (c.type === 'has_item' && (c.who === 'player' || c.who === 'self')) return { type: 'always' };
+  return c;
+}
+
+interface GoalItem {
+  def: ItemDef;
+  /** items the user must carry for the use to work: item → count */
+  needs: Map<string, number>;
+}
+
+/**
+ * Items whose use sets a flag or raises a counter the objectives want, and whose use condition
+ * asks the user to carry other items ("recite the knot while holding all three rings"). Item use
+ * conditions are personal, so in a party those items must end up in one pack.
+ */
+function goalItemsNeedingItems(ctx: Ctx, objectives: Turn['objectives']): GoalItem[] {
+  const objs = [...objectives.goal, ...objectives.lock];
+  const flags = new Set(objs.filter((o) => o.kind === 'flag').map((o) => (o as { flag: string }).flag));
+  const counters = new Set(objs.filter((o) => o.kind === 'counter').map((o) => (o as { counter: string }).counter));
+  if (!flags.size && !counters.size) return [];
+  const out: GoalItem[] = [];
+  for (const def of ctx.world.items) {
+    if (!def.onUse?.condition) continue;
+    const pr = itemProfile(ctx.world, def);
+    if (!pr.setsFlags.some((f) => flags.has(f)) && !Object.entries(pr.counters).some(([c, v]) => counters.has(c) && v > 0)) continue;
+    const needs = heldItemLeaves(def.onUse.condition);
+    needs.delete(def.id);
+    if (needs.size) out.push({ def, needs });
+  }
+  return out;
+}
+
+/** the standing player (party order) who carries a goal item: the one the others bring things to */
+function collectorOf(ctx: Ctx, defId: string): PlayerId | null {
+  for (const id of ctx.s.party) {
+    const ps = ctx.s.players[id];
+    if (ps.down || !countItem(ps, defId)) continue;
+    const a = playerActorOf(ctx, id);
+    if (a && a.hp > 0) return id;
+  }
+  return null;
+}
+
+/** in a party: items this bot's goal item needs and its pack lacks (teammates drop them nearby) */
+function collectorWants(ctx: Ctx, objectives: Turn['objectives']): string[] {
+  if (ctx.s.party.length <= 1) return [];
+  const out: string[] = [];
+  for (const g of goalItemsNeedingItems(ctx, objectives)) {
+    if (collectorOf(ctx, g.def.id) !== ctx.pid) continue;
+    for (const [item, need] of g.needs) if (countItem(me(ctx), item) < need) out.push(item);
+  }
+  return out;
+}
+
+/**
+ * Carries an item a teammate's goal item needs to that teammate and drops it next to them (they
+ * want it and pick it up). Only once the rest of the use condition holds for them, so nothing is
+ * dropped in an area the party may leave before it is picked up.
+ */
+function handOver(t: Turn): PlayerAction | null {
+  const { ctx } = t;
+  const s = ctx.s;
+  if (s.party.length <= 1) return null;
+  const p = player(ctx);
+  if (visibleHostiles(ctx).some((h) => cheb(h.pos, p.pos) <= 1)) return null;
+  for (const g of goalItemsNeedingItems(ctx, t.objectives)) {
+    const to = collectorOf(ctx, g.def.id);
+    if (!to || to === ctx.pid) continue;
+    const them = playerActorOf(ctx, to)!;
+    if (!evalConditionSafe(ctx, withoutHeldItems(g.def.onUse!.condition!), them)) continue;
+    for (const [item, need] of g.needs) {
+      if (countItem(s.players[to], item) >= need) continue;
+      const slot = me(ctx).slots.findIndex((it) => it?.defId === item);
+      if (slot < 0) continue;
+      if (cheb(them.pos, p.pos) <= 1) {
+        const drop = t.legal.find((a) => a.type === 'drop' && a.slot === slot);
+        if (!drop) continue;
+        t.mem.handedOver.add(item);
+        return drop;
+      }
+      const field = pathField(ctx);
+      const n = cheapestNeighbour(field, them.pos, s.area.map.height);
+      const step = n ? stepTowards(t, field, n.goal, p.pos.y * s.area.map.width + p.pos.x) : null;
+      if (step) return step;
+    }
+  }
+  return null;
+}
+
+/** while the exit countdown runs, walk to the exit (everyone there moves the party on at once) */
+function gather(t: Turn): PlayerAction | null {
+  const { ctx } = t;
+  const s = ctx.s;
+  if (s.party.length <= 1 || !s.area.exitCountdown) return null;
+  const p = player(ctx);
+  const exit = s.area.map.exit;
+  if (cheb(exit, p.pos) <= 1) return waitAction(t);
+  if (visibleHostiles(ctx).some((h) => cheb(h.pos, p.pos) <= 1)) return null;
+  const W = s.area.map.width;
+  const field = pathField(ctx);
+  const exitIdx = exit.y * W + exit.x;
+  const goal = Number.isFinite(field.dist[exitIdx]) ? exitIdx : cheapestNeighbour(field, exit, s.area.map.height)?.goal;
+  return goal === undefined ? null : stepTowards(t, field, goal, p.pos.y * W + p.pos.x);
+}
+
+// ---------------------------------------------------------------------------
 // Resting, leaving and moving around
 // ---------------------------------------------------------------------------
 
@@ -832,7 +1042,7 @@ function rest(t: Turn): PlayerAction | null {
   // draining resources make resting expensive
   for (const res of vitalResources(t.world)) {
     const r = ctx.ix.resources.get(res)!;
-    if (r.perTurn < 0 && (ctx.s.player.resources[res] ?? 0) < r.max * 0.5) return null;
+    if (r.perTurn < 0 && (me(ctx).resources[res] ?? 0) < r.max * 0.5) return null;
   }
   if (t.mem.restStreak >= 30 * ps.hpRegenEvery) return null;
   t.mem.restStreak++;
@@ -857,7 +1067,7 @@ function readyToLeave(t: Turn): boolean {
   // goal items/actors of this area still visible and reachable? stay (they may be needed later too)
   const { ctx } = t;
   if (t.mem.areaDecisions > AREA_DECISION_CAP || hurry(t)) return true;
-  if (t.wantItems.size && ctx.s.area.items.some((fi) => t.wantItems.has(fi.item.defId) && ctx.s.area.seen[fi.pos.y * ctx.s.area.map.width + fi.pos.x])) return false;
+  if (t.wantItems.size && ctx.s.area.items.some((fi) => t.wantItems.has(fi.item.defId) && me(ctx).seen[fi.pos.y * ctx.s.area.map.width + fi.pos.x])) return false;
   if (!t.persona.exploreFully) return t.mem.areaDecisions > 80 || frontierTiles(ctx).length === 0;
   return false; // explorers leave when navigate() finds nothing left to do
 }
@@ -884,13 +1094,13 @@ function navigate(t: Turn): PlayerAction | null {
   const avoid = t.persona.fight === 'avoid' || t.persona.fight === 'talk';
   const field = pathField(ctx, avoid && hostiles.length ? { extraCost: (i) => nearHostileCost(i, W, hostiles) } : {});
   const cands: Candidate[] = [];
-  const seen = ctx.s.area.seen;
-  const invSpace = ctx.s.player.slots.some((s) => s === null);
+  const seen = me(ctx).seen;
+  const invSpace = me(ctx).slots.some((s) => s === null);
 
   // floor items (wanted ones first)
   for (const fi of ctx.s.area.items) {
     const i = fi.pos.y * W + fi.pos.x;
-    if (!seen[i] || mem.blacklist.has(i)) continue;
+    if (!seen[i] || mem.blacklist.has(i) || mem.handedOver.has(fi.item.defId)) continue;
     const wanted = t.wantItems.has(fi.item.defId);
     if (!invSpace && !wanted) continue;
     cands.push({ idx: i, key: i, bonus: wanted ? 60 : 10 });
@@ -904,7 +1114,7 @@ function navigate(t: Turn): PlayerAction | null {
   // npcs to talk to
   if (ctx.world.verbs.talk) {
     for (const a of ctx.s.area.actors) {
-      if (a.hp <= 0 || a.id === ctx.s.player.actorId || !isNpc(ctx, a) || side(ctx, a) === 'H') continue;
+      if (a.hp <= 0 || a.id === me(ctx).actorId || !isNpc(ctx, a) || side(ctx, a) === 'H') continue;
       const i = a.pos.y * W + a.pos.x;
       if (seen[i] !== 2 || mem.blacklist.has(a.id)) continue;
       const talks = mem.talks.get(a.id) ?? 0;
@@ -1069,7 +1279,7 @@ function wander(t: Turn): PlayerAction {
       let goal = -1;
       let bestD = Infinity;
       for (let i = 0; i < field.dist.length; i++) {
-        if (ctx.s.area.seen[i] !== 0 || !Number.isFinite(field.dist[i]) || mem.blacklist.has(i)) continue;
+        if (me(ctx).seen[i] !== 0 || !Number.isFinite(field.dist[i]) || mem.blacklist.has(i)) continue;
         if (field.dist[i] < bestD) {
           bestD = field.dist[i];
           goal = i;

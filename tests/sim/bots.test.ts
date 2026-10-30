@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
 import { WORLD_DIR, loadFixture, testWorld, newGame, player, addActor, env, roomMap, simpleGenerator } from '../engine/helpers';
-import { createGame, step, legalActions, serialize } from '../../src/engine';
+import { createGame, step, legalActions, serialize, leadPlayer } from '../../src/engine';
 import type { GameState, PlayerAction, MapGenerator } from '../../src/engine/types';
 import { BOT_NAMES, botByName, newMemory, type Bot } from '../../src/engine/sim/bots';
 import { botCtx, fastLegal, itemProfile } from '../../src/engine/sim/view';
@@ -50,7 +50,7 @@ describe('bot decisions', () => {
   it('every bot resolves a pending perk choice (and the persona bots pick the strongest perk)', () => {
     const world = testWorld();
     const s = newGame(world);
-    s.player.pendingPerkChoice = ['quick', 'tough'];
+    leadPlayer(s).pendingPerkChoice = ['quick', 'tough'];
     for (const name of BOT_NAMES) {
       const a = decide(name, world, s);
       expect(a.type).toBe('choose_perk');
@@ -64,18 +64,18 @@ describe('bot decisions', () => {
     const p = player(s);
     addActor(world, s, 'sage', { x: p.pos.x + 1, y: p.pos.y });
     s = step(s, { type: 'talk', targetId: s.area.actors[s.area.actors.length - 1].id }, env(world)).state;
-    expect(s.pendingChoice).not.toBeNull();
+    expect(leadPlayer(s).pendingChoice).not.toBeNull();
     player(s).hp = 10;
     const a = decide('explorer', world, s);
     expect(a.type).toBe('choose_option');
-    const opt = s.pendingChoice!.options[(a as { index: number }).index];
+    const opt = leadPlayer(s).pendingChoice!.options[(a as { index: number }).index];
     expect(opt.tag).toBe('service:heal');
   });
 
   it('picks the cheapest way out of a GM offer it cannot afford', () => {
     const world = testWorld();
     let s = newGame(world);
-    s.pendingChoice = {
+    leadPlayer(s).pendingChoice = {
       kind: 'gm_offer',
       prompt: 'buy?',
       options: [
@@ -86,7 +86,7 @@ describe('bot decisions', () => {
     const a = decide('cautious', world, s);
     expect(a).toEqual({ type: 'choose_option', index: 1 });
     s = step(s, a, env(world)).state;
-    expect(s.pendingChoice).toBeNull();
+    expect(leadPlayer(s).pendingChoice).toBeNull();
   });
 
   it('heals with a known item when hurt and calm', () => {
@@ -95,14 +95,14 @@ describe('bot decisions', () => {
     player(s).hp = 6;
     const a = decide('explorer', world, s);
     expect(a.type).toBe('use');
-    expect(s.player.slots[(a as { slot: number }).slot]!.defId).toBe('tonic');
+    expect(leadPlayer(s).slots[(a as { slot: number }).slot]!.defId).toBe('tonic');
   });
 
   it('tries an unknown item when it is safe, but not with a hostile in view', () => {
     const world = testWorld();
     const s = newGame(world);
-    s.player.slots[6] = { id: 'i900', defId: 'murk', count: 1 };
-    expect(s.knowledge.murk.level).toBe('unknown');
+    leadPlayer(s).slots[6] = { id: 'i900', defId: 'murk', count: 1 };
+    expect(leadPlayer(s).knowledge.murk.level).toBe('unknown');
     const a = decide('explorer', world, s);
     expect(a).toEqual({ type: 'use', slot: 6 });
     const p = player(s);
@@ -145,7 +145,7 @@ describe('bot decisions', () => {
       expect(r.events.find((e) => e.type === 'invalid')).toBeUndefined();
       cur = r.state;
     }
-    expect(cur.player.slots.some((it) => it?.defId === 'key')).toBe(true);
+    expect(leadPlayer(cur).slots.some((it) => it?.defId === 'key')).toBe(true);
     expect(cur.area.index).toBe(1);
   });
 });

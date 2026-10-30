@@ -17,17 +17,20 @@ import {
   isPlayer,
   log,
   logKey,
+  me,
   mutTile,
   opaque,
   passable,
   playerActor,
+  playerOf,
   tileWalkable,
+  withPlayer,
 } from './ctx';
 import { END_REASON_KEYS, FACTION_KEYS, renderTemplate } from './log-keys';
 import { evalCondition } from './conditions';
 import { getStat, isAlly, isEnemy, maxHp, maxMp, sightRadius } from './stats';
 import { applyStatus, removeStatus } from './statuses';
-import { dealDamage, heal } from './combat';
+import { dealDamage, heal, killPlayer } from './combat';
 import { makeNoise, moveActor, spawnActor, transformActor } from './actors';
 import { fireTriggers } from './triggers';
 import { grantXp } from './progression';
@@ -225,7 +228,7 @@ export function isVisibleToPlayer(ctx: Ctx, a: ActorInstance): boolean {
   const map = ctx.s.area.map;
   if (!inBounds(map, a.pos.x, a.pos.y)) return false;
   if (isPlayer(ctx, a)) return true;
-  const seen = ctx.s.area.seen[a.pos.y * map.width + a.pos.x];
+  const seen = me(ctx).seen[a.pos.y * map.width + a.pos.x];
   if (seen !== 2) return false;
   const inv = a.statuses.some((s) => ctx.ix.statuses.get(s.id)?.flags.includes('invisible'));
   if (inv && cheb(a.pos, playerActor(ctx).pos) > 1) return false;
@@ -373,7 +376,20 @@ function resolveShape(
 // Running actions
 // ---------------------------------------------------------------------------
 
+/**
+ * Runs `fn` with the user's player as the acting player when the user is a player actor, so the
+ * `me(ctx)` reads inside an effect (fog, knowledge, xp) are the user's, never another player's.
+ */
+export function asUser<T>(ctx: Ctx, user: ActorInstance, fn: () => T): T {
+  const ps = playerOf(ctx, user);
+  return ps && ps.id !== ctx.pid ? withPlayer(ctx, ps.id, fn) : fn();
+}
+
 export function runAction(ctx: Ctx, action: Action, user: ActorInstance, opts: RunOpts = {}): RunResult {
+  return asUser(ctx, user, () => runActionAs(ctx, action, user, opts));
+}
+
+function runActionAs(ctx: Ctx, action: Action, user: ActorInstance, opts: RunOpts): RunResult {
   const obs = opts.obs ?? [];
   const tr = resolveTargets(ctx, user, action.targeting, opts.targetPos ?? opts.targetActor?.pos, action.effects);
   if (!tr.ok) return { ok: false, reason: tr.reason, affected: [], obs, centre: { ...user.pos } };
@@ -406,17 +422,19 @@ export function applyEffectList(
   obs: Obs[],
   sourceId?: string,
 ): void {
-  for (const e of effects) {
-    if (ctx.s.status !== 'playing') return;
-    if (isActorEffect(e)) {
-      for (const t of targets) {
-        if (!isAlive(ctx, t)) continue;
-        applyActorEffect(ctx, e, user, t, centre, obs, sourceId);
+  asUser(ctx, user, () => {
+    for (const e of effects) {
+      if (ctx.s.status !== 'playing') return;
+      if (isActorEffect(e)) {
+        for (const t of targets) {
+          if (!isAlive(ctx, t)) continue;
+          applyActorEffect(ctx, e, user, t, centre, obs, sourceId);
+        }
+      } else {
+        applyPositionalEffect(ctx, e, user, centre, obs);
       }
-    } else {
-      applyPositionalEffect(ctx, e, user, centre, obs);
     }
-  }
+  });
 }
 
 function credit(user: ActorInstance, target: ActorInstance, sourceId?: string): string | undefined {
@@ -433,7 +451,8 @@ export function applyActorEffect(
   obs: Obs[],
   sourceId?: string,
 ): void {
-  const self = isPlayer(ctx, target);
+  // "you" in item notes: the user's own player, never a teammate the effect lands on
+  const self = isPlayer(ctx, target) && (target === user || !isPlayer(ctx, user));
   const who = actorName(ctx, target);
   switch (e.type) {
     case 'damage': {
@@ -527,7 +546,8 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
         if (!p) break;
         const opts: { faction?: ActorInstance['faction']; allyOf?: string; randomEnergy?: boolean } = {};
         if (e.allied) {
-          if (userIsPlayerSide) opts.allyOf = ctx.s.player.actorId;
+          // an ally's summon serves the same owner
+          if (userIsPlayerSide) opts.allyOf = user.allyOf ?? user.id;
           else opts.faction = user.faction === 'player' ? 'friendly' : user.faction;
         }
         const a = spawnActor(ctx, e.actor, p, opts);
@@ -557,7 +577,7 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
     }
     case 'reveal_map': {
       const map = ctx.s.area.map;
-      const seen = ctx.s.area.seen;
+      const seen = me(ctx).seen;
       for (let y = 0; y < map.height; y++)
         for (let x = 0; x < map.width; x++) {
           if (Math.max(Math.abs(x - centre.x), Math.abs(y - centre.y)) > e.radius) continue;
@@ -583,8 +603,8 @@ export function applyPositionalEffect(ctx: Ctx, e: Effect, user: ActorInstance, 
       return;
     }
     case 'currency': {
-      // paid to the player whoever the effect lands on (like grant_xp): currency is player state
-      ctx.s.player.currency += e.amount;
+      // paid to the party whoever the effect lands on (like grant_xp): the purse is shared
+      ctx.s.purse += e.amount;
       if (e.amount >= 0) logKey(ctx, 'log.currency.gain', { amount: e.amount, currency: ctx.world.vocabulary.currency }, 'loot');
       else logKey(ctx, 'log.currency.spend', { amount: -e.amount, currency: ctx.world.vocabulary.currency }, 'info');
       return;
@@ -626,8 +646,9 @@ export function changeResource(ctx: Ctx, a: ActorInstance, res: string, amount: 
   }
   const def = ctx.ix.resources.get(res);
   if (def) {
-    if (!isPlayer(ctx, a)) return 0;
-    const r = ctx.s.player.resources;
+    const ps = playerOf(ctx, a);
+    if (!ps) return 0;
+    const r = ps.resources;
     const before = own(r, res) ?? 0;
     r[res] = clamp(before + amount, 0, def.max);
     if (before > 0 && r[res] === 0) resourceEmptied(ctx, a, res);
@@ -647,10 +668,18 @@ export function resourceEmptied(ctx: Ctx, a: ActorInstance, res: string): void {
     logKey(ctx, 'log.resource.empty', { resource: def.name }, 'warning');
     if (def.onEmpty.length) applyEffectList(ctx, def.onEmpty, a, [a], a.pos, []);
     if (def.emptyIsDeath && ctx.s.status === 'playing') {
-      a.hp = 0;
-      emit(ctx, { type: 'died', actorId: a.id, defId: a.defId });
-      endGame(ctx, 'lost', renderTemplate(END_REASON_KEYS['end.loss.resource'], { resource: def.name }), { key: 'end.loss.resource', params: { resource: def.name } });
-      return;
+      const params = { resource: def.name };
+      const cause = { text: renderTemplate(END_REASON_KEYS['end.loss.resource'], params), key: 'end.loss.resource' as const, params };
+      if (ctx.s.party.length > 1) {
+        // a party: a fall like any other (a second chance, or down), the run lost only when all are down
+        killPlayer(ctx, a, undefined, cause);
+        if (ctx.s.status !== 'playing' || !isAlive(ctx, a)) return;
+      } else {
+        a.hp = 0;
+        emit(ctx, { type: 'died', actorId: a.id, defId: a.defId });
+        endGame(ctx, 'lost', cause.text, cause);
+        return;
+      }
     }
   }
   fireTriggers(ctx, a, 'on_resource_empty', { pos: a.pos });

@@ -176,7 +176,7 @@ test('play the bokmål Althing world with the UI in bokmål', async ({ page }) =
   const fought = await page.evaluate(async () => {
     const c = window.__anyworld!.controller!;
     const s = c.session;
-    const p = s.state.area.actors.find((a) => a.id === s.state.player.actorId)!;
+    const p = s.state.area.actors.find((a) => a.id === s.state.players[s.state.party[0]].actorId)!;
     const foe = s.state.area.actors.find((a) => a.faction === 'hostile');
     if (!foe) return false;
     const m = s.state.area.map;
@@ -237,8 +237,8 @@ test('play the bokmål Althing world with the UI in bokmål', async ({ page }) =
       if (!t || (t.kind !== 'floor' && t.kind !== 'start') || t.terrain) continue;
       if (s.state.area.actors.some((a) => a.pos.x === x && a.pos.y === y)) continue;
       await c.setStateForTest((st) => {
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.faction !== 'hostile');
-        st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { x, y };
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId || a.faction !== 'hostile');
+        st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.pos = { x, y };
       });
       c.actNow({ type: 'talk', targetId: npc.id });
       return true;
@@ -256,7 +256,7 @@ test('play the bokmål Althing world with the UI in bokmål', async ({ page }) =
   await page.evaluate(async () => {
     const c = window.__anyworld!.controller!;
     await c.setStateForTest((st) => {
-      st.area.actors.find((a) => a.id === st.player.actorId)!.hp = 1;
+      st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.hp = 1;
     });
     c.gmNow([{ type: 'effect', target: 'player', effects: [{ type: 'damage', amount: { base: 50 }, damageType: c.session.world.damageTypes[0]!.id }] }]);
   });
@@ -294,8 +294,8 @@ test('office world: trade and the world vocabulary in bokmål', async ({ page })
       if (!t || (t.kind !== 'floor' && t.kind !== 'start')) continue;
       if (s.state.area.actors.some((a) => a.pos.x === x && a.pos.y === y)) continue;
       await c.setStateForTest((st) => {
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.faction !== 'hostile');
-        st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { x, y };
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId || a.faction !== 'hostile');
+        st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.pos = { x, y };
       });
       c.actNow({ type: 'talk', targetId: npc.id });
       return true;

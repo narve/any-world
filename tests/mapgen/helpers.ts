@@ -111,3 +111,22 @@ export function checkMap(map: AreaMap, label: string, openEdges = false): string
   if (passableCount(map) < W * H * 0.15) problems.push(`too little floor (${passableCount(map)})`);
   return problems.slice(0, 5).map((p) => `${label}: ${p}`);
 }
+
+/**
+ * CPU time of `fn` on this thread, in ms (MP5): the timing asserts measure work, not wall time, so a
+ * loaded machine (the full suite, other agents) does not fail them while a real slowdown still does.
+ * Falls back to the process's CPU time, then to wall time, where the thread clock is missing.
+ */
+export function cpuMs(fn: () => void): number {
+  const p = process as NodeJS.Process & { threadCpuUsage?: (prev?: NodeJS.CpuUsage) => NodeJS.CpuUsage };
+  const usage = p.threadCpuUsage ? (prev?: NodeJS.CpuUsage) => p.threadCpuUsage!(prev) : typeof process.cpuUsage === 'function' ? (prev?: NodeJS.CpuUsage) => process.cpuUsage(prev) : null;
+  if (!usage) {
+    const t0 = performance.now();
+    fn();
+    return performance.now() - t0;
+  }
+  const u0 = usage();
+  fn();
+  const d = usage(u0);
+  return (d.user + d.system) / 1000;
+}

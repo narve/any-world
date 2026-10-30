@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { WorldSpec, parseWorld, type WorldSpecInput } from '../../src/schema';
 import type { AreaMap, MapGenerator, Pos, Tile, GameState, ActorInstance } from '../../src/engine/types';
-import { createGame, step, type EngineEnv } from '../../src/engine';
+import { createGame, leadPlayer, step, type EngineEnv } from '../../src/engine';
 
 export const WORLD_DIR = join(__dirname, '..', '..', 'content', 'worlds');
 
@@ -355,7 +355,7 @@ export function newGame(world: WorldSpec, seed = 1, map: AreaMap = roomMap()): G
 }
 
 export function player(s: GameState): ActorInstance {
-  return s.area.actors.find((a) => a.id === s.player.actorId)!;
+  return s.area.actors.find((a) => a.id === leadPlayer(s).actorId)!;
 }
 
 /** places a fresh actor of `defId` at pos by direct state surgery (test setup only) */
@@ -393,7 +393,7 @@ import { indexWorld, type Ctx } from '../../src/engine/ctx';
 import { SeededRng, rngFromState } from '../../src/engine/rng';
 
 export function ctxFor(world: WorldSpec, s: GameState, rng?: SeededRng): Ctx {
-  return { world, ix: indexWorld(world), s, rng: rng ?? rngFromState(s.rng), events: [], mapGen: simpleGenerator, depth: 0 };
+  return { world, ix: indexWorld(world), s, pid: s.party[0], rng: rng ?? rngFromState(s.rng), events: [], mapGen: simpleGenerator, depth: 0 };
 }
 
 /** an rng whose int() calls return queued values first (then falls back to the seeded stream) */

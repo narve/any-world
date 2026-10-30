@@ -3,6 +3,8 @@
  * Pure (no DOM, no storage) so the rules can be unit-tested — see issues/M1-reload-wipes-run.md.
  *
  * Rules:
+ *  - `?room=<code>` (MP3) opens that room; the code is upper-cased and must be a valid room code (else
+ *    the start screen). It wins over `?world=`, and the saved single-player run is never touched.
  *  - `?world=<id>[&seed=<n>]` starts that world, unless an autosaved run of the same world (and,
  *    when the link names a seed, the same seed) exists: then the run is resumed. Reloading a page
  *    opened from a demo link therefore continues the run instead of wiping it.
@@ -12,6 +14,12 @@
  *  - anything else opens the start screen.
  */
 import { t } from './i18n/index';
+
+/**
+ * a room code (the protocol's Code: 4 characters without 0/O/1/I/L), kept here as a plain regex so
+ * the start bundle does not pull in the protocol's schemas (tests/client/boot.test.ts checks they agree)
+ */
+export const ROOM_CODE = /^[2-9A-HJ-NP-Z]{4}$/;
 
 export interface SavedRunInfo {
   worldId: string;
@@ -23,6 +31,7 @@ export interface SavedRunInfo {
 export type BootRoute =
   | { kind: 'new'; worldId: string; seed?: number }
   | { kind: 'continue' }
+  | { kind: 'room'; code: string }
   | { kind: 'start'; notice?: string };
 
 /** parses `seed=` the way demo links write it: a positive integer, else none */
@@ -34,6 +43,11 @@ export function parseSeed(raw: string | null): number | undefined {
 
 export function bootRoute(search: string, saved: SavedRunInfo | null, worldTitle?: (id: string) => string | undefined): BootRoute {
   const q = new URLSearchParams(search);
+  const room = q.get('room');
+  if (room !== null) {
+    const code = room.trim().toUpperCase();
+    return ROOM_CODE.test(code) ? { kind: 'room', code } : { kind: 'start' };
+  }
   const world = q.get('world');
   if (world) {
     const seed = parseSeed(q.get('seed'));

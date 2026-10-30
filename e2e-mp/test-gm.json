@@ -1,0 +1,10 @@
+{
+  "latencyMs": 60,
+  "seed": 1,
+  "responses": {
+    "gm:intro": { "json": { "actions": [{ "type": "narrate", "text": "SCRIPTED INTRO: the dust settles over Sweetwater." }] } },
+    "gm:chat": { "json": { "actions": [{ "type": "narrate", "text": "SCRIPTED CHAT: the game master hears you." }] } },
+    "gm": { "json": { "actions": [{ "type": "narrate", "text": "The wind shifts." }] } },
+    "dialogue": { "json": { "reply": "SCRIPTED VOICE: welcome, stranger.", "options": [], "actions": [] } }
+  }
+}

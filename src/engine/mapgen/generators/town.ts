@@ -3,7 +3,7 @@
  * into the blocks between streets, each with a door facing the main street and a walled
  * interior (larger ones split into two rooms). Spare lots get a little clutter.
  */
-import { bySize, type GenContext, type Rect } from '../context';
+import { bySize, scaledCount, type GenContext, type Rect } from '../context';
 import { canBlockLocally, shuffle } from '../grid';
 
 export function genTown(ctx: GenContext): void {
@@ -89,7 +89,7 @@ export function genTown(ctx: GenContext): void {
     }
   }
 
-  const want = Math.round(ctx.param(['buildings', 'buildingCount'], bySize(size, 6, 9, 14), 1, 40));
+  const want = scaledCount(ctx, Math.round(ctx.param(['buildings', 'buildingCount'], bySize(size, 6, 9, 14), 1, 40)));
   // prefer buildings that front the main street, then random
   const frontage = (b: Building) => (b.front === 'bottom' ? b.r.y2 === my - 2 : b.r.y1 === my + sw + 1);
   shuffle(buildings, rng);

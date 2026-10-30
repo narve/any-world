@@ -14,7 +14,7 @@ import type { WorldSpec } from '../../schema/world';
 import type { Difficulty } from '../../schema/gm';
 import type { GameEvent, GameState, MapGenerator, PlayerAction } from '../types';
 import { TOTAL_SLOTS } from '../types';
-import { createGame, step, applyGmActions, transitionBlocker } from '../index';
+import { createGame, step, applyGmActions, leadPlayer, transitionBlocker } from '../index';
 import { type Bot, type BotName, botByName, newMemory } from './bots';
 import { gmActionsForArea, gmIdleActions } from './gm-script';
 import { seenCount } from './view';
@@ -89,23 +89,52 @@ export interface SimResult {
 const MAX_FREE_STREAK = 40;
 
 function progressKey(s: GameState): string {
-  const p = s.player;
+  const p = leadPlayer(s);
   const defeated = Object.values(s.defeated).reduce((a, b) => a + b, 0);
   const items = p.slots.reduce((n, it) => n + (it ? it.count + 1 : 0), 0);
   const flags = Object.keys(s.flags).filter((k) => s.flags[k]).length;
   const counters = Object.entries(s.counters).map(([k, v]) => `${k}${v}`).join(',');
-  const kn = Object.values(s.knowledge).map((k) => k.level[0]).join('');
+  const kn = Object.values(p.knowledge).map((k) => k.level[0]).join('');
   return [s.area.index, seenCount(s), defeated, items, p.xp, p.level, flags, counters, kn, s.stats.damageDealt, s.quests.length, p.equipped.weapon, p.equipped.armour].join('|');
 }
 
-/** cheap structural invariants; returns a description of the first violation */
+/** cheap structural invariants (every player of the party); returns a description of the first violation */
 export function invariantError(world: WorldSpec, s: GameState): string | null {
   const map = s.area.map;
+  const lead = leadPlayer(s);
+  if (!lead) return 'no lead player';
+  // (players who left the map, MP2 leaveMap, are kept outside the party with their actor)
+  if (s.party.length !== Object.keys(s.players).filter((id) => !s.players[id].left).length || s.party.some((id) => s.players[id]?.id !== id || s.players[id].left)) return 'party and players disagree';
+  for (const [id, ps] of Object.entries(s.players)) if (ps.left && s.area.actors.some((a) => a.id === ps.left!.actor.id)) return `${id} left the map but its actor is in the area`;
+  if (new Set(s.party).size !== s.party.length) return 'a player is in the party twice';
   if (map.tiles.length !== map.width * map.height) return 'tile count does not match map size';
-  if (s.player.slots.length !== TOTAL_SLOTS) return 'slot array has the wrong length';
-  const p = s.area.actors.find((a) => a.id === s.player.actorId);
-  if (!p) return 'player actor missing from the area';
-  if (s.status === 'playing' && p.hp <= 0) return 'player at 0 hp while the run is playing';
+  for (const id of s.party) {
+    const ps = s.players[id];
+    if (ps.seen.length !== map.width * map.height) return `fog of ${id} does not match the map size`;
+    if (ps.slots.length !== TOTAL_SLOTS) return `slot array of ${id} has the wrong length`;
+    const mine = s.area.actors.filter((a) => a.id === ps.actorId);
+    if (mine.length !== 1) return mine.length ? `actor of ${id} is in the area twice` : `actor of ${id} missing from the area`;
+    const p = mine[0];
+    if (s.party.some((o) => o !== id && s.players[o].actorId === ps.actorId)) return `${id} shares an actor with another player`;
+    if (ps.down) {
+      if (p.hp !== 0) return `${id} is down with ${p.hp} hp`;
+      if (p.statuses.length || p.tempMods.length || p.energy !== 0) return `${id} is down with statuses, temporary mods or energy`;
+    } else if (s.status === 'playing' && p.hp <= 0) return `${id} at 0 hp while the run is playing`;
+    for (const kind of ['weapon', 'armour', 'trinket'] as const) {
+      const i = ps.equipped[kind];
+      if (i !== null && !ps.slots[i]) return `equipped ${kind} of ${id} points at an empty slot`;
+    }
+    for (const it of ps.slots) if (it && !(it.count > 0)) return `item ${it.id} has count ${it.count}`;
+    for (const r of world.resources ?? []) {
+      const v = ps.resources[r.id];
+      if (!(v >= 0 && v <= r.max)) return `resource ${r.id} of ${id} = ${v} outside 0..${r.max}`;
+    }
+  }
+  const cd = s.area.exitCountdown;
+  // 0 means "moving on now" and never outlives the party turn that reached it (party.ts)
+  if (cd && s.status === 'playing' && !(cd.turnsLeft >= 1 && cd.turnsLeft <= s.partyRules.exitCountdownTurns)) return `exit countdown at ${cd.turnsLeft}`;
+  if (cd && !s.party.includes(cd.by)) return `exit countdown started by ${cd.by}, who is not in the party`;
+  if (!Number.isFinite(s.purse)) return `purse = ${s.purse}`;
   const taken = new Set<number>();
   for (const a of s.area.actors) {
     if (!Number.isFinite(a.hp) || !Number.isFinite(a.energy)) return `actor ${a.id} has a non-finite hp/energy`;
@@ -114,15 +143,6 @@ export function invariantError(world: WorldSpec, s: GameState): string | null {
     const k = a.pos.y * map.width + a.pos.x;
     if (taken.has(k)) return `two actors on ${a.pos.x},${a.pos.y}`;
     taken.add(k);
-  }
-  for (const kind of ['weapon', 'armour', 'trinket'] as const) {
-    const i = s.player.equipped[kind];
-    if (i !== null && !s.player.slots[i]) return `equipped ${kind} points at an empty slot`;
-  }
-  for (const it of s.player.slots) if (it && !(it.count > 0)) return `item ${it.id} has count ${it.count}`;
-  for (const r of world.resources ?? []) {
-    const v = s.player.resources[r.id];
-    if (!(v >= 0 && v <= r.max)) return `resource ${r.id} = ${v} outside 0..${r.max}`;
   }
   if (s.rng.length !== 4) return 'rng state has the wrong length';
   return null;
@@ -170,7 +190,7 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     return res;
   }
   let lastKey = progressKey(s);
-  const resPrev: Record<string, number> = { ...s.player.resources };
+  const resPrev: Record<string, number> = { ...leadPlayer(s).resources };
   let lastProgress = 0;
   let freeStreak = 0;
   let gmArea = -1;
@@ -186,7 +206,7 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     stats.damageTaken = s.stats.damageTaken;
     stats.itemsUsed = s.stats.itemsUsed;
     stats.areasCleared = s.stats.areasCleared;
-    stats.level = s.player.level;
+    stats.level = leadPlayer(s).level;
     return res;
   };
 
@@ -198,10 +218,10 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     // scripted GM moments
     if (opts.gm) {
       try {
-        if (s.area.index !== gmArea && !s.pendingChoice && !s.player.pendingPerkChoice) {
+        if (s.area.index !== gmArea && !leadPlayer(s).pendingChoice && !leadPlayer(s).pendingPerkChoice) {
           gmArea = s.area.index;
           s = applyGm(s, gmActionsForArea(world, s.area.index), env, stats);
-        } else if (s.turn >= nextIdle && !s.pendingChoice) {
+        } else if (s.turn >= nextIdle && !leadPlayer(s).pendingChoice) {
           nextIdle = s.turn + 150;
           s = applyGm(s, gmIdleActions(s), env, stats);
         }
@@ -235,7 +255,7 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
       count(stats, action);
     }
     for (const e of r.events) {
-      if (e.type === 'damaged' && e.actorId === s.player.actorId) lastHurt = { sourceId: e.sourceId, damageType: e.damageType };
+      if (e.type === 'damaged' && e.actorId === leadPlayer(s).actorId) lastHurt = { sourceId: e.sourceId, damageType: e.damageType };
     }
     s = r.state;
     opts.onStep?.(s, action, r.events);
@@ -246,7 +266,7 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     } else if (++freeStreak > MAX_FREE_STREAK) {
       return finish('stuck', `free-action loop (${JSON.stringify(action)}) in area ${s.area.index}`);
     }
-    const pa = s.area.actors.find((a) => a.id === s.player.actorId);
+    const pa = s.area.actors.find((a) => a.id === leadPlayer(s).actorId);
     if (pa && pa.maxHp > 0) stats.hpLow = Math.min(stats.hpLow, Math.max(0, pa.hp) / pa.maxHp);
     if (checkInv) {
       const err = invariantError(world, s);
@@ -258,8 +278,8 @@ export function runGame(world: WorldSpec, seed: number, botIn: Bot | BotName, op
     const key = progressKey(s);
     // a rising custom resource (refilling oxygen on a moss tile…) counts as progress too
     let rising = false;
-    for (const id of Object.keys(s.player.resources)) {
-      const v = s.player.resources[id] ?? 0;
+    for (const id of Object.keys(leadPlayer(s).resources)) {
+      const v = leadPlayer(s).resources[id] ?? 0;
       if (v > (resPrev[id] ?? Infinity)) rising = true;
       resPrev[id] = v;
     }
@@ -318,7 +338,7 @@ function lossCause(world: WorldSpec, s: GameState, lastHurt: { sourceId?: string
   if (reason === world.goal.summary) return 'lose condition';
   if (lastHurt) {
     if (lastHurt.sourceId) {
-      if (lastHurt.sourceId === s.player.actorId) return 'killed by own action';
+      if (lastHurt.sourceId === leadPlayer(s).actorId) return 'killed by own action';
       const src = s.area.actors.find((a) => a.id === lastHurt.sourceId);
       return `killed by ${src ? actorLabel(world, src.defId) : 'an unseen source'}`;
     }

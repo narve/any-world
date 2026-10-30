@@ -6,6 +6,7 @@ import { applyStatus } from '../../src/engine/statuses';
 import { giveItem } from '../../src/engine/inventory';
 import type { WorldSpecInput } from '../../src/schema';
 import type { GameState } from '../../src/engine/types';
+import { leadPlayer } from '../../src/engine';
 
 function setup(patch?: (w: WorldSpecInput) => void, map = roomMap()) {
   const w = testWorld(patch);
@@ -77,8 +78,8 @@ describe('combat math', () => {
     const ctx = ctxFor(w, s);
     p.base.dex = 14;
     giveItem(ctx, 'bow', 1);
-    const slot = s.player.slots.findIndex((x) => x?.defId === 'bow');
-    s.player.equipped.weapon = slot;
+    const slot = leadPlayer(s).slots.findIndex((x) => x?.defId === 'bow');
+    leadPlayer(s).equipped.weapon = slot;
     const atk = attackOf(ctx, p)!.attack;
     expect(atk.range).toBe(6);
     const hidden = addActor(w, s, 'rat', { x: 5, y: 1 });
@@ -96,7 +97,7 @@ describe('combat math', () => {
     const ctx = ctxFor(w, s);
     const a = addActor(w, s, 'archer', { x: 3, y: 3 });
     dealDamage(ctx, a, 100, 'physical', p.id);
-    expect(s.player.xp).toBe(6);
+    expect(leadPlayer(s).xp).toBe(6);
     expect(s.defeated.archer).toBe(1);
     expect(s.counters.blood).toBe(1);
     expect(s.area.items.map((i) => i.item.defId)).toEqual(['tonic']);
@@ -161,13 +162,13 @@ describe('combat math', () => {
     const { w, s, p } = setup((x) => {
       x.rules = [{ id: 'r', name: 'R', description: 'd', switches: { durability: true } }];
     });
-    const slot = s.player.equipped.weapon!;
-    expect(s.player.slots[slot]!.durability).toBe(40);
-    s.player.slots[slot]!.durability = 1;
+    const slot = leadPlayer(s).equipped.weapon!;
+    expect(leadPlayer(s).slots[slot]!.durability).toBe(40);
+    leadPlayer(s).slots[slot]!.durability = 1;
     const g = addActor(w, s, 'rat', { x: 2, y: 1 }, { hp: 99, maxHp: 99 });
     performAttack(ctxFor(w, s, new ScriptedRng([19])), p, g);
-    expect(s.player.slots[slot]).toBeNull();
-    expect(s.player.equipped.weapon).toBeNull();
+    expect(leadPlayer(s).slots[slot]).toBeNull();
+    expect(leadPlayer(s).equipped.weapon).toBeNull();
   });
 
   it('on_low_hp fires once per crossing (and the player gets a low_hp event)', () => {
@@ -281,7 +282,7 @@ describe('status flags', () => {
     giveItem(ctx, 'spark', 1);
     applyStatus(ctx, p, 'mute', 5);
     addActor(w, s, 'rat', { x: 3, y: 1 });
-    const slot = s.player.slots.findIndex((x) => x?.defId === 'spark');
+    const slot = leadPlayer(s).slots.findIndex((x) => x?.defId === 'spark');
     expect(act(w, s, { type: 'use', slot }).events[0]).toMatchObject({ type: 'invalid', reason: 'silenced' });
   });
 

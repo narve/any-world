@@ -7,6 +7,7 @@ import { endRound } from '../../src/engine/turn';
 import { knowledgeOf } from '../../src/engine/knowledge';
 import { giveItem } from '../../src/engine/inventory';
 import { updateFov } from '../../src/engine/vision';
+import { leadPlayer } from '../../src/engine';
 
 const T = (t: Partial<Targeting>): Targeting => ({ shape: 'self', range: 1, radius: 0, affects: 'enemies', needsLos: true, ...t });
 const A = (t: Partial<Targeting>, effects: Effect[]): Action => ({ targeting: T(t), effects });
@@ -50,9 +51,9 @@ describe('effects', () => {
     applyEffectList(ctx, [{ type: 'resource', resource: 'mp', amount: { base: -4 } }], p, [p], p.pos, []);
     expect(p.mp).toBe(6);
     applyEffectList(ctx, [{ type: 'resource', resource: 'oil', amount: { base: 50 } }], p, [p], p.pos, []);
-    expect(s.player.resources.oil).toBe(20);
+    expect(leadPlayer(s).resources.oil).toBe(20);
     applyEffectList(ctx, [{ type: 'resource', resource: 'oil', amount: { base: -50 } }], p, [p], p.pos, []);
-    expect(s.player.resources.oil).toBe(0);
+    expect(leadPlayer(s).resources.oil).toBe(0);
     expect(p.statuses.map((x) => x.id)).toContain('blind'); // onEmpty
     applyEffectList(ctx, [{ type: 'resource', resource: 'hp', amount: { base: -5 } }], p, [p], p.pos, []);
     expect(p.hp).toBe(25);
@@ -151,9 +152,9 @@ describe('effects', () => {
     const { w, s, ctx, p } = setup();
     applyEffectList(ctx, [{ type: 'spawn_item', item: 'tonic', count: 3 }], p, [], { x: 4, y: 4 }, []);
     expect(s.area.items).toEqual([{ item: expect.objectContaining({ defId: 'tonic', count: 3 }), pos: { x: 4, y: 4 } }]);
-    s.area.seen.fill(0);
+    leadPlayer(s).seen.fill(0);
     applyEffectList(ctx, [{ type: 'reveal_map', radius: 99 }], p, [], p.pos, []);
-    expect([...s.area.seen].every((v) => v >= 1)).toBe(true);
+    expect([...leadPlayer(s).seen].every((v) => v >= 1)).toBe(true);
     giveItem(ctx, 'murk', 1);
     giveItem(ctx, 'fog', 1);
     applyEffectList(ctx, [{ type: 'identify', scope: 'one' }], p, [], p.pos, []);
@@ -168,8 +169,8 @@ describe('effects', () => {
     expect(r.ai.alerted).toBe(true);
     expect(r.ai.lastSeen).toEqual({ x: 8, y: 8 });
     applyEffectList(ctx, [{ type: 'grant_xp', amount: 12 }], p, [], p.pos, []);
-    expect(s.player.level).toBe(2);
-    expect(s.player.pendingPerkChoice).toHaveLength(3);
+    expect(leadPlayer(s).level).toBe(2);
+    expect(leadPlayer(s).pendingPerkChoice).toHaveLength(3);
     applyEffectList(ctx, [{ type: 'set_flag', flag: 'x', value: true }, { type: 'counter', counter: 'c', add: 2 }, { type: 'counter', counter: 'c', add: 1 }, { type: 'message', text: 'Hello there' }], p, [], p.pos, []);
     expect(s.flags.x).toBe(true);
     expect(s.counters.c).toBe(3);

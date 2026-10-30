@@ -1,7 +1,7 @@
 /** Effective stats: base + temporary mods + status modifiers + equipment/carried items. */
 import type { ItemDef, StatusDef } from '../schema/world';
-import type { ActorInstance, ItemInstance } from './types';
-import { type Ctx, isPlayer } from './ctx';
+import type { ActorInstance, ItemInstance, PlayerState } from './types';
+import { type Ctx, isPlayer, playerOf } from './ctx';
 import { switchesOf } from './rules';
 import { own } from './util';
 
@@ -20,9 +20,8 @@ export interface ActiveItem {
   equipped: boolean;
 }
 
-/** player items whose modifiers/triggers are live: equipped ones, and passiveWhenCarried ones */
-export function activeItems(ctx: Ctx): ActiveItem[] {
-  const p = ctx.s.player;
+/** a player's items whose modifiers/triggers are live: equipped ones, and passiveWhenCarried ones */
+export function activeItems(ctx: Ctx, p: PlayerState): ActiveItem[] {
   const eq = new Set<number>();
   for (const v of [p.equipped.weapon, p.equipped.armour, p.equipped.trinket]) if (v !== null && v !== undefined) eq.add(v);
   const out: ActiveItem[] = [];
@@ -58,8 +57,9 @@ export function modSum(ctx: Ctx, a: ActorInstance, stat: string): number {
   let sum = 0;
   for (const m of a.tempMods) if (m.stat === stat) sum += m.amount;
   for (const d of statusDefs(ctx, a)) for (const m of d.modifiers) if (m.stat === stat) sum += m.amount;
-  if (isPlayer(ctx, a)) {
-    for (const ai of activeItems(ctx)) {
+  const ps = playerOf(ctx, a);
+  if (ps) {
+    for (const ai of activeItems(ctx, ps)) {
       for (const m of ai.def.modifiers) if (m.stat === stat) sum += m.amount;
       if (stat === 'ac' && ai.equipped && typeof ai.def.armour === 'number') sum += ai.def.armour;
     }
@@ -120,8 +120,8 @@ export function getStat(ctx: Ctx, a: ActorInstance, stat: string): number {
     case 'sight':
       return sightRadius(ctx, a);
     default:
-      if (isPlayer(ctx, a)) return own(ctx.s.player.resources, stat) ?? 0;
-      return 0;
+      const ps = playerOf(ctx, a);
+      return ps ? (own(ps.resources, stat) ?? 0) : 0;
   }
 }
 

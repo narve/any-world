@@ -120,7 +120,7 @@ for (const world of worlds.filter((w) => w !== DREAM)) {
       const r = d.renderer;
       r.rig.settle();
       r.renderNow();
-      const p = d.state.area.actors.find((a) => a.id === d.state.player.actorId)!.pos;
+      const p = d.state.area.actors.find((a) => a.id === d.state.players[d.state.party[0]].actorId)!.pos;
       const W = innerWidth;
       const H = innerHeight;
       const on = (q: { x: number; y: number }) => {
@@ -153,7 +153,7 @@ test('walls next to the player in the ship never dominate the frame (fixture-shi
       const next = structuredClone(d.state);
       const m = next.area.map;
       const W = m.width;
-      const p = next.area.actors.find((a) => a.id === next.player.actorId)!;
+      const p = next.area.actors.find((a) => a.id === next.players[next.party[0]].actorId)!;
       let best = p.pos;
       let bestN = -1;
       for (let y = 1; y < m.height - 1; y++)
@@ -169,7 +169,7 @@ test('walls next to the player in the ship never dominate the frame (fixture-shi
       p.pos = best;
       const seen = new Uint8Array(m.tiles.length).fill(1);
       for (let y = 0; y < m.height; y++) for (let x = 0; x < W; x++) if (Math.max(Math.abs(x - best.x), Math.abs(y - best.y)) <= 7) seen[y * W + x] = 2;
-      next.area.seen = seen;
+      next.players[next.party[0]].seen = seen;
       d.state = next;
       await d.renderer.sync(next, []);
       d.renderer.skipAnimations();
@@ -204,7 +204,7 @@ test('flat liquids are soft translucent surfaces, not flat UI-like quads (fixtur
     const m = next.area.map;
     const W = m.width;
     // a 3×2 seep in open floor right next to the player
-    const p = next.area.actors.find((a) => a.id === next.player.actorId)!;
+    const p = next.area.actors.find((a) => a.id === next.players[next.party[0]].actorId)!;
     let placed = 0;
     for (let y = p.pos.y - 3; y <= p.pos.y + 3 && placed < 6; y++)
       for (let x = p.pos.x + 1; x <= p.pos.x + 4 && placed < 6; x++) {
@@ -215,7 +215,7 @@ test('flat liquids are soft translucent surfaces, not flat UI-like quads (fixtur
         }
       }
     const seen = new Uint8Array(m.tiles.length).fill(2);
-    next.area.seen = seen;
+    next.players[next.party[0]].seen = seen;
     d.state = next;
     await d.renderer.sync(next, []);
     d.renderer.skipAnimations();

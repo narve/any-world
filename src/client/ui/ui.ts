@@ -23,12 +23,14 @@ import { isCompact, layoutFor, type LayoutMode } from './layout';
 import { Hud } from './components/hud';
 import { MessageLog } from './components/log';
 import { NarrationCard } from './components/narration';
-import { ToastStack, toastLabel, type ToastEntry } from './toasts';
+import { ToastStack, toastLabel, type ToastAction, type ToastEntry } from './toasts';
 import { Hotbar } from './components/hotbar';
 import { Backpack, type BackpackState } from './components/backpack';
 import { ChoiceModal, DialoguePanel, LevelUpModal, TradePanel } from './components/modals';
 import { HelpOverlay, RulesPanel, rulesBadge } from './components/panels';
 import { EndScreen, LoadingScreen, SettingsDialog, StartScreen } from './components/screens';
+import type { LobbyScreen, ProfileSheet } from './components/lobby';
+import type { RoomView } from './viewmodel';
 
 export interface GameUi {
   readonly root: HTMLElement;
@@ -58,8 +60,8 @@ export interface GameUi {
    */
   setGraphicsLost?(lost: boolean): void;
   setBackpackOpen(open: boolean): void;
-  /** short transient notice */
-  toast(text: string, tone?: 'info' | 'warn'): void;
+  /** short transient notice; `action` adds one button (a sticky one stays until it or ✕ is pressed) */
+  toast(text: string, tone?: 'info' | 'warn', action?: ToastAction): void;
   /** current keyboard layer (for the integrator's own input decisions) */
   layer(): InputLayer;
   /** how the player is playing (key hints show only for 'keyboard') */
@@ -70,7 +72,35 @@ export interface GameUi {
   layoutMode(): LayoutMode;
   /** called after the layout or the panels' sizes may have changed (viewport insets) */
   onLayoutChange(cb: (() => void) | null): void;
+  /** MP3: where a room's party and chat UI (a lazy module) puts its elements */
+  roomSlots(): RoomSlots;
   destroy(): void;
+}
+
+/**
+ * MP3: empty hosts in the game layout for the room UI (room/room-ui.ts), so the party and chat
+ * code stays out of the start bundle. Everything in them is measured by panelRects (the phone's
+ * chat sheet too), so the camera insets and the map overlays keep clear of them.
+ */
+export interface RoomSlots {
+  /** the end of the status strip (party chips; phones: dots) */
+  strip: HTMLElement;
+  /** under the status strip (the turn pill, desktop) */
+  pill: HTMLElement;
+  /** the banner row (spectator, exit countdown) */
+  banner: HTMLElement;
+  /** the right column under the rules (the desktop chat panel) */
+  side: HTMLElement;
+  /** the start of the hotbar's tools row (the phone's chat button) */
+  tools: HTMLElement;
+  /** over the bottom of the game screen (the phone's chat sheet) */
+  sheet: HTMLElement;
+  /** the log panel (phones: a chat line over its ticker) */
+  log: HTMLElement;
+  /** the lobby screen's chat host (null until the lobby module has loaded) */
+  lobby: HTMLElement | null;
+  /** under the end screen's text (a room's chat after a run) */
+  end: HTMLElement;
 }
 
 export interface CreateUiOptions {
@@ -132,6 +162,14 @@ class UiRoot implements GameUi {
   private loading: LoadingScreen;
   private end: EndScreen;
   private settings: SettingsDialog;
+  /** MP3: the lobby screen, the name and colour sheet, and the reconnect banner */
+  /** MP3: made when the lobby module arrives (it is fetched the first time a room needs it) */
+  private lobby: LobbyScreen | null = null;
+  private profileSheet: ProfileSheet | null = null;
+  private roomUiLoading = false;
+  private roomBanner: HTMLElement;
+  private roomBannerKey = '';
+  private slots_: Omit<RoomSlots, 'strip' | 'log' | 'lobby'>;
 
   private mapTools: HTMLElement;
   private gfxLost = false;
@@ -195,12 +233,24 @@ class UiRoot implements GameUi {
       () => this.setHelpOpen(false),
       () => this.vm?.screen === 'game' && this.intent({ type: 'show_onboarding' }),
       () => cb.onOpenSettings?.(true),
+      () => cb.onRoom?.({ type: 'leave' }),
     );
     this.rules = new RulesPanel(() => this.setRulesOpen(false));
     this.start = new StartScreen(cb, opts.rand);
     this.loading = new LoadingScreen(cb);
     this.end = new EndScreen(cb);
     this.settings = new SettingsDialog(cb);
+    this.roomBanner = h('div', { class: 'aw-room-banner', role: 'status', hidden: true });
+    this.slots_ = {
+      pill: h('div', { class: 'aw-room-slot aw-slot-pill' }),
+      banner: h('div', { class: 'aw-room-slot aw-slot-banner' }),
+      side: h('div', { class: 'aw-room-slot aw-slot-side' }),
+      tools: h('span', { class: 'aw-room-slot aw-slot-tools' }),
+      sheet: h('div', { class: 'aw-room-slot aw-slot-sheet' }),
+      end: h('div', { class: 'aw-room-slot aw-slot-end' }),
+    };
+    this.hotbar.el.querySelector('.aw-hotbar-tools')?.prepend(this.slots_.tools);
+    this.end.el.append(this.slots_.end);
 
     this.modeBanner = h('div', { class: 'aw-mode-banner', role: 'status', hidden: true });
     this.busyEl = h('div', { class: 'aw-busy', role: 'status', hidden: true });
@@ -220,7 +270,7 @@ class UiRoot implements GameUi {
     this.onboard = new OnboardingCard((forever) => this.intent({ type: 'dismiss_onboarding', forever }));
     this.slotTip = new SlotTip(root);
     this.vignette = h('div', { class: 'aw-vignette', 'aria-hidden': 'true', hidden: true });
-    this.stripWrap = h('div', { class: 'aw-top-centre' }, this.hud.strip, this.goal.el, this.modeBanner, this.busyEl);
+    this.stripWrap = h('div', { class: 'aw-top-centre' }, this.hud.strip, this.slots_.pill, this.goal.el, this.modeBanner, this.busyEl, this.slots_.banner);
     this.rulesBadgeWrap = h('div', { class: 'aw-top-right' });
     this.toasts = h('div', { class: 'aw-toasts', 'aria-live': 'polite' });
     // camera buttons over the map edge (touch: a twist needs two hands, a button needs one thumb)
@@ -244,7 +294,7 @@ class UiRoot implements GameUi {
       this.vignette,
       h('div', { class: 'aw-top-left' }, this.hud.panel),
       this.stripWrap,
-      h('div', { class: 'aw-top-right-col' }, this.rulesBadgeWrap, this.rules.el),
+      h('div', { class: 'aw-top-right-col' }, this.rulesBadgeWrap, this.rules.el, this.slots_.side),
       h('div', { class: 'aw-bottom-left' }, this.log.el),
       h('div', { class: 'aw-bottom-centre' }, this.ctxBar.el, this.hotbar.el),
       this.mapTools,
@@ -255,10 +305,11 @@ class UiRoot implements GameUi {
       this.trade.el,
       this.levelUp.el,
       this.choice.el,
+      this.slots_.sheet,
       this.help.el,
       this.gfxEl,
     );
-    root.append(this.start.el, this.loading.el, this.end.el, this.gameEl, this.settings.el, this.toasts, this.slotTip.el, this.tooltip.el);
+    root.append(this.start.el, this.loading.el, this.end.el, this.gameEl, this.roomBanner, this.settings.el, this.toasts, this.slotTip.el, this.tooltip.el);
     for (const s of [this.start.el, this.loading.el, this.end.el]) s.hidden = true;
 
     // input mode: key hints (context bar, menus) only show once a keyboard has been used
@@ -340,6 +391,7 @@ class UiRoot implements GameUi {
       () => this.vm?.game?.verbs ?? NO_VERBS,
       (cmd) => this.command(cmd),
       opts.keyboardTarget,
+      () => !!this.vm?.room,
     );
   }
 
@@ -364,6 +416,8 @@ class UiRoot implements GameUi {
     this.lastScreen = vm.screen;
     this.start.el.hidden = vm.screen !== 'start';
     this.loading.el.hidden = vm.screen !== 'loading';
+    if (this.lobby) this.lobby.el.hidden = vm.screen !== 'lobby';
+    else if (vm.screen === 'lobby' || vm.profileSheet) this.loadRoomUi();
     this.end.el.hidden = vm.screen !== 'end';
     this.gameEl.hidden = vm.screen !== 'game';
     this.root.dataset.screen = vm.screen;
@@ -379,7 +433,8 @@ class UiRoot implements GameUi {
       }
     }
     if (vm.screen === 'loading' && vm.loading) this.loading.update(vm.loading);
-    if (vm.screen === 'end' && vm.end) this.end.update(vm.end, this.ctxValue.vocab);
+    if (vm.screen === 'lobby' && vm.lobby) this.lobby?.update(vm.lobby);
+    if (vm.screen === 'end' && vm.end) this.end.update(vm.end, this.ctxValue.vocab, vm.room);
     if (vm.screen !== 'game' && screenChanged) {
       // whatever runs next is a new run (or the same one re-mounted, whose dismissed cards the
       // session has already cleared): its prologue must show
@@ -393,6 +448,43 @@ class UiRoot implements GameUi {
     if (vm.screen === 'game' && vm.game) this.renderGame(vm.game);
     else this.help.update(false, NO_VERBS, this.ctxValue);
     this.settings.update(vm.settings ?? null, vm.language);
+    this.profileSheet?.update(vm.profileSheet ?? null);
+    this.renderRoomBanner(vm.room ?? null);
+  }
+
+  /** MP3: the lobby screen and the name sheet, fetched the first time a view needs them; then that view again */
+  private loadRoomUi(): void {
+    if (this.roomUiLoading) return;
+    this.roomUiLoading = true;
+    void import('./components/lobby').then(
+      (m) => {
+        this.lobby = new m.LobbyScreen((i) => this.cb.onRoom?.(i));
+        this.profileSheet = new m.ProfileSheet((i) => this.cb.onRoom?.(i));
+        this.lobby.el.hidden = true;
+        // (in the same places as the other screens and dialogs)
+        this.end.el.before(this.lobby.el);
+        this.settings.el.after(this.profileSheet.el);
+        if (this.vm) this.render(this.vm);
+      },
+      (e) => {
+        this.roomUiLoading = false;
+        console.warn('[anyworld] the lobby could not be loaded:', e);
+      },
+    );
+  }
+
+  /** MP3: "Reconnecting…" over every screen of a room (non-blocking); "Leave room" after a while */
+  private renderRoomBanner(room: RoomView | null): void {
+    const on = !!room?.reconnecting;
+    const key = on ? `1|${room!.canLeave}` : '';
+    if (key === this.roomBannerKey) return;
+    this.roomBannerKey = key;
+    this.roomBanner.hidden = !on;
+    setChildren(
+      this.roomBanner,
+      on ? h('span', { class: 'aw-room-banner-text' }, t('room.reconnecting')) : null,
+      on && room!.canLeave ? h('button', { type: 'button', class: 'aw-btn aw-btn-small', onclick: () => this.cb.onRoom?.({ type: 'leave' }) }, t('room.leave')) : null,
+    );
   }
 
   private renderGame(g: GameView): void {
@@ -409,7 +501,7 @@ class UiRoot implements GameUi {
     this.trade.update(lv ? null : g.trade);
     this.levelUp.update(g.levelUp);
     this.choice.update(lv ? null : g.choice);
-    this.help.update(this.helpOpen, g.verbs, ctx, g.transitionName);
+    this.help.update(this.helpOpen, g.verbs, ctx, g.transitionName, !!this.vm?.room);
     this.rules.update(this.rulesOpen, g.goalSummary, g.rules, g.quests);
     this.renderAids(g);
     // a dialogue, choice, level-up, trade or panel took over: no map card stays on top of it
@@ -572,7 +664,7 @@ class UiRoot implements GameUi {
   showTileTooltip(tile: TileTooltipView | null, at?: { x: number; y: number }, avoid?: { x: number; y: number } | null): void {
     if (!tile || !at) return this.tooltip.hideAt();
     this.tooltip.setSheet(isCompact(this.layoutValue));
-    this.tooltip.showAt(tileCard(tile), at.x, at.y, avoid);
+    this.tooltip.showAt(tileCard(tile, !!this.vm?.room), at.x, at.y, avoid);
   }
 
   placeDialogue(at: { speaker: { x: number; y: number } | null; player: { x: number; y: number } } | null): void {
@@ -612,8 +704,10 @@ class UiRoot implements GameUi {
         }
       }
     }
-    if (!this.mapTools.hidden) {
-      const rc = this.mapTools.getBoundingClientRect();
+    // (the room's chat sheet on phones sits over the map like the corner panels)
+    for (const el of [this.mapTools, ...Array.from(this.slots_.sheet.children)] as HTMLElement[]) {
+      if (el.hidden) continue;
+      const rc = el.getBoundingClientRect();
       if (rc.width > 0 && rc.height > 0) hud.push(rc);
     }
     return { log: this.log.el.getBoundingClientRect(), hud };
@@ -621,6 +715,10 @@ class UiRoot implements GameUi {
 
   hideTooltip(): void {
     this.tooltip.hideAt();
+  }
+
+  roomSlots(): RoomSlots {
+    return { ...this.slots_, strip: this.hud.party, log: this.log.el, lobby: this.lobby?.chatHost ?? null };
   }
 
   setGraphicsLost(lost: boolean): void {
@@ -651,8 +749,8 @@ class UiRoot implements GameUi {
     if (!open) this.focusGame();
   }
 
-  toast(text: string, tone: 'info' | 'warn' = 'info'): void {
-    this.toastStack.push(text, tone);
+  toast(text: string, tone: 'info' | 'warn' = 'info', action?: ToastAction): void {
+    this.toastStack.push(text, tone, action);
   }
 
   /** mirrors the toast stack into the DOM (identical toasts merge, at most three show) */
@@ -671,8 +769,24 @@ class UiRoot implements GameUi {
         this.toastEls.set(e.id, el);
       }
       const label = toastLabel(e);
-      if (el.textContent !== label) {
-        el.textContent = label;
+      const key = `${label}|${e.action?.label ?? ''}|${e.action?.sticky ? 1 : 0}`;
+      if (el.dataset.key !== key) {
+        el.dataset.key = key;
+        if (e.action) {
+          // a toast with a button (MP3: Reload, Change): it takes clicks; a sticky one also has ✕
+          const run = e.action.run;
+          const id = e.id;
+          el.classList.add('has-action');
+          setChildren(
+            el,
+            h('span', { class: 'aw-toast-text' }, label),
+            h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-toast-action', onclick: () => (this.toastStack.dismiss(id), run()) }, e.action.label),
+            e.action.sticky ? h('button', { type: 'button', class: 'aw-icon-btn aw-toast-close', 'aria-label': t('common.close'), onclick: () => this.toastStack.dismiss(id) }, icon(ICONS.close)) : null,
+          );
+        } else {
+          el.classList.remove('has-action');
+          el.textContent = label;
+        }
         if (e.count > 1) {
           // replay the pulse so a repeated message is noticed without adding a new line
           el.classList.remove('is-bumped');
@@ -691,7 +805,8 @@ class UiRoot implements GameUi {
     const g = vm.game;
     return computeLayer({
       screen: vm.screen,
-      settingsOpen: !!vm.settings,
+      // (the name sheet takes the keys like the settings dialog: text, Esc closes)
+      settingsOpen: !!vm.settings || !!vm.profileSheet,
       helpOpen: this.helpOpen,
       rulesOpen: this.rulesOpen,
       backpackOpen: this.bp.open,
@@ -882,13 +997,17 @@ class UiRoot implements GameUi {
   }
 
   private command(cmd: UiCommand): void {
+    // (a room's chat and spectator keys: never a turn, so also while the map is not drawn)
+    if (cmd.type === 'chat' || cmd.type === 'follow') return this.cb.onRoom?.(cmd.type === 'chat' ? { type: 'chat' } : { type: 'follow', dir: cmd.dir });
     // the map is not drawn: no turn may pass blind (settings stay reachable through the overlay)
     if (this.gfxLost) return;
     const layer = this.layer();
     const g = this.vm?.game;
     switch (layer) {
       case 'settings':
-        if (cmd.type === 'close') this.cb.onOpenSettings?.(false);
+        if (cmd.type !== 'close') return;
+        if (this.vm?.profileSheet && !this.vm.settings) this.cb.onRoom?.({ type: 'profile_cancel' });
+        else this.cb.onOpenSettings?.(false);
         return;
       case 'help':
         if (cmd.type === 'close') this.setHelpOpen(false);

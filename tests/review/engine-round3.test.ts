@@ -5,7 +5,7 @@
  * repros moved to tests/engine/review-r3.test.ts.)
  */
 import { describe, expect, it } from 'vitest';
-import { describeInventory, step } from '../../src/engine';
+import { describeInventory, step, leadPlayer } from '../../src/engine';
 import type { GameState } from '../../src/engine/types';
 import { env, newGame, testWorld } from '../engine/helpers';
 
@@ -13,7 +13,7 @@ const model = { archetype: 'blob', colors: { primary: '#888888' } } as const;
 const selfT = { shape: 'self', range: 0, radius: 0, affects: 'self_only', needsLos: false } as const;
 
 function slotOf(s: GameState, defId: string): number {
-  return s.player.slots.findIndex((it) => it?.defId === defId);
+  return leadPlayer(s).slots.findIndex((it) => it?.defId === defId);
 }
 
 describe('review r3: inventory', () => {

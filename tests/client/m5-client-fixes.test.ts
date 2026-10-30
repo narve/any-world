@@ -17,7 +17,7 @@ import { rememberWorld } from '../../src/client/worlds';
 import { MAX_WORLD_FILE_BYTES } from '../../src/client/world-file';
 import { setLanguage } from '../../src/client/i18n/index';
 import { getPreset } from '../../src/llm/presets';
-import { legalActions } from '../../src/engine/index';
+import { legalActions, leadPlayer } from '../../src/engine/index';
 import type { SlotItemView } from '../../src/client/ui/viewmodel';
 import { loadFixture, roomMap } from '../engine/helpers';
 
@@ -36,7 +36,7 @@ function session(world: WorldSpec, seed = 3): GameSession {
 /** only the player and one NPC (from any area of the world), side by side */
 function withNpc(s: GameSession, defId: string, me: Pos = { x: 5, y: 5 }, them: Pos = { x: 6, y: 5 }): string {
   const st = structuredClone(s.state) as GameState;
-  const pl = st.area.actors.find((a) => a.id === st.player.actorId)!;
+  const pl = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
   pl.pos = { ...me };
   const template = st.area.actors.find((a) => a.id !== pl.id) ?? pl;
   const def = s.world.actors.find((d) => d.id === defId)!;
@@ -60,7 +60,7 @@ describe('final-stretch goal step (issues/M5-final-step-opaque-flag.md)', () => 
     const s = session(teen);
     const st = structuredClone(s.state) as GameState;
     st.area.index = 2;
-    st.player.slots[9] = { id: 'test-notebook', defId: 'speech-notebook', count: 1 };
+    leadPlayer(st).slots[9] = { id: 'test-notebook', defId: 'speech-notebook', count: 1 };
     s.state = st;
     const step = currentStep(teen, s.state);
     expect(step.kind).toBe('final');
@@ -77,7 +77,7 @@ describe('final-stretch goal step (issues/M5-final-step-opaque-flag.md)', () => 
     // no notebook: get it first
     expect(currentStep(teen, s.state).text).toMatch(/Junie's Speech Notebook/);
     const st2 = structuredClone(s.state) as GameState;
-    st2.player.slots[9] = { id: 'test-notebook', defId: 'speech-notebook', count: 1 };
+    leadPlayer(st2).slots[9] = { id: 'test-notebook', defId: 'speech-notebook', count: 1 };
     s.state = st2;
     // the "all" branch is met now (the engine ends the run as won): nothing left but the summary
     expect(currentStep(teen, s.state).text).toBe(teen.goal.summary);
@@ -128,7 +128,7 @@ describe('conversations answer in place', () => {
     const s = session(western);
     const id = withNpc(s, 'preacher-weekes');
     const st = structuredClone(s.state) as GameState;
-    const pl = st.area.actors.find((a) => a.id === st.player.actorId)!;
+    const pl = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
     pl.hp = Math.max(1, Math.floor(pl.hp / 3));
     s.state = st;
     const hpBefore = s.player().hp;

@@ -31,7 +31,7 @@ async function startWorld(page: Page, world: string, seed: number) {
   await page.locator('.aw-onboard-ok').click({ timeout: 2000 }).catch(() => {});
 }
 
-const perkCount = (page: Page) => page.evaluate(() => (window.__anyworld!.controller!.session.state.player.perks ?? []).length);
+const perkCount = (page: Page) => page.evaluate(() => (window.__anyworld!.controller!.session.me.perks ?? []).length);
 
 test('level-up: keys pressed as the card opens are ignored; a moment later they pick', async ({ page }) => {
   const errors: string[] = [];
@@ -70,12 +70,12 @@ test('Pianissimo area 3: the goal tracker names the Prompter\'s Last Cue', async
     await page.evaluate(async () => {
       const c = window.__anyworld!.controller!;
       await c.setStateForTest((st) => {
-        const pl = st.area.actors.find((a) => a.id === st.player.actorId)!;
+        const pl = st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!;
         pl.pos = { ...st.area.map.exit };
         const need = c.session.world.areas[st.area.index]?.transitionRequires;
         if (need && need.type === 'has_item') {
-          const free = st.player.slots.findIndex((x, j) => j >= 8 && !x);
-          st.player.slots[free] = { id: `e2e-${need.item}`, defId: need.item, count: 1 };
+          const free = st.players[st.party[0]].slots.findIndex((x, j) => j >= 8 && !x);
+          st.players[st.party[0]].slots[free] = { id: `e2e-${need.item}`, defId: need.item, count: 1 };
         }
       });
       c.actNow({ type: 'transition' } as never);

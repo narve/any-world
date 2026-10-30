@@ -5,17 +5,17 @@
  * Schemas attached to GM / dialogue requests. Browser-safe; no client imports.
  */
 import type { Amount, Effect, Trigger, WorldSpec } from '../schema/world';
-import { DialogueResponse, GmResponse, type GmAction, type GmHook } from '../schema/gm';
+import { DialogueResponse, GmResponse, RoomGmResponse, type GmAction, type GmHook } from '../schema/gm';
 import type { ActorInstance, GameState } from '../engine/types';
-import { applyGmActions, estimateRuleImpact } from '../engine/index';
+import { applyGmActions, estimateRuleImpact, leadPlayer } from '../engine/index';
 import { toJsonSchema } from './structured';
 import { npcOf } from './prompts/dialogue';
 import { GM_HARMFUL_STATUS_TURNS, goalRefs, type GoalRefs } from './goal-refs';
 
 export { GM_HARMFUL_STATUS_TURNS, goalRefs, type GoalRefs };
 
-/** hooks after which nothing but words may happen */
-const WORDS_ONLY: ReadonlySet<GmHook> = new Set(['intro', 'death', 'victory']);
+/** hooks after which nothing but words may happen (chat: a hostile line can at most make the GM talk) */
+const WORDS_ONLY: ReadonlySet<GmHook> = new Set(['intro', 'death', 'victory', 'chat']);
 const WORD_ACTIONS: ReadonlySet<GmAction['type']> = new Set(['narrate', 'say', 'mood']);
 
 function isHarmfulStatus(world: WorldSpec, id: string): boolean {
@@ -321,7 +321,7 @@ export function goalWriteProblem(world: WorldSpec, a: GmAction, allowItems: Read
 function goalActorsInArea(world: WorldSpec, state: GameState): ActorInstance[] {
   const refs = goalRefs(world);
   if (!refs.actors.size) return [];
-  return state.area.actors.filter((x) => x.hp > 0 && x.id !== state.player.actorId && refs.actors.has(x.defId));
+  return state.area.actors.filter((x) => x.hp > 0 && x.id !== leadPlayer(state).actorId && refs.actors.has(x.defId));
 }
 
 /**
@@ -355,7 +355,7 @@ export function stateGoalProblem(world: WorldSpec, state: GameState, a: GmAction
   switch (a.type) {
     case 'effect': {
       if (a.target === 'player') {
-        const pl = state.area.actors.find((x) => x.id === state.player.actorId);
+        const pl = state.area.actors.find((x) => x.id === leadPlayer(state).actorId);
         const loss = maxHpLoss(world, a.effects);
         if (pl && loss > 0 && loss >= pl.hp) return `hp loss up to ${Math.round(loss)} (damage, harmful statuses) could knock the player out (hp ${pl.hp}); the GM never decides the run by fiat`;
         return null;
@@ -497,11 +497,44 @@ export function applyHelpCeiling(world: WorldSpec, actions: readonly GmAction[],
   return { actions: out, used };
 }
 
+/**
+ * Whether an action threatens or harms whoever it lands on (a room never aims one at a member who is
+ * down): harmful effects on the player, hostile spawns, and offers or rules that carry them.
+ */
+export function threatensPlayer(world: WorldSpec, a: GmAction): boolean {
+  switch (a.type) {
+    case 'effect':
+      return a.target === 'player' && a.effects.some((e) => hindersTarget(world, e) && e.type !== 'change_faction');
+    case 'spawn':
+      return (world.actors.find((d) => d.id === a.actor)?.faction ?? 'hostile') === 'hostile';
+    case 'add_rule':
+      try {
+        return estimateRuleImpact(world, a.rule).hpPer100 > 0;
+      } catch {
+        return true;
+      }
+    case 'offer_choice':
+      return a.options.some((o) => o.actions.some((x) => threatensPlayer(world, x)));
+    default:
+      return false;
+  }
+}
+
+/** whether an action is words only (narrate, say, mood) */
+export function isWordAction(a: GmAction): boolean {
+  return WORD_ACTIONS.has(a.type);
+}
+
 let gmSchemaCache: object | null = null;
+let roomGmSchemaCache: object | null = null;
 let dialogueSchemaCache: object | null = null;
 /** JSON Schemas attached to GM / dialogue requests (native structured output where supported) */
 export function gmJsonSchema(): object {
   return (gmSchemaCache ??= toJsonSchema(GmResponse));
+}
+/** the room GM's reply schema (RoomGmResponse: GmResponse plus the optional `player`) */
+export function roomGmJsonSchema(): object {
+  return (roomGmSchemaCache ??= toJsonSchema(RoomGmResponse));
 }
 export function dialogueJsonSchema(): object {
   return (dialogueSchemaCache ??= toJsonSchema(DialogueResponse));

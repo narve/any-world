@@ -7,7 +7,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { applyGmActions, legalActions, step } from '../../src/engine';
+import { applyGmActions, legalActions, step, leadPlayer } from '../../src/engine';
 import { attackOf, inAttackRange } from '../../src/engine/combat';
 import { withinRadius, withinReach } from '../../src/engine/fov';
 import { giveItem } from '../../src/engine/inventory';
@@ -35,7 +35,7 @@ describe('ranged reach counts steps (Chebyshev), like movement', () => {
     const s = newGame(world, 1, roomMap(20, 20, { start: { x: 10, y: 10 }, exit: { x: 18, y: 18 } }));
     const ctx = ctxFor(world, s);
     giveItem(ctx, 'bow', 1);
-    s.player.equipped.weapon = s.player.slots.findIndex((x) => x?.defId === 'bow');
+    leadPlayer(s).equipped.weapon = leadPlayer(s).slots.findIndex((x) => x?.defId === 'bow');
     const atk = attackOf(ctx, player(s))!.attack;
     expect(atk.range).toBe(5);
     const foe = addActor(world, s, 'rat', { x: 6, y: 6 });
@@ -80,7 +80,7 @@ describe('actor cap per area', () => {
       maxTurns: 300,
       fast: true,
       invariants: false,
-      onStep: (s) => (maxLiving = Math.max(maxLiving, s.area.actors.filter((a) => a.hp > 0 && a.id !== s.player.actorId).length)),
+      onStep: (s) => (maxLiving = Math.max(maxLiving, s.area.actors.filter((a) => a.hp > 0 && a.id !== leadPlayer(s).actorId).length)),
     });
     expect(maxLiving).toBeLessThanOrEqual(MAX_AREA_ACTORS);
     expect(maxLiving).toBeGreaterThan(20); // it did swarm, up to the cap

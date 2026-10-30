@@ -8,9 +8,9 @@
  */
 import type { WorldSpec } from '../schema/world';
 import type { GmAction, GmHook } from '../schema/gm';
-import type { ActorInstance, AreaMap, Dir, GameEvent, GameState, LogMessage, NewGameOptions, PendingChoice, PlayerAction, Pos } from '../engine/types';
+import type { ActorInstance, AreaMap, Dir, GameEvent, GameState, LogMessage, NewGameOptions, PendingChoice, PlayerAction, PlayerId, PlayerState, Pos } from '../engine/types';
 import { recheckGmActions, recheckOfferOption } from './gm-recheck';
-import { applyGmActions, createGame, describeActor, describeItem, describeItemDef, deserialize, legalActions, passability, playerSheet, serialize, step } from '../engine/index';
+import { applyGmActions, createGame, describeActor, describeItem, describeItemDef, deserialize, legalActions, passability, playerSheet, serialize, step, leadPlayer, patchPlayer } from '../engine/index';
 import type {
   ActorTooltipView,
   Difficulty,
@@ -56,13 +56,18 @@ export interface Outcome {
   travel?: boolean;
   /** rules that came into force or were lifted with this change */
   rules?: RuleChange[];
+  /**
+   * a room session sent this action and waits for its entry (the HUD marks it as queued; nothing
+   * to redraw yet). Callers that test `changed` treat it as accepted. Never set in single player.
+   */
+  pending?: PlayerAction;
 }
 
-function emptyOutcome(): Outcome {
+export function emptyOutcome(): Outcome {
   return { changed: false, events: [], areaChanged: false, toasts: [] };
 }
 
-function merge(a: Outcome, b: Outcome): Outcome {
+export function merge(a: Outcome, b: Outcome): Outcome {
   return {
     changed: a.changed || b.changed,
     events: [...a.events, ...b.events],
@@ -71,8 +76,24 @@ function merge(a: Outcome, b: Outcome): Outcome {
     camera: b.camera ?? a.camera,
     describe: b.describe !== undefined ? b.describe : a.describe,
     travel: b.travel ?? a.travel,
+    ...(b.pending ?? a.pending ? { pending: b.pending ?? a.pending } : {}),
     ...(a.rules || b.rules ? { rules: [...(a.rules ?? []), ...(b.rules ?? [])] } : {}),
   };
+}
+
+/** what a dialogue reply does (GameSession.replyPlan) */
+export interface ReplyPlan {
+  /** the engine option */
+  engineIndex: number;
+  speaker: string | null;
+  /** the line an "Ask what they know" option says */
+  said: string | null;
+  /** a healer's "Ask for help" */
+  heals: boolean;
+  /** the conversation reopens with an answer (said or heals) */
+  reopen: boolean;
+  /** the reply as the button showed it */
+  label: string;
 }
 
 /** what hovering a tile would do on click (path preview) */
@@ -118,13 +139,27 @@ export interface SessionInit {
   hooks?: HookTracker;
   /** show the onboarding card for this world (after the prologue) */
   onboarding?: boolean;
+  /**
+   * a room (MP3): the perspective state of the room's replica and this player's id. The session then
+   * never steps or writes the state itself (RoomSession assigns it from the room's entries).
+   */
+  room?: { state: GameState; pid: PlayerId };
 }
 
 export class GameSession {
   readonly world: WorldSpec;
   readonly worldId: string;
   readonly seed: number;
+  /**
+   * The state the view shows. Single player: the engine state of the run. In a room: the
+   * perspective of the room's replica for this player (room/perspective.ts), assigned by
+   * RoomSession only (a plain field: the ES2022 target lets no subclass accessor override it).
+   */
   state: GameState;
+  /** the player this session plays (single player: the lead; a room: the seat's player) */
+  readonly pid: PlayerId;
+  /** a room session: the state is the replica's perspective, never stepped or written here */
+  protected readonly replicaMode: boolean;
   mode: GameView['mode'] = 'normal';
   cursor: Pos | null = null;
   targetingSlot: number | undefined;
@@ -133,9 +168,9 @@ export class GameSession {
   history: { who: 'npc' | 'player'; text: string }[] = [];
   tradeOpen = false;
   /** the NPC voice (LLM, ai.ts): its latest line stands in for the engine's dialogue prompt */
-  private voice: { token: number; line: string } | null = null;
-  private voiceToken = 0;
-  private voiceWanted: VoiceRequest | null = null;
+  protected voice: { token: number; line: string } | null = null;
+  protected voiceToken = 0;
+  protected voiceWanted: VoiceRequest | null = null;
   /** NPC lines the player has already been told, per NPC instance ("Ask what they know") */
   private heard = new Map<string, Set<string>>();
   /** camera yaw step 0..3, mirrored from the renderer */
@@ -143,7 +178,7 @@ export class GameSession {
   /** the last direction the player moved (map space): where direction aiming starts */
   facing: Dir = 's';
   /** item instance the player was warned would be wasted (a second press uses it anyway) */
-  private wasteWarned: string | null = null;
+  protected wasteWarned: string | null = null;
   prefs: { animationSpeed: number; reduceMotion: boolean };
   /** click-to-travel destination */
   travelDest: Pos | null = null;
@@ -175,7 +210,11 @@ export class GameSession {
     this.gmLog = init.gmLog ? [...init.gmLog] : [];
     this.prefs = init.prefs ?? { animationSpeed: 1, reduceMotion: false };
     this.onboardingOn = !!init.onboarding;
-    if (init.saved) {
+    this.replicaMode = !!init.room;
+    if (init.room) {
+      this.state = init.room.state;
+      this.narration = null;
+    } else if (init.saved) {
       this.state = deserialize(init.world, init.saved);
       this.narration = null;
     } else {
@@ -192,12 +231,14 @@ export class GameSession {
       this.narration = { id: 'intro', kind: 'intro', title: m.title, text: init.world.gm.fallback.intro || m.premise || m.tagline };
       this.narrationHook = { hook: 'intro', area: this.state.area.index };
     }
+    this.pid = init.room?.pid ?? this.state.party[0];
     const st = this.state as GameState & { difficulty?: unknown; weirdness?: unknown };
     this.difficulty = isDifficulty(st.difficulty) ? st.difficulty : (init.difficulty ?? 'normal');
     this.weirdness = typeof st.weirdness === 'number' ? st.weirdness : (init.weirdness ?? 0.4);
     this.rules = new RuleTracker(init.rules);
     this.rules.prime(this.world, this.state);
     this.hookTracker = init.hooks ? { ...init.hooks, bossesSeen: [...(init.hooks.bossesSeen ?? [])] } : newHookTracker(this.state.turn);
+    if (this.replicaMode) return;
     if (!init.saved) this.hooks.push({ hook: 'intro', area: this.state.area.index, turn: this.state.turn });
     this.state = drainEngineQueue(this.state);
   }
@@ -208,6 +249,21 @@ export class GameSession {
 
   get ended(): boolean {
     return this.state.status !== 'playing';
+  }
+
+  /** the player this session plays (single player: the lead of a party of one) */
+  get playerId(): PlayerId {
+    return this.pid;
+  }
+
+  /** what the renderer and the map overlays show (single player: `state`; a room's spectator: the followed teammate) */
+  get cameraState(): GameState {
+    return this.state;
+  }
+
+  /** this session's player state */
+  get me(): PlayerState {
+    return this.state.players[this.pid];
   }
 
   player(): ActorInstance {
@@ -221,7 +277,7 @@ export class GameSession {
     const legal = legalActions(this.state);
     const it = this.interactTargets(legal)[0];
     const game = gameView(this.world, state, {
-      gmLog: this.gmLog,
+      gmLog: this.clientLog(),
       narration: this.narration,
       mode: this.mode,
       targetingSlot: this.targetingSlot,
@@ -230,12 +286,20 @@ export class GameSession {
       tradeOpen: this.tradeOpen,
       rules: this.rules,
       legal,
-      interactHint: it && !it.door ? tr('ctx.interactHint', { name: it.name }) : null,
+      interactHint: it && !it.door ? tr(this.interactHintKey, { name: it.name }) : null,
       interact: it && !it.door ? { name: it.name } : null,
       onboarding: this.onboardingVisible() ? inWorldLanguage(this.world, () => onboardingView(this.world, this.worldId, this.state)) : null,
       ...(this.thumbs ? { thumbs: this.thumbs } : {}),
     });
     return { screen: 'game', theme, game, prefs: this.prefs, ...extra };
+  }
+
+  /** the context bar's "use" hint (a room uses Shift+Enter: Enter is its chat) */
+  protected readonly interactHintKey: 'ctx.interactHint' | 'ctx.interactHintRoom' = 'ctx.interactHint';
+
+  /** the client's own log lines merged into the engine log (GM and rule lines; a room adds its overlay) */
+  protected clientLog(): LogMessage[] {
+    return this.gmLog;
   }
 
   /** item thumbnails (set by the controller when the renderer can draw them) */
@@ -252,7 +316,7 @@ export class GameSession {
    */
   preview(pos: Pos | null): HoverPreview | null {
     if (!pos || this.mode !== 'normal' || this.ended || !this.inBounds(pos)) return null;
-    if (this.state.pendingChoice || this.state.player.pendingPerkChoice) return null;
+    if (this.me.pendingChoice || this.me.pendingPerkChoice) return null;
     const seen = this.seenAt(pos);
     // an unexplored tile: travel walks toward it (travelPath plans through the unknown)
     if (seen === 0) {
@@ -262,7 +326,7 @@ export class GameSession {
     const p = this.player().pos;
     if (p.x === pos.x && p.y === pos.y) return { pos, kind: 'self', path: [] };
     const target = seen === 2 ? actorAt(this.state, pos) : undefined;
-    if (target && target.id !== this.state.player.actorId) {
+    if (target && target.id !== this.me.actorId) {
       const hostile = target.faction === 'hostile' && !target.allyOf;
       if (hostile && cheb(target.pos, p) > 1 && legalActions(this.state).some((a) => a.type === 'attack' && a.targetId === target.id)) return { pos, kind: 'attack', path: [] };
       const path = travelPath(this.state, pos);
@@ -277,7 +341,7 @@ export class GameSession {
   /** the onboarding card shows after the prologue, while nothing else needs an answer */
   onboardingVisible(): boolean {
     if (!this.onboardingOn || this.ended || this.narration) return false;
-    return !this.state.pendingChoice && !this.state.player.pendingPerkChoice;
+    return !this.me.pendingChoice && !this.me.pendingPerkChoice;
   }
 
   /** usable tiles next to the player: terrain interactions first, then doors */
@@ -341,14 +405,22 @@ export class GameSession {
       console.warn('[anyworld] GM actions failed:', e);
       return out;
     }
-    out.events = res.events;
-    const text = narrationOf({ actions });
+    return this.absorbGm(before, res.state, res.events, actions, meta, out);
+  }
+
+  /**
+   * Keeps the session consistent with applied GM actions (`before` → `after`): audio, rules and the
+   * narration card a narrate action opens or rewrites. Single player: applyGm; a room: its gm entries.
+   */
+  protected absorbGm(before: GameState, after: GameState, events: GameEvent[], actions: readonly GmAction[], meta: { hook?: GmHook; area?: number }, out: Outcome = emptyOutcome()): Outcome {
+    out.events = events;
+    const text = narrationOf({ actions: actions as GmAction[] });
     this.pendingGmActions = actions;
-    if (res.state !== before) {
+    if (after !== before) {
       out.changed = true;
-      this.state = res.state;
-      this.afterChange(before, res.events, out);
-    } else this.emitAudio(res.events); // e.g. a lone `mood` action: no state change, but the music changes
+      this.state = after;
+      this.afterChange(before, events, out);
+    } else this.emitAudio(events); // e.g. a lone `mood` action: no state change, but the music changes
 
     if (text && meta.hook) {
       const card = this.narration;
@@ -358,8 +430,9 @@ export class GameSession {
         const plan = this.world.areas[this.state.area.index];
         this.narration = { id: `gm-${meta.hook}-${++this.narrationSeq}`, kind: meta.hook === 'intro' ? 'intro' : 'area_enter', title: meta.hook === 'intro' ? this.world.meta.title : plan?.name, text };
         this.narrationHook = { hook: meta.hook, area: this.state.area.index };
-      } else if (meta.hook !== 'low_hp' && !this.state.pendingChoice) {
-        // an event: a short card the next action clears (offers show their own panel instead)
+      } else if (meta.hook !== 'low_hp' && meta.hook !== 'chat' && !this.me.pendingChoice) {
+        // an event: a short card the next action clears (offers show their own panel instead; a
+        // room's answer to the chat is in the log and the chat panel, never a card)
         this.narration = { id: `gm-event-${++this.narrationSeq}`, kind: 'event', text };
         this.narrationHook = { hook: meta.hook, area: this.state.area.index };
       }
@@ -378,17 +451,19 @@ export class GameSession {
     this.pendingGmActions = null;
     if (!this.audioListener) return;
     try {
-      this.audioListener({ events, playerId: this.state.player.actorId, cue: audioCueFor(this.world, this.state), ...(gmActions?.length ? { gmActions } : {}) });
+      this.audioListener({ events, playerId: this.me.actorId, cue: audioCueFor(this.world, this.state), ...(gmActions?.length ? { gmActions } : {}) });
     } catch (e) {
       console.warn('[anyworld] audio listener failed:', e);
     }
   }
 
-  /** bookkeeping after any engine state change: GM hooks, rule changes, engine hook queue */
+  /** bookkeeping after any engine state change: GM hooks, rule changes, engine hook queue (a room's GM is the server: no hooks, no drain) */
   private afterChange(before: GameState, events: GameEvent[], out: Outcome): void {
-    const hooks = gmHooksFor(this.world, before, this.state, events, this.hookTracker);
-    this.state = drainEngineQueue(this.state);
-    this.hooks.push(...hooks);
+    if (!this.replicaMode) {
+      const hooks = gmHooksFor(this.world, before, this.state, events, this.hookTracker);
+      this.state = drainEngineQueue(this.state);
+      this.hooks.push(...hooks);
+    }
     const changes = this.rules.update(this.world, this.state);
     if (changes.length) {
       out.rules = [...(out.rules ?? []), ...changes];
@@ -444,7 +519,7 @@ export class GameSession {
   private seenAt(p: Pos): number {
     const m = this.state.area.map;
     if (p.x < 0 || p.y < 0 || p.x >= m.width || p.y >= m.height) return 0;
-    return (this.state.area.seen as ArrayLike<number>)[p.y * m.width + p.x] ?? 0;
+    return (this.me.seen as ArrayLike<number>)[p.y * m.width + p.x] ?? 0;
   }
 
   private inBounds(p: Pos): boolean {
@@ -457,10 +532,10 @@ export class GameSession {
     const seen = this.seenAt(pos);
     if (seen === 0) return { actor: null, tile: null };
     const a = actorAt(this.state, pos);
-    if (a && (seen === 2 || a.id === this.state.player.actorId)) {
+    if (a && (seen === 2 || a.id === this.me.actorId)) {
       const view = describeActor(this.state, a.id);
-      const def = a.id === this.state.player.actorId ? undefined : this.world.actors.find((d) => d.id === a.defId);
-      const model = def?.model ?? (a.id === this.state.player.actorId ? this.world.player.model : undefined);
+      const def = a.id === this.me.actorId ? undefined : this.world.actors.find((d) => d.id === a.defId);
+      const model = def?.model ?? (a.id === this.me.actorId ? this.world.player.model : undefined);
       const color = model?.humanoid?.top ?? model?.colors?.primary;
       return { actor: { ...view, id: a.id, ...(color ? { color } : {}) }, tile: null };
     }
@@ -525,7 +600,7 @@ export class GameSession {
     this.wasteWarned = null;
     // a GM offer was checked when it was made; the option runs now (issues/M5-stale-gm-fiat.md)
     let input = before;
-    if (action.type === 'choose_option' && before.pendingChoice?.kind === 'gm_offer') {
+    if (action.type === 'choose_option' && leadPlayer(before).pendingChoice?.kind === 'gm_offer') {
       const r = recheckOfferOption(this.world, before, action.index);
       if (r.dropped.length) console.info('[anyworld] GM offer actions dropped on choose:', r.dropped);
       input = r.state;
@@ -534,26 +609,40 @@ export class GameSession {
     for (const e of res.events) if (e.type === 'invalid') out.toasts.push({ text: explainInvalid(this.world, before, action, e.reason), tone: 'warn' });
     out.events = res.events;
     if (res.state === before || res.state === input) return out;
+    return this.absorbStep(before, res.state, res.events, { action, tookTurn: res.tookTurn }, out);
+  }
+
+  /**
+   * Keeps the controller-side state consistent with an engine change `before` → `after`: dialogue
+   * history, voice turn, narration on an area change, rules, audio, the onboarding count and the
+   * end of the run. `mine`: this player's own action that made the change (absent when only others
+   * acted, in a room). Single player: act; a room: each of its turn entries.
+   */
+  protected absorbStep(before: GameState, after: GameState, events: GameEvent[], mine: { action: PlayerAction; tookTurn: boolean } | undefined, out: Outcome = emptyOutcome()): Outcome {
     out.changed = true;
+    out.events = events;
+    const action = mine?.action ?? null;
     // the player has started acting: narration from before this action has been read (or
     // skipped) and must not stay over the board (issues/M1-narration-covers-player.md); a card
     // this action opens (a new area) stays until the next action
-    this.narration = null;
-    this.narrationHook = null;
-    const prevChoice = before.pendingChoice;
+    if (mine) {
+      this.narration = null;
+      this.narrationHook = null;
+    }
+    const prevChoice = leadPlayer(before).pendingChoice;
     const prevLine = this.voiceLine();
-    this.state = res.state;
-    const pc = this.state.pendingChoice;
+    this.state = after;
+    const pc = this.me.pendingChoice;
 
     // dialogue history: the NPC line + the player's reply, for the conversation just answered
-    if (action.type === 'choose_option' && prevChoice?.kind === 'dialogue') {
+    if (action?.type === 'choose_option' && prevChoice?.kind === 'dialogue') {
       // the line the player saw on the reply button, in the UI language (issues/M5-dialogue-history-english.md)
       const opt = prevChoice.options[action.index];
       const label = opt ? dialogueOptionLabel(opt) : '';
       this.pushHistory({ who: 'npc', text: prevLine ?? prevChoice.prompt }, { who: 'player', text: label });
     }
     if (pc?.kind !== 'dialogue') this.tradeOpen = false;
-    else if (action.type !== 'choose_option' && prevChoice?.kind !== 'dialogue') this.history = []; // a new conversation
+    else if (action && action.type !== 'choose_option' && prevChoice?.kind !== 'dialogue') this.history = []; // a new conversation
     this.noteVoiceTurn(action, prevChoice);
 
     if (this.state.area.index !== before.area.index) {
@@ -567,8 +656,8 @@ export class GameSession {
         this.narrationHook = { hook: 'area_enter', area: this.state.area.index };
       }
     }
-    this.afterChange(before, res.events, out);
-    if (res.tookTurn && this.onboardingVisible() && ++this.onboardingActions >= ONBOARDING_ACTIONS) this.onboardingOn = false;
+    this.afterChange(before, events, out);
+    if (mine?.tookTurn && this.onboardingVisible() && ++this.onboardingActions >= ONBOARDING_ACTIONS) this.onboardingOn = false;
     if (this.ended) {
       this.cancelCursor();
       this.travelDest = null;
@@ -599,7 +688,7 @@ export class GameSession {
     }
     if (action.type === 'use' && action.target === undefined) {
       // aimed items always go through targeting, even when activated from a menu
-      const it = this.state.player.slots[action.slot];
+      const it = this.me.slots[action.slot];
       const def = it ? this.world.items.find((d) => d.id === it.defId) : undefined;
       if (def && needsTarget(def)) return this.beginTarget(action.slot);
       // a known restorative whose every vital is already full: warn first, use on a second press
@@ -676,15 +765,15 @@ export class GameSession {
   }
 
   /** talk/persuade with the nearest NPC the engine accepts (or the given one) */
-  private talk(kind: 'talk' | 'persuade', targetId?: string): Outcome {
+  protected talk(kind: 'talk' | 'persuade', targetId?: string): Outcome {
     this.travelDest = null;
     let out = emptyOutcome();
     // persuading from the dialogue panel: leave the conversation first (the engine accepts no
     // other action while a choice is open)
-    if (this.state.pendingChoice?.kind === 'dialogue') {
+    if (this.me.pendingChoice?.kind === 'dialogue') {
       if (kind === 'talk') return out;
-      const leave = dialogueMap(this.state.pendingChoice).leaveIndex;
-      const speaker = this.state.pendingChoice.speakerId;
+      const leave = dialogueMap(this.me.pendingChoice).leaveIndex;
+      const speaker = this.me.pendingChoice.speakerId;
       if (leave === null) return { ...out, toasts: [{ text: tr('toast.finishConversation'), tone: 'warn' }] };
       out = this.act({ type: 'choose_option', index: leave });
       targetId = targetId ?? speaker;
@@ -710,7 +799,7 @@ export class GameSession {
   /** Enter: use the adjacent usable tile (the one under the look cursor first) */
   private interact(): Outcome {
     this.travelDest = null;
-    if (this.state.pendingChoice || this.state.player.pendingPerkChoice) return emptyOutcome();
+    if (this.me.pendingChoice || this.me.pendingPerkChoice) return emptyOutcome();
     const ts = this.interactTargets();
     const at = this.cursor ? ts.find((t) => t.pos.x === this.cursor!.x && t.pos.y === this.cursor!.y) : undefined;
     const t = at ?? ts.find((x) => !x.door);
@@ -720,7 +809,7 @@ export class GameSession {
 
   private beginTarget(slot: number): Outcome {
     this.travelDest = null;
-    const it = this.state.player.slots[slot];
+    const it = this.me.slots[slot];
     if (!it) return { ...emptyOutcome(), toasts: [{ text: tr('toast.slotEmpty'), tone: 'warn' }] };
     this.mode = 'target';
     this.targetingSlot = slot;
@@ -751,8 +840,8 @@ export class GameSession {
   firingWeapon(): boolean {
     if (this.mode !== 'target' || this.targetingSlot === undefined) return false;
     const slot = this.targetingSlot;
-    if (this.state.player.equipped.weapon !== slot) return false;
-    const it = this.state.player.slots[slot];
+    if (this.me.equipped.weapon !== slot) return false;
+    const it = this.me.slots[slot];
     const def = it ? this.world.items.find((d) => d.id === it.defId) : undefined;
     return !!def && !needsTarget(def) && (def.weapon?.range ?? 1) > 1;
   }
@@ -766,7 +855,7 @@ export class GameSession {
   /** true while targeting an item aimed by direction (ray, cone) */
   aimingDirection(): boolean {
     if (this.mode !== 'target' || this.targetingSlot === undefined) return false;
-    const it = this.state.player.slots[this.targetingSlot];
+    const it = this.me.slots[this.targetingSlot];
     const def = it ? this.world.items.find((d) => d.id === it.defId) : undefined;
     return !!def && aimsDirection(def);
   }
@@ -819,16 +908,18 @@ export class GameSession {
       // nobody to shoot there: aiming stays open so the player can move the cursor
       if (!foe) return { ...emptyOutcome(), toasts: [{ text: tr('toast.noRangedTarget'), tone: 'warn' }] };
       const out = this.act({ type: 'attack', targetId: foe.id });
-      if (out.changed) this.cancelCursor();
-      return { ...out, describe: out.changed ? null : undefined };
+      const ok = out.changed || !!out.pending;
+      if (ok) this.cancelCursor();
+      return { ...out, describe: ok ? null : undefined };
     }
     if (this.mode === 'target' && this.targetingSlot !== undefined) {
       const slot = this.targetingSlot;
       const target = { ...this.cursor };
       const out = this.act({ type: 'use', slot, target });
       // an invalid target (out of range, no line of sight) keeps targeting open so the player can fix it
-      if (out.changed) this.cancelCursor();
-      return { ...out, describe: out.changed ? null : undefined };
+      const ok = out.changed || !!out.pending;
+      if (ok) this.cancelCursor();
+      return { ...out, describe: ok ? null : undefined };
     }
     return emptyOutcome();
   }
@@ -855,7 +946,7 @@ export class GameSession {
       this.cursor = { ...pos };
       return { ...emptyOutcome(), describe: { pos, ...this.describeAt(pos) } };
     }
-    if (this.state.pendingChoice || this.state.player.pendingPerkChoice || this.ended) return emptyOutcome();
+    if (this.me.pendingChoice || this.me.pendingPerkChoice || this.ended) return emptyOutcome();
     const p = this.player().pos;
     if (p.x === pos.x && p.y === pos.y) {
       // clicking yourself picks up what lies here, or takes the exit when standing on it
@@ -901,21 +992,39 @@ export class GameSession {
    * does not stop it: travel into the unknown would otherwise halt every few steps.
    */
   travelTick(): { outcome: Outcome; more: boolean } {
+    const action = this.nextTravelAction();
+    if (!action) return { outcome: emptyOutcome(), more: false };
+    const hpBefore = this.player().hp;
+    const out = this.act(action);
+    return { outcome: out, more: this.travelGoesOn(out, hpBefore) };
+  }
+
+  /** the next click-to-travel step, or null (travel ends: no destination or route, the run is over, a choice is open, look / target mode) */
+  nextTravelAction(): PlayerAction | null {
     const dest = this.travelDest;
-    if (!dest || this.ended || this.state.pendingChoice || this.state.player.pendingPerkChoice || this.mode !== 'normal') {
+    if (!dest || this.ended || this.me.pendingChoice || this.me.pendingPerkChoice || this.mode !== 'normal') {
       this.travelDest = null;
-      return { outcome: emptyOutcome(), more: false };
+      return null;
     }
     const dir = travelStep(this.state, dest);
     if (!dir) {
       this.travelDest = null;
-      return { outcome: emptyOutcome(), more: false };
+      return null;
     }
-    const hpBefore = this.player().hp;
-    const out = this.act({ type: 'move', dir });
-    if (!out.changed || this.ended || out.areaChanged) {
+    return { type: 'move', dir };
+  }
+
+  /**
+   * After a travel step (`out`, with the player's hp before it): whether travel goes on. It stops
+   * (travelDest cleared) when the step did nothing, the run ended, the area changed, the destination
+   * is reached, a new hostile came into view, or the player was hurt, levelled up, picked up
+   * something or got a choice.
+   */
+  protected travelGoesOn(out: Outcome, hpBefore: number): boolean {
+    const dest = this.travelDest;
+    if (!dest || !out.changed || this.ended || out.areaChanged) {
       this.travelDest = null;
-      return { outcome: out, more: false };
+      return false;
     }
     const now = visibleHostiles(this.state);
     const fresh = [...now].some((id) => !this.travelSeen.has(id));
@@ -924,11 +1033,11 @@ export class GameSession {
     const arrived = p.pos.x === dest.x && p.pos.y === dest.y;
     // steady ambient drains (world rules, standing in a hazard for a step) don't stop travel; being
     // hit by someone, dropping to low health or anything that needs a decision does
-    const pid = this.state.player.actorId;
+    const pid = this.me.actorId;
     const interrupted =
       fresh ||
-      !!this.state.pendingChoice ||
-      !!this.state.player.pendingPerkChoice ||
+      !!this.me.pendingChoice ||
+      !!this.me.pendingPerkChoice ||
       out.events.some(
         (e) =>
           (e.type === 'attacked' && (e.targetId === pid || e.attackerId === pid)) ||
@@ -941,9 +1050,9 @@ export class GameSession {
       p.hp < hpBefore - Math.max(2, Math.ceil(p.maxHp * 0.1));
     if (arrived || interrupted) {
       this.travelDest = null;
-      return { outcome: out, more: false };
+      return false;
     }
-    return { outcome: out, more: true };
+    return true;
   }
 
   stopTravel(): void {
@@ -955,45 +1064,62 @@ export class GameSession {
   // ---------------------------------------------------------------------------
 
   dialogueReply(index: number): Outcome {
-    const pc = this.state.pendingChoice;
-    if (!pc || pc.kind !== 'dialogue') return emptyOutcome();
-    const m = dialogueMap(pc, this.dialogueSkip());
-    const engineIndex = m.engineIndex[index];
-    if (engineIndex === undefined) return emptyOutcome();
-    const opt = pc.options[engineIndex];
-    const speaker = pc.speakerId;
-    const said = opt.actions.find((a): a is Extract<GmAction, { type: 'say' }> => a.type === 'say');
-    const heals = opt.tag === 'service:heal';
-    const before = this.player();
-    const hpBefore = before.hp;
+    const plan = this.replyPlan(index);
+    if (!plan) return emptyOutcome();
+    const { engineIndex, speaker } = plan;
+    const hpBefore = this.player().hp;
     const out = this.act({ type: 'choose_option', index: engineIndex });
     // "Ask what they know" and a healer's "Ask for help" answer in the conversation itself, which
     // stays open (issues/M5-dialogue-answers-close.md, M5-healer-silent.md); everything else
     // (gifts, recruiting, goodbye) ends it as before
-    if (!out.changed || this.ended || this.state.pendingChoice || !speaker || (!said && !heals)) return out;
+    if (!out.changed || this.ended || this.me.pendingChoice || !speaker || !plan.reopen) return out;
+    const { answer, extraLog } = this.replyAnswer(plan, Math.max(0, this.player().hp - hpBefore));
+    return this.reopenConversation(speaker, out, answer, plan.label, extraLog);
+  }
+
+  /** what reply `index` of the open dialogue does: its engine option and whether the conversation reopens with an answer */
+  protected replyPlan(index: number): ReplyPlan | null {
+    const pc = this.me.pendingChoice;
+    if (!pc || pc.kind !== 'dialogue') return null;
+    const m = dialogueMap(pc, this.dialogueSkip());
+    const engineIndex = m.engineIndex[index];
+    if (engineIndex === undefined) return null;
+    const opt = pc.options[engineIndex];
+    const said = opt.actions.find((a): a is Extract<GmAction, { type: 'say' }> => a.type === 'say');
+    const heals = opt.tag === 'service:heal';
+    return { engineIndex, speaker: pc.speakerId ?? null, said: said?.text ?? null, heals, reopen: !!said || heals, label: dialogueOptionLabel(opt) };
+  }
+
+  /**
+   * The engine actions of reply `index`: the option, and when it answers in the conversation
+   * ("Ask what they know", a healer's help) the `talk` that reopens it. A room sends them as one input.
+   */
+  dialogueReplyActions(index: number): PlayerAction[] {
+    const plan = this.replyPlan(index);
+    if (!plan) return [];
+    const choose: PlayerAction = { type: 'choose_option', index: plan.engineIndex };
+    return plan.reopen && plan.speaker ? [choose, { type: 'talk', targetId: plan.speaker }] : [choose];
+  }
+
+  /** the NPC's answer to an answered reply (its line, or the healer's "helps you"), and the healer's log line */
+  protected replyAnswer(plan: ReplyPlan, gained: number): { answer: string; extraLog: LogMessage | null } {
+    const speaker = plan.speaker ?? '';
+    if (plan.said !== null) {
+      this.markHeard(speaker, plan.said);
+      return { answer: plan.said, extraLog: null };
+    }
     const npc = this.state.area.actors.find((a) => a.id === speaker);
     const npcName = npc ? (this.world.actors.find((d) => d.id === npc.defId)?.name ?? tr('common.someone')) : tr('common.someone');
-    let answer: string;
-    let extraLog: LogMessage | null = null;
-    if (said) {
-      answer = said.text;
-      this.markHeard(speaker, said.text);
-    } else {
-      const gained = Math.max(0, this.player().hp - hpBefore);
-      const hp = this.world.vocabulary.stats.hp.name;
-      const params = { npc: npcName, amount: gained, hp };
-      const key = gained > 0 ? 'dlg.healed' : 'dlg.helped';
-      answer = tr(key, params);
-      const english = gained > 0 ? `${npcName} helps you: +${gained} ${hp}.` : `${npcName} helps you.`;
-      extraLog = { turn: this.state.turn, text: english, kind: 'good', speaker: npcName, key, params };
-    }
-    const label = dialogueOptionLabel(opt);
-    return this.reopenConversation(speaker, out, answer, label, extraLog);
+    const hp = this.world.vocabulary.stats.hp.name;
+    const params = { npc: npcName, amount: gained, hp };
+    const key = gained > 0 ? 'dlg.healed' : 'dlg.helped';
+    const english = gained > 0 ? `${npcName} helps you: +${gained} ${hp}.` : `${npcName} helps you.`;
+    return { answer: tr(key, params), extraLog: { turn: this.state.turn, text: english, kind: 'good', speaker: npcName, key, params } };
   }
 
   /** the dialogue options hidden from the reply list right now */
   private dialogueSkip(): DialogueSkip | undefined {
-    const pc = this.state.pendingChoice;
+    const pc = this.me.pendingChoice;
     if (pc?.kind !== 'dialogue' || !pc.speakerId) return undefined;
     const npc = this.state.area.actors.find((a) => a.id === pc.speakerId);
     const lines = npc ? this.world.actors.find((d) => d.id === npc.defId)?.npc?.lines : undefined;
@@ -1019,22 +1145,27 @@ export class GameSession {
     const history = this.history;
     const log = this.state.log;
     const again = this.act({ type: 'talk', targetId: speaker });
-    const reopened = this.state.pendingChoice as PendingChoice | null;
+    const reopened = this.me.pendingChoice as PendingChoice | null;
     if (!again.changed || reopened?.kind !== 'dialogue') {
       if (extraLog) this.state = { ...this.state, log: [...this.state.log, extraLog] };
       return out;
     }
     this.state = { ...this.state, log: extraLog ? [...log, extraLog] : log };
+    this.keepConversation(reopened, history, answer, playerLine);
+    return merge(out, { ...again, toasts: [] });
+  }
+
+  /** after an answered reply reopened the conversation: the history carries on and the answer is the NPC's line */
+  protected keepConversation(reopened: PendingChoice, history: { who: 'npc' | 'player'; text: string }[], answer: string, playerLine: string): void {
     this.history = history;
     this.voice = { token: this.voiceToken, line: answer };
     if (this.voiceWanted) this.voiceWanted = { ...this.voiceWanted, history: history.map((h) => ({ speaker: h.who, text: h.text })), playerLine };
     const rm = dialogueMap(reopened);
     this.tradeOpen = this.tradeOpen && (rm.buy.length > 0 || rm.sell.length > 0);
-    return merge(out, { ...again, toasts: [] });
   }
 
   dialogueLeave(): Outcome {
-    const pc = this.state.pendingChoice;
+    const pc = this.me.pendingChoice;
     if (!pc || pc.kind !== 'dialogue') return emptyOutcome();
     const m = dialogueMap(pc);
     // every engine dialogue ends with a no-op "goodbye"; fall back to the last no-op option
@@ -1051,30 +1182,51 @@ export class GameSession {
       this.tradeOpen = false;
       return emptyOutcome();
     }
-    const pc = this.state.pendingChoice;
-    if (!pc || pc.kind !== 'dialogue') return emptyOutcome();
-    const m = dialogueMap(pc);
-    const idx = t.type === 'sell' ? m.sell.find((i) => pc.options[i].sell?.slot === t.slot) : m.buy[t.offerIndex];
-    if (idx === undefined) return t.type === 'sell' ? { ...emptyOutcome(), toasts: [{ text: tr('trade.notBuying'), tone: 'info' }] } : emptyOutcome();
-    const speaker = pc.speakerId;
+    const plan = this.tradePlan(t);
+    if (!plan) return emptyOutcome();
+    if ('toast' in plan) return { ...emptyOutcome(), toasts: [plan.toast] };
+    const { speaker } = plan;
     const voice = { voice: this.voice, token: this.voiceToken };
-    const out = this.act({ type: 'choose_option', index: idx });
-    if (!out.changed || !speaker || this.state.pendingChoice) return out;
+    const out = this.act({ type: 'choose_option', index: plan.index });
+    if (!out.changed || !speaker || this.me.pendingChoice) return out;
     // buying resolves the engine's choice; reopen the conversation so the shop stays open
     const history = this.history;
     const again = this.act({ type: 'talk', targetId: speaker });
-    const reopened = this.state.pendingChoice as PendingChoice | null; // (TS narrowed it to null above)
-    if (again.changed && reopened?.kind === 'dialogue') {
-      this.history = history;
-      // the reopen is the same conversation: keep the NPC's voice, ask for no new turn
-      this.voice = voice.voice;
-      this.voiceToken = voice.token;
-      this.voiceWanted = null;
-      const rm = dialogueMap(reopened);
-      this.tradeOpen = rm.buy.length > 0 || rm.sell.length > 0;
-    }
+    const reopened = this.me.pendingChoice as PendingChoice | null; // (TS narrowed it to null above)
+    if (again.changed && reopened?.kind === 'dialogue') this.keepShop(reopened, history, voice);
     // the reopen is bookkeeping: its refusal (if any) is not news to the player
     return merge(out, { ...again, toasts: [] });
+  }
+
+  /** the engine option a buy / sell picks in the open dialogue (or a toast why not; null: no dialogue or no such offer) */
+  protected tradePlan(t: Exclude<TradeIntent, { type: 'close' }>): { index: number; speaker: string | null } | { toast: Toast } | null {
+    const pc = this.me.pendingChoice;
+    if (!pc || pc.kind !== 'dialogue') return null;
+    const m = dialogueMap(pc);
+    const idx = t.type === 'sell' ? m.sell.find((i) => pc.options[i].sell?.slot === t.slot) : m.buy[t.offerIndex];
+    if (idx === undefined) return t.type === 'sell' ? { toast: { text: tr('trade.notBuying'), tone: 'info' } } : null;
+    return { index: idx, speaker: pc.speakerId ?? null };
+  }
+
+  /**
+   * The engine actions of a buy or sell: the option, and the `talk` that reopens the conversation so
+   * the shop stays open (a room sends them as one input); empty when there is no such offer.
+   */
+  tradeActions(t: Exclude<TradeIntent, { type: 'close' }>): PlayerAction[] {
+    const plan = this.tradePlan(t);
+    if (!plan || 'toast' in plan) return [];
+    const choose: PlayerAction = { type: 'choose_option', index: plan.index };
+    return plan.speaker ? [choose, { type: 'talk', targetId: plan.speaker }] : [choose];
+  }
+
+  /** after a buy or sell reopened the conversation: the same conversation, the NPC's voice kept, no new voice turn */
+  protected keepShop(reopened: PendingChoice, history: { who: 'npc' | 'player'; text: string }[], voice: { voice: { token: number; line: string } | null; token: number }): void {
+    this.history = history;
+    this.voice = voice.voice;
+    this.voiceToken = voice.token;
+    this.voiceWanted = null;
+    const rm = dialogueMap(reopened);
+    this.tradeOpen = rm.buy.length > 0 || rm.sell.length > 0;
   }
 
   // ---------------------------------------------------------------------------
@@ -1084,25 +1236,25 @@ export class GameSession {
 
   /** the voice line for the open conversation, if the LLM has answered this turn */
   voiceLine(): string | null {
-    return this.voice && this.voice.token === this.voiceToken && this.state.pendingChoice?.kind === 'dialogue' ? this.voice.line : null;
+    return this.voice && this.voice.token === this.voiceToken && this.me.pendingChoice?.kind === 'dialogue' ? this.voice.line : null;
   }
 
   /** the state the view shows: the open dialogue's prompt replaced by the NPC's voiced line */
   private voicedState(): GameState {
     const line = this.voiceLine();
-    const pc = this.state.pendingChoice;
-    return line && pc ? { ...this.state, pendingChoice: { ...pc, prompt: line } } : this.state;
+    const pc = this.me.pendingChoice;
+    return line && pc ? patchPlayer(this.state, { pendingChoice: { ...pc, prompt: line } }, this.playerId) : this.state;
   }
 
-  private noteVoiceTurn(action: PlayerAction, prevChoice: PendingChoice | null | undefined): void {
-    const pc = this.state.pendingChoice;
+  private noteVoiceTurn(action: PlayerAction | null, prevChoice: PendingChoice | null | undefined): void {
+    const pc = this.me.pendingChoice;
     if (pc?.kind !== 'dialogue' || !pc.speakerId) {
       this.voice = null;
       this.voiceWanted = null;
       return;
     }
-    const answered = action.type === 'choose_option' && prevChoice?.kind === 'dialogue';
-    const opened = action.type !== 'choose_option' && prevChoice?.kind !== 'dialogue';
+    const answered = action?.type === 'choose_option' && prevChoice?.kind === 'dialogue';
+    const opened = !!action && action.type !== 'choose_option' && prevChoice?.kind !== 'dialogue';
     if (!answered && !opened) return;
     this.voiceToken++;
     this.voice = null;
@@ -1128,7 +1280,7 @@ export class GameSession {
    * Answers for an older turn, or after the conversation closed, are dropped.
    */
   setVoice(token: number, response: { reply: string; actions: GmAction[] }): Outcome {
-    if (token !== this.voiceToken || this.state.pendingChoice?.kind !== 'dialogue' || this.ended) return emptyOutcome();
+    if (token !== this.voiceToken || this.me.pendingChoice?.kind !== 'dialogue' || this.ended) return emptyOutcome();
     this.voice = { token, line: response.reply.trim() };
     const out = response.actions.length ? this.applyGm(response.actions) : emptyOutcome();
     // the line changed even when the state did not: the controller re-renders on any outcome

@@ -1,10 +1,10 @@
 /** Actor creation, movement, transformation and noise. */
 import type { ActorInstance, Pos } from './types';
-import { type Ctx, actorAt, actorName, emit, isPlayer, logKey, nextId } from './ctx';
+import { type Ctx, actorAt, actorName, emit, isPlayer, logKey, me, nextId } from './ctx';
 import { side } from './stats';
 import { fireTriggers } from './triggers';
 import { cheb, own } from './util';
-import { scaledHostileHp } from './difficulty';
+import { PARTY_SCALING, scaledHostileHp } from './difficulty';
 
 export interface SpawnOpts {
   faction?: ActorInstance['faction'];
@@ -27,6 +27,12 @@ export interface SpawnOpts {
  */
 export const MAX_AREA_ACTORS = 60;
 
+/** the cap of the current area: MAX_AREA_ACTORS, plus PARTY_SCALING.actorCap per extra player */
+export function areaActorCap(ctx: Ctx): number {
+  const n = ctx.s.area.partySize ?? 1;
+  return n > 1 ? MAX_AREA_ACTORS + PARTY_SCALING.actorCap * (n - 1) : MAX_AREA_ACTORS;
+}
+
 /** living actors in the area other than the player */
 export function livingNonPlayerActors(ctx: Ctx): number {
   let n = 0;
@@ -34,9 +40,9 @@ export function livingNonPlayerActors(ctx: Ctx): number {
   return n;
 }
 
-/** whether the area has room for one more runtime spawn (see MAX_AREA_ACTORS) */
+/** whether the area has room for one more runtime spawn (see MAX_AREA_ACTORS, areaActorCap) */
 export function areaHasRoom(ctx: Ctx): boolean {
-  return livingNonPlayerActors(ctx) < MAX_AREA_ACTORS;
+  return livingNonPlayerActors(ctx) < areaActorCap(ctx);
 }
 
 export function makeActor(ctx: Ctx, defId: string, pos: Pos, opts: SpawnOpts = {}): ActorInstance | null {
@@ -59,10 +65,10 @@ export function makeActor(ctx: Ctx, defId: string, pos: Pos, opts: SpawnOpts = {
     tempMods: [],
   };
   if (opts.allyOf) a.allyOf = opts.allyOf;
-  else if (a.faction === 'friendly' && def.behaviour.type === 'follower') a.allyOf = ctx.s.player.actorId;
+  else if (a.faction === 'friendly' && def.behaviour.type === 'follower') a.allyOf = me(ctx).actorId;
   if (a.allyOf) a.faction = 'friendly';
-  // difficulty: hostiles (not NPCs) are tougher or frailer (engine/difficulty.ts)
-  if (a.faction === 'hostile' && !def.npc) a.hp = a.maxHp = scaledHostileHp(ctx.s, def.stats.hp);
+  // difficulty: hostiles (not NPCs) are tougher or frailer, uniques tougher still (engine/difficulty.ts)
+  if (a.faction === 'hostile') a.hp = a.maxHp = scaledHostileHp(ctx.s, def);
   return a;
 }
 
@@ -124,7 +130,7 @@ export function transformActor(ctx: Ctx, a: ActorInstance, into: string): boolea
     if (!former.includes(a.defId)) former.push(a.defId);
   }
   a.defId = into;
-  a.hp = a.faction === 'hostile' && !a.allyOf && !def.npc ? scaledHostileHp(ctx.s, def.stats.hp) : def.stats.hp;
+  a.hp = a.faction === 'hostile' && !a.allyOf ? scaledHostileHp(ctx.s, def) : def.stats.hp;
   a.maxHp = a.hp;
   a.mp = def.stats.mp;
   a.maxMp = def.stats.mp;

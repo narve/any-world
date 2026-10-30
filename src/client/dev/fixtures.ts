@@ -327,34 +327,41 @@ export async function buildDemoState(world: WorldSpec, opts: DemoOptions): Promi
   }
   for (const i of vis) seen[i] = 2;
 
-  const area: AreaState = { index: opts.areaIndex, map, actors, items, seen, discoveredRegions: [], gmBudget: 0 };
+  const area: AreaState = { index: opts.areaIndex, map, actors, items, discoveredRegions: [], gmBudget: 0 };
   const state: GameState = {
-    version: 1,
+    version: 2,
     worldId: world.meta.title,
     seed: opts.seed,
     rng: [1, 2, 3, 4],
     turn: 1,
     status: 'playing',
     area,
-    player: {
-      actorId: 'p',
-      slots: Array.from({ length: TOTAL_SLOTS }, () => null),
-      equipped: { weapon: null, armour: null, trinket: null },
-      level: 1,
-      xp: 0,
-      perks: [],
-      pendingPerkChoice: null,
-      resources: {},
-      currency: 0,
-      sneaking: false,
+    players: {
+      p1: {
+        id: 'p1',
+        name: world.player.name,
+        actorId: 'p',
+        slots: Array.from({ length: TOTAL_SLOTS }, () => null),
+        equipped: { weapon: null, armour: null, trinket: null },
+        level: 1,
+        xp: 0,
+        perks: [],
+        pendingPerkChoice: null,
+        resources: {},
+        sneaking: false,
+        knowledge,
+        pendingChoice: null,
+        seen,
+      },
     },
-    knowledge,
+    party: ['p1'],
+    purse: 0,
+    partyRules: { exitCountdownTurns: 5 },
     flags: {},
     counters: {},
     defeated: {},
     quests: [],
     log: [],
-    pendingChoice: null,
     nextId: 100,
     stats: { kills: 0, itemsUsed: 0, damageDealt: 0, damageTaken: 0, areasCleared: 0 },
   };

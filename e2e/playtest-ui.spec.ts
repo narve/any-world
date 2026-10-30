@@ -37,7 +37,7 @@ async function skipNarration(page: Page) {
 async function slots(page: Page) {
   return page.evaluate(() => {
     const s = window.__anyworld!.controller!.session;
-    const p = s.state.player;
+    const p = s.state.players[s.state.party[0]];
     return p.slots.map((x, i) => (x ? { i, def: x.defId, count: (x as { count?: number }).count ?? 1, charges: (x as { charges?: number }).charges, eq: Object.values(p.equipped).includes(i), cd: (x as { cooldown?: number }).cooldown } : null));
   });
 }
@@ -70,8 +70,8 @@ async function standNextTo(page: Page, defId: string) {
       if (!tile || !(tile.kind === 'floor' || tile.kind === 'start' || tile.kind === 'door_open')) continue;
       if (st.area.actors.some((a) => a.pos.x === x && a.pos.y === y)) continue;
       await c.setStateForTest((s) => {
-        s.area.actors = s.area.actors.filter((a) => a.id === s.player.actorId || a.faction !== 'hostile');
-        s.area.actors.find((a) => a.id === s.player.actorId)!.pos = { x, y };
+        s.area.actors = s.area.actors.filter((a) => a.id === s.players[s.party[0]].actorId || a.faction !== 'hostile');
+        s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!.pos = { x, y };
       });
       c.actNow({ type: 'wait' });
       return { id: t.id, pos: t.pos };
@@ -94,7 +94,7 @@ test('ship: hotbar use modes, unknown item, backpack equip by mouse', async ({ p
   const afterO2 = await slots(page);
   const o2Log = await page.evaluate(() => window.__anyworld!.controller!.session.state.log.slice(-2).map((l) => l.text));
   const o2Toast = await page.evaluate(() => document.querySelector('.aw-toast')?.textContent ?? null);
-  fact('consumed-o2', { before: s0[2], after: afterO2[2], log: o2Log, layer: await layer(page), toast: o2Toast, startCurrency: await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency) });
+  fact('consumed-o2', { before: s0[2], after: afterO2[2], log: o2Log, layer: await layer(page), toast: o2Toast, startCurrency: await page.evaluate(() => window.__anyworld!.controller!.session.state.purse) });
   await shot(page, 'ship-01-consumed');
 
   // charges: signal flare slot 5 (may want a target)
@@ -126,7 +126,7 @@ test('ship: hotbar use modes, unknown item, backpack equip by mouse', async ({ p
   }
   const weld1 = await page.evaluate(() => {
     const s = window.__anyworld!.controller!.session;
-    return { res: { ...s.state.player.resources }, log: s.state.log.slice(-3).map((l) => l.text), turn: s.state.turn };
+    return { res: { ...s.state.players[s.state.party[0]].resources }, log: s.state.log.slice(-3).map((l) => l.text), turn: s.state.turn };
   });
   // press again straight away: cooldown should block it with a clear message
   await page.keyboard.press('2');
@@ -163,7 +163,7 @@ test('ship: hotbar use modes, unknown item, backpack equip by mouse', async ({ p
     await equipBtn.click();
     await page.waitForTimeout(400);
   }
-  const eq = await page.evaluate((i) => Object.values(window.__anyworld!.controller!.session.state.player.equipped).includes(i), vestIdx);
+  const eq = await page.evaluate((i) => Object.values(window.__anyworld!.controller!.session.me.equipped).includes(i), vestIdx);
   fact('vest-equipped', eq);
   await shot(page, 'ship-08-vest-equipped');
 
@@ -199,7 +199,7 @@ test('ship: hotbar use modes, unknown item, backpack equip by mouse', async ({ p
   await shot(page, 'ship-11-talk');
   const opts = await page.locator('.aw-dialogue button, .aw-modal button').allTextContents();
   fact('talk-options', opts);
-  const curTalk = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
+  const curTalk = await page.evaluate(() => window.__anyworld!.controller!.session.state.purse);
   await page.keyboard.press('t');
   await page.waitForTimeout(500);
   fact('t-in-dialogue', { layer: await layer(page), currencyBeforeGmGift: curTalk });
@@ -212,13 +212,13 @@ test('ship: hotbar use modes, unknown item, backpack equip by mouse', async ({ p
   await shot(page, 'ship-12-trade');
   const tradeText = await page.locator('.aw-trade').innerText().catch(() => '');
   fact('trade-text', tradeText.slice(0, 800));
-  const cur0 = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
+  const cur0 = await page.evaluate(() => window.__anyworld!.controller!.session.state.purse);
   // buy the first thing (key 1), then confirm if needed
   await page.keyboard.press('1');
   await page.waitForTimeout(300);
   await page.keyboard.press('Enter');
   await page.waitForTimeout(400);
-  const cur1 = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
+  const cur1 = await page.evaluate(() => window.__anyworld!.controller!.session.state.purse);
   fact('trade-buy', { cur0, cur1, log: await page.evaluate(() => window.__anyworld!.controller!.session.state.log.slice(-3).map((l) => l.text)) });
   await shot(page, 'ship-13-trade-bought');
   for (let i = 0; i < 3 && (await layer(page)) !== 'game'; i++) {
@@ -305,7 +305,7 @@ test('teen: level-up perk picked with the mouse; dream: rules + reload in a moda
   await shot(page, 'teen-levelup');
   const cards = page.locator('.aw-levelup button, .aw-perk');
   const n = await cards.count();
-  const before = await page.evaluate(() => ({ lvl: window.__anyworld!.controller!.session.state.player.level, perks: [...(window.__anyworld!.controller!.session.state.player.perks ?? [])] }));
+  const before = await page.evaluate(() => ({ lvl: window.__anyworld!.controller!.session.me.level, perks: [...(window.__anyworld!.controller!.session.me.perks ?? [])] }));
   if (n > 1) {
     await cards.nth(1).click();
     await page.waitForTimeout(300);
@@ -314,7 +314,7 @@ test('teen: level-up perk picked with the mouse; dream: rules + reload in a moda
       await page.waitForTimeout(300);
     }
   }
-  const after = await page.evaluate(() => ({ lvl: window.__anyworld!.controller!.session.state.player.level, perks: [...(window.__anyworld!.controller!.session.state.player.perks ?? [])], layer: window.__anyworld!.ui.layer() }));
+  const after = await page.evaluate(() => ({ lvl: window.__anyworld!.controller!.session.me.level, perks: [...(window.__anyworld!.controller!.session.me.perks ?? [])], layer: window.__anyworld!.ui.layer() }));
   fact('levelup-mouse', { layer: L, cards: n, before, after });
   await shot(page, 'teen-levelup-picked');
   // more levels queued? play them through with the keyboard
@@ -450,7 +450,7 @@ test('western: dying shows a loss screen and a fresh start works', async ({ page
     const foe = c.session.world.actors.find((a) => !a.npc && !a.unique && a.faction === 'hostile')!;
     c.gmNow([{ type: 'spawn', actor: foe.id, count: 3, near: 'player' }]);
     await c.setStateForTest((s) => {
-      s.area.actors.find((a) => a.id === s.player.actorId)!.hp = 1;
+      s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!.hp = 1;
     });
   });
   for (let i = 0; i < 40 && (await layer(page)) !== 'end'; i++) {

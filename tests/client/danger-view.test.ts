@@ -8,6 +8,7 @@ import type { GameState } from '../../src/engine/types';
 import { GameSession } from '../../src/client/session';
 import { restoresOf } from '../../src/client/view';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer } from '../../src/engine';
 
 const ship = loadFixture('fixture-ship.json');
 const western = loadFixture('fixture-western.json');
@@ -15,7 +16,7 @@ const western = loadFixture('fixture-western.json');
 function shipSession() {
   const s = new GameSession({ world: ship, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10) });
   const st = structuredClone(s.state) as GameState;
-  st.knowledge['o2-canister'] = { ...st.knowledge['o2-canister'], level: 'clear' };
+  leadPlayer(st).knowledge['o2-canister'] = { ...leadPlayer(st).knowledge['o2-canister'], level: 'clear' };
   s.state = st;
   return s;
 }
@@ -28,7 +29,7 @@ describe('danger view', () => {
   it('empty O2 drains health and points at the canister slot', () => {
     const s = shipSession();
     const st = structuredClone(s.state) as GameState;
-    st.player.resources.oxygen = 0;
+    leadPlayer(st).resources.oxygen = 0;
     s.state = st;
     const g = s.viewModel().game!;
     const slot = g.slots.findIndex((x, i) => i < 8 && x?.defId === 'o2-canister');
@@ -41,9 +42,9 @@ describe('danger view', () => {
   it('low health is a danger; a resource that only runs out (no harm) is not', () => {
     const s = new GameSession({ world: western, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10) });
     const st = structuredClone(s.state) as GameState;
-    const p = st.area.actors.find((a) => a.id === st.player.actorId)!;
+    const p = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
     p.hp = 1;
-    for (const r of western.resources) st.player.resources[r.id] = 0;
+    for (const r of western.resources) leadPlayer(st).resources[r.id] = 0;
     s.state = st;
     const d = s.viewModel().game!.hud.danger!;
     expect(d.map((x) => x.id)).toEqual(['hp']);
@@ -52,8 +53,8 @@ describe('danger view', () => {
   it('unknown items never reveal what they restore', () => {
     const s = new GameSession({ world: ship, worldId: 'fixture-test', seed: 1, map: roomMap(14, 10) });
     const st = structuredClone(s.state) as GameState;
-    st.knowledge['o2-canister'] = { ...st.knowledge['o2-canister'], level: 'unknown' };
-    st.player.resources.oxygen = 0;
+    leadPlayer(st).knowledge['o2-canister'] = { ...leadPlayer(st).knowledge['o2-canister'], level: 'unknown' };
+    leadPlayer(st).resources.oxygen = 0;
     s.state = st;
     const g = s.viewModel().game!;
     expect(g.slots.find((x) => x?.defId === 'o2-canister')?.restores).toBeUndefined();

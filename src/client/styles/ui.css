@@ -69,6 +69,11 @@ body {
   display: none !important;
 }
 
+/* MP3: hosts for a room's party and chat UI (room/room-ui.ts, styles/party.css); empty outside a room */
+.aw-room-slot:empty {
+  display: none !important;
+}
+
 .aw-ui *,
 .aw-ui *::before,
 .aw-ui *::after {
@@ -1752,6 +1757,18 @@ body {
   color: var(--c-muted);
 }
 
+/* "2 open rooms ↓": only while the rooms card sits below the form (one column) */
+.aw-start-rooms-jump {
+  margin-top: 10px;
+  border-color: var(--c-secondary);
+}
+
+@media (min-width: 1001px) {
+  .aw-start-rooms-jump {
+    display: none;
+  }
+}
+
 .aw-start-settings {
   position: absolute;
   top: 0;
@@ -2330,6 +2347,15 @@ body {
   gap: 8px;
   font-size: 13px;
   cursor: pointer;
+}
+
+.aw-start-party {
+  flex-wrap: wrap;
+  margin: 4px 0 12px;
+}
+
+.aw-start-party[hidden] {
+  display: none;
 }
 
 /* demo switcher (mountUiDemo only) */
@@ -4606,9 +4632,9 @@ body {
 /* M5 phone fixes                                                            */
 /* ------------------------------------------------------------------------ */
 
-/* toasts never sit on a bottom sheet (choice, dialogue, narration, backpack…): while one is open
-   they go to the top safe area (issues/M5-toasts-over-sheets.md) */
-.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape'])[data-sheet='1'] .aw-toasts {
+/* toasts never sit on a bottom sheet (choice, dialogue, narration, backpack, the room's chat…):
+   while one is open they go to the top safe area (issues/M5-toasts-over-sheets.md) */
+.aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']):is([data-sheet='1'], [data-room-chat='1']) .aw-toasts {
   top: calc(var(--safe-t) + 8px);
   bottom: auto;
   left: 50%;

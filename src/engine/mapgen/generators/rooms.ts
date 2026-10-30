@@ -1,6 +1,6 @@
 /** Rooms & corridors: separated rectangular rooms joined by an MST of winding corridors with doors. */
 import type { Pos } from '../../types';
-import { bySize, type GenContext, type Rect } from '../context';
+import { bySize, scaledCount, type GenContext, type Rect } from '../context';
 import { dijkstraPath } from '../grid';
 
 function centre(r: Rect): { x: number; y: number } {
@@ -25,7 +25,8 @@ function doorToward(ctx: GenContext, r: Rect, tx: number, ty: number): { door: P
 
 export function genRooms(ctx: GenContext): void {
   const { g, rng, size } = ctx;
-  const target = Math.round(ctx.param(['roomCount', 'rooms'], bySize(size, 7, 10, 14), 2, 30));
+  // a party's bigger grid gets more rooms of the same sizes (scaledCount)
+  const target = scaledCount(ctx, Math.round(ctx.param(['roomCount', 'rooms'], bySize(size, 7, 10, 14), 2, 30)));
   const minSide = Math.round(ctx.param('roomMin', bySize(size, 4, 3, 3), 2, 8));
   const maxSide = Math.max(minSide, Math.round(ctx.param('roomMax', bySize(size, 7, 10, 12), 3, 16)));
   const rooms: Rect[] = [];

@@ -4,7 +4,7 @@
  * xp and durability.
  */
 import type { Attack } from '../schema/world';
-import type { ActorInstance } from './types';
+import type { ActorInstance, PlayerState } from './types';
 import {
   type Ctx,
   actorDef,
@@ -17,8 +17,10 @@ import {
   isPlayer,
   log,
   logKey,
-  playerActor,
+  me,
+  playerOf,
   statusName,
+  withPlayer,
 } from './ctx';
 import { LOW_HP_FRACTION, getStat, maxHp, side, statMod } from './stats';
 import { evalAmount, los } from './effects';
@@ -31,7 +33,8 @@ import { END_REASON_KEYS, type EndReasonKey, type LogParams, renderTemplate } fr
 import { withinReach } from './fov';
 import { playerSeesTile } from './vision';
 import { switchesOf } from './rules';
-import { profileOf } from './difficulty';
+import { PARTY_SCALING, bandSecondChance, partyFactor, profileOf } from './difficulty';
+import { closeChoice } from './npc';
 
 export interface AttackInfo {
   attack: Attack;
@@ -54,10 +57,11 @@ export const DEFAULT_ACTOR_ATTACK: Attack = {
 
 /** the attack an actor uses; null if it has none (most NPCs) */
 export function attackOf(ctx: Ctx, a: ActorInstance): AttackInfo | null {
-  if (isPlayer(ctx, a)) {
-    const slot = ctx.s.player.equipped.weapon;
+  const ps = playerOf(ctx, a);
+  if (ps) {
+    const slot = ps.equipped.weapon;
     if (slot !== null) {
-      const it = ctx.s.player.slots[slot];
+      const it = ps.slots[slot];
       const def = it ? ctx.ix.items.get(it.defId) : undefined;
       if (def?.weapon) return { attack: def.weapon, slot };
     }
@@ -73,15 +77,16 @@ export function attackOf(ctx: Ctx, a: ActorInstance): AttackInfo | null {
 /**
  * Can `a` hit `t` with its attack right now. Melee reaches the 8 neighbours; ranged attacks reach
  * `range` steps in any direction (withinReach, the same count as movement and ability targeting)
- * with line of sight. Perception is symmetric: nobody shoots the player from beyond arm's reach
- * while standing where the player can't see.
+ * with line of sight. Perception is symmetric: nobody shoots a player from beyond arm's reach
+ * while standing where that player can't see.
  */
 export function inAttackRange(ctx: Ctx, a: ActorInstance, t: ActorInstance, atk: Attack): boolean {
   const d = cheb(a.pos, t.pos);
   if (d < 1) return false;
   if (atk.range <= 1) return d <= 1;
   if (!withinReach(a.pos, t.pos, atk.range) || !los(ctx, a.pos, t.pos)) return false;
-  if (d > 1 && isPlayer(ctx, t) && !isPlayer(ctx, a) && !playerSeesTile(ctx, a.pos)) return false;
+  const tps = playerOf(ctx, t);
+  if (d > 1 && tps && !isPlayer(ctx, a) && !playerSeesTile(ctx, tps.id, a.pos)) return false;
   return true;
 }
 
@@ -104,7 +109,8 @@ const PLAYER_MISS_MAX = Math.round(20 * (1 - PLAYER_HIT_CHANCE));
 /** to-hit bonus for an attack */
 export function toHitBonus(ctx: Ctx, a: ActorInstance, atk: Attack): number {
   let b = statMod(getStat(ctx, a, atk.accuracyStat));
-  if (isPlayer(ctx, a)) b += Math.floor(ctx.s.player.level / 2);
+  const ps = playerOf(ctx, a);
+  if (ps) b += Math.floor(ps.level / 2);
   return b;
 }
 
@@ -145,7 +151,8 @@ export function performAttack(ctx: Ctx, attacker: ActorInstance, target: ActorIn
   if (atk === DEFAULT_ACTOR_ATTACK) logKey(ctx, res.crit ? 'log.attack.crit_default' : 'log.attack.hit_default', { attacker: aName, target: tName, amount: dealt }, 'combat');
   else if (atk.damageType === 'physical') logKey(ctx, res.crit ? 'log.attack.crit' : 'log.attack.hit', hitParams, 'combat');
   else logKey(ctx, res.crit ? 'log.attack.crit_typed' : 'log.attack.hit_typed', { ...hitParams, damageType: damageTypeName(ctx, atk.damageType) }, 'combat');
-  if (isPlayer(ctx, attacker) && ai.slot !== null) damageEquipped(ctx, ai.slot);
+  const aps = playerOf(ctx, attacker);
+  if (aps && ai.slot !== null) withPlayer(ctx, aps.id, () => damageEquipped(ctx, ai.slot));
   if (isAlive(ctx, attacker)) fireTriggers(ctx, attacker, 'on_hit', { other: target, pos: target.pos });
   // the kill is announced after the hit line
   if (target.hp <= 0 && ctx.s.area.actors.includes(target)) finishKill(ctx, target, attacker.id);
@@ -183,7 +190,14 @@ export function dealDamage(ctx: Ctx, target: ActorInstance, raw: number, damageT
   }
   const src0 = findActor(ctx, sourceId);
   // difficulty: hostiles hit the player's side harder or softer (engine/difficulty.ts)
-  if (src0 && src0 !== target && side(ctx, src0) === 'H' && side(ctx, target) === 'P') mult *= profileOf(ctx.s).hostileDamage;
+  if (src0 && src0 !== target && side(ctx, src0) === 'H' && side(ctx, target) === 'P') {
+    mult *= profileOf(ctx.s).hostileDamage;
+    // a boss hits a party harder (PARTY_SCALING.uniqueDamage; parties of two or more only; a
+    // unique NPC keeps its strength, as it keeps its hp in scaledHostileHp)
+    const n = ctx.s.area.partySize ?? 1;
+    const def = n > 1 ? actorDef(ctx, src0) : undefined;
+    if (def?.unique && !def.npc) mult *= partyFactor(n, PARTY_SCALING.uniqueDamage);
+  }
   let dmg = raw * mult;
   dmg = mult <= 0 ? 0 : Math.max(1, Math.round(dmg));
   const tName = actorName(ctx, target);
@@ -194,13 +208,14 @@ export function dealDamage(ctx: Ctx, target: ActorInstance, raw: number, damageT
   target.hp -= dmg;
   emit(ctx, sourceId ? { type: 'damaged', actorId: target.id, amount: dmg, damageType, sourceId } : { type: 'damaged', actorId: target.id, amount: dmg, damageType });
   const src = src0;
-  if (isPlayer(ctx, target)) {
+  const tps = playerOf(ctx, target);
+  if (tps) {
     ctx.s.stats.damageTaken += dmg;
-    const harm: NonNullable<typeof ctx.s.lastHarm> = src && src !== target ? { by: actorName(ctx, src), damageType, turn: ctx.s.turn } : { damageType, turn: ctx.s.turn };
+    const harm: NonNullable<PlayerState['lastHarm']> = src && src !== target ? { by: actorName(ctx, src), damageType, turn: ctx.s.turn } : { damageType, turn: ctx.s.turn };
     if (ctx.harmCause?.status) harm.status = ctx.harmCause.status;
     if (ctx.harmCause?.terrain) harm.terrain = ctx.harmCause.terrain;
-    ctx.s.lastHarm = harm;
-    damageEquipped(ctx, ctx.s.player.equipped.armour);
+    tps.lastHarm = harm;
+    withPlayer(ctx, tps.id, () => damageEquipped(ctx, tps.equipped.armour));
   } else if (src && isPlayer(ctx, src)) {
     ctx.s.stats.damageDealt += dmg;
   }
@@ -261,7 +276,7 @@ export function killActor(ctx: Ctx, victim: ActorInstance, killerId: string | un
 export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | undefined): void {
   if (!ctx.s.area.actors.includes(victim)) return;
   if (isPlayer(ctx, victim)) {
-    killPlayer(ctx, killerId);
+    killPlayer(ctx, victim, killerId);
     return;
   }
   const def = actorDef(ctx, victim);
@@ -289,7 +304,7 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
   if (byPlayerSide && def) {
     ctx.s.stats.kills += 1;
     const vc = switchesOf(ctx).violenceCounter;
-    if (vc) ctx.s.counters[vc] = (own(ctx.s.counters, vc) ?? 0) + 1;
+    if (vc) countViolence(ctx, vc);
     if (def.xp > 0) grantXp(ctx, def.xp);
   }
   if (killer && isAlive(ctx, killer)) fireTriggers(ctx, killer, 'on_kill', { other: victim, pos: victim.pos });
@@ -300,23 +315,99 @@ export function finishKill(ctx: Ctx, victim: ActorInstance, killerId: string | u
   }
 }
 
-function killPlayer(ctx: Ctx, killerId: string | undefined): void {
-  const p = playerActor(ctx);
-  // a world's mercy rule, or Gentle's second chance: once per run
-  if ((switchesOf(ctx).permadeathMercy || profileOf(ctx.s).secondChance) && !ctx.s.mercyUsed) {
-    ctx.s.mercyUsed = true;
-    p.hp = Math.max(1, Math.ceil(maxHp(ctx, p) / 2));
-    p.ai.lowHp = false;
-    logKey(ctx, 'log.mercy', { player: ctx.world.player.name }, 'good');
+/** how a player fell when it was not to an attack: the loss line to use if the run ends on it */
+export interface FallCause {
+  text: string;
+  key: EndReasonKey;
+  params: LogParams;
+}
+
+/**
+ * A player's hp ran out (or a fatal resource emptied, `cause`). In order:
+ *   - already down: nothing (a second hit in the same turn neither resets the fall nor spends a
+ *     second chance);
+ *   - a second chance left (a world's permadeathMercy rule, the band's: bandSecondChance): straight
+ *     back up at half health, once per player;
+ *   - a party of one: the run is lost, as in single player;
+ *   - otherwise the player is down (downPlayer); the run is lost when nobody is left standing.
+ */
+export function killPlayer(ctx: Ctx, p: ActorInstance, killerId: string | undefined, cause?: FallCause): void {
+  const ps = playerOf(ctx, p)!;
+  if (ps.down) {
+    p.hp = 0;
     return;
   }
-  p.hp = Math.min(p.hp, 0);
-  if (ctx.s.status !== 'playing') return;
+  const party = ctx.s.party.length > 1;
+  if ((switchesOf(ctx).permadeathMercy || bandSecondChance(ctx.s)) && !ps.mercyUsed) {
+    ps.mercyUsed = true;
+    p.hp = Math.max(1, Math.ceil(maxHp(ctx, p) / 2));
+    p.ai.lowHp = false;
+    // in a party the world keeps moving: an empty fatal resource would fell them again at once
+    if (party) refillFatalResources(ctx, ps);
+    logKey(ctx, 'log.mercy', { player: ps.name }, 'good');
+    return;
+  }
+  if (ctx.s.status !== 'playing') {
+    p.hp = Math.min(p.hp, 0);
+    return;
+  }
   const k = findActor(ctx, killerId);
   const killer = k && k !== p ? k : undefined;
+  if (party) {
+    downPlayer(ctx, ps, p);
+    if (ctx.s.party.some((id) => !ctx.s.players[id].down)) return;
+  } else p.hp = Math.min(p.hp, 0);
   emit(ctx, killer ? { type: 'died', actorId: p.id, defId: p.defId, killerId: killer.id } : { type: 'died', actorId: p.id, defId: p.defId });
-  const lr = lossReasonKeyed(ctx, killer);
+  const lr = cause ?? lossReasonKeyed(ctx, killer, ps);
   endGame(ctx, 'lost', lr.text, lr);
+}
+
+/**
+ * Makes a player down: hp 0, no statuses, temporary mods, energy, sneaking, open choice or busy
+ * flag. The actor stays in the area (at 0 hp it is not alive: hostiles ignore it, anyone may step
+ * on its tile) until it gets up (turn.ts reviveDown) or the party moves on.
+ */
+export function downPlayer(ctx: Ctx, ps: PlayerState, p: ActorInstance): void {
+  p.hp = 0;
+  p.statuses = [];
+  p.tempMods = [];
+  p.energy = 0;
+  p.ai.lowHp = false;
+  ps.sneaking = false;
+  closeChoice(ctx, ps);
+  delete ps.busySince;
+  ps.down = { since: ctx.s.turn, helpedTurns: 0 };
+  emit(ctx, { type: 'downed', playerId: ps.id, actorId: p.id });
+  logKey(ctx, 'log.party.down', { player: ps.name }, 'bad');
+}
+
+/** a resource whose running out harms or fells the player (onEmpty effects, emptyIsDeath) */
+export function isFatalResource(r: { onEmpty: readonly unknown[]; emptyIsDeath?: boolean }): boolean {
+  return r.onEmpty.length > 0 || !!r.emptyIsDeath;
+}
+
+/** every empty fatal resource of a player back to half its maximum (getting up, a party's second chance) */
+export function refillFatalResources(ctx: Ctx, ps: PlayerState): void {
+  for (const r of ctx.world.resources ?? []) {
+    if (!isFatalResource(r) || (own(ps.resources, r.id) ?? 0) > 0) continue;
+    ps.resources[r.id] = Math.max(1, Math.ceil(r.max / 2));
+  }
+}
+
+/**
+ * A kill by the player's side raises the world's violence counter by one. A party area has more
+ * hostiles (PARTY_SCALING.hostileCount), so there each kill weighs 1/f (the remainder carries over
+ * in AreaState.violenceCarry): a lose condition on the counter stays as far away as for one player.
+ */
+function countViolence(ctx: Ctx, vc: string): void {
+  const n = ctx.s.area.partySize ?? 1;
+  let add = 1;
+  if (n > 1) {
+    const carry = (ctx.s.area.violenceCarry ?? 0) + 1 / partyFactor(n, PARTY_SCALING.hostileCount);
+    add = Math.floor(carry + 1e-9);
+    ctx.s.area.violenceCarry = Math.max(0, carry - add);
+  }
+  if (add > 0) ctx.s.counters[vc] = (own(ctx.s.counters, vc) ?? 0) + add;
 }
 
 /**
@@ -324,8 +415,8 @@ function killPlayer(ctx: Ctx, killerId: string | undefined): void {
  * "put in the dirt by Mesa Rattler (Lead)". Uses the killer when known, else the last harm the
  * player took (a status, a rule, terrain or an attacker that has since left).
  */
-export function lossReason(ctx: Ctx, killer?: ActorInstance): string {
-  return lossReasonKeyed(ctx, killer).text;
+export function lossReason(ctx: Ctx, killer?: ActorInstance, ps: PlayerState = me(ctx)): string {
+  return lossReasonKeyed(ctx, killer, ps).text;
 }
 
 /**
@@ -333,9 +424,9 @@ export function lossReason(ctx: Ctx, killer?: ActorInstance): string {
  * or terrain that did it ("Parched, Heat"), else the damage kind when the world names it (an
  * unnamed built-in 'physical' says nothing).
  */
-export function lossReasonKeyed(ctx: Ctx, killer?: ActorInstance): { text: string; key: EndReasonKey; params: LogParams } {
+export function lossReasonKeyed(ctx: Ctx, killer?: ActorInstance, ps: PlayerState = me(ctx)): { text: string; key: EndReasonKey; params: LogParams } {
   const defeated = ctx.world.vocabulary.defeated;
-  const h = ctx.s.lastHarm;
+  const h = ps.lastHarm;
   const by = killer ? actorName(ctx, killer) : h?.by;
   const typeName = h && ctx.ix.damageTypes.has(h.damageType) ? damageTypeName(ctx, h.damageType) : '';
   const source = h?.status ? statusName(ctx, h.status) : h?.terrain ? (ctx.ix.terrains.get(h.terrain)?.name ?? h.terrain) : '';

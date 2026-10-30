@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest';
 import type { GmAction } from '../../src/schema/gm';
 import { GM_ACTION_COST, GM_BUDGET_PER_AREA, MAX_ACTIVE_RULES } from '../../src/schema/gm';
 import type { RuleVariant, WorldSpec } from '../../src/schema/world';
-import { applyGmActions, createGame, deserialize, playerSheet, serialize, step } from '../../src/engine';
+import { applyGmActions, createGame, deserialize, playerSheet, serialize, step, leadPlayer } from '../../src/engine';
 import type { GameState } from '../../src/engine/types';
 import { estimateRuleImpact } from '../../src/engine/rules';
 import { simRule } from '../../src/engine/sim/gm-script';
@@ -90,7 +90,7 @@ describe('activeRules', () => {
   it('durability added mid-run starts wearing held gear; removing it leaves no counters behind', () => {
     const w = testWorld();
     let s = newGame(w);
-    const stick = () => s.player.slots.find((x) => x?.defId === 'stick')!;
+    const stick = () => leadPlayer(s).slots.find((x) => x?.defId === 'stick')!;
     expect(stick().durability).toBeUndefined();
     s = applyGmActions(s, [add(rule('rust', { switches: { durability: true } }))], env(w)).state;
     expect(typeof stick().durability).toBe('number');
@@ -273,7 +273,7 @@ describe('GM budget: action types that are Object.prototype keys', () => {
       { action: 'action', reason: 'unknown type' },
       { action: 'action', reason: 'unknown type' },
     ]);
-    expect(r.state.pendingChoice?.options.map((o) => o.label)).toEqual(['ok']);
+    expect(leadPlayer(r.state).pendingChoice?.options.map((o) => o.label)).toEqual(['ok']);
     // offer (1) + grant_xp reserved (2)
     expect(r.state.area.gmBudget).toBe(GM_BUDGET_PER_AREA - 3);
   });

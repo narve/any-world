@@ -10,6 +10,7 @@
 import type { ActorDef, Attack, Condition, Effect, ItemDef, WorldSpec } from '../../schema/world';
 import { avgAmount, itemProfile } from '../sim/view';
 import { PLAYER_HIT_CHANCE } from '../combat';
+import { uniqueHp } from '../difficulty';
 import { AREA_TURNS, estimateRuleImpact, resourceDrainHarm, type RuleImpact } from './rules';
 
 /** extra spawns per area size (mirrors engine/area.ts EXTRA_SPAWNS) */
@@ -403,7 +404,8 @@ export function staticAnalysis(world: WorldSpec): StaticAnalysis {
       const atkDef = weapon?.weapon ?? ps.unarmed;
       const resist = def.resistances.find((r) => r.damageType === atkDef.damageType)?.multiplier ?? 1;
       const pdpt = Math.max(0.2, weaponDpt(world, weapon, stats) * resist);
-      const ttk = def.stats.hp / pdpt;
+      const defHp = def.unique ? uniqueHp(def.stats.hp) : def.stats.hp;
+      const ttk = defHp / pdpt;
       const dpt = actorDpt(def, playerAc);
       const group = def.behaviour.type === 'pack' ? 1.3 : 1;
       const perFight = dpt * ttk * group;
@@ -413,7 +415,7 @@ export function staticAnalysis(world: WorldSpec): StaticAnalysis {
         const ld = world.items.find((x) => x.id === l.item);
         if (ld && !(world.rules ?? []).some((r) => r.switches?.noLoot)) lootHeal += l.chance * count * healValue(world, ld, stats.int, maxMp, ps.mpRegenEvery, turns);
       }
-      hostiles.push({ id, name: def.name, count: Math.round(count * 10) / 10, hp: def.stats.hp, dpt: round1(dpt), ttk: round1(ttk), damagePerFight: round1(perFight), unique: def.unique, xp: def.xp });
+      hostiles.push({ id, name: def.name, count: Math.round(count * 10) / 10, hp: defHp, dpt: round1(dpt), ttk: round1(ttk), damagePerFight: round1(perFight), unique: def.unique, xp: def.xp });
     }
     // healing: floor items, loot, healers, regeneration, healing spells carried
     const table = plan.items.filter((e) => world.items.some((x) => x.id === e.item));

@@ -2,7 +2,10 @@
  * AnyWorld backend: plain node:http, no framework.
  *   POST /api/llm      {preset, model?, request} -> {response}  (keys come from the server env)
  *   GET  /api/presets  which presets this server can serve (never keys)
- *   GET  /api/health
+ *   GET  /api/health  {ok, uptimeS, configured, engine, gm?} (engine: the engine version rooms check, MP2;
+ *                     gm: 'ai' | 'offline', whether the rooms have an AI GM, MP4)
+ *   rooms (MP2, only when AppOptions.rooms is given): GET /api/rooms, GET /api/rooms/:code,
+ *   POST /api/rooms, POST /api/rooms/:code/world, and the WebSocket upgrade on /api/ws (rooms/ws.ts)
  *   everything else    dist/client static files with SPA fallback (when staticDir is set)
  * Optional (MP0, home hosting): ANYWORLD_HOST_CODE makes POST /api/llm (real providers, not the
  * recorded "mock") require the header X-AnyWorld-Code, so strangers cannot spend the server's keys;
@@ -11,6 +14,8 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { isIP } from 'node:net';
+import { join } from 'node:path';
+import { performance } from 'node:perf_hooks';
 import { z } from 'zod';
 import { PRESETS, getPreset } from '../src/llm/presets';
 import { createDirectProvider } from '../src/llm/transport';
@@ -21,6 +26,23 @@ import { DEFAULT_TIMEOUT_MS, redact, type FetchLike, type HttpOptions } from '..
 import type { CompletionResponse, LLMProvider, ProviderPreset } from '../src/llm/types';
 import { RateLimiter, type RateLimitOptions } from './rate-limit';
 import { serveStatic } from './static';
+import { engineVersionFor } from './engine-version';
+import { ensureDataDir } from './data-dir';
+import { createGame, worldIdOf } from '../src/engine/index';
+import { generateArea, seededRng } from '../src/engine/mapgen';
+import type { MapGenerator } from '../src/engine/types';
+import type { Difficulty as RoomOptionsDifficulty } from '../src/schema/gm';
+import { parseWorld } from '../src/schema';
+import type { WorldSpec } from '../src/schema/world';
+import { jsonDepth, MAX_JSON_DEPTH } from '../src/schema/json-depth';
+import { Code, CreateRoomRequest, LIMITS, WorldUploadRequest, type CreateRoomResponse, type RoomList } from '../src/net/protocol';
+import { RoomManager } from './rooms/manager';
+import { EXIT_COUNTDOWN_TURNS } from './rooms/room';
+import type { RoomTiming, Scheduler } from './rooms/timing';
+import type { DemoWorlds } from './rooms/worlds';
+import { roomLimits, type RoomLimits } from './rooms/limits';
+import { attachRoomSockets, type RoomSockets } from './rooms/ws';
+import { gmConfigFor, type GmConfig } from './gm-config';
 
 export interface AppOptions {
   /** environment to read keys/config from; default process.env */
@@ -54,6 +76,30 @@ export interface AppOptions {
   hostCode?: string;
   /** origins allowed to call /api from another site (CORS); default env ALLOWED_ORIGINS, comma-separated */
   allowedOrigins?: string[];
+  /**
+   * The engine version this server plays (MP2 design §8), reported by /api/health; default
+   * engineVersionFor(env): the hash of the checkout, or ANYWORLD_ENGINE_VERSION outside production.
+   */
+  engineVersion?: string;
+  /** rooms (MP2): off unless given (main() and dev.ts pass the data dir; tests a temp dir) */
+  rooms?: RoomsOptions;
+}
+
+export interface RoomsOptions {
+  /** the data directory; rooms live in <dataDir>/rooms (created, and checked writable, at start) */
+  dataDir: string;
+  /** durations (tests; main() reads ANYWORLD_TEST_TIMING outside production) */
+  timing?: Partial<RoomTiming>;
+  scheduler?: Scheduler;
+  /** per-IP and socket limits (rooms/limits.ts) */
+  limits?: Partial<RoomLimits>;
+  /** open rooms at most; default env ANYWORLD_MAX_ROOMS or 10 */
+  maxRooms?: number;
+  demos?: DemoWorlds;
+  /** run seeds (tests; main() and dev.ts read ANYWORLD_TEST_SEED outside production) */
+  seed?: () => number;
+  /** the rooms' game master; default gmConfigFor(env) (ANYWORLD_GM_PRESET, gm-config.ts) */
+  gm?: GmConfig;
 }
 
 /** the header that carries the host access code */
@@ -209,10 +255,33 @@ export interface App {
   configuredPresets(): string[];
   /** number of cached upstream providers (bounded by maxCachedProviders) */
   cachedProviderCount(): number;
+  /** the rooms, when AppOptions.rooms was given */
+  rooms: { manager: RoomManager; sockets: RoomSockets } | null;
+}
+
+/**
+ * MP5: an uploaded world's later areas, trial-generated at upload (the map generator, which is the
+ * costly part of an area change): the first that throws or takes longer than `limitMs` refuses the
+ * world, so a crafted later area cannot stall every room mid-run. (The first area is timed by the
+ * trial createGame.) The generator and the clock are parameters for tests.
+ */
+export function laterAreaFailure(world: WorldSpec, players: number, limitMs: number, gen: MapGenerator = generateArea, now: () => number = () => performance.now()): string | null {
+  for (let i = 1; i < world.areas.length; i++) {
+    const t0 = now();
+    try {
+      gen(world.areas[i]!, world, seededRng(i + 1), players > 1 ? { partySize: players } : undefined);
+    } catch (e) {
+      return `The world's area ${i + 1} cannot be made: ${e instanceof Error ? e.message : String(e)}`.slice(0, 300);
+    }
+    const ms = now() - t0;
+    if (ms > limitMs) return `The world's area ${i + 1} took ${Math.round(ms)} ms to make (the limit is ${limitMs} ms)`;
+  }
+  return null;
 }
 
 export function createApp(opts: AppOptions = {}): App {
   const env = opts.env ?? process.env;
+  const engineVersion = opts.engineVersion ?? engineVersionFor(env);
   const log = opts.log ?? ((l: string) => console.log(l));
   const limiter = new RateLimiter({
     perMinute: opts.rateLimit?.perMinute ?? (Number(env.LLM_RATE_PER_MIN) || 30),
@@ -381,6 +450,160 @@ export function createApp(opts: AppOptions = {}): App {
     };
   }
 
+  // -------------------------------------------------------------------------
+  // Rooms (MP2 design §3, §9)
+  // -------------------------------------------------------------------------
+
+  const lim = roomLimits(opts.rooms?.limits);
+  let manager: RoomManager | null = null;
+  if (opts.rooms) {
+    // throws when the directory cannot be made or written: main() reports it and exits
+    const dir = ensureDataDir(opts.rooms.dataDir);
+    const maxRooms = opts.rooms.maxRooms ?? envInt(env.ANYWORLD_MAX_ROOMS, 1);
+    // the GM's model is its own setting (a cheap, fast one), apart from world generation's
+    const gm = opts.rooms.gm ?? gmConfigFor(env, { maxRooms: maxRooms ?? LIMITS.maxRooms, providerFor, isConfigured, log });
+    if (gm.setting !== 'off') log(`[gm] rooms: ${gm.provider ? `AI GM ${gm.label}` : 'no GM provider (demo rooms play recorded lines, others the offline director)'}`);
+    manager = new RoomManager({
+      dir,
+      engineVersion,
+      timing: opts.rooms.timing,
+      scheduler: opts.rooms.scheduler,
+      demos: opts.rooms.demos,
+      maxRooms,
+      gm,
+      ...(opts.rooms.seed ? { seed: opts.rooms.seed } : {}),
+      log,
+    });
+    manager.load();
+    manager.start();
+  }
+  const rooms = manager;
+  const listLimiter = new RateLimiter({ perMinute: lim.listPerMin, burst: Math.max(1, lim.listPerMin) });
+  const createLimiter = new RateLimiter({ perMinute: lim.createsPer10Min / 10, burst: Math.max(1, lim.createsPer10Min) });
+
+  const limited = (limiter: RateLimiter, ip: string): void => {
+    const rl = limiter.take(ip);
+    if (rl.allowed) return;
+    const s = Math.max(1, Math.ceil(rl.retryAfterMs / 1000));
+    throw new HttpError(429, 'rate_limit', 'Too many requests; slow down', { 'retry-after': String(s) });
+  };
+
+  /** a JSON body of a rooms route (≤ 1 MB, nesting guarded: the world is untrusted input) */
+  const readJson = async (req: IncomingMessage): Promise<unknown> => {
+    const ctype = String(req.headers['content-type'] ?? '');
+    if (!ctype.toLowerCase().startsWith('application/json')) throw new HttpError(415, 'bad_request', 'Content-Type must be application/json');
+    const raw = await readBody(req, LIMITS.roomBodyBytes);
+    let json: unknown;
+    try {
+      json = JSON.parse(raw);
+    } catch {
+      throw new HttpError(400, 'bad_request', 'Body is not valid JSON');
+    }
+    if (jsonDepth(json, MAX_JSON_DEPTH) > MAX_JSON_DEPTH) throw new HttpError(400, 'bad_request', 'Body nests too deep');
+    return json;
+  };
+
+  const issues = (e: z.ZodError): string => e.issues.slice(0, 5).map((i) => `${i.path.join('.') || '(body)'}: ${i.message}`).join('; ');
+
+  /**
+   * An uploaded world: parseWorld with strict keys, then a trial createGame for `players` players,
+   * caught and timed (a world whose first area takes longer than limits.firstAreaMs is refused),
+   * then every later area's map is trial-generated with the same limit (laterAreaFailure, MP5). The
+   * real area changes still run on the main thread (a worker thread would cap them for sure).
+   */
+  const checkWorld = (m: RoomManager, raw: unknown, players: number, difficulty: RoomOptionsDifficulty): WorldSpec => {
+    const r = parseWorld(raw, { strictKeys: true });
+    if (!r.ok) throw new HttpError(400, 'invalid_world', `Invalid world: ${r.errors.slice(0, 5).join('; ')}`);
+    const started = performance.now();
+    let failure: string | null = null;
+    try {
+      createGame(r.world, { seed: 1, players: Array.from({ length: players }, (_, i) => ({ name: `P${i + 1}` })), difficulty, exitCountdownTurns: EXIT_COUNTDOWN_TURNS });
+    } catch (e) {
+      failure = `The world cannot start: ${e instanceof Error ? e.message : String(e)}`.slice(0, 300);
+    }
+    const ms = performance.now() - started;
+    if (!failure && ms > lim.firstAreaMs) failure = `The world's first area took ${Math.round(ms)} ms to make (the limit is ${lim.firstAreaMs} ms)`;
+    if (!failure) failure = laterAreaFailure(r.world, players, lim.firstAreaMs);
+    if (failure) {
+      // the trial registered it
+      m.releaseWorld(worldIdOf(r.world));
+      log(`[rooms] upload refused: ${failure}`);
+      throw new HttpError(400, 'invalid_world', failure);
+    }
+    return r.world;
+  };
+
+  async function createRoom(m: RoomManager, req: IncomingMessage, res: ServerResponse, ip: string): Promise<void> {
+    const json = await readJson(req);
+    // the engine first (as peekHello does on the socket), so an old page gets one clear answer
+    const engine = json && typeof json === 'object' && !Array.isArray(json) ? (json as Record<string, unknown>).engine : undefined;
+    if (typeof engine === 'string' && engine !== engineVersion) {
+      return sendError(res, 409, 'outdated', 'This page is out of date. Reload it to play.', { reload: true });
+    }
+    // every creation counts, invalid uploads included
+    limited(createLimiter, ip);
+    const p = CreateRoomRequest.safeParse(json);
+    if (!p.success) throw new HttpError(400, 'bad_request', `Invalid request: ${issues(p.error)}`);
+    if (m.size >= m.maxRooms) throw new HttpError(503, 'server_full', 'The server has no room for another room; try again later');
+    const world =
+      p.data.world !== undefined
+        ? checkWorld(m, p.data.world, p.data.options?.maxPlayers ?? LIMITS.maxPlayers.default, p.data.options?.difficulty ?? 'normal')
+        : undefined;
+    const r = m.create({ ...(world ? { world } : { demo: p.data.demo }), ...(p.data.options ? { options: p.data.options } : {}) });
+    if (!r.ok) {
+      if (world) m.releaseWorld(worldIdOf(world));
+      if (r.error === 'server_full') throw new HttpError(503, 'server_full', 'The server has no room for another room; try again later');
+      throw new HttpError(400, 'no_demo', `There is no demo world "${p.data.demo}"`);
+    }
+    const out: CreateRoomResponse = { code: r.code, token: r.token };
+    sendJson(res, 201, out);
+  }
+
+  async function uploadWorld(m: RoomManager, code: string, req: IncomingMessage, res: ServerResponse, ip: string): Promise<void> {
+    const room = m.get(code);
+    if (!room || room.closed) throw new HttpError(404, 'no_room', 'There is no room with that code');
+    const json = await readJson(req);
+    limited(createLimiter, ip);
+    const p = WorldUploadRequest.safeParse(json);
+    if (!p.success) throw new HttpError(400, 'bad_request', `Invalid request: ${issues(p.error)}`);
+    const world = checkWorld(m, p.data.world, room.options.maxPlayers, room.options.difficulty);
+    const worldId = worldIdOf(world);
+    const r = room.uploadWorld(p.data.token, { world, worldId, source: { upload: true } });
+    if (r === 'ok') return sendJson(res, 200, { ok: true, worldId });
+    m.releaseWorld(worldId);
+    if (r === 'bad_token') throw new HttpError(403, 'bad_token', 'That seat is not in this room');
+    if (r === 'not_host') throw new HttpError(403, 'not_host', 'Only the host can change the world');
+    throw new HttpError(409, 'bad_phase', 'The world can change only in the lobby or after a run');
+  }
+
+  async function handleRooms(m: RoomManager, req: IncomingMessage, res: ServerResponse, path: string): Promise<void> {
+    const ip = clientIp(req);
+    const parts = path.split('/').filter(Boolean);
+    const isGet = req.method === 'GET' || req.method === 'HEAD';
+    if (parts.length === 2) {
+      if (isGet) {
+        limited(listLimiter, ip);
+        const out: RoomList = { rooms: m.list(), max: m.maxRooms };
+        return sendJson(res, 200, out);
+      }
+      if (req.method === 'POST') return await createRoom(m, req, res, ip);
+      throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET, POST' });
+    }
+    const code = parts[2] ?? '';
+    if (!Code.safeParse(code).success || parts.length > 4 || (parts.length === 4 && parts[3] !== 'world')) {
+      throw new HttpError(404, 'no_room', 'There is no room with that code');
+    }
+    if (parts.length === 3) {
+      if (!isGet) throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET' });
+      limited(listLimiter, ip);
+      const room = m.get(code);
+      if (!room || room.closed) throw new HttpError(404, 'no_room', 'There is no room with that code');
+      return sendJson(res, 200, room.info());
+    }
+    if (req.method !== 'POST') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'POST' });
+    return await uploadWorld(m, code, req, res, ip);
+  }
+
   const handler = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     // Node accepts absolute-form targets (`GET http://[ HTTP/1.1`), so parsing can throw: keep it
     // inside the try so a bad target is a 400, never an unhandled rejection.
@@ -412,7 +635,7 @@ export function createApp(opts: AppOptions = {}): App {
         }
         if (path === '/api/health') {
           if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET' });
-          return sendJson(res, 200, { ok: true, uptimeS: Math.round(process.uptime()), configured: configuredPresets() });
+          return sendJson(res, 200, { ok: true, uptimeS: Math.round(process.uptime()), configured: configuredPresets(), engine: engineVersion, ...(rooms ? { gm: rooms.gm.capability } : {}) });
         }
         if (path === '/api/presets') {
           if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET' });
@@ -422,6 +645,7 @@ export function createApp(opts: AppOptions = {}): App {
           if (req.method !== 'POST') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'POST' });
           return await handleLlm(req, res);
         }
+        if (rooms && (path === '/api/rooms' || path.startsWith('/api/rooms/'))) return await handleRooms(rooms, req, res, path);
         throw new HttpError(404, 'bad_request', 'Unknown API route');
       }
       if (opts.staticDir && (await serveStatic(req, res, opts.staticDir))) return;
@@ -466,5 +690,12 @@ export function createApp(opts: AppOptions = {}): App {
       else res.destroy();
     });
   });
-  return { server, handler, configuredPresets, cachedProviderCount: () => providers.size };
+  const sockets = rooms ? attachRoomSockets(server, { manager: rooms, allowedOrigins, clientIp, limits: opts.rooms?.limits, log }) : null;
+  return {
+    server,
+    handler,
+    configuredPresets,
+    cachedProviderCount: () => providers.size,
+    rooms: rooms && sockets ? { manager: rooms, sockets } : null,
+  };
 }

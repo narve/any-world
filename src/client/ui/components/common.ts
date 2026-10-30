@@ -237,14 +237,15 @@ export function actorCard(a: ActorTooltipView, ctx: UiContext, hint?: string): H
   );
 }
 
-export function tileCard(tile: TileTooltipView): HTMLElement {
+/** `room`: in a room Enter is the chat, so the hint names Shift+Enter (MP3) */
+export function tileCard(tile: TileTooltipView, room = false): HTMLElement {
   return h(
     'div',
     { class: ['aw-card', 'aw-tile-card'] },
     h('div', { class: 'aw-card-head' }, h('div', { class: 'aw-card-title' }, tile.title), tile.usable ? plainChip(tile.usable === 'usable' ? t('tile.usable') : t('tile.usedUp'), tile.usable === 'usable' ? 'good' : 'muted') : null),
     tile.description ? h('p', { class: 'aw-card-desc' }, tile.description) : null,
     tile.items?.length ? h('ul', { class: 'aw-tile-items' }, tile.items.map((i) => h('li', null, i))) : null,
-    tile.usable === 'usable' ? h('div', { class: 'aw-card-hint' }, t('tile.usableHint')) : null,
+    tile.usable === 'usable' ? h('div', { class: 'aw-card-hint' }, t(room ? 'tile.usableHintRoom' : 'tile.usableHint')) : null,
   );
 }
 

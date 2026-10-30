@@ -5,17 +5,20 @@
  */
 import { assertSafeNode } from './node-check';
 import { createServer as createViteServer } from 'vite';
-import { startServer } from './index';
+import { dataDirOrExit, startServer, testRoomOptions } from './index';
 
 async function main(): Promise<void> {
   assertSafeNode();
-  const api = await startServer();
+  const dataDir = dataDirOrExit(process.env, '[dev]');
+  const api = await startServer({ rooms: { dataDir, ...testRoomOptions(process.env) } });
   console.log(`[dev] API on http://localhost:${api.port}`);
   console.log(`[dev] LLM presets available: ${api.configuredPresets().join(', ')}`);
+  console.log(`[dev] rooms in ${dataDir}`);
   const clientPort = Number(process.env.ANYWORLD_CLIENT_PORT) || 5173;
   const vite = await createViteServer({
     configFile: 'vite.config.ts',
-    server: { port: clientPort, strictPort: true, proxy: { '/api': `http://localhost:${api.port}` } },
+    // ws: true carries the room WebSocket (/api/ws) through the proxy too
+    server: { port: clientPort, strictPort: true, proxy: { '/api': { target: `http://localhost:${api.port}`, ws: true } } },
   });
   await vite.listen();
   vite.printUrls();

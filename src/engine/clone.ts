@@ -7,12 +7,12 @@
  *    write to a tile goes through ctx.mutTile, which copies the array once and each touched tile
  *    once, see ctx.ts);
  *  - shares the log entries (they are immutable once written; the array itself is copied);
- *  - copies `seen` (a Uint8Array; FOV rewrites it every step anyway);
+ *  - copies each player's `seen` as a Uint8Array (FOV rewrites it every step anyway);
  *  - deep-copies everything else with a plain-data copier (GameState is JSON-like data plus the
  *    `seen` typed array), which is several times faster than structuredClone for small objects.
  * Key order is preserved, so a cloned state serializes exactly like its source.
  */
-import type { AreaMap, AreaState, GameState, Tile } from './types';
+import type { AreaMap, AreaState, GameState, PlayerState, Tile } from './types';
 import type { TileCow } from './ctx';
 
 /** deep copy of plain data (objects, arrays, typed arrays, primitives); key order preserved */
@@ -32,8 +32,24 @@ export function deepClone<T>(v: T): T {
   return out as T;
 }
 
-function copySeen(seen: AreaState['seen']): Uint8Array {
+function copySeen(seen: PlayerState['seen']): Uint8Array {
   return seen instanceof Uint8Array ? seen.slice() : Uint8Array.from((seen ?? []) as number[]);
+}
+
+function clonePlayer(ps: PlayerState): PlayerState {
+  const out: Record<string, unknown> = {};
+  for (const k in ps) {
+    if (!Object.prototype.hasOwnProperty.call(ps, k)) continue;
+    const v = (ps as unknown as Record<string, unknown>)[k];
+    out[k] = k === 'seen' ? copySeen(v as PlayerState['seen']) : deepClone(v);
+  }
+  return out as unknown as PlayerState;
+}
+
+function clonePlayers(players: GameState['players']): GameState['players'] {
+  const out: GameState['players'] = {};
+  for (const id in players) if (Object.prototype.hasOwnProperty.call(players, id)) out[id] = clonePlayer(players[id]);
+  return out;
 }
 
 function cloneMap(map: AreaMap): AreaMap {
@@ -51,9 +67,7 @@ function cloneArea(area: AreaState): AreaState {
   for (const k in area) {
     if (!Object.prototype.hasOwnProperty.call(area, k)) continue;
     const v = (area as unknown as Record<string, unknown>)[k];
-    if (k === 'map') out[k] = cloneMap(v as AreaMap);
-    else if (k === 'seen') out[k] = copySeen(v as AreaState['seen']);
-    else out[k] = deepClone(v);
+    out[k] = k === 'map' ? cloneMap(v as AreaMap) : deepClone(v);
   }
   return out as unknown as AreaState;
 }
@@ -68,6 +82,7 @@ export function cloneState(s: GameState): { state: GameState; cow: TileCow } {
     if (!Object.prototype.hasOwnProperty.call(s, k)) continue;
     const v = (s as unknown as Record<string, unknown>)[k];
     if (k === 'area') out[k] = cloneArea(v as AreaState);
+    else if (k === 'players') out[k] = clonePlayers(v as GameState['players']);
     else if (k === 'log') out[k] = Array.isArray(v) ? v.slice() : [];
     else out[k] = deepClone(v);
   }

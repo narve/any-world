@@ -6,7 +6,7 @@ import type { ItemDef, Knowledge } from '../schema/world';
 import type { ItemKnowledgeState } from './types';
 import type { SeededRng } from './rng';
 import type { WorldSpec } from '../schema/world';
-import { type Ctx, emit, itemName, logKey, statName, statusName } from './ctx';
+import { type Ctx, emit, itemName, logKey, me, statName, statusName } from './ctx';
 import type { Obs } from './effects';
 import { indexWorld } from './ctx';
 import { own } from './util';
@@ -61,17 +61,37 @@ export function initKnowledge(world: WorldSpec, rng: SeededRng): Record<string, 
   return out;
 }
 
+/** every party member's knowledge table, in party order */
+function partyKnowledge(ctx: Ctx): Record<string, ItemKnowledgeState>[] {
+  return ctx.s.party.map((id) => ctx.s.players[id].knowledge);
+}
+
+/** a player's knowledge of an item kind, created on first use (knowledgeOf for that player) */
+function knowledgeIn(ctx: Ctx, table: Record<string, ItemKnowledgeState>, defId: string): ItemKnowledgeState {
+  let k = own(table, defId);
+  if (!k) {
+    const def = ctx.ix.items.get(defId);
+    k = { level: def ? initialKnowledge(ctx.world, def) : 'clear', notes: [], timesUsed: 0 };
+    if (def && k.level !== 'clear') k.appearance = fallbackAppearance(def);
+    table[defId] = k;
+  }
+  return k;
+}
+
 /**
- * An allConsumablesUnknown rule came into force mid-run (GM add_rule): every consumable the player
- * knows only from the world (never used it, not carrying it) becomes unknown again and gets a
- * per-run appearance, drawn from its appearance group's pool like at run start (labels already in
- * use are skipped; the fallback "unfamiliar <kind>" names are kept distinct). Silent: the rule's
- * own announcement says what happened. Returns the def ids hidden.
+ * An allConsumablesUnknown rule came into force mid-run (GM add_rule): every consumable the party
+ * knows only from the world (nobody used it or carries it) becomes unknown again for every player
+ * and gets a per-run appearance, drawn from its appearance group's pool like at run start (labels
+ * already in use are skipped; the fallback "unfamiliar <kind>" names are kept distinct). Every player
+ * gets the same appearance. Silent: the rule's own announcement says what happened. Returns the def
+ * ids hidden.
  */
 export function hideConsumablesForRule(ctx: Ctx): string[] {
-  const carried = new Set(ctx.s.player.slots.filter((it) => !!it).map((it) => it!.defId));
+  const tables = partyKnowledge(ctx);
+  const carried = new Set<string>();
+  for (const id of ctx.s.party) for (const it of ctx.s.players[id].slots) if (it) carried.add(it.defId);
   const taken = new Set<string>();
-  for (const k of Object.values(ctx.s.knowledge)) if (k.appearance) taken.add(k.appearance.label.toLowerCase());
+  for (const t of tables) for (const k of Object.values(t)) if (k.appearance) taken.add(k.appearance.label.toLowerCase());
   const pools = new Map<string, { label: string; color: string }[]>();
   const poolFor = (g: string | undefined) => {
     if (!g) return undefined;
@@ -87,54 +107,60 @@ export function hideConsumablesForRule(ctx: Ctx): string[] {
   const needFallback: ItemDef[] = [];
   for (const def of ctx.world.items) {
     if (def.category !== 'consumable' || def.knowledge !== 'clear' || carried.has(def.id)) continue;
-    const k = knowledgeOf(ctx, def.id);
-    if (k.level !== 'clear' || k.timesUsed > 0 || k.ruleHidden) continue;
-    k.level = 'unknown';
-    k.ruleHidden = true;
+    const ks = tables.map((t) => knowledgeIn(ctx, t, def.id));
+    if (ks.some((k) => k.level !== 'clear' || k.timesUsed > 0 || k.ruleHidden)) continue;
+    for (const k of ks) {
+      k.level = 'unknown';
+      k.ruleHidden = true;
+    }
     hidden.push(def.id);
-    if (k.appearance) continue;
+    const had = ks.find((k) => k.appearance)?.appearance;
+    if (had) {
+      for (const k of ks) if (!k.appearance) k.appearance = { ...had };
+      continue;
+    }
     const pool = poolFor(def.appearanceGroup);
     const pick = pool?.find((x) => !taken.has(x.label.toLowerCase()));
     if (pick && pool) {
       pool.splice(pool.indexOf(pick), 1);
-      k.appearance = pick;
+      ks.forEach((k, i) => (k.appearance = i ? { ...pick } : pick));
       taken.add(pick.label.toLowerCase());
     } else needFallback.push(def);
   }
-  for (const def of needFallback) ctx.s.knowledge[def.id].appearance = fallbackAppearance(def, taken);
+  for (const def of needFallback) {
+    const app = fallbackAppearance(def, taken);
+    tables.forEach((t, i) => (t[def.id].appearance = i ? { ...app } : app));
+  }
   for (const id of hidden) emit(ctx, { type: 'item_identified', defId: id, level: 'unknown' });
   return hidden;
 }
 
 /**
  * No allConsumablesUnknown rule is in force any more: what hideConsumablesForRule hid goes back
- * to the item's own knowledge level (what the player learned meanwhile is kept). Returns the def
- * ids restored.
+ * to the item's own knowledge level for every player (what a player learned meanwhile is kept).
+ * Returns the def ids restored (for any player).
  */
 export function unhideConsumablesForRule(ctx: Ctx): string[] {
   const restored: string[] = [];
-  for (const [id, k] of Object.entries(ctx.s.knowledge)) {
-    if (!k.ruleHidden) continue;
-    delete k.ruleHidden;
-    const own = ctx.ix.items.get(id)?.knowledge ?? 'clear';
-    if (RANK[own] > RANK[k.level]) {
-      k.level = own;
-      restored.push(id);
-      emit(ctx, { type: 'item_identified', defId: id, level: own });
+  for (const table of partyKnowledge(ctx)) {
+    for (const [id, k] of Object.entries(table)) {
+      if (!k.ruleHidden) continue;
+      delete k.ruleHidden;
+      const own = ctx.ix.items.get(id)?.knowledge ?? 'clear';
+      if (RANK[own] > RANK[k.level]) {
+        k.level = own;
+        if (restored.includes(id)) continue;
+        restored.push(id);
+        emit(ctx, { type: 'item_identified', defId: id, level: own });
+      }
     }
   }
   return restored;
 }
 
+/** what the acting player knows about an item kind */
 export function knowledgeOf(ctx: Ctx, defId: string): ItemKnowledgeState {
-  let k = own(ctx.s.knowledge, defId);
-  if (!k) {
-    const def = ctx.ix.items.get(defId);
-    k = { level: def ? initialKnowledge(ctx.world, def) : 'clear', notes: [], timesUsed: 0 };
-    if (def && k.level !== 'clear') k.appearance = fallbackAppearance(def);
-    ctx.s.knowledge[defId] = k;
-  }
-  return k;
+  return knowledgeIn(ctx, me(ctx).knowledge, defId);
 }
 
 /** raises knowledge to `level` (never lowers it); returns true if it changed */
@@ -159,7 +185,7 @@ export function reveal(ctx: Ctx, defId: string, level: Knowledge, announce = tru
 export function identifyCarried(ctx: Ctx, scope: 'one' | 'all_carried'): number {
   let n = 0;
   const seen = new Set<string>();
-  for (const it of ctx.s.player.slots) {
+  for (const it of me(ctx).slots) {
     if (!it || seen.has(it.defId)) continue;
     seen.add(it.defId);
     if (knowledgeOf(ctx, it.defId).level === 'clear') continue;

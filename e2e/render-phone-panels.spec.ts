@@ -92,10 +92,10 @@ async function hiddenActors(page: Page): Promise<string[]> {
     const st = app.controller!.session.state;
     const r = app.renderer!;
     const w = st.area.map.width;
-    const seen = st.area.seen as ArrayLike<number>;
+    const seen = st.players[st.party[0]].seen as ArrayLike<number>;
     const hidden: string[] = [];
     for (const a of st.area.actors) {
-      if (a.hp <= 0 || a.id === st.player.actorId || seen[a.pos.y * w + a.pos.x] !== 2) continue;
+      if (a.hp <= 0 || a.id === st.players[st.party[0]].actorId || seen[a.pos.y * w + a.pos.x] !== 2) continue;
       const pts = [r.actorScreen(a.id, 0.45), r.tileToScreen(a.pos)].filter(Boolean) as { x: number; y: number }[];
       const on = pts.filter((p) => p.x > 0 && p.y > 0 && p.x < innerWidth && p.y < innerHeight);
       if (!on.length) continue;
@@ -117,7 +117,7 @@ async function tilesUnderPanels(page: Page) {
     const r = app.renderer!;
     const w = st.area.map.width;
     const h = st.area.map.height;
-    const seen = st.area.seen as ArrayLike<number>;
+    const seen = st.players[st.party[0]].seen as ArrayLike<number>;
     const me = app.controller!.session.player().pos;
     const out = new Map<string, { x: number; y: number; panel: string; d: number }>();
     for (let y = 0; y < h; y++)
@@ -146,7 +146,7 @@ async function moveHostile(page: Page, to: { x: number; y: number }) {
     const app = window.__anyworld!;
     const c = app.controller!;
     const st = c.session.state;
-    const pid = st.player.actorId;
+    const pid = st.players[st.party[0]].actorId;
     const foe = st.area.actors.find((a) => a.hp > 0 && a.faction === 'hostile' && a.id !== pid) ?? st.area.actors.find((a) => a.hp > 0 && a.id !== pid);
     if (!foe) return null;
     const id = foe.id;
@@ -154,7 +154,7 @@ async function moveHostile(page: Page, to: { x: number; y: number }) {
     await c.setStateForTest((ns) => {
       const a = ns.area.actors.find((x) => x.id === id)!;
       a.pos = { x: p.x, y: p.y };
-      (ns.area.seen as number[])[p.y * w + p.x] = 2;
+      (ns.players[ns.party[0]].seen as number[])[p.y * w + p.x] = 2;
     });
     return { id, defId: foe.defId };
   }, to);
@@ -232,7 +232,7 @@ test.describe('hostile behind a tall player model', () => {
         const app = window.__anyworld!;
         const r = app.renderer!;
         const st = app.controller!.session.state;
-        const me = st.area.actors.find((a) => a.id === st.player.actorId)!.pos;
+        const me = st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.pos;
         const tile = r.tileToScreen(pos);
         const bodyAt = r.actorScreen(id, 0.45) ?? tile;
         let hits = 0;

@@ -12,6 +12,7 @@ import type { WorldSpec } from '../../../src/schema/world';
 import { GameSession } from '../../../src/client/session';
 import { setLanguage } from '../../../src/client/i18n/index';
 import { loadFixture, roomMap } from '../../engine/helpers';
+import { leadPlayer } from '../../../src/engine';
 
 const troll = loadFixture('nb-troll-direktoratet.json');
 
@@ -19,7 +20,7 @@ afterEach(() => setLanguage('en', { persist: false }));
 
 function withNpc(s: GameSession, defId: string, me: Pos = { x: 5, y: 5 }, them: Pos = { x: 6, y: 5 }): string {
   const st = structuredClone(s.state) as GameState;
-  const pl = st.area.actors.find((a) => a.id === st.player.actorId)!;
+  const pl = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
   pl.pos = { ...me };
   const template = st.area.actors.find((a) => a.id !== pl.id) ?? pl;
   const def = s.world.actors.find((d) => d.id === defId)!;

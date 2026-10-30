@@ -20,6 +20,8 @@
  *             Del/Backspace drop · Esc / i / Tab close
  *  Dialogue / choices / perk cards: 1-3 pick · ↑↓ focus · Enter confirm · Esc leave (dialogue only)
  *  Dialogue only: p persuade (if enabled) · t trade (trader NPCs)
+ *  In a room (MP3): Enter chat (Shift+Enter uses what is next to you) · / chat in every layer but
+ *             text fields and settings · [ ] watch another teammate while down
  */
 import type { Dir } from '../../engine/types';
 import type { Vocabulary } from '../../schema/world';
@@ -39,6 +41,7 @@ export type InputLayer =
   | 'none'
   | 'start'
   | 'loading'
+  | 'lobby'
   | 'end'
   | 'game'
   | 'narration'
@@ -85,7 +88,11 @@ export type UiCommand =
   | { type: 'confirm' }
   | { type: 'option'; index: number }
   | { type: 'menu_key'; key: 'u' | 'e' | 'q' | 'b' | 'm' | 'Delete' }
-  | { type: 'skip' };
+  | { type: 'skip' }
+  /** MP3: open the room chat's input */
+  | { type: 'chat' }
+  /** MP3: watch the previous / next teammate (while down) */
+  | { type: 'follow'; dir: -1 | 1 };
 
 const ARROWS: Record<string, Dir> = { ArrowUp: 'n', ArrowDown: 's', ArrowLeft: 'w', ArrowRight: 'e' };
 const WASD: Record<string, Dir> = { w: 'n', a: 'w', s: 's', d: 'e' };
@@ -139,9 +146,13 @@ function isConfirm(ev: KeyLike): boolean {
   return ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar' || ev.code === 'NumpadEnter';
 }
 
-/** the map-play key map (layer 'game') */
-function gameKey(ev: KeyLike, verbs: InputVerbs): UiCommand | null {
+/** the map-play key map (layer 'game'); in a room Enter opens the chat and Shift+Enter uses */
+function gameKey(ev: KeyLike, verbs: InputVerbs, room = false): UiCommand | null {
   if (ev.key === 'Tab') return ev.shiftKey ? null : { type: 'backpack' };
+  if (room) {
+    if (ev.key === 'Enter' || ev.code === 'NumpadEnter') return ev.shiftKey ? { type: 'interact' } : { type: 'chat' };
+    if (ev.key === '[' || ev.key === ']') return { type: 'follow', dir: ev.key === '[' ? -1 : 1 };
+  }
   if (isWait(ev)) return { type: 'wait' };
   const di = digitIndex(ev);
   if (di !== null) return di < 8 ? { type: 'slot', index: di } : null;
@@ -191,16 +202,22 @@ function gameKey(ev: KeyLike, verbs: InputVerbs): UiCommand | null {
   return null;
 }
 
+/** MP3: the layers where `/` does not open a room's chat (text fields, the settings and name dialogs, no room screen) */
+const NO_SLASH = new Set<InputLayer>(['none', 'text', 'settings', 'start', 'loading']);
+
 /**
  * Resolve a key press for the current UI layer. Returns null when the key should be left to the
- * browser (text editing, native focus movement, unknown keys).
+ * browser (text editing, native focus movement, unknown keys). `room`: the page is in a room (MP3:
+ * the chat keys).
  */
-export function resolveKey(ev: KeyLike, layer: InputLayer, verbs: InputVerbs): UiCommand | null {
+export function resolveKey(ev: KeyLike, layer: InputLayer, verbs: InputVerbs, room = false): UiCommand | null {
   if (ev.ctrlKey || ev.metaKey || ev.altKey) return null;
+  if (room && ev.key === '/' && !NO_SLASH.has(layer)) return { type: 'chat' };
   switch (layer) {
     case 'none':
     case 'start':
     case 'loading':
+    case 'lobby':
     case 'end':
       return null;
     case 'text':
@@ -212,10 +229,10 @@ export function resolveKey(ev: KeyLike, layer: InputLayer, verbs: InputVerbs): U
       if (layer === 'rules' && lower(ev.key) === 'r') return { type: 'close' };
       return null;
     case 'game':
-      return gameKey(ev, verbs);
+      return gameKey(ev, verbs, room);
     case 'narration':
       if (ev.key === 'Escape' || ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') return { type: 'skip' };
-      return gameKey(ev, verbs);
+      return gameKey(ev, verbs, room);
     case 'look':
     case 'target': {
       if (ev.key === 'Escape') return { type: 'close' };
@@ -289,7 +306,7 @@ export interface HelpSection {
   rows: { keys: string[]; what: string }[];
 }
 
-export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, transitionName = t('help.takeExit')): HelpSection[] {
+export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, transitionName = t('help.takeExit'), room = false): HelpSection[] {
   const play: HelpSection = {
     title: t('help.section.play'),
     rows: [
@@ -299,10 +316,12 @@ export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, 
       { keys: ['1 – 8', t('key.enter')], what: t('help.fire') },
       { keys: ['g', ','], what: t('help.pickup') },
       { keys: ['>'], what: transitionName },
-      { keys: [t('key.enter')], what: t('help.interact') },
+      room ? { keys: [`⇧ ${t('key.enter')}`], what: t('help.interactRoom') } : { keys: [t('key.enter')], what: t('help.interact') },
       { keys: ['x'], what: t('help.look') },
     ],
   };
+  // (a room: Enter is the chat; `[` `]` watch a teammate while down)
+  if (room) play.rows.push({ keys: [t('key.enter'), '/'], what: t('keys.chat') }, { keys: ['[', ']'], what: t('keys.cycleFollow') });
   if (verbs.talk) play.rows.push({ keys: ['t'], what: t('help.talk') });
   if (verbs.persuade) play.rows.push({ keys: ['p'], what: t('help.persuade') });
   if (verbs.search) play.rows.push({ keys: ['f'], what: t('help.search') });
@@ -389,13 +408,15 @@ export function attachKeyboard(
   getVerbs: () => InputVerbs,
   onCommand: (cmd: UiCommand, ev: KeyboardEvent) => void,
   target: Pick<Window, 'addEventListener' | 'removeEventListener'> = window,
+  /** MP3: the page is in a room (the chat keys) */
+  inRoom: () => boolean = () => false,
 ): KeyboardBinding {
   const handler = (e: Event) => {
     const ev = e as KeyboardEvent;
     if (ev.defaultPrevented) return;
     let layer = getLayer();
     if (isTextTarget(ev.target) && layer !== 'none') layer = 'text';
-    const cmd = resolveKey(ev, layer, getVerbs());
+    const cmd = resolveKey(ev, layer, getVerbs(), inRoom());
     if (!cmd) return;
     // let Enter/Space activate a focused button natively in dialogs/menus
     const tgt = ev.target as HTMLElement | null;
@@ -481,7 +502,7 @@ export function attachPointer(
 // ---------------------------------------------------------------------------
 
 export interface LayerState {
-  screen: 'start' | 'loading' | 'game' | 'end';
+  screen: 'start' | 'loading' | 'lobby' | 'game' | 'end';
   settingsOpen: boolean;
   helpOpen: boolean;
   rulesOpen: boolean;

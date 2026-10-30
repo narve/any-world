@@ -273,3 +273,83 @@ describe('computeLayer', () => {
     }
   });
 });
+
+describe('the lobby layer (MP3)', () => {
+  const base: LayerState = {
+    screen: 'lobby',
+    settingsOpen: false,
+    helpOpen: false,
+    rulesOpen: false,
+    backpackOpen: false,
+    menuOpen: false,
+    narrationVisible: false,
+    choice: false,
+    levelUp: false,
+    dialogue: false,
+    trade: false,
+    mode: 'normal',
+  };
+
+  it('the lobby screen is its own layer; settings (and the name sheet) go over it', () => {
+    expect(computeLayer(base)).toBe('lobby');
+    expect(computeLayer({ ...base, helpOpen: true, backpackOpen: true })).toBe('lobby');
+    expect(computeLayer({ ...base, settingsOpen: true })).toBe('settings');
+  });
+
+  it('no game key fires in the lobby (the page keeps Tab, Enter and typing)', () => {
+    for (const key of ['w', 'a', 's', 'd', 'ArrowUp', '1', ' ', '.', 'Enter', 'Tab', 'i', 'g', '>', 'Escape', '?', 'r']) expect(resolveKey(k(key), 'lobby', ALL)).toBeNull();
+  });
+
+  it('in the text layer (the name sheet, the code field) only Esc means something', () => {
+    for (const key of ['w', 'a', 's', 'd', '1', ' ', 'Enter', 'Tab']) expect(resolveKey(k(key), 'text', ALL)).toBeNull();
+    expect(resolveKey(k('Escape'), 'text', ALL)).toEqual({ type: 'close' });
+  });
+});
+
+describe('room keys (MP3 D4)', () => {
+  const room = (key: string, layer: InputLayer, extra = {}) => resolveKey(k(key, extra), layer, ALL, true);
+
+  it('in a room Enter opens the chat, Shift+Enter uses what is next to you, `/` opens the chat', () => {
+    expect(room('Enter', 'game')).toEqual({ type: 'chat' });
+    expect(room('Enter', 'game', { code: 'NumpadEnter' })).toEqual({ type: 'chat' });
+    expect(room('Enter', 'game', { shiftKey: true })).toEqual({ type: 'interact' });
+    expect(room('/', 'game')).toEqual({ type: 'chat' });
+    // single player: Enter still uses, `/` does nothing
+    expect(game('Enter')).toEqual({ type: 'interact' });
+    expect(game('/')).toBeNull();
+  });
+
+  it('`[` / `]` watch the previous / next teammate; Tab stays the backpack', () => {
+    expect(room('[', 'game')).toEqual({ type: 'follow', dir: -1 });
+    expect(room(']', 'game')).toEqual({ type: 'follow', dir: 1 });
+    expect(room('Tab', 'game')).toEqual({ type: 'backpack' });
+    expect(game('[')).toBeNull();
+  });
+
+  it('`/` opens the chat in every non-text layer, where Enter keeps its meaning', () => {
+    for (const l of ['dialogue', 'trade', 'choice', 'levelup', 'narration', 'look', 'target', 'backpack', 'menu', 'help', 'rules', 'lobby', 'end'] as InputLayer[]) expect(room('/', l), l).toEqual({ type: 'chat' });
+    expect(room('Enter', 'dialogue')).toEqual({ type: 'confirm' });
+    expect(room('Enter', 'choice')).toEqual({ type: 'confirm' });
+    expect(room('Enter', 'narration')).toEqual({ type: 'skip' });
+    expect(room('Enter', 'look')).toEqual({ type: 'confirm' });
+    expect(room('Enter', 'backpack')).toEqual({ type: 'confirm' });
+    // the lobby and the end screen keep Enter for their buttons
+    expect(room('Enter', 'lobby')).toBeNull();
+  });
+
+  it('a text field (the chat input itself) and the settings get no game key, `/` included', () => {
+    for (const key of ['w', 'a', 's', 'd', '1', ' ', 'Enter', '/', '[', 'Tab']) expect(room(key, 'text'), key).toBeNull();
+    expect(room('Escape', 'text')).toEqual({ type: 'close' });
+    expect(room('/', 'settings')).toBeNull();
+    expect(room('/', 'start')).toBeNull();
+  });
+
+  it('the key help names the room keys', () => {
+    const rows = keyHelp(ALL, { conflict: 'Fight' }, undefined, true).flatMap((s) => s.rows);
+    expect(rows.some((r) => r.keys.includes('/') && r.what === 'Chat')).toBe(true);
+    expect(rows.some((r) => r.keys.includes('[') && r.keys.includes(']'))).toBe(true);
+    expect(rows.some((r) => r.keys.some((x) => x.includes('⇧')))).toBe(true);
+    const sp = keyHelp(ALL, { conflict: 'Fight' }).flatMap((s) => s.rows);
+    expect(sp.some((r) => r.keys.includes('/'))).toBe(false);
+  });
+});

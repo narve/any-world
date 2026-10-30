@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'node:url';
+import { engineVersionFor } from './server/engine-version.js';
 
 /**
  * Two builds from one client (DESIGN §4.4):
@@ -22,6 +24,10 @@ export default defineConfig(({ mode }) => ({
     // pages hosted apart from the server (e.g. GitHub Pages + a home server): the server's origin, which
     // must list this page's origin in its ALLOWED_ORIGINS; '' = the page's own origin
     __ANYWORLD_SERVER__: JSON.stringify((process.env.ANYWORLD_SERVER_URL ?? '').trim().replace(/\/+$/, '')),
+    // the engine version rooms check at join (MP2 design §8): computed from the checkout, both modes
+    __ANYWORLD_ENGINE_VERSION__: JSON.stringify(engineVersionFor(process.env, fileURLToPath(new URL('.', import.meta.url)))),
+    // the rooms' in-page autoplay (MP3 exit check): the dev server, or a build with ANYWORLD_AUTOPLAY=1
+    __ANYWORLD_AUTOPLAY__: JSON.stringify(mode === 'development' || process.env.ANYWORLD_AUTOPLAY === '1'),
   },
   build: {
     outDir: mode === 'static' ? '../../dist/static' : '../../dist/client',
@@ -30,7 +36,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: '0.0.0.0',
     port: envPort('ANYWORLD_CLIENT_PORT', 5173),
-    proxy: { '/api': `http://localhost:${envPort('ANYWORLD_API_PORT', 8787)}` },
+    // ws: true carries the room WebSocket (/api/ws) through the proxy too
+    proxy: { '/api': { target: `http://localhost:${envPort('ANYWORLD_API_PORT', 8787)}`, ws: true } },
   },
   preview: {
     host: '0.0.0.0',

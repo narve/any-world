@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createGame, applyGmActions, step, endingText, DEATH_REASON_KEYS, END_REASON_KEYS } from '../../src/engine';
+import { createGame, applyGmActions, step, endingText, DEATH_REASON_KEYS, END_REASON_KEYS, leadPlayer } from '../../src/engine';
 import { grantXp, xpToNext, MAX_LEVELS_PER_CHECK } from '../../src/engine/progression';
 import type { GameState } from '../../src/engine/types';
 import type { WorldSpec } from '../../src/schema/world';
@@ -41,7 +41,7 @@ describe('ending text by how the run was lost', () => {
     expect(yams.goal.lose).toBeDefined(); // turn >= 1400
     expect(yams.goal.deathText).toBeTruthy();
     let s = structuredClone(createGame(yams, { seed: 3, map: roomMap() }));
-    const me = s.area.actors.find((a) => a.id === s.player.actorId)!;
+    const me = s.area.actors.find((a) => a.id === leadPlayer(s).actorId)!;
     me.hp = 1;
     s = applyGmActions(s, [{ type: 'spawn', actor: 'repo-agent', count: 2, near: 'player' }] as never).state;
     for (let i = 0; i < 200 && s.status === 'playing'; i++) s = step(s, { type: 'wait' }).state;
@@ -119,7 +119,7 @@ describe('huge xp grants', () => {
   }
   function allPerksTaken(world: WorldSpec): GameState {
     const s = structuredClone(createGame(world, { seed: 1 }));
-    s.player.perks = world.player.growth.perks.map((p) => p.id);
+    leadPlayer(s).perks = world.player.growth.perks.map((p) => p.id);
     return s;
   }
 
@@ -137,10 +137,10 @@ describe('huge xp grants', () => {
     const s = allPerksTaken(world);
     const ctx = ctxFor(world, s);
     expect(() => grantXp(ctx, 1e9)).not.toThrow();
-    expect(s.player.level).toBe(1 + MAX_LEVELS_PER_CHECK);
-    expect(s.player.pendingPerkChoice).toBeNull();
+    expect(leadPlayer(s).level).toBe(1 + MAX_LEVELS_PER_CHECK);
+    expect(leadPlayer(s).pendingPerkChoice).toBeNull();
     // the unspendable rest is dropped: the bar is just short of the next level
-    expect(s.player.xp).toBeLessThan(xpToNext(ctx, s.player.level));
+    expect(leadPlayer(s).xp).toBeLessThan(xpToNext(ctx, leadPlayer(s).level));
     expect(ctx.events.filter((e) => e.type === 'level_up')).toHaveLength(MAX_LEVELS_PER_CHECK);
   });
 
@@ -155,12 +155,12 @@ describe('huge xp grants', () => {
     let s: GameState = createGame(world, { seed: 1 });
     expect(() => {
       for (let i = 0; i < 40 && s.status === 'playing'; i++) {
-        const pc = s.player.pendingPerkChoice;
+        const pc = leadPlayer(s).pendingPerkChoice;
         s = (pc && pc.length ? step(s, { type: 'choose_perk', perkId: pc[0] }, { world }) : step(s, { type: 'wait' }, { world })).state;
       }
     }).not.toThrow();
-    expect(Number.isFinite(s.player.level)).toBe(true);
-    expect(Number.isFinite(s.player.xp)).toBe(true);
+    expect(Number.isFinite(leadPlayer(s).level)).toBe(true);
+    expect(Number.isFinite(leadPlayer(s).xp)).toBe(true);
   });
 
   it('ordinary grants still level up several times in one go and stop at a pending perk choice', () => {
@@ -168,15 +168,15 @@ describe('huge xp grants', () => {
     const s = allPerksTaken(world);
     const ctx = ctxFor(world, s);
     grantXp(ctx, 5 * 3 + 2);
-    expect(s.player.level).toBe(4);
-    expect(s.player.xp).toBe(2);
+    expect(leadPlayer(s).level).toBe(4);
+    expect(leadPlayer(s).xp).toBe(2);
 
     const fresh = structuredClone(createGame(world, { seed: 1 }));
     const c2 = ctxFor(world, fresh);
     grantXp(c2, 5 * 3);
-    expect(fresh.player.level).toBe(2); // a perk choice is pending: the rest waits for choosePerk
-    expect(fresh.player.pendingPerkChoice?.length).toBeGreaterThan(0);
-    expect(fresh.player.xp).toBe(10);
+    expect(leadPlayer(fresh).level).toBe(2); // a perk choice is pending: the rest waits for choosePerk
+    expect(leadPlayer(fresh).pendingPerkChoice?.length).toBeGreaterThan(0);
+    expect(leadPlayer(fresh).xp).toBe(10);
   });
 
   it('non-finite or non-positive amounts are ignored', () => {
@@ -184,7 +184,7 @@ describe('huge xp grants', () => {
     const s = allPerksTaken(world);
     const ctx = ctxFor(world, s);
     for (const a of [Number.POSITIVE_INFINITY, Number.NaN, 0, -5]) grantXp(ctx, a);
-    expect(s.player.xp).toBe(0);
-    expect(s.player.level).toBe(1);
+    expect(leadPlayer(s).xp).toBe(0);
+    expect(leadPlayer(s).level).toBe(1);
   });
 });

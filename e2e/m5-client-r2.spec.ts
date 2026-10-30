@@ -64,10 +64,11 @@ test('the equipped gun fires at range from the keyboard: its key aims, Enter sho
     let out: { gun: number; id: string } | null = null;
     await c.setStateForTest((s) => {
       const st = s as unknown as {
-        player: { actorId: string; slots: ({ defId: string } | null)[]; equipped: { weapon: number | null } };
+        players: Record<string, { actorId: string; slots: ({ defId: string } | null)[]; equipped: { weapon: number | null } }>;
+        party: string[];
         area: { map: { width: number; tiles: { kind: string }[] }; actors: { id: string; defId: string; pos: { x: number; y: number }; faction: string }[] };
       };
-      const me = st.area.actors.find((a) => a.id === st.player.actorId)!;
+      const me = st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!;
       const w = st.area.map.width;
       const floor = (x: number, y: number) => ['floor', 'start', 'door'].includes(st.area.map.tiles[y * w + x]?.kind ?? 'wall');
       let at: { x: number; y: number } | null = null;
@@ -77,7 +78,7 @@ test('the equipped gun fires at range from the keyboard: its key aims, Enter sho
       st.area.actors = st.area.actors.filter((a) => a === me || a === dep);
       me.pos = { ...at! };
       dep.pos = { x: at!.x + 4, y: at!.y };
-      out = { gun: st.player.equipped.weapon ?? -1, id: dep.id };
+      out = { gun: st.players[st.party[0]].equipped.weapon ?? -1, id: dep.id };
     });
     return out!;
   });

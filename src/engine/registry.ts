@@ -29,6 +29,14 @@ export function registerWorld(world: WorldSpec): string {
   return id;
 }
 
+/**
+ * Drops a world from the registry (a closed room's uploaded world, MP2). States of that world then
+ * need `env.world` again (or a new createGame / deserialize).
+ */
+export function unregisterWorld(id: string): boolean {
+  return registry.delete(id);
+}
+
 export function getWorld(stateOrId: GameState | string): WorldSpec | undefined {
   return registry.get(typeof stateOrId === 'string' ? stateOrId : stateOrId.worldId);
 }

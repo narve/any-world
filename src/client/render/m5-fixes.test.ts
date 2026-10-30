@@ -10,7 +10,7 @@ import { parseWorld } from '../../schema/refs';
 import type { WorldSpec } from '../../schema/world';
 import { CameraRig, OCCLUDER_PAD, underOverlay, type OverlayRect } from './camera';
 import type { AreaMap, AreaState, Tile } from '../../engine/types';
-import { AreaView } from './tiles';
+import { AreaView, type FoggedArea } from './tiles';
 import { buildModel, animateModel } from './models';
 import { ItemThumbnailer, encodePixels, linearToSrgbByte, type ThumbCanvas, type ThumbGl } from './thumbnails';
 
@@ -326,7 +326,7 @@ describe('animated terrain models are compacted', () => {
     for (const r of rows) for (const ch of r) tiles.push(ch === '#' ? { kind: 'wall' } : ch === 'S' ? { kind: 'start' } : ch === 'T' ? { kind: 'transition' } : ch === 'm' ? { kind: 'floor', terrain: def.id } : { kind: 'floor' });
     const W = rows[0]!.length;
     const map: AreaMap = { width: W, height: rows.length, tiles, start: { x: 1, y: 1 }, exit: { x: 5, y: 2 }, regions: [] };
-    const state: AreaState = { index: 0, map, actors: [], items: [], seen: new Array(tiles.length).fill(2), discoveredRegions: [], gmBudget: 0 };
+    const state: FoggedArea = { index: 0, map, actors: [], items: [], seen: new Array(tiles.length).fill(2), discoveredRegions: [], gmBudget: 0 };
     const view = new AreaView(world, world.areas[0]!, state);
     const copies: THREE.Object3D[] = [];
     view.group.traverse((o) => {
@@ -359,7 +359,7 @@ describe('doors are compacted', () => {
     for (const r of rows) for (const ch of r) tiles.push(ch === '#' ? { kind: 'wall' } : ch === 'S' ? { kind: 'start' } : ch === 'T' ? { kind: 'transition' } : ch === 'D' ? { kind: 'door' } : { kind: 'floor' });
     const W = rows[0]!.length;
     const map: AreaMap = { width: W, height: rows.length, tiles, start: { x: 1, y: 1 }, exit: { x: 3, y: 1 }, regions: [] };
-    const state: AreaState = { index: 0, map, actors: [], items: [], seen: new Array(tiles.length).fill(2), discoveredRegions: [], gmBudget: 0 };
+    const state: FoggedArea = { index: 0, map, actors: [], items: [], seen: new Array(tiles.length).fill(2), discoveredRegions: [], gmBudget: 0 };
     const view = new AreaView(world, world.areas[0]!, state);
     const doors = (view as unknown as { doors: Map<number, { obj: THREE.Object3D; panel: THREE.Object3D; k: number }> }).doors;
     expect(doors.size).toBe(1);

@@ -19,6 +19,8 @@ const SAME_OK = new Set([
   'cond.counter', 'cond.areaName', 'cond.defeatedCount', 'vocab.int.abbr', 'vocab.int.name', 'vocab.hp.abbr', 'vocab.mp.name', 'vocab.mp.abbr',
   'rules.srcGm', 'npc.role.rival', 'key.enter', 'key.tab', 'key.esc', 'key.del', 'help.zoom', 'start.label', 'difficulty.normal.label',
   'difficulty.brutal.label', 'settings.note.region',
+  // rooms (MP3): the same word in bokmål
+  'lobby.start', 'lobby.options.deadlineValue', 'lobby.colours.magenta', 'chat.open', 'chat.send', 'chat.history', 'keys.chat',
   // item effect lines that are only numbers and world words
   'item.fx.resource_gain', 'item.fx.resource_loss', 'item.fx.xp', 'item.fx.currency', 'item.fx.weapon', 'item.fx.modifier', 'item.fx.trigger',
 ]);

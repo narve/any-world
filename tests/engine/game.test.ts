@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { testWorld, newGame, ctxFor, player, addActor, act, env, roomMap, simpleGenerator, loadFixture } from './helpers';
 import {
+  leadPlayer,
   createGame,
   step,
   applyGmActions,
@@ -88,8 +89,8 @@ describe('determinism & purity', () => {
     const s = states[states.length - 1];
     const json = serialize(s);
     const back = deserialize(w, json);
-    expect(back.area.seen).toBeInstanceOf(Uint8Array);
-    expect([...back.area.seen]).toEqual([...s.area.seen]);
+    expect(leadPlayer(back).seen).toBeInstanceOf(Uint8Array);
+    expect([...leadPlayer(back).seen]).toEqual([...leadPlayer(s).seen]);
     expect(serialize(back)).toBe(json);
     const a = act(w, s, { type: 'wait' }).state;
     const b = act(w, back, { type: 'wait' }).state;
@@ -143,7 +144,7 @@ describe('turns & energy', () => {
     });
     let st = newGame(w);
     for (let i = 0; i < 5; i++) st = act(w, st, { type: 'wait' }).state;
-    expect(st.player.resources.oil).toBe(0);
+    expect(leadPlayer(st).resources.oil).toBe(0);
     expect(player(st).statuses.map((x) => x.id)).toContain('blind');
     const w2 = testWorld((x) => {
       x.resources![0].perTurn = -5;
@@ -255,8 +256,8 @@ describe('areas, goals and progression', () => {
   it('level-up offers perks that block other actions until chosen; perks apply', () => {
     const w = testWorld();
     let st = applyGmActions(newGame(w), [{ type: 'grant_xp', amount: 10 }], env(w)).state;
-    expect(st.player.level).toBe(2);
-    const choices = st.player.pendingPerkChoice!;
+    expect(leadPlayer(st).level).toBe(2);
+    const choices = leadPlayer(st).pendingPerkChoice!;
     expect(choices).toHaveLength(3);
     expect(legalActions(st, env(w))).toEqual(choices.map((perkId) => ({ type: 'choose_perk', perkId })));
     expect(act(w, st, { type: 'wait' }).events[0]).toMatchObject({ type: 'invalid', reason: 'choose a perk first' });
@@ -264,10 +265,10 @@ describe('areas, goals and progression', () => {
     expect(act(w, st, { type: 'choose_perk', perkId: notOffered }).events[0]).toMatchObject({ type: 'invalid' });
     const hpBefore = player(st).maxHp;
     st = act(w, st, { type: 'choose_perk', perkId: choices[0] }).state;
-    expect(st.player.perks).toEqual([choices[0]]);
-    expect(st.player.pendingPerkChoice).toBeNull();
+    expect(leadPlayer(st).perks).toEqual([choices[0]]);
+    expect(leadPlayer(st).pendingPerkChoice).toBeNull();
     if (choices[0] === 'tough') expect(player(st).maxHp).toBe(hpBefore + 5);
-    if (choices[0] === 'clever') expect(st.player.slots.some((x) => x?.defId === 'spark')).toBe(true);
+    if (choices[0] === 'clever') expect(leadPlayer(st).slots.some((x) => x?.defId === 'spark')).toBe(true);
     expect(player(st).maxHp).toBeGreaterThanOrEqual(34); // +4 hp per level
   });
 });
@@ -291,9 +292,9 @@ describe('GM actions', () => {
     expect(st.log.some((l) => l.kind === 'gm' && l.text === 'The lights flicker.')).toBe(true);
     expect(st.log.some((l) => l.kind === 'npc' && l.speaker === 'Sage')).toBe(true);
     expect(st.flags.omen).toBe(true);
-    expect(st.knowledge.murk.level).toBe('vague');
-    expect(st.player.currency).toBe(30);
-    expect(st.player.slots.some((x) => x?.defId === 'coat')).toBe(true);
+    expect(leadPlayer(st).knowledge.murk.level).toBe('vague');
+    expect(st.purse).toBe(30);
+    expect(leadPlayer(st).slots.some((x) => x?.defId === 'coat')).toBe(true);
     expect(st.area.gmBudget).toBe(GM_BUDGET_PER_AREA - 1 - 1 - 3);
     expect(r.tookTurn).toBe(false);
 
@@ -305,7 +306,7 @@ describe('GM actions', () => {
     expect(r2.state.area.items).toHaveLength(1);
     expect(r2.state.area.gmBudget).toBe(0);
     const r3 = applyGmActions(r2.state, [{ type: 'grant_xp', amount: 5 }, { type: 'narrate', text: 'free' }], env(w));
-    expect(r3.state.player.xp).toBe(0);
+    expect(leadPlayer(r3.state).xp).toBe(0);
     expect(r3.gmSkipped).toEqual([{ action: 'grant_xp', reason: 'over budget' }]);
     expect(r3.events).toContainEqual({ type: 'gm_skipped', action: 'grant_xp', reason: 'over budget' });
     // refused GM actions are diagnostics, never lines in the player's log
@@ -327,21 +328,21 @@ describe('GM actions', () => {
     giveItem(ctxFor(w, st), 'coat', 1);
     const done = act(w, st, { type: 'wait' });
     expect(done.state.quests[0].status).toBe('done');
-    expect(done.state.player.currency).toBe(7);
+    expect(done.state.purse).toBe(7);
     expect(done.events.some((e) => e.type === 'quest_updated' && e.status === 'done')).toBe(true);
     st = applyGmActions(done.state, [{ type: 'trade', actorId: sage.id, items: [{ item: 'tonic', price: 5 }, { item: 'wand', price: 50 }] }], env(w)).state;
-    expect(st.pendingChoice?.options.map((o) => o.label)).toEqual(['Tonic (5 coins)', 'Wand (50 coins)', 'Leave']);
+    expect(leadPlayer(st).pendingChoice?.options.map((o) => o.label)).toEqual(['Tonic (5 coins)', 'Wand (50 coins)', 'Leave']);
     expect(legalActions(st, env(w))).toEqual([{ type: 'choose_option', index: 0 }, { type: 'choose_option', index: 2 }]);
     expect(act(w, st, { type: 'choose_option', index: 1 }).events[0]).toMatchObject({ type: 'invalid', reason: 'not enough coins' });
     st = act(w, st, { type: 'choose_option', index: 0 }).state;
-    expect(st.player.currency).toBe(2);
-    expect(st.pendingChoice).toBeNull();
+    expect(st.purse).toBe(2);
+    expect(leadPlayer(st).pendingChoice).toBeNull();
     st = applyGmActions(st, [{ type: 'offer_choice', prompt: 'Pick', options: [{ label: 'Gold', actions: [{ type: 'currency', amount: 10 }] }, { label: 'Nothing', actions: [] }] }], env(w)).state;
-    expect(st.pendingChoice?.kind).toBe('gm_offer');
+    expect(leadPlayer(st).pendingChoice?.kind).toBe('gm_offer');
     // the option's cost (currency: 1) was reserved with the offer; choosing it charges nothing more
     const budget = st.area.gmBudget;
     st = act(w, st, { type: 'choose_option', index: 0 }).state;
-    expect(st.player.currency).toBe(12);
+    expect(st.purse).toBe(12);
     expect(st.area.gmBudget).toBe(budget);
   });
 
@@ -373,14 +374,14 @@ describe('npc verbs', () => {
     expect(r.events.some((e) => e.type === 'npc_talk' && e.actorId === sage.id)).toBe(true);
     expect(r.tookTurn).toBe(false);
     let st = r.state;
-    expect(st.pendingChoice).toMatchObject({ kind: 'dialogue', prompt: 'Hello, traveller.', speakerId: sage.id });
+    expect(leadPlayer(st).pendingChoice).toMatchObject({ kind: 'dialogue', prompt: 'Hello, traveller.', speakerId: sage.id });
     expect(act(w, st, { type: 'wait' }).events[0]).toMatchObject({ type: 'invalid', reason: 'make a choice first' });
-    const heal = st.pendingChoice!.options.findIndex((o) => o.label === 'Ask for help');
+    const heal = leadPlayer(st).pendingChoice!.options.findIndex((o) => o.label === 'Ask for help');
     st = act(w, st, { type: 'choose_option', index: heal }).state;
     expect(player(st).hp).toBe(20);
     st = act(w, st, { type: 'talk', targetId: sage.id }).state;
-    expect(st.pendingChoice!.options.some((o) => o.label === 'Ask for help')).toBe(false);
-    st = act(w, st, { type: 'choose_option', index: st.pendingChoice!.options.length - 1 }).state;
+    expect(leadPlayer(st).pendingChoice!.options.some((o) => o.label === 'Ask for help')).toBe(false);
+    st = act(w, st, { type: 'choose_option', index: leadPlayer(st).pendingChoice!.options.length - 1 }).state;
     // already talked to: bumping now swaps places instead of re-opening the dialogue
     const sw = act(w, st, { type: 'move', dir: 'e' }).state;
     expect(player(sw).pos).toEqual({ x: 2, y: 1 });
@@ -425,7 +426,7 @@ describe('npc verbs', () => {
     });
     let s = newGame(w, 1, roomMap(20, 10));
     s = act(w, s, { type: 'toggle_sneak' }).state;
-    expect(s.player.sneaking).toBe(true);
+    expect(leadPlayer(s).sneaking).toBe(true);
     const r = addActor(w, s, 'rat', { x: 3, y: 2 });
     s = act(w, s, { type: 'search' }).state;
     expect(s.area.actors.find((a) => a.id === r.id)!.ai.alerted).toBe(true);
@@ -475,8 +476,8 @@ describe('pending choices', () => {
     ], env(w)).state;
     st = act(w, st, { type: 'choose_option', index: 0 }).state; // levels up → perk pending
     st = applyGmActions(st, [{ type: 'offer_choice', prompt: '!', options: [{ label: 'a', actions: [] }, { label: 'b', actions: [] }] }], env(w)).state;
-    expect(st.player.pendingPerkChoice).not.toBeNull();
-    expect(st.pendingChoice).not.toBeNull();
+    expect(leadPlayer(st).pendingPerkChoice).not.toBeNull();
+    expect(leadPlayer(st).pendingChoice).not.toBeNull();
     const la = legalActions(st, env(w));
     expect(la.every((a) => a.type === 'choose_perk')).toBe(true);
     st = act(w, st, la[0]).state;

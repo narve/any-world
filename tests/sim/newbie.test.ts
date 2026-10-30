@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { loadFixture, testWorld, newGame, player, addActor, env } from '../engine/helpers';
-import { step } from '../../src/engine';
+import { step, leadPlayer } from '../../src/engine';
 import type { GameState, PlayerAction } from '../../src/engine/types';
 import { BOT_NAMES, DEFEND_RANGE, botByName, newMemory, type Bot } from '../../src/engine/sim/bots';
 import { runGame } from '../../src/engine/sim/run';
@@ -38,15 +38,15 @@ describe('newbie bot', () => {
     player(s).hp = 10; // 33%
     const a = decide('newbie', world, s);
     expect(a.type).toBe('use');
-    expect(s.player.slots[(a as { slot: number }).slot]!.defId).toBe('tonic');
+    expect(leadPlayer(s).slots[(a as { slot: number }).slot]!.defId).toBe('tonic');
   });
 
   it('never tries an unknown item, not even when calm or nearly dead', () => {
     const world = testWorld();
     const s = newGame(world);
-    s.player.slots = s.player.slots.map((it) => (it && it.defId === 'tonic' ? null : it));
-    s.player.slots[6] = { id: 'i900', defId: 'murk', count: 1 };
-    expect(s.knowledge.murk.level).toBe('unknown');
+    leadPlayer(s).slots = leadPlayer(s).slots.map((it) => (it && it.defId === 'tonic' ? null : it));
+    leadPlayer(s).slots[6] = { id: 'i900', defId: 'murk', count: 1 };
+    expect(leadPlayer(s).knowledge.murk.level).toBe('unknown');
     expect(decide('explorer', world, s)).toEqual({ type: 'use', slot: 6 });
     expect(decide('newbie', world, s)).not.toEqual({ type: 'use', slot: 6 });
     player(s).hp = 3;
@@ -88,8 +88,8 @@ describe('newbie bot', () => {
         decide(s, w, m) {
           const a = inner.decide(s, w, m);
           if (a.type === 'use') {
-            const it = s.player.slots[a.slot];
-            if (it && s.knowledge[it.defId]?.level === 'unknown') bad.push(`${file} turn ${s.turn}: used unknown ${it.defId}`);
+            const it = leadPlayer(s).slots[a.slot];
+            if (it && leadPlayer(s).knowledge[it.defId]?.level === 'unknown') bad.push(`${file} turn ${s.turn}: used unknown ${it.defId}`);
           }
           return a;
         },

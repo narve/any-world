@@ -23,7 +23,7 @@ import { parseWorld } from '../../../src/schema/refs';
 import type { WorldSpec } from '../../../src/schema/world';
 import { GmAction } from '../../../src/schema/gm';
 import type { GameState } from '../../../src/engine/types';
-import { applyGmActions, step } from '../../../src/engine/index';
+import { applyGmActions, step, leadPlayer } from '../../../src/engine/index';
 import { playToSituation } from '../../../src/llm/situation';
 import { botByName, newMemory } from '../../../src/engine/sim/bots';
 
@@ -43,7 +43,7 @@ function bossInSight(world: WorldSpec, area: number, defId: string): GameState |
     const mem = newMemory(seed);
     for (let i = 0; i < 1500 && s.status === 'playing' && s.area.index === area; i++) {
       const boss = s.area.actors.find((a) => a.defId === defId && a.hp > 0);
-      if (boss && s.area.seen[boss.pos.y * s.area.map.width + boss.pos.x] === 2) return s;
+      if (boss && leadPlayer(s).seen[boss.pos.y * s.area.map.width + boss.pos.x] === 2) return s;
       s = step(s, bot.decide(s, world, mem), { world }).state;
     }
   }

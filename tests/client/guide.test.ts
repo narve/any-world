@@ -22,7 +22,7 @@ import {
   unmetLeaves,
 } from '../../src/client/guide';
 import { explainInvalid } from '../../src/client/invalid';
-import { legalActions } from '../../src/engine/index';
+import { legalActions, leadPlayer } from '../../src/engine/index';
 import { loadFixture, roomMap } from '../engine/helpers';
 
 const teen = loadFixture('fixture-teen.json');
@@ -42,13 +42,13 @@ function edit(s: GameSession, fn: (st: GameState) => void): void {
 }
 
 function placePlayer(st: GameState, pos: Pos): void {
-  st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId);
+  st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId);
   st.area.actors[0].pos = { ...pos };
   st.area.items = [];
 }
 
 function giveItem(st: GameState, defId: string, slot = 9): void {
-  st.player.slots[slot] = { id: `test-${defId}`, defId, count: 1 };
+  leadPlayer(st).slots[slot] = { id: `test-${defId}`, defId, count: 1 };
 }
 
 describe('conditions in plain words', () => {
@@ -147,12 +147,12 @@ describe('goal tracker step', () => {
     const s = session(western);
     edit(s, (st) => {
       placePlayer(st, { x: 2, y: 2 });
-      st.area.seen = new Uint8Array(st.area.seen.length);
+      leadPlayer(st).seen = new Uint8Array(leadPlayer(st).seen.length);
     });
     expect(currentStep(western, s.state)).toMatchObject({ kind: 'explore', text: `Explore ${western.areas[0].name} and find the way on` });
     edit(s, (st) => {
       const m = st.area.map;
-      (st.area.seen as Uint8Array)[m.exit.y * m.width + m.exit.x] = 1;
+      (leadPlayer(st).seen as Uint8Array)[m.exit.y * m.width + m.exit.x] = 1;
     });
     expect(currentStep(western, s.state).text).toBe(`Go to the way on (marked on the map): ${western.areas[0].transitionName}`);
     edit(s, (st) => placePlayer(st, st.area.map.exit));

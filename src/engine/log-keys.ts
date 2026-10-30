@@ -68,6 +68,14 @@ export const LOG_KEYS = {
   'log.trade.cannot_afford': 'You cannot afford any of it (not enough {currency}).',
   'log.trade.sold': '{player} sells {item} for {amount} {currency}.',
 
+  // party
+  /** a dialogue closed because its speaker died, left talking range or turned hostile meanwhile */
+  'log.party.talk_gone': '{player} loses the thread: the conversation is over.',
+  'log.party.down': '{player} is down. A teammate at their side gets them back up.',
+  'log.party.up': '{player} gets back up.',
+  /** a player took the exit with teammates elsewhere: the exit countdown starts (MP1 B3) */
+  'log.party.exit_countdown': '{player} takes {transition}: the party moves on in {turns}.',
+
   // quests, rules, currency, progression
   'log.quest.new': 'New: {title}',
   'log.quest.done': 'Done: {title}',

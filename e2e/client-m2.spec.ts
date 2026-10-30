@@ -140,8 +140,8 @@ test('ship: the bridge console can be used (Enter) and clicked hostiles refresh 
       if (req?.item) c.gmNow([{ type: 'give_item', item: req.item, count: 1 }]);
       const ex = c.session.state.area.map.exit;
       await c.setStateForTest((st) => {
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.faction !== 'hostile');
-        st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { ...ex };
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId || a.faction !== 'hostile');
+        st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.pos = { ...ex };
       });
       c.actNow({ type: 'transition' });
     });
@@ -175,8 +175,8 @@ test('ship: the bridge console can be used (Enter) and clicked hostiles refresh 
           const n = m.tiles[(y + dy) * m.width + x + dx];
           if (n && (n.kind === 'floor' || n.kind === 'start') && !n.terrain && !st.area.actors.some((a) => a.pos.x === x + dx && a.pos.y === y + dy)) {
             await c.setStateForTest((s2) => {
-              s2.area.actors = s2.area.actors.filter((a) => a.id === s2.player.actorId || a.faction !== 'hostile');
-              s2.area.actors.find((a) => a.id === s2.player.actorId)!.pos = { x: x + dx, y: y + dy };
+              s2.area.actors = s2.area.actors.filter((a) => a.id === s2.players[s2.party[0]].actorId || a.faction !== 'hostile');
+              s2.area.actors.find((a) => a.id === s2.players[s2.party[0]].actorId)!.pos = { x: x + dx, y: y + dy };
             });
             c.actNow({ type: 'wait' });
             return { console: { x, y } };
@@ -307,9 +307,9 @@ test('GM rules, danger feedback and log folding on the ship', async ({ page }) =
   await page.evaluate(async () => {
     const c = window.__anyworld!.controller!;
     await c.setStateForTest((st) => {
-      st.player.resources.oxygen = 0;
-      st.knowledge['o2-canister'].level = 'clear';
-      st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId);
+      st.players[st.party[0]].resources.oxygen = 0;
+      st.players[st.party[0]].knowledge['o2-canister'].level = 'clear';
+      st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId);
     });
   });
   for (let i = 0; i < 6; i++) {
@@ -346,8 +346,8 @@ test('western: the dialogue docks beside the speaker; the end screen shows the r
       if (!t || (t.kind !== 'floor' && t.kind !== 'start') || t.terrain) continue;
       if (s.state.area.actors.some((a) => a.pos.x === x && a.pos.y === y)) continue;
       await c.setStateForTest((st) => {
-        st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.faction !== 'hostile');
-        st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { x, y };
+        st.area.actors = st.area.actors.filter((a) => a.id === st.players[st.party[0]].actorId || a.faction !== 'hostile');
+        st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.pos = { x, y };
       });
       c.actNow({ type: 'talk', targetId: npc.id });
       return true;
@@ -360,7 +360,7 @@ test('western: the dialogue docks beside the speaker; the end screen shows the r
   // the speaker is not under the panel
   const sp = await page.evaluate(() => {
     const app = window.__anyworld!;
-    const pc = app.controller!.session.state.pendingChoice!;
+    const pc = app.controller!.session.me.pendingChoice!;
     const a = app.controller!.session.state.area.actors.find((x) => x.id === pc.speakerId)!;
     return app.renderer!.tileToScreen(a.pos);
   });
@@ -376,7 +376,7 @@ test('western: the dialogue docks beside the speaker; the end screen shows the r
   await page.evaluate(async () => {
     const c = window.__anyworld!.controller!;
     await c.setStateForTest((st) => {
-      st.area.actors.find((a) => a.id === st.player.actorId)!.hp = 1;
+      st.area.actors.find((a) => a.id === st.players[st.party[0]].actorId)!.hp = 1;
     });
     c.gmNow([{ type: 'effect', target: 'player', effects: [{ type: 'damage', amount: { base: 50 }, damageType: c.session.world.damageTypes[0].id }] }]);
   });

@@ -4,7 +4,7 @@
  * Repros of the fixed engine issues moved to tests/engine/review-r2.test.ts.
  */
 import { describe, expect, it } from 'vitest';
-import { describeItem, step } from '../../src/engine';
+import { describeItem, step, leadPlayer } from '../../src/engine';
 import { env, newGame, testWorld } from '../engine/helpers';
 
 const model = { archetype: 'blob', colors: { primary: '#888888' } } as const;
@@ -27,9 +27,9 @@ describe('review r2: inventory', () => {
       (w.player as { startingItems: unknown[] }).startingItems.push({ item: 'bomb', count: 3 });
     });
     let s = newGame(world);
-    const slot = s.player.slots.findIndex((it) => it?.defId === 'bomb');
+    const slot = leadPlayer(s).slots.findIndex((it) => it?.defId === 'bomb');
     s = step(s, { type: 'use', slot }, env(world)).state;
-    expect(s.player.slots[slot]?.count).toBe(2);
+    expect(leadPlayer(s).slots[slot]?.count).toBe(2);
     const r = step(s, { type: 'use', slot }, env(world));
     expect(r.events.some((e) => e.type === 'invalid')).toBe(true);
   });
@@ -52,8 +52,8 @@ describe('review r2: item knowledge in effect lines', () => {
       (w.player as { startingItems: unknown[] }).startingItems.push({ item: 'still' });
     });
     const s = newGame(world);
-    expect(s.knowledge.murk.level).toBe('unknown');
-    const it = s.player.slots.find((x) => x?.defId === 'still')!;
+    expect(leadPlayer(s).knowledge.murk.level).toBe('unknown');
+    const it = leadPlayer(s).slots.find((x) => x?.defId === 'still')!;
     const view = describeItem(s, it.id, env(world));
     expect(view.effectLines.join(' | ')).not.toContain('Murky Draught');
   });

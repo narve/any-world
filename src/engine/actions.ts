@@ -1,5 +1,5 @@
 /** Player action dispatch: validation first (no state change when invalid), then the action. */
-import type { Dir, PlayerAction, Pos } from './types';
+import type { Dir, PlayerAction, PlayerId, Pos } from './types';
 import {
   type Ctx,
   actorAt,
@@ -11,10 +11,14 @@ import {
   isPlayer,
   log,
   logKey,
+  me,
   moveCost,
   mutTile,
   passable,
+  partyActors,
   playerActor,
+  playerName,
+  withPlayer,
 } from './ctx';
 import {
   type ActionOutcome,
@@ -33,8 +37,8 @@ import { attackOf, inAttackRange, performAttack } from './combat';
 import { hasFlag, side } from './stats';
 import { isVisibleToPlayer, runAction } from './effects';
 import { moveActor } from './actors';
-import { enterArea, lockedReason, transitionFailure } from './area';
-import { canTalkTo, doChooseOption, doPersuade, doTalk } from './npc';
+import { enterArea, lockedReason, partyAtExit, transitionFailure } from './area';
+import { canTalkTo, doChooseOption, doPersuade, doTalk, talkingWith } from './npc';
 import { choosePerk } from './progression';
 import { DIR_LIST, addDir, cheb, isValidPos, samePos, tileAt } from './util';
 
@@ -42,9 +46,9 @@ export function doPlayerAction(ctx: Ctx, action: PlayerAction): ActionOutcome {
   if (!action || typeof action !== 'object' || typeof (action as { type?: unknown }).type !== 'string') return invalid('malformed action');
   const s = ctx.s;
   // a pending perk choice comes first, then any open dialogue/GM choice
-  if (s.player.pendingPerkChoice) {
+  if (me(ctx).pendingPerkChoice) {
     if (action.type !== 'choose_perk') return invalid('choose a perk first');
-  } else if (s.pendingChoice && action.type !== 'choose_option') return invalid('make a choice first');
+  } else if (me(ctx).pendingChoice && action.type !== 'choose_option') return invalid('make a choice first');
   switch (action.type) {
     case 'move':
       return doMove(ctx, action.dir);
@@ -75,8 +79,8 @@ export function doPlayerAction(ctx: Ctx, action: PlayerAction): ActionOutcome {
       return doSearch(ctx);
     case 'toggle_sneak':
       if (!ctx.world.verbs.sneak) return invalid('sneaking is not possible here');
-      s.player.sneaking = !s.player.sneaking;
-      logKey(ctx, s.player.sneaking ? 'log.sneak.on' : 'log.sneak.off', { player: ctx.world.player.name }, 'info');
+      me(ctx).sneaking = !me(ctx).sneaking;
+      logKey(ctx, me(ctx).sneaking ? 'log.sneak.on' : 'log.sneak.off', { player: playerName(ctx) }, 'info');
       return free();
     case 'choose_perk': {
       const err = choosePerk(ctx, action.perkId);
@@ -102,10 +106,19 @@ function doMove(ctx: Ctx, dirIn: Dir): ActionOutcome {
   const map = ctx.s.area.map;
   const tile = tileAt(map, to.x, to.y);
   const other = tile ? actorAt(ctx, to) : undefined;
-  if (other && !isPlayer(ctx, other)) {
+  if (other && isPlayer(ctx, other)) {
+    // walking into a teammate swaps places (as with allies), so nobody blocks a corridor
+    if (hasFlag(ctx, p, 'rooted')) return invalid('you cannot move');
+    const from = { ...p.pos };
+    other.pos = from;
+    emit(ctx, { type: 'moved', actorId: other.id, from: to, to: from });
+    moveActor(ctx, p, to);
+    return done(Math.round(100 * moveCost(ctx, to)));
+  }
+  if (other) {
     if (side(ctx, other) === 'H') return attackTarget(ctx, other, true);
     // allies, and NPCs you've already spoken to, step aside (so nobody can block a corridor)
-    const talkFirst = canTalkTo(ctx, other) && !other.talkedTo;
+    const talkFirst = canTalkTo(ctx, other) && !other.talkedTo && !talkingWith(ctx, other);
     if (other.allyOf === p.id || (!talkFirst && !confused)) {
       if (hasFlag(ctx, p, 'rooted')) return invalid('you cannot move');
       const from = { ...p.pos };
@@ -115,12 +128,12 @@ function doMove(ctx: Ctx, dirIn: Dir): ActionOutcome {
       return done(Math.round(100 * moveCost(ctx, to)));
     }
     if (talkFirst) return doTalk(ctx, other.id);
-    logKey(ctx, 'log.stumble', { player: ctx.world.player.name }, 'info');
+    logKey(ctx, 'log.stumble', { player: playerName(ctx) }, 'info');
     return done();
   }
   if (!tile || !passable(ctx, to.x, to.y)) {
     if (confused && dir !== dirIn) {
-      logKey(ctx, 'log.stumble', { player: ctx.world.player.name }, 'info');
+      logKey(ctx, 'log.stumble', { player: playerName(ctx) }, 'info');
       return done();
     }
     return invalid('blocked');
@@ -135,9 +148,10 @@ function doMove(ctx: Ctx, dirIn: Dir): ActionOutcome {
   const here = ctx.s.area.items.filter((fi) => samePos(fi.pos, to));
   if (here.length) {
     const names = here.slice(0, 3).map((fi) => displayItemName(ctx, fi.item.defId));
-    logKey(ctx, here.length > 3 ? 'log.here_more' : 'log.here', { items: names.join(', ') }, 'info');
+    // (in a party the line is the mover's own: "Here" is under their feet, not a teammate's)
+    logKey(ctx, here.length > 3 ? 'log.here_more' : 'log.here', { items: names.join(', ') }, 'info', Object.keys(ctx.s.players).length > 1 ? ctx.pid : undefined);
   }
-  if (ctx.s.player.sneaking) return done(Math.round(100 * moveCost(ctx, to)) + 25);
+  if (me(ctx).sneaking) return done(Math.round(100 * moveCost(ctx, to)) + 25);
   return done(Math.round(100 * moveCost(ctx, to)));
 }
 
@@ -174,24 +188,51 @@ function doAttack(ctx: Ctx, targetId: string): ActionOutcome {
   return attackTarget(ctx, t, false);
 }
 
+/**
+ * Taking the exit (docs/progress/MP1-DESIGN.md §5). A party of one, or a party whose other standing
+ * players are all at the exit, moves on at once. Otherwise the exit countdown starts
+ * (partyRules.exitCountdownTurns rounds; endRound counts it down and runTurn moves everyone on at
+ * 0); taking the exit again while it runs just spends the turn at the exit.
+ */
 function doTransition(ctx: Ctx): ActionOutcome {
   const err = transitionFailure(ctx);
   if (err) {
     if (err === lockedReason(ctx)) logKey(ctx, 'log.transition.locked', { transition: ctx.world.areas[ctx.s.area.index].transitionName }, 'warning');
     return invalid(err);
   }
+  const area = ctx.s.area;
+  if (ctx.s.party.length < 2 || partyAtExit(ctx, ctx.pid)) {
+    moveOn(ctx, area.exitCountdown?.by ?? ctx.pid);
+    return done();
+  }
+  if (!area.exitCountdown) {
+    const turns = ctx.s.partyRules.exitCountdownTurns;
+    area.exitCountdown = { turnsLeft: turns, by: ctx.pid };
+    emit(ctx, { type: 'exit_countdown', turnsLeft: turns, by: ctx.pid });
+    logKey(ctx, 'log.party.exit_countdown', { player: playerName(ctx), transition: ctx.world.areas[area.index].transitionName, turns }, 'system');
+  }
+  return done();
+}
+
+/**
+ * The whole party moves on to the next area, led by `by` (placed on the start, the user of
+ * on_area_enter): down players are pulled along and get up, and everyone has the energy to act.
+ * Runs from doTransition (at once) or from runTurn after the world moved (the countdown ran out),
+ * never inside endRound or runWorld.
+ */
+export function moveOn(ctx: Ctx, by: PlayerId): void {
+  const lead = ctx.s.party.includes(by) ? by : ctx.s.party[0];
   ctx.s.stats.areasCleared += 1;
   log(ctx, ctx.world.areas[ctx.s.area.index].transitionName, 'system');
-  enterArea(ctx, ctx.s.area.index + 1);
-  const p = playerActor(ctx);
-  p.energy = Math.max(p.energy, 100);
-  return done();
+  withPlayer(ctx, lead, () => enterArea(ctx, ctx.s.area.index + 1));
+  for (const p of partyActors(ctx)) p.energy = Math.max(p.energy, 100);
 }
 
 function doSearch(ctx: Ctx): ActionOutcome {
   if (!ctx.world.verbs.search) return invalid('searching is not possible here');
   const p = playerActor(ctx);
   const map = ctx.s.area.map;
+  const seen = me(ctx).seen;
   let found = 0;
   for (let dy = -2; dy <= 2; dy++)
     for (let dx = -2; dx <= 2; dx++) {
@@ -199,7 +240,7 @@ function doSearch(ctx: Ctx): ActionOutcome {
       const y = p.pos.y + dy;
       if (x < 0 || y < 0 || x >= map.width || y >= map.height) continue;
       const i = y * map.width + x;
-      if (ctx.s.area.seen[i] === 0) ctx.s.area.seen[i] = 1;
+      if (seen[i] === 0) seen[i] = 1;
       const t = map.tiles[i];
       if (Math.max(Math.abs(dx), Math.abs(dy)) <= 1 && t.terrain && !t.interacted) {
         const td = ctx.ix.terrains.get(t.terrain);
@@ -215,7 +256,7 @@ function doSearch(ctx: Ctx): ActionOutcome {
     if (side(ctx, a) === 'H' && (def?.behaviour.type === 'ambusher' || hasFlag(ctx, a, 'invisible'))) {
       a.ai.alerted = true;
       a.ai.lastSeen = { ...p.pos };
-      logKey(ctx, 'log.search.spot', { player: ctx.world.player.name, target: actorName(ctx, a) }, 'warning');
+      logKey(ctx, 'log.search.spot', { player: playerName(ctx), target: actorName(ctx, a) }, 'warning');
       found++;
     }
   }
@@ -238,7 +279,7 @@ function doInteract(ctx: Ctx, pos: Pos): ActionOutcome {
   const td = t.terrain ? ctx.ix.terrains.get(t.terrain) : undefined;
   if (!td?.interact) return invalid('nothing to do there');
   if (t.interacted) return invalid(`${td.name}: nothing more to find`);
-  logKey(ctx, 'log.interact.use', { player: ctx.world.player.name, terrain: td.name }, 'info');
+  logKey(ctx, 'log.interact.use', { player: playerName(ctx), terrain: td.name }, 'info');
   const terrainId = t.terrain;
   const res = runAction(ctx, td.interact, p, { targetPos: pos });
   // the tile is used up when its action ran, or when a pure luck roll failed (one roll per tile);

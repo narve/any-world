@@ -1,9 +1,10 @@
 /** Full-screen views: start, loading, end; and the settings dialog. */
 import type { Vocabulary } from '../../../schema/world';
-import type { EndView, InspirationPrompt, LoadingView, RecentWorldView, Settings, SettingsView, StartOptions, StartView, UiCallbacks, UiViewModel } from '../viewmodel';
+import type { EndView, InspirationPrompt, LoadingView, RecentWorldView, RoomView, Settings, SettingsView, StartOptions, StartView, UiCallbacks, UiViewModel } from '../viewmodel';
 import { dataKey, h, icon, ICONS, setChildren } from '../dom';
 import { baseLang, clamp, DIFFICULTIES, difficultyHint, difficultyLabel, groupByLanguage, languageEndonym, pickInspiration, presetNotes, runStatLines, toDifficulty, weirdnessLabel } from '../format';
 import { Modal } from './modals';
+import { RoomsCard } from './rooms';
 import { getLanguage, t } from '../../i18n/index';
 import { tagLabel } from '../../i18n/tags';
 import '../../styles/shell.css';
@@ -19,6 +20,8 @@ const SHELL_ICONS = {
 
 /** how many theme tags the inspiration filter offers */
 const TAG_CHIPS = 8;
+/** "For a party" without a room to size it: a world for this many players */
+const DEFAULT_PARTY = 4;
 
 /** the language and theme filter of the inspiration cards; 'all' / null = no filter */
 export interface InspirationFilter {
@@ -79,6 +82,10 @@ export class StartScreen {
   private diffOut: HTMLOutputElement;
   private weirdOut: HTMLOutputElement;
   private diffHint: HTMLElement;
+  private party: HTMLInputElement;
+  private partyEl: HTMLElement;
+  private partySize = DEFAULT_PARTY;
+  private partyDefault: number | undefined;
   private cardsEl: HTMLElement;
   private sideEl: HTMLElement;
   private noteEl: HTMLElement;
@@ -93,8 +100,14 @@ export class StartScreen {
   private filter: InspirationFilter = { language: 'all', tag: null };
   private filterEl: HTMLElement;
   private fileInput: HTMLInputElement;
+  /** MP3: the "Play together" card (kept across re-renders: its code field keeps what was typed) */
+  private rooms: RoomsCard;
+  /** narrow screens (one column): "2 open rooms ↓" at the top, as the rooms card sits below the form (MP5) */
+  private roomsJump: HTMLButtonElement;
 
   constructor(private cb: UiCallbacks, private rand: () => number = Math.random) {
+    this.rooms = new RoomsCard((i) => this.cb.onRoom?.(i));
+    this.roomsJump = h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-start-rooms-jump', hidden: true, onclick: () => this.rooms.el.scrollIntoView({ behavior: 'smooth', block: 'start' }) }) as HTMLButtonElement;
     this.langEl = h('div', { class: 'aw-start-lang' });
     this.textarea = h('textarea', {
       id: 'aw-prompt',
@@ -123,6 +136,8 @@ export class StartScreen {
       oninput: () => this.syncOut(),
     });
     this.diffHint = h('p', { id: 'aw-diff-hint', class: 'aw-range-hint' });
+    this.party = h('input', { id: 'aw-party', type: 'checkbox' });
+    this.partyEl = h('label', { class: 'aw-check aw-start-party', for: 'aw-party', hidden: true }, this.party, h('span', null, t('start.forParty')), h('span', { class: 'aw-muted' }, t('start.forPartyHint')));
     this.weird = h('input', { id: 'aw-weird', type: 'range', min: '0', max: '1', step: '0.05', value: '0.4', oninput: () => this.syncOut() });
     this.cardsEl = h('div', { class: 'aw-insp-cards' });
     this.filterEl = h('div', { class: 'aw-insp-filters' });
@@ -152,6 +167,7 @@ export class StartScreen {
             { class: 'aw-brand' },
             h('h1', { class: 'aw-logo' }, 'Any', h('span', null, 'World')),
             h('p', { class: 'aw-brand-sub' }, t('start.tagline')),
+            this.roomsJump,
             this.langEl,
             h('button', { type: 'button', class: 'aw-icon-btn aw-start-settings', 'aria-label': t('settings.title'), dataset: { tip: t('settings.title') }, onclick: () => this.cb.onOpenSettings?.(true) }, icon(ICONS.gear)),
           ),
@@ -164,6 +180,7 @@ export class StartScreen {
             h('label', { class: 'aw-range', for: 'aw-weird' }, h('span', null, t('start.weirdness')), this.weird, this.weirdOut),
           ),
           this.diffHint,
+          this.partyEl,
           h(
             'div',
             { class: 'aw-start-actions' },
@@ -225,6 +242,7 @@ export class StartScreen {
       weirdness: clamp(Number(this.weird.value), 0, 1),
       surprise,
       ...(fromCard ? { language: this.filled!.language } : {}),
+      ...(this.party.checked && !this.partyEl.hidden ? { party: this.partySize } : {}),
     };
   }
 
@@ -355,7 +373,18 @@ export class StartScreen {
       if (v.defaults?.weirdness !== undefined) this.weird.value = String(v.defaults.weirdness);
       this.syncOut();
     }
-    const key = dataKey([v.prompts, v.demos, v.savedRun, v.providerLabel, v.canGenerate, v.providerStatus, v.recent, v.canImport]);
+    // "For a party": only with a game server (off by default; on for a room's world, sized to its maxPlayers)
+    this.partyEl.hidden = !v.rooms;
+    if (v.defaults?.party !== undefined && v.defaults.party !== this.partyDefault) {
+      this.partyDefault = v.defaults.party;
+      this.party.checked = true;
+    }
+    this.partySize = Math.min(12, Math.max(2, v.defaults?.party ?? DEFAULT_PARTY));
+    if (v.rooms) this.rooms.update(v.rooms);
+    const open = v.rooms?.status === 'ok' ? v.rooms.rooms.length : 0;
+    this.roomsJump.hidden = !open;
+    if (open) this.roomsJump.textContent = t('room.openRooms', { n: open });
+    const key = dataKey([v.prompts, v.demos, v.savedRun, v.providerLabel, v.canGenerate, v.providerStatus, v.recent, v.canImport, v.rooms ? v.rooms.status : null]);
     if (key === this.listKey) return;
     const promptsChanged = dataKey(v.prompts) !== dataKey(JSON.parse(this.listKey || '[[]]')[0]);
     this.listKey = key;
@@ -403,6 +432,7 @@ export class StartScreen {
             ),
           )
         : null,
+      v.rooms ? this.rooms.el : null,
       v.recent?.length || v.canImport ? this.recentSection(v) : null,
       h(
         'section',
@@ -446,6 +476,7 @@ export class StartScreen {
         h(
           'div',
           { class: 'aw-recent-tools' },
+          this.friendsButton(v, w.id, w.title),
           this.cb.onExportWorld
             ? h(
                 'button',
@@ -478,6 +509,16 @@ export class StartScreen {
     );
   }
 
+  /** MP3: "Play with friends" on a world card: a room on that world with the default options */
+  private friendsButton(v: StartView, worldId: string, title: string): HTMLElement | null {
+    if (v.rooms?.status !== 'ok') return null;
+    return h(
+      'button',
+      { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost aw-friends', dataset: { friends: worldId }, 'aria-label': `${t('lobby.playWithFriends')}: ${title}`, onclick: () => this.cb.onRoom?.({ type: 'create', worldId }) },
+      t('lobby.playWithFriends'),
+    );
+  }
+
   private async readImport(): Promise<void> {
     const file = this.fileInput.files?.[0];
     this.fileInput.value = '';
@@ -501,7 +542,7 @@ export class StartScreen {
         demos.map((d) =>
           h(
             'li',
-            null,
+            { class: v.rooms?.status === 'ok' ? 'aw-demo-item has-friends' : undefined },
             h(
               'button',
               { type: 'button', class: 'aw-demo', lang: baseLang(d.language), dataset: { world: d.id }, style: { '--demo': d.color ?? 'var(--c-primary)' }, onclick: () => this.cb.onPlayDemo?.(d.id, this.options(false)) },
@@ -509,6 +550,7 @@ export class StartScreen {
               h('span', { class: 'aw-demo-title' }, d.title),
               h('span', { class: 'aw-demo-tag' }, d.tagline),
             ),
+            this.friendsButton(v, d.id, d.title),
           ),
         ),
       );
@@ -596,8 +638,12 @@ export class EndScreen {
     this.el = h('main', { class: 'aw-screen aw-end', 'aria-label': t('end.label') }, this.body);
   }
 
-  update(v: EndView, vocab: Vocabulary): void {
-    const key = dataKey([v, vocab]);
+  private roomBlock(room: RoomView): HTMLElement {
+    return roomEndBlock(room, this.cb);
+  }
+
+  update(v: EndView, vocab: Vocabulary, room?: RoomView | null): void {
+    const key = dataKey([v, vocab, room ?? null]);
     if (key === this.key) return;
     this.key = key;
     this.el.dataset.result = v.result;
@@ -621,15 +667,40 @@ export class EndScreen {
             v.weirdness !== undefined ? h('span', { class: 'aw-chip tone-muted' }, t('end.weirdness', { value: weirdnessLabel(v.weirdness) })) : null,
           )
         : null,
-      h(
-        'div',
-        { class: 'aw-end-actions' },
-        h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg', 'data-autofocus': true, onclick: () => this.cb.onEnd?.('new_world') }, t('end.newWorld')),
-        h('button', { type: 'button', class: 'aw-btn aw-btn-lg', onclick: () => this.cb.onEnd?.('same_world') }, t('end.sameWorld')),
-      ),
+      room
+        ? this.roomBlock(room)
+        : h(
+            'div',
+            { class: 'aw-end-actions' },
+            h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg', 'data-autofocus': true, onclick: () => this.cb.onEnd?.('new_world') }, t('end.newWorld')),
+            h('button', { type: 'button', class: 'aw-btn aw-btn-lg', onclick: () => this.cb.onEnd?.('same_world') }, t('end.sameWorld')),
+          ),
     );
     queueMicrotask(() => this.body.querySelector<HTMLElement>('[data-autofocus]')?.focus({ preventScroll: true }));
   }
+}
+
+/** MP3: the end screen in a room: play again in the same room (host), ready, leave */
+function roomEndBlock(room: RoomView, cb: UiCallbacks): HTMLElement {
+  const go = (i: Parameters<NonNullable<UiCallbacks['onRoom']>>[0]) => cb.onRoom?.(i);
+  return h(
+    'div',
+    { class: 'aw-end-room', dataset: { code: room.code } },
+    h(
+      'div',
+      { class: 'aw-end-actions' },
+      room.host ? h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg aw-end-again', 'data-autofocus': true, onclick: () => go({ type: 'start' }) }, icon(ICONS.play), t('lobby.playAgain')) : null,
+      room.host ? h('button', { type: 'button', class: 'aw-btn aw-btn-lg aw-end-another', onclick: () => go({ type: 'pick_world', open: true }) }, t('lobby.anotherWorld')) : null,
+      h(
+        'button',
+        { type: 'button', class: ['aw-btn', 'aw-btn-lg', 'aw-lobby-ready', room.ready && 'is-on'], 'aria-pressed': String(room.ready), 'data-autofocus': room.host ? undefined : true, onclick: () => go({ type: 'ready', on: !room.ready }) },
+        room.ready ? icon(ICONS.check) : null,
+        t('lobby.ready'),
+      ),
+      h('button', { type: 'button', class: 'aw-btn aw-btn-ghost aw-btn-lg aw-end-leave', onclick: () => go({ type: 'leave' }) }, t('room.leave')),
+    ),
+    h('p', { class: 'aw-muted aw-small' }, room.host ? t('lobby.readyCount', { ready: room.readyCount, total: room.total }) : `${t('lobby.waitingHost')} · ${t('lobby.readyCount', { ready: room.readyCount, total: room.total })}`),
+  );
 }
 
 // ---------------------------------------------------------------------------

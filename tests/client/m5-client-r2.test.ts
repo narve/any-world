@@ -7,7 +7,7 @@
  *  - issues/M5-api-key-leaks-across-presets.md direct-mode keys stay with their provider
  */
 import { describe, it, expect, afterEach } from 'vitest';
-import { createGame } from '../../src/engine';
+import { createGame, leadPlayer } from '../../src/engine';
 import type { GameState, Pos } from '../../src/engine/types';
 import { loadFixture, roomMap } from '../engine/helpers';
 import { gameView, readyToUse, type GameViewExtras } from '../../src/client/view';
@@ -28,13 +28,13 @@ const western = loadFixture('fixture-western.json');
 /** western run at low Blood: an empty canteen in its quick slot, one sarsaparilla (heals) in quick slot 5 */
 function lowBloodEmptyCanteen(): GameState {
   const s = structuredClone(createGame(western, { seed: 7, map: roomMap() }));
-  const canteen = s.player.slots.findIndex((x) => x?.defId === 'canteen');
+  const canteen = leadPlayer(s).slots.findIndex((x) => x?.defId === 'canteen');
   expect(canteen).toBeGreaterThanOrEqual(0);
-  s.player.slots[canteen]!.charges = 0;
-  s.player.slots[4] = { id: 'i-sars', defId: 'sarsaparilla', count: 1 };
-  if (s.knowledge.sarsaparilla) s.knowledge.sarsaparilla.level = 'clear';
-  else s.knowledge.sarsaparilla = { level: 'clear', notes: [], timesUsed: 1 };
-  const me = s.area.actors.find((a) => a.id === s.player.actorId)!;
+  leadPlayer(s).slots[canteen]!.charges = 0;
+  leadPlayer(s).slots[4] = { id: 'i-sars', defId: 'sarsaparilla', count: 1 };
+  if (leadPlayer(s).knowledge.sarsaparilla) leadPlayer(s).knowledge.sarsaparilla.level = 'clear';
+  else leadPlayer(s).knowledge.sarsaparilla = { level: 'clear', notes: [], timesUsed: 1 };
+  const me = s.area.actors.find((a) => a.id === leadPlayer(s).actorId)!;
   me.hp = Math.max(1, Math.floor(me.maxHp * 0.2));
   return s;
 }
@@ -45,7 +45,7 @@ describe('low-HP "press N" hint and an empty charged item (issues/M5-danger-hint
     const v = gameView(western, s, extras());
     const hp = v.hud.danger?.find((d) => d.id === 'hp');
     expect(hp).toBeDefined();
-    const canteen = s.player.slots.findIndex((x) => x?.defId === 'canteen');
+    const canteen = leadPlayer(s).slots.findIndex((x) => x?.defId === 'canteen');
     expect(hp!.slot).not.toBe(canteen);
     expect(hp!.slot).toBe(4);
     expect(v.slots[4]!.urgent).toBe(true);
@@ -54,7 +54,7 @@ describe('low-HP "press N" hint and an empty charged item (issues/M5-danger-hint
 
   it('no hint at all when every restorative is empty', () => {
     const s = lowBloodEmptyCanteen();
-    s.player.slots[4] = null;
+    leadPlayer(s).slots[4] = null;
     const v = gameView(western, s, extras());
     const hp = v.hud.danger?.find((d) => d.id === 'hp');
     expect(hp?.slot).toBeUndefined();
@@ -63,7 +63,7 @@ describe('low-HP "press N" hint and an empty charged item (issues/M5-danger-hint
   it('pressing an empty charged item says it is empty instead of "works just by being carried"', () => {
     const s = lowBloodEmptyCanteen();
     const v = gameView(western, s, extras());
-    const canteen = s.player.slots.findIndex((x) => x?.defId === 'canteen');
+    const canteen = leadPlayer(s).slots.findIndex((x) => x?.defId === 'canteen');
     expect(readyToUse(v.slots[canteen]!)).toBe(false);
     const r = activateSlot(v.slots, canteen);
     expect(r?.kind).toBe('blocked');
@@ -77,7 +77,7 @@ describe('low-HP "press N" hint and an empty charged item (issues/M5-danger-hint
     setLanguage('nb');
     const s = lowBloodEmptyCanteen();
     const v = gameView(western, s, extras());
-    const canteen = s.player.slots.findIndex((x) => x?.defId === 'canteen');
+    const canteen = leadPlayer(s).slots.findIndex((x) => x?.defId === 'canteen');
     const r = activateSlot(v.slots, canteen);
     expect(r && r.kind === 'blocked' ? r.reason : '').toMatch(/er tom \(0\/3\)/);
   });
@@ -90,10 +90,10 @@ function session(map = roomMap(14, 10)): GameSession {
 /** only the player and one deputy, `dist` tiles east of the player, with FOV refreshed */
 function deputyAt(s: GameSession, at: Pos): string {
   const st = structuredClone(s.state) as GameState;
-  const me = st.area.actors.find((a) => a.id === st.player.actorId)!;
+  const me = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
   me.pos = { x: 2, y: 5 };
   const dep = st.area.actors.find((a) => a.defId === 'company-deputy') ?? null;
-  st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a === dep);
+  st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId || a === dep);
   if (!dep) throw new Error('no deputy in the first area');
   dep.pos = { ...at };
   s.state = st;
@@ -105,7 +105,7 @@ describe('ranged weapon with the keyboard (issues/M5-ranged-keyboard-fire.md)', 
   it('the slot tip for a range-5 gun names its reach and the aim key, not "bump into"', () => {
     const s = createGame(western, { seed: 7, map: roomMap() });
     const v = gameView(western, s, extras());
-    const gun = s.player.slots.findIndex((x) => x?.defId === 'peacemaker');
+    const gun = leadPlayer(s).slots.findIndex((x) => x?.defId === 'peacemaker');
     expect(gun).toBeGreaterThanOrEqual(0);
     expect(v.slots[gun]!.range).toBe(5);
     const tip = slotExplanation(v.slots[gun]!, western.vocabulary, gun).lines.join(' ');
@@ -117,15 +117,15 @@ describe('ranged weapon with the keyboard (issues/M5-ranged-keyboard-fire.md)', 
   it("pressing the equipped gun's key starts aiming instead of explaining", () => {
     const s = createGame(western, { seed: 7, map: roomMap() });
     const v = gameView(western, s, extras());
-    const gun = s.player.slots.findIndex((x) => x?.defId === 'peacemaker');
+    const gun = leadPlayer(s).slots.findIndex((x) => x?.defId === 'peacemaker');
     expect(activateSlot(v.slots, gun)).toEqual({ kind: 'intent', intent: { type: 'begin_target', slot: gun } });
   });
 
   it('aiming starts on the nearest hostile in reach, and Enter shoots it from range', () => {
     const s = session();
     const id = deputyAt(s, { x: 6, y: 5 });
-    const gun = s.state.player.slots.findIndex((x) => x?.defId === 'peacemaker');
-    expect(s.state.player.equipped.weapon).toBe(gun);
+    const gun = leadPlayer(s.state).slots.findIndex((x) => x?.defId === 'peacemaker');
+    expect(leadPlayer(s.state).equipped.weapon).toBe(gun);
     s.intent({ type: 'begin_target', slot: gun });
     expect(s.mode).toBe('target');
     expect(s.firingWeapon()).toBe(true);
@@ -141,14 +141,14 @@ describe('ranged weapon with the keyboard (issues/M5-ranged-keyboard-fire.md)', 
     expect(s.mode).toBe('normal');
     // fired from where the player stood: the player did not move before the shot (the deputy's lasso may pull them after)
     const shot = out.events.findIndex((e) => e.type === 'attacked' && e.targetId === id);
-    const moved = out.events.findIndex((e) => e.type === 'moved' && e.actorId === s.state.player.actorId);
+    const moved = out.events.findIndex((e) => e.type === 'moved' && e.actorId === leadPlayer(s.state).actorId);
     expect(moved === -1 || moved > shot).toBe(true);
   });
 
   it('confirming on an empty tile keeps aiming open and says why', () => {
     const s = session();
     deputyAt(s, { x: 6, y: 5 });
-    const gun = s.state.player.slots.findIndex((x) => x?.defId === 'peacemaker');
+    const gun = leadPlayer(s.state).slots.findIndex((x) => x?.defId === 'peacemaker');
     s.intent({ type: 'begin_target', slot: gun });
     s.intent({ type: 'target_move', dir: 'n' });
     const turn = s.state.turn;
@@ -161,7 +161,7 @@ describe('ranged weapon with the keyboard (issues/M5-ranged-keyboard-fire.md)', 
 
   it('the onboarding and help name the aim key', () => {
     const s = createGame(western, { seed: 7, map: roomMap() });
-    const gun = s.player.slots.findIndex((x) => x?.defId === 'peacemaker');
+    const gun = leadPlayer(s).slots.findIndex((x) => x?.defId === 'peacemaker');
     const lines = conflictEntries(western, s);
     const ranged = lines.find((l) => /reaches 5 tiles/.test(l.text));
     expect(ranged?.text).toContain(`press ${gun + 1} to aim`);
@@ -176,15 +176,15 @@ describe('dialogue transcript in the UI language (issues/M5-dialogue-history-eng
     setLanguage('nb');
     const s = session();
     const st = structuredClone(s.state) as GameState;
-    const me = st.area.actors.find((a) => a.id === st.player.actorId)!;
+    const me = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
     me.pos = { x: 5, y: 5 };
     const kid = st.area.actors.find((a) => a.defId === 'kid-tobias');
     if (!kid) throw new Error('no informant in the first area');
-    st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a === kid);
+    st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId || a === kid);
     kid.pos = { x: 6, y: 5 };
     s.state = st;
     s.intent({ type: 'talk' });
-    const pc = s.state.pendingChoice!;
+    const pc = leadPlayer(s.state).pendingChoice!;
     expect(pc.kind).toBe('dialogue');
     const d = s.viewModel().game!.dialogue!;
     const ask = d.options.findIndex((o) => /Spør hva/.test(o));

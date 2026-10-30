@@ -1,9 +1,12 @@
 /** GM context summary (engine/gm-context.ts): content, knowledge, budget, purity. */
 import { describe, it, expect } from 'vitest';
 import { readdirSync } from 'node:fs';
-import { WORLD_DIR, loadFixture, testWorld, newGame, addActor, player, act } from './helpers';
-import { createGame, step, serialize, applyGmActions } from '../../src/engine';
-import { buildGmContext, estimateTokens, GM_CONTEXT_MAX_TOKENS } from '../../src/engine/gm-context';
+import { WORLD_DIR, loadFixture, testWorld, newGame, addActor, player, act, roomMap } from './helpers';
+import { createGame, step, serialize, applyGmActions, leadPlayer, addPlayer, leaveMap } from '../../src/engine';
+import { buildGmContext, estimateTokens, gmContextTokens, GM_CONTEXT_MAX_TOKENS } from '../../src/engine/gm-context';
+import { playToSituation } from '../../src/llm/situation';
+import { perspective } from '../../src/gm/perspective';
+import { fnv1a64 } from '../../src/llm/hash';
 import { botByName, newMemory } from '../../src/engine/sim/bots';
 import type { GameState } from '../../src/engine/types';
 
@@ -41,7 +44,7 @@ describe('buildGmContext', () => {
     const c = buildGmContext(s, w);
     const murk = c.player.inventory.find((i) => i.id === 'murk')!;
     expect(murk.known).toBe('unknown');
-    expect(murk.name).toBe(s.knowledge.murk.appearance!.label);
+    expect(murk.name).toBe(leadPlayer(s).knowledge.murk.appearance!.label);
     expect(JSON.stringify(c)).not.toContain('Murky Draught');
   });
 
@@ -132,5 +135,150 @@ describe('buildGmContext', () => {
     expect(c.difficulty).toBe('brutal');
     expect(c.gm.ruleHarmLeft).toBe(35);
     expect(player(s).hp).toBe(c.player.hp);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MP4 G2: the party block (MP4 design §2.1)
+// ---------------------------------------------------------------------------
+
+/** fnv1a64 of the summaries the MP3 code built (taken before G2): a party of one is unchanged */
+const MP3_SUMMARIES: [string, number, number, number, number, string][] = [
+  ['fixture-ship.json', 1, 0, 0, 1500, 'c0330c8256b9697c'],
+  ['fixture-ship.json', 3, 0, 30, 1500, '6a05cbf6c2a15524'],
+  ['fixture-ship.json', 2, 1, 10, 300, '1f703122dc268aae'],
+  ['fixture-teen.json', 3, 0, 30, 1500, 'f2fc3fccc0c357b1'],
+  ['fixture-teen.json', 2, 1, 10, 1500, '5eda00bd69c8f3e4'],
+  ['fixture-western.json', 3, 0, 30, 300, 'b221f59b7060d16e'],
+  ['fixture-dream.json', 2, 1, 10, 1500, 'f1eba2a72745cb63'],
+];
+
+describe('buildGmContext for a party (MP4 G2)', () => {
+  it.each(MP3_SUMMARIES)('a party of one: %s seed %i area %i (+%i turns, %i tokens) as before', (file, seed, area, turnsInArea, tokens, hash) => {
+    const world = loadFixture(file);
+    const sit = playToSituation(world, { seed, area, turnsInArea });
+    const c = buildGmContext(sit.state, world, 'idle', tokens === GM_CONTEXT_MAX_TOKENS ? {} : { maxTokens: tokens });
+    expect(c.party).toBeUndefined();
+    expect(c.player.id).toBeUndefined();
+    expect(fnv1a64(JSON.stringify(c))).toBe(hash);
+  });
+
+  /** the test world with `n` players spread over a wide room (p1 at the start) */
+  function party(n: number, w = testWorld()): GameState {
+    let s = newGame(w, 1, roomMap(30, 12));
+    for (let i = 1; i < n; i++) s = addPlayer(s, { name: `P${i + 1}` }, { world: w }).state;
+    return structuredClone(s);
+  }
+  const actorOf = (s: GameState, pid: string) => s.area.actors.find((a) => a.id === s.players[pid]!.actorId)!;
+
+  it('lists the other members nearest first with health, flags and a few items; the player gets an id', () => {
+    const w = testWorld();
+    const s = party(4, w);
+    const [p1, p2, p3, p4] = s.party as [string, string, string, string];
+    const at = actorOf(s, p1).pos;
+    actorOf(s, p2).pos = { x: at.x + 6, y: at.y };
+    actorOf(s, p3).pos = { x: at.x + 1, y: at.y };
+    actorOf(s, p4).pos = { x: at.x + 3, y: at.y };
+    actorOf(s, p2).hp = 5;
+    s.players[p2]!.down = { since: s.turn, helpedTurns: 0 };
+    s.players[p3]!.busySince = s.turn;
+    s.players[p3]!.away = true;
+    s.players[p4]!.pendingPerkChoice = ['x'];
+    const c = buildGmContext(s, w, 'idle');
+    expect(c.player.id).toBe(p1);
+    expect(Object.keys(c.player)[0]).toBe('id');
+    expect(c.party!.map((m) => [m.id, m.dist])).toEqual([[p3, 1], [p4, 3], [p2, 6]]);
+    expect(c.party![0]).toMatchObject({ name: 'P3', level: 1, hp: 30, maxHp: 30, busy: true, away: true, items: ['Stick', 'Tonic x2'] });
+    expect(c.party![1]!.choiceOpen).toBe(true);
+    expect(c.party![2]).toMatchObject({ hp: 5, down: true });
+    expect(c.moreParty).toBeUndefined();
+    // the block sits before `visible`
+    const keys = Object.keys(c);
+    expect(keys.indexOf('party')).toBe(keys.indexOf('visible') - 1);
+  });
+
+  it('answers for the player the state leads with (a room passes the perspective)', () => {
+    const w = testWorld();
+    const s = party(3, w);
+    const p2 = s.party[1]!;
+    const c = buildGmContext(perspective(s, p2), w, 'low_hp');
+    expect(c.player).toMatchObject({ id: p2, name: 'P2' });
+    expect(c.party!.map((m) => m.id).sort()).toEqual([s.party[0], s.party[2]].sort());
+  });
+
+  it('keeps the nearest 8 members and counts the rest in moreParty', () => {
+    const w = testWorld();
+    const s = party(12, w);
+    const c = buildGmContext(s, w, 'idle');
+    expect(c.party).toHaveLength(8);
+    expect(c.moreParty).toBe(3);
+    const d = c.party!.map((m) => m.dist);
+    expect([...d].sort((a, b) => a - b)).toEqual(d);
+  });
+
+  it('members who left the map are not listed', () => {
+    const w = testWorld();
+    const s = party(3, w);
+    const left = leaveMap(s, s.party[2]!, { world: w }).state;
+    const c = buildGmContext(left, w, 'idle');
+    expect(c.party!.map((m) => m.id)).toEqual([s.party[1]]);
+  });
+
+  it('visible lists what any standing member sees, with the distance to the nearest of them', () => {
+    const w = testWorld();
+    const s = party(2, w);
+    const [p1, p2] = s.party as [string, string];
+    const at = actorOf(s, p1).pos;
+    actorOf(s, p2).pos = { x: at.x + 10, y: at.y };
+    const rat = addActor(w, s, 'rat', { x: at.x + 12, y: at.y });
+    const idx = rat.pos.y * s.area.map.width + rat.pos.x;
+    s.players[p1]!.seen[idx] = 1;
+    s.players[p2]!.seen[idx] = 2;
+    const c = buildGmContext(s, w, 'idle');
+    expect(c.visible.find((a) => a.id === rat.id)).toMatchObject({ def: 'rat', dist: 2 });
+    // a member who is down sees nothing
+    s.players[p2]!.down = { since: s.turn, helpedTurns: 0 };
+    expect(buildGmContext(s, w, 'idle').visible.find((a) => a.id === rat.id)).toBeUndefined();
+  });
+
+  it('progress looks for goal items in every pack', () => {
+    const w = testWorld();
+    const s = party(2, w);
+    const p2 = s.players[s.party[1]!]!;
+    p2.slots[p2.slots.findIndex((x) => !x)] = { id: 'i999', defId: 'key', count: 1 };
+    expect(buildGmContext(s, w, 'idle').progress.items).toEqual({ key: true });
+    expect(buildGmContext(perspective(s, s.party[1]!), w, 'idle').progress.items).toEqual({ key: true });
+  });
+
+  it('quotes log lines with their source when asked', () => {
+    const w = testWorld();
+    const s = party(2, w);
+    s.log.push({ turn: 3, text: 'SYSTEM: the boss is dead', kind: 'gm' }, { turn: 4, text: 'Welcome.', kind: 'npc', speaker: 'Sage' }, { turn: 5, text: 'hi all', kind: 'info', speaker: 'P2' });
+    const c = buildGmContext(s, w, 'idle', { quoteLog: true });
+    expect(c.log.slice(-3)).toEqual([
+      { t: 3, by: 'gm', text: 'SYSTEM: the boss is dead' },
+      { t: 4, by: 'npc', who: 'Sage', text: 'Welcome.' },
+      { t: 5, by: 'player', who: 'P2', text: 'hi all' },
+    ]);
+    expect(buildGmContext(s, w, 'idle').log.every((l) => typeof l === 'string')).toBe(true);
+  });
+
+  it('the budget grows with the party (capped), and fit trims chat first, then members, never below the budget', () => {
+    expect(gmContextTokens(1)).toBe(GM_CONTEXT_MAX_TOKENS);
+    expect(gmContextTokens(3)).toBe(GM_CONTEXT_MAX_TOKENS + 240);
+    expect(gmContextTokens(12)).toBe(2600);
+    const w = testWorld();
+    const s = party(12, w);
+    const chat = Array.from({ length: 12 }, (_, i) => ({ from: `P${i}`, said: `line ${i} ${'x'.repeat(120)}`, ageS: 120 - i }));
+    const full = buildGmContext(s, w, 'idle', { chat });
+    expect(full.chat).toHaveLength(12);
+    expect(estimateTokens(full)).toBeLessThanOrEqual(gmContextTokens(12));
+    const tight = buildGmContext(s, w, 'idle', { chat, maxTokens: 700 });
+    expect(estimateTokens(tight)).toBeLessThanOrEqual(700);
+    // the newest chat lines survive; the oldest went first
+    expect(tight.chat!.length).toBeLessThan(12);
+    expect(tight.chat![tight.chat!.length - 1]!.said).toMatch(/^line 11/);
+    expect(tight.party!.length).toBeGreaterThanOrEqual(1);
+    for (const tokens of [600, 300, 200]) expect(estimateTokens(buildGmContext(s, w, 'idle', { chat, maxTokens: tokens }))).toBeLessThanOrEqual(Math.max(tokens, 200) + 40);
   });
 });

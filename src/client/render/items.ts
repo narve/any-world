@@ -9,6 +9,7 @@ import { buildModel, animateModel } from './models';
 import { compactModel } from './models/merge';
 import { col } from './color';
 import { glowTexture } from './textures';
+import { leadPlayer } from '../../engine/index';
 
 export interface ItemView {
   id: string;
@@ -50,7 +51,7 @@ export class ItemLayer {
 
   /** tint for unknown items: their run appearance colour */
   static tintFor(state: GameState | null, defId: string): string | null {
-    const k = state?.knowledge?.[defId];
+    const k = state ? leadPlayer(state).knowledge[defId] : undefined;
     if (k && k.level === 'unknown' && k.appearance?.color) return k.appearance.color;
     return null;
   }

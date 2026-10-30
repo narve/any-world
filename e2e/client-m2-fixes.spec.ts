@@ -33,7 +33,7 @@ test('ship: full O2 warns before spending a canister; Arc Weld aims by direction
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await startWorld(page, 'fixture-ship', 21);
-  const count = () => page.evaluate(() => window.__anyworld!.controller!.session.state.player.slots[2]?.count ?? 0);
+  const count = () => page.evaluate(() => window.__anyworld!.controller!.session.me.slots[2]?.count ?? 0);
   const c0 = await count();
   await page.keyboard.press('3');
   await page.waitForTimeout(300);
@@ -87,8 +87,8 @@ test('teen: p persuades inside a conversation; objective hint on its own line; q
       if (!tile || !(tile.kind === 'floor' || tile.kind === 'start' || tile.kind === 'door_open')) continue;
       if (st.area.actors.some((a) => a.pos.x === x && a.pos.y === y)) continue;
       await c.setStateForTest((s) => {
-        s.area.actors = s.area.actors.filter((a) => a.id === s.player.actorId || a.faction !== 'hostile');
-        s.area.actors.find((a) => a.id === s.player.actorId)!.pos = { x, y };
+        s.area.actors = s.area.actors.filter((a) => a.id === s.players[s.party[0]].actorId || a.faction !== 'hostile');
+        s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!.pos = { x, y };
       });
       c.actNow({ type: 'wait' });
       return t.id;
@@ -141,9 +141,9 @@ test('ship: trade window shows a Sell column only for what the trader buys, and 
       if (!tile || !(tile.kind === 'floor' || tile.kind === 'start' || tile.kind === 'door_open')) continue;
       if (st.area.actors.some((a) => a.pos.x === x && a.pos.y === y)) continue;
       await c.setStateForTest((s) => {
-        s.area.actors = s.area.actors.filter((a) => a.id === s.player.actorId || a.faction !== 'hostile');
-        s.area.actors.find((a) => a.id === s.player.actorId)!.pos = { x, y };
-        s.player.currency = 70;
+        s.area.actors = s.area.actors.filter((a) => a.id === s.players[s.party[0]].actorId || a.faction !== 'hostile');
+        s.area.actors.find((a) => a.id === s.players[s.party[0]].actorId)!.pos = { x, y };
+        s.purse = 70;
       });
       c.actNow({ type: 'wait' });
       return t.id;
@@ -166,10 +166,10 @@ test('ship: trade window shows a Sell column only for what the trader buys, and 
   expect(await page.locator('.aw-trade-row').count()).toBeGreaterThan(0);
   await shot(page, 'trade-buy-only');
   if (sellable) {
-    const before = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
+    const before = await page.evaluate(() => window.__anyworld!.controller!.session.state.purse);
     await page.locator('.aw-trade-cols section').nth(1).locator('.aw-trade-row').first().click();
     await page.waitForTimeout(400);
-    const after = await page.evaluate(() => window.__anyworld!.controller!.session.state.player.currency);
+    const after = await page.evaluate(() => window.__anyworld!.controller!.session.state.purse);
     expect(after).toBeGreaterThan(before);
     expect(await layer(page)).toBe('trade');
   }

@@ -76,6 +76,11 @@ export interface MockProviderOptions {
   /** fixed latency, or [min, max] uniformly drawn from the seeded generator */
   latencyMs?: number | [number, number];
   failure?: MockFailureOptions;
+  /** seed of the generator behind latency and failure draws (default failure.seed, else a constant) */
+  seed?: number;
+  /** timer hooks for the latency (default the globals; tests and rooms pass a manual clock's) */
+  setTimer?: (fn: () => void, ms: number) => unknown;
+  clearTimer?: (h: unknown) => void;
   model?: string;
   /** try the purpose prefix before ":" (default true) */
   matchPrefix?: boolean;
@@ -128,7 +133,7 @@ export class MockProvider implements LLMProvider {
     this.model = opts.model ?? 'mock';
     const mc = opts.maxCalls;
     this.maxCalls = mc === undefined || !Number.isFinite(mc) ? Infinity : Math.max(0, Math.floor(mc));
-    this.rand = mulberry32(opts.failure?.seed ?? 1234567);
+    this.rand = mulberry32(opts.seed ?? opts.failure?.seed ?? 1234567);
     for (const r of opts.recordings ?? []) this.add(r);
     for (const [key, v] of Object.entries(opts.responses ?? {})) {
       for (const one of Array.isArray(v) ? v : [v]) this.addKey(key, toValue(one));
@@ -186,14 +191,16 @@ export class MockProvider implements LLMProvider {
     if (l === undefined) return;
     const ms = Array.isArray(l) ? l[0] + (l[1] - l[0]) * this.rand() : l;
     if (ms <= 0) return;
+    const setTimer = this.opts.setTimer ?? ((fn: () => void, n: number) => setTimeout(fn, n));
+    const clearTimer = this.opts.clearTimer ?? ((h: unknown) => clearTimeout(h as ReturnType<typeof setTimeout>));
     await new Promise<void>((resolve, reject) => {
       if (signal?.aborted) return reject(new LLMAbortedError(undefined, { provider: this.id }));
-      const t = setTimeout(() => {
+      const t = setTimer(() => {
         signal?.removeEventListener('abort', onAbort);
         resolve();
       }, ms);
       const onAbort = () => {
-        clearTimeout(t);
+        clearTimer(t);
         reject(new LLMAbortedError(undefined, { provider: this.id }));
       };
       signal?.addEventListener('abort', onAbort, { once: true });

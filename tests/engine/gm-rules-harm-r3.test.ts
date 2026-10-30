@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import type { GmAction } from '../../src/schema/gm';
 import type { RuleVariant } from '../../src/schema/world';
-import { applyGmActions, createGame } from '../../src/engine';
+import { applyGmActions, createGame, patchPlayer } from '../../src/engine';
 import type { GameState } from '../../src/engine/types';
 import { estimateRuleImpact, expectedPositive, goalRefs, statCeiling } from '../../src/engine/rules';
 import { testWorld, env, act, roomMap, simpleGenerator, loadFixture, player } from './helpers';
@@ -85,12 +85,12 @@ describe('GM rule harm: effects the estimator prices at 0', () => {
 
 describe('GM rule harm: permadeathMercy counted as help when it can no longer help', () => {
   // The estimate always credits -maxHp/3 for permadeathMercy, even when the mercy was already used
-  // (GameState.mercyUsed) or another rule already grants it. On normal (ruleHarm 6) a rule
+  // (PlayerState.mercyUsed) or another rule already grants it. On normal (ruleHarm 6) a rule
   // "mercy + 1 damage every 7 turns" nets 14.3 - 10 = 4.3 and is accepted, but after the mercy is
   // spent it is a pure 14.3 hp/100t drain, over the per-rule allowance.
   it('normal refuses a mercy-counterweighted drain once the mercy is spent', () => {
     const w = testWorld();
-    const s0 = { ...game('normal', w), mercyUsed: true } as GameState;
+    const s0 = patchPlayer(game('normal', w), { mercyUsed: true });
     const r = rule('fake_mercy', {
       playerTriggers: [onTurn(7, [{ type: 'damage', amount: { base: 1 }, damageType: 'physical' }])],
       switches: { permadeathMercy: true },
@@ -224,7 +224,7 @@ describe('permadeathMercy credit follows the state', () => {
     const w = testWorld((x) => {
       x.rules = [{ id: 'mercy', name: 'Mercy', description: 'd', playerTriggers: [], switches: { permadeathMercy: true } }];
     });
-    const s0 = { ...game('normal', w), mercyUsed: true } as GameState;
+    const s0 = patchPlayer(game('normal', w), { mercyUsed: true });
     const res = applyGmActions(s0, [{ type: 'remove_rule', id: 'mercy', reason: 'r3' }], env(w));
     expect(ids(res.state)).not.toContain('mercy');
     expect(res.state.gmRetiredHarm ?? 0).toBe(0);

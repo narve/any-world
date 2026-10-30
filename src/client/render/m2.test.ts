@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { parseWorld } from '../../schema/refs';
 import type { WorldSpec, AreaPlan } from '../../schema/world';
 import type { AreaMap, AreaState, Tile } from '../../engine/types';
-import { AreaView } from './tiles';
+import { AreaView, type FoggedArea } from './tiles';
 import { ActorLayer, actorScaleFor, lowContrast, MIN_ACTOR_HEIGHT, ACTOR_SCALE } from './actors';
 import { Backdrop, backdropParams, backdropHorizonColor, BACKDROP_STYLES } from './backdrop';
 import { defaultDistance, DEFAULT_HALF_WIDTH, CAMERA_FOV_DEG, CameraRig, MAX_DIST, MIN_DIST } from './camera';
@@ -42,7 +42,7 @@ function mapFrom(rows: string[]): AreaMap {
   return { width: W, height: rows.length, tiles, start: { x: s % W, y: Math.floor(s / W) }, exit: { x: e % W, y: Math.floor(e / W) }, regions: [] };
 }
 
-const area = (map: AreaMap): AreaState => ({ index: 0, map, actors: [], items: [], seen: new Array(map.tiles.length).fill(2), discoveredRegions: [], gmBudget: 0 });
+const area = (map: AreaMap): FoggedArea => ({ index: 0, map, actors: [], items: [], seen: new Array(map.tiles.length).fill(2), discoveredRegions: [], gmBudget: 0 });
 
 describe('surface rules', () => {
   it('picks a wall look per layout family', () => {

@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { parseWorld } from '../../../src/schema/refs';
 import type { WorldSpec } from '../../../src/schema/world';
 import { GmAction } from '../../../src/schema/gm';
-import { applyGmActions } from '../../../src/engine/index';
+import { applyGmActions, leadPlayer } from '../../../src/engine/index';
 import { applyHelpCeiling, gmActionProblems, isHelpfulAction } from '../../../src/llm/gm-checks';
 import { playToSituation } from '../../../src/llm/situation';
 import { cheb } from '../../../src/client/travel';
@@ -28,14 +28,14 @@ describe('GM teleport to the exit', () => {
     const sit = playToSituation(world, { seed: 1, area: 0, turnsInArea: 1 });
     expect(sit.reached).toBe(true);
     const s0 = sit.state;
-    const me = () => s0.area.actors.find((a) => a.id === s0.player.actorId)!;
+    const me = () => s0.area.actors.find((a) => a.id === leadPlayer(s0).actorId)!;
     const before = cheb(me().pos, s0.area.map.exit);
     expect(before).toBeGreaterThan(10);
 
     const hop = GmAction.parse({ type: 'effect', target: 'player', effects: [{ type: 'teleport', mode: 'to_exit' }] });
     expect(gmActionProblems(world, s0, [hop])).toEqual([]);
     const s1 = applyGmActions(s0, [hop], { world }).state;
-    const pl = s1.area.actors.find((a) => a.id === s1.player.actorId)!;
+    const pl = s1.area.actors.find((a) => a.id === leadPlayer(s1).actorId)!;
     // the player now stands at the exit of an area they had barely entered
     expect(cheb(pl.pos, s1.area.map.exit)).toBeLessThanOrEqual(6);
 

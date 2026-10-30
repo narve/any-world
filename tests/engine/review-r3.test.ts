@@ -5,7 +5,7 @@
  * See issues/M1-*.md for each issue.
  */
 import { describe, expect, it } from 'vitest';
-import { legalActions, step } from '../../src/engine';
+import { legalActions, step, leadPlayer } from '../../src/engine';
 import type { GameState, Pos } from '../../src/engine/types';
 import { addActor, ctxFor, env, newGame, player, roomMap, testWorld } from './helpers';
 import { dealDamage, inAttackRange } from '../../src/engine/combat';
@@ -18,7 +18,7 @@ const model = { archetype: 'blob', colors: { primary: '#888888' } } as const;
 const selfT = { shape: 'self', range: 0, radius: 0, affects: 'self_only', needsLos: false } as const;
 
 function slotOf(s: GameState, defId: string): number {
-  return s.player.slots.findIndex((it) => it?.defId === defId);
+  return leadPlayer(s).slots.findIndex((it) => it?.defId === defId);
 }
 
 /** a world with a stationary shooter (range 6), like the western playtest's Claim Jumper */
@@ -99,7 +99,7 @@ describe('perception symmetry: nobody attacks the player from a tile the player 
           if (!a) continue;
           attacks++;
           if (Math.max(Math.abs(a.pos.x - pl.pos.x), Math.abs(a.pos.y - pl.pos.y)) <= 1) continue;
-          expect(st.area.seen[a.pos.y * st.area.map.width + a.pos.x], `seed ${seed} turn ${turn}: hit from unseen ${a.defId}`).toBe(2);
+          expect(leadPlayer(st).seen[a.pos.y * st.area.map.width + a.pos.x], `seed ${seed} turn ${turn}: hit from unseen ${a.defId}`).toBe(2);
         }
         s = st;
       }
@@ -227,8 +227,8 @@ describe('terrain interactions', () => {
     let s = newGame(world, 1, map);
     s = step(s, { type: 'interact', pos: { x: 2, y: 1 } }, env(world)).state; // no key yet: nothing happens
     expect(legalActions(s, env(world)).some((a) => a.type === 'interact')).toBe(true);
-    const slot = s.player.slots.findIndex((x) => x === null);
-    s.player.slots[slot] = { id: 'i900', defId: 'key', count: 1 }; // the player finds the key
+    const slot = leadPlayer(s).slots.findIndex((x) => x === null);
+    leadPlayer(s).slots[slot] = { id: 'i900', defId: 'key', count: 1 }; // the player finds the key
     const before = s.area.items.length;
     const r = step(s, { type: 'interact', pos: { x: 2, y: 1 } }, env(world));
     expect(r.events.find((e) => e.type === 'invalid')).toBeUndefined();
@@ -316,9 +316,9 @@ describe('transformed uniques', () => {
     const s = newGame(world);
     const boss = addActor(world, s, 'boss', { x: 2, y: 1 });
     const ctx = ctxFor(world, s);
-    dealDamage(ctx, boss, 15, 'physical', s.player.actorId); // below 30%: the boss becomes its true form
+    dealDamage(ctx, boss, 15, 'physical', leadPlayer(s).actorId); // below 30%: the boss becomes its true form
     expect(boss.defId).toBe('golem');
-    dealDamage(ctx, boss, 999, 'physical', s.player.actorId); // the true form falls
+    dealDamage(ctx, boss, 999, 'physical', leadPlayer(s).actorId); // the true form falls
     checkEnd(ctx);
     expect(ctx.s.status).toBe('won');
     expect(ctx.s.defeated.golem).toBe(1);
@@ -329,10 +329,10 @@ describe('transformed uniques', () => {
     const s = newGame(world);
     const boss = addActor(world, s, 'boss', { x: 2, y: 1 });
     const ctx = ctxFor(world, s);
-    dealDamage(ctx, boss, 15, 'physical', s.player.actorId);
+    dealDamage(ctx, boss, 15, 'physical', leadPlayer(s).actorId);
     expect(boss.defId).toBe('golem');
     expect(spawnActor(ctx, 'boss', { x: 6, y: 6 })).toBeNull();
-    dealDamage(ctx, boss, 999, 'physical', s.player.actorId);
+    dealDamage(ctx, boss, 999, 'physical', leadPlayer(s).actorId);
     expect(ctx.s.flags['boss-down']).toBe(true);
     checkEnd(ctx);
     expect(ctx.s.status).toBe('won');

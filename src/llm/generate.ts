@@ -24,7 +24,7 @@ import { DEFAULT_BACKEND_TIMEOUT_MS } from './http';
 import { checkStructuredText, completeStructured, extractJson, repairMessage, StructuredOutputError, type CheckResult, type Usage } from './structured';
 import { worldRequest, WORLD_MAX_TOKENS, type WorldPromptOptions } from './prompts/world';
 import { normaliseLanguage } from './prompts/common';
-import { tuneWorld, type BalanceReport, type TuneStep, type Verdict } from '../engine/balance/index';
+import type { BalanceReport, TuneStep, Verdict } from '../engine/balance/index';
 import type { BotName } from '../engine/sim/bots';
 
 type WorldSpecT = WorldSpec;
@@ -100,7 +100,7 @@ export interface GenerateWorldOptions extends WorldPromptOptions {
   balanceFeedback?: number;
   maxTokens?: number;
   /**
-   * Runs the balance step; default `balanceWorld` on this thread. The browser passes a Web Worker
+   * Runs the balance step; default `balanceWorld` (balance-run.ts) on this thread. The browser passes a Web Worker
    * based balancer (balance-worker.ts: `workerBalancer`) so the loading screen stays responsive.
    */
   balancer?: Balancer;
@@ -184,18 +184,11 @@ export function isUnplayable(v: Verdict): boolean {
   return v === 'unwinnable' || v === 'broken';
 }
 
-/** run the automatic balance step (static analysis + bots + rebalance) on a valid world */
-export function balanceWorld(world: WorldSpecT, difficulty: Difficulty, opts: BalanceOptions = {}): BalanceOutcome {
-  const res = tuneWorld(world, {
-    seeds: opts.seeds ?? 12,
-    bots: opts.bots ?? ['explorer', 'cautious'],
-    rounds: opts.rounds ?? 2,
-    confirm: opts.confirm ?? true,
-    difficulty,
-    fast: true,
-  });
-  return { world: res.world, report: res.report, history: res.history.filter((h) => h.changes.length > 0) };
-}
+/**
+ * The balance step on this thread (balance-run.ts), loaded on first use: the bots and simulations
+ * stay out of the start bundle (the browser normally balances in a worker, balance-worker.ts).
+ */
+export const balanceHere: Balancer = async (world, difficulty, opts) => (await import('./balance-run')).balanceWorld(world, difficulty, opts);
 
 export type BalanceOutcome = { world: WorldSpecT; report: BalanceReport; history: TuneStep[] };
 export type Balancer = (world: WorldSpecT, difficulty: Difficulty, opts: BalanceOptions, signal?: AbortSignal) => BalanceOutcome | Promise<BalanceOutcome>;
@@ -387,7 +380,7 @@ export async function generateWorld(opts: GenerateWorldOptions): Promise<Generat
       progress({ stage: 'balancing', fraction: 0.7, message: 'Play-testing the world with bots…', key: 'gen.progress.balancing' });
       await yieldToUi();
       if (ctrl.signal.aborted) fail(new LLMAbortedError());
-      const bal = await (opts.balancer ?? balanceWorld)(world, difficulty, opts.balance ?? {}, ctrl.signal);
+      const bal = await (opts.balancer ?? balanceHere)(world, difficulty, opts.balance ?? {}, ctrl.signal);
       if (ctrl.signal.aborted) fail(new LLMAbortedError());
       await yieldToUi();
       const rep = bal.report;

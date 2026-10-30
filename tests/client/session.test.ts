@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest';
 import type { GameState, Pos } from '../../src/engine/types';
 import { GameSession } from '../../src/client/session';
 import { loadFixture, roomMap } from '../engine/helpers';
+import { leadPlayer, patchPlayer } from '../../src/engine';
 
 const western = loadFixture('fixture-western.json');
 const ship = loadFixture('fixture-ship.json');
@@ -19,7 +20,7 @@ const P = (s: GameSession) => s.player().pos;
 /** moves the player (and only the player) to `pos`, then lets one free action refresh FOV */
 function teleport(s: GameSession, pos: Pos): void {
   const st = structuredClone(s.state) as GameState;
-  st.area.actors.find((a) => a.id === st.player.actorId)!.pos = { ...pos };
+  st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!.pos = { ...pos };
   s.state = st;
   s.act({ type: 'toggle_sneak' }); // may be refused (no sneak verb): FOV only refreshes on success
   s.act({ type: 'wait' });
@@ -28,7 +29,7 @@ function teleport(s: GameSession, pos: Pos): void {
 /** clears every actor except the player and the given def ids */
 function onlyKeep(s: GameSession, defIds: string[]): void {
   const st = structuredClone(s.state) as GameState;
-  st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || defIds.includes(a.defId));
+  st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId || defIds.includes(a.defId));
   s.state = st;
 }
 
@@ -128,21 +129,21 @@ describe('talk, dialogue and trade', () => {
     // reply 0 = "Ask for help" (healer service): healed, and the healer answers in the same
     // conversation (issues/M5-healer-silent.md)
     const hurt = structuredClone(s.state) as GameState;
-    hurt.area.actors.find((a) => a.id === hurt.player.actorId)!.hp = 3;
+    hurt.area.actors.find((a) => a.id === leadPlayer(hurt).actorId)!.hp = 3;
     s.state = hurt;
     s.dialogueReply(0);
-    expect(s.state.pendingChoice?.kind).toBe('dialogue');
+    expect(leadPlayer(s.state).pendingChoice?.kind).toBe('dialogue');
     expect(s.player().hp).toBeGreaterThan(3);
     expect(s.history.map((h) => h.who)).toEqual(['npc', 'player']);
     expect(s.viewModel().game!.dialogue!.reply).toMatch(/helps you/);
     // leave, talk again: a new conversation, then leave
     s.dialogueLeave();
-    expect(s.state.pendingChoice).toBeNull();
+    expect(leadPlayer(s.state).pendingChoice).toBeNull();
     s.intent({ type: 'talk' });
-    expect(s.state.pendingChoice?.kind).toBe('dialogue');
+    expect(leadPlayer(s.state).pendingChoice?.kind).toBe('dialogue');
     expect(s.history).toEqual([]);
     s.dialogueLeave();
-    expect(s.state.pendingChoice).toBeNull();
+    expect(leadPlayer(s.state).pendingChoice).toBeNull();
     expect(s.viewModel().game!.dialogue).toBeNull();
   });
 
@@ -152,11 +153,11 @@ describe('talk, dialogue and trade', () => {
     teleport(s, { x: 5, y: 5 });
     const id = placeActor(s, 'kid-tobias', { x: 6, y: 5 });
     s.intent({ type: 'talk' });
-    expect(s.state.pendingChoice?.kind).toBe('dialogue');
+    expect(leadPlayer(s.state).pendingChoice?.kind).toBe('dialogue');
     const t0 = s.state.turn;
     const out = s.intent({ type: 'persuade', targetId: id });
     expect(out.changed).toBe(true);
-    expect(s.state.pendingChoice).toBeNull();
+    expect(leadPlayer(s.state).pendingChoice).toBeNull();
     expect(s.state.turn).toBeGreaterThan(t0); // persuading took the turn
   });
 
@@ -166,7 +167,7 @@ describe('talk, dialogue and trade', () => {
     teleport(s, { x: 5, y: 5 });
     const id = placeActor(s, 'widow-oquendo', { x: 6, y: 5 });
     const rich = structuredClone(s.state) as GameState;
-    rich.player.currency = 500;
+    rich.purse = 500;
     s.state = rich;
     s.intent({ type: 'talk' });
     expect(s.viewModel().game!.dialogue!.canTrade).toBe(true);
@@ -175,10 +176,10 @@ describe('talk, dialogue and trade', () => {
     expect(tv.offers.length).toBeGreaterThan(0);
     expect(s.viewModel().game!.dialogue).toBeNull(); // trade replaces the dialogue panel
     const price = tv.offers[0].price;
-    const countHeld = () => s.state.player.slots.filter(Boolean).length;
+    const countHeld = () => leadPlayer(s.state).slots.filter(Boolean).length;
     const held = countHeld();
     s.trade({ type: 'buy', offerIndex: 0 });
-    expect(s.state.player.currency).toBe(500 - price);
+    expect(s.state.purse).toBe(500 - price);
     expect(countHeld()).toBeGreaterThanOrEqual(held); // stacks may merge
     expect(s.viewModel().game!.trade).not.toBeNull();
     s.trade({ type: 'close' });
@@ -192,7 +193,7 @@ describe('talk, dialogue and trade', () => {
     teleport(s, { x: 5, y: 5 });
     const id = placeActor(s, 'widow-oquendo', { x: 6, y: 5 });
     const poor = structuredClone(s.state) as GameState;
-    poor.player.currency = 0;
+    poor.purse = 0;
     s.state = poor;
     s.intent({ type: 'talk' });
     s.intent({ type: 'open_trade', npcId: id });
@@ -225,7 +226,7 @@ describe('look and target modes', () => {
 
   it('aimed items go through targeting and fire at the confirmed tile', () => {
     const s = session();
-    const slot = s.state.player.slots.findIndex((it) => it?.defId === 'trick-shot');
+    const slot = leadPlayer(s.state).slots.findIndex((it) => it?.defId === 'trick-shot');
     expect(slot).toBeGreaterThanOrEqual(0);
     const foe = s.state.area.actors.find((a) => a.faction === 'hostile');
     onlyKeep(s, foe ? [foe.defId] : []);
@@ -248,7 +249,7 @@ describe('look and target modes', () => {
       s.state = st;
       s.intent({ type: 'cancel' });
       s.act({ type: 'wait' });
-      if (s.state.player.pendingPerkChoice || s.ended) return;
+      if (leadPlayer(s.state).pendingPerkChoice || s.ended) return;
       s.intent({ type: 'begin_target', slot });
     }
     const cursor = s.cursor!;
@@ -266,7 +267,7 @@ describe('look and target modes', () => {
 
   it('a primary click in target mode uses the item on that tile; secondary cancels', () => {
     const s = session();
-    const slot = s.state.player.slots.findIndex((it) => it?.defId === 'trick-shot');
+    const slot = leadPlayer(s.state).slots.findIndex((it) => it?.defId === 'trick-shot');
     onlyKeep(s, []);
     teleport(s, { x: 3, y: 5 });
     s.intent({ type: 'begin_target', slot });
@@ -303,13 +304,13 @@ describe('click-to-travel', () => {
     expect(foe).toBeDefined();
     onlyKeep(s, [foe.defId]);
     const st = structuredClone(s.state) as GameState;
-    st.area.actors = st.area.actors.filter((a) => a.id === st.player.actorId || a.id === foe.id);
+    st.area.actors = st.area.actors.filter((a) => a.id === leadPlayer(st).actorId || a.id === foe.id);
     st.area.actors.find((a) => a.id === foe.id)!.pos = { x: 15, y: 2 }; // behind the wall
     s.state = st;
     teleport(s, { x: 3, y: 8 });
     // reveal the whole row so the destination past the wall is "explored"
-    const seen = Uint8Array.from(s.state.area.seen as ArrayLike<number>, (v) => (v === 0 ? 1 : v));
-    s.state = { ...s.state, area: { ...s.state.area, seen } };
+    const seen = Uint8Array.from(leadPlayer(s.state).seen as ArrayLike<number>, (v) => (v === 0 ? 1 : v));
+    s.state = patchPlayer(s.state, { seen });
     expect(s.intent({ type: 'click_tile', pos: { x: 17, y: 8 }, button: 'primary' }).travel).toBe(true);
     let stoppedAt: Pos | null = null;
     for (let i = 0; i < 30; i++) {
@@ -327,12 +328,12 @@ describe('click-to-travel', () => {
 
   it('walks toward unexplored destinations, without leaking what is there', () => {
     const s = session();
-    const p = s.state.area.actors.find((a) => a.id === s.state.player.actorId)!.pos;
+    const p = s.state.area.actors.find((a) => a.id === leadPlayer(s.state).actorId)!.pos;
     const map = s.state.area.map;
     // only the player's own tile and its neighbours are known
-    const seen = new Uint8Array(s.state.area.seen.length);
+    const seen = new Uint8Array(leadPlayer(s.state).seen.length);
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) seen[(p.y + dy) * map.width + p.x + dx] = 2;
-    s.state = { ...s.state, area: { ...s.state.area, seen } };
+    s.state = patchPlayer(s.state, { seen });
     let dest: Pos | null = null;
     for (let y = 1; y < map.height - 1 && !dest; y++)
       for (let x = 1; x < map.width - 1; x++)
@@ -437,7 +438,7 @@ describe('hostile hover preview', () => {
     teleport(s, { x: 4, y: 5 });
     // placed after the FOV refresh, so it has no turn to move
     const st = structuredClone(s.state) as GameState;
-    const pl = st.area.actors.find((a) => a.id === st.player.actorId)!;
+    const pl = st.area.actors.find((a) => a.id === leadPlayer(st).actorId)!;
     st.area.actors.push({ ...structuredClone(pl), id: 'a777', defId: hostile.id, faction: 'hostile', pos: { x: 6, y: 5 } });
     s.state = st;
     expect(s.preview({ x: 6, y: 5 })?.kind).toBe('attack');
