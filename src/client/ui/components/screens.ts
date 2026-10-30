@@ -946,6 +946,7 @@ export class SettingsDialog {
           h('legend', null, t('settings.audio')),
           h('div', { class: 'aw-field aw-field-row' }, h('label', { for: 'aw-set-volume' }, t('settings.volume')), volume),
           check('aw-set-mute', d.audio.muted, t('settings.mute'), (on) => this.set((s) => (s.audio.muted = on))),
+          check('aw-set-music', d.audio.music !== false, t('settings.music'), (on) => this.set((s) => (s.audio.music = on)), t('settings.musicHint')),
           check('aw-set-soundcloud', !!d.audio.soundcloud, t('settings.soundcloud'), (on) => this.set((s) => (s.audio.soundcloud = on)), t('settings.soundcloudHint')),
           musicHost,
         ),

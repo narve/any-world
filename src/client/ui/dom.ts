@@ -151,6 +151,9 @@ export const ICONS = {
   help: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3', 'M12 17h.01'],
   bag: ['M6 7h12l1 13H5L6 7z', 'M9 7V5a3 3 0 0 1 6 0v2'],
   scroll: ['M8 4h11v13a3 3 0 0 1-3 3H6', 'M5 20a3 3 0 0 1-3-3V7h6', 'M12 9h4', 'M12 13h4'],
+  /** sound on / off (hotbar toggle) */
+  sound: ['M4 9h4l5-4v14l-5-4H4V9z', 'M16 9a4 4 0 0 1 0 6', 'M19 6a8 8 0 0 1 0 12'],
+  soundOff: ['M4 9h4l5-4v14l-5-4H4V9z', 'M17 9l5 6', 'M22 9l-5 6'],
   play: ['M6 4l14 8-14 8V4z'],
   sparkle: ['M12 3v4', 'M12 17v4', 'M3 12h4', 'M17 12h4', 'M6 6l2 2', 'M16 16l2 2', 'M6 18l2-2', 'M16 8l2-2'],
   check: ['M5 12l5 5L20 7'],

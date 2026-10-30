@@ -83,6 +83,7 @@ export type UiCommand =
   | { type: 'zoom'; delta: -1 | 1 }
   | { type: 'help' }
   | { type: 'rules' }
+  | { type: 'sound' }
   | { type: 'close' }
   | { type: 'nav'; dir: Dir }
   | { type: 'confirm' }
@@ -198,6 +199,8 @@ function gameKey(ev: KeyLike, verbs: InputVerbs, room = false): UiCommand | null
       return { type: 'rotate', dir: 1 };
     case 'r':
       return { type: 'rules' };
+    case 'm':
+      return { type: 'sound' };
   }
   return null;
 }
@@ -335,6 +338,7 @@ export function keyHelp(verbs: InputVerbs, vocab: Pick<Vocabulary, 'conflict'>, 
         { keys: ['r'], what: t('help.rules') },
         { keys: ['q', 'e'], what: t('help.rotate') },
         { keys: ['+', '-'], what: t('help.zoom') },
+        { keys: ['m'], what: t('help.sound') },
         { keys: ['?'], what: t('help.help') },
         { keys: [t('key.esc')], what: t('help.close') },
       ],

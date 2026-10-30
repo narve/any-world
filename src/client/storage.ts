@@ -82,7 +82,7 @@ export function defaultSettings(transport: 'direct' | 'backend'): Settings {
     // the browser-only build (direct transport) starts with the offline demo generator ('mock', modes.ts
     // OFFLINE_PRESET), so a first visit works with no key; the backend build starts with Anthropic
     provider: { preset: transport === 'direct' ? 'mock' : 'anthropic', transport },
-    audio: { volume: 0.6, muted: false, soundcloud: false },
+    audio: { volume: 0.6, muted: false, soundcloud: false, music: true },
     animationSpeed: 1,
     reduceMotion: false,
     quality: 'auto',
@@ -121,7 +121,7 @@ export function normalizeSettings(v: unknown, transport: 'direct' | 'backend', t
   return {
     provider,
     ...(Object.keys(apiKeys).length ? { apiKeys } : {}),
-    audio: { volume: vol, muted: !!a.muted, soundcloud: !!a.soundcloud },
+    audio: { volume: vol, muted: !!a.muted, soundcloud: !!a.soundcloud, music: a.music !== false },
     animationSpeed: typeof o.animationSpeed === 'number' && Number.isFinite(o.animationSpeed) ? Math.min(3, Math.max(0.5, o.animationSpeed)) : 1,
     reduceMotion: !!o.reduceMotion,
     quality: (QUALITIES as readonly string[]).includes(o.quality as string) ? (o.quality as Settings['quality']) : 'auto',

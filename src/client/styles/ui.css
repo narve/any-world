@@ -826,9 +826,11 @@ body {
   gap: 6px;
 }
 
+/* panel buttons in columns of three (backpack, rules, help | sound, settings, + a room's chat) */
 .aw-hotbar-tools {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: repeat(3, auto);
+  grid-auto-flow: column;
   gap: 2px;
   padding-left: 8px;
   border-left: 1px solid var(--c-border);
@@ -3776,6 +3778,7 @@ body {
 }
 
 .aw-ui[data-layout='tablet'][data-input='touch'] .aw-hotbar-tools {
+  display: flex;
   flex-direction: row;
 }
 
@@ -4158,6 +4161,7 @@ body {
 
 .aw-ui:is([data-layout='phone-portrait'], [data-layout='phone-landscape']) .aw-hotbar-tools {
   grid-area: tools;
+  display: flex;
   flex-direction: row;
   justify-content: flex-end;
   align-self: end;
@@ -4368,7 +4372,10 @@ body {
   margin-top: 6px;
 }
 
+/* at most three buttons a row, so the log beside them keeps its width */
 .aw-ui[data-layout='phone-portrait'] .aw-hotbar-tools {
+  flex-wrap: wrap;
+  max-width: 140px;
   margin-top: 6px;
 }
 
@@ -4607,6 +4614,7 @@ body {
   }
 
   .aw-ui[data-layout='tablet'] .aw-hotbar-tools {
+    display: flex;
     flex-basis: 100%;
     flex-direction: row;
     justify-content: flex-end;

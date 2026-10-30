@@ -108,6 +108,11 @@ export interface MusicPanelOptions {
   settings?: { soundcloud?: boolean };
   /** the live audio engine, for the mute / volume / ambience controls (omit for links only) */
   engine?: PanelAudio;
+  /**
+   * show the panel's own mute / volume / ambience controls (default true). The game turns them off:
+   * the settings dialog's saved controls stand in for them, so a choice there survives a reload.
+   */
+  mixer?: boolean;
   doc?: Document;
   /** network state (default: navigator.onLine) */
   online?: () => boolean;
@@ -273,7 +278,7 @@ export function createMusicPanel(opts: MusicPanelOptions = {}): MusicPanel {
       };
     }
     if (m.description) el.appendChild(node('p', { class: 'aw-music-desc' }, m.description));
-    if (opts.engine) el.appendChild(controls(opts.engine));
+    if (opts.engine && opts.mixer !== false) el.appendChild(controls(opts.engine));
     if (m.offline) el.appendChild(node('p', { class: 'aw-music-note aw-music-offline', role: 'status' }, at('audio.panel.offline')));
     if (m.searchLinks.length) {
       el.appendChild(node('h4', {}, at('audio.panel.search')));

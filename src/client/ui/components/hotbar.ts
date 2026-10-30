@@ -14,6 +14,8 @@ export interface HotbarHandlers {
   toggleBackpack(): void;
   toggleRules(): void;
   toggleHelp(): void;
+  toggleSound(): void;
+  openSettings(): void;
   bindSlot(el: HTMLElement, slot: number): void;
 }
 
@@ -69,8 +71,12 @@ export class Hotbar {
   private slotsEl: HTMLElement;
   private key = '';
   private slotEls: HTMLElement[] = [];
+  private soundBtn: HTMLButtonElement;
+  private muted: boolean | null = null;
 
   constructor(private handlers: HotbarHandlers, private tooltip: Tooltip, private ctx: () => UiContext) {
+    this.soundBtn = h('button', { type: 'button', class: 'aw-icon-btn aw-hotbar-sound', onclick: () => handlers.toggleSound() }) as HTMLButtonElement;
+    this.setMuted(false);
     this.slotsEl = h('div', { class: 'aw-hotbar-slots', role: 'toolbar', 'aria-label': t('hotbar.label') });
     this.el = h(
       'nav',
@@ -82,8 +88,21 @@ export class Hotbar {
         h('button', { type: 'button', class: 'aw-icon-btn', 'aria-label': t('hotbar.backpackAria'), dataset: { tip: t('hotbar.backpackTip') }, onclick: () => handlers.toggleBackpack() }, icon(ICONS.bag)),
         h('button', { type: 'button', class: 'aw-icon-btn', 'aria-label': t('hotbar.rulesAria'), dataset: { tip: t('hotbar.rulesTip') }, onclick: () => handlers.toggleRules() }, icon(ICONS.scroll)),
         h('button', { type: 'button', class: 'aw-icon-btn', 'aria-label': t('hotbar.helpAria'), dataset: { tip: t('hotbar.helpTip') }, onclick: () => handlers.toggleHelp() }, icon(ICONS.help)),
+        this.soundBtn,
+        h('button', { type: 'button', class: 'aw-icon-btn aw-hotbar-settings', 'aria-label': t('hotbar.settingsAria'), dataset: { tip: t('hotbar.settingsTip') }, onclick: () => handlers.openSettings() }, icon(ICONS.gear)),
       ),
     );
+  }
+
+  /** the sound toggle shows the saved mute setting */
+  setMuted(muted: boolean): void {
+    if (muted === this.muted) return;
+    this.muted = muted;
+    const label = muted ? t('hotbar.soundOnAria') : t('hotbar.soundOffAria');
+    this.soundBtn.setAttribute('aria-label', label);
+    this.soundBtn.setAttribute('aria-pressed', String(muted));
+    this.soundBtn.dataset.tip = label;
+    this.soundBtn.replaceChildren(icon(muted ? ICONS.soundOff : ICONS.sound));
   }
 
   /** the element of quick slot `i` (anchors the slot tip) */

@@ -144,7 +144,10 @@ describe('AudioBridge', () => {
     b.update(update('combat'));
     expect(calls.at(-1)).toEqual(['mute', true]); // no updates between runs
     b.applySettings({ volume: 0.3, muted: false, soundcloud: true });
-    expect(calls.at(-1)).toEqual(['applySettings', { volume: 0.3, soundcloud: true, muted: true }]);
+    expect(calls.at(-1)).toEqual(['applySettings', { volume: 0.3, soundcloud: true, music: true, muted: true }]);
+    // the music switch is passed on (it is saved with the other settings)
+    b.applySettings({ volume: 0.3, muted: false, soundcloud: true, music: false });
+    expect(calls.at(-1)).toEqual(['applySettings', { volume: 0.3, soundcloud: true, music: false, muted: true }]);
     await b.startRun(western, 2);
     expect(calls.slice(-2)).toEqual([
       ['setWorld', western.meta.title, 2],

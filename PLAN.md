@@ -118,7 +118,7 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
 
 ## Backlog added after MP5 (user, 2026-10-30)
 
-- **TODO: sound on/off button.** Today sound is muted only from the settings dialog (`muted` in
+- **Done: sound on/off button** (speaker on the hotbar and the `M` key; saved setting). Today sound is muted only from the settings dialog (`muted` in
   `applySettings`, src/client/audio-bridge.ts). Add a one-tap speaker toggle that is always visible
   during a run (desktop HUD and phone layout). It uses the same stored `muted` setting, so the toggle
   and the settings dialog never disagree. Keyboard shortcut (e.g. `M`) if it doesn't clash. en + nb strings.
@@ -126,12 +126,12 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   with each milestone: provider note, demo worlds, own worlds, party option, open rooms. Tidy it up,
   with a clear main action, less text, related things grouped and secondary options folded away. Check
   it on phone portrait as well as desktop.
-- **TODO (bug): switching off music in settings isn't saved.** The music comes back on the next
+- **Fixed: switching off music in settings wasn't saved.** The cause: the music panel's own controls (mute, volume, *Generated ambience*) changed only the engine. They are hidden in the game now; the settings dialog has a saved *Music* switch (`Settings.audio.music`). The music comes back on the next
   load or run. Likely cause, not yet verified: the music panel's Mute button
   (src/client/audio/music-panel.ts) calls `engine.mute()` directly and never updates the stored `muted`
   setting (`saveSettings`, src/client/storage.ts). Make every mute/volume control write the setting,
   add a regression test (mute, reload, still muted), and share the code path with the sound on/off button.
-- **TODO: visible settings gear during a run.** Today settings is reached in a run only through
+- **Done: visible settings gear during a run** (on the hotbar). Today settings is reached in a run only through
   `?` → "Settings & music" in the Controls overlay. Add a gear icon button that is always visible in
   the run HUD (next to the help button on the hotbar, src/client/ui/components/hotbar.ts, and in the
   phone layout). It opens the same settings dialog as the start screen's gear.

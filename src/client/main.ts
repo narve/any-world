@@ -98,6 +98,7 @@ export class App {
     this.audio = new AudioBridge(this.settings.audio);
     document.documentElement.lang = getLanguage();
     this.ui = createUi(uiRoot, this.callbacks());
+    this.ui.setMuted(this.settings.audio.muted);
     void this.refreshServerPresets();
     preloadRenderer();
     if (this.endpoint) {
@@ -156,6 +157,7 @@ export class App {
     setLanguage(code);
     this.ui.destroy();
     this.ui = createUi(this.uiRoot, this.callbacks());
+    this.ui.setMuted(this.settings.audio.muted);
     this.render();
   }
 
@@ -545,6 +547,14 @@ export class App {
         this.flow?.link?.setMenu('settings', open);
         this.render();
       },
+      onToggleSound: () => {
+        const s = { ...this.settings, audio: { ...this.settings.audio, muted: !this.settings.audio.muted } };
+        this.settings = s;
+        saveSettings(s);
+        this.audio.applySettings(s.audio);
+        this.ui.setMuted(s.audio.muted);
+        this.ui.toast(s.audio.muted ? t('app.soundOff') : t('app.soundOn'));
+      },
       onSettings: (saved) => {
         const before = this.settings;
         // keys stay with the provider they were typed for (issues/M5-api-key-leaks-across-presets.md)
@@ -552,6 +562,7 @@ export class App {
         this.settings = s;
         saveSettings(s);
         this.audio.applySettings(s.audio);
+        this.ui.setMuted(s.audio.muted);
         this.renderer?.setQuality(s.quality ?? 'auto');
         if (s.reduceMotion !== before.reduceMotion) this.renderer?.setReduceMotion(s.reduceMotion);
         if (this.controller) this.controller.session.prefs = this.prefs();

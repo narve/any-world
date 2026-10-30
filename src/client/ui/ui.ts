@@ -62,6 +62,8 @@ export interface GameUi {
   setBackpackOpen(open: boolean): void;
   /** short transient notice; `action` adds one button (a sticky one stays until it or ✕ is pressed) */
   toast(text: string, tone?: 'info' | 'warn', action?: ToastAction): void;
+  /** the hotbar's sound button shows the saved mute setting */
+  setMuted(muted: boolean): void;
   /** current keyboard layer (for the integrator's own input decisions) */
   layer(): InputLayer;
   /** how the player is playing (key hints show only for 'keyboard') */
@@ -203,6 +205,8 @@ class UiRoot implements GameUi {
         toggleBackpack: () => this.setBackpackOpen(!this.bp.open),
         toggleRules: () => this.setRulesOpen(!this.rulesOpen),
         toggleHelp: () => this.setHelpOpen(!this.helpOpen),
+        toggleSound: () => cb.onToggleSound?.(),
+        openSettings: () => cb.onOpenSettings?.(true),
         bindSlot,
       },
       this.tooltip,
@@ -749,6 +753,10 @@ class UiRoot implements GameUi {
     if (!open) this.focusGame();
   }
 
+  setMuted(muted: boolean): void {
+    this.hotbar.setMuted(muted);
+  }
+
   toast(text: string, tone: 'info' | 'warn' = 'info', action?: ToastAction): void {
     this.toastStack.push(text, tone, action);
   }
@@ -1106,6 +1114,8 @@ class UiRoot implements GameUi {
         return this.act({ type: 'toggle_sneak' });
       case 'rules':
         return this.setRulesOpen(true);
+      case 'sound':
+        return this.cb.onToggleSound?.();
       case 'interact':
         return this.intent({ type: 'interact' });
       case 'close':

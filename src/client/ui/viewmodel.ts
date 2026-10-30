@@ -634,8 +634,8 @@ export interface Settings {
    * set), so a key typed for one host is never sent to another (issues/M5-api-key-leaks-across-presets.md)
    */
   apiKeys?: Record<string, string>;
-  /** soundcloud (M4): also look for matching music on SoundCloud (default off) */
-  audio: { volume: number; muted: boolean; soundcloud?: boolean };
+  /** soundcloud (M4): also look for matching music on SoundCloud (default off); music: the generated music (default on) */
+  audio: { volume: number; muted: boolean; soundcloud?: boolean; music?: boolean };
   /** 0.5 (slow) .. 3 (fast); multiplies animation speed */
   animationSpeed: number;
   reduceMotion: boolean;
@@ -747,6 +747,8 @@ export interface UiCallbacks {
   onSettings?(settings: Settings): void;
   /** open/close the settings dialog (the controller sets vm.settings) */
   onOpenSettings?(open: boolean): void;
+  /** the hotbar's sound button or the M key: flip the saved mute setting */
+  onToggleSound?(): void;
   onDismissNarration?(id: string): void;
   /** player chose dialogue reply `index` (text included for convenience) */
   onDialogueReply?(index: number, text: string): void;

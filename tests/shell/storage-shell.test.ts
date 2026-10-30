@@ -58,7 +58,7 @@ describe('settings', () => {
   });
 
   it('round-trips through localStorage', () => {
-    const s = { ...defaultSettings('direct'), quality: 'low' as const, gm: false, audio: { volume: 0.2, muted: true, soundcloud: true } };
+    const s = { ...defaultSettings('direct'), quality: 'low' as const, gm: false, audio: { volume: 0.2, muted: true, soundcloud: true, music: false } };
     s.provider = { preset: 'openai', transport: 'direct', apiKey: 'sk-1', model: 'gpt-5' };
     saveSettings(s);
     expect(loadSettings('direct')).toEqual({ ...s, apiKeys: { openai: 'sk-1' } }); // the key is also kept per preset (M5-api-key-leaks-across-presets)
@@ -70,7 +70,7 @@ describe('settings', () => {
       'backend',
     );
     expect(s.provider).toEqual({ preset: 'anthropic', transport: 'backend' });
-    expect(s.audio).toEqual({ volume: 1, muted: true, soundcloud: false });
+    expect(s.audio).toEqual({ volume: 1, muted: true, soundcloud: false, music: true });
     expect(s.animationSpeed).toBe(1);
     expect(s.quality).toBe('auto');
     expect(s.gm).toBe(true);

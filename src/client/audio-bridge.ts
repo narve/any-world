@@ -7,7 +7,7 @@
  *                          browser autoplay rules, iOS)
  *   update(u)              after every engine change (GameSession.audioListener): sound effects,
  *                          danger moods, GM mood actions, and "boss" when a boss comes into view
- *   applySettings(s)       volume / mute / SoundCloud from the settings dialog
+ *   applySettings(s)       volume / mute / music / SoundCloud from the settings dialog or the hotbar
  *   mountPanel(host)       the world's music panel (mood, SoundCloud links / player) in `host`
  *   stopRun()              back to the start screen: silent until the next run
  *   dispose()
@@ -27,7 +27,7 @@ export interface BridgeAudio {
   onGmActions(actions: readonly unknown[]): void;
   setMood(mood: 'explore' | 'tense' | 'calm' | 'eerie' | 'boss' | 'upbeat'): void;
   mute(on?: boolean): void;
-  applySettings(s: { volume?: number; muted?: boolean; soundcloud?: boolean }): void;
+  applySettings(s: { volume?: number; muted?: boolean; soundcloud?: boolean; music?: boolean }): void;
   setWorld(world: Pick<WorldSpec, 'audio' | 'meta' | 'areas'>, areaIndex?: number): void;
   dispose(): void;
 }
@@ -36,7 +36,7 @@ export interface BridgeAudio {
 export type BridgeMusicPanel = Pick<MusicPanel, 'el' | 'update' | 'dispose'>;
 
 export interface AudioModule {
-  createAudio(world: Pick<WorldSpec, 'audio' | 'meta' | 'areas'>, settings?: { volume?: number; muted?: boolean; soundcloud?: boolean }): BridgeAudio;
+  createAudio(world: Pick<WorldSpec, 'audio' | 'meta' | 'areas'>, settings?: { volume?: number; muted?: boolean; soundcloud?: boolean; music?: boolean }): BridgeAudio;
   installUnlock(audio: BridgeAudio): () => void;
   /** the music panel (SoundCloud links / player, mood, mute and volume); optional */
   createMusicPanel?(opts: MusicPanelOptions): BridgeMusicPanel;
@@ -141,7 +141,7 @@ export class AudioBridge {
 
   applySettings(s: Settings['audio']): void {
     this.settings = { ...s };
-    this.guard((a) => a.applySettings({ volume: s.volume, soundcloud: !!s.soundcloud, muted: s.muted || !this.inRun }));
+    this.guard((a) => a.applySettings({ volume: s.volume, soundcloud: !!s.soundcloud, music: s.music !== false, muted: s.muted || !this.inRun }));
     this.panelCall((p) => p.update({ settings: { soundcloud: !!s.soundcloud } }));
   }
 
@@ -171,7 +171,7 @@ export class AudioBridge {
       }
       if (!this.panel) {
         // the loaded engine is the module's full GameAudio (BridgeAudio is the slice the bridge drives)
-        this.panel = mod.createMusicPanel({ audio: this.world.audio, engine: audio as unknown as MusicPanelOptions['engine'], settings: { soundcloud: !!this.settings.soundcloud } });
+        this.panel = mod.createMusicPanel({ audio: this.world.audio, engine: audio as unknown as MusicPanelOptions['engine'], settings: { soundcloud: !!this.settings.soundcloud }, mixer: false });
         this.panelWorld = this.world;
       }
       if (this.panel.el.parentElement !== host) host.replaceChildren(this.panel.el);

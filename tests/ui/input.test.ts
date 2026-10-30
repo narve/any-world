@@ -60,6 +60,8 @@ describe('game keys', () => {
     expect(game('?', { shiftKey: true })).toEqual({ type: 'help' });
     expect(game('Escape')).toEqual({ type: 'close' });
     expect(game('r')).toEqual({ type: 'rules' });
+    expect(game('m')).toEqual({ type: 'sound' });
+    expect(game('M', { shiftKey: true })).toEqual({ type: 'sound' });
   });
 
   it('search lives on f because s is WASD south', () => {
