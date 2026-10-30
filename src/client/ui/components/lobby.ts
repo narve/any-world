@@ -232,6 +232,8 @@ export class ProfileSheet {
   private go: HTMLButtonElement;
   private colour = '';
   private view: ProfileSheetView | null = null;
+  /** the field still holds the name it opened with and has not been clicked */
+  private nameUntouched = false;
 
   constructor(private onRoom: (i: RoomIntent) => void) {
     this.nameInput = h('input', {
@@ -242,10 +244,21 @@ export class ProfileSheet {
       autocomplete: 'nickname',
       enterkeyhint: 'done',
       'data-autofocus': true,
-      oninput: () => this.syncGo(),
+      oninput: () => {
+        this.nameUntouched = false;
+        this.syncGo();
+      },
       // (the field holds a name, often the generated "Player 92": a tap then typing replaces it, MP5)
       // (after the tap's own caret placement, so the selection stays)
       onfocus: () => setTimeout(() => document.activeElement === this.nameInput && this.nameInput.select(), 0),
+      // (on a desktop the sheet opened with the field focused and the name selected, so a click fires no
+      // focus and would drop the selection: the first press on a name nobody has edited keeps it)
+      onmousedown: (e: MouseEvent) => {
+        if (!this.nameUntouched || document.activeElement !== this.nameInput) return;
+        this.nameUntouched = false;
+        e.preventDefault();
+        this.nameInput.select();
+      },
     });
     this.swatches = h('div', { class: 'aw-swatches', role: 'radiogroup', 'aria-label': t('lobby.colour') });
     this.go = h('button', { type: 'submit', class: 'aw-btn aw-btn-primary aw-profile-go' });
@@ -283,6 +296,7 @@ export class ProfileSheet {
     // (built once per opening: a roster change while it is open must not reset the typed name)
     if (!this.modal.show([v.purpose, v.name, v.colour])) return;
     this.nameInput.value = v.name;
+    this.nameUntouched = true;
     this.colour = v.colour;
     setChildren(
       this.swatches,

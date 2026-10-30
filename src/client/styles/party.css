@@ -460,7 +460,8 @@
   border-radius: 16px 16px 0 0;
   border: 1px solid var(--c-border);
   border-bottom: 0;
-  background: rgba(var(--c-panel-rgb), 0.97);
+  /* (opaque: the log ticker under it showed through its last line, MP5) */
+  background: var(--c-panel);
   box-shadow: 0 -12px 40px var(--c-shadow);
   pointer-events: auto;
   animation: aw-sheet-in calc(220ms / var(--anim-speed)) ease-out;
@@ -487,6 +488,10 @@
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
+  /* (a fade at the right edge shows that it scrolls; the end padding lets the last ping clear it) */
+  padding-inline-end: 28px;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
 }
 
 .aw-chat-sheet :is(.aw-chat-emotes, .aw-chat-pings) {
@@ -599,6 +604,11 @@
 /* (under the feet: the head is behind a HUD panel) */
 :is(.aw-name-tag, .aw-bubble).is-below {
   translate: -50% 0;
+}
+
+/* (another speaker's bubble covers it and there is no room under the feet) */
+.aw-name-tag.is-covered {
+  opacity: 0.2;
 }
 
 .aw-name-tag.is-fogged {

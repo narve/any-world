@@ -41,11 +41,14 @@ const room = (page: Page) =>
     return r ? { code: r.code, status: r.status, phase: r.phase, seat: r.seat, pid: r.pid, host: r.host, n: r.n, run: r.run, roster: r.roster() } : null;
   });
 
-/** the name sheet: type a name and go */
+/** the name sheet: click the field, type a name (it replaces the offered one, MP5) and go */
 async function answerSheet(page: Page, name: string): Promise<void> {
   const sheet = page.locator('.aw-profile-sheet');
   await expect(sheet).toBeVisible();
-  await page.locator('#aw-profile-name').fill(name);
+  const field = page.locator('#aw-profile-name');
+  await field.click();
+  await page.keyboard.type(name);
+  await expect(field).toHaveValue(name);
   await page.locator('.aw-profile-go').click();
 }
 

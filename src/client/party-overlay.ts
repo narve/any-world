@@ -134,6 +134,10 @@ export class PartyOverlay {
     // teammates' name tags never cover the own character or each other (MP5: adjacent players):
     // a tag that would lifts above what it meets
     const tagBoxes: Rect[] = [];
+    // speech bubbles on screen, and the tags placed above a head: a tag under another speaker's bubble
+    // moves under its own player's feet, or fades when that is off the view too (MP5)
+    const bubbleBoxes: (Rect & { seat: string })[] = [];
+    const placedTags: { el: HTMLElement; seat: string; box: Rect; under: { x: number; y: number } }[] = [];
     const me = f.members.find((m) => m.you && m.visible && m.actorId && m.pos);
     const myHead = me ? this.project.actor(me.actorId!, 1.08) : null;
     if (me && myHead) {
@@ -179,7 +183,10 @@ export class PartyOverlay {
           }
         }
         el.classList.toggle('is-below', bBelow);
-        place(el, bAt.x, bBelow ? bAt.y + (m.you || !below ? 0 : 20) : bAt.y - (m.you ? 6 : 24));
+        const bY = bBelow ? bAt.y + (m.you || !below ? 0 : 20) : bAt.y - (m.you ? 6 : 24);
+        place(el, bAt.x, bY);
+        const [bw, bh] = [el.offsetWidth, el.offsetHeight];
+        bubbleBoxes.push({ seat: m.seat, x: bAt.x - bw / 2, y: bBelow ? bY : bY - bh, w: bw, h: bh });
         used.bubbles.add(m.seat);
         shown.push({ seat: m.seat, text, kind: typing ? 'typing' : 'bubble' });
       }
@@ -217,7 +224,12 @@ export class PartyOverlay {
             y = hit.y - 2;
           }
           tagBoxes.push({ x: x - w / 2, y: y - h, w, h });
+          if (seen) {
+            const feet = local(this.project.tile(m.pos));
+            placedTags.push({ el, seat: m.seat, box: { x: x - w / 2, y: y - h, w, h }, under: { x: feet.x, y: feet.y + 30 } });
+          }
         }
+        el.classList.remove('is-covered');
         place(el, x, y);
         used.tags.add(m.seat);
         continue;
@@ -232,6 +244,15 @@ export class PartyOverlay {
       el.style.setProperty('--who', m.colour);
       place(el, pl.x, pl.y);
       used.arrows.add(m.seat);
+    }
+    for (const t of placedTags) {
+      const meets = (r: Rect) => bubbleBoxes.some((b) => b.seat !== t.seat && r.x < b.x + b.w && r.x + r.w > b.x && r.y < b.y + b.h && r.y + r.h > b.y);
+      if (!meets(t.box)) continue;
+      const under = { x: t.under.x - t.box.w / 2, y: t.under.y, w: t.box.w, h: t.box.h };
+      if (inView(t.under) && inView({ x: t.under.x, y: t.under.y + t.box.h }) && !meets(under)) {
+        t.el.classList.add('is-below');
+        place(t.el, t.under.x, t.under.y);
+      } else t.el.classList.add('is-covered');
     }
 
     // map pings: a marker on the tile, or an arrow at the edge while it is off screen

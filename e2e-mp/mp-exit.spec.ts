@@ -125,7 +125,10 @@ test('three players (two desktops, a phone) play one run together, chat, ping, s
   await B.page.goto(new URL(link).pathname + new URL(link).search);
   await ready(B.page);
   await expect(B.page.locator('.aw-profile-sheet')).toBeVisible({ timeout: 20_000 });
-  await B.page.locator('#aw-profile-name').fill('Ola');
+  // (a click into the field and typing replaces the offered "Player 12", MP5)
+  await B.page.locator('#aw-profile-name').click();
+  await B.page.keyboard.type('Ola');
+  await expect(B.page.locator('#aw-profile-name')).toHaveValue('Ola');
   await B.page.locator(`.aw-swatch[data-colour="${PLAYER_COLOURS[2]}"]`).click();
   await B.page.locator('.aw-profile-go').click();
   await expect(B.page.locator('.aw-lobby')).toBeVisible({ timeout: 20_000 });

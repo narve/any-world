@@ -80,6 +80,10 @@ test('desktop: lobby chat, Enter, keys stay in the input, bubbles and typing, of
   ola.client.say('look at this');
   await expect.poll(() => handle(A.page, (r) => r.bubbles()), { timeout: 10_000 }).toContainEqual({ seat: olaSeat, text: 'look at this', kind: 'bubble' });
   await expect(A.page.locator('.aw-party-overlay .aw-name-tag', { hasText: 'Ola' })).toBeVisible();
+  // (and Siv's line too: neither bubble hides a name tag)
+  siv.client.say('and who are you?');
+  await expect.poll(() => handle(A.page, (r) => r.bubbles().length), { timeout: 10_000 }).toBeGreaterThanOrEqual(2);
+  expect(await coveredTags(A.page)).toEqual([]);
   // (on screen: not highlighted in the column)
   await expect(dock.locator('.aw-chat-line', { hasText: 'look at this' })).not.toHaveClass(/is-new/);
   await A.page.screenshot({ path: `${OUT}/chat-bubble-desktop.png` });
@@ -256,6 +260,23 @@ async function hiddenActors(page: Page): Promise<string[]> {
     return hidden;
   });
 }
+
+/** name tags (not faded) under another speaker's bubble on screen (MP5: a tag moves under the feet, or fades) */
+const coveredTags = (page: Page) =>
+  page.evaluate(() => {
+    const box = (el: Element) => el.getBoundingClientRect();
+    const who = (el: Element) => (el as HTMLElement).style.getPropertyValue('--who');
+    const bubbles = Array.from(document.querySelectorAll('.aw-party-overlay .aw-bubble:not(.aw-bubble-npc)'));
+    return Array.from(document.querySelectorAll('.aw-party-overlay .aw-name-tag:not(.is-covered):not(.is-fogged)'))
+      .filter((t) => {
+        const a = box(t);
+        return bubbles.some((b) => {
+          const c = box(b);
+          return who(b) !== who(t) && a.left < c.right && a.right > c.left && a.top < c.bottom && a.bottom > c.top;
+        });
+      })
+      .map((t) => t.textContent ?? '');
+  });
 
 const rect = (page: Page, sel: string) => page.locator(sel).first().evaluate((el) => el.getBoundingClientRect().toJSON() as DOMRect);
 
