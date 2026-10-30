@@ -98,7 +98,7 @@ export const ILLEGAL_LOG_PER_MIN = 20;
 const ROOM_WEIRDNESS = 0.5;
 /** the chat hook (MP4 design §3.2): at most one per room this often for chatter that does not address the GM */
 export const CHAT_HOOK_ROOM_MS = 20_000;
-/** a seat addressing the GM fires the chat hook at most this often (MP5: was a minute, a follow-up was ignored) */
+/** a seat addressing the GM starts a chat request at most this often (MP5: was a minute; a follow-up inside it is owed, not dropped) */
 export const CHAT_ADDRESS_SEAT_MS = 20_000;
 /** a line addressing the GM: at most one chat hook per room this often; a line inside the window is owed an answer, not dropped */
 export const CHAT_ADDRESS_ROOM_MS = 5000;
@@ -241,9 +241,10 @@ export class Room {
   /**
    * MP5: a line addressed the GM while a chat request was queued or running, inside the room's
    * window or during the area hold: one chat hook is owed (fired when that ends, quoting every line
-   * since the last answer). `pid`: the newest asker on the map.
+   * since the last answer). `pid`: the newest asker on the map; `notBefore`: a seat's own follow-up
+   * inside its CHAT_ADDRESS_SEAT_MS window waits for the window's end.
    */
-  private chatOwed: { at: number; pid: PlayerId | null } | null = null;
+  private chatOwed: { at: number; pid: PlayerId | null; notBefore: number } | null = null;
   /** set while askGm runs: a synchronous answer is pushed in its caller's guard */
   private askingGm = false;
   /**
@@ -866,17 +867,23 @@ export class Room {
    * every CHAT_ADDRESS_ROOM_MS), or CHAT_HOOK_LINES new lines since the GM's last chat answer and a
    * quiet minute (at most one per CHAT_HOOK_ROOM_MS). One chat request at a time: a line that
    * addresses the GM while one is queued or running, inside the room's window or during the
-   * area-entry hold is owed an answer (MP5: never dropped), fired by flushChatOwed.
+   * area-entry hold is owed an answer (MP5: never dropped), fired by flushChatOwed. A seat's follow-up
+   * inside its own window joins a request already coming, or is owed for when the window ends.
    */
   private chatHook(s: Seat, text: string, now: number): void {
     const gm = this.gm;
     const state = this.state;
     if (!gm || this.phase !== 'playing' || !state || state.status !== 'playing') return;
     if (gm.current() !== 'ai') return;
-    const addressed = now - s.lastGmCallAt >= CHAT_ADDRESS_SEAT_MS && addressesGm(text, this.world.world.gm.persona);
-    if (addressed) {
-      s.lastGmCallAt = now;
-      this.chatOwed = { at: this.chatOwed?.at ?? now, pid: this.onMap(s.pid) ? s.pid : (this.chatOwed?.pid ?? null) };
+    if (addressesGm(text, this.world.world.gm.persona)) {
+      const owed = this.chatOwed;
+      // a follow-up inside the seat's window joins a request that is already coming (in flight or owed: it is
+      // asked after the current one, quoting every line since), else it is owed for when the window ends (MP5)
+      const fresh = now - s.lastGmCallAt >= CHAT_ADDRESS_SEAT_MS;
+      const joins = owed !== null || this.chatPending(gm);
+      const notBefore = fresh ? now : joins ? (owed?.notBefore ?? now) : s.lastGmCallAt + CHAT_ADDRESS_SEAT_MS;
+      s.lastGmCallAt = Math.max(now, notBefore);
+      this.chatOwed = { at: owed?.at ?? now, pid: this.onMap(s.pid) ? s.pid : (owed?.pid ?? null), notBefore };
       this.flushChatOwed(now);
       return;
     }
@@ -901,7 +908,7 @@ export class Room {
       this.chatOwed = null;
       return;
     }
-    if (this.hold || this.chatPending(gm) || now - this.lastChatHookAt < CHAT_ADDRESS_ROOM_MS) return;
+    if (this.hold || this.chatPending(gm) || now < owed.notBefore || now - this.lastChatHookAt < CHAT_ADDRESS_ROOM_MS) return;
     if (gm.current() !== 'ai') {
       this.chatOwed = null;
       this.log('gm chat line not answered (the AI GM is on its fallback)');
@@ -1472,7 +1479,7 @@ export class Room {
       } else if (s.awayAt !== null) wakes.push(s.awayAt);
     }
     if (this.clockDue !== null) wakes.push(this.clockDue);
-    if (this.chatOwed) wakes.push(this.lastChatHookAt + CHAT_ADDRESS_ROOM_MS);
+    if (this.chatOwed) wakes.push(Math.max(this.lastChatHookAt + CHAT_ADDRESS_ROOM_MS, this.chatOwed.notBefore));
     return {
       active,
       ready,

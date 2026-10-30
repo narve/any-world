@@ -71,6 +71,9 @@ export interface ClockDecision {
  *  5. nothing pending: no resolve (while nobody acts the world does not move), except
  *  6. someone is down and it is calm: a turn every countdownTurnMs with advance: true, so the
  *     self-revive counts down while the teammates read, chat or look away (MP5: nobody waits).
+ *     It stops once nobody is down or a hostile comes into view, but these turns also move hostiles
+ *     out of view and tick world clocks and hunger while nobody is at the controls (open, with the
+ *     owner's shared-clock decision: watch for it in the real-people session).
  */
 export function nextResolve(v: ClockView, now: number): ClockDecision {
   if (!v.anyConnected) return { resolve: null, wakeAt: null };

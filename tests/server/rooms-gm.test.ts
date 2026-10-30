@@ -570,6 +570,46 @@ describe('offers and the chat hook', () => {
     expect(h.logs.filter((l) => /gm area 0: \d+ calls \(0 voice\)/.test(l))).toHaveLength(1);
   }, 60_000);
 
+  it('MP5: a seat\'s own follow-up inside its window is owed (asked when the window ends), and one said mid-answer is asked after it', async () => {
+    const clock = lateClock();
+    const mock = new MockProvider({ responses: { ...scriptedAnswers(), 'gm:chat': { json: { actions: [narrate('AI: chat answer')] } } }, latencyMs: 2000, ...clock.timers });
+    h = new MemRoom({ seed: 5, gm: aiConfig(mock) });
+    clock.set(h.sch);
+    const clients = [h.client('Ann', { host: true }), h.client('Bo')];
+    await h.join(...clients);
+    clients[0]!.start();
+    await h.flush();
+    await quiet(h);
+    const chatCalls = () => mock.calls.filter((c) => c.purpose.startsWith('gm:chat'));
+    clients[0]!.say('@gm where is the exit?');
+    await h.flush();
+    await quiet(h, 500);
+    expect(chatCalls()).toHaveLength(1);
+    // about 8 s after the answer, the same seat follows up: not dropped, asked when its window ends
+    await h.advance(7000);
+    clients[0]!.say('@gm and where is the key?');
+    await h.flush();
+    await quiet(h, 500);
+    expect(chatCalls()).toHaveLength(1);
+    await h.advance(CHAT_ADDRESS_SEAT_MS);
+    await quiet(h, 500);
+    expect(chatCalls()).toHaveLength(2);
+    expect(JSON.stringify(chatCalls()[1]!.messages)).toContain('where is the key');
+    // a follow-up said while that answer is in flight is asked after it, quoting it
+    await h.advance(CHAT_ADDRESS_SEAT_MS);
+    clients[0]!.say('@gm one more thing');
+    await h.flush();
+    await h.advance(1200);
+    clients[0]!.say('@gm is the key behind the bar?');
+    await h.flush();
+    expect(chatCalls()).toHaveLength(3);
+    await quiet(h, 500);
+    await h.advance(CHAT_ADDRESS_ROOM_MS);
+    await quiet(h, 500);
+    expect(chatCalls()).toHaveLength(4);
+    expect(JSON.stringify(chatCalls()[3]!.messages)).toContain('behind the bar');
+  }, 60_000);
+
   it('a chosen offer option that the recheck would trim is refused (offer_gone); another option still works', async () => {
     h = new MemRoom({ seed: 5, gm: offGmConfig() });
     const clients = [h.client('Ann', { host: true }), h.client('Bo')];
