@@ -16,7 +16,7 @@ import { checkQuests } from './gm';
 import { evalParty } from './conditions';
 import { heal, killPlayer, lossReasonKeyed, refillFatalResources } from './combat';
 import { switchesOf } from './rules';
-import { regenInterval } from './difficulty';
+import { regenInterval, worldClockFactor } from './difficulty';
 import { closeStaleChoices } from './npc';
 import { exitPending, tickExitCountdown } from './area';
 
@@ -162,14 +162,17 @@ export function endRound(ctx: Ctx): void {
     if (regenEvery > 0 && !switchesOf(ctx).noNaturalHpRegen && s.turn % regenEvery === 0) heal(ctx, p, 1);
   }
   if (s.turn % 5 === 0) for (const a of s.area.actors) if (!isPlayer(ctx, a) && a.mp < maxMp(ctx, a)) a.mp += 1;
-  // custom resources: bodily, each player drains their own
+  // custom resources: bodily, each player drains their own. In a party the world clock runs slower
+  // (worldClockFactor f): the drain skips turns so it lands on about 1 turn in f, keeping whole amounts
+  const clock = worldClockFactor(s);
+  const drainsThisTurn = clock === 1 || Math.ceil(s.turn / clock) !== Math.ceil((s.turn - 1) / clock);
   for (const id of s.party) {
     const p = playerActorOf(ctx, id);
     if (!p || !isAlive(ctx, p)) continue;
     const res = s.players[id].resources;
     for (const r of ctx.world.resources ?? []) {
       const cur = own(res, r.id) ?? 0;
-      if (r.perTurn) changeResource(ctx, p, r.id, r.perTurn);
+      if (r.perTurn && drainsThisTurn) changeResource(ctx, p, r.id, r.perTurn);
       if (s.status !== 'playing') return;
       if (cur === 0 && (own(res, r.id) ?? 0) === 0 && r.perTurn < 0 && s.turn % RESOURCE_EMPTY_REPEAT === 0 && r.onEmpty.length) {
         applyEffectList(ctx, r.onEmpty, p, [p], p.pos, []);

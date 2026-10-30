@@ -128,17 +128,33 @@ export const PARTY_SCALING = {
   hostileCount: 0.65,
   /** ordinary hostiles' hp */
   hostileHp: 0.3,
-  /** bosses' hp (they face the whole party's focus fire; MP2 C1: 0.5 → 0.8) */
-  uniqueHp: 0.8,
-  /** damage bosses deal to the party's side (MP2 C1, combat.dealDamage) */
-  uniqueDamage: 0.1,
+  /** bosses' hp (they face the whole party's focus fire; MP2 C1: 0.5 → 0.8; owner O4, 2026-10-30: 1.0) */
+  uniqueHp: 1.0,
+  /** damage bosses deal to the party's side (MP2 C1, combat.dealDamage; owner O4, 2026-10-30: 0.1 → 0.2) */
+  uniqueDamage: 0.2,
   /** plan.itemCount (packs are personal); placed items (keys, goal items) stay single */
   itemCount: 0.5,
   /** the GM's budget per area */
   gmBudget: 0.25,
+  /**
+   * World clocks run slower in a party (owner, 2026-10-30, MULTIPLAYER-PLAN §6 O1): a party run takes
+   * more turns (more players to wait for, calm turns while someone is down), so rule triggers that
+   * fire every N turns, per-turn resource drains and `turn` conditions are stretched by this factor.
+   * MP1 measured runs about 1.6× as long at 12 players: 1 + 0.06·11 ≈ 1.66.
+   */
+  worldClock: 0.06,
   /** extra room in the per-area actor cap per extra player (absolute, not a factor) */
   actorCap: 10,
 } as const;
+
+/**
+ * How much slower world clocks run in this area's party (1 for a party of one, so single player is
+ * untouched): `every N turns` becomes about N·f, a per-turn drain d becomes d/f, `turn ≥ T` becomes T·f.
+ */
+export function worldClockFactor(s: { area?: Pick<AreaState, 'partySize'> }): number {
+  const n = s.area?.partySize ?? 1;
+  return n > 1 ? partyFactor(n, PARTY_SCALING.worldClock) : 1;
+}
 
 /** 1 + k·(n − 1): the scale for a party of n */
 export function partyFactor(n: number, k: number): number {

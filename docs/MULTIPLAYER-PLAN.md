@@ -272,12 +272,14 @@ Built in MP1 as proposed in its design, confirmed by the owner (2026-10-28):
 - Currency is one shared party purse (items stay personal).
 - XP is shared in full: every player gets each kill's XP; levels and perks stay per player.
 
-Open (2026-10-30, from MP5; details in [MP.md](progress/MP.md) "Open"):
-- Per-turn world clocks in a party (the yellow triangle's varnish drains faster with more players, and
-  the turns that let a downed player get up while everyone idles tick them too): scale per party, count
-  per player action, or keep the rule and add a party warning.
-- The GM call budget: the room cap (400 an hour) and whether chat gets a reserve. Measured: about 9
-  calls a minute for 3 players.
-- A chat line the GM cannot answer (failed call, breaker, cap): silence today; or an out-of-character
-  "the game master is busy" line.
-- Party difficulty at Normal (from MP1): bot parties win about 100 % at 2–8 players.
+- 2026-10-30 (MP5 questions): world clocks scale with the party (O1): rule triggers that fire every N
+  turns, per-turn resource drains and `turn` conditions run slower by 1 + 0.06·(n − 1) (about 1.66 at 12
+  players; `PARTY_SCALING.worldClock`, `worldClockFactor`); a chat line the GM cannot answer stays
+  silent (O3); party difficulty at Normal stays as it is for now (O4), but bosses get tougher with the
+  number of players: `uniqueHp` 0.8 → 1.0 and `uniqueDamage` 0.1 → 0.2 per extra player.
+
+- 2026-10-30: the GM call budget stays at 400 calls per room per hour for now
+  (`ANYWORLD_GM_ROOM_CALLS_PER_HOUR`), with no separate chat reserve; revisit after the session with
+  real people (measured so far: about 9 calls a minute for 3 players).
+
+Open: none (2026-10-30). What remains needs deployment or people (MP.md "Open").

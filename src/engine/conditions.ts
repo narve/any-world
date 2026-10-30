@@ -5,6 +5,7 @@ import { type Ctx, isAlive, playerActor, playerActorOf, playerOf } from './ctx';
 import { getMax, getStat } from './stats';
 import { countItem } from './inventory';
 import { own, tileAt } from './util';
+import { worldClockFactor } from './difficulty';
 
 export interface CondCtx {
   self?: ActorInstance | null;
@@ -87,8 +88,11 @@ export function evalCondition(ctx: Ctx, c: Condition, cc: CondCtx = {}, depth = 
       return (own(ctx.s.defeated, c.actor) ?? 0) >= (c.count ?? 1);
     case 'in_area':
       return ctx.s.area.index === c.area;
-    case 'turn':
-      return compare(ctx.s.turn, c.cmp, c.value);
+    case 'turn': {
+      // a world clock: stretched in a party (worldClockFactor; 1 for a party of one)
+      const f = worldClockFactor(ctx.s);
+      return compare(ctx.s.turn, c.cmp, f === 1 ? c.value : Math.round(c.value * f));
+    }
     case 'on_terrain': {
       const a = who(ctx, c.who, cc);
       if (!a) return false;

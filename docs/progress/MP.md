@@ -198,14 +198,19 @@ Needs deployment or people:
 
 Owner decisions:
 
-- **O1. Per-turn world clocks in a party** (varnish-style lose conditions drain faster with more players
+- **O1. Per-turn world clocks in a party** — **decided 2026-10-30: they scale** (`PARTY_SCALING.worldClock`
+  0.06 per extra player: every-N rule triggers, per-turn drains and `turn` conditions; `tests/engine/party-clock.test.ts`).
+  Was: (varnish-style lose conditions drain faster with more players
   and rule 6's idle turns also tick them): scale per party, count per player action, or keep the rule
   and add a party warning banner (client). Changes engine rules, so the golden replay and the gate apply.
-- **O2. GM call budget**: `ANYWORLD_GM_ROOM_CALLS_PER_HOUR` (400) and whether chat gets a reserve;
+- **O2. GM call budget** — **decided 2026-10-30: 400 calls per room per hour for now, no chat reserve;
+  revisit after the real-people session.** Was: `ANYWORLD_GM_ROOM_CALLS_PER_HOUR` (400) and whether chat gets a reserve;
   measured: ~9 calls/min for 3 human-paced players, ~31/min for fast bots (upper bound).
-- **O3. A failed chat answer**: today a failed call, an open breaker or a reached cap means silence for
+- **O3. A failed chat answer** — **decided 2026-10-30: silence is fine.** Was:: today a failed call, an open breaker or a reached cap means silence for
   that line; an out-of-character "the GM is busy" line is a wording and UX choice.
-- **O4. Party difficulty at Normal** (from MP1): bot parties win ~100 % at 2–8.
+- **O4. Party difficulty at Normal** (from MP1): bot parties win ~100 % at 2–8. **Decided 2026-10-30:
+  keep it for now, but bosses get tougher with the party: `uniqueHp` 0.8 → 1.0, `uniqueDamage` 0.1 → 0.2
+  per extra player.**
 
 Not done, could be done locally later:
 

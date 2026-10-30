@@ -1,6 +1,7 @@
 /**
  * MP2 C1: bosses (unique hostiles) get tougher with the party, on top of MP1's party scaling: hp by
- * PARTY_SCALING.uniqueHp (0.8 per extra player) and the damage they deal by uniqueDamage (0.1).
+ * PARTY_SCALING.uniqueHp (1.0 per extra player; 0.8 until the owner's O4, 2026-10-30) and the damage they
+ * deal by uniqueDamage (0.2; was 0.1).
  * Parties of two or more only: a party of one is unchanged (the golden replay checks the rest).
  */
 import { describe, it, expect } from 'vitest';
@@ -40,18 +41,18 @@ function hitFrom(n: number, defId: string, difficulty: Difficulty = 'normal'): n
 
 describe('bosses scale with the party', () => {
   it('the factors', () => {
-    expect(PARTY_SCALING.uniqueHp).toBe(0.8);
-    expect(PARTY_SCALING.uniqueDamage).toBe(0.1);
-    expect(partyFactor(4, PARTY_SCALING.uniqueDamage)).toBeCloseTo(1.3);
+    expect(PARTY_SCALING.uniqueHp).toBe(1);
+    expect(PARTY_SCALING.uniqueDamage).toBe(0.2);
+    expect(partyFactor(4, PARTY_SCALING.uniqueDamage)).toBeCloseTo(1.6);
   });
 
   it.each([
-    // n, boss hp: 20 × 1.25 (UNIQUE_HOSTILE_HP) × (1 + 0.8·(n − 1)), rounded
+    // n, boss hp: 20 × 1.25 (UNIQUE_HOSTILE_HP) × (1 + 1.0·(n − 1)), rounded
     [1, 25],
-    [2, 45],
-    [3, 65],
-    [4, 85],
-    [12, 245],
+    [2, 50],
+    [3, 75],
+    [4, 100],
+    [12, 300],
   ])('a party of %i meets a boss with %i hp', (n, hp) => {
     const s = game(n);
     const boss = spawnActor(ctxOf(s), 'boss', { x: 8, y: 8 })!;
@@ -61,16 +62,17 @@ describe('bosses scale with the party', () => {
 
   it('a boss hits a party harder; a party of one and ordinary hostiles are unchanged', () => {
     expect(hitFrom(1, 'boss')).toBe(10);
-    expect(hitFrom(2, 'boss')).toBe(11);
-    expect(hitFrom(4, 'boss')).toBe(13);
-    expect(hitFrom(12, 'boss')).toBe(21);
+    expect(hitFrom(2, 'boss')).toBe(12);
+    expect(hitFrom(4, 'boss')).toBe(16);
+    // 12 players: ×3.2 = 32, more than the test player's hp (the second chance would hide it)
+    expect(hitFrom(8, 'boss')).toBe(24);
     expect(hitFrom(1, 'rat')).toBe(10);
     expect(hitFrom(4, 'rat')).toBe(10);
   });
 
   it('the band multiplies with it: Hard for four players', () => {
-    // 10 × 1.15 × 1.3 = 14.95
-    expect(hitFrom(4, 'boss', 'hard')).toBe(15);
+    // 10 × 1.15 × 1.6 = 18.4
+    expect(hitFrom(4, 'boss', 'hard')).toBe(18);
     expect(hitFrom(1, 'boss', 'hard')).toBe(12);
   });
 

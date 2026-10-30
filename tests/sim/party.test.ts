@@ -78,7 +78,7 @@ describe('runParty', () => {
     let downed = 0;
     let revived = 0;
     let helped = 0;
-    const r = runParty(world, 4, ['explorer', 'cautious'], {
+    const r = runParty(world, 5, ['explorer', 'cautious'], {
       fast: true,
       maxTurns: 1500,
       difficulty: 'brutal',

@@ -9,6 +9,7 @@ import { type Ctx, playerOf } from './ctx';
 import { activeItems } from './stats';
 import { runAction } from './effects';
 import { activeRuleVariants } from './rules';
+import { worldClockFactor } from './difficulty';
 
 export interface TriggerCtx {
   other?: ActorInstance | null;
@@ -18,11 +19,19 @@ export interface TriggerCtx {
 const ITEM_ONLY_EVENTS = new Set<TriggerEvent>(['on_pickup', 'on_equip', 'on_unequip']);
 const MAX_DEPTH = 6;
 
+/** triggers that come from world rules: their `every N turns` is a world clock (worldClockFactor) */
+const RULE_TRIGGERS = new WeakSet<Trigger>();
+
 export function triggersFor(ctx: Ctx, holder: ActorInstance): Trigger[] {
   const ps = playerOf(ctx, holder);
   if (ps) {
     const out: Trigger[] = [];
-    for (const r of activeRuleVariants(ctx)) out.push(...(r.playerTriggers ?? []));
+    for (const r of activeRuleVariants(ctx)) {
+      for (const t of r.playerTriggers ?? []) {
+        RULE_TRIGGERS.add(t);
+        out.push(t);
+      }
+    }
     for (const id of ps.perks) {
       const p = ctx.ix.perks.get(id);
       if (p) out.push(...p.triggers);
@@ -33,6 +42,13 @@ export function triggersFor(ctx: Ctx, holder: ActorInstance): Trigger[] {
   return ctx.ix.actors.get(holder.defId)?.triggers ?? [];
 }
 
+/** a trigger's `every`, stretched for a party when it is a world rule's clock */
+function clockEvery(ctx: Ctx, t: Trigger): number {
+  const every = t.every ?? 1;
+  const f = RULE_TRIGGERS.has(t) ? worldClockFactor(ctx.s) : 1;
+  return f === 1 ? every : Math.max(1, Math.round(every * f));
+}
+
 function run(ctx: Ctx, holder: ActorInstance, list: readonly Trigger[], event: TriggerEvent, tc: TriggerCtx): void {
   if (ctx.depth >= MAX_DEPTH) return;
   ctx.depth++;
@@ -40,7 +56,7 @@ function run(ctx: Ctx, holder: ActorInstance, list: readonly Trigger[], event: T
     for (const t of list) {
       if (t.on !== event) continue;
       if (ctx.s.status !== 'playing') return;
-      if (event === 'on_turn' && t.every && t.every > 1 && ctx.s.turn % t.every !== 0) continue;
+      if (event === 'on_turn' && t.every && t.every > 1 && ctx.s.turn % clockEvery(ctx, t) !== 0) continue;
       if (!ctx.rng.chance(t.chance)) continue;
       const other = tc.other && tc.other.hp > 0 ? tc.other : null;
       runAction(ctx, t.action, holder, { targetPos: other?.pos ?? tc.pos, targetActor: other });
