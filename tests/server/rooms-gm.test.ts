@@ -31,7 +31,7 @@ import { OfflineGmDirector, type GmContext } from '../../src/gm/offline';
 import { offGmConfig } from '../../server/gm-config';
 import { addressesGm, GmBudget, GmPool, GmServer, personaName, RoomGm, roomGmMode, type GmAnswer } from '../../server/rooms/gm';
 import { RoomManager } from '../../server/rooms/manager';
-import { CHAT_HOOK_ROOM_MS } from '../../server/rooms/room';
+import { CHAT_ADDRESS_ROOM_MS, CHAT_ADDRESS_SEAT_MS, CHAT_HOOK_ROOM_MS } from '../../server/rooms/room';
 import { ManualScheduler } from '../../server/rooms/timing';
 import { ScriptedClient } from '../../tools/rooms/scripted-client';
 import { loadFixture } from '../engine/helpers';
@@ -480,6 +480,34 @@ describe('drops, staleness, the pool, the breaker and the caps (manual clock)', 
     gm.dispose();
   });
 
+  it('MP5: the hourly cap is hard: queued requests past it make no call and get the fallback; every request leaves the bookkeeping', async () => {
+    const sch = new ManualScheduler();
+    const timers = { setTimer: (fn: () => void, ms: number) => sch.setTimer(sch.now() + ms, fn), clearTimer: (t: unknown) => sch.cancel(t as number) };
+    const mock = new MockProvider({ responses: { ...scriptedAnswers(), 'gm:idle': { json: { actions: [] } } }, latencyMs: 10, ...timers });
+    const server = new GmServer(aiConfig(mock, { roomCallsPerHour: 2 }), () => sch.now(), null);
+    const answers: GmAnswer[] = [];
+    const logs: string[] = [];
+    const gm = new RoomGm({ mode: 'ai', server, room: 'R', run: 1, world: western, demo: null, worldKey: 'w', ledger: { get: () => 0, add: () => {} }, scheduler: sch, offline: new OfflineGmDirector(), onAnswer: (a) => answers.push(a), log: (l) => logs.push(l) });
+    const ctx: GmContext = { world: western, state: new MemRoomState().state, difficulty: 'normal', weirdness: 0.5, recentLog: [], areaEnteredTurn: 0 };
+    // four moments asked while the cap still allows them all (the soft check passes for every one)
+    for (const hook of ['intro', 'area_enter', 'milestone', 'boss_seen'] as const) gm.ask({ hook, area: 0, turn: 0 }, 'p1', ctx, 'ai');
+    for (let i = 0; i < 20; i++) {
+      for (let k = 0; k < 10; k++) await new Promise((r) => setImmediate(r));
+      sch.advanceBy(20);
+    }
+    expect(mock.callCount).toBe(2);
+    expect(server.budget.used('R')).toBe(2);
+    expect(answers.filter((a) => a.source === 'llm:mock').length).toBeLessThanOrEqual(2);
+    // a silent answer ("nothing to add") and everything else leave the request map
+    gm.ask({ hook: 'idle', area: 0, turn: 1 }, 'p1', ctx, 'ai');
+    for (let k = 0; k < 20; k++) await new Promise((r) => setImmediate(r));
+    sch.advanceBy(50);
+    for (let k = 0; k < 20; k++) await new Promise((r) => setImmediate(r));
+    expect((gm as unknown as { pids: Map<number, unknown> }).pids.size).toBe(0);
+    expect(logs.some((l) => l.includes('gm breaker open'))).toBe(false);
+    gm.dispose();
+  });
+
   it('the pool hands slots out in order and skips an aborted waiter', async () => {
     const pool = new GmPool(1);
     const a = await pool.acquire(new AbortController().signal);
@@ -499,6 +527,49 @@ describe('drops, staleness, the pool, the breaker and the caps (manual clock)', 
 });
 
 describe('offers and the chat hook', () => {
+  it('MP5: a line that addresses the GM while a chat answer is in flight is owed one, never dropped, and quoted in it', async () => {
+    const clock = lateClock();
+    const mock = new MockProvider({ responses: { ...scriptedAnswers(), 'gm:chat': { json: { actions: [narrate('AI: chat answer')] } } }, latencyMs: 2000, ...clock.timers });
+    h = new MemRoom({ seed: 5, gm: aiConfig(mock) });
+    clock.set(h.sch);
+    const clients = [h.client('Ann', { host: true }), h.client('Bo'), h.client('Cy')];
+    await h.join(...clients);
+    clients[0]!.start();
+    await h.flush();
+    await quiet(h);
+    const chatCalls = () => mock.calls.filter((c) => c.purpose.startsWith('gm:chat'));
+    clients[0]!.say('@gm what is behind that saloon?');
+    await h.flush();
+    await h.advance(500);
+    clients[1]!.say('gm, is it going to rain?');
+    await h.advance(1200);
+    clients[2]!.say('game master, tell Ann a joke');
+    await h.flush();
+    // one chat request at a time
+    expect(chatCalls()).toHaveLength(1);
+    await quiet(h, 500);
+    // (the owed one waits for the room's short window after the first ask)
+    await h.advance(CHAT_ADDRESS_ROOM_MS);
+    await quiet(h, 500);
+    expect(chatCalls()).toHaveLength(2);
+    // the owed request quotes the lines said while the first one ran
+    const second = JSON.stringify(chatCalls()[1]!.messages);
+    expect(second).toContain('is it going to rain');
+    expect(second).toContain('tell Ann a joke');
+    // a follow-up from the same seat after the (shorter) per-seat window is answered too
+    await h.advance(CHAT_ADDRESS_SEAT_MS);
+    clients[0]!.say('@gm thanks!');
+    await h.flush();
+    await quiet(h, 500);
+    expect(chatCalls()).toHaveLength(3);
+    // the lines up to each ask count as seen; nothing is left new
+    const room = h.room as unknown as { lastChatAnswerAt: number | undefined; chat: ChatLine[] };
+    expect(chatQuotes(room.chat, h.sch.now(), room.lastChatAnswerAt).filter((q) => q.new)).toEqual([]);
+    // a shutdown mid-area still writes the area's stats line
+    h.manager.shutdown();
+    expect(h.logs.filter((l) => /gm area 0: \d+ calls \(0 voice\)/.test(l))).toHaveLength(1);
+  }, 60_000);
+
   it('a chosen offer option that the recheck would trim is refused (offer_gone); another option still works', async () => {
     h = new MemRoom({ seed: 5, gm: offGmConfig() });
     const clients = [h.client('Ann', { host: true }), h.client('Bo')];

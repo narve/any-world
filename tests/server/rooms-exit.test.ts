@@ -198,15 +198,19 @@ describe('MP2 exit checks (tests in a file run one after another)', { timeout: 2
     await Promise.all(cs.map((c) => c.play(50)));
     pause(cs);
     await settled(cs);
+    // a graceful stop snapshots: the stored state is the clients'. The server appends and sends
+    // before its snapshot, and an input sent before pause() may still resolve at its deadline, so
+    // n and the hash are taken together once every client has seen the socket close (MP5: the race)
+    await killChild(second.proc, 'SIGTERM');
+    await until(() => cs.every((c) => c.client.status !== 'joined'), 10_000, 'the closes');
+    const n = cs[0].n;
     const h = hashState(cs[0].state!);
     for (const c of cs) {
-      expect(hashState(c.state!)).toBe(h);
+      expect([c.n, hashState(c.state!)]).toEqual([n, h]);
       expect(c.desyncs).toBe(0);
     }
-    // a graceful stop snapshots: the stored state is the clients'
-    await killChild(second.proc, 'SIGTERM');
     const after = new RoomStore(join(dir, 'rooms')).load(code);
-    expect(after.room.snapshot!.n).toBe(cs[0].n);
+    expect(after.room.snapshot!.n).toBe(n);
     expect(hashState(deserialize(world, after.room.snapshot!.state))).toBe(h);
   });
 

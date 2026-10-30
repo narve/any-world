@@ -5,7 +5,9 @@
  * signal, every GM call answers at once with words.
  *  - a conversation turn is voiced: the speaker's panel shows the line, a teammate gets a bubble, the
  *    voice's actions are never applied and no entry is made
- *  - dropped: the conversation closed or moved on (a newer turn aborts the older), the timeout
+ *  - dropped: the conversation closed or moved on, the timeout
+ *  - MP5: asked only once a turn stayed put (VOICE_DEBOUNCE_MS: a quick click costs no call), a
+ *    newer turn waits for the one in flight (never aborts it), the voice's own breaker
  *  - only 'ai' rooms voice; the voice takes at most half the pool and never waits for a slot
  */
 import { describe, it, expect, afterEach } from 'vitest';
@@ -17,7 +19,7 @@ import type { ServerMsg } from '../../src/net/protocol';
 import { LLMAbortedError } from '../../src/llm/errors';
 import type { CompletionRequest, CompletionResponse, LLMProvider } from '../../src/llm/types';
 import { offGmConfig, type GmConfig } from '../../server/gm-config';
-import { VOICE_GAP_MS, VOICE_TIMEOUT_MS } from '../../server/rooms/gm';
+import { BREAKER_FAILURES, BREAKER_OPEN_MS, VOICE_DEBOUNCE_MS, VOICE_TIMEOUT_MS } from '../../server/rooms/gm';
 import { loadFixture, roomMap } from '../engine/helpers';
 import { MemRoom } from '../client/room-harness';
 
@@ -110,7 +112,7 @@ async function setUp(provider: VoiceProvider | null, o: Partial<GmConfig> = {}):
   if (provider) provider.sch = h.sch;
   const seats = await started(h, ['Ann', 'Bo']);
   await h.craft(smallRoom(['Ann', 'Bo']), seats.map((x) => x.c));
-  await h.advance(VOICE_GAP_MS);
+  await h.advance(VOICE_DEBOUNCE_MS);
   return seats;
 }
 
@@ -137,6 +139,9 @@ describe('the NPC voice in rooms (words only)', () => {
     await h!.flush();
     expect(a.s.me.pendingChoice?.speakerId).toBe(preacher);
     const canned = a.s.me.pendingChoice!.prompt;
+    // asked once the turn stayed put
+    expect(p.dialogueCalls).toBe(0);
+    await tick(VOICE_DEBOUNCE_MS);
     expect(p.dialogueCalls).toBe(1);
     // the teammate sees the canned line as a bubble first
     expect(b.s.npcBubbles.all(h!.sch.now())).toMatchObject([{ actorId: preacher, text: canned }]);
@@ -153,33 +158,37 @@ describe('the NPC voice in rooms (words only)', () => {
     expectLockstep([a, b]);
   });
 
-  it('drops a line whose conversation closed, and a newer turn aborts the older request', async () => {
-    const p = new VoiceProvider(['FIRST', 'SECOND', 'THIRD'], [3000, 4000, 300]);
+  it('drops a line whose conversation closed; a newer turn waits for the one in flight and never aborts it', async () => {
+    const p = new VoiceProvider(['FIRST', 'SECOND', 'THIRD'], [3000, 1500, 300]);
     const [a, b] = await setUp(p);
     const preacher = npcId(h!.room.state!, 'preacher-weekes');
     a.s.act({ type: 'talk', targetId: preacher });
     await tick(1000);
+    expect(p.dialogueCalls).toBe(1);
     a.s.dialogueLeave();
     await tick(3000);
     expect(a.npc).toEqual([]);
     expect(p.aborted).toBe(1);
 
-    // a reply past the gap aborts the open request; its own line arrives
-    await tick(VOICE_GAP_MS);
+    // a reply while the open request runs: it waits, the open one is not aborted; its line is dropped (moved on), the reply's own arrives
     a.s.act({ type: 'talk', targetId: preacher });
-    await tick(VOICE_GAP_MS + 500);
+    await tick(VOICE_DEBOUNCE_MS + 100);
     expect(p.dialogueCalls).toBe(2);
     a.s.dialogueReply(0);
     await h!.flush();
-    expect(p.aborted).toBe(2);
-    await tick(400);
-    expect(a.npc.map((m) => m.text)).toEqual(['THIRD']);
-    expect(b.npc.map((m) => m.text)).toEqual(['THIRD']);
-    expect(a.s.voiceLine() === 'THIRD' || a.s.me.pendingChoice?.kind !== 'dialogue').toBe(true);
+    await tick(VOICE_DEBOUNCE_MS + 200);
+    expect(p.aborted).toBe(1);
+    expect(p.dialogueCalls).toBe(2);
+    await tick(1500);
+    const third = a.s.me.pendingChoice?.kind === 'dialogue';
+    expect(p.dialogueCalls).toBe(third ? 3 : 2);
+    await tick(500);
+    expect(a.npc.map((m) => m.text)).toEqual(third ? ['THIRD'] : []);
+    expect(b.npc.map((m) => m.text)).toEqual(a.npc.map((m) => m.text));
     expectLockstep([a, b]);
   });
 
-  it('a turn sooner than the gap keeps its canned line; a line later than the timeout is dropped', async () => {
+  it('quick turns cost no call (debounce); a line later than the timeout is dropped', async () => {
     const p = new VoiceProvider(['LATE', 'NEXT'], [VOICE_TIMEOUT_MS + 2000, 200]);
     const [a] = await setUp(p);
     const preacher = npcId(h!.room.state!, 'preacher-weekes');
@@ -187,17 +196,41 @@ describe('the NPC voice in rooms (words only)', () => {
     await tick(VOICE_TIMEOUT_MS + 3000);
     expect(a.npc).toEqual([]);
     expect(p.aborted).toBe(1);
-    // the slot came back: the next turn is voiced; one sooner than the gap is not asked
+    // two quick replies: only the last one (once it stayed put) is asked
     a.s.dialogueReply(0);
     await h!.flush();
-    expect(p.dialogueCalls).toBe(2);
-    if (a.s.me.pendingChoice?.kind === 'dialogue' && a.s.me.pendingChoice.options.length > 1) {
+    const open = a.s.me.pendingChoice?.kind === 'dialogue' && a.s.me.pendingChoice.options.length > 0;
+    if (open) {
       a.s.dialogueReply(0);
       await h!.flush();
-      expect(p.dialogueCalls).toBe(2);
     }
-    await tick(300);
+    expect(p.dialogueCalls).toBe(1);
+    await tick(VOICE_DEBOUNCE_MS + 300);
+    expect(p.dialogueCalls).toBeLessThanOrEqual(2);
     expect(a.npc.length).toBeLessThanOrEqual(1);
+  });
+
+  it('the voice has its own breaker: failed lines in a row stop voicing for a while, the GM keeps answering', async () => {
+    const p = new VoiceProvider([], Array(10).fill(VOICE_TIMEOUT_MS + 1000));
+    const [a] = await setUp(p);
+    const preacher = npcId(h!.room.state!, 'preacher-weekes');
+    for (let i = 0; i < BREAKER_FAILURES; i++) {
+      a.s.act({ type: 'talk', targetId: preacher });
+      await tick(VOICE_TIMEOUT_MS + 600);
+      a.s.dialogueLeave();
+      await tick(200);
+    }
+    expect(p.dialogueCalls).toBe(BREAKER_FAILURES);
+    expect(h!.logs.some((l) => l.includes('gm voice breaker open'))).toBe(true);
+    a.s.act({ type: 'talk', targetId: preacher });
+    await tick(VOICE_DEBOUNCE_MS + 200);
+    expect(p.dialogueCalls).toBe(BREAKER_FAILURES);
+    expect(h!.room.gmMode()).toBe('ai');
+    a.s.dialogueLeave();
+    await tick(BREAKER_OPEN_MS);
+    a.s.act({ type: 'talk', targetId: preacher });
+    await tick(VOICE_DEBOUNCE_MS + 200);
+    expect(p.dialogueCalls).toBe(BREAKER_FAILURES + 1);
   });
 
   it('only the AI GM voices; the voice takes at most half the pool and never waits for a slot', async () => {
@@ -216,6 +249,7 @@ describe('the NPC voice in rooms (words only)', () => {
     await h!.flush();
     expect(a.s.me.pendingChoice?.kind).toBe('dialogue');
     expect(b.s.me.pendingChoice?.kind).toBe('dialogue');
+    await tick(VOICE_DEBOUNCE_MS);
     expect(p.dialogueCalls).toBe(1);
     await tick(1200);
     expect(a.npc.map((m) => [m.pid, m.text])).toEqual([['p1', 'ONE']]);

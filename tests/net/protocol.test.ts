@@ -253,6 +253,9 @@ describe('server messages and log entries', () => {
     expect(parseServerMsg({ t: 'npc', run: 1, n: 1, pid: 'p1', actorId: 'a1', text: '' })).toBeNull();
     expect(parseServerMsg({ t: 'npc', run: 1, n: 1, pid: 'p1', actorId: 'a1', text: 'x'.repeat(601) })).toBeNull();
     expect(parseServerMsg({ t: 'nope' })).toBeNull();
+    // MP5: seat ids are never reused, so a room with a lot of join churn gets past s9999
+    expect(parseServerMsg({ t: 'roster', seats: [{ ...roster[0]!, seat: 's10000' }] })).not.toBeNull();
+    expect(parseServerMsg({ t: 'roster', seats: [{ ...roster[0]!, seat: 's1234567890' }] })).toBeNull();
   });
 
   it('every log entry kind parses; bad ones do not', () => {

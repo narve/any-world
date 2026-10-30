@@ -6,16 +6,20 @@
  * full, creations per IP with invalid uploads counted, the first-area timing cap, world uploads with
  * the token in the body).
  */
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { startServer } from '../../server/index';
 import { ensureDataDir, resolveDataDir } from '../../server/data-dir';
 import { wsConn, originAllowed, type WsLike } from '../../server/rooms/ws';
-import { ConnBuckets } from '../../server/rooms/limits';
+import { ConnBuckets, DEFAULT_LIMITS, REPLACED_TERMINATE_MS } from '../../server/rooms/limits';
 import { REPO_ROOT } from '../../server/engine-version';
-import { LIMITS, type ServerMsg } from '../../src/net/protocol';
+import { laterAreaFailure } from '../../server/app';
+import { generateArea } from '../../src/engine/mapgen';
+import { parseWorld } from '../../src/schema';
+import type { MapGenerator } from '../../src/engine/types';
+import { CLOSE, LIMITS, type ServerMsg } from '../../src/net/protocol';
 import { boot, createDemoRoom, ENGINE, getJson, hello, openRaw, postJson, sleep, until, upgradeStatus, type Booted } from './rooms-helpers';
 
 let b: Booted | undefined;
@@ -242,6 +246,39 @@ describe('rooms: hello and messages', () => {
     conn.send(msg);
     expect(calls).toEqual(['send', 'send', 'close 1009', 'terminate']);
   });
+
+  it('MP5: a replaced socket is terminated soon when its close does not finish (half-open), and one IP fits 3 full rooms of reconnects', () => {
+    vi.useFakeTimers();
+    try {
+      const calls: string[] = [];
+      let state = 1;
+      const fake: WsLike = {
+        get readyState() {
+          return state;
+        },
+        bufferedAmount: 0,
+        send: () => calls.push('send'),
+        close: (code) => {
+          calls.push(`close ${code}`);
+          state = 2;
+        },
+        terminate: () => calls.push('terminate'),
+      };
+      wsConn(fake, 100).close(CLOSE.replaced, 'replaced');
+      vi.advanceTimersByTime(REPLACED_TERMINATE_MS);
+      expect(calls).toEqual([`close ${CLOSE.replaced}`, 'terminate']);
+      // a normal close waits for its handshake
+      calls.length = 0;
+      state = 1;
+      wsConn(fake, 100).close(1000, 'bye');
+      vi.advanceTimersByTime(REPLACED_TERMINATE_MS * 5);
+      expect(calls).toEqual(['close 1000']);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(DEFAULT_LIMITS.socketsPerIp).toBeGreaterThanOrEqual(3 * LIMITS.maxPlayers.max);
+    expect(DEFAULT_LIMITS.upgradesPerMin).toBeGreaterThanOrEqual(3 * LIMITS.maxPlayers.max);
+  });
 });
 
 describe('rooms: HTTP routes', () => {
@@ -307,6 +344,28 @@ describe('rooms: HTTP routes', () => {
     expect(slow.status).toBe(400);
     expect(slow.json.error.message).toMatch(/first area/);
     expect((await getJson(`${b.base}/api/rooms`)).json.rooms).toHaveLength(0);
+  });
+
+  it('MP5: an uploaded world\'s later areas are trial-generated: one that is slow or throws refuses the world', () => {
+    const r = parseWorld(western(), { strictKeys: true });
+    if (!r.ok) throw new Error(r.errors.join('; '));
+    const w = r.world;
+    expect(w.areas.length).toBeGreaterThan(2);
+    expect(laterAreaFailure(w, 4, 2000)).toBeNull();
+    // a fake clock: area 3 takes 5 s
+    let t = 0;
+    const seen: (number | undefined)[] = [];
+    const slow: MapGenerator = (plan, world, rng, o) => {
+      seen.push(o?.partySize);
+      if (plan === w.areas[2]) t += 5000;
+      return generateArea(plan, world, rng, o);
+    };
+    expect(laterAreaFailure(w, 4, 2000, slow, () => t)).toMatch(/area 3 took 5000 ms/);
+    expect(seen).toEqual([4, 4]);
+    const broken: MapGenerator = () => {
+      throw new Error('no room for the exit');
+    };
+    expect(laterAreaFailure(w, 1, 2000, broken)).toMatch(/area 2 cannot be made: no room for the exit/);
   });
 
   it('POST /api/rooms/:code/world: the host token in the body, lobby only', async () => {

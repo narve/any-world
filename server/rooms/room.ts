@@ -74,7 +74,7 @@ import {
 import { formatMessage } from '../../src/client/i18n/message-format';
 import en from '../../src/client/i18n/en';
 import nb from '../../src/client/i18n/nb';
-import { nextResolve, type ClockDecision, type ClockView, type PendingInput } from './clock';
+import { hostileInView, nextResolve, type ClockDecision, type ClockView, type PendingInput } from './clock';
 import type { RoomTiming, Scheduler, TimerId } from './timing';
 import { linesToReplay, type LoadedRoom, type LogLine, type RoomFile, type RoomStore, type SeatRecord, type WorldFile } from './store';
 import type { DemoWorlds } from './worlds';
@@ -96,10 +96,14 @@ export const DESYNC_SNAPSHOT_MS = 5000;
 export const ILLEGAL_LOG_PER_MIN = 20;
 /** the GM's weirdness in rooms (the offline director does not read it) */
 const ROOM_WEIRDNESS = 0.5;
-/** the chat hook (MP4 design §3.2): at most one per room this often */
+/** the chat hook (MP4 design §3.2): at most one per room this often for chatter that does not address the GM */
 export const CHAT_HOOK_ROOM_MS = 20_000;
-/** a seat addressing the GM fires the chat hook at most this often */
-export const CHAT_ADDRESS_SEAT_MS = 60_000;
+/** a seat addressing the GM fires the chat hook at most this often (MP5: was a minute, a follow-up was ignored) */
+export const CHAT_ADDRESS_SEAT_MS = 20_000;
+/** a line addressing the GM: at most one chat hook per room this often; a line inside the window is owed an answer, not dropped */
+export const CHAT_ADDRESS_ROOM_MS = 5000;
+/** an owed answer (a line that addressed the GM while it was busy) is given up after this long */
+export const CHAT_OWED_MAX_MS = 60_000;
 /** or this many new lines since the GM's last chat answer, and this long since the last chat hook */
 export const CHAT_HOOK_LINES = 4;
 export const CHAT_HOOK_QUIET_MS = 60_000;
@@ -107,6 +111,8 @@ export const CHAT_HOOK_QUIET_MS = 60_000;
 /** one connection as the room sees it */
 export interface Conn {
   send(msg: ServerMsg): void;
+  /** the same message already serialized (a broadcast serializes once for every seat, MP5); optional */
+  sendText?(text: string): void;
   close(code: number, reason?: string): void;
 }
 
@@ -232,6 +238,12 @@ export class Room {
   /** wall-clock time of the GM's last answer to a chat hook, and of the last chat hook */
   private lastChatAnswerAt: number | undefined = undefined;
   private lastChatHookAt = -Infinity;
+  /**
+   * MP5: a line addressed the GM while a chat request was queued or running, inside the room's
+   * window or during the area hold: one chat hook is owed (fired when that ends, quoting every line
+   * since the last answer). `pid`: the newest asker on the map.
+   */
+  private chatOwed: { at: number; pid: PlayerId | null } | null = null;
   /** set while askGm runs: a synchronous answer is pushed in its caller's guard */
   private askingGm = false;
   /**
@@ -550,6 +562,8 @@ export class Room {
       const s = seat!;
       // (inside the guard: a full disk closes this room, never the process)
       if (fresh) this.persistSeat(s);
+      // (before a replaced socket is dropped: a reconnect over a half-open socket wakes nothing, MP5)
+      const wasEmpty = !this.anyConnected;
       // a second socket with the same token replaces the first (a new tab)
       if (s.conn) {
         const old = s.conn;
@@ -558,7 +572,6 @@ export class Room {
       }
       // the 2-minute timer is cancelled before anything else
       s.awayAt = null;
-      const wasEmpty = !this.anyConnected;
       let changed = false;
       if (s.pid === null) {
         const name = this.uniqueName(h.name, s);
@@ -597,6 +610,8 @@ export class Room {
       this.emptySince = null;
       this.ensureHost();
       conn.send(this.welcome(s, token, h));
+      // (typing is not in the roster: the newcomer gets the typing frames of those typing now)
+      for (const o of this.seats) if (o !== s && o.conn && o.typingUntil !== null) conn.send({ t: 'typing', seat: o.id, on: true });
       this.evaluate();
       return null;
     }, refused('room_closed', 'This room is closed.'));
@@ -835,24 +850,68 @@ export class Room {
 
   /**
    * The chat hook (MP4 design §3.2, AI rooms only; wall clock, never replayed: only its answer is):
-   * a line that addresses the GM (at most once per seat a minute), or CHAT_HOOK_LINES new lines since
-   * the GM's last chat answer and a quiet minute; never more than one per CHAT_HOOK_ROOM_MS, while a
-   * chat request is queued, or during the area-entry hold.
+   * a line that addresses the GM (at most once per seat every CHAT_ADDRESS_SEAT_MS, and once per room
+   * every CHAT_ADDRESS_ROOM_MS), or CHAT_HOOK_LINES new lines since the GM's last chat answer and a
+   * quiet minute (at most one per CHAT_HOOK_ROOM_MS). One chat request at a time: a line that
+   * addresses the GM while one is queued or running, inside the room's window or during the
+   * area-entry hold is owed an answer (MP5: never dropped), fired by flushChatOwed.
    */
   private chatHook(s: Seat, text: string, now: number): void {
     const gm = this.gm;
     const state = this.state;
-    if (!gm || this.phase !== 'playing' || !state || state.status !== 'playing' || this.hold) return;
-    if (now - this.lastChatHookAt < CHAT_HOOK_ROOM_MS || gm.pendingHooks().some((h) => h.hook === 'chat')) return;
+    if (!gm || this.phase !== 'playing' || !state || state.status !== 'playing') return;
     if (gm.current() !== 'ai') return;
     const addressed = now - s.lastGmCallAt >= CHAT_ADDRESS_SEAT_MS && addressesGm(text, this.world.world.gm.persona);
-    if (!addressed) {
-      const fresh = chatQuotes(this.chat, now, this.lastChatAnswerAt).filter((q) => q.new).length;
-      if (fresh < CHAT_HOOK_LINES || now - this.lastChatHookAt < CHAT_HOOK_QUIET_MS) return;
-    } else s.lastGmCallAt = now;
+    if (addressed) {
+      s.lastGmCallAt = now;
+      this.chatOwed = { at: this.chatOwed?.at ?? now, pid: this.onMap(s.pid) ? s.pid : (this.chatOwed?.pid ?? null) };
+      this.flushChatOwed(now);
+      return;
+    }
+    if (this.hold || this.chatOwed || this.chatPending(gm)) return;
+    if (now - this.lastChatHookAt < CHAT_HOOK_ROOM_MS) return;
+    const fresh = chatQuotes(this.chat, now, this.lastChatAnswerAt).filter((q) => q.new).length;
+    if (fresh < CHAT_HOOK_LINES || now - this.lastChatHookAt < CHAT_HOOK_QUIET_MS) return;
+    this.fireChatHook(state, null, now);
+  }
+
+  private chatPending(gm: RoomGm): boolean {
+    return gm.pendingHooks().some((h) => h.hook === 'chat');
+  }
+
+  /** an owed chat answer is asked once no chat request is queued or running, the hold is over and the room's window is open */
+  private flushChatOwed(now: number): void {
+    const owed = this.chatOwed;
+    const gm = this.gm;
+    const state = this.state;
+    if (!owed) return;
+    if (!gm || this.phase !== 'playing' || !state || state.status !== 'playing' || now - owed.at > CHAT_OWED_MAX_MS) {
+      this.chatOwed = null;
+      return;
+    }
+    if (this.hold || this.chatPending(gm) || now - this.lastChatHookAt < CHAT_ADDRESS_ROOM_MS) return;
+    if (gm.current() !== 'ai') {
+      this.chatOwed = null;
+      this.log('gm chat line not answered (the AI GM is on its fallback)');
+      return;
+    }
+    this.chatOwed = null;
+    this.fireChatHook(state, owed.pid && this.onMap(owed.pid) ? owed.pid : null, now);
+  }
+
+  private fireChatHook(state: GameState, subject: PlayerId | null, now: number): void {
     this.lastChatHookAt = now;
-    const subject = addressed && this.onMap(s.pid) ? s.pid : null;
     this.askGm([{ hook: 'chat', area: state.area.index, turn: state.turn, ...(subject ? { detail: { playerId: subject } } : {}) }]);
+  }
+
+  /**
+   * An 'ai' request left the GM's queue (answered, silent, failed, dropped): a finished chat request
+   * marks the lines it was shown as seen (those up to its ask, not those said while it ran), and an
+   * owed chat answer may go now.
+   */
+  private gmSettled(hook: GmHookEvent, askedAt: number): void {
+    if (hook.hook === 'chat') this.lastChatAnswerAt = Math.max(this.lastChatAnswerAt ?? -Infinity, askedAt);
+    if (this.chatOwed && !this.askingGm && !this.closed) this.guard(() => this.evaluate(), undefined);
   }
 
   private checkHash(s: Seat, n: number, h: string): void {
@@ -926,6 +985,7 @@ export class Room {
     this.voiceHistory.clear();
     this.lastChatAnswerAt = undefined;
     this.lastChatHookAt = -Infinity;
+    this.chatOwed = null;
     // the old run's GM is gone (its late answers too); the intro is asked on the new one
     this.gm?.dispose();
     this.gm = this.makeGm();
@@ -1150,6 +1210,7 @@ export class Room {
       scheduler: this.deps.scheduler,
       offline: this.director,
       onAnswer: (a) => (this.askingGm ? this.gmAnswer(a) : this.guard(() => (this.gmAnswer(a), this.evaluate()), undefined)),
+      onSettled: (hook, askedAt) => this.gmSettled(hook, askedAt),
       log: (l) => this.log(l),
     });
   }
@@ -1271,7 +1332,7 @@ export class Room {
     if (this.closed || this.phase !== 'playing' || !state || state.status !== 'playing') return;
     if (a.run !== this.run || a.area !== state.area.index) return this.log(`gm answer to ${a.hook.hook} dropped (asked in run ${a.run} area ${a.area})`);
     if (gmAnswerStale(a.hook.hook, a.askedAt, now)) return this.log(`gm answer to ${a.hook.hook} dropped (${Math.round((now - a.askedAt) / 1000)} s old)`);
-    if (a.hook.hook === 'chat') this.lastChatAnswerAt = now;
+    // (a chat answer's lines are marked seen when its request settles: gmSettled)
     const world = this.world.world;
     let pid = a.response.player ?? a.pid;
     let actions = a.response.actions;
@@ -1399,6 +1460,7 @@ export class Room {
       } else if (s.awayAt !== null) wakes.push(s.awayAt);
     }
     if (this.clockDue !== null) wakes.push(this.clockDue);
+    if (this.chatOwed) wakes.push(this.lastChatHookAt + CHAT_ADDRESS_ROOM_MS);
     return {
       active,
       ready,
@@ -1408,6 +1470,10 @@ export class Room {
       deadlineMs: t.deadlineMs || this.options.deadlineMs,
       travelMs: t.travelMs,
       countdownTurnMs: t.countdownTurnMs,
+      calmGraceMs: t.calmGraceMs,
+      calm: !hostileInView(state),
+      calmFlow: t.calmFlow,
+      downWaiting: state.status === 'playing' && state.party.some((id) => state.players[id]?.down) && state.party.some((id) => !state.players[id]?.down),
       countdown: !!state.area.exitCountdown,
       areaHoldUntil: this.hold?.until ?? null,
       anyConnected: this.anyConnected,
@@ -1462,6 +1528,7 @@ export class Room {
     }
     for (const s of this.seats) if (s.typingUntil !== null && s.typingUntil <= now) this.stopTyping(s, true);
     if (this.hold && this.hold.until <= now) this.hold = null;
+    if (this.chatOwed) this.flushChatOwed(now);
     for (const s of this.seats.slice()) {
       if (s.conn || s.awayAt === null || s.awayAt > now) continue;
       if (this.phase === 'lobby') {
@@ -1519,7 +1586,9 @@ export class Room {
     const ps = s.pid !== null && this.state ? this.state.players[s.pid] : undefined;
     if (ps?.left && this.phase === 'playing') return 'gone';
     if (!s.conn) return 'off';
-    if (s.typingUntil !== null || ps?.pendingChoice) return 'busy';
+    // (typing is left out: the typing frames carry it, and a roster to every seat on every
+    // keystroke toggle was most of a chatting room's traffic, MP5; clients fold it back in)
+    if (ps?.pendingChoice) return 'busy';
     if (s.presence === 'menu') return 'menu';
     if (now - s.lastActiveAt >= this.deps.timing.idleActiveMs) return 'idle';
     return 'active';
@@ -1567,7 +1636,20 @@ export class Room {
   }
 
   private broadcast(msg: ServerMsg): void {
-    for (const s of this.seats) if (s.conn) safeSend(s.conn, msg);
+    let text: string | null = null;
+    for (const s of this.seats) {
+      if (!s.conn) continue;
+      if (!s.conn.sendText) {
+        safeSend(s.conn, msg);
+        continue;
+      }
+      text ??= JSON.stringify(msg);
+      try {
+        s.conn.sendText(text);
+      } catch {
+        // a dead socket: its close handler takes the seat off
+      }
+    }
   }
 
   // -------------------------------------------------------------------------

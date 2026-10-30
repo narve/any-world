@@ -4,7 +4,7 @@
  * its own (idle, typing expiry, away timers, the end of an area hold). The room keeps one timer for
  * the earlier of the two and calls this again after every message, entry and timer.
  */
-import type { PlayerId } from '../../src/engine/types';
+import type { GameState, PlayerId } from '../../src/engine/types';
 import type { Intent } from '../../src/net/protocol';
 
 export interface PendingInput {
@@ -30,6 +30,14 @@ export interface ClockView {
   deadlineMs: number;
   travelMs: number;
   countdownTurnMs: number;
+  /** calm turns: how long a pending input waits for the active players who have not acted */
+  calmGraceMs: number;
+  /** no living hostile is in view of a standing player on the map (hostileInView is false) */
+  calm: boolean;
+  /** rule 4a is on (RoomTiming.calmFlow; tests of the waiting UI turn it off) */
+  calmFlow: boolean;
+  /** a party member is down (getting up by themselves takes turns) and someone else stands */
+  downWaiting: boolean;
   /** state.area.exitCountdown is set */
   countdown: boolean;
   /** the area was just entered: no deadline starts and nothing resolves before this */
@@ -55,8 +63,14 @@ export interface ClockDecision {
  *     a ready player's input: now when one intent is `decide`, else at the travel cadence, advance:
  *     false; no pending input from a ready player: at the travel cadence with advance: true (the
  *     world runs until the slow ones are ready);
- *  4. something is pending and someone active has not acted: firstAt + deadlineMs, advance: true;
- *  5. nothing pending: no resolve (while nobody acts the world does not move).
+ *  4. something is pending and someone active has not acted:
+ *     a. calm (no hostile in view of a standing player): flow over fairness, the ones who have not
+ *        acted wait that turn as on a deadline: only travel or wait pending at the travel cadence,
+ *        else firstAt + calmGraceMs (never earlier than the travel cadence), advance: true;
+ *     b. otherwise firstAt + deadlineMs, advance: true;
+ *  5. nothing pending: no resolve (while nobody acts the world does not move), except
+ *  6. someone is down and it is calm: a turn every countdownTurnMs with advance: true, so the
+ *     self-revive counts down while the teammates read, chat or look away (MP5: nobody waits).
  */
 export function nextResolve(v: ClockView, now: number): ClockDecision {
   if (!v.anyConnected) return { resolve: null, wakeAt: null };
@@ -66,7 +80,10 @@ export function nextResolve(v: ClockView, now: number): ClockDecision {
 
   if (v.countdown) return { resolve: { at: v.lastResolveAt + v.countdownTurnMs, advance: true }, wakeAt };
   if (v.areaHoldUntil !== null && v.areaHoldUntil > now) return { resolve: null, wakeAt };
-  if (v.pending.size === 0) return { resolve: null, wakeAt };
+  if (v.pending.size === 0) {
+    if (v.downWaiting && v.calm) return { resolve: { at: v.lastResolveAt + v.countdownTurnMs, advance: true }, wakeAt };
+    return { resolve: null, wakeAt };
+  }
 
   const allActed = v.active.every((id) => v.pending.has(id));
   if (allActed) {
@@ -76,5 +93,27 @@ export function nextResolve(v: ClockView, now: number): ClockDecision {
     return { resolve: { at: v.lastResolveAt + v.travelMs, advance: false }, wakeAt };
   }
   const start = Math.max(v.firstAt ?? now, v.areaHoldUntil ?? -Infinity);
+  if (v.calm && v.calmFlow) {
+    const cadence = v.lastResolveAt + v.travelMs;
+    const onlyFlow = [...v.pending.values()].every((p) => p.intent !== 'decide');
+    return { resolve: { at: onlyFlow ? cadence : Math.max(cadence, start + v.calmGraceMs), advance: true }, wakeAt };
+  }
   return { resolve: { at: start + v.deadlineMs, advance: true }, wakeAt };
+}
+
+/**
+ * Whether a living hostile (not an ally) stands on a tile some standing party member on the map
+ * sees now (that member's fog). Down players' eyes do not count: they cannot act on it.
+ */
+export function hostileInView(state: GameState): boolean {
+  const w = state.area.map.width;
+  const eyes = state.party.map((id) => state.players[id]).filter((ps) => ps && !ps.down && !ps.left);
+  if (!eyes.length) return false;
+  const mine = new Set(eyes.map((ps) => ps!.actorId));
+  for (const a of state.area.actors) {
+    if (a.hp <= 0 || a.faction !== 'hostile' || a.allyOf || mine.has(a.id)) continue;
+    const i = a.pos.y * w + a.pos.x;
+    if (eyes.some((ps) => ps!.seen[i] === 2)) return true;
+  }
+  return false;
 }

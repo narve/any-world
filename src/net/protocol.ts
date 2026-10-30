@@ -116,7 +116,8 @@ export type Presence = z.infer<typeof Presence>;
 export const PingKind = z.enum(['follow', 'wait', 'help']);
 export type PingKind = z.infer<typeof PingKind>;
 export const PlayerIdSchema = z.string().regex(/^p\d{1,3}$/);
-export const SeatId = z.string().regex(/^s\d{1,4}$/);
+/** s1, s2, …: never reused in a room (nine digits: join churn never runs out, MP5) */
+export const SeatId = z.string().regex(/^s\d{1,9}$/);
 /** a demo world: a file id in content/worlds (without .json) */
 export const DemoId = z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/);
 export const EngineVersion = z.string().min(1).max(LIMITS.engineMax);

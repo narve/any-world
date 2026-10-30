@@ -241,6 +241,43 @@ describe('turns', () => {
     expect(room.n).toBe(n0 + 2);
   });
 
+  it('MP5: calm (no hostile in view), a decide input waits only the grace for a thinking teammate, travel only the cadence', () => {
+    const { sch, room, conns } = setup(2);
+    for (const a of room.state!.area.actors) if (a.faction === 'hostile') a.hp = 0;
+    expect(room.clockView().calm).toBe(true);
+    act(room, conns[0], { type: 'wait' });
+    const n0 = room.n;
+    sch.advanceBy(DEFAULT_TIMING.calmGraceMs - 1);
+    expect(room.n).toBe(n0);
+    sch.advanceBy(1);
+    expect(room.n).toBe(n0 + 1);
+    expect(turns(room).at(-1)).toMatchObject({ advance: true, inputs: [{ playerId: 'p1' }] });
+    act(room, conns[0], { type: 'wait' }, 'travel');
+    sch.advanceBy(DEFAULT_TIMING.travelMs);
+    expect(room.n).toBe(n0 + 2);
+  });
+
+  it('MP5: a down player gets up while the teammates do nothing (a turn a second while calm)', () => {
+    const { sch, room, conns } = setup(3);
+    const s = room.state!;
+    for (const a of s.area.actors) if (a.faction === 'hostile') a.hp = 0;
+    // p3 away from the others, so only the self-revive counts
+    const far = s.area.actors.find((a) => a.id === s.players.p3.actorId)!;
+    far.hp = 0;
+    s.players.p3.down = { since: s.turn, helpedTurns: 0 };
+    const n0 = room.n;
+    room.message(conns[0], { t: 'presence', state: 'playing' });
+    expect(room.clockView().downWaiting).toBe(true);
+    sch.advanceBy(30_000);
+    expect(room.n).toBeGreaterThan(n0);
+    expect(room.state!.players.p3.down).toBeFalsy();
+    // standing up again: nothing pending, the world stands still once more
+    const n1 = room.n;
+    sch.advanceBy(10_000);
+    expect(room.n).toBe(n1);
+    void conns;
+  });
+
   it('drops stale inputs, appends free actions at once, and never appends a no-op (the actor gets a refusal)', () => {
     const { room, conns } = setup(2);
     const s = room.state!;
@@ -289,6 +326,19 @@ describe('turns', () => {
     sch.advanceBy(DEFAULT_TIMING.typingExpiryMs);
     expect(room.state!.players.p2.busySince ?? null).toBeNull();
     expect(conns[0].last('typing')).toEqual({ t: 'typing', seat: 's2', on: false });
+  });
+
+  it('MP5: a typing toggle sends no roster (the typing frame carries it); a newcomer gets the typing frames of those typing', () => {
+    const { room, conns } = setup(2);
+    const rosters = conns[0].of('roster').length;
+    room.message(conns[1], { t: 'typing', on: true });
+    room.message(conns[1], { t: 'typing', on: false });
+    room.message(conns[1], { t: 'typing', on: true });
+    expect(conns[0].of('roster').length).toBe(rosters);
+    expect(room.roster().map((r) => r.presence)).toEqual(['active', 'active']);
+    const late = new FakeConn();
+    setupJoin(room, late, 'Cy');
+    expect(late.of('typing')).toEqual([{ t: 'typing', seat: 's2', on: true }]);
   });
 });
 
@@ -475,6 +525,18 @@ describe('the 2-minute rule', () => {
     expect(room.state!.party).toContain('p3');
     expect(room.closed).toBe(false);
     void other;
+  });
+
+  it('MP5: a reconnect that replaces a still-open socket does not restart the others\' 2-minute timers', () => {
+    const { sch, m, room, conns, tokens } = setup(2);
+    room.disconnect(conns[1]);
+    sch.advanceBy(90_000);
+    // p1's phone switches network: a new socket with the same token before the old one is noticed dead
+    const again = new FakeConn();
+    m.hello(again, hello(room.code, tokens[0], 'P1'));
+    expect(conns[0].closedWith).not.toBeNull();
+    sch.advanceBy(DEFAULT_TIMING.awayMs - 90_000);
+    expect(room.state!.party).toEqual(['p1']);
   });
 
   it('closes the room when every seat has sent leave or is gone', () => {

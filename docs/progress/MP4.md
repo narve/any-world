@@ -131,17 +131,21 @@ per busy room. Input tokens dominate.
   calls hit the 4 s deadline. How often a party of
   8–12 triggers the GM in practice, and how the answers feel at 1–2.5 s, is for MP5's playtest
   (the area stats log line gives calls, tokens and latency per area).
-- **The voice has no breaker of its own**: its calls count in the hourly caps and the area stats line,
-  and its errors log as `gm voice: …`.
+- ~~**The voice has no breaker of its own**~~ (MP5: it has one, 3 failed or late lines in a row stop
+  voicing for 2 minutes; voice calls are counted separately in the area stats line; a turn is voiced
+  only once it stayed put 400 ms and a newer turn waits for the one in flight instead of aborting it).
 - **Recordings were made for one player**: in a party only the recorded answers that pass the checks
   for the party are used; the rest fall back to the canned offline lines. A recording is served once
   per run (a restart may repeat one).
 - **"For a party" defaults**: the lobby's world picker lists demo and stored worlds and never opens the
   new-world form, so a party world is made from the start page's form with the toggle on.
-- **A first chat line during the intro gets no own answer** (one request in flight per room); it stays
-  in the next request's chat context.
-- **`rooms-exit` "restart" races under load**: it compares the snapshot's n with a live client n after
-  taking the hash; it failed once in the gate's full run and passed alone 3/3. Worth taking n and hash
-  together.
+- **Chat lines without an answer** (corrected in MP5): a line queued behind the intro *is* answered.
+  Lines were lost when they came inside the room's 20 s chat window or a seat's 60 s window (dropped,
+  not deferred), during the area-entry hold, or when the chat call failed or timed out (the fallback
+  director has no chat answer). MP5: a line that addresses the GM is owed an answer (one chat request
+  at a time, fired when the current one settles, the hold ends or the room's 5 s window opens, quoting
+  every line since), the seat window is 20 s; a failed call, the breaker or a cap still means silence.
+- ~~**`rooms-exit` "restart" races under load**~~ (MP5: n and the hash are taken together after every
+  client saw the socket close).
 - **Not deployed**: MP0's exit check (the Dell and the VPS) is still open; the env example has the GM
   lines commented out (HOSTING.md §7).

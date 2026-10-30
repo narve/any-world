@@ -29,6 +29,8 @@ import { serveStatic } from './static';
 import { engineVersionFor } from './engine-version';
 import { ensureDataDir } from './data-dir';
 import { createGame, worldIdOf } from '../src/engine/index';
+import { generateArea, seededRng } from '../src/engine/mapgen';
+import type { MapGenerator } from '../src/engine/types';
 import type { Difficulty as RoomOptionsDifficulty } from '../src/schema/gm';
 import { parseWorld } from '../src/schema';
 import type { WorldSpec } from '../src/schema/world';
@@ -255,6 +257,26 @@ export interface App {
   cachedProviderCount(): number;
   /** the rooms, when AppOptions.rooms was given */
   rooms: { manager: RoomManager; sockets: RoomSockets } | null;
+}
+
+/**
+ * MP5: an uploaded world's later areas, trial-generated at upload (the map generator, which is the
+ * costly part of an area change): the first that throws or takes longer than `limitMs` refuses the
+ * world, so a crafted later area cannot stall every room mid-run. (The first area is timed by the
+ * trial createGame.) The generator and the clock are parameters for tests.
+ */
+export function laterAreaFailure(world: WorldSpec, players: number, limitMs: number, gen: MapGenerator = generateArea, now: () => number = () => performance.now()): string | null {
+  for (let i = 1; i < world.areas.length; i++) {
+    const t0 = now();
+    try {
+      gen(world.areas[i]!, world, seededRng(i + 1), players > 1 ? { partySize: players } : undefined);
+    } catch (e) {
+      return `The world's area ${i + 1} cannot be made: ${e instanceof Error ? e.message : String(e)}`.slice(0, 300);
+    }
+    const ms = now() - t0;
+    if (ms > limitMs) return `The world's area ${i + 1} took ${Math.round(ms)} ms to make (the limit is ${limitMs} ms)`;
+  }
+  return null;
 }
 
 export function createApp(opts: AppOptions = {}): App {
@@ -485,8 +507,9 @@ export function createApp(opts: AppOptions = {}): App {
 
   /**
    * An uploaded world: parseWorld with strict keys, then a trial createGame for `players` players,
-   * caught and timed (a world whose first area takes longer than limits.firstAreaMs is refused;
-   * later slow areas cannot be capped without a worker thread, a possible improvement).
+   * caught and timed (a world whose first area takes longer than limits.firstAreaMs is refused),
+   * then every later area's map is trial-generated with the same limit (laterAreaFailure, MP5). The
+   * real area changes still run on the main thread (a worker thread would cap them for sure).
    */
   const checkWorld = (m: RoomManager, raw: unknown, players: number, difficulty: RoomOptionsDifficulty): WorldSpec => {
     const r = parseWorld(raw, { strictKeys: true });
@@ -500,6 +523,7 @@ export function createApp(opts: AppOptions = {}): App {
     }
     const ms = performance.now() - started;
     if (!failure && ms > lim.firstAreaMs) failure = `The world's first area took ${Math.round(ms)} ms to make (the limit is ${lim.firstAreaMs} ms)`;
+    if (!failure) failure = laterAreaFailure(r.world, players, lim.firstAreaMs);
     if (failure) {
       // the trial registered it
       m.releaseWorld(worldIdOf(r.world));

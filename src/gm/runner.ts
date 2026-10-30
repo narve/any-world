@@ -36,6 +36,12 @@ export interface GmRunnerOptions {
   maxQueue?: number;
   /** called for every usable result of the current epoch */
   onResult: (r: GmResult) => void;
+  /**
+   * Called once for every request when it leaves the runner, answered or not: after its result (or
+   * its silence, failure or abort), and when it is coalesced, evicted, dropped as stale or cancelled
+   * while queued (rooms: request bookkeeping, a chat line owed an answer). Default: none.
+   */
+  onSettled?: (id: number, hook: GmHookEvent, askedAt: number) => void;
   /** called when a director failed (logging only) */
   onError?: (err: unknown, req: GmHookEvent, director: string) => void;
   /** timer hooks (tests, the room's scheduler) */
@@ -123,11 +129,11 @@ export class GmRunner {
     const q: Queued = { id: this.nextId++, epoch: this.epoch, hook, ctx, at: this.now() };
     const co = this.opts.coalesce;
     const same = co ? this.queue.findIndex((x) => co(x.hook, hook)) : -1;
-    if (same >= 0) this.queue[same] = q;
+    if (same >= 0) this.settled(this.queue.splice(same, 1, q));
     else this.queue.push(q);
     while (this.queue.length > this.maxQueue) {
       const i = this.queue.findIndex((x) => !KEEP.has(x.hook.hook));
-      this.queue.splice(i >= 0 ? i : 0, 1);
+      this.settled(this.queue.splice(i >= 0 ? i : 0, 1));
     }
     void this.pump();
     return q.id;
@@ -139,8 +145,12 @@ export class GmRunner {
    */
   cancelAll(): void {
     this.epoch++;
-    this.queue = [];
+    this.settled(this.queue.splice(0));
     this.running?.ctrl.abort();
+  }
+
+  private settled(qs: readonly Queued[]): void {
+    for (const q of qs) this.opts.onSettled?.(q.id, q.hook, q.at);
   }
 
   dispose(): void {
@@ -164,7 +174,10 @@ export class GmRunner {
     if (this.running || this.disposed) return;
     let q = this.queue.shift();
     const stale = this.opts.dropStale;
-    while (q && stale?.(q.hook, q.at)) q = this.queue.shift();
+    while (q && stale?.(q.hook, q.at)) {
+      this.settled([q]);
+      q = this.queue.shift();
+    }
     if (!q) {
       this.flushIdle();
       return;
@@ -185,6 +198,7 @@ export class GmRunner {
     } finally {
       release?.();
       this.running = null;
+      this.settled([q]);
       if (this.queue.length) void this.pump();
       else this.flushIdle();
     }

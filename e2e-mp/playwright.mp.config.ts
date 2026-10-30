@@ -2,7 +2,7 @@
  * The room specs (MP3 design §7): their own dev server on 5183 (client) / 8797 (API), so the other
  * specs' server on 5173 and other agents are never touched (E2E_MP_PORT / E2E_MP_API_PORT move
  * them). The server gets a fresh data dir under .data/ (removed in the global teardown), test
- * timing (600 ms deadline, 30 ms travel, 150 ms countdown turns), fixed run seeds and raised limits
+ * timing (600 ms deadline, 30 ms travel, 150 ms countdown turns, calm turns off), fixed run seeds and raised limits
  * (every page is on 127.0.0.1). One worker; Chromium is kept from throttling or hiding windows that
  * overlap under xvfb (that would send presence: menu).
  *
@@ -25,7 +25,8 @@ const GM_API_PORT = Number(process.env.E2E_MP_GM_API_PORT) || 8798;
 // (set once in the main process; the workers and the teardown inherit it)
 process.env.E2E_MP_DATA ??= resolve(HERE, '..', '.data', `e2e-mp-${Date.now()}`);
 
-export const MP_TIMING = { deadlineMs: 600, travelMs: 30, countdownTurnMs: 150 };
+/** calmFlow off (MP5's calm turns would resolve before a teammate acts): the specs check the waiting pill and the deadline */
+export const MP_TIMING = { deadlineMs: 600, travelMs: 30, countdownTurnMs: 150, calmFlow: false };
 export const MP_SEED = 4242;
 export const MP_LIMITS = { createsPer10Min: 500, upgradesPerMin: 1000, socketsPerIp: 200, listPerMin: 2000, maxRooms: 50 };
 

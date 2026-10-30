@@ -332,6 +332,22 @@ describe('RoomClient', () => {
     expect(t.c.typingSeats.size).toBe(0);
   });
 
+  it('MP5: typing is not in the server roster; the client shows a typing seat busy unless it is off, gone or busy already', () => {
+    const t = setup();
+    t.c.connect();
+    t.last().open();
+    const seat = (id: string, presence: 'active' | 'idle' | 'menu' | 'off') => ({ seat: id, pid: null, name: id, colour: PLAYER_COLOURS[0], host: false, connected: presence !== 'off', presence, since: 0, ready: false });
+    t.last().deliver(welcome(null, { roster: [seat('s1', 'active'), seat('s2', 'idle'), seat('s3', 'off')] }));
+    t.last().deliver({ t: 'typing', seat: 's2', on: true });
+    t.last().deliver({ t: 'typing', seat: 's3', on: true });
+    expect(t.c.roster.map((r) => r.presence)).toEqual(['active', 'busy', 'off']);
+    // a new roster keeps the typing overlay; typing off shows the server's presence again
+    t.last().deliver({ t: 'roster', seats: [seat('s1', 'active'), seat('s2', 'menu'), seat('s3', 'off')] });
+    expect(t.c.roster.map((r) => r.presence)).toEqual(['active', 'busy', 'off']);
+    t.last().deliver({ t: 'typing', seat: 's2', on: false });
+    expect(t.c.roster.map((r) => r.presence)).toEqual(['active', 'menu', 'off']);
+  });
+
   it('an entry that wins or loses the run ends the phase, as the server does (no message says so)', () => {
     const t = setup();
     const start = createGame(world, { seed: 3, players: [{ name: 'Ann' }] });

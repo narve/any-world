@@ -348,6 +348,12 @@ export interface HookTracker {
    * entries (on the state before each), so the help ceiling survives a restart. Absent in single player.
    */
   help?: { area: number; used: number };
+  /**
+   * Parties only (MP5): the area whose first idle hook already fired, so a model that never sets
+   * gm_event_area_N does not get the quick first idle every FIRST_IDLE_TURNS (party turns are fast).
+   * Absent in single player, whose rule is unchanged.
+   */
+  firstIdleArea?: number;
 }
 
 export function newHookTracker(turn = 0): HookTracker {
@@ -424,10 +430,13 @@ export function gmHooksFor(world: WorldSpec, before: GameState, after: GameState
   else if (after.status === 'playing') {
     const sinceArea = after.turn - tracker.areaEnteredTurn;
     const sinceHook = after.turn - tracker.lastHookTurn;
-    const firstIdle = !after.flags[eventFlag(after.area.index)] && sinceArea >= FIRST_IDLE_TURNS && sinceHook >= FIRST_IDLE_TURNS;
+    const party = isParty(after);
+    const firstIdle =
+      !after.flags[eventFlag(after.area.index)] && sinceArea >= FIRST_IDLE_TURNS && sinceHook >= FIRST_IDLE_TURNS && (!party || tracker.firstIdleArea !== after.area.index);
     if (firstIdle || sinceHook >= IDLE_TURNS) {
       out.push({ hook: 'idle', area: after.area.index, turn: after.turn });
       tracker.lastHookTurn = after.turn;
+      if (party && firstIdle) tracker.firstIdleArea = after.area.index;
     }
   }
   return out;

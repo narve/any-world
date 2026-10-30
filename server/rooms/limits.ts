@@ -26,9 +26,17 @@ export interface RoomLimits {
   pingMs: number;
 }
 
+/** a socket replaced by a newer one with the same token is terminated this soon if its close handshake has not finished (a half-open socket) */
+export const REPLACED_TERMINATE_MS = 1000;
+
+/**
+ * MP5: a household or a LAN party shares one public IP: 12 players who all drop at once and come
+ * back hold 12 half-open sockets (until their pings fail) next to 12 new ones, and reconnect within
+ * a minute of joining. So about 3x the room maximum (LIMITS.maxPlayers, 12) per IP.
+ */
 export const DEFAULT_LIMITS: RoomLimits = {
-  upgradesPerMin: 20,
-  socketsPerIp: 16,
+  upgradesPerMin: 40,
+  socketsPerIp: 36,
   socketsTotal: 200,
   createsPer10Min: 6,
   listPerMin: 60,

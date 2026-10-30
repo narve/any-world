@@ -21,7 +21,7 @@ import { CLOSE, LIMITS, parseClientMsg, peekHello, REFUSED_CLOSE, type ServerMsg
 import { RateLimiter } from '../rate-limit';
 import { refused, type Conn, type Room } from './room';
 import type { RoomManager } from './manager';
-import { ConnBuckets, roomLimits, type RoomLimits } from './limits';
+import { ConnBuckets, REPLACED_TERMINATE_MS, roomLimits, type RoomLimits } from './limits';
 
 export const WS_PATH = '/api/ws';
 
@@ -58,19 +58,32 @@ export interface WsLike {
  * `bufferBytes` queued (a client that stopped reading) closes the socket with 1009 and drops it.
  */
 export function wsConn(ws: WsLike, bufferBytes: number): Conn {
+  const sendText = (text: string) => {
+    if (ws.readyState !== WebSocket.OPEN) return;
+    ws.send(text);
+    if (ws.bufferedAmount > bufferBytes) {
+      ws.close(CLOSE.tooBig, 'too slow');
+      // the close frame would wait behind the backlog: drop the socket now
+      ws.terminate();
+    }
+  };
   return {
     send(msg: ServerMsg) {
       if (ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify(msg));
-      if (ws.bufferedAmount > bufferBytes) {
-        ws.close(CLOSE.tooBig, 'too slow');
-        // the close frame would wait behind the backlog: drop the socket now
-        ws.terminate();
-      }
+      sendText(JSON.stringify(msg));
     },
+    sendText,
     close(code: number, reason?: string) {
       if (ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) return;
       ws.close(code, reason);
+      // a replaced socket is often half-open (a phone changed network): it must not hold its per-IP
+      // slot until the close handshake times out (MP5); a live old tab still gets the close frame
+      if (code === CLOSE.replaced) {
+        const t = setTimeout(() => {
+          if (ws.readyState !== WebSocket.CLOSED) ws.terminate();
+        }, REPLACED_TERMINATE_MS);
+        t.unref?.();
+      }
     },
   };
 }

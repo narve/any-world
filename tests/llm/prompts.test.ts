@@ -245,6 +245,8 @@ describe('room GM prompts (MP4 G2)', () => {
     expect(p.user).not.toContain(HOOK_BRIEF.chat);
     const c = buildGmPrompt({ ...gmInputFor(ship, party(2), 'chat'), party: 2, chat: [{ from: 'Ada', said: 'hello GM', ageS: 3, new: true }] });
     expect(c.user).toContain(HOOK_BRIEF.chat);
+    // MP5: a line that speaks to the GM gets an answer to it, not any NPC line
+    expect(HOOK_BRIEF.chat).toContain('answer that line');
   });
 
   it('the world facts are clipped in rooms', () => {

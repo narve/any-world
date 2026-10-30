@@ -8,8 +8,12 @@
 export interface RoomTiming {
   /** a turn where everyone who acted travels or waits resolves this long after the last one */
   travelMs: number;
-  /** during an exit countdown, a turn resolves this often whether or not anyone acted */
+  /** during an exit countdown (and while someone is down in a calm area), a turn resolves this often whether or not anyone acted */
   countdownTurnMs: number;
+  /** calm turns (no hostile in view): a pending input waits at most this long for the others (clock.ts rule 4a) */
+  calmGraceMs: number;
+  /** clock.ts rule 4a (calm turns do not wait for the deadline); false only in tests of the waiting UI */
+  calmFlow: boolean;
   /** longest wait after an area change for every connected seat to report `applied` */
   areaHoldMaxMs: number;
   /** a seat with no input or presence change for this long is idle (does not hold up a turn) */
@@ -33,6 +37,8 @@ export interface RoomTiming {
 export const DEFAULT_TIMING: RoomTiming = {
   travelMs: 100,
   countdownTurnMs: 1000,
+  calmGraceMs: 300,
+  calmFlow: true,
   areaHoldMaxMs: 3000,
   idleActiveMs: 10_000,
   typingExpiryMs: 8000,
@@ -44,14 +50,16 @@ export const DEFAULT_TIMING: RoomTiming = {
   deadlineMs: 0,
 };
 
-/** the defaults with some durations replaced (unknown keys and non-positive numbers are ignored) */
+/** the defaults with some durations (and switches) replaced (unknown keys, wrong types and non-positive numbers are ignored) */
 export function roomTiming(partial: Partial<RoomTiming> = {}): RoomTiming {
-  const out = { ...DEFAULT_TIMING };
+  const out: Record<string, number | boolean> = { ...DEFAULT_TIMING };
   for (const k of Object.keys(DEFAULT_TIMING) as (keyof RoomTiming)[]) {
     const v = partial[k];
-    if (typeof v === 'number' && Number.isFinite(v) && v > 0) out[k] = v;
+    if (typeof DEFAULT_TIMING[k] === 'boolean') {
+      if (typeof v === 'boolean') out[k] = v;
+    } else if (typeof v === 'number' && Number.isFinite(v) && v > 0) out[k] = v;
   }
-  return out;
+  return out as unknown as RoomTiming;
 }
 
 export type TimerId = number;

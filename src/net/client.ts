@@ -133,7 +133,10 @@ export class RoomClient {
   options: RoomOptions | null = null;
   /** the room as the server lists it (welcome, then `room` messages) */
   room: RoomInfo | null = null;
+  /** the roster as shown: the server's, with a typing seat that is on and not otherwise busy shown 'busy' */
   roster: RosterEntry[] = [];
+  /** the roster as the server sent it (typing is not in it, MP5) */
+  private serverRoster: RosterEntry[] = [];
   chat: ChatLine[] = [];
   /** seats typing now (typing frames; cleared on a welcome) */
   typingSeats = new Set<string>();
@@ -319,6 +322,7 @@ export class RoomClient {
       case 'typing':
         if (msg.on) this.typingSeats.add(msg.seat);
         else this.typingSeats.delete(msg.seat);
+        this.foldTyping();
         break;
       case 'chat':
         this.chat.push(msg.line);
@@ -348,8 +352,8 @@ export class RoomClient {
     this.options = msg.options;
     this.room = msg.room;
     this.chat = msg.chat.slice();
-    this.roster = msg.roster;
     this.typingSeats.clear();
+    this.setRoster(msg.roster);
     if (msg.run !== this.run) {
       this.run = msg.run;
       this.state = null;
@@ -393,12 +397,18 @@ export class RoomClient {
   }
 
   private setRoster(seats: RosterEntry[]): void {
-    this.roster = seats;
+    this.serverRoster = seats;
+    this.foldTyping();
     const me = seats.find((s) => s.seat === this.seat);
     if (me) {
       this.pid = me.pid;
       this.host = me.host;
     }
+  }
+
+  /** typing shows as busy on a connected seat that is active, idle or in a menu (as the server did before MP5) */
+  private foldTyping(): void {
+    this.roster = this.serverRoster.map((r) => (this.typingSeats.has(r.seat) && (r.presence === 'active' || r.presence === 'idle' || r.presence === 'menu') ? { ...r, presence: 'busy' as const } : r));
   }
 
   private setState(state: GameState, n: number): void {

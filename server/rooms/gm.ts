@@ -14,10 +14,13 @@
  * Shared by every room (GmServer): the GmPool (provider calls in flight over all rooms; a request
  * that cannot start waits in its room's runner queue, nothing is answered early) and the GmBudget
  * (hourly caps, server-wide and per room). Per room: a circuit breaker (3 failed or timed-out calls
- * in a row put the room on its fallback for 2 minutes). Every clock is the room's scheduler.
+ * in a row put the room on its fallback for 2 minutes). Every clock is the room's scheduler. The
+ * hourly caps are hard: every provider call is checked (MeteredProvider), so queued requests, repair
+ * turns and the voice never go past them.
  *
  * The NPC voice (design §4.3, 'ai' rooms only): words for a player's conversation turn, sent as a
  * cosmetic `npc` message (never an entry), within its own half of the pool; late lines are dropped.
+ * It has its own breaker (MP5), and asks only once a turn has stayed put for VOICE_DEBOUNCE_MS.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -34,7 +37,7 @@ import { extractJson } from '../../src/llm/structured';
 import { parseRecordingsFile, type Recording } from '../../src/llm/mock';
 import type { CompletionRequest, CompletionResponse, LLMProvider } from '../../src/llm/types';
 import type { GmConfig } from '../gm-config';
-import type { Scheduler } from './timing';
+import type { Scheduler, TimerId } from './timing';
 
 export type RoomGmMode = 'ai' | 'recorded' | 'offline';
 
@@ -46,13 +49,25 @@ export const BREAKER_FAILURES = 3;
 export const BREAKER_OPEN_MS = 2 * 60_000;
 /** answers to these moments are dropped when older than this (wall clock; the moment has passed) */
 export const GM_STALE_MS: Partial<Record<GmHook, number>> = { low_hp: 15_000, region_discovered: 15_000, boss_seen: 15_000, chat: 20_000 };
-/** NPC voice: requests for one player at least this far apart (a quicker turn keeps its canned line) */
-export const VOICE_GAP_MS = 2000;
+/**
+ * NPC voice: a conversation turn is voiced only once it has stayed put this long (a quicker click
+ * replaces it, so no call is made for it); one request per player in flight, a newer turn waits for
+ * it (MP5: an aborted call was still charged).
+ */
+export const VOICE_DEBOUNCE_MS = 400;
 /** NPC voice: a line later than this is dropped (the canned line stays) */
 export const VOICE_TIMEOUT_MS = 5000;
 /** NPC voice answers carry at most this many output tokens */
 export const VOICE_MAX_TOKENS = 300;
 const HOUR_MS = 3_600_000;
+
+/** a provider call refused because an hourly cap is reached (the director falls back; not a breaker failure) */
+export class GmCapError extends Error {
+  constructor(room: string) {
+    super(`gm hourly cap reached for room ${room}`);
+    this.name = 'GmCapError';
+  }
+}
 
 /** the mode a room gets for a world (design §1.2): AI with a provider, recordings for a demo without one, else offline */
 export function roomGmMode(config: GmConfig | null | undefined, source: { demo: string } | { upload: true }): RoomGmMode {
@@ -299,6 +314,8 @@ export interface RoomGmDeps {
   /** the room's offline director (the world's language) */
   offline: OfflineGmDirector;
   onAnswer(a: GmAnswer): void;
+  /** an 'ai' request left the queue, answered or not (after onAnswer when answered) */
+  onSettled?(hook: GmHookEvent, askedAt: number): void;
   log(line: string): void;
 }
 
@@ -309,13 +326,14 @@ class MeteredProvider implements LLMProvider {
   constructor(
     private readonly inner: LLMProvider,
     private readonly gm: RoomGm,
+    private readonly kind: 'gm' | 'voice',
   ) {
     this.id = inner.id;
     this.model = inner.model;
   }
 
   async complete(req: CompletionRequest): Promise<CompletionResponse> {
-    return this.gm.metered(() => this.inner.complete(req));
+    return this.gm.metered(() => this.inner.complete(req), this.kind);
   }
 }
 
@@ -324,9 +342,11 @@ export class RoomGm {
   private readonly runner: GmRunner | null = null;
   private readonly director: LlmGmDirector | null = null;
   private readonly dialogue: LlmDialogue | null = null;
-  /** the voice request in flight per player (a newer turn aborts it) and when each player's last one started */
+  /** the voice request in flight per player, and the newest turn waiting to be voiced (debounce, or behind the one in flight) */
   private readonly voices = new Map<PlayerId, { ctrl: AbortController; done: Promise<void> }>();
-  private readonly voiceAt = new Map<PlayerId, number>();
+  private readonly voiceWaiting = new Map<PlayerId, { v: VoiceAsk; deliver: (text: string) => void; timer: TimerId | null }>();
+  private voiceFailures = 0;
+  private voiceOpenUntil: number | null = null;
   private readonly pids = new Map<number, { pid: PlayerId; run: number }>();
   private readonly recs = new Map<string, Recording[]>();
   private readonly served = new Map<string, number>();
@@ -334,7 +354,7 @@ export class RoomGm {
   private failedNow = false;
   private openUntil: number | null = null;
   private capped = false;
-  private stats = { area: -1, calls: 0, inTokens: 0, outTokens: 0, ms: 0 };
+  private stats = { area: -1, calls: 0, voice: 0, inTokens: 0, outTokens: 0, ms: 0 };
   private disposed = false;
 
   constructor(private readonly deps: RoomGmDeps) {
@@ -353,7 +373,7 @@ export class RoomGm {
     const clearTimer = (h: unknown) => sch.cancel(h as number);
     const fallback = this.fallbackDirector();
     this.director = new LlmGmDirector({
-      provider: new MeteredProvider(provider, this),
+      provider: new MeteredProvider(provider, this, 'gm'),
       worldKey: deps.worldKey,
       ledger: deps.ledger,
       deadlineMs: config.deadlineMs,
@@ -364,12 +384,13 @@ export class RoomGm {
       clearTimer,
       fallback,
       onError: (e, hook) => {
-        this.failedNow = true;
+        // (a cap refusal is no provider failure: the breaker stays as it is)
+        if (!(e instanceof GmCapError)) this.failedNow = true;
         deps.log(`gm ${hook}: ${e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200)}`);
       },
     });
     // the NPC voice: words only (the room never applies its actions), no repair turn, the same metered provider
-    this.dialogue = new LlmDialogue({ provider: new MeteredProvider(provider, this), worldKey: deps.worldKey, ledger: deps.ledger, retries: 0, maxTokens: VOICE_MAX_TOKENS, onError: (e) => deps.log(`gm voice: ${e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200)}`) });
+    this.dialogue = new LlmDialogue({ provider: new MeteredProvider(provider, this, 'voice'), worldKey: deps.worldKey, ledger: deps.ledger, retries: 0, maxTokens: VOICE_MAX_TOKENS, onError: (e) => deps.log(`gm voice: ${e instanceof Error ? e.message.slice(0, 200) : String(e).slice(0, 200)}`) });
     const director = this.director;
     // the breaker sees how each primary call went (an abort by an area change is neither)
     const tracked: GmDirector = {
@@ -397,12 +418,18 @@ export class RoomGm {
       acquire: (signal) => deps.server!.pool.acquire(signal),
       onResult: (r) => {
         const asked = this.pids.get(r.request.id);
-        this.pids.delete(r.request.id);
         if (!asked || this.disposed) return;
         const { id: _id, ...hook } = r.request;
         deps.onAnswer({ run: asked.run, area: hook.area, askedAt: r.askedAt ?? sch.now(), hook, pid: asked.pid, response: r.response as PartyGmResponse, source: r.source });
       },
+      onSettled: (id, hook, askedAt) => {
+        // every request leaves the map here, answered or not (silence, coalesced, evicted, stale, aborted)
+        const asked = this.pids.get(id);
+        this.pids.delete(id);
+        if (asked && !this.disposed) deps.onSettled?.(hook, askedAt);
+      },
       onError: (err, req, name) => {
+        if (err instanceof GmCapError) return;
         if (name === director.name) {
           this.outcome(false);
           deps.log(`gm ${req.hook}: ${err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200)}`);
@@ -482,48 +509,108 @@ export class RoomGm {
   }
 
   /**
-   * Voices one conversation turn ('ai' rooms only, and only while the AI GM answers): one request
-   * per player in flight (a newer turn aborts the older), at least VOICE_GAP_MS apart per player, a
-   * slot in the voice's half of the pool or nothing (the voice never waits), VOICE_TIMEOUT_MS at most.
-   * `deliver` gets the NPC's words (never its actions); the room checks the conversation is still on
-   * that turn. A failed, late or offline answer delivers nothing: the canned line stays.
+   * Voices one conversation turn ('ai' rooms only, and only while the AI GM answers and the voice's
+   * breaker is closed): asked once the turn has stayed put for VOICE_DEBOUNCE_MS (a newer turn for
+   * the player replaces a waiting one, so a quick click costs no call), one request per player in
+   * flight (a newer turn waits for it; the older one is never aborted for it, its line is dropped by
+   * the room if the conversation moved on), a slot in the voice's half of the pool or nothing (the
+   * voice never waits for a slot), VOICE_TIMEOUT_MS at most. `deliver` gets the NPC's words (never
+   * its actions); the room checks the conversation is still on that turn. A failed, late or offline
+   * answer delivers nothing: the canned line stays.
    */
   voice(v: VoiceAsk, deliver: (text: string) => void): void {
-    if (this.disposed || !this.dialogue || this.current() !== 'ai') return;
+    if (this.disposed || !this.dialogue || !this.voiceAllowed()) return;
     const sch = this.deps.scheduler;
-    const now = sch.now();
-    this.voices.get(v.pid)?.ctrl.abort();
-    this.voices.delete(v.pid);
-    const last = this.voiceAt.get(v.pid);
-    if (last !== undefined && now - last < VOICE_GAP_MS) return;
+    const old = this.voiceWaiting.get(v.pid);
+    if (old) sch.cancel(old.timer);
+    const w: { v: VoiceAsk; deliver: (text: string) => void; timer: TimerId | null } = { v, deliver, timer: null };
+    w.timer = sch.setTimer(sch.now() + VOICE_DEBOUNCE_MS, () => {
+      w.timer = null;
+      this.startVoice(v.pid);
+    });
+    this.voiceWaiting.set(v.pid, w);
+  }
+
+  /** the voice may call now: the AI GM answers and the voice's breaker is closed */
+  private voiceAllowed(): boolean {
+    if (this.current() !== 'ai') return false;
+    if (this.voiceOpenUntil === null) return true;
+    if (this.deps.scheduler.now() < this.voiceOpenUntil) return false;
+    this.voiceOpenUntil = null;
+    this.deps.log('gm voice breaker closed: NPCs are voiced again');
+    return true;
+  }
+
+  /** starts the player's waiting voice turn once its debounce is over and nothing is in flight for them */
+  private startVoice(pid: PlayerId): void {
+    const w = this.voiceWaiting.get(pid);
+    if (!w || w.timer !== null || this.voices.has(pid) || this.disposed || !this.dialogue) return;
+    this.voiceWaiting.delete(pid);
+    if (!this.voiceAllowed()) return;
     const release = this.deps.server!.voiceSlot();
     if (!release) return;
-    this.voiceAt.set(v.pid, now);
+    const v = w.v;
+    const sch = this.deps.scheduler;
     const ctrl = new AbortController();
-    const timer = sch.setTimer(now + VOICE_TIMEOUT_MS, () => ctrl.abort());
+    let timedOut = false;
+    const timer = sch.setTimer(sch.now() + VOICE_TIMEOUT_MS, () => {
+      timedOut = true;
+      ctrl.abort();
+    });
     const dialogue = this.dialogue;
     const job: { ctrl: AbortController; done: Promise<void> } = { ctrl, done: Promise.resolve() };
     job.done = (async () => {
       try {
         const r = await dialogue.turn({ world: this.deps.world, state: v.state, npcId: v.npcId, difficulty: v.difficulty, history: v.history, ...(v.playerLine ? { playerLine: v.playerLine } : {}), signal: ctrl.signal });
-        if (ctrl.signal.aborted || this.disposed || r.source !== 'llm') return;
+        if (this.disposed) return;
+        if (ctrl.signal.aborted) {
+          if (timedOut) this.voiceOutcome(false);
+          return;
+        }
+        this.voiceOutcome(r.source === 'llm');
+        if (r.source !== 'llm') return;
         const text = r.response.reply.trim().slice(0, VOICE_TEXT_MAX);
-        if (text) deliver(text);
+        if (text) w.deliver(text);
       } catch {
-        // (aborted: a newer turn, the timeout, an area change)
+        // (aborted: the timeout, a closed conversation, an area change)
+        if (timedOut && !this.disposed) this.voiceOutcome(false);
       } finally {
         release();
         sch.cancel(timer);
         if (this.voices.get(v.pid) === job) this.voices.delete(v.pid);
+        // a newer turn of this player waited for this one
+        this.startVoice(v.pid);
       }
     })();
     this.voices.set(v.pid, job);
   }
 
-  /** a player's conversation closed: its voice request (if any) is dropped */
+  /** the voice's own breaker: BREAKER_FAILURES failed or late lines in a row stop voicing for BREAKER_OPEN_MS */
+  private voiceOutcome(ok: boolean): void {
+    if (ok) {
+      this.voiceFailures = 0;
+      return;
+    }
+    if (++this.voiceFailures < BREAKER_FAILURES || this.voiceOpenUntil !== null) return;
+    this.voiceFailures = 0;
+    this.voiceOpenUntil = this.deps.scheduler.now() + BREAKER_OPEN_MS;
+    this.deps.log(`gm voice breaker open: ${BREAKER_FAILURES} failed lines in a row; canned NPC lines for ${BREAKER_OPEN_MS / 1000} s`);
+  }
+
+  /** a player's conversation closed: its waiting turn is dropped and its request (if any) aborted */
   dropVoice(pid: PlayerId): void {
+    const w = this.voiceWaiting.get(pid);
+    if (w) this.deps.scheduler.cancel(w.timer);
+    this.voiceWaiting.delete(pid);
     this.voices.get(pid)?.ctrl.abort();
     this.voices.delete(pid);
+  }
+
+  private dropAllVoices(): void {
+    for (const w of this.voiceWaiting.values()) this.deps.scheduler.cancel(w.timer);
+    this.voiceWaiting.clear();
+    for (const v of this.voices.values()) v.ctrl.abort();
+    this.voices.clear();
   }
 
   /** the hooks waiting or running ('ai'; rooms: "a chat request is already queued") */
@@ -534,8 +621,7 @@ export class RoomGm {
   /** the area changed or the run ended: everything queued or in flight is dropped */
   cancelAll(): void {
     this.runner?.cancelAll();
-    for (const v of this.voices.values()) v.ctrl.abort();
-    this.voices.clear();
+    this.dropAllVoices();
     this.pids.clear();
     this.flushStats(-1);
   }
@@ -546,8 +632,7 @@ export class RoomGm {
     this.flushStats(-1);
     this.disposed = true;
     this.runner?.dispose();
-    for (const v of this.voices.values()) v.ctrl.abort();
-    this.voices.clear();
+    this.dropAllVoices();
     this.pids.clear();
   }
 
@@ -559,12 +644,15 @@ export class RoomGm {
     return Promise.all([runner, ...[...this.voices.values()].map((v) => v.done)]).then(() => this.idle());
   }
 
-  /** one provider call: charged to the budget, counted for the area's log line */
-  async metered<T extends CompletionResponse>(call: () => Promise<T>): Promise<T> {
+  /** one provider call: refused past an hourly cap (GmCapError), else charged to the budget and counted for the area's log line */
+  async metered<T extends CompletionResponse>(call: () => Promise<T>, kind: 'gm' | 'voice' = 'gm'): Promise<T> {
     const sch = this.deps.scheduler;
-    this.deps.server?.budget.charge(this.deps.room);
+    const budget = this.deps.server?.budget;
+    if (budget && !budget.allows(this.deps.room)) throw new GmCapError(this.deps.room);
+    budget?.charge(this.deps.room);
     const t0 = sch.now();
     this.stats.calls++;
+    if (kind === 'voice') this.stats.voice++;
     try {
       const r = await call();
       this.stats.inTokens += r.usage?.inputTokens ?? 0;
@@ -589,7 +677,7 @@ export class RoomGm {
   /** one log line per area with calls: calls, tokens and the average latency */
   private flushStats(nextArea: number): void {
     const s = this.stats;
-    if (s.calls > 0) this.deps.log(`gm area ${s.area}: ${s.calls} calls, ${s.inTokens} in / ${s.outTokens} out tokens, ${Math.round(s.ms / s.calls)} ms average`);
-    this.stats = { area: nextArea, calls: 0, inTokens: 0, outTokens: 0, ms: 0 };
+    if (s.calls > 0) this.deps.log(`gm area ${s.area}: ${s.calls} calls (${s.voice} voice), ${s.inTokens} in / ${s.outTokens} out tokens, ${Math.round(s.ms / s.calls)} ms average`);
+    this.stats = { area: nextArea, calls: 0, voice: 0, inTokens: 0, outTokens: 0, ms: 0 };
   }
 }

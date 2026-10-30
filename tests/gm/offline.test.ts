@@ -13,6 +13,8 @@ import type { GameEvent, GameState, PlayerId } from '../../src/engine/types';
 import type { GmAction, GmResponse } from '../../src/schema/gm';
 import {
   OfflineGmDirector,
+  FIRST_IDLE_TURNS,
+  IDLE_TURNS,
   PARTY_LOW_HP_TURNS,
   PARTY_REGION_TURNS,
   cloneTracker,
@@ -206,6 +208,32 @@ describe('party hooks and throttles (MP4 design §2.2)', () => {
     expect(hooksOf(s0, s1, t, [{ type: 'low_hp' }])).toEqual([{ hook: 'low_hp', area: 0, turn: s1.turn }]);
     expect(hooksOf(s1, later(s1, 1), t, [{ type: 'low_hp' }])).toHaveLength(1);
     expect(t.lowHpAt).toBeUndefined();
+  });
+
+  it('MP5: a party gets the quick first idle once per area, set flag or not; then every IDLE_TURNS', () => {
+    const s0 = party(2);
+    const t = newHookTracker(s0.turn);
+    const idles: number[] = [];
+    let s = s0;
+    for (let i = 0; i < IDLE_TURNS + FIRST_IDLE_TURNS + 5; i++) {
+      const next = later(s, 1);
+      if (gmHooksFor(ship, s, next, [], t).some((h) => h.hook === 'idle')) idles.push(next.turn - s0.turn);
+      s = next;
+    }
+    expect(idles).toEqual([FIRST_IDLE_TURNS, FIRST_IDLE_TURNS + IDLE_TURNS]);
+    expect(t.firstIdleArea).toBe(0);
+    // a party of one keeps the quick first idle until the flag is set
+    const one = party(1);
+    const t1 = newHookTracker(one.turn);
+    let x = one;
+    const solo: number[] = [];
+    for (let i = 0; i < 2 * FIRST_IDLE_TURNS + 1; i++) {
+      const next = later(x, 1);
+      if (gmHooksFor(ship, x, next, [], t1).some((h) => h.hook === 'idle')) solo.push(next.turn - one.turn);
+      x = next;
+    }
+    expect(solo).toEqual([FIRST_IDLE_TURNS, 2 * FIRST_IDLE_TURNS]);
+    expect(t1.firstIdleArea).toBeUndefined();
   });
 
   it('cloneTracker shares nothing with the live tracker', () => {

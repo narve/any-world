@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { GENERATOR_NAMES, MAP_SIZES, generateArea, mapDimensions, seededRng, validateMap } from '../../src/engine/mapgen';
-import { OPEN_EDGED, checkMap, emptyWorld, makePlan } from './helpers';
+import { OPEN_EDGED, checkMap, cpuMs, emptyWorld, makePlan } from './helpers';
 
 const SIZES = ['small', 'medium', 'large'] as const;
 const SEEDS = [1, 7920, 15839, 23758];
@@ -70,13 +70,11 @@ describe('map size by party', () => {
     });
   }
 
-  it('a 91×65 map is generated in reasonable time (loose: load-sensitive)', () => {
+  it('a 91×65 map is generated in reasonable time (CPU time, so a loaded machine does not fail it)', () => {
     const times: number[] = [];
     for (const gen of GENERATOR_NAMES) {
       for (const seed of SEEDS.slice(0, 2)) {
-        const t0 = performance.now();
-        generateArea(makePlan(gen, 'large'), emptyWorld, seededRng(seed), { partySize: 12 });
-        times.push(performance.now() - t0);
+        times.push(cpuMs(() => generateArea(makePlan(gen, 'large'), emptyWorld, seededRng(seed), { partySize: 12 })));
       }
     }
     times.sort((a, b) => a - b);
