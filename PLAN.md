@@ -126,3 +126,8 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   with each milestone: provider note, demo worlds, own worlds, party option, open rooms. Tidy it up,
   with a clear main action, less text, related things grouped and secondary options folded away. Check
   it on phone portrait as well as desktop.
+- **TODO (bug): switching off music in settings isn't saved.** The music comes back on the next
+  load or run. Likely cause, not yet verified: the music panel's Mute button
+  (src/client/audio/music-panel.ts) calls `engine.mute()` directly and never updates the stored `muted`
+  setting (`saveSettings`, src/client/storage.ts). Make every mute/volume control write the setting,
+  add a regression test (mute, reload, still muted), and share the code path with the sound on/off button.
