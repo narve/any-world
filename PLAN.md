@@ -131,3 +131,7 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   (src/client/audio/music-panel.ts) calls `engine.mute()` directly and never updates the stored `muted`
   setting (`saveSettings`, src/client/storage.ts). Make every mute/volume control write the setting,
   add a regression test (mute, reload, still muted), and share the code path with the sound on/off button.
+- **TODO: visible settings gear during a run.** Today settings is reached in a run only through
+  `?` → "Settings & music" in the Controls overlay. Add a gear icon button that is always visible in
+  the run HUD (next to the help button on the hotbar, src/client/ui/components/hotbar.ts, and in the
+  phone layout). It opens the same settings dialog as the start screen's gear.
