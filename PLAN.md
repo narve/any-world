@@ -158,3 +158,16 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
     miss. Give it its own "Open rooms" heading with a count ("Open rooms (3)"), an empty state that
     still reads as a list (e.g. a dashed placeholder row with "Create one and share the link"), and on
     the phone layout keep it above the fold next to the featured world.
+- **Phone movement is hard: the map is crowded by the HUD.** On a phone the hero sits in the middle of
+  a small map, with the log, hotbar and overlays covering much of the view, so tapping the tile you
+  mean is fiddly. Today one finger is tap (walk/talk/attack) and long-press (inspect); a one-finger drag
+  is classified (`PressTracker`, src/client/ui/touch-input.ts) and then ignored; two fingers pinch/twist
+  the camera (src/client/render/touch.ts). Two options, to try both and keep the better (or offer a setting):
+  1. **Drag pans the camera.** A one-finger drag moves the view off the hero, so the area you want to
+     look at or tap can sit in the open part of the screen. The hero must always stay visible: clamp
+     the pan so their tile stays inside the visible map area (not under the HUD), and recentre on the
+     hero after a move or with a "recentre" button / double-tap.
+  2. **Swipe moves the hero.** A short swipe steps one tile in that direction (8 directions, snapped to
+     the camera's rotation); hold at the end of the swipe to keep walking. Taps keep working as today.
+  Either way: no conflict with pinch/twist, Norwegian + English hints in the help overlay, and the
+  mobile e2e (e2e/mobile.spec.ts) gains a drag/swipe case on phone portrait and landscape.
