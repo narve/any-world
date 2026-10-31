@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-kuben-valget/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Glassgata, klokka ti. Hundre og førtifire meter glass tvers gjennom skolen, og det går folk hele tida. Vg1 står i klynger med spørsmål, en story deler seg selv fra mobil til mobil, og midt i gata blinker slushmaskinen blått. Bak den ligger stemmesedlene dine."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

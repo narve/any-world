@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-tangen-laerlingplassen/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Elvegata, klokka ett. Studio E2 lukter vafler og jordbærhårspray helt ut på fortauet. Inne er det ekte kunder, en hårføner som har kommet seg løs, og en kjøler bakerst som er varm på feil måte. Blomstene dine ligger bak krøllsaksa."
+          },
+          {
+            "type": "mood",
+            "music": "calm",
+            "tint": "#f3c6ff"
+          }
+        ]
+      }
+    }
+  ]
+}

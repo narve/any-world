@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-tangen-laerlingplassen/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Klokka to. Skolerestauranten har hvite duker og utsikt mot Otra og kranene på Tangen Torv. Kari sitter ved vinduet med god tid. Marius står ved bord fire med tre tallerkener skum som sakte synker. Og rett foran deg står nervene dine, og de har vokst siden i stad."
+          },
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-tangen-laerlingplassen/bente",
+      "json": {
+        "reply": "Javel, vennen! Se det. Rægårene dine, ja. Fiskebrygga-bilen leverte dem her klokka åtte, rett i kjøledisken min, bak frokostkøen. Og køen, den har stått der siden halv åtte og nekter å gå. Snakk tydelig til den, så gir den seg. Vaffel først? Du ser ut som en som trenger to.",
+        "options": [
+          "To vafler, takk. Og hva koster en god nyhet?",
+          "Hvordan får jeg køen til å gi seg?",
+          "Har Marius vært innom?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

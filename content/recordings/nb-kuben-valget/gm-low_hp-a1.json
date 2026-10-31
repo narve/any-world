@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/nb-kuben-valget/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Humøret er nesten borte, og hørselvernet hjelper ikke mot kontrollspørsmål. Det er lættis, egentlig, når du tenker etter. Ta en bolle. Modul 3 av 12 har overlevd verre elever enn deg."
+          }
+        ]
+      }
+    }
+  ]
+}

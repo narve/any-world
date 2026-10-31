@@ -632,6 +632,38 @@
       "worldId": "nb-kkg-talen"
     },
     {
+      "id": "nb-kuben-valget",
+      "prompt": "Kuben videregående skole på Økern i Oslo, valgdag: du går Vg2 automatisering og stiller som elevrådsleder mot Henrik fra 3STB, som lover slush hver dag og sprer ryktet om at du vil fjerne den. Samle seksten stemmer gjennom glassgata, verkstedene og taket før allmøtet i Sentralen klokka to, og møt ryktet der.",
+      "language": "nb",
+      "genre": "skolekomedie",
+      "tags": [
+        "teen",
+        "school",
+        "norway",
+        "social",
+        "comedy"
+      ],
+      "teaser": "Allmøtet er klokka to, og hele Kuben tror du vil fjerne slushen.",
+      "nonViolent": true,
+      "worldId": "nb-kuben-valget"
+    },
+    {
+      "id": "nb-tangen-laerlingplassen",
+      "prompt": "Tangen videregående skole i Kristiansand, Åpen dag: du går Vg2 kokk- og servitørfag, og klokka to kommer kjøkkensjefen fra Fiskebrygga for å smake på retten som avgjør hvem som får lærlingplassen. Rægårene står bak frokostkøen i kantina, serveringsfjøla ligger uferdig i byggverkstedet, og blomstene er i kjøleren på Studio E2. Hent alt før Marius fra 2KOB vinner med skum.",
+      "language": "nb",
+      "genre": "skolekomedie",
+      "tags": [
+        "teen",
+        "school",
+        "norway",
+        "social",
+        "comedy"
+      ],
+      "teaser": "Kjøkkensjefen kommer klokka to, og retten din ligger på tre steder.",
+      "nonViolent": true,
+      "worldId": "nb-tangen-laerlingplassen"
+    },
+    {
       "id": "nb-troll-direktoratet",
       "prompt": "Trollene under Dovre har fått sitt eget direktorat, og du er det første mennesket som har søkt om å bygge hytte på trollgrunn. Skjemaene må være ferdig utfylt før sola står opp, saksbehandleren har tre hoder som er hjertens uenige, og klagefristen er hundre år.",
       "language": "nb",

@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-kuben-valget/ida",
+      "json": {
+        "reply": "Sara! Valgstyret har lagt de siste stemmesedlene ved talerstolen, men ryktet har lagt seg rundt den. Seksten stemmer og talerstolen, så er du valgt. Eller svar ryktet foran alle, det er det eneste som biter på et rykte. Jeg har skrevet «vinner» i margen, men det er bare for meg.",
+        "options": [
+          "Seksten stemmer. Jeg har dem snart.",
+          "Hvordan svarer jeg et rykte?",
+          "Hva skjer hvis Henrik vinner?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

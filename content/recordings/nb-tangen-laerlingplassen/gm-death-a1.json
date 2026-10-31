@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/nb-tangen-laerlingplassen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Selma satte seg på en sagflishaug og ble sittende. Jørgen sa ingenting, det er sånn han er snill. Klokka to smakte kjøkkensjefen på skum. Hun sa «javel», men ikke sånn hun sier det til vaflene."
+          }
+        ]
+      }
+    }
+  ]
+}

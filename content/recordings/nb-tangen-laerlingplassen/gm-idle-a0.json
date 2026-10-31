@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:idle/nb-tangen-laerlingplassen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Et sted i Smultringen sier rektor «hei» til noen. Det er ikke klart til hvem. Det er sjelden klart til hvem, og det er hele poenget."
+          }
+        ]
+      }
+    }
+  ]
+}

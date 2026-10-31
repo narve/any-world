@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-kuben-valget/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Verkstedene, halv tolv. Det lukter olje, kobber og gul vest, og gjennom glassveggene ser du inn i tre fag på én gang. En vinkelsliper hviner et sted, KUBE-3 kjører i ring før Malta, og HMS-skjermen ved døra spiller modul 3 av 12 for ingen. Stemmesedlene ligger bak den."
+          },
+          {
+            "type": "mood",
+            "music": "explore",
+            "tint": "#c0c0c0"
+          }
+        ]
+      }
+    }
+  ]
+}

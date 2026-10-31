@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/nb-tangen-laerlingplassen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Torsdag, klokka ti. Åpen dag på Tangen, og om fire timer sitter kjøkkensjefen fra Fiskebrygga i skolerestauranten og venter på retten din. Rægårene ble levert til Himmel og hav og står i kjøledisken bak frokostkøen. Fjøla ligger i byggverkstedet, under en plank. Blomstene er på E2 i Elvegata. Javel (greit, da). Se det (så får vi se). Helst før klokka to."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-kuben-valget/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Klokka to. Sentralen er full, tre hundre seter og hele Vg1 på de første radene. Scenelyset er på. Henrik står ved scenekanten med en slush i hver hånd. Og rundt talerstolen kveiler ryktet seg, stort og blått, og sier fire ord om og om igjen."
+          },
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

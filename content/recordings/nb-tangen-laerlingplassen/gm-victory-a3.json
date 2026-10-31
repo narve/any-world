@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/nb-tangen-laerlingplassen/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Det blir stille rundt vindusbordet. Rægår, eik og tre blomster på en fjøl som lukter linolje. Kari smaker, og smiler sent. «Javel,» sier hun. «Se det.» Marius klapper først. Smultringen har hørt tusen elever le på én gang. I dag holder det med én kokk som puster ut."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

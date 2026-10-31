@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-tangen-laerlingplassen/a1",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Byggverkstedene, halv tolv. Det lukter eik, betong og gul vest. Åtte Vg1-klasser, og alle har lagt fra seg noe. Gjærsaga synger lenger inne, og over to bukker ligger en plank som er helt sikker på at den er i vater. Fjøla di ligger under den."
+          },
+          {
+            "type": "mood",
+            "music": "explore",
+            "tint": "#e8d3a0"
+          }
+        ]
+      }
+    }
+  ]
+}

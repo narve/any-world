@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-tangen-laerlingplassen/elin",
+      "json": {
+        "reply": "Sett deg. Pust. Blomstene dine står i kjøleren bakerst, stemorsblomster og ringblomst, sprø og fine. Problemet er krøllsaksa som noen glemte på foran kjøleren. Den er ikke sint, den er bare varm. Hold deg rolig, svar den, så klikker den av. Først deg, så dem.",
+        "options": [
+          "Hvordan får jeg saksa til å gi seg?",
+          "Takk. Jeg trengte å puste.",
+          "Har kjøkkensjefen vært her?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

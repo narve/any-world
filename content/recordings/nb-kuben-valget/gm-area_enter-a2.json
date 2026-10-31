@@ -1,0 +1,20 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-kuben-valget/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Taket, kvart på ett. Seks etasjer over Økern tar vinden fra Østre Aker vei tak i alt som ikke er skrudd fast. TILLIT, står det i vinduene på tårnet der borte, og kranene over Økern sentrum snur sakte. I gjerdet rundt basketbanen henger Henrik på tre meter og smiler. Bak ham ligger stemmesedlene fra ST."
+          },
+          {
+            "type": "mood",
+            "music": "calm",
+            "tint": "#9fc5e8"
+          }
+        ]
+      }
+    }
+  ]
+}

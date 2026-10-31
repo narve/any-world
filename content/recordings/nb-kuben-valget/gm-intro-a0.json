@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:intro/nb-kuben-valget/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Onsdag, klokka ti. Storefri i glassgata på Kuben, og om fire timer velger allmøtet i Sentralen ny elevrådsleder. Du, Sara, Vg2 automatisering, står mot Henrik fra 3STB og et rykte med fire ord: «Sara vil fjerne slushen». Stemmesedlene ligger bak slushmaskinen. Seksten stemmer. Fire timer. Mobilen på 80 prosent. Det går folk hele tida."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:area_enter/nb-tangen-laerlingplassen/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Smultringen, klokka ti. Novemberlyset kommer gjennom glasstaket, seks etasjer med gelender ser ned på deg, og fire hundre tiendeklassinger har funnet gratisfrokosten. Køen står der ennå. Bak den, i kjøledisken, lukter det Skagerrak."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

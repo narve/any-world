@@ -1,0 +1,5599 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Tangen: Lærlingplassen",
+    "tagline": "Klokka to kommer kjøkkensjefen fra Fiskebrygga for å smake. Rægårene er borte, fjøla er ikke ferdig, og hele byen har Åpen dag.",
+    "genre": "skolekomedie",
+    "tags": [
+      "skole",
+      "tangen",
+      "kristiansand",
+      "ikke-voldelig",
+      "sosialt",
+      "yrkesfag",
+      "kokk",
+      "sørlandet"
+    ],
+    "tone": "varmt, morsomt, sabla travelt",
+    "era": "nåtid, en torsdag i november, Åpen dag på Tangen",
+    "premise": "Du er Selma, Vg2 kokk- og servitørfag på Tangen videregående skole i Kristiansand. Klokka to i dag kommer kjøkkensjefen fra en restaurant på Fiskebrygga til skolerestauranten for å smake på én rett, og den som imponerer, får lærlingplassen. Retten din er enkel: rægår fra Fiskebrygga på en serveringsfjøl i eik, pyntet med spiselige blomster fra Studio E2. Problemet er at rægårene ble levert til kantina Himmel og hav og står bak frokostkøen, fjøla ligger uferdig nede i byggverkstedene, og blomstene er i kjøleren på E2 i Elvegata, bak en krøllsaks. Det er dessuten Åpen dag: fire hundre tiendeklassinger med foreldre går rundt i Smultringen og spør om fravær. Og Marius fra 2KOB har allerede begynt å lage skum.",
+    "prompt": "Tangen videregående skole i Kristiansand, Åpen dag: du går Vg2 kokk- og servitørfag, og klokka to kommer kjøkkensjefen fra Fiskebrygga for å smake på retten som avgjør hvem som får lærlingplassen. Rægårene står bak frokostkøen i kantina, serveringsfjøla ligger uferdig i byggverkstedet, og blomstene er i kjøleren på Studio E2. Hent alt før Marius fra 2KOB vinner med skum.",
+    "nonViolent": true,
+    "language": "nb"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Kjøkkenstemme",
+        "abbr": "KJK",
+        "description": "Hvor tydelig du bærer deg selv. Stemmen som sier «bak deg!» uten å rope."
+      },
+      "dex": {
+        "name": "Knivføring",
+        "abbr": "KNV",
+        "description": "Hvor fort hendene jobber, og hvor fort du smetter unna en full servitør."
+      },
+      "int": {
+        "name": "Smak",
+        "abbr": "SMK",
+        "description": "Alt du har smakt, lært og lest på en etikett. Driver de gode replikkene."
+      },
+      "hp": {
+        "name": "Ro",
+        "abbr": "RO",
+        "description": "Sørlandsk ro. På null går du hjem, kjøper en Hennig-Olsen og ser Åpen dag på andres story."
+      },
+      "mp": {
+        "name": "Driv",
+        "abbr": "DRV",
+        "description": "Krutt til de store øyeblikkene. Fylles sakte opp igjen."
+      },
+      "ac": {
+        "name": "Kjøkkenhud",
+        "abbr": "HUD",
+        "description": "Hvor mye som preller av. Du har stått ved stekebordet før."
+      }
+    },
+    "conflict": "Svar for deg",
+    "defeated": "avfeid",
+    "xp": "Respekt",
+    "levelUp": "Du vokser på kjøkkenet",
+    "currency": "kroner",
+    "lossTitle": "Lærlingplassen gikk til skum",
+    "winTitle": "Lærekontrakten er din!",
+    "area": "Etappe"
+  },
+  "palette": {
+    "primary": "#1d4e89",
+    "secondary": "#f0d9a8",
+    "accent": "#2fa3c7",
+    "danger": "#e0453c",
+    "ui": "#13213a",
+    "text": "#fbf8f2"
+  },
+  "damageTypes": [
+    {
+      "id": "physical",
+      "name": "Dytt",
+      "color": "#d6d6d6"
+    },
+    {
+      "id": "kleinhet",
+      "name": "Kleinhet",
+      "color": "#ff7aa2"
+    },
+    {
+      "id": "stress",
+      "name": "Stress",
+      "color": "#ff9f43"
+    },
+    {
+      "id": "stoy",
+      "name": "Støy",
+      "color": "#ffd23f"
+    },
+    {
+      "id": "hete",
+      "name": "Hete",
+      "color": "#ff5e3a"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "flau",
+      "name": "Flau",
+      "description": "Kinnene brenner, og hendene glemmer hva de holdt på med.",
+      "harmful": true,
+      "color": "#ff8fab",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "stresset",
+      "name": "Stresset",
+      "description": "Hodet er fullt av klokkeslett. Du smaker ingenting.",
+      "harmful": true,
+      "color": "#ff9f43",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "sagflis-i-oyet",
+      "name": "Sagflis i øyet",
+      "description": "Fra 1BAD sin gjærsag. Du ser nesten ingenting.",
+      "harmful": true,
+      "color": "#e8d3a0",
+      "modifiers": [
+        {
+          "stat": "sight",
+          "amount": -3
+        }
+      ]
+    },
+    {
+      "id": "flekkete",
+      "name": "Flekkete",
+      "description": "Jakka er ikke hvit lenger. Det merkes på stemmen (−2 Kjøkkenstemme).",
+      "harmful": true,
+      "color": "#a0785a",
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "harsprayet",
+      "name": "Hårsprayet",
+      "description": "Du gikk gjennom skyen fra salongen. Alt lukter jordbær, og du går litt i ring.",
+      "harmful": true,
+      "color": "#f3c6ff",
+      "flags": [
+        "confused"
+      ]
+    },
+    {
+      "id": "klissete",
+      "name": "Klissete",
+      "description": "Vaffelrøre på skoene. Hvert skritt klistrer.",
+      "harmful": true,
+      "color": "#e0a050",
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "gira",
+      "name": "Gira",
+      "description": "Kaffe fra kantina. Du er overalt samtidig.",
+      "harmful": false,
+      "color": "#c6ff3a",
+      "flags": [
+        "hasted"
+      ]
+    },
+    {
+      "id": "i-flyten",
+      "name": "I flyten",
+      "description": "Hendene vet hva de gjør. Roen kommer litt tilbake hver runde.",
+      "harmful": false,
+      "color": "#ffd23f",
+      "perTurn": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "flags": [
+        "regenerating"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "jakka",
+      "name": "Hvit jakke",
+      "description": "Hvor hvit kokkejakka fortsatt er. Synker med 1 hvert 25. trekk. På 0 blir du Flekkete. Flekkfjerner hjelper.",
+      "color": "#f0d9a8",
+      "max": 20,
+      "start": 16,
+      "perTurn": -0.04,
+      "onEmpty": [
+        {
+          "type": "apply_status",
+          "status": "flekkete",
+          "duration": 6
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "jakka-skal-vaere-hvit",
+      "name": "Jakka skal være hvit til to",
+      "description": "Hvit jakke synker med 1 hvert 25. trekk. Står den på 0, er du Flekkete (−2 Kjøkkenstemme) til du finner en flekkfjerner.",
+      "playerTriggers": [],
+      "switches": {}
+    },
+    {
+      "id": "hei-ja-vi",
+      "name": "HEI, JA og VI",
+      "description": "Skolens tre ord henger i Smultringen. Hver gang du avfeier noen, er det 1 av 3 sjanse for at et «hei» gir deg 3 Ro tilbake.",
+      "playerTriggers": [
+        {
+          "on": "on_kill",
+          "chance": 0.33,
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "heal",
+                "amount": {
+                  "base": 3
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#ffd23f"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Selma",
+    "title": "Vg2 kokk- og servitørfag, 2KOA",
+    "description": "Andreklassing på restaurant- og matfag. Har hvit jakke, egen kniv i rull og en rett i hodet som smaker av Tangen: rægår, eik og blomster. Sier «javel» når hun er nervøs.",
+    "stats": {
+      "str": 11,
+      "dex": 12,
+      "int": 13,
+      "hp": 30,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 9,
+    "sight": 8,
+    "unarmed": {
+      "name": "Kremt",
+      "verb": "kremter mot",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "kleinhet"
+    },
+    "startingItems": [
+      {
+        "item": "ordreblokka",
+        "equipped": true
+      },
+      {
+        "item": "kokkejakka",
+        "equipped": true
+      },
+      {
+        "item": "hei"
+      },
+      {
+        "item": "vaffel",
+        "count": 2
+      },
+      {
+        "item": "flekkfjerner",
+        "count": 1
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 28,
+      "curve": 1.55,
+      "hpPerLevel": 5,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "smaksminne",
+          "name": "Smaksminne",
+          "description": "Du husker hver saus du har smakt. +2 Smak.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "bak-deg",
+          "name": "«Bak deg!»",
+          "description": "Du eier kjøkkengangen. +2 Kjøkkenstemme.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "raske-hender",
+          "name": "Raske hender",
+          "description": "Løk på tolv sekunder. +2 Knivføring.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "tykk-hud",
+          "name": "Tykkere kjøkkenhud",
+          "description": "Du har hørt verre på en lørdagskveld. +1 Kjøkkenhud.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "ja-perk",
+          "name": "Ordet JA",
+          "description": "Du lærer skolens andre ord. Et høyt «JA!» gjør alle foran deg flaue.",
+          "grantItems": [
+            "ja"
+          ]
+        },
+        {
+          "id": "vi-perk",
+          "name": "Ordet VI",
+          "description": "Du lærer skolens tredje ord. «Vi» heler deg og setter deg i flyten.",
+          "grantItems": [
+            "vi"
+          ]
+        },
+        {
+          "id": "ekstra-flekkfjerner",
+          "name": "Flekkfjerner i lomma",
+          "description": "Jakka holder seg hvit lenger: +6 på Hvit jakke, én gang.",
+          "triggers": [
+            {
+              "on": "on_turn",
+              "every": 100,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "jakka",
+                    "amount": {
+                      "base": 6
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "mise-en-place",
+          "name": "Mise en place",
+          "description": "Alt er på plass før det smeller. Hver 12. runde får du 1 Ro tilbake.",
+          "triggers": [
+            {
+              "on": "on_turn",
+              "every": 12,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 1
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "sorlandsk-ro",
+          "name": "Sørlandsk ro",
+          "description": "Vi bare ser. +6 Ro.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 6
+            }
+          ]
+        },
+        {
+          "id": "siste-ord",
+          "name": "Siste ord",
+          "description": "Når du avfeier noen, er det 1 av 2 sjanse for at du får 2 Driv tilbake.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "chance": 0.5,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "mp",
+                    "amount": {
+                      "base": 2
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.88,
+        "build": "slim",
+        "skin": "#efc7a3",
+        "top": "#fbf8f2",
+        "bottom": "#2b2b2b",
+        "hair": "#4a2e1a",
+        "hairStyle": "bun",
+        "headwear": "none",
+        "outfit": "uniform",
+        "holding": "tool",
+        "accent": "#1d4e89"
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "tiendeklassing",
+      "name": "Tiendeklassing på Åpen dag",
+      "description": "Har gått rundt i Smultringen i to timer med en forelder og en brosjyre. Vil vite om kokkelinja har mye lekser, og om du er ekte kokk.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 6,
+        "ac": 10,
+        "str": 6,
+        "dex": 12,
+        "int": 7
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Oppfølgingsspørsmål",
+        "verb": "stiller et spørsmål til",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "stress"
+      },
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.15
+      },
+      "loot": [
+        {
+          "item": "frokostbrod",
+          "chance": 0.15
+        }
+      ],
+      "xp": 4,
+      "tags": [
+        "elev",
+        "besok"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.72,
+          "build": "slim",
+          "skin": "#e8b996",
+          "top": "#3fa9f5",
+          "bottom": "#2b2b6b",
+          "hair": "#d8b25a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "phone"
+        }
+      }
+    },
+    {
+      "id": "forelder",
+      "name": "Forelder med spørsmål om fravær",
+      "description": "Har lest om fraværsgrensa på nettet og vil høre det fra en elev. Hører aldri på svaret.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 11,
+        "ac": 10,
+        "str": 10,
+        "dex": 9,
+        "int": 12
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Spørsmål om fraværsgrensa",
+        "verb": "spør om fraværsgrensa til",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "stress"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "kaffe",
+          "chance": 0.25
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "voksen",
+        "besok"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#e0b48f",
+          "top": "#7a6a4f",
+          "bottom": "#3b3b3b",
+          "hair": "#8a8a8a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "coat",
+          "holding": "phone"
+        }
+      }
+    },
+    {
+      "id": "fravaersvarsel",
+      "name": "Kristins fraværsvarsel",
+      "description": "Et utropstegn fra Visma InSchool som har løsnet fra skjermen. Kristin registrerte Tangentid som «!», og nå flagrer det etter deg for å minne deg på det.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 9,
+        "ac": 12,
+        "str": 6,
+        "dex": 14,
+        "int": 10
+      },
+      "speed": 130,
+      "attack": {
+        "name": "Utropstegn",
+        "verb": "blinker utropstegn mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "stress"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.3
+      },
+      "xp": 5,
+      "tags": [
+        "system"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#e0453c",
+          "secondary": "#ffffff"
+        },
+        "idle": "hover",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "frokostkoen",
+      "name": "Frokostkøen",
+      "description": "Gratis frokost 07.30–08.30, står det. Klokka er ti, og køen står der ennå. Rægårene fra Fiskebrygga er levert bak den, i kjøledisken, og køen slipper ingen forbi.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 22,
+        "ac": 11,
+        "str": 12,
+        "dex": 8,
+        "int": 6
+      },
+      "speed": 70,
+      "sight": 10,
+      "attack": {
+        "name": "Alle snakker samtidig",
+        "verb": "snakker i munnen på",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "stress"
+      },
+      "abilities": [
+        {
+          "id": "brodsmuler",
+          "name": "Brødsmuler overalt",
+          "description": "Køen rister av seg en halv frokost.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 1,
+              "affects": "enemies",
+              "radius": 1
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "physical"
+              },
+              {
+                "type": "apply_status",
+                "status": "stresset",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#e8d3a0"
+            }
+          },
+          "cooldown": 6
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              },
+              {
+                "type": "message",
+                "text": "Køen løser seg opp i enkeltmennesker med brødskiver. Kjøledisken står åpen. Rægårene er dine."
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "frokostbrod",
+          "chance": 0.5
+        }
+      ],
+      "xp": 18,
+      "tags": [
+        "ko",
+        "elite"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#5d7aa0",
+          "secondary": "#f0d9a8"
+        },
+        "idle": "sway",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "spikerpistol",
+      "name": "Spikerpistol uten eier",
+      "description": "Noen i 1BAF la den fra seg på et stillas, og nå går den rundt og pinger i luften. Treffer ingenting, men lyden går rett i Roen.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 8,
+        "ac": 11,
+        "str": 7,
+        "dex": 13,
+        "int": 4
+      },
+      "speed": 85,
+      "attack": {
+        "name": "Ping",
+        "verb": "pinger mot",
+        "damage": {
+          "dice": "1d4"
+        },
+        "damageType": "stoy",
+        "range": 3
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 2,
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "serviettsvane",
+          "chance": 0.1
+        },
+        {
+          "item": "hms-vest",
+          "chance": 0.15
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "verktoy"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#ff9f43",
+          "secondary": "#3b3b3b"
+        },
+        "idle": "bob",
+        "scale": 0.7
+      }
+    },
+    {
+      "id": "sagflissky",
+      "name": "Sagflissky",
+      "description": "En sky av fin eikeflis fra gjærsaga i treteknikkrommet. Den vil bare være med deg, i håret, i jakka, i øynene.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 8,
+        "dex": 12,
+        "int": 3
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Flis",
+        "verb": "driver flis mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "physical"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "sagflis-i-oyet",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#e8d3a0"
+            }
+          }
+        },
+        {
+          "on": "on_hit",
+          "chance": 0.5,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "jakka",
+                "amount": {
+                  "base": -2
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "verksted"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#e8d3a0",
+          "secondary": "#c9a86a"
+        },
+        "idle": "hover",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "betongblander",
+      "name": "Betongblanderen fra 1BAD",
+      "description": "Slått på for Åpen dag og aldri slått av. Går i ring og durer så ingen hører hva du sier.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 19,
+        "ac": 12,
+        "str": 13,
+        "dex": 7,
+        "int": 3
+      },
+      "speed": 70,
+      "attack": {
+        "name": "Dur",
+        "verb": "durer over",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "stoy",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "loot": [
+        {
+          "item": "vaffel",
+          "chance": 0.2
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "maskin"
+      ],
+      "model": {
+        "archetype": "vehicle",
+        "colors": {
+          "primary": "#7a7a7a",
+          "secondary": "#ff9f43"
+        },
+        "idle": "spin",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "vaterplanken",
+      "name": "Planken som ikke er i vater",
+      "description": "Serveringsfjøla di ligger under den. Planken er fire meter eik, ligger skjevt over to bukker og nekter å flytte seg før noen innrømmer at den er i vater. Den er ikke i vater.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "str": 14,
+        "dex": 9,
+        "int": 8
+      },
+      "speed": 80,
+      "sight": 10,
+      "attack": {
+        "name": "Tung ende",
+        "verb": "svinger den tunge enden mot",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "physical",
+        "accuracyStat": "str"
+      },
+      "abilities": [
+        {
+          "id": "skjevt",
+          "name": "Skjevt",
+          "description": "Planken vipper, og alle rundt mister balansen og nerven.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "affects": "enemies",
+              "radius": 3
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                },
+                "damageType": "physical"
+              },
+              {
+                "type": "apply_status",
+                "status": "flau",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "slash",
+              "color": "#9a6b3c"
+            }
+          },
+          "cooldown": 7
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "stoy",
+          "multiplier": 0.5
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              },
+              {
+                "type": "message",
+                "text": "Planken legger seg rolig ned på bukkene. Den var ikke i vater. Fjøla ligger under, nesten ferdig."
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "pinsett",
+          "chance": 0.4
+        }
+      ],
+      "xp": 24,
+      "unique": true,
+      "tags": [
+        "verksted",
+        "elite"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              2.4,
+              0.12,
+              0.35
+            ],
+            "pos": [
+              0,
+              0.6,
+              0
+            ],
+            "color": "#9a6b3c",
+            "material": "wood",
+            "rot": [
+              0,
+              0,
+              6
+            ]
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.08,
+              0.14
+            ],
+            "pos": [
+              0.6,
+              0.72,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.12,
+              0.5,
+              0.35
+            ],
+            "pos": [
+              -1.0,
+              0.25,
+              0
+            ],
+            "color": "#6b4a2b",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.12,
+              0.5,
+              0.35
+            ],
+            "pos": [
+              1.0,
+              0.25,
+              0
+            ],
+            "color": "#6b4a2b",
+            "material": "wood"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "harfoner",
+      "name": "Hårføner på full guffe",
+      "description": "Har kommet seg løs fra en frisørstol og blåser rundt i salongen. Lun, høylytt og helt uten retning.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 10,
+        "ac": 12,
+        "str": 7,
+        "dex": 14,
+        "int": 4
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Varmluft",
+        "verb": "blåser varmluft på",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "stoy",
+        "range": 3
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 2,
+        "erratic": 0.3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "push",
+                "distance": 1
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#ffffff"
+            }
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "salong"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#ff6f91",
+          "secondary": "#ffffff"
+        },
+        "idle": "hover",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "harspraysky",
+      "name": "Hårspraysky",
+      "description": "Ligger tykt over hele salongen etter oppsatt hår til Åpen dag. Lukter jordbær og gjør alle litt svimle.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 8,
+        "dex": 11,
+        "int": 3
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Spray",
+        "verb": "sprayer",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "physical"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "harsprayet",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#f3c6ff"
+            }
+          }
+        },
+        {
+          "on": "on_hit",
+          "chance": 0.4,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "jakka",
+                "amount": {
+                  "base": -2
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "salong"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#f3c6ff",
+          "secondary": "#ffffff"
+        },
+        "idle": "hover",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "moodboard",
+      "name": "Hildes moodboard på hjul",
+      "description": "Interiørelevene har laget et moodboard til Hilde i tre ganger to meter, på hjul. Det triller rundt og flytter alt som står i veien for helheten. Du står i veien for helheten.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 16,
+        "ac": 12,
+        "str": 12,
+        "dex": 9,
+        "int": 8
+      },
+      "speed": 85,
+      "attack": {
+        "name": "Flytter deg",
+        "verb": "flytter på",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "physical",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.4,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "push",
+                "distance": 2
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#6fbf73"
+            }
+          }
+        },
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "salong",
+        "interior"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.4,
+              1.2,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.3,
+              0.09
+            ],
+            "pos": [
+              -0.4,
+              1.1,
+              0
+            ],
+            "color": "#6fbf73",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.3,
+              0.09
+            ],
+            "pos": [
+              0.3,
+              0.8,
+              0
+            ],
+            "color": "#ff6f91",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.4,
+              0.09
+            ],
+            "pos": [
+              0.4,
+              1.2,
+              0
+            ],
+            "color": "#2fa3c7",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              -0.5,
+              0.06,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal",
+            "rot": [
+              0,
+              0,
+              90
+            ]
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0.5,
+              0.06,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal",
+            "rot": [
+              0,
+              0,
+              90
+            ]
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "krollsaksa",
+      "name": "Krøllsaksa",
+      "description": "Glemt på i kjøleren på E2, og nå er kjøleren varm, blomstene dine ligger rett bak den, og saksa vil krølle alt som kommer nær. Også jakkekrager.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "str": 11,
+        "dex": 13,
+        "int": 6
+      },
+      "speed": 90,
+      "sight": 10,
+      "attack": {
+        "name": "Krøll",
+        "verb": "krøller kragen til",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "hete",
+        "accuracyStat": "dex"
+      },
+      "abilities": [
+        {
+          "id": "varmebolge",
+          "name": "Varmebølge",
+          "description": "Hele kjøleren puster ut varm luft.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 1,
+              "affects": "enemies",
+              "radius": 1
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                },
+                "damageType": "hete"
+              },
+              {
+                "type": "apply_status",
+                "status": "stresset",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#ff5e3a"
+            }
+          },
+          "cooldown": 7
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "hete",
+          "multiplier": 0.5
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              },
+              {
+                "type": "message",
+                "text": "Saksa klikker og blir kald. Kjøleren summer i gang igjen. Blomstene er fortsatt sprø."
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "forkle",
+          "chance": 0.4
+        }
+      ],
+      "xp": 24,
+      "unique": true,
+      "tags": [
+        "salong",
+        "elite"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#ff5e3a",
+          "secondary": "#3b3b3b"
+        },
+        "idle": "pulse",
+        "scale": 1.0,
+        "light": {
+          "color": "#ff5e3a",
+          "intensity": 1.2,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "marius",
+      "name": "Marius fra 2KOB",
+      "description": "Den andre søkeren. Har laget skum av alt siden Vg1 og snakker om «teksturer». Han har pinsett i brystlomma og tre tallerkener klare, og han er ikke egentlig slem. Han er bare veldig, veldig klar.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 16,
+        "ac": 12,
+        "str": 11,
+        "dex": 13,
+        "int": 12
+      },
+      "speed": 100,
+      "attack": {
+        "name": "Skum",
+        "verb": "legger skum på tallerkenen til",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "kleinhet",
+        "accuracyStat": "dex"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "pinsett",
+          "chance": 0.3
+        }
+      ],
+      "xp": 14,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Velment, overforberedt og livredd for å gå tom for sifon. Snakker om teksturer. Tror kjøkkensjefer vil ha skum.",
+        "greeting": "Selma! Hei! Du har ikke sifon, vel? Jeg lager skum av rægårskall. Vil du smake? Det er … tekstur.",
+        "lines": [
+          "Jeg har tre tallerkener. Én med skum, én med mer skum, én uten, i tilfelle.",
+          "Hun fra Fiskebrygga liker visst «rene smaker». Jeg vet ikke helt hva det betyr.",
+          "Hvis du får plassen, kan jeg få lov til å smake på fjøla di først?"
+        ],
+        "secrets": "Han søkte egentlig på lærlingplass i konditorfaget og angrer. Han håper i all hemmelighet at Selma vinner, så han slipper å si det til faren sin.",
+        "wants": "At noen sier at skummet hans er godt. Én gang. Og å få servere sammen med Selma på Åpen dag.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 12
+      },
+      "tags": [
+        "elev",
+        "rival"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.98,
+          "build": "average",
+          "skin": "#efc29c",
+          "top": "#fbf8f2",
+          "bottom": "#1a1a1a",
+          "hair": "#c99a4a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "uniform",
+          "holding": "tool",
+          "accent": "#2fa3c7"
+        }
+      }
+    },
+    {
+      "id": "intervjunervene",
+      "name": "Intervjunervene",
+      "description": "Dine egne. De sitter i halsen, i hendene og i ordet «javel». De vokser for hvert minutt kjøkkensjefen venter, og de hvisker det samme hele tiden: «Og hvis du glemmer saltet?»",
+      "faction": "hostile",
+      "stats": {
+        "hp": 88,
+        "ac": 13,
+        "str": 14,
+        "dex": 11,
+        "int": 13,
+        "mp": 20
+      },
+      "speed": 100,
+      "sight": 12,
+      "attack": {
+        "name": "«Og hvis du glemmer saltet?»",
+        "verb": "hvisker om salt til",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "kleinhet"
+      },
+      "abilities": [
+        {
+          "id": "alt-du-kan-glemme",
+          "name": "Alt du kan glemme",
+          "description": "Nervene ramser opp alt som kan gå galt. Med tydelige pauser.",
+          "action": {
+            "targeting": {
+              "shape": "ray",
+              "range": 6,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 3,
+                  "dice": "1d6"
+                },
+                "damageType": "stress"
+              },
+              {
+                "type": "apply_status",
+                "status": "stresset",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#ff9f43"
+            }
+          },
+          "cost": {
+            "resource": "mp",
+            "amount": 5
+          },
+          "cooldown": 5
+        },
+        {
+          "id": "og-marius-da",
+          "name": "«Og Marius, da?»",
+          "description": "Nervene minner deg på at Marius er ferdig med skummet sitt.",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "marius",
+                "count": 1
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#2fa3c7"
+            }
+          },
+          "cooldown": 14,
+          "useWhen": "start_of_fight"
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "stoy",
+          "multiplier": 0.5
+        },
+        {
+          "damageType": "kleinhet",
+          "multiplier": 1.25
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 110,
+      "unique": true,
+      "tags": [
+        "nerver",
+        "boss"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#13213a",
+          "secondary": "#ff9f43",
+          "accent": "#ff5e3a"
+        },
+        "idle": "pulse",
+        "scale": 1.5,
+        "light": {
+          "color": "#ff9f43",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "bente",
+      "name": "Kantinesjef Bente",
+      "description": "Har drevet Himmel og hav siden bygget var nytt. Serverer gratis frokost, kaffe og sladder, og hører alt som blir sagt over et rundt bord.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 10,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Tørr, varm, kaller alle «vennen». Selger vafler og kaffe til samme pris og vet alltid hvem som har levert hva hvor.",
+        "greeting": "Javel, vennen! Se det. Du ser ut som en som trenger to vafler og én god nyhet. Jeg har begge.",
+        "lines": [
+          "Rægårene dine? Fiskebrygga leverte dem i kjøledisken min, bak frokostkøen. Køen gir seg om du snakker tydelig til den.",
+          "Marius fra 2KOB kjøpte seks sifonpatroner av meg i går. Seks.",
+          "HEI, JA og VI, står det på veggen. VI er vaffel. Det vet alle."
+        ],
+        "stock": [
+          "vaffel",
+          "kaffe",
+          "frokostbrod",
+          "flekkfjerner",
+          "menykort"
+        ],
+        "secrets": "Hun vet at kjøkkensjefen fra Fiskebrygga er allergisk mot skum. Ikke mot ingrediensene, mot ideen.",
+        "wants": "At ingen setter koppene på feil brett i år. Hun sier det hvert år.",
+        "persuadeStat": "str",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#e8bfa0",
+          "top": "#fbf8f2",
+          "bottom": "#5b6b8a",
+          "hair": "#b0b0b0",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "tool",
+          "accent": "#e0453c"
+        }
+      }
+    },
+    {
+      "id": "terje",
+      "name": "Driftsleder Terje",
+      "description": "Har nøkkelkort til alle seks etasjene og hviler aldri. Snakker sakte, tenker fort, og mener at alt kan løses med en vest og en kopp kaffe.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 25,
+        "ac": 12,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "quest_giver",
+        "personality": "Rolig, tørrvittig sørlending. Fikser alt med et nøkkelkort og en kopp kaffe. Liker elever som sier «hei» tilbake.",
+        "greeting": "Nei men, kokken. Du ser ut som en som har mista noe. Ta en vest, vennen, så slipper jeg å skrive avvik.",
+        "lines": [
+          "Byggverkstedene? Ta heisen ned. Ikke trappa, der står det tiendeklassinger og tar bilder av Smultringen.",
+          "Planken i treteknikkrommet er ikke i vater. Jeg har sagt det siden august.",
+          "Jeg har nøkkelkort til alt. Også til E2 i Elvegata, men det sier vi ikke høyt."
+        ],
+        "stock": [
+          "hms-vest",
+          "nokkelkort",
+          "plaster"
+        ],
+        "secrets": "Han så Fiskebrygga-bilen levere rægårene i kantina i stedet for på kjøkkenet. Han vet at fjøla ligger under planken i treteknikkrommet.",
+        "wants": "At noen takker driftsavdelingen når lærekontrakten er signert. Bare én setning.",
+        "persuadeStat": "str",
+        "persuadeDifficulty": 8
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "round",
+          "skin": "#d8a07c",
+          "top": "#2f4f6f",
+          "bottom": "#2f4f6f",
+          "hair": "#cfcfcf",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "tool",
+          "accent": "#ffd23f"
+        }
+      }
+    },
+    {
+      "id": "monica",
+      "name": "Rådgiver Monica",
+      "description": "Kjenner hver eneste søknad på huset og vet hvilke restauranter som faktisk tar inn lærlinger. Har kontor ved Smultringen og døra alltid på gløtt.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Effektiv, varm, snakker i kulepunkter. Heier på deg, men har allerede en plan B.",
+        "greeting": "Selma! Punkt én: kjøkkensjefen kommer klokka to. Punkt to: rægårene dine står i kantina. Punkt tre: du kommer ikke til å like hvor.",
+        "lines": [
+          "Rægårene står i kjøledisken bak frokostkøen. Køen slipper deg forbi når den er avfeid, det er bare å svare tydelig.",
+          "Fiskebrygga tar inn én lærling i år. Én. Marius har søkt. Du har søkt. Ingen andre, så det er dere to."
+        ],
+        "secrets": "Hun har sett karakterene til begge og vet at det står helt likt. Det avgjøres på smaken.",
+        "wants": "At søknadsskjemaet i Visma blir ferdig utfylt før fristen. Det er alltid noen som glemmer punkt fire."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#f0c8a0",
+          "top": "#6a4c93",
+          "bottom": "#2f3640",
+          "hair": "#3a2a1a",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "coat",
+          "holding": "book",
+          "accent": "#f0d9a8"
+        }
+      }
+    },
+    {
+      "id": "lene",
+      "name": "Lene, norsklærer",
+      "description": "Driver Tangen Ytring og står på Åpen dag med buttons og en Speakers' Corner-kasse. Snakker som om alle rom er fulle, selv når de ikke er det.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Begeistret, ordrik, mener at alt kan sies høyt. Elsker elever som tør å stå på kassa.",
+        "greeting": "Hei! Stå på kassa, si én setning om lærlingplassen din. Nei? Da sier jeg den for deg: hun klarer det.",
+        "lines": [
+          "Tusen elever satt i Smultringen i fjor og hørte på en korrespondent. I dag er det deg og en tallerken. Like viktig.",
+          "Si «hei» til folk. Det er ikke bare et ord på veggen her, det er en strategi."
+        ],
+        "secrets": "Hun har en button som sier «VI» i lomma og gir den til elever som ser ut som de trenger den.",
+        "wants": "At noen stiller seg på Speakers' Corner uten å bli bedt om det."
+      },
+      "tags": [
+        "voksen",
+        "laerer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.92,
+          "build": "average",
+          "skin": "#f3d2b8",
+          "top": "#e0453c",
+          "bottom": "#2a2a3a",
+          "hair": "#7a4a26",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "book",
+          "accent": "#fbf8f2"
+        }
+      }
+    },
+    {
+      "id": "rektor",
+      "name": "Rektor",
+      "description": "Står i Smultringen og sier hei til alle som går forbi, inkludert foreldre som ikke har spurt om noe. Har sagt hei til nitti mennesker siden halv ni og ser ut som det var det beste med dagen.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 25,
+        "ac": 12,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Varm, rolig, sier hei før du rekker det. Siterer skolens tre ord uten ironi og mener det hver gang.",
+        "greeting": "Hei! Selma, 2KOA, lærlingplass klokka to. Jeg vet. HEI, JA og VI. Du har hei-et. Ja-et får du på kjøkkenet. Vi-et er alle oss.",
+        "lines": [
+          "Denne skolen står på stålpæler sytti meter ned i leira. Den står. Det gjør du også.",
+          "Kjøkkensjefen fra Fiskebrygga spiste frokost her i dag. Hun sa «javel» til vaflene. Det er et godt tegn."
+        ],
+        "secrets": "Rektor har smakt på både Selmas og Marius' prøveretter i Tangentid. Rektor vet hvilken som smaker av Tangen, og at Marius vet det også.",
+        "wants": "At alle som går ut av Smultringen i dag har sagt hei til minst én de ikke kjente."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#f0c8a0",
+          "top": "#7a1f3a",
+          "bottom": "#1a1a1a",
+          "hair": "#a8a8a8",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "suit",
+          "holding": "none",
+          "accent": "#f0d9a8"
+        }
+      }
+    },
+    {
+      "id": "jorgen",
+      "name": "Jørgen, verkstedlærer",
+      "description": "Har lært opp tømrere i tre ulike bygg og snakker om eik som om den var en person. Måler alt med øyemål og har alltid rett.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 22,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Rolig, tørr, snakker sakte og presist. Liker elever som spør om treverk før de spør om saga.",
+        "greeting": "Javel, kokk. Fjøla di? Eik fra Søgne, pusset til 240. Den ligger under planken som ikke er i vater. Planken nekter å innrømme det.",
+        "lines": [
+          "Planken gir seg når du står på deg. Snakk tydelig, ikke høyt. Eik hører forskjell.",
+          "Spikerpistolen er ikke farlig, bare høy. Det samme kan sies om 1BAF."
+        ],
+        "secrets": "Han har oljet fjøla to ganger ekstra fordi han vil at Tangen skal ta lærlingplassen. Han sier det ikke.",
+        "wants": "At noen fra kokkelinja sier at fjøla er like viktig som maten."
+      },
+      "tags": [
+        "voksen",
+        "laerer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.97,
+          "build": "broad",
+          "skin": "#d8b090",
+          "top": "#2f4f6f",
+          "bottom": "#3b3b3b",
+          "hair": "#5a4a3a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "uniform",
+          "holding": "tool",
+          "accent": "#ff9f43"
+        }
+      }
+    },
+    {
+      "id": "andreas",
+      "name": "Andreas fra 2TMA",
+      "description": "Vg2 tømrer, har tommestokk i lomma og kan bære ting. Ble med fordi det er Åpen dag og ingen trenger ham i verkstedet akkurat nå.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 12,
+        "str": 13,
+        "dex": 10,
+        "int": 9
+      },
+      "attack": {
+        "name": "Tommestokk",
+        "verb": "måler opp",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "physical"
+      },
+      "behaviour": {
+        "type": "follower",
+        "param": 2
+      },
+      "xp": 0,
+      "npc": {
+        "role": "ally",
+        "personality": "Rolig, sterk, sier lite og mener det. Synes kokkelinja har det travlere enn tømrerne, og synes litt synd på dem.",
+        "greeting": "Hei. Trenger du en som bærer? Jeg kan bære. Jeg kan også holde planken hvis du snakker til den.",
+        "lines": [
+          "Vi bare ser. Det går bra. Det går alltid bra på Tangen, i hvert fall til slutt.",
+          "Hvis det blir lærlingplass, skal jeg lage en ny fjøl. En større."
+        ],
+        "secrets": "Han var den som la planken skjevt i august. Han har ikke turt å si det til Jørgen.",
+        "wants": "At noen sier at det var han som bar.",
+        "persuadeStat": "str",
+        "persuadeDifficulty": 7
+      },
+      "tags": [
+        "elev",
+        "bygg"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "broad",
+          "skin": "#e6c3a0",
+          "top": "#ff9f43",
+          "bottom": "#2b2b2b",
+          "hair": "#3a2a1a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "uniform",
+          "holding": "tool",
+          "accent": "#3b3b3b"
+        }
+      }
+    },
+    {
+      "id": "elin",
+      "name": "Elin, blomsterlærer",
+      "description": "Står midt i Studio E2 med sekatør og ro. Snakker med blomster og elever på samme måte: rolig og med klare forventninger.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 10,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Rolig, presis, behandler panikk som en visnet stilk: klipp, friskt vann, vent.",
+        "greeting": "Sett deg. Pust. Blomstene dine står i kjøleren, bak en krøllsaks som noen glemte på. Først deg, så dem.",
+        "lines": [
+          "Spiselige blomster skal være sprø. Det skal du også.",
+          "Krøllsaksa er ikke sint. Den er bare varm. Det er forskjell.",
+          "Hårføneren slår seg av hvis du ikke gir den oppmerksomhet. Det samme gjelder nesten alt her."
+        ],
+        "secrets": "Hun vet at kjøkkensjefen fra Fiskebrygga har kjøpt blomster på E2 hver fredag i høst.",
+        "wants": "At noen kjøper en bukett som ikke er til en mor."
+      },
+      "tags": [
+        "voksen",
+        "laerer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#c58c69",
+          "top": "#6fbf73",
+          "bottom": "#2f3640",
+          "hair": "#3a2a1a",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "tool",
+          "accent": "#ff6f91"
+        }
+      }
+    },
+    {
+      "id": "kjetil",
+      "name": "Kjetil i kaffebaren på E2",
+      "description": "Driver kafédisken i Studio E2 og har stekt vafler for hele Elvegata. Tar kroner, ikke sifonpatroner.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 10,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Avslappet, kvikk, svarer alltid med et tilbud. Synes ingenting haster, minst av alt lunsjen.",
+        "greeting": "Javel, der kom kokkelinja. Vaffel? Kaffe? Forkle? Jeg har alt som ikke er blomster.",
+        "lines": [
+          "Blomstene er i kjøleren bakerst. Krøllsaksa står foran. Det vet alle, ingen har gjort noe med det.",
+          "Marius var innom i stad og kjøpte en vaffel for å lage skum av den. Jeg sa ingenting."
+        ],
+        "stock": [
+          "vaffel",
+          "kaffe",
+          "flekkfjerner",
+          "forkle",
+          "pinsett"
+        ],
+        "secrets": "Han vet at forkleet fra E2 har en lomme som rommer en flekkfjerner, og at det gjør underverker for en kokkejakke.",
+        "wants": "At noen fra skolen spiser lunsj på E2 i stedet for i Smultringen. Bare én gang."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#e0b48f",
+          "top": "#3b3b3b",
+          "bottom": "#5b6b8a",
+          "hair": "#2a2a2a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "bottle",
+          "accent": "#f0d9a8"
+        }
+      }
+    },
+    {
+      "id": "nina",
+      "name": "Nina fra 2FRA",
+      "description": "Vg2 frisør med kunde i stolen og kam bak øret. Snakker mens hun klipper, og klipper mens hun snakker.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 18,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Lynrask, varm, hjelpsom. Retter på luggen din i hodet mens du snakker.",
+        "greeting": "Hei! Kjøkkensjefen? Ja, hun har vært her. Hun sa «rene smaker» tre ganger. Blomstene er i kjøleren, bak saksa. Vil du ha luggen fikset først?",
+        "lines": [
+          "Krøllsaksa gir seg hvis du holder deg rolig og svarer. Den liker ikke folk som skriker.",
+          "Hårsprayskyen er fra Åpen dag-oppsettingen. Gå rundt, ikke gjennom."
+        ],
+        "secrets": "Hun klippet Marius i går. Han snakket om skum i førti minutter. Hun synes synd på ham.",
+        "wants": "Å få klippe kjøkkensjefen fra Fiskebrygga. Hun har et forslag til luggen.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 7
+      },
+      "tags": [
+        "elev",
+        "frisor"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.84,
+          "build": "slim",
+          "skin": "#a0663f",
+          "top": "#ff6f91",
+          "bottom": "#212529",
+          "hair": "#120d0b",
+          "hairStyle": "braids",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "tool",
+          "accent": "#ffd23f"
+        }
+      }
+    },
+    {
+      "id": "kari",
+      "name": "Kjøkkensjef Kari fra Fiskebrygga",
+      "description": "Sitter ved vinduet i skolerestauranten med utsikt mot Otra og venter. Har smakt tusen tallerkener og husker alle. Sier lite, smiler sent, og sa «javel» til vaflene i morges.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 25,
+        "ac": 12,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Rolig, få ord, ser alt. Vil ha rene smaker og folk som tør å stå for retten sin.",
+        "greeting": "Hei. Jeg har god tid. Det er du som har dårlig tid. Sett tallerkenen på bordet når du er klar, ikke før.",
+        "lines": [
+          "Jeg tar inn én lærling i år. Jeg bryr meg ikke om skum. Jeg bryr meg om rægår som smaker rægår.",
+          "Nervene dine er de eneste her som ikke får lov til å smake."
+        ],
+        "secrets": "Hun har allerede bestemt seg for å ansette den som tør å gå opp til bordet først. Hun venter på det.",
+        "wants": "En rett som smaker av stedet den er laget. Og at servitøren sier hva som er på tallerkenen uten å lese."
+      },
+      "tags": [
+        "voksen",
+        "kjokkensjef"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#e8c3a0",
+          "top": "#fbf8f2",
+          "bottom": "#1a1a1a",
+          "hair": "#2a2a2a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "uniform",
+          "holding": "none",
+          "accent": "#2fa3c7"
+        }
+      }
+    },
+    {
+      "id": "jonas",
+      "name": "Jonas, servitør i 2KOA",
+      "description": "Klassekameraten din på servitørdelen. Har tre tallerkener på én arm og hvit duk på den andre. Bytter mellom bordene som om han danser.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 18,
+        "ac": 11,
+        "str": 10,
+        "dex": 13,
+        "int": 11
+      },
+      "attack": {
+        "name": "Serviett",
+        "verb": "knipser en serviett mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "kleinhet",
+        "range": 2
+      },
+      "behaviour": {
+        "type": "follower",
+        "param": 2
+      },
+      "xp": 0,
+      "npc": {
+        "role": "ally",
+        "personality": "Kjapp, lun, hjelpsom. Lever for overganger mellom rettene. Vil gjerne være med på noe som ikke er en vurdering.",
+        "greeting": "Selma! Kjøkkensjefen sitter ved vinduet. Nervene dine står foran bordet, og de er større enn i stad. Jeg går med deg.",
+        "lines": [
+          "Marius har satt tallerkenene sine ved bord fire. Skummet synker. Han vet det.",
+          "Si hva som er på tallerkenen. Rægår, eik, blomster. Tre ord. Så er det gjort."
+        ],
+        "secrets": "Han har lagt en ekstra serviett ved kjøkkensjefens bord med «SELMA» skrevet på, i tilfelle hun glemmer navnet.",
+        "wants": "Å bli nevnt når lærekontrakten er signert, som «han som bar tallerkenen».",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 7
+      },
+      "tags": [
+        "elev",
+        "servitor"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#d8a878",
+          "top": "#fbf8f2",
+          "bottom": "#1a1a1a",
+          "hair": "#3a2a1a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "uniform",
+          "holding": "tool",
+          "accent": "#1d4e89"
+        }
+      }
+    },
+    {
+      "id": "siri",
+      "name": "Siri, elevrådsleder",
+      "description": "Går rundt i skolerestauranten med klistremerker og en liste. Har organisert Åpen dag siden september og vet hvor alle skal være, unntatt seg selv.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Effektiv, lett stresset, heier på alle samtidig. Har allerede laget en plan for hvis det går bra.",
+        "greeting": "Selma! Du er på lista. «Smaksprøve, kl. 14, bord ved vinduet». Jeg har skrevet «vinner» i margen, men det er bare for meg.",
+        "lines": [
+          "Bord ved vinduet. Kjøkkensjefen. Rægår, fjøl, blomster. Gå bort dit og sett det fra deg, så er det gjort.",
+          "Rektor har sagt hei til hundre og tolv mennesker i dag. Jeg teller."
+        ],
+        "secrets": "Hun har en reservetale klar hvis Selma får plassen, og en klem klar hvis ikke.",
+        "wants": "At Åpen dag ender uten at noen tiendeklassinger blir igjen i bygget."
+      },
+      "tags": [
+        "elev",
+        "elevrad"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "slim",
+          "skin": "#e8b890",
+          "top": "#2a5a8a",
+          "bottom": "#1a1a1a",
+          "hair": "#3a2418",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "book",
+          "accent": "#ffd23f"
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "ordreblokka",
+      "name": "Ordreblokka",
+      "kind": "Blokk",
+      "description": "Liten blokk med kulepenn i spiralen. Du tar opp bestillingen til folk, og de får plutselig mye å forklare.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Tar opp bestillingen",
+        "verb": "tar opp bestillingen til",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "kleinhet",
+        "accuracyStat": "int"
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.14,
+              0.2,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.02,
+              0.18,
+              0.02
+            ],
+            "pos": [
+              0.08,
+              0.12,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "osa",
+      "name": "Kjøkkenøsa",
+      "kind": "Øse",
+      "description": "Stor, blank og lånt fra kjøkkenet på Himmel og hav. Du får ting unna med den.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Øse",
+        "verb": "øser mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "physical",
+        "accuracyStat": "str"
+      },
+      "rarity": "uncommon",
+      "value": 25,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.4,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.14,
+              0.1,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.42,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pinsett",
+      "name": "Plateringspinsett",
+      "kind": "Pinsett",
+      "description": "Lang, spiss og presis. Du plasserer én urt perfekt foran noen, og de mister hele argumentet.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Presisjon",
+        "verb": "plasserer én urt perfekt foran",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "kleinhet",
+        "accuracyStat": "dex"
+      },
+      "rarity": "rare",
+      "value": 40,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.02,
+              0.3,
+              0.01
+            ],
+            "pos": [
+              -0.01,
+              0.15,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal",
+            "rot": [
+              0,
+              0,
+              4
+            ]
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.02,
+              0.3,
+              0.01
+            ],
+            "pos": [
+              0.01,
+              0.15,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal",
+            "rot": [
+              0,
+              0,
+              -4
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "kokkejakka",
+      "name": "Kokkejakka",
+      "kind": "Jakke",
+      "description": "Hvit, dobbeltspent, med «Tangen vgs» brodert på brystet. Du har vasket den i går og håper det holder.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.45,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.22,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hms-vest",
+      "name": "HMS-vest fra driftsavdelingen",
+      "kind": "Vest",
+      "description": "Gul, reflekterende og to nummer for stor. Ingen stiller spørsmål til folk i gul vest.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 22,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.4,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.46,
+              0.06,
+              0.21
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "glow",
+            "emissive": "#c0c0c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "forkle",
+      "name": "Forkle fra Studio E2",
+      "kind": "Forkle",
+      "description": "Mørkeblått lerret med lomme foran. Dekker jakka og gjør deg tre centimeter mer profesjonell.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "triggers": [
+        {
+          "on": "on_equip",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "jakka",
+                "amount": {
+                  "base": 3
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#f0d9a8"
+            }
+          }
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.5,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#1d4e89",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.12,
+              0.11
+            ],
+            "pos": [
+              0,
+              0.18,
+              0
+            ],
+            "color": "#2f3640",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "navneskilt",
+      "name": "Navneskilt: «Selma, 2KOA»",
+      "kind": "Navneskilt",
+      "description": "Laminert, litt skjevt, fra Åpen dag. Folk tar deg mer på alvor med navnet på brystet.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 1
+        },
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.1,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "glass"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "vaffel",
+      "name": "Vaffel fra E2",
+      "kind": "Vaffel",
+      "description": "Med brunost. Stekt i Studio E2 og kjent i hele Elvegata. Gir deg roen tilbake.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8b06a"
+        }
+      },
+      "stackable": true,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.3,
+              0.04,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#e0a050",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.03,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#a0522d",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "kaffe",
+      "name": "Kaffe fra Himmel og hav",
+      "kind": "Drikke",
+      "description": "Fra kanna på frokostdisken. Varm ro i pappkopp, og fart i beina.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "gira",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c6ff3a"
+        }
+      },
+      "stackable": true,
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.2,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.11,
+              0.02,
+              0.11
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#5a3a22",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "frokostbrod",
+      "name": "Frokostbrød med pålegg",
+      "kind": "Brødskive",
+      "description": "Fra den gratis frokosten. Grovbrød, ost og en agurkskive som noen har lagt på med omhu.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8d3a0"
+        }
+      },
+      "stackable": true,
+      "value": 6,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.04,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#c9a86a",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.02,
+              0.16
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hennig-olsen",
+      "name": "Hennig-Olsen-is",
+      "kind": "Is",
+      "description": "Fra fryseren i kantina. Diplom-Is er som å banne i kjerka. Denne heler alt og fjerner alt som plager deg.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 8
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#fff3b0"
+        }
+      },
+      "stackable": true,
+      "rarity": "uncommon",
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.12,
+              0.2,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#e0a050",
+            "material": "matte",
+            "rot": [
+              180,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.14,
+              0.14,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.26,
+              0
+            ],
+            "color": "#fff3b0",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "flekkfjerner",
+      "name": "Flekkfjernerpenn",
+      "kind": "Flekkfjerner",
+      "description": "Fra lomma på forkleet. Gir 7 Hvit jakke og fjerner Flekkete. Lukter sitron og panikk.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "jakka",
+            "amount": {
+              "base": 7
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "flekkete"
+          }
+        ],
+        "vfx": {
+          "kind": "cloud",
+          "color": "#dff6ff"
+        }
+      },
+      "stackable": true,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.22,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#2fa3c7",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.04,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.24,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "konditorbollen",
+      "name": "Konditorbollen fra 2BKA",
+      "kind": "Brett",
+      "description": "Merket «TIL SENSOR». Noen tok. Den var verdt det.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 10
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ]
+      },
+      "stackable": true,
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "brett",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.1,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#ffd6ec",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "restesuppa",
+      "name": "Restesuppe med noe grønt",
+      "kind": "Brett",
+      "description": "Fra i går, varmet opp i mikroen i Smultringen. Alle snur seg. Alle vet det var deg.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 3
+          },
+          {
+            "type": "message",
+            "text": "Restesuppe. Oppvarmet. Hele Smultringen snur seg."
+          }
+        ]
+      },
+      "stackable": true,
+      "value": 1,
+      "knowledge": "unknown",
+      "appearanceGroup": "brett",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.1,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#9fb8a0",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dobbel-espresso",
+      "name": "Dobbel espresso fra lærerrommet",
+      "kind": "Brett",
+      "description": "Trukket siden halv åtte, satt igjen på et brett. Gir krutt, og litt stress.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "gira",
+            "duration": 6
+          },
+          {
+            "type": "apply_status",
+            "status": "stresset",
+            "duration": 3
+          }
+        ]
+      },
+      "stackable": true,
+      "value": 8,
+      "knowledge": "unknown",
+      "appearanceGroup": "brett",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              0.12,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.06,
+              0
+            ],
+            "color": "#5a3a22",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "serviettsvane",
+      "name": "Serviettsvane",
+      "kind": "Servietter",
+      "description": "Tre svaner brettet av Jonas. Kast én, og alle i nærheten blir stående og lure på hvordan.",
+      "category": "throwable",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 4,
+          "affects": "enemies",
+          "radius": 1
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d6"
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#fbf8f2"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.08,
+              0.2,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "cloth"
+          },
+          {
+            "shape": "pyramid",
+            "size": [
+              0.14,
+              0.08,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "menykort",
+      "name": "Menykort med feil",
+      "kind": "Meny",
+      "description": "Utskrift fra i går med tre retter som ikke finnes. Kast det til noen, så står de og leter etter «Rægår à la Otra».",
+      "category": "throwable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "2d4"
+            },
+            "damageType": "stress"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#ffd23f"
+        }
+      },
+      "stackable": true,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.14,
+              0.01,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.012,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.022,
+              0.04
+            ],
+            "color": "#1a1a1a",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hei",
+      "name": "«Hei!»",
+      "kind": "Skolens ord",
+      "description": "Det første av skolens tre ord. Sagt tydelig til én person, så har de ikke noe å si tilbake.",
+      "category": "spell",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.25
+              }
+            },
+            "damageType": "kleinhet"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#ffd23f"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.18,
+              0.18,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "ja",
+      "name": "«JA!»",
+      "kind": "Skolens ord",
+      "description": "Det andre ordet, sagt høyt nok for hele gangen foran deg. Alle som står der, blir flaue på dine vegne.",
+      "category": "spell",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "ray",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#6fbf73"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.22,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#6fbf73",
+            "material": "glow",
+            "emissive": "#6fbf73"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "vi",
+      "name": "«Vi»",
+      "kind": "Skolens ord",
+      "description": "Det tredje ordet. Du sier det lavt, og husker at det er flere her. Heler deg, fjerner alt som plager deg, og setter deg i flyten.",
+      "category": "spell",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          },
+          {
+            "type": "apply_status",
+            "status": "i-flyten",
+            "duration": 5
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#2fa3c7"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.22,
+              0.22,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#2fa3c7",
+            "material": "glow",
+            "rot": [
+              90,
+              0,
+              0
+            ],
+            "emissive": "#2fa3c7"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "plaster",
+      "name": "Plaster fra førstehjelpsskapet",
+      "kind": "Plaster",
+      "description": "To store plaster fra skapet ved heisen. Hvert gir Ro og fjerner alt som plager deg. Det er ikke medisinsk korrekt, men det virker.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 2,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#f0d9a8"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.02,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#f0d9a8",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.025,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.025,
+              0
+            ],
+            "color": "#ffffff",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nokkelkort",
+      "name": "Terjes nøkkelkort",
+      "kind": "Nøkkelkort",
+      "description": "Blått kort med «DRIFT» på. Åpner hver dør mellom deg og utgangen av etappen du er i, én gang.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 1,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "teleport",
+            "mode": "to_exit"
+          },
+          {
+            "type": "message",
+            "text": "Pip. Dør etter dør går opp, og du står ved utgangen."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#2fa3c7"
+        }
+      },
+      "rarity": "rare",
+      "value": 35,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.12,
+              0.01
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#1d4e89",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.14,
+              0.02,
+              0.012
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "matte"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "raegar",
+      "name": "Rægår fra Fiskebrygga",
+      "kind": "Ingrediens",
+      "description": "To kilo, pillet i morges, iset ned. Lukter av Skagerrak og mandag. Du må ha dem for å komme videre.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "grant_xp",
+                "amount": 10
+              },
+              {
+                "type": "message",
+                "text": "1 av 3: rægårene er dine. De må holdes kalde, så ikke somle."
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.14,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.07,
+              0
+            ],
+            "color": "#dff6ff",
+            "material": "glass"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.06,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.16,
+              0
+            ],
+            "color": "#ff9f8a",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.06,
+              0.1
+            ],
+            "pos": [
+              0.08,
+              0.16,
+              0.04
+            ],
+            "color": "#ff9f8a",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "eikefjola",
+      "name": "Serveringsfjøl i eik",
+      "kind": "Ingrediens",
+      "description": "Eik fra Søgne, pusset til 240 og oljet tre ganger av Jørgen. Retten din skal ligge på den. Du må ha den for å komme videre.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "grant_xp",
+                "amount": 10
+              },
+              {
+                "type": "message",
+                "text": "2 av 3: fjøla er din. Den lukter eik og linolje. Nå mangler bare blomstene."
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.03,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#9a6b3c",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.04,
+              0.03
+            ],
+            "pos": [
+              0.16,
+              0.03,
+              0
+            ],
+            "color": "#6b4a2b",
+            "material": "wood"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "spiselige-blomster",
+      "name": "Spiselige blomster fra E2",
+      "kind": "Ingrediens",
+      "description": "Stemorsblomster og ringblomst i en liten eske, sprø og kalde. Retten din er ikke komplett uten. Du må ha dem for å komme ut av E2.",
+      "category": "quest",
+      "useMode": "passive",
+      "passiveWhenCarried": true,
+      "triggers": [
+        {
+          "on": "on_pickup",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "grant_xp",
+                "amount": 10
+              },
+              {
+                "type": "message",
+                "text": "3 av 3: blomstene er dine. Hele retten er klar. Nå gjelder det bare å få den på bordet."
+              }
+            ]
+          }
+        }
+      ],
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.08,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.04,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.06,
+              0.04,
+              0.06
+            ],
+            "pos": [
+              -0.04,
+              0.1,
+              0
+            ],
+            "color": "#ff6f91",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.06,
+              0.04,
+              0.06
+            ],
+            "pos": [
+              0.04,
+              0.1,
+              0.02
+            ],
+            "color": "#ffd23f",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.06,
+              0.04,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.1,
+              -0.04
+            ],
+            "color": "#b48cff",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "kjokkensjefens-bord",
+      "name": "Kjøkkensjefens bord",
+      "kind": "Bord ved vinduet",
+      "description": "Bordet ved vinduet i skolerestauranten, med utsikt mot Otra. Sett retten fra deg her med rægår, fjøl og blomster i hånda, så er smaksprøven servert.",
+      "category": "quest",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "laerekontrakt-signert"
+          },
+          {
+            "type": "message",
+            "text": "Du setter fjøla på bordet. «Rægår, eik og blomster,» sier du. Kari smaker. Hun smiler sent. Så sier hun «javel»."
+          }
+        ],
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "raegar"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "eikefjola"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "spiselige-blomster"
+            }
+          ]
+        },
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.9,
+              0.06,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#9a6b3c",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.7,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.35,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.01,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.74,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "cloth"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffe8a3",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "rundt-bord",
+      "name": "Rundt bord",
+      "description": "Et av de runde bordene i Smultringen. «Tangen utvider sirkelen», står det på en lapp. Noen har lagt igjen frokost.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "frokostbrod"
+          }
+        ],
+        "condition": {
+          "type": "chance",
+          "p": 0.35
+        },
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8d3a0"
+        }
+      },
+      "color": "#9a6b3c",
+      "height": 0.8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.9,
+              0.05,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.75,
+              0
+            ],
+            "color": "#9a6b3c",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.75,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.37,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "infostand",
+      "name": "Stand for Åpen dag",
+      "description": "Et bord med brosjyrer, en rull-opp-plakat og en skål med drops. Alle linjene har en. Alle droppsskålene er tomme.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "grant_xp",
+            "amount": 5
+          },
+          {
+            "type": "message",
+            "text": "Du leser brosjyren for kokkelinja. Bildet er av deg, fra i fjor. Du så yngre ut."
+          }
+        ]
+      },
+      "color": "#1d4e89",
+      "height": 1.2,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.05,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.75,
+              0
+            ],
+            "color": "#c9cfd6",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              1.2,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.6,
+              -0.3
+            ],
+            "color": "#1d4e89",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.2,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.9,
+              -0.28
+            ],
+            "color": "#fbf8f2",
+            "material": "glow",
+            "emissive": "#fbf8f2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vaffelrore",
+      "name": "Søl av vaffelrøre",
+      "description": "Det står et gult skilt. Ingen leser det gule skiltet.",
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "klissete",
+          "duration": 1
+        }
+      ],
+      "moveCost": 2,
+      "color": "#f0d9a8"
+    },
+    {
+      "id": "kaffekanne",
+      "name": "Kaffekanna på frokostdisken",
+      "description": "Den eneste maskinen på huset som alle stoler på. Pumpa må trykkes hardt.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "kaffe"
+          },
+          {
+            "type": "noise",
+            "radius": 5
+          }
+        ],
+        "condition": {
+          "type": "chance",
+          "p": 0.6
+        }
+      },
+      "color": "#5a3a22",
+      "height": 1.1,
+      "emissive": "#ffcc88",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.8,
+              0.9,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#c9cfd6",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.18,
+              0.35,
+              0.18
+            ],
+            "pos": [
+              0,
+              1.07,
+              0
+            ],
+            "color": "#5a3a22",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.04,
+              0.1
+            ],
+            "pos": [
+              0,
+              1.26,
+              0.1
+            ],
+            "color": "#1a1a1a",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "stillas",
+      "name": "Stillas",
+      "description": "Et øvingsstillas fra Vg1. Montert riktig, tror alle. Ingen har sjekket.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#7a7a7a",
+      "height": 1.6,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.95,
+              1.6,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#8a8a8a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.05,
+              0.85
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#c9a86a",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.05,
+              0.85
+            ],
+            "pos": [
+              0,
+              1.55,
+              0
+            ],
+            "color": "#c9a86a",
+            "material": "wood"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sagflishaug",
+      "name": "Sagflishaug",
+      "description": "Fra en uke med gjærsag. Myk, varm og umulig å gå fort i.",
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "sagflis-i-oyet",
+          "duration": 1
+        }
+      ],
+      "moveCost": 2,
+      "color": "#e8d3a0"
+    },
+    {
+      "id": "verktoytavle",
+      "name": "Verktøytavle",
+      "description": "Omriss av hvert verktøy, tegnet med tusj. Halvparten av verktøyene henger der. En vest henger der også, noen ganger.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "hms-vest"
+          }
+        ],
+        "condition": {
+          "type": "chance",
+          "p": 0.2
+        },
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd23f"
+        }
+      },
+      "color": "#3b3b3b",
+      "height": 1.5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.95,
+              1.5,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.75,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.4,
+              0.09
+            ],
+            "pos": [
+              -0.2,
+              0.9,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.5,
+              0.04
+            ],
+            "pos": [
+              0.25,
+              0.8,
+              0.02
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "frisorstol",
+      "name": "Frisørstol",
+      "description": "Svart skinn, pumpe i foten og en kappe over ryggen. Kunden gikk til lunsj midt i klippen.",
+      "walkable": false,
+      "color": "#1a1a1a",
+      "height": 1.0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.12,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.5,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.8,
+              -0.24
+            ],
+            "color": "#1a1a1a",
+            "material": "cloth"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.4,
+              0.05,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.45,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.27,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "blomsterbotte",
+      "name": "Blomsterbøtte",
+      "description": "Sinkbøtte med eukalyptus og roser til Åpen dag-buketter. Lukter rolig.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2
+            }
+          },
+          {
+            "type": "message",
+            "text": "Du lukter på blomstene. Eukalyptus. Pulsen går ned. Elin nikker."
+          }
+        ]
+      },
+      "color": "#6fbf73",
+      "height": 0.9,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.4,
+              0.5,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#8a8a8a",
+            "material": "metal"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.5,
+              0.4,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#6fbf73",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              0.1,
+              0.85,
+              0.1
+            ],
+            "color": "#ff6f91",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.12,
+              0.12,
+              0.12
+            ],
+            "pos": [
+              -0.12,
+              0.8,
+              -0.05
+            ],
+            "color": "#ffd23f",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vindusbord",
+      "name": "Bord ved vinduet",
+      "description": "Hvit duk, to glass, utsikt mot Otra og kranene på Tangen Torv. Her sitter de som skal smake.",
+      "walkable": false,
+      "color": "#fbf8f2",
+      "height": 0.8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.05,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.75,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.75,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.37,
+              0
+            ],
+            "color": "#9a6b3c",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.15,
+              0.06
+            ],
+            "pos": [
+              0.2,
+              0.85,
+              0.1
+            ],
+            "color": "#dff6ff",
+            "material": "glass"
+          }
+        ]
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "brett": [
+      {
+        "label": "Brett med lapp: «TIL SENSOR»",
+        "color": "#ffd6ec"
+      },
+      {
+        "label": "Brett som er varmt av seg selv",
+        "color": "#9fb8a0"
+      },
+      {
+        "label": "Brett med en kopp uten skål",
+        "color": "#5a3a22"
+      },
+      {
+        "label": "Brett med et navn som er strøket over",
+        "color": "#dff6ff"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Smultringen (kl. 10.00)",
+      "description": "Atriet midt i skolen, rundt og med glasstak, seks etasjer med gelender rundt. Åpen dag: stander for alle linjene, tiendeklassinger med foreldre, gratis frokost som aldri tok slutt. Et sted bak frokostkøen står rægårene dine i kjøledisken til Himmel og hav.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 2,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#c9cfd6",
+        "color2": "#b7bec7",
+        "material": "stone",
+        "pattern": "tiles"
+      },
+      "wall": {
+        "color": "#e9e4d8",
+        "color2": "#9fb8c9",
+        "material": "glass",
+        "height": 1.6
+      },
+      "lighting": {
+        "ambient": "#eef4ff",
+        "ambientIntensity": 0.9,
+        "lamps": {
+          "color": "#fff8e0",
+          "intensity": 1.2,
+          "frequency": 0.2,
+          "flicker": false
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "tiendeklassing",
+          "weight": 40,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "forelder",
+          "weight": 25,
+          "min": 0,
+          "max": 1
+        },
+        {
+          "actor": "fravaersvarsel",
+          "weight": 20,
+          "min": 0,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "terje",
+          "where": "near_start"
+        },
+        {
+          "actor": "bente",
+          "where": "centre"
+        },
+        {
+          "actor": "frokostkoen",
+          "where": "far"
+        },
+        {
+          "actor": "monica",
+          "where": "anywhere"
+        },
+        {
+          "actor": "lene",
+          "where": "anywhere"
+        },
+        {
+          "actor": "rektor",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "vaffel",
+          "weight": 30
+        },
+        {
+          "item": "kaffe",
+          "weight": 15
+        },
+        {
+          "item": "frokostbrod",
+          "weight": 20
+        },
+        {
+          "item": "flekkfjerner",
+          "weight": 15
+        },
+        {
+          "item": "menykort",
+          "weight": 12
+        },
+        {
+          "item": "konditorbollen",
+          "weight": 8
+        },
+        {
+          "item": "restesuppa",
+          "weight": 6
+        },
+        {
+          "item": "dobbel-espresso",
+          "weight": 8
+        },
+        {
+          "item": "navneskilt",
+          "weight": 5
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "raegar",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "rundt-bord",
+          "density": 0.015
+        },
+        {
+          "terrain": "infostand",
+          "density": 0.008
+        },
+        {
+          "terrain": "vaffelrore",
+          "density": 0.015
+        },
+        {
+          "terrain": "kaffekanne",
+          "density": 0.004
+        }
+      ],
+      "transitionName": "Ta heisen ned til byggverkstedene",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "raegar"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              1.9,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.95,
+              0
+            ],
+            "color": "#c9cfd6",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.02,
+              1.7,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.1,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.75,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ],
+        "light": {
+          "color": "#fff2c8",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Åpen dag, formiddag. Terje gir HMS-vest og nøkkelkort og vet hvor rægårene og fjøla er. Bente selger vafler og sladder. Rægårene står i kjøledisken bak Frokostkøen; køen må avfeies. Rektor sier hei til alle. Ingen vold: konflikter er spørsmål, kø og kleinhet. Et sørlandsk uttrykk nå og da («Javel! Se det!»).",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#9fb8c9",
+        "color2": "#e9e4d8",
+        "intensity": 0.4
+      },
+      "music": "upbeat"
+    },
+    {
+      "name": "Byggverkstedene (kl. 11.30)",
+      "description": "Nederste etasje, åtte Vg1-klasser i bygg og anlegg, stillas, gjærsag og en betongblander som ingen slår av. Tiendeklassingene går omvisning i gule vester. Serveringsfjøla di ligger under en plank som nekter å innrømme at den er skjev.",
+      "generator": "rooms",
+      "size": "medium",
+      "params": {
+        "roomCount": 8,
+        "corridorWidth": 2
+      },
+      "floor": {
+        "color": "#8a8a8a",
+        "color2": "#7a7a7a",
+        "material": "stone",
+        "pattern": "plain"
+      },
+      "wall": {
+        "color": "#b0b8c0",
+        "color2": "#ff9f43",
+        "material": "metal",
+        "height": 1.8
+      },
+      "lighting": {
+        "ambient": "#e0e8f0",
+        "ambientIntensity": 0.7,
+        "lamps": {
+          "color": "#ffffff",
+          "intensity": 1.5,
+          "frequency": 0.18,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#d8cfb8",
+          "density": 0.012
+        }
+      },
+      "actors": [
+        {
+          "actor": "spikerpistol",
+          "weight": 30,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "sagflissky",
+          "weight": 35,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "betongblander",
+          "weight": 20,
+          "min": 0,
+          "max": 1
+        },
+        {
+          "actor": "tiendeklassing",
+          "weight": 15,
+          "min": 0,
+          "max": 2
+        },
+        {
+          "actor": "fravaersvarsel",
+          "weight": 10,
+          "min": 0,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "jorgen",
+          "where": "near_start"
+        },
+        {
+          "actor": "andreas",
+          "where": "anywhere"
+        },
+        {
+          "actor": "vaterplanken",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "vaffel",
+          "weight": 22
+        },
+        {
+          "item": "kaffe",
+          "weight": 12
+        },
+        {
+          "item": "flekkfjerner",
+          "weight": 15
+        },
+        {
+          "item": "menykort",
+          "weight": 10
+        },
+        {
+          "item": "konditorbollen",
+          "weight": 6
+        },
+        {
+          "item": "dobbel-espresso",
+          "weight": 8
+        },
+        {
+          "item": "serviettsvane",
+          "weight": 6
+        },
+        {
+          "item": "osa",
+          "weight": 5
+        },
+        {
+          "item": "hennig-olsen",
+          "weight": 4
+        },
+        {
+          "item": "nokkelkort",
+          "weight": 2
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "eikefjola",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "stillas",
+          "density": 0.03
+        },
+        {
+          "terrain": "sagflishaug",
+          "density": 0.03
+        },
+        {
+          "terrain": "verktoytavle",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Gå ned Elvegata til Studio E2",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "eikefjola"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.8,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#2f4f6f",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              0.3,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.5,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ],
+        "light": {
+          "color": "#fff2c8",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Verkstedene til bygg- og anleggsteknikk, åtte parallelle Vg1-klasser. Jørgen vet at fjøla ligger under Planken som ikke er i vater; planken må avfeies. Andreas fra 2TMA kan bli med og bære. Støy og sagflis er fiendene, ikke folk. Hold tonen varm: tømrerne er de roligste på huset.",
+      "backdrop": {
+        "style": "color",
+        "color": "#6a6a6a",
+        "intensity": 0.3
+      },
+      "music": "explore"
+    },
+    {
+      "name": "Studio E2 i Elvegata (kl. 13.00)",
+      "description": "Skolens egen salong, blomsterbutikk, interiørstudio og kafé, med ekte kunder og vaffellukt ut i gata. Hårspray fra Åpen dag-oppsettingen henger i lufta, en hårføner har kommet seg løs, og blomstene dine ligger i kjøleren bak en krøllsaks som noen glemte på.",
+      "generator": "rooms",
+      "size": "medium",
+      "params": {
+        "roomCount": 7,
+        "corridorWidth": 1
+      },
+      "floor": {
+        "color": "#d9cdbf",
+        "color2": "#c9bdaf",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#fbf8f2",
+        "color2": "#ff6f91",
+        "material": "stone",
+        "height": 1.6
+      },
+      "lighting": {
+        "ambient": "#fff0f5",
+        "ambientIntensity": 0.85,
+        "lamps": {
+          "color": "#ffd9e8",
+          "intensity": 1.6,
+          "frequency": 0.22,
+          "flicker": false
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#f3c6ff",
+          "density": 0.012
+        }
+      },
+      "actors": [
+        {
+          "actor": "harfoner",
+          "weight": 30,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "harspraysky",
+          "weight": 35,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "moodboard",
+          "weight": 25,
+          "min": 1,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "elin",
+          "where": "near_start"
+        },
+        {
+          "actor": "kjetil",
+          "where": "anywhere"
+        },
+        {
+          "actor": "nina",
+          "where": "anywhere"
+        },
+        {
+          "actor": "krollsaksa",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "vaffel",
+          "weight": 25
+        },
+        {
+          "item": "kaffe",
+          "weight": 12
+        },
+        {
+          "item": "flekkfjerner",
+          "weight": 15
+        },
+        {
+          "item": "menykort",
+          "weight": 8
+        },
+        {
+          "item": "serviettsvane",
+          "weight": 8
+        },
+        {
+          "item": "konditorbollen",
+          "weight": 6
+        },
+        {
+          "item": "hennig-olsen",
+          "weight": 5
+        },
+        {
+          "item": "forkle",
+          "weight": 4
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "spiselige-blomster",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "frisorstol",
+          "density": 0.02
+        },
+        {
+          "terrain": "blomsterbotte",
+          "density": 0.015
+        }
+      ],
+      "transitionName": "Løp tilbake over Tangen til skolerestauranten",
+      "transitionRequires": {
+        "type": "has_item",
+        "who": "player",
+        "item": "spiselige-blomster"
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              1.8,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#2fa3c7",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.2,
+              0.1
+            ],
+            "pos": [
+              0,
+              1.5,
+              0
+            ],
+            "color": "#fbf8f2",
+            "material": "glow",
+            "emissive": "#fbf8f2"
+          }
+        ],
+        "idle": "pulse",
+        "light": {
+          "color": "#2fa3c7",
+          "intensity": 1.4,
+          "radius": 2.5
+        }
+      },
+      "gmNotes": "Studio E2 i Elvegata: elevdrevet salong, blomsterbutikk, interiørstudio og kafé med ekte kunder. Elin heler én gang. Kjetil selger forkle, vafler og flekkfjerner. Nina vet at blomstene ligger bak Krøllsaksa i kjøleren; saksa må avfeies. Hold det lekent: ingen her er slemme, bare varme, høylytte og fulle av hårspray.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#f3c6ff",
+        "color2": "#fbf8f2",
+        "intensity": 0.4
+      },
+      "music": "calm"
+    },
+    {
+      "name": "Skolerestauranten (kl. 14.00)",
+      "description": "Hvite duker, utsikt mot Otra og kranene på Tangen Torv. Kjøkkensjefen fra Fiskebrygga sitter ved vinduet. Marius har tre tallerkener med skum ved bord fire. Og mellom deg og vindusbordet står nervene dine, og de har vokst.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.2,
+        "sideRooms": 0.4
+      },
+      "floor": {
+        "color": "#3a2e26",
+        "color2": "#4a3a30",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#1d4e89",
+        "color2": "#f0d9a8",
+        "material": "stone",
+        "height": 2
+      },
+      "lighting": {
+        "ambient": "#8aa8c8",
+        "ambientIntensity": 0.55,
+        "lamps": {
+          "color": "#ffe8a3",
+          "intensity": 2,
+          "frequency": 0.2,
+          "flicker": false
+        },
+        "playerLight": 3,
+        "fog": {
+          "color": "#2a3a4a",
+          "density": 0.012
+        }
+      },
+      "actors": [
+        {
+          "actor": "forelder",
+          "weight": 35,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "tiendeklassing",
+          "weight": 30,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "fravaersvarsel",
+          "weight": 20,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "intervjunervene",
+          "where": "near_exit"
+        },
+        {
+          "actor": "kari",
+          "where": "centre"
+        },
+        {
+          "actor": "jonas",
+          "where": "near_start"
+        },
+        {
+          "actor": "siri",
+          "where": "anywhere"
+        },
+        {
+          "actor": "bente",
+          "where": "anywhere"
+        },
+        {
+          "actor": "marius",
+          "where": "anywhere"
+        }
+      ],
+      "items": [
+        {
+          "item": "vaffel",
+          "weight": 30
+        },
+        {
+          "item": "flekkfjerner",
+          "weight": 20
+        },
+        {
+          "item": "serviettsvane",
+          "weight": 15
+        },
+        {
+          "item": "hennig-olsen",
+          "weight": 6
+        }
+      ],
+      "itemCount": 3,
+      "placedItems": [
+        {
+          "item": "kjokkensjefens-bord",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "vindusbord",
+          "density": 0.02
+        },
+        {
+          "terrain": "vaffelrore",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Gå ut på kjøkkenet",
+      "gmNotes": "Finalen, uten vold. To veier: avfei Intervjunervene foran alle, eller gå til Kjøkkensjefens bord ved vinduet og bruk det med rægår, fjøl og blomster i hånda. Marius kan overtales; han er egentlig lettet. Kari sier lite og venter. Jonas kan bli med. Siri teller rektors hei-er.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#2a3a4a",
+        "color2": "#8aa8c8",
+        "intensity": 0.5
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Hent rægårene, fjøla og blomstene før klokka to. Server så retten: avfei Intervjunervene, eller bruk Kjøkkensjefens bord i skolerestauranten med alle tre i hånda.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "raegar"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "eikefjola"
+            },
+            {
+              "type": "has_item",
+              "who": "player",
+              "item": "spiselige-blomster"
+            },
+            {
+              "type": "actor_defeated",
+              "actor": "intervjunervene"
+            }
+          ]
+        },
+        {
+          "type": "flag",
+          "flag": "laerekontrakt-signert"
+        }
+      ]
+    },
+    "winText": "Du går bort til vindusbordet med fjøla i hendene: rægår fra Fiskebrygga, eik fra Søgne, tre blomster fra E2. «Rægår, eik og blomster,» sier du, uten å lese. Kari smaker. Hun smiler sent. «Javel,» sier hun. «Se det.» Marius klapper først, med skum på fingrene. Bente setter en vaffel foran deg uten å si noe. Rektor sier hei til Kari. HEI, JA og VI, tenker du. Mest vi.",
+    "lossText": "Klokka blir to, og så halv tre. Kari ser på klokka, takker for kaffen og smaker på Marius sitt skum. Det er faktisk ganske godt. Du står i gangen med jakka halvt hvit og hører henne si «javel» til feil tallerken. Neste år, tenker du. Neste år bærer du rægårene selv.",
+    "labels": {
+      "laerekontrakt-signert": "Retten er servert ved vindusbordet"
+    },
+    "lose": {
+      "type": "turn",
+      "cmp": "gte",
+      "value": 1800
+    },
+    "deathText": "Roen tar slutt midt i Smultringen, under glasstaket, med fire hundre tiendeklassinger som ser på. Du går hjem over Tangen, kjøper en Hennig-Olsen på Bystranda og ser Åpen dag på andres story. Marius får plassen. Han lager skum av gleden."
+  },
+  "gm": {
+    "persona": "Smultringen selv: det runde atriet med glasstak midt på Tangen vgs, bygd på stålpæler sytti meter ned i leira i 2009, som har hørt tusen elever le på én gang og vet hvor alt på huset står. Snakker som en rolig, tørr sørlending som har god tid.",
+    "voice": "Presens, du-form, korte setninger. Av og til et sørlandsk uttrykk med forklaring i parentes. Aldri slem mot elevene, litt slem mot køer og krøllsakser.",
+    "threads": [
+      "Retten er spredd på tre steder, og hvert sted har sin egen form for travelhet.",
+      "Marius er egentlig lettet hvis Selma vinner, og tør ikke si det.",
+      "HEI, JA og VI dukker opp der man minst venter det, og virker hver gang.",
+      "Kjøkkensjefen har god tid. Det er alle andre som ikke har det."
+    ],
+    "fallback": {
+      "intro": "Torsdag, klokka ti. Åpen dag på Tangen, og om fire timer kommer kjøkkensjefen fra Fiskebrygga for å smake på retten din. Rægårene ble levert i kantina og står bak frokostkøen. Fjøla ligger i byggverkstedet. Blomstene er på E2. Javel (greit, da). Se det (så får vi se).",
+      "areaEnter": [
+        "Smultringen, klokka ti. Glasstaket slipper inn novemberlys, seks etasjer med gelender ser ned på deg, og frokostkøen står der ennå. Bak den, i kjøledisken, lukter det Skagerrak.",
+        "Byggverkstedene, halv tolv. Det lukter eik, betong og gul vest. Gjærsaga synger i et rom lenger inne, og en plank ligger skjevt over to bukker og later som ingenting.",
+        "Elvegata, klokka ett. Studio E2 lukter vafler og jordbærhårspray. En hårføner har kommet seg løs, og kjøleren bakerst er varm på feil måte.",
+        "Klokka to. Skolerestauranten har hvite duker og utsikt mot Otra. Kari sitter ved vinduet. Marius står ved bord fire med skum. Og rett foran deg står nervene dine, og de har vokst."
+      ],
+      "lowHp": [
+        "Roen er nesten borte. Vi bare ser (det ordner seg). Ta en vaffel.",
+        "Hendene skjelver. Ingen husker dette i morgen. Nesten ingen."
+      ],
+      "events": [
+        "Høyttaleren skraper: «Omvisning for tiendeklasse starter ved Smultringen nå.» Alle tiendeklassingene står allerede der.",
+        "Mobilen vibrerer. Klassechatten 2KOA: «har du rægårene??» «marius har laget skum av VAFFEL» «hun fra fiskebrygga har spist tre vafler»",
+        "Langt borte slår betongblanderen seg av. Alle i bygget hører stillheten.",
+        "Noen har skrevet HEI JA VI på en serviett og lagt den igjen på et rundt bord. Du føler deg merkelig styrket."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Lett skolekomedie med sjø i bakgrunnen: pizzicato og klokkespill, en vaffeljern-rytme, og en kjøkkenbass som kommer nærmere klokka to.",
+    "synth": {
+      "key": "D",
+      "scale": "mixolydian",
+      "tempo": 116,
+      "timbre": "pluck",
+      "drone": false,
+      "percussion": "soft",
+      "brightness": 0.7
+    },
+    "searchTerms": [
+      "skolekomedie instrumental",
+      "kjøkken jazz lett",
+      "sørlandet sommer instrumental"
+    ],
+    "suggestions": [
+      "Lys pluck-melodi over myke trommer, med en varm bass i restauranten."
+    ]
+  }
+}

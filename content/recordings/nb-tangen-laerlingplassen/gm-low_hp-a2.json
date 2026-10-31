@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:low_hp/nb-tangen-laerlingplassen/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Roen er nesten borte, og jakka er ikke hvit lenger. Vi bare ser (det ordner seg). Ta en vaffel fra Kjetil. Blomster tåler mer enn du tror, og det gjør du også."
+          }
+        ]
+      }
+    }
+  ]
+}

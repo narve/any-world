@@ -8,7 +8,7 @@ narrates, voices characters and sometimes changes the rules. A deterministic eng
 playable and fair.
 
 The AI writes only structured, validated data (a *World Spec*). It never writes code. Normal turns
-never wait for the AI. With no AI at all, the 19 recorded demo worlds play with recorded narration.
+never wait for the AI. With no AI at all, the 21 recorded demo worlds play with recorded narration.
 Friends can also **play one run together** in a room: everyone moves at once, chats, and nobody waits.
 
 Play it at **https://any-game.dv8.no** (the owner's server, with multiplayer rooms; creating new AI

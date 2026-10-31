@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:idle/nb-kuben-valget/a0",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Et sted i glassgata durer et spjeld som er for stort for kanalen sin. Det har durt siden 2013. Ingen hører det lenger, unntatt deg og Knut."
+          }
+        ]
+      }
+    }
+  ]
+}

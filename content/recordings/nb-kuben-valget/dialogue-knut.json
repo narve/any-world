@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-kuben-valget/knut",
+      "json": {
+        "reply": "Nei men, kandidaten. Du er den eneste på huset som har spurt om spjeldene siden 2015. Stemmesedlene? Bak slushmaskinen, jeg så dem flytte den. Og ned i verkstedene må du forbi HMS-skjermen, den slipper ingen forbi før de har svart. Ta et nøkkelkort, så slipper du trappene. Og si det med ventilasjonen fra talerstolen. Én setning.",
+        "options": [
+          "Takk, Knut. Ventilasjonen får en hel setning. Minst.",
+          "Hva er egentlig galt med spjeldene?",
+          "Hvor er trappa ned til verkstedene?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

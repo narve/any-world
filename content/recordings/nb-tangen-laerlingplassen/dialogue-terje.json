@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-tangen-laerlingplassen/terje",
+      "json": {
+        "reply": "Nei men, kokken. Du ser ut som en som har mista noe. Rægårene? De står i kantina, jeg så bilen. Fjøla di ligger nede i treteknikkrommet, under planken som ikke er i vater. Jeg har sagt det siden august. Ta en vest, vennen, så slipper jeg å skrive avvik. Og si hei til Jørgen fra meg.",
+        "options": [
+          "Takk, Terje. Har du et nøkkelkort til overs?",
+          "Hvorfor er planken ikke i vater?",
+          "Jeg skal takke driftsavdelingen. Lover."
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

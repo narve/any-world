@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-kuben-valget/espen",
+      "json": {
+        "reply": "Sett deg. Hold i benken, det blåser. Se der borte: TILLIT, står det på Økerntårnet. Det er et greit ord å ta med seg ned igjen. Stemmesedlene fra ST ligger bak plakaten til Henrik i gjerdet. Plakaten gir seg når du står på deg. Vinden gjør det ikke, så ikke bruk kreftene på den.",
+        "options": [
+          "Hvordan får jeg plakaten til å gi seg?",
+          "Takk. Jeg trengte å sette meg.",
+          "Har Henrik vært her oppe?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

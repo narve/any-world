@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-kuben-valget/bjorn",
+      "json": {
+        "reply": "Kandidaten, ja. Stemmesedlene fra bygg og elektro ligger bak HMS-skjermen ved døra, der alle må se modul 3 før de får gå inn. Den slipper deg ikke forbi før du har svart. Svar rolig, det er det den tåler dårligst. Og hold deg unna KUBE-3, den er ikke farlig, bare ivrig.",
+        "options": [
+          "Hvordan får jeg skjermen til å gi seg?",
+          "Kan Tobias bli med og bære?",
+          "Har du lest forslaget mitt om ventilasjonen?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

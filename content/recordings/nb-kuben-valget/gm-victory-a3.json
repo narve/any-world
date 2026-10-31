@@ -1,0 +1,19 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:victory/nb-kuben-valget/a3",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Det blir stille i hele Sentralen. Seksten stemmer, et forslag på to sider og en setning som sitter: «Jeg vil ikke fjerne slushen. Jeg vil fikse lufta.» Henrik klapper først, med en slush i hver hånd. Glassgata har sett tolv elevrådsvalg. Dette er det første som handlet om luft."
+          },
+          {
+            "type": "mood",
+            "music": "upbeat"
+          }
+        ]
+      }
+    }
+  ]
+}

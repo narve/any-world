@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-kuben-valget/hege",
+      "json": {
+        "reply": "Bolle, vennen? Du ser ut som du trenger to. Og nei, jeg tror ikke du vil fjerne slushen, det ville jeg ha hørt. Henriks folk flyttet maskinen min ut i gata i storefri, og stemmesedlene dine ligger bak den. Svar den rolig, så går den over på «RENS» av seg selv.",
+        "options": [
+          "To boller, takk. Og en powerbank, hvis du har.",
+          "Hvordan får jeg slushmaskinen til å gi seg?",
+          "Vet du hvem som startet ryktet?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

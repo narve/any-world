@@ -1,0 +1,21 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-kuben-valget/henrik",
+      "json": {
+        "reply": "Sara! Hei! Serr, det der med slushen, det var ikke meg som skrev det. Altså, det var meg, men i en gruppechat, og jeg angret etter to minutter. Men du vil vel ikke fjerne den, ass? Bare si det, så sier jeg det videre. Jeg har ikke lest forslaget ditt om ventilasjonen. Det er på to sider.",
+        "options": [
+          "Henrik. Jeg vil ikke fjerne slushen. Jeg vil fikse lufta.",
+          "Du kan få slush på fredager. Hvis du leser forslaget.",
+          "To sider? Det er kortversjonen."
+        ],
+        "actions": [
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

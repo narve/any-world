@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-tangen-laerlingplassen/kari",
+      "json": {
+        "reply": "Hei. Jeg har god tid. Det er du som har dårlig tid. Jeg tar inn én lærling i år, og jeg bryr meg ikke om skum. Jeg bryr meg om rægår som smaker rægår, og om folk som tør å sette tallerkenen på bordet og si hva som er på den. Når du er klar. Ikke før.",
+        "options": [
+          "Rægår, eik og blomster. Jeg er klar.",
+          "Hva er det du egentlig ser etter?",
+          "Har du smakt på Marius sitt skum?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

@@ -239,8 +239,8 @@ describe('applyEntry', () => {
 describe('worlds on the wire', () => {
   const files = readdirSync(WORLDS).filter((f) => f.endsWith('.json')).sort();
 
-  it('ships 21 worlds', () => {
-    expect(files).toHaveLength(21);
+  it('ships 23 worlds', () => {
+    expect(files).toHaveLength(23);
   });
 
   it.each(files)('%s: parseWorld is idempotent and worldIdOf stable', (file) => {

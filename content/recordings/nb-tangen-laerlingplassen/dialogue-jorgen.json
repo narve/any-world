@@ -1,0 +1,16 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-tangen-laerlingplassen/jorgen",
+      "json": {
+        "reply": "Javel, kokk. Fjøla di er eik fra Søgne, pusset til 240 og oljet tre ganger. Den ligger under planken der borte. Planken ligger skjevt over to bukker og nekter å flytte seg før noen innrømmer at den er i vater. Den er ikke i vater. Snakk tydelig til den, ikke høyt. Eik hører forskjell.",
+        "options": [
+          "Hvordan får jeg planken til å gi seg?",
+          "Tre ganger olje? Takk, Jørgen.",
+          "Kan Andreas bli med og bære?"
+        ],
+        "actions": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "recordings": [
+    {
+      "purpose": "gm:death/nb-kuben-valget/a2",
+      "json": {
+        "actions": [
+          {
+            "type": "narrate",
+            "text": "Sara satte seg på benken på taket og ble sittende. Espen sa ingenting, det er sånn han er snill. Klokka to sa Henrik «slush hver dag» elleve ganger i Sentralen, og tre hundre elever klappet. TILLIT, sto det på tårnet. Det hjalp ikke akkurat da."
+          }
+        ]
+      }
+    }
+  ]
+}

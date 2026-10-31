@@ -1,0 +1,21 @@
+{
+  "recordings": [
+    {
+      "purpose": "dialogue/nb-tangen-laerlingplassen/marius",
+      "json": {
+        "reply": "Selma! Hei! Du har ikke sifon, vel? Jeg har laget skum av rægårskall, av vaffel og av … altså, det er tekstur. Jeg har tre tallerkener klare. Én med skum, én med mer skum, og én uten, i tilfelle. Hun sa «rene smaker» til Nina. Jeg vet ikke helt hva det betyr. Vet du?",
+        "options": [
+          "Marius. Rene smaker betyr uten skum.",
+          "Du kan servere sammen med meg på Åpen dag, hvis du vil.",
+          "Tre tallerkener? For én smaksprøve?"
+        ],
+        "actions": [
+          {
+            "type": "mood",
+            "music": "boss"
+          }
+        ]
+      }
+    }
+  ]
+}

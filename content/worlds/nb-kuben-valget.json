@@ -1,0 +1,5728 @@
+{
+  "specVersion": 1,
+  "meta": {
+    "title": "Kuben: Valget",
+    "tagline": "Allmøtet i Sentralen er klokka to. Du stiller som elevrådsleder, og hele skolen tror du vil fjerne slushen.",
+    "genre": "skolekomedie",
+    "tags": [
+      "skole",
+      "kuben",
+      "oslo",
+      "ikke-voldelig",
+      "sosialt",
+      "yrkesfag",
+      "elevråd",
+      "økern"
+    ],
+    "tone": "morsomt, varmt, litt vindfullt",
+    "era": "nåtid, en onsdag i oktober, valgdag på Kuben",
+    "premise": "Du er Sara, Vg2 automatisering på Kuben videregående skole på Økern, Oslos største skole, og i dag velges ny elevrådsleder på allmøtet i Sentralen klokka to. Motkandidaten er Henrik fra 3STB på BiKuben. Hans valgprogram har ett punkt: slush i kantina hver dag. Hans valgkamp har ett rykte: at du vil fjerne slushen. Du vil ikke fjerne slushen. Du vil ha ventilasjonen fikset, men det får ikke plass på en plakat. Stemmesedlene ligger spredd på fire steder: bak slushmaskinen i glassgata, i verkstedene, på taket og i Sentralen. Hver du får overbevist, er en stemme. Alt du trenger, er seksten av dem før klokka to. Og at mobilen holder til da.",
+    "prompt": "Kuben videregående skole på Økern i Oslo, valgdag: du går Vg2 automatisering og stiller som elevrådsleder mot Henrik fra 3STB, som lover slush hver dag og sprer ryktet om at du vil fjerne den. Samle seksten stemmer gjennom glassgata, verkstedene og taket før allmøtet i Sentralen klokka to, og møt ryktet der.",
+    "nonViolent": true,
+    "language": "nb"
+  },
+  "vocabulary": {
+    "stats": {
+      "str": {
+        "name": "Framtoning",
+        "abbr": "FRM",
+        "description": "Hvor godt du fyller en glassgate. Holdning, stemme og et blikk som ikke flakker."
+      },
+      "dex": {
+        "name": "Kjapphet",
+        "abbr": "KJP",
+        "description": "Hvor fort replikken kommer, og hvor fort du smetter unna en Vg1-klasse."
+      },
+      "int": {
+        "name": "Argumenter",
+        "abbr": "ARG",
+        "description": "Alt du har lest, målt og regnet på. Driver de gode svarene."
+      },
+      "hp": {
+        "name": "Humør",
+        "abbr": "HUM",
+        "description": "Hvor lenge du holder humøret oppe. På null tar du 23-bussen hjem og ser allmøtet på story."
+      },
+      "mp": {
+        "name": "Gnist",
+        "abbr": "GNI",
+        "description": "Krutt til de store øyeblikkene. Fylles sakte opp igjen."
+      },
+      "ac": {
+        "name": "Tykk hud",
+        "abbr": "HUD",
+        "description": "Hvor mye som preller av. Du har gått på Kuben i over et år."
+      }
+    },
+    "conflict": "Svar for deg",
+    "defeated": "overbevist",
+    "xp": "Respekt",
+    "levelUp": "Du vokser som kandidat",
+    "currency": "kroner",
+    "lossTitle": "Slushen vant",
+    "winTitle": "Valgt!",
+    "area": "Etappe"
+  },
+  "palette": {
+    "primary": "#2b3a55",
+    "secondary": "#b5652d",
+    "accent": "#3fd1ff",
+    "danger": "#e0453c",
+    "ui": "#1a1f2b",
+    "text": "#f7f4ee"
+  },
+  "damageTypes": [
+    {
+      "id": "physical",
+      "name": "Dytt",
+      "color": "#d6d6d6"
+    },
+    {
+      "id": "kleinhet",
+      "name": "Kleinhet",
+      "color": "#ff7aa2"
+    },
+    {
+      "id": "stress",
+      "name": "Stress",
+      "color": "#ff9f43"
+    },
+    {
+      "id": "sladder",
+      "name": "Sladder",
+      "color": "#ffd23f"
+    },
+    {
+      "id": "stoy",
+      "name": "Støy",
+      "color": "#c0c0c0"
+    },
+    {
+      "id": "kulde",
+      "name": "Kulde",
+      "color": "#3fd1ff"
+    }
+  ],
+  "statuses": [
+    {
+      "id": "flau",
+      "name": "Flau",
+      "description": "Kinnene brenner, og ordene kommer i feil rekkefølge.",
+      "harmful": true,
+      "color": "#ff8fab",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "stresset",
+      "name": "Stresset",
+      "description": "Hodet er fullt av klokkeslett. Du tenker tregere.",
+      "harmful": true,
+      "color": "#ff9f43",
+      "modifiers": [
+        {
+          "stat": "int",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "hjernefrys",
+      "name": "Hjernefrys",
+      "description": "Slush for fort. Panna verker, og du går litt i ring.",
+      "harmful": true,
+      "color": "#3fd1ff",
+      "flags": [
+        "confused"
+      ]
+    },
+    {
+      "id": "overdovet",
+      "name": "Overdøvet",
+      "description": "Ventilasjonen durer. Ingen hører hva du sier, heller ikke du (−2 Framtoning).",
+      "harmful": true,
+      "color": "#c0c0c0",
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "uten-mobil",
+      "name": "Uten mobil",
+      "description": "Batteriet er dødt. Ingen story, ingen valgkamp, ingen klokke (−2 Kjapphet).",
+      "harmful": true,
+      "color": "#555555",
+      "modifiers": [
+        {
+          "stat": "dex",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "glatt",
+      "name": "Glatt på gulvet",
+      "description": "Olje eller slush under skoene. Hvert skritt tar tid.",
+      "harmful": true,
+      "color": "#8a94a0",
+      "flags": [
+        "slowed"
+      ]
+    },
+    {
+      "id": "forblast",
+      "name": "Forblåst",
+      "description": "Vinden fra Østre Aker vei har tatt håret og halve synet.",
+      "harmful": true,
+      "color": "#9fc5e8",
+      "modifiers": [
+        {
+          "stat": "sight",
+          "amount": -3
+        }
+      ]
+    },
+    {
+      "id": "gira",
+      "name": "Gira",
+      "description": "Sukker og adrenalin. Du er overalt samtidig.",
+      "harmful": false,
+      "color": "#c6ff3a",
+      "flags": [
+        "hasted"
+      ]
+    },
+    {
+      "id": "pa-sporet",
+      "name": "På sporet",
+      "description": "Du husker hvorfor du stilte. Humøret kommer litt tilbake hver runde.",
+      "harmful": false,
+      "color": "#ffd23f",
+      "perTurn": [
+        {
+          "type": "heal",
+          "amount": {
+            "base": 1
+          }
+        }
+      ],
+      "flags": [
+        "regenerating"
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "batteri",
+      "name": "Mobilbatteri",
+      "description": "Prosent igjen på mobilen. Synker med 1 hvert 25. trekk. På 0 er du Uten mobil. Powerbank fyller på.",
+      "color": "#c6ff3a",
+      "max": 20,
+      "start": 16,
+      "perTurn": -0.04,
+      "onEmpty": [
+        {
+          "type": "apply_status",
+          "status": "uten-mobil",
+          "duration": 6
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "mobilen-skal-holde",
+      "name": "Mobilen skal holde til to",
+      "description": "Mobilbatteri synker med 1 hvert 25. trekk. Står det på 0, er du Uten mobil (−2 Kjapphet) til du finner en powerbank.",
+      "playerTriggers": [],
+      "switches": {}
+    },
+    {
+      "id": "hver-overbevist-er-en-stemme",
+      "name": "Hver overbevist er en stemme",
+      "description": "Hver gang du overbeviser noen som sto i veien, får du 1 stemme. Stemmesedlene du finner, gir flere.",
+      "playerTriggers": [
+        {
+          "on": "on_kill",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "counter",
+                "counter": "stemmer",
+                "add": 1
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#ffd23f"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "verbs": {
+    "talk": true,
+    "sneak": false,
+    "search": true,
+    "persuade": true
+  },
+  "player": {
+    "name": "Sara",
+    "title": "Vg2 automatisering, kandidat til elevrådsleder",
+    "description": "Andreklassing på elektro og datateknologi. Har multimeter i sekken, et valgprogram på to sider og et forslag om ventilasjonen som ingen vil høre om. Sier «ass» når hun er sikker og «serr?» når hun ikke er det.",
+    "stats": {
+      "str": 11,
+      "dex": 12,
+      "int": 13,
+      "hp": 30,
+      "mp": 14,
+      "ac": 11
+    },
+    "mpRegenEvery": 5,
+    "hpRegenEvery": 9,
+    "sight": 8,
+    "unarmed": {
+      "name": "Sukk",
+      "verb": "sukker høyt mot",
+      "damage": {
+        "dice": "1d3"
+      },
+      "damageType": "kleinhet"
+    },
+    "startingItems": [
+      {
+        "item": "valgprogrammet",
+        "equipped": true
+      },
+      {
+        "item": "hettegenser",
+        "equipped": true
+      },
+      {
+        "item": "valgtalen"
+      },
+      {
+        "item": "kanelbolle",
+        "count": 2
+      },
+      {
+        "item": "powerbank",
+        "count": 1
+      }
+    ],
+    "startCurrency": 15,
+    "growth": {
+      "firstLevelXp": 28,
+      "curve": 1.55,
+      "hpPerLevel": 5,
+      "mpPerLevel": 2,
+      "choices": 3,
+      "perks": [
+        {
+          "id": "debattrutine",
+          "name": "Debattrutine",
+          "description": "Du har stått i glassgata og svart før. +2 Argumenter.",
+          "modifiers": [
+            {
+              "stat": "int",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "ta-rommet",
+          "name": "Ta rommet",
+          "description": "Du fyller selv Sentralen. +2 Framtoning.",
+          "modifiers": [
+            {
+              "stat": "str",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "kjapp-i-replikken",
+          "name": "Kjapp i replikken",
+          "description": "Svaret kommer før spørsmålet er ferdig. +2 Kjapphet.",
+          "modifiers": [
+            {
+              "stat": "dex",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "tykkere-hud",
+          "name": "Tykkere hud",
+          "description": "Du har lest kommentarfeltet. +1 Tykk hud.",
+          "modifiers": [
+            {
+              "stat": "ac",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "allmotestemme",
+          "name": "Allmøtestemme",
+          "description": "Du lærer å snakke til tre hundre på én gang. Alle foran deg blir flaue.",
+          "grantItems": [
+            "allmotestemmen"
+          ]
+        },
+        {
+          "id": "verdibevisst",
+          "name": "Respekt, ansvar, omsorg",
+          "description": "Skolens tre ord. Sagt høyt heler de deg og setter deg på sporet.",
+          "grantItems": [
+            "verdiene"
+          ]
+        },
+        {
+          "id": "lader-i-sekken",
+          "name": "Lader i sekken",
+          "description": "Du fant en stikkontakt. +6 Mobilbatteri, én gang per hundre trekk.",
+          "triggers": [
+            {
+              "on": "on_turn",
+              "every": 100,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "resource",
+                    "resource": "batteri",
+                    "amount": {
+                      "base": 6
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "pauserutine",
+          "name": "Pauserutine",
+          "description": "Du tar storefri på alvor. Hver 12. runde får du 1 Humør tilbake.",
+          "triggers": [
+            {
+              "on": "on_turn",
+              "every": 12,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "heal",
+                    "amount": {
+                      "base": 1
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "godt-humor",
+          "name": "Godt humør",
+          "description": "Det er lættis, egentlig. +6 Humør.",
+          "modifiers": [
+            {
+              "stat": "hp",
+              "amount": 6
+            }
+          ]
+        },
+        {
+          "id": "folkeprat",
+          "name": "Folkeprat",
+          "description": "Hver gang du overbeviser noen, er det 1 av 2 sjanse for én stemme til.",
+          "triggers": [
+            {
+              "on": "on_kill",
+              "chance": 0.5,
+              "action": {
+                "targeting": {
+                  "shape": "self",
+                  "affects": "self_only",
+                  "range": 0
+                },
+                "effects": [
+                  {
+                    "type": "counter",
+                    "counter": "stemmer",
+                    "add": 1
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "model": {
+      "archetype": "humanoid",
+      "humanoid": {
+        "height": 0.9,
+        "build": "slim",
+        "skin": "#c89a70",
+        "top": "#2b3a55",
+        "bottom": "#1a1a1a",
+        "hair": "#120d0b",
+        "hairStyle": "long",
+        "headwear": "none",
+        "outfit": "plain",
+        "holding": "phone",
+        "accent": "#b5652d"
+      }
+    }
+  },
+  "actors": [
+    {
+      "id": "vg1-elev",
+      "name": "Vg1-elev med spørsmål om slush",
+      "description": "Har gått på Kuben i åtte uker og har hørt at du vil fjerne slushen. Vil vite om det er sant, om det gjelder blå også, og om du er ekte kandidat.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 6,
+        "ac": 10,
+        "str": 6,
+        "dex": 12,
+        "int": 7
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Spørsmål om slushen",
+        "verb": "spør om slushen til",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "stress"
+      },
+      "behaviour": {
+        "type": "pack",
+        "erratic": 0.15
+      },
+      "loot": [
+        {
+          "item": "slush",
+          "chance": 0.15
+        }
+      ],
+      "xp": 4,
+      "tags": [
+        "elev"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.72,
+          "build": "slim",
+          "skin": "#e8b996",
+          "top": "#3fa9f5",
+          "bottom": "#2b2b6b",
+          "hair": "#d8b25a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "phone"
+        }
+      }
+    },
+    {
+      "id": "storyen",
+      "name": "Story som sprer seg",
+      "description": "Et skjermbilde av valgplakaten din med teksten «SARA VIL FJERNE SLUSHEN??» som flyr fra mobil til mobil gjennom glassgata. Det har 340 visninger. Nå har det 341.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 9,
+        "ac": 12,
+        "str": 6,
+        "dex": 14,
+        "int": 10
+      },
+      "speed": 130,
+      "attack": {
+        "name": "Deling",
+        "verb": "deler videre til",
+        "damage": {
+          "base": 1,
+          "dice": "1d3"
+        },
+        "damageType": "sladder"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.3
+      },
+      "xp": 5,
+      "tags": [
+        "rykte"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#ffd23f",
+          "secondary": "#ffffff"
+        },
+        "idle": "hover",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "ventilasjonsduren",
+      "name": "Ventilasjonsduren",
+      "description": "Et VAV-spjeld som er for stort for kanalen sin, akkurat som i 2013. Det durer gjennom hele gata og gjør det umulig å høre et argument.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 12,
+        "ac": 12,
+        "str": 8,
+        "dex": 10,
+        "int": 3
+      },
+      "speed": 90,
+      "attack": {
+        "name": "Dur",
+        "verb": "durer over",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "stoy"
+      },
+      "behaviour": {
+        "type": "wanderer",
+        "erratic": 0.3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.3,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "status": "overdovet",
+                "duration": 3
+              }
+            ],
+            "vfx": {
+              "kind": "ring",
+              "color": "#c0c0c0"
+            }
+          }
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "bygg",
+        "ventilasjon"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#8a94a0",
+          "secondary": "#c0c0c0"
+        },
+        "idle": "pulse",
+        "scale": 1.0
+      }
+    },
+    {
+      "id": "slushmaskinen",
+      "name": "Slushmaskinen",
+      "description": "Kantinas slushmaskin, blå og rød, valgkampens symbol. Henriks folk har satt den midt i glassgata, og stemmesedlene dine ligger bak den. Den er iskald og meget populær.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 22,
+        "ac": 11,
+        "str": 12,
+        "dex": 8,
+        "int": 4
+      },
+      "speed": 70,
+      "sight": 10,
+      "attack": {
+        "name": "Hjernefrys",
+        "verb": "serverer iskald slush til",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "kulde",
+        "range": 2
+      },
+      "abilities": [
+        {
+          "id": "blaa-sky",
+          "name": "Blå sky",
+          "description": "Maskinen spytter ut en sky av blå is.",
+          "action": {
+            "targeting": {
+              "shape": "area",
+              "range": 1,
+              "affects": "enemies",
+              "radius": 1
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d4"
+                },
+                "damageType": "kulde"
+              },
+              {
+                "type": "apply_status",
+                "status": "hjernefrys",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "cloud",
+              "color": "#3fd1ff"
+            }
+          },
+          "cooldown": 6
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "kulde",
+          "multiplier": 0.5
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 5
+              },
+              {
+                "type": "message",
+                "text": "Maskinen hikster, går over til «RENS» og blir stille. Bak den ligger en bunke stemmesedler."
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "slush",
+          "chance": 0.5
+        }
+      ],
+      "xp": 18,
+      "tags": [
+        "maskin",
+        "elite"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#3fd1ff",
+          "secondary": "#e0453c",
+          "accent": "#ffffff"
+        },
+        "idle": "pulse",
+        "scale": 1.2,
+        "light": {
+          "color": "#3fd1ff",
+          "intensity": 1.2,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "vinkelsliper",
+      "name": "Vinkelsliper uten eier",
+      "description": "Noen i 2TPA la den fra seg på benken, og nå hviner den rundt og spruter gnister. Treffer ingenting, men lyden går rett i humøret.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 8,
+        "ac": 11,
+        "str": 7,
+        "dex": 13,
+        "int": 4
+      },
+      "speed": 85,
+      "attack": {
+        "name": "Hvin",
+        "verb": "hviner mot",
+        "damage": {
+          "dice": "1d4"
+        },
+        "damageType": "stoy",
+        "range": 3
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 2,
+        "erratic": 0.2
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "horselvern",
+          "chance": 0.15
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "verktoy"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#ff9f43",
+          "secondary": "#3b3b3b"
+        },
+        "idle": "spin",
+        "scale": 0.7
+      }
+    },
+    {
+      "id": "kube-3",
+      "name": "KUBE-3 på testkjøring",
+      "description": "Robotikklinjas konkurranserobot, ute på prøvekjøring før Malta. Den kjører etter alt som beveger seg og dulter i det. Den mener det godt. Den har ikke kode for å mene noe annet.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 14,
+        "ac": 12,
+        "str": 11,
+        "dex": 11,
+        "int": 5
+      },
+      "speed": 110,
+      "attack": {
+        "name": "Dult",
+        "verb": "dulter i",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "physical",
+        "accuracyStat": "str"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.4
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.4,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 1,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "push",
+                "distance": 1
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#c6ff3a"
+            }
+          }
+        },
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "xp": 7,
+      "tags": [
+        "robot"
+      ],
+      "model": {
+        "archetype": "robot",
+        "colors": {
+          "primary": "#2b3a55",
+          "secondary": "#b5652d",
+          "accent": "#c6ff3a"
+        },
+        "idle": "bob",
+        "scale": 0.8,
+        "light": {
+          "color": "#c6ff3a",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "soknadsbunken",
+      "name": "Olas søknadsbunke",
+      "description": "En bunke lærlingsøknader som kom inn til Ola på Lærlingsenteret i dag tidlig, høyere enn ham. Den har begynt å gå av seg selv og vil at du skal signere noe.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 15,
+        "ac": 11,
+        "str": 10,
+        "dex": 9,
+        "int": 12
+      },
+      "speed": 80,
+      "attack": {
+        "name": "Vedlegg",
+        "verb": "ber om ett vedlegg til fra",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "stress",
+        "accuracyStat": "int"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "kaffe",
+          "chance": 0.2
+        }
+      ],
+      "xp": 8,
+      "tags": [
+        "papir",
+        "byrakrati"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.5,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.52,
+              0.04,
+              0.42
+            ],
+            "pos": [
+              0.02,
+              0.3,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.04,
+              0.4
+            ],
+            "pos": [
+              -0.02,
+              0.45,
+              0.02
+            ],
+            "color": "#dddddd",
+            "material": "matte"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "hms-kurset",
+      "name": "HMS-kurset, modul 3 av 12",
+      "description": "Videoen alle må se før de får gå inn i verkstedet. Den står på en skjerm ved døra, kan ikke spoles, og stiller kontrollspørsmål. Stemmesedlene fra bygg og elektro ligger rett bak den.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "str": 10,
+        "dex": 8,
+        "int": 14
+      },
+      "speed": 80,
+      "sight": 10,
+      "attack": {
+        "name": "Neste modul",
+        "verb": "spiller neste modul for",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "stress",
+        "range": 4,
+        "accuracyStat": "int"
+      },
+      "abilities": [
+        {
+          "id": "kontrollsporsmal",
+          "name": "Kontrollspørsmål",
+          "description": "«Hva er riktig verneutstyr ved sliping? Velg ett.» Alle svarene er riktige.",
+          "action": {
+            "targeting": {
+              "shape": "ray",
+              "range": 5,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                },
+                "damageType": "stress"
+              },
+              {
+                "type": "apply_status",
+                "status": "stresset",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#1f6feb"
+            }
+          },
+          "cooldown": 7
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "stoy",
+          "multiplier": 0.5
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              },
+              {
+                "type": "message",
+                "text": "Skjermen viser «KURS FULLFØRT» og et diplom med feil navn. Bak den ligger stemmesedlene fra verkstedene."
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "multimeteret",
+          "chance": 0.4
+        }
+      ],
+      "xp": 24,
+      "unique": true,
+      "tags": [
+        "kurs",
+        "elite"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.2,
+              0.8,
+              0.08
+            ],
+            "pos": [
+              0,
+              1.0,
+              0
+            ],
+            "color": "#111111",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.1,
+              0.7,
+              0.09
+            ],
+            "pos": [
+              0,
+              1.0,
+              0
+            ],
+            "color": "#1f6feb",
+            "material": "glow",
+            "emissive": "#1f6feb"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.1,
+              0.6,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.05,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          }
+        ],
+        "idle": "flicker"
+      }
+    },
+    {
+      "id": "vindkast",
+      "name": "Vindkast fra Østre Aker vei",
+      "description": "Taket på Kuben ligger seks etasjer opp, og vinden fra Østre Aker vei har ingen planer om å roe seg. Den tar hatter, plakater og halve setninger.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 10,
+        "ac": 12,
+        "str": 8,
+        "dex": 14,
+        "int": 3
+      },
+      "speed": 120,
+      "attack": {
+        "name": "Kast",
+        "verb": "blåser mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "physical",
+        "range": 3
+      },
+      "behaviour": {
+        "type": "kiter",
+        "param": 2,
+        "erratic": 0.3
+      },
+      "triggers": [
+        {
+          "on": "on_hit",
+          "chance": 0.4,
+          "action": {
+            "targeting": {
+              "shape": "single",
+              "range": 3,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "push",
+                "distance": 2
+              },
+              {
+                "type": "apply_status",
+                "status": "forblast",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#9fc5e8"
+            }
+          }
+        }
+      ],
+      "xp": 6,
+      "tags": [
+        "vaer"
+      ],
+      "model": {
+        "archetype": "flier",
+        "colors": {
+          "primary": "#9fc5e8",
+          "secondary": "#ffffff"
+        },
+        "idle": "hover",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "basketball",
+      "name": "Aksels basketball",
+      "description": "Ballen Aksel lot ligge igjen på banen på taket etter kroppsøving. Vinden har satt den i gang, og nå spretter den etter alle som ikke ser den komme.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 9,
+        "ac": 12,
+        "str": 9,
+        "dex": 13,
+        "int": 2
+      },
+      "speed": 130,
+      "attack": {
+        "name": "Sprett",
+        "verb": "spretter rett i",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "physical"
+      },
+      "behaviour": {
+        "type": "chaser",
+        "erratic": 0.5
+      },
+      "loot": [
+        {
+          "item": "vannflaske",
+          "chance": 0.2
+        }
+      ],
+      "xp": 5,
+      "tags": [
+        "ball"
+      ],
+      "model": {
+        "archetype": "blob",
+        "colors": {
+          "primary": "#d2691e",
+          "secondary": "#1a1a1a"
+        },
+        "idle": "bob",
+        "scale": 0.7
+      }
+    },
+    {
+      "id": "valgkampgjengen",
+      "name": "Valgkampgjengen fra 3STB",
+      "description": "Tre elever fra Henriks klasse med plakater, klistremerker og én replikk: «Slush hver dag!» De er hyggelige. De er overalt.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 16,
+        "ac": 12,
+        "str": 11,
+        "dex": 11,
+        "int": 10
+      },
+      "speed": 100,
+      "attack": {
+        "name": "«Slush hver dag!»",
+        "verb": "roper «slush hver dag!» til",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "sladder"
+      },
+      "behaviour": {
+        "type": "pack"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "klistremerker",
+          "chance": 0.25
+        }
+      ],
+      "xp": 9,
+      "tags": [
+        "elev",
+        "valgkamp"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#efc29c",
+          "top": "#3fd1ff",
+          "bottom": "#1a1a1a",
+          "hair": "#c99a4a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "book",
+          "accent": "#e0453c"
+        }
+      }
+    },
+    {
+      "id": "storplakaten",
+      "name": "Henriks valgplakat på tre meter",
+      "description": "Trykket på Medielinja, hengt opp i gjerdet rundt basketbanen. Henrik smiler i tre meters høyde med en slush i hver hånd. Vinden har gjort den levende. Stemmesedlene fra ST ligger bak den.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 30,
+        "ac": 12,
+        "str": 13,
+        "dex": 9,
+        "int": 11
+      },
+      "speed": 80,
+      "sight": 10,
+      "attack": {
+        "name": "Smil på tre meter",
+        "verb": "smiler ned på",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "sladder",
+        "range": 3
+      },
+      "abilities": [
+        {
+          "id": "klaff",
+          "name": "Klaff i vinden",
+          "description": "Plakaten slår ut i vinden og dekker alt foran seg.",
+          "action": {
+            "targeting": {
+              "shape": "cone",
+              "range": 3,
+              "affects": "enemies",
+              "radius": 3
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "dice": "1d6"
+                },
+                "damageType": "physical"
+              },
+              {
+                "type": "apply_status",
+                "status": "flau",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "slash",
+              "color": "#3fd1ff"
+            }
+          },
+          "cooldown": 7
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "sladder",
+          "multiplier": 0.5
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 6
+              },
+              {
+                "type": "message",
+                "text": "Plakaten legger seg flatt mot gjerdet, med Henrik vendt inn. Bak den ligger stemmesedlene fra ST, festet med en stein."
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "regnjakke",
+          "chance": 0.4
+        }
+      ],
+      "xp": 24,
+      "unique": true,
+      "tags": [
+        "plakat",
+        "elite"
+      ],
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.8,
+              2.4,
+              0.06
+            ],
+            "pos": [
+              0,
+              1.3,
+              0
+            ],
+            "color": "#3fd1ff",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              1.2,
+              0.08
+            ],
+            "pos": [
+              0,
+              1.5,
+              0
+            ],
+            "color": "#efc29c",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.6,
+              0.4,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.5,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "glow",
+            "emissive": "#f7f4ee"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              2.6,
+              0.06
+            ],
+            "pos": [
+              -0.95,
+              1.3,
+              0
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              2.6,
+              0.06
+            ],
+            "pos": [
+              0.95,
+              1.3,
+              0
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          }
+        ],
+        "idle": "sway"
+      }
+    },
+    {
+      "id": "henrik",
+      "name": "Henrik fra 3STB",
+      "description": "Motkandidaten. Går siste året på studiespesialisering på BiKuben, har et valgprogram på ett punkt og en Snapchat-story som ikke tar slutt. Han er ikke slem. Han liker bare slush veldig, veldig godt.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 16,
+        "ac": 12,
+        "str": 12,
+        "dex": 11,
+        "int": 12
+      },
+      "speed": 100,
+      "sight": 10,
+      "attack": {
+        "name": "«Slush hver dag»",
+        "verb": "lover slush hver dag til",
+        "damage": {
+          "base": 2,
+          "dice": "1d6"
+        },
+        "damageType": "sladder"
+      },
+      "behaviour": {
+        "type": "chaser"
+      },
+      "triggers": [
+        {
+          "on": "on_death",
+          "action": {
+            "effects": [
+              {
+                "type": "currency",
+                "amount": 3
+              }
+            ]
+          }
+        }
+      ],
+      "loot": [
+        {
+          "item": "slush",
+          "chance": 0.5
+        }
+      ],
+      "xp": 14,
+      "unique": true,
+      "npc": {
+        "role": "rival",
+        "personality": "Velment, overforberedt og livredd for å si noe uten en plakat bak seg. Snakker i slagord. Tror valg handler om slush.",
+        "greeting": "Sara! Hei! Serr, det der med slushen, det var ikke meg som skrev det. Det var noen i klassen. Men du vil vel ikke fjerne den, ass?",
+        "lines": [
+          "Slush hver dag. Det er hele programmet. Det er et bra program.",
+          "Jeg har ikke lest forslaget ditt om ventilasjonen. Det er på to sider.",
+          "Hvis du vinner, kan vi fortsatt ha slush på fredager? Bare fredager?"
+        ],
+        "secrets": "Han skrev ryktet selv, i en gruppechat, og angret etter to minutter. Han håper i all hemmelighet at Sara vinner, for han orker ikke elevrådsmøter.",
+        "wants": "At noen sier at slushpunktet var et godt punkt. Og å slippe å lede et møte.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 12
+      },
+      "tags": [
+        "elev",
+        "rival"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.0,
+          "build": "broad",
+          "skin": "#efc29c",
+          "top": "#ffffff",
+          "bottom": "#2b3a55",
+          "hair": "#c99a4a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "suit",
+          "holding": "phone",
+          "accent": "#3fd1ff"
+        }
+      }
+    },
+    {
+      "id": "slushryktet",
+      "name": "Slushryktet",
+      "description": "«Sara vil fjerne slushen.» Fire ord som har gått gjennom 1 800 mobiler siden mandag. I Sentralen har de blitt noe stort og blått som kveiler seg rundt talerstolen og sier det samme om og om igjen.",
+      "faction": "hostile",
+      "stats": {
+        "hp": 88,
+        "ac": 13,
+        "str": 14,
+        "dex": 11,
+        "int": 13,
+        "mp": 20
+      },
+      "speed": 100,
+      "sight": 12,
+      "attack": {
+        "name": "«Hun vil fjerne slushen»",
+        "verb": "hvisker om slushen til",
+        "damage": {
+          "base": 3,
+          "dice": "1d8"
+        },
+        "damageType": "sladder"
+      },
+      "abilities": [
+        {
+          "id": "alle-har-hort-det",
+          "name": "Alle har hørt det",
+          "description": "Ryktet leser opp alle som har delt det. Med tydelige pauser.",
+          "action": {
+            "targeting": {
+              "shape": "ray",
+              "range": 6,
+              "affects": "enemies"
+            },
+            "effects": [
+              {
+                "type": "damage",
+                "amount": {
+                  "base": 3,
+                  "dice": "1d6"
+                },
+                "damageType": "sladder"
+              },
+              {
+                "type": "apply_status",
+                "status": "flau",
+                "duration": 2
+              }
+            ],
+            "vfx": {
+              "kind": "beam",
+              "color": "#3fd1ff"
+            }
+          },
+          "cost": {
+            "resource": "mp",
+            "amount": 5
+          },
+          "cooldown": 5
+        },
+        {
+          "id": "kaller-gjengen",
+          "name": "Kaller på valgkampgjengen",
+          "description": "«Kan noen fra 3STB si det de har hørt?»",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "summon",
+                "actor": "valgkampgjengen",
+                "count": 1
+              }
+            ],
+            "vfx": {
+              "kind": "burst",
+              "color": "#3fd1ff"
+            }
+          },
+          "cooldown": 14,
+          "useWhen": "start_of_fight"
+        }
+      ],
+      "resistances": [
+        {
+          "damageType": "sladder",
+          "multiplier": 0.5
+        },
+        {
+          "damageType": "kleinhet",
+          "multiplier": 1.25
+        }
+      ],
+      "behaviour": {
+        "type": "chaser"
+      },
+      "xp": 110,
+      "unique": true,
+      "tags": [
+        "rykte",
+        "boss"
+      ],
+      "model": {
+        "archetype": "serpent",
+        "colors": {
+          "primary": "#3fd1ff",
+          "secondary": "#ffd23f",
+          "accent": "#e0453c"
+        },
+        "idle": "sway",
+        "scale": 1.5,
+        "light": {
+          "color": "#3fd1ff",
+          "intensity": 1.2,
+          "radius": 3
+        }
+      }
+    },
+    {
+      "id": "hege",
+      "name": "Kantinesjef Hege",
+      "description": "Har drevet hovedkantina siden døra åpnet i 2013. Alt kjøtt er halal, kaffen er sterk, og slushmaskinen er hennes, uansett hva valgkampen sier.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 20,
+        "ac": 10,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Tørr, varm, kaller alle «vennen». Selger boller og sladder til samme pris og vet hvem som startet hva.",
+        "greeting": "Bolle, vennen? Du ser ut som du trenger to. Og nei, jeg tror ikke du vil fjerne slushen. Det ville jeg ha hørt.",
+        "lines": [
+          "Henriks folk flyttet slushmaskinen min ut i glassgata i storefri. Stemmesedlene dine ligger bak den.",
+          "Henrik satt her i går og øvde på «slush hver dag». Han sa det elleve ganger.",
+          "Respekt, ansvar, omsorg, står det på veggen. Omsorg er bolle. Det vet alle."
+        ],
+        "stock": [
+          "kanelbolle",
+          "slush",
+          "kaffe",
+          "powerbank",
+          "skjermbilde"
+        ],
+        "secrets": "Hun vet at Henrik skrev ryktet selv i en gruppechat, fordi lillesøsteren hans går i Vg1 og viste henne det.",
+        "wants": "At ingen setter slushkoppen i kaffeautomaten i år. Hun sier det hvert år.",
+        "persuadeStat": "str",
+        "persuadeDifficulty": 10
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.85,
+          "build": "round",
+          "skin": "#e8bfa0",
+          "top": "#f7f4ee",
+          "bottom": "#5b6b8a",
+          "hair": "#b0b0b0",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "tool",
+          "accent": "#e0453c"
+        }
+      }
+    },
+    {
+      "id": "knut",
+      "name": "Driftstekniker Knut",
+      "description": "Har nøkkelkort til alle tusen rommene og har kjent ventilasjonen siden den var et mareritt i 2015. Snakker sakte, tenker fort, og mener at alt kan løses med et spjeld og en kopp kaffe.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 25,
+        "ac": 12,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "quest_giver",
+        "personality": "Rolig, tørrvittig østkantmann. Fikser alt med et nøkkelkort og en kopp kaffe. Liker elever som bryr seg om ventilasjon.",
+        "greeting": "Nei men, kandidaten. Du er den eneste på huset som har spurt om spjeldene. Ta et nøkkelkort, så slipper du trappene.",
+        "lines": [
+          "Verkstedene? Ned trappa ved resepsjonen. Ikke heisen, der står det en Vg1-klasse og tar bilder av seg selv.",
+          "Spjeldet i glassgata er for stort for kanalen. Jeg har sagt det siden 2013.",
+          "Taket er fint på en dag som i dag. Hold i noe. Alt som ikke er skrudd fast, flyr."
+        ],
+        "stock": [
+          "horselvern",
+          "nokkelkort",
+          "forstehjelpsskrin"
+        ],
+        "secrets": "Han så Henriks gjeng flytte slushmaskinen og vet at HMS-skjermen i verkstedet kan slås av bak, men han sier det ikke til noen.",
+        "wants": "At noen nevner ventilasjonen fra talerstolen. Bare én setning.",
+        "persuadeStat": "str",
+        "persuadeDifficulty": 8
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "round",
+          "skin": "#d8a07c",
+          "top": "#2f4f6f",
+          "bottom": "#2f4f6f",
+          "hair": "#cfcfcf",
+          "hairStyle": "short",
+          "headwear": "cap",
+          "outfit": "uniform",
+          "holding": "tool",
+          "accent": "#ffd23f"
+        }
+      }
+    },
+    {
+      "id": "malin",
+      "name": "Malin, elevrådssekretær",
+      "description": "Fører referat fra alle elevrådsmøter på kontoret midt i hovedgangen. Har tre penner bak øret, et regneark for alt og en kaffe som aldri blir tom.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Effektiv, lett stresset, snakker i kulepunkter. Heier på deg, men har allerede en plan B.",
+        "greeting": "Sara! Punkt én: valget er klokka to. Punkt to: stemmesedlene står bak slushmaskinen. Punkt tre: du trenger seksten stemmer. Punkt fire: du har null.",
+        "lines": [
+          "Slushmaskinen gir seg hvis du svarer den. Den tåler ikke folk som ikke blir kalde.",
+          "Hver du overbeviser i gangen, teller som en stemme. Det står i valgreglene. Jeg skrev dem."
+        ],
+        "secrets": "Hun har en kopi av ryktet med avsender på mobilen. Avsenderen er Henrik.",
+        "wants": "At møtet i Sentralen får et ordentlig referat og at Henrik ikke får siste ord."
+      },
+      "tags": [
+        "elev",
+        "elevrad"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "slim",
+          "skin": "#e8b890",
+          "top": "#2a5a8a",
+          "bottom": "#1a1a1a",
+          "hair": "#3a2418",
+          "hairStyle": "bun",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "book",
+          "accent": "#ffd23f"
+        }
+      }
+    },
+    {
+      "id": "maryam",
+      "name": "Rådgiver Maryam",
+      "description": "Har kontor ved glassgata med døra på gløtt og te til alle. Kjenner alle seks avdelingene og vet hvem som trenger å bli hørt før de sier noe.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Rolig, lun, svarer på spørsmål med et nytt spørsmål. Tror på deg mer enn du gjør selv.",
+        "greeting": "Hei du. Te? Du ser ut som en som har lest kommentarfeltet. Pust først. Så går vi gjennom det.",
+        "lines": [
+          "Et rykte er bare en setning som ingen har svart på. Svar på den. Rolig.",
+          "Nesten to tusen elever fra seksti ungdomsskoler. Ingen av dem vet hva de synes ennå. Det er det fine."
+        ],
+        "secrets": "Hun har hatt Henrik på kontoret tre ganger denne uka. Han grudde seg til å vinne.",
+        "wants": "At du spiser en bolle før du går videre."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#c58c69",
+          "top": "#6a4c93",
+          "bottom": "#2f3640",
+          "hair": "#120d0b",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "coat",
+          "holding": "book",
+          "accent": "#b5652d"
+        }
+      }
+    },
+    {
+      "id": "inger",
+      "name": "Bibliotekar Inger",
+      "description": "Passer biblioteket over resepsjonen, i hjertet av bygget, og vinduet i gulvet der grunnsteinen og avisa fra 9. juni 2011 ligger. Hysjer med øyenbrynene, aldri med munnen.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 10,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Presis, varm, elsker bygg og elever som spør om historien. Behandler panikk som en feil i katalogen.",
+        "greeting": "Sett deg. Pust. Her lå Standard Telefon og Kabelfabrik med fire tusen ansatte. De overlevde også et og annet rykte.",
+        "lines": [
+          "Sogn yrkesskole hadde mottoet «Til arbeid». Det gjelder fortsatt. Også for valgkamp.",
+          "Under vinduet i gulvet ligger grunnsteinen og avisa fra dagen den ble lagt. Ingen leste den avisa heller."
+        ],
+        "secrets": "Hun har jubileumsboka og vet at ST kalles «lillesøster på yrkesarenaen». Hun sier det aldri til ST.",
+        "wants": "At noen låner en bok som ikke er pensum. Bare én."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "slim",
+          "skin": "#f0d0b0",
+          "top": "#6a3a5a",
+          "bottom": "#2a2a3a",
+          "hair": "#c8c8c8",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "dress",
+          "holding": "book",
+          "accent": "#e8e0c0"
+        }
+      }
+    },
+    {
+      "id": "bjorn",
+      "name": "Bjørn, verkstedlærer",
+      "description": "Underviser i elenergi langs vestfasaden, med glassvegg inn til klasserommet. Snakker om strøm som om den var en person. Måler alt med øyemål og har alltid rett.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 22,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Rolig, tørr, snakker sakte og presist. Liker elever som spør om sikring før de spør om spenning.",
+        "greeting": "Kandidaten, ja. Stemmesedlene fra bygg og elektro ligger bak HMS-skjermen ved døra. Skjermen slipper deg ikke forbi før du har svart. Svar rolig, det er det den tåler dårligst.",
+        "lines": [
+          "KUBE-3 er ikke farlig, bare ivrig. Det samme kan sies om Robotikklinja.",
+          "Søknadsbunken til Lærlingsenteret vil ha vedlegg. Gi den ingen."
+        ],
+        "secrets": "Han har lest Saras forslag om ventilasjonen og mener det er det beste som er skrevet på huset siden 2013.",
+        "wants": "At noen fra ST en dag sier at verkstedene er like viktige som realfag."
+      },
+      "tags": [
+        "voksen",
+        "laerer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.97,
+          "build": "broad",
+          "skin": "#d8b090",
+          "top": "#2f4f6f",
+          "bottom": "#3b3b3b",
+          "hair": "#5a4a3a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "uniform",
+          "holding": "tool",
+          "accent": "#ff9f43"
+        }
+      }
+    },
+    {
+      "id": "tobias",
+      "name": "Tobias fra 2BYA",
+      "description": "Vg2 tømrer, har vater i lomma og kan bære ting. Ble med fordi han hørte ordet «ventilasjon» og ble nysgjerrig.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 12,
+        "str": 13,
+        "dex": 10,
+        "int": 9
+      },
+      "attack": {
+        "name": "Vater",
+        "verb": "måler opp",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "physical"
+      },
+      "behaviour": {
+        "type": "follower",
+        "param": 2
+      },
+      "xp": 0,
+      "npc": {
+        "role": "ally",
+        "personality": "Rolig, sterk, sier lite og mener det. Synes elektro har det travlere enn tømrerne, og synes litt synd på dem.",
+        "greeting": "Hei. Trenger du en som bærer? Jeg kan bære. Jeg kan også stå foran HMS-skjermen hvis du snakker til den.",
+        "lines": [
+          "Det går bra, ass. Det går alltid bra på Kuben, i hvert fall til slutt.",
+          "Hvis du vinner, kan vi bygge et nytt elevrådskontor? Det gamle er på størrelse med et skap."
+        ],
+        "secrets": "Han var den som slo på vinkelsliperen. Han har ikke turt å si det til Bjørn.",
+        "wants": "At noen sier at det var han som bar.",
+        "persuadeStat": "str",
+        "persuadeDifficulty": 7
+      },
+      "tags": [
+        "elev",
+        "bygg"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "broad",
+          "skin": "#e6c3a0",
+          "top": "#ff9f43",
+          "bottom": "#2b2b2b",
+          "hair": "#3a2a1a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "uniform",
+          "holding": "tool",
+          "accent": "#3b3b3b"
+        }
+      }
+    },
+    {
+      "id": "espen",
+      "name": "Miljøarbeider Espen",
+      "description": "Sitter på benken på taket med utsikt over Økern og en kopp te som aldri blir tom. Kjenner alle elevene ved navn og vet hvem som trenger en pause før de vet det selv.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "healer",
+        "personality": "Rolig, lun, svarer på spørsmål med et nytt spørsmål. Tror på deg mer enn du gjør selv.",
+        "greeting": "Sett deg. Hold i benken. Se der borte: TILLIT, står det på Økerntårnet. Det er et greit ord å ta med seg ned igjen.",
+        "lines": [
+          "Plakaten gir seg når du står på deg. Vinden gjør det ikke, så ikke bruk kreftene på den.",
+          "Jeg har sett tjue elevrådsvalg fra denne benken. Ryktene taper alltid. Det tar bare litt tid."
+        ],
+        "secrets": "Han vet at Henrik har sittet på denne benken hver dag denne uka og sett på TILLIT-skiltet.",
+        "wants": "At noen tar seg tid til utsikten før de går ned."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.0,
+          "build": "round",
+          "skin": "#c89a70",
+          "top": "#5a7a4a",
+          "bottom": "#3a3a4a",
+          "hair": "#6a5a4a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "coat",
+          "holding": "bottle",
+          "accent": "#e0d0b0"
+        }
+      }
+    },
+    {
+      "id": "martine",
+      "name": "Martine fra Jentenettverket",
+      "description": "Vg2 elenergi og med i Jentenettverket for jenter på yrkesfag. Har lunsj på taket med gjengen hver onsdag, også i vind.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 18,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Lynrask, varm, hjelpsom. Retter på luggen din i hodet mens du snakker.",
+        "greeting": "Sara! Stemmesedlene fra ST ligger bak den digre plakaten til Henrik i gjerdet. Den gir seg hvis du svarer den rolig. Og serr, hele nettverket stemmer på deg.",
+        "lines": [
+          "Valgkampgjengen hans er hyggelige. De vet bare ikke hva ventilasjon er.",
+          "Ballen til Aksel er løs igjen. Gå rundt, ikke gjennom."
+        ],
+        "secrets": "Hun hjalp Medielinja med å trykke Henriks plakat. Hun la inn en liten skrivefeil med vilje.",
+        "wants": "At Sara nevner Jentenettverket fra talerstolen. Ett ord holder.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 7
+      },
+      "tags": [
+        "elev",
+        "elektro"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.84,
+          "build": "slim",
+          "skin": "#a0663f",
+          "top": "#ff9f43",
+          "bottom": "#212529",
+          "hair": "#120d0b",
+          "hairStyle": "braids",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "phone",
+          "accent": "#ffd23f"
+        }
+      }
+    },
+    {
+      "id": "vegard",
+      "name": "Vegard, kroppsøvingslærer",
+      "description": "Har ansvar for basketbanen på taket og den eneste nøkkelen til ballskapet. Selger Kubenklær, vann og gode råd fra en kasse ved gjerdet.",
+      "faction": "neutral",
+      "stats": {
+        "hp": 22,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "trader",
+        "personality": "Høy stemme, godt humør, svarer alltid med et tilbud. Synes ingenting haster, minst av alt en valgkamp.",
+        "greeting": "Der kom kandidaten! Vann? Genser? Regnjakke? Jeg har alt som ikke flyr av gårde.",
+        "lines": [
+          "Ballen til Aksel har vært løs siden fjerde time. Jeg har gitt opp.",
+          "Plakaten til Henrik står i gjerdet mitt. Jeg har ikke gitt lov. Jeg har heller ikke sagt nei."
+        ],
+        "stock": [
+          "vannflaske",
+          "kanelbolle",
+          "powerbank",
+          "regnjakke",
+          "klistremerker"
+        ],
+        "secrets": "Han vet at regnjakka fra skapet hans har en lomme som rommer en powerbank, og at det gjør underverker på taket.",
+        "wants": "At noen spiller pickleball med ham i det gamle Økernsenteret. Bare én gang."
+      },
+      "tags": [
+        "voksen",
+        "laerer"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 1.0,
+          "build": "broad",
+          "skin": "#e0b48f",
+          "top": "#2b3a55",
+          "bottom": "#1a1a1a",
+          "hair": "#2a2a2a",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "bottle",
+          "accent": "#b5652d"
+        }
+      }
+    },
+    {
+      "id": "rektor",
+      "name": "Rektor",
+      "description": "Står ved scenekanten i Sentralen og ser ut som en som vet nøyaktig hvordan dette ender. Har holdt velkomsttale for tusenvis av Vg1-elever og siterer skolens tre ord uten ironi.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 25,
+        "ac": 12,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "stationary"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "lore",
+        "personality": "Varm, rolig, litt teatralsk. Mener det hver gang.",
+        "greeting": "Sara. Respekt, ansvar, omsorg. Du har respekten. Ansvaret får du klokka to. Omsorgen er det vi andre som skal vise deg.",
+        "lines": [
+          "Denne skolen kostet nesten to milliarder. Den har aldri mistet et valg til et rykte.",
+          "Henrik spurte om han kunne trekke seg. Jeg sa at det var opp til ham. Han sa at det var opp til deg."
+        ],
+        "secrets": "Rektor har lest både Saras forslag og Henriks plakat. Rektor vet hvilket som holder, og at Henrik vet det også.",
+        "wants": "At valget blir avgjort fra talerstolen, at ingen står på stolradene, og at Hege ikke sier opp."
+      },
+      "tags": [
+        "voksen",
+        "ansatt"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#f0c8a0",
+          "top": "#7a1f3a",
+          "bottom": "#1a1a1a",
+          "hair": "#a8a8a8",
+          "hairStyle": "short",
+          "headwear": "none",
+          "outfit": "suit",
+          "holding": "none",
+          "accent": "#b5652d"
+        }
+      }
+    },
+    {
+      "id": "ida",
+      "name": "Ida, valgstyret",
+      "description": "Går rundt i Sentralen med stemmeurne, klistremerker og en liste. Har organisert valget siden september og vet hvor alle skal sitte, unntatt seg selv.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 20,
+        "ac": 11,
+        "str": 10,
+        "dex": 10,
+        "int": 10
+      },
+      "behaviour": {
+        "type": "wanderer"
+      },
+      "xp": 0,
+      "npc": {
+        "role": "informant",
+        "personality": "Effektiv, nøytral på papiret, heier på deg i praksis. Har allerede laget en plan for hvis det går bra.",
+        "greeting": "Sara! Siste stemmesedler ligger ved talerstolen, bak ryktet. Seksten stemmer og talerstolen, så er du valgt. Jeg har skrevet «vinner» i margen, men det er bare for meg.",
+        "lines": [
+          "Talerstolen står på scenen. Med seksten stemmer trenger du den bare én gang.",
+          "Ryktet gir seg hvis du svarer det foran alle. Det er det eneste som biter på et rykte."
+        ],
+        "secrets": "Hun har en reservetale klar hvis Sara vinner, og en klem klar hvis ikke.",
+        "wants": "At allmøtet ender uten at noen Vg1-elever blir igjen i Sentralen."
+      },
+      "tags": [
+        "elev",
+        "valgstyret"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.9,
+          "build": "average",
+          "skin": "#f3d2b8",
+          "top": "#2a5a8a",
+          "bottom": "#2a2a3a",
+          "hair": "#7a4a26",
+          "hairStyle": "long",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "book",
+          "accent": "#f7f4ee"
+        }
+      }
+    },
+    {
+      "id": "thomas",
+      "name": "Thomas fra Medielinja",
+      "description": "Står bak miksepulten i Sentralen med hodetelefoner rundt halsen. Har lydsjekket talerstolen tre ganger og trykket Henriks plakat mot sin vilje.",
+      "faction": "friendly",
+      "stats": {
+        "hp": 18,
+        "ac": 11,
+        "str": 10,
+        "dex": 13,
+        "int": 11
+      },
+      "attack": {
+        "name": "Feedback",
+        "verb": "sender feedback mot",
+        "damage": {
+          "base": 1,
+          "dice": "1d4"
+        },
+        "damageType": "stoy",
+        "range": 2
+      },
+      "behaviour": {
+        "type": "follower",
+        "param": 2
+      },
+      "xp": 0,
+      "npc": {
+        "role": "ally",
+        "personality": "Kul på utsiden, nervøs på innsiden. Bryr seg mest om overganger, både i lyd og i valgkamp.",
+        "greeting": "Yo. Mikrofonen er klar. Ryktet står foran talerstolen, og det er høyere enn i stad. Jeg går med deg, jeg har feedback.",
+        "lines": [
+          "Henrik har bedt meg spille fanfare når han går opp. Jeg har ikke bestemt meg for om jeg hører etter.",
+          "Si det med ventilasjonen. Kort. Folk hører etter når det er kort."
+        ],
+        "secrets": "Han har allerede lagt inn en stille pause etter Saras tale, i tilfelle den er god.",
+        "wants": "At ingen ber om én låt til etter allmøtet.",
+        "persuadeStat": "int",
+        "persuadeDifficulty": 7
+      },
+      "tags": [
+        "elev",
+        "medier"
+      ],
+      "model": {
+        "archetype": "humanoid",
+        "humanoid": {
+          "height": 0.95,
+          "build": "average",
+          "skin": "#d8a878",
+          "top": "#1a1a1a",
+          "bottom": "#3a3a5a",
+          "hair": "#e83a8a",
+          "hairStyle": "mohawk",
+          "headwear": "none",
+          "outfit": "plain",
+          "holding": "phone",
+          "accent": "#e83a8a"
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "valgprogrammet",
+      "name": "Valgprogrammet",
+      "kind": "Ark",
+      "description": "To sider, laminert, med «ventilasjon» i overskriften. Du leser punkt 3 for folk, og de får plutselig mye å tenke på.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Punkt 3",
+        "verb": "leser punkt 3 for",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "sladder",
+        "accuracyStat": "int"
+      },
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.3,
+              0.01
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.18,
+              0.03,
+              0.012
+            ],
+            "pos": [
+              0,
+              0.26,
+              0
+            ],
+            "color": "#2b3a55",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "megafon",
+      "name": "Megafon fra russen",
+      "kind": "Megafon",
+      "description": "Lånt av russestyret og aldri levert tilbake. Alt du sier, høres i hele glassgata.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Forsterket replikk",
+        "verb": "sier i megafonen til",
+        "damage": {
+          "base": 1,
+          "dice": "1d6"
+        },
+        "damageType": "stoy",
+        "range": 3,
+        "accuracyStat": "str"
+      },
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.25,
+              0.3,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#e0453c",
+            "material": "metal",
+            "rot": [
+              0,
+              0,
+              90
+            ]
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.2,
+              0.06
+            ],
+            "pos": [
+              -0.2,
+              0.15,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "multimeteret",
+      "name": "Multimeteret",
+      "kind": "Måleinstrument",
+      "description": "Fra elektro. Du måler spenningen på folk, og tallet er alltid pinlig lavt.",
+      "category": "weapon",
+      "equipSlot": "weapon",
+      "useMode": "passive",
+      "weapon": {
+        "name": "Spenningsmåling",
+        "verb": "måler spenningen på",
+        "damage": {
+          "base": 2,
+          "dice": "1d8"
+        },
+        "damageType": "stress",
+        "accuracyStat": "dex"
+      },
+      "rarity": "rare",
+      "value": 40,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.14,
+              0.26,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.08,
+              0.055
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "glass"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.01,
+              0.3,
+              0.01
+            ],
+            "pos": [
+              0.1,
+              0.1,
+              0
+            ],
+            "color": "#e0453c",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hettegenser",
+      "name": "Kubenklær-hettegenser",
+      "kind": "Genser",
+      "description": "Mørkeblå med kobberfarget KUBEN på ryggen. Du har sovet i den to ganger denne uka.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 1,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.4,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#2b3a55",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.08,
+              0.19
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#b5652d",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "arbeidsjakke",
+      "name": "Arbeidsjakke fra elektro",
+      "kind": "Jakke",
+      "description": "Grå med refleks og tjue lommer. Ingen stiller spørsmål til folk i arbeidsjakke.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "modifiers": [
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 22,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.45,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.22,
+              0
+            ],
+            "color": "#555555",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.46,
+              0.06,
+              0.21
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#c0c0c0",
+            "material": "glow",
+            "emissive": "#c0c0c0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "regnjakke",
+      "name": "Regnjakke fra ballskapet",
+      "kind": "Jakke",
+      "description": "Gul, knitrende, med hette. Vinden på taket får ikke tak i deg, og lomma rommer en powerbank.",
+      "category": "armour",
+      "equipSlot": "armour",
+      "useMode": "passive",
+      "armour": 2,
+      "triggers": [
+        {
+          "on": "on_equip",
+          "action": {
+            "targeting": {
+              "shape": "self",
+              "affects": "self_only",
+              "range": 0
+            },
+            "effects": [
+              {
+                "type": "resource",
+                "resource": "batteri",
+                "amount": {
+                  "base": 3
+                }
+              }
+            ],
+            "vfx": {
+              "kind": "sparkle",
+              "color": "#c6ff3a"
+            }
+          }
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 30,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.45,
+              0.5,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.25,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "cloth"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.25,
+              0.15,
+              0.25
+            ],
+            "pos": [
+              0,
+              0.52,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "horselvern",
+      "name": "Hørselvern fra verkstedet",
+      "kind": "Hørselvern",
+      "description": "Oransje, store, fra tavla i verkstedet. Durene preller av, og du ser mer bestemt ut.",
+      "category": "trinket",
+      "equipSlot": "trinket",
+      "useMode": "passive",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "amount": 1
+        },
+        {
+          "stat": "str",
+          "amount": 1
+        }
+      ],
+      "rarity": "uncommon",
+      "value": 20,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.24,
+              0.04
+            ],
+            "pos": [
+              0,
+              0.15,
+              0
+            ],
+            "color": "#ff9f43",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              -0.12,
+              0.1,
+              0
+            ],
+            "color": "#ff9f43",
+            "material": "matte"
+          },
+          {
+            "shape": "sphere",
+            "size": [
+              0.1,
+              0.1,
+              0.1
+            ],
+            "pos": [
+              0.12,
+              0.1,
+              0
+            ],
+            "color": "#ff9f43",
+            "material": "matte"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "kanelbolle",
+      "name": "Kanelbolle fra kantina",
+      "kind": "Bolle",
+      "description": "Stor, klissete, fra Heges disk. Kantinas egentlige pensum. Gir deg humøret tilbake.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8b06a"
+        }
+      },
+      "stackable": true,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.22,
+              0.08,
+              0.22
+            ],
+            "pos": [
+              0,
+              0.04,
+              0
+            ],
+            "color": "#c9a86a",
+            "material": "matte"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.14,
+              0.14,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.09,
+              0
+            ],
+            "color": "#8a5a2a",
+            "material": "matte",
+            "rot": [
+              90,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "slush",
+      "name": "Slush, blå",
+      "kind": "Drikke",
+      "description": "Fra maskinen. Iskald, blå og politisk. Gir humør og fart, og litt vondt i panna.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "gira",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#3fd1ff"
+        }
+      },
+      "stackable": true,
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.14,
+              0.22,
+              0.14
+            ],
+            "pos": [
+              0,
+              0.11,
+              0
+            ],
+            "color": "#3fd1ff",
+            "material": "glass",
+            "rot": [
+              180,
+              0,
+              0
+            ]
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.01,
+              0.2,
+              0.01
+            ],
+            "pos": [
+              0.03,
+              0.28,
+              0
+            ],
+            "color": "#e0453c",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "kaffe",
+      "name": "Kaffe fra elevcaféen",
+      "kind": "Drikke",
+      "description": "Elevdrevet, sterk og ujevn. Varm ro i pappkopp, og fart i beina.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 5,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "gira",
+            "duration": 4
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c6ff3a"
+        }
+      },
+      "stackable": true,
+      "value": 10,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.12,
+              0.2,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.11,
+              0.02,
+              0.11
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#5a3a22",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vannflaske",
+      "name": "Vannflaske fra Vegard",
+      "kind": "Drikke",
+      "description": "Fra kassa ved gjerdet. Kaldt vann på et vindfullt tak. Heler litt og fjerner alt som plager deg.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 8
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#9fc5e8"
+        }
+      },
+      "stackable": true,
+      "rarity": "uncommon",
+      "value": 12,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.26,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#9fc5e8",
+            "material": "glass"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.04,
+              0.06
+            ],
+            "pos": [
+              0,
+              0.28,
+              0
+            ],
+            "color": "#2b3a55",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "powerbank",
+      "name": "Powerbank",
+      "kind": "Lader",
+      "description": "Liten, varm, halvfull. Gir 7 Mobilbatteri og fjerner Uten mobil.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "batteri",
+            "amount": {
+              "base": 7
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "uten-mobil"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#c6ff3a"
+        }
+      },
+      "stackable": true,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.16,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.04,
+              0.02,
+              0.035
+            ],
+            "pos": [
+              0,
+              0.12,
+              0
+            ],
+            "color": "#c6ff3a",
+            "material": "glow",
+            "emissive": "#c6ff3a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ansattkantine-rester",
+      "name": "Rester fra ansattkantina",
+      "kind": "Pose",
+      "description": "Salatbar fra andre etasje, merket «LÆRERE». Noen tok. Den var verdt det.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 10
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ]
+      },
+      "stackable": true,
+      "value": 12,
+      "knowledge": "unknown",
+      "appearanceGroup": "pose",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.1,
+              0.18
+            ],
+            "pos": [
+              0,
+              0.05,
+              0
+            ],
+            "color": "#9fb8a0",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fasademelk",
+      "name": "Sjokolademelk fra fasaden",
+      "kind": "Pose",
+      "description": "Har stått i mellomrommet i glassfasaden siden i morges. Der var det seksti grader. Alle snur seg.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 2
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 3
+          },
+          {
+            "type": "message",
+            "text": "Sjokolademelk. Varm. Hele glassgata snur seg."
+          }
+        ]
+      },
+      "stackable": true,
+      "value": 1,
+      "knowledge": "unknown",
+      "appearanceGroup": "pose",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.2,
+              0.07
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#8a5a2a",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energidrikk",
+      "name": "Energidrikk fra en i 3STB",
+      "kind": "Pose",
+      "description": "Står igjen på en benk med Henriks klistremerke på. Gir krutt, og litt stress.",
+      "category": "consumable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "resource",
+            "resource": "mp",
+            "amount": {
+              "base": 6
+            }
+          },
+          {
+            "type": "apply_status",
+            "status": "gira",
+            "duration": 6
+          },
+          {
+            "type": "apply_status",
+            "status": "stresset",
+            "duration": 3
+          }
+        ]
+      },
+      "stackable": true,
+      "value": 8,
+      "knowledge": "unknown",
+      "appearanceGroup": "pose",
+      "revealOnUse": "full",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cylinder",
+            "size": [
+              0.08,
+              0.2,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#c6ff3a",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "klistremerker",
+      "name": "Klistremerker «SARA 2026»",
+      "kind": "Valgkampmateriell",
+      "description": "Et ark med tretti klistremerker fra Medielinja. Kast dem, og alle i nærheten står og plukker dem av seg.",
+      "category": "throwable",
+      "useMode": "charges",
+      "charges": 3,
+      "onUse": {
+        "targeting": {
+          "shape": "area",
+          "range": 4,
+          "affects": "enemies",
+          "radius": 1
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d6"
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 2
+          }
+        ],
+        "vfx": {
+          "kind": "burst",
+          "color": "#b5652d"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 18,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.01,
+              0.28
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.012,
+              0.06
+            ],
+            "pos": [
+              0.04,
+              0.025,
+              0.05
+            ],
+            "color": "#b5652d",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.06,
+              0.012,
+              0.06
+            ],
+            "pos": [
+              -0.05,
+              0.025,
+              -0.06
+            ],
+            "color": "#b5652d",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "skjermbilde",
+      "name": "Skjermbilde av en gammel story",
+      "kind": "Sladder",
+      "description": "Fra 2024. Kast det til noen, og de har plutselig mye å forklare.",
+      "category": "throwable",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 5,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "2d4"
+            },
+            "damageType": "sladder"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#ffd23f"
+        }
+      },
+      "stackable": true,
+      "value": 8,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.1,
+              0.18,
+              0.01
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.14,
+              0.012
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ]
+      }
+    },
+    {
+      "id": "valgtalen",
+      "name": "Valgtalen, kortversjon",
+      "kind": "Replikk",
+      "description": "Førti sekunder om ventilasjon, øvd inn foran speilet. Rolig, tydelig og umulig å avbryte.",
+      "category": "spell",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "single",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "base": 1,
+              "dice": "1d6",
+              "scale": {
+                "stat": "int",
+                "factor": 0.25
+              }
+            },
+            "damageType": "kleinhet"
+          }
+        ],
+        "vfx": {
+          "kind": "bolt",
+          "color": "#b5652d"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "cone",
+            "size": [
+              0.15,
+              0.3,
+              0.15
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#b5652d",
+            "material": "glow",
+            "rot": [
+              0,
+              0,
+              90
+            ],
+            "emissive": "#b5652d"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "allmotestemmen",
+      "name": "Allmøtestemmen",
+      "kind": "Replikk",
+      "description": "«Kan alle som står i veien for kandidaten flytte seg.» Alle foran deg blir flaue.",
+      "category": "spell",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "ray",
+          "range": 4,
+          "affects": "enemies"
+        },
+        "effects": [
+          {
+            "type": "damage",
+            "amount": {
+              "dice": "1d4"
+            },
+            "damageType": "kleinhet"
+          },
+          {
+            "type": "apply_status",
+            "status": "flau",
+            "duration": 3
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd23f"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.25,
+              0.25,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#ffd23f",
+            "material": "glow",
+            "emissive": "#ffd23f"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "verdiene",
+      "name": "Respekt, ansvar, omsorg",
+      "kind": "Skolens verdier",
+      "description": "Du sier dem høyt, og mener dem. Hel deg selv, rist av deg alt det kleine og kom på sporet.",
+      "category": "spell",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 4,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          },
+          {
+            "type": "apply_status",
+            "status": "pa-sporet",
+            "duration": 5
+          }
+        ],
+        "vfx": {
+          "kind": "ring",
+          "color": "#b5652d"
+        }
+      },
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "sphere",
+            "size": [
+              0.2,
+              0.2,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#b5652d",
+            "material": "glow",
+            "emissive": "#b5652d"
+          }
+        ],
+        "idle": "pulse"
+      }
+    },
+    {
+      "id": "forstehjelpsskrin",
+      "name": "Førstehjelpsskrin fra verkstedet",
+      "kind": "Skrin",
+      "description": "Grønt, fra veggen ved døra. To plaster igjen: hvert gir Humør og fjerner alt som plager deg.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 2,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 6,
+              "dice": "1d4"
+            }
+          },
+          {
+            "type": "remove_status",
+            "status": "all_harmful"
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#2e8b57"
+        }
+      },
+      "rarity": "uncommon",
+      "value": 15,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.26,
+              0.16,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.08,
+              0
+            ],
+            "color": "#2e8b57",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.12,
+              0.03,
+              0.11
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.03,
+              0.12,
+              0.11
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "matte"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nokkelkort",
+      "name": "Knuts nøkkelkort",
+      "kind": "Nøkkelkort",
+      "description": "Hvitt kort med «DRIFT» på. Åpner hver dør mellom deg og utgangen av etappen du er i, én gang.",
+      "category": "tool",
+      "useMode": "charges",
+      "charges": 1,
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "teleport",
+            "mode": "to_exit"
+          },
+          {
+            "type": "message",
+            "text": "Pip. Dør etter dør går opp, og du står ved utgangen."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#9fc5e8"
+        }
+      },
+      "rarity": "rare",
+      "value": 35,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.12,
+              0.01
+            ],
+            "pos": [
+              0,
+              0.1,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.14,
+              0.02,
+              0.012
+            ],
+            "pos": [
+              0,
+              0.13,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "matte"
+          }
+        ],
+        "idle": "spin"
+      }
+    },
+    {
+      "id": "stemmer-glassgata",
+      "name": "Stemmesedler fra glassgata",
+      "kind": "Stemmesedler",
+      "description": "En bunke på fire, med slush-flekk i hjørnet. Bruk dem, så teller de. Du må ha fire stemmer for å komme ned til verkstedene.",
+      "category": "quest",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "counter",
+            "counter": "stemmer",
+            "add": 4
+          },
+          {
+            "type": "grant_xp",
+            "amount": 10
+          },
+          {
+            "type": "message",
+            "text": "Fire stemmer fra glassgata. Én av dem har skrevet «ok da» i margen."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.04,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.012,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.055,
+              0.05
+            ],
+            "color": "#ffd23f",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "stemmer-verkstedene",
+      "name": "Stemmesedler fra verkstedene",
+      "kind": "Stemmesedler",
+      "description": "Fire sedler med sagflis og oljefingre. Bruk dem, så teller de. Du må ha åtte stemmer for å komme opp på taket.",
+      "category": "quest",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "counter",
+            "counter": "stemmer",
+            "add": 4
+          },
+          {
+            "type": "grant_xp",
+            "amount": 10
+          },
+          {
+            "type": "message",
+            "text": "Fire stemmer fra bygg, elektro og TIP. Én av dem er brettet til et papirfly."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.04,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.012,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.055,
+              0.05
+            ],
+            "color": "#ffd23f",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "stemmer-taket",
+      "name": "Stemmesedler fra taket",
+      "kind": "Stemmesedler",
+      "description": "Fire sedler fra ST, holdt nede av en stein. Bruk dem, så teller de. Du må ha tolv stemmer for å komme ned til Sentralen.",
+      "category": "quest",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "counter",
+            "counter": "stemmer",
+            "add": 4
+          },
+          {
+            "type": "grant_xp",
+            "amount": 10
+          },
+          {
+            "type": "message",
+            "text": "Fire stemmer fra taket. Én av dem er skrevet med mascara, i vind."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.04,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.012,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.055,
+              0.05
+            ],
+            "color": "#ffd23f",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "stemmer-sentralen",
+      "name": "Stemmesedler fra Sentralen",
+      "kind": "Stemmesedler",
+      "description": "De siste fire, lagt ved talerstolen av valgstyret. Bruk dem, så teller de. Seksten stemmer og talerstolen, så er du valgt.",
+      "category": "quest",
+      "useMode": "consumed",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "counter",
+            "counter": "stemmer",
+            "add": 4
+          },
+          {
+            "type": "grant_xp",
+            "amount": 10
+          },
+          {
+            "type": "message",
+            "text": "Fire stemmer fra Sentralen. Én av dem har tegnet et ventilasjonsspjeld med hjerte rundt."
+          }
+        ],
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.04,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.03,
+              0
+            ],
+            "color": "#f7f4ee",
+            "material": "matte"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.22,
+              0.012,
+              0.03
+            ],
+            "pos": [
+              0,
+              0.055,
+              0.05
+            ],
+            "color": "#ffd23f",
+            "material": "matte"
+          }
+        ],
+        "idle": "hover",
+        "light": {
+          "color": "#ffd23f",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "talerstolen",
+      "name": "Talerstolen i Sentralen",
+      "kind": "Talerstol",
+      "description": "Talerstolen på scenen i Sentralen, lydsjekket tre ganger av Thomas. Bruk den med seksten stemmer, så holder du talen og blir valgt.",
+      "category": "quest",
+      "useMode": "reusable",
+      "onUse": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "set_flag",
+            "flag": "valgt"
+          },
+          {
+            "type": "message",
+            "text": "Du banker lett på mikrofonen. «Hei. Jeg vil ikke fjerne slushen. Jeg vil fikse lufta.» Det blir stille i hele Sentralen. Så blir det ikke stille."
+          }
+        ],
+        "condition": {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "counter",
+              "counter": "stemmer",
+              "cmp": "gte",
+              "value": 16
+            }
+          ]
+        },
+        "vfx": {
+          "kind": "ring",
+          "color": "#ffd23f"
+        }
+      },
+      "rarity": "unique",
+      "value": 0,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.6,
+              1.1,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.55,
+              0
+            ],
+            "color": "#2b3a55",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.7,
+              0.06,
+              0.55
+            ],
+            "pos": [
+              0,
+              1.12,
+              0
+            ],
+            "color": "#b5652d",
+            "material": "wood"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.03,
+              0.4,
+              0.03
+            ],
+            "pos": [
+              0.1,
+              1.3,
+              0
+            ],
+            "color": "#1a1a1a",
+            "material": "metal"
+          }
+        ],
+        "idle": "none",
+        "light": {
+          "color": "#ffe8a3",
+          "intensity": 1.2,
+          "radius": 2.5
+        }
+      }
+    }
+  ],
+  "terrains": [
+    {
+      "id": "sittegruppe",
+      "name": "Sittegruppe i glassgata",
+      "description": "Sofaer i kobberfarge langs glassveggen. Noen har lagt igjen en bolle.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "kanelbolle"
+          }
+        ],
+        "condition": {
+          "type": "chance",
+          "p": 0.35
+        },
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#e8b06a"
+        }
+      },
+      "color": "#b5652d",
+      "height": 0.7,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.4,
+              0.8
+            ],
+            "pos": [
+              0,
+              0.2,
+              0
+            ],
+            "color": "#b5652d",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.4,
+              0.2
+            ],
+            "pos": [
+              0,
+              0.6,
+              -0.3
+            ],
+            "color": "#b5652d",
+            "material": "cloth"
+          }
+        ]
+      }
+    },
+    {
+      "id": "grunnsteinsvinduet",
+      "name": "Vinduet i gulvet",
+      "description": "Et vindu i foajégulvet. Under ligger grunnsteinen fra 9. juni 2011 og avisa fra samme dag. Ingen leser den avisa.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "grant_xp",
+            "amount": 5
+          },
+          {
+            "type": "message",
+            "text": "Du ser ned på grunnsteinen og avisa fra 2011. Forsiden handler om noe helt annet. Det roer deg merkelig nok."
+          }
+        ]
+      },
+      "color": "#9fc5e8",
+      "height": 0.05,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.04,
+              0.9
+            ],
+            "pos": [
+              0,
+              0.02,
+              0
+            ],
+            "color": "#9fc5e8",
+            "material": "glass"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.4,
+              0.02,
+              0.3
+            ],
+            "pos": [
+              0,
+              0.0,
+              0
+            ],
+            "color": "#8a8a8a",
+            "material": "stone"
+          }
+        ]
+      }
+    },
+    {
+      "id": "slushsol",
+      "name": "Søl av slush",
+      "description": "Blått, klissete, med et gult skilt ved siden av. Ingen leser det gule skiltet.",
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "glatt",
+          "duration": 1
+        }
+      ],
+      "moveCost": 2,
+      "color": "#3fd1ff"
+    },
+    {
+      "id": "kaffeautomat",
+      "name": "Kaffeautomaten i elevcaféen",
+      "description": "Den eneste maskinen på huset som alle stoler på. Dunk den på riktig sted.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "kaffe"
+          },
+          {
+            "type": "noise",
+            "radius": 5
+          }
+        ],
+        "condition": {
+          "type": "chance",
+          "p": 0.6
+        }
+      },
+      "color": "#7a3a1a",
+      "height": 1.4,
+      "emissive": "#ffcc88",
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.7,
+              1.4,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.7,
+              0
+            ],
+            "color": "#7a3a1a",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.5,
+              0.6,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.9,
+              0.26
+            ],
+            "color": "#ffcc88",
+            "material": "glass",
+            "emissive": "#ffcc88"
+          }
+        ],
+        "light": {
+          "color": "#ffcc88",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      }
+    },
+    {
+      "id": "arbeidsbenk",
+      "name": "Arbeidsbenk",
+      "description": "Stålbenk med skrustikke, en halvferdig koblingsboks og noens matpakke.",
+      "walkable": false,
+      "color": "#8a94a0",
+      "height": 0.9,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.95,
+              0.08,
+              0.6
+            ],
+            "pos": [
+              0,
+              0.85,
+              0
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.8,
+              0.08
+            ],
+            "pos": [
+              -0.4,
+              0.4,
+              -0.2
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.8,
+              0.08
+            ],
+            "pos": [
+              0.4,
+              0.4,
+              0.2
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.2,
+              0.15,
+              0.15
+            ],
+            "pos": [
+              0.2,
+              0.97,
+              0
+            ],
+            "color": "#ff9f43",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "oljesol",
+      "name": "Oljesøl",
+      "description": "Fra TIP. Svart, blankt og helt uten skilt.",
+      "onStand": [
+        {
+          "type": "apply_status",
+          "status": "glatt",
+          "duration": 1
+        }
+      ],
+      "moveCost": 2,
+      "color": "#2a2a2a",
+      "emissive": "#1a1a2a"
+    },
+    {
+      "id": "verktoytavle",
+      "name": "Verktøytavle",
+      "description": "Omriss av hvert verktøy, tegnet med tusj. Halvparten henger der. Et hørselvern henger der også, noen ganger.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "spawn_item",
+            "item": "horselvern"
+          }
+        ],
+        "condition": {
+          "type": "chance",
+          "p": 0.2
+        },
+        "vfx": {
+          "kind": "sparkle",
+          "color": "#ff9f43"
+        }
+      },
+      "color": "#3b3b3b",
+      "height": 1.5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.95,
+              1.5,
+              0.08
+            ],
+            "pos": [
+              0,
+              0.75,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "wood"
+          },
+          {
+            "shape": "torus",
+            "size": [
+              0.24,
+              0.24,
+              0.04
+            ],
+            "pos": [
+              -0.2,
+              0.9,
+              0.05
+            ],
+            "color": "#ff9f43",
+            "material": "matte"
+          },
+          {
+            "shape": "cylinder",
+            "size": [
+              0.04,
+              0.5,
+              0.04
+            ],
+            "pos": [
+              0.25,
+              0.8,
+              0.05
+            ],
+            "color": "#c0c0c0",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "gjerde",
+      "name": "Gjerdet rundt basketbanen",
+      "description": "Høyt nettinggjerde, seks etasjer over Økern. Plakater og vind sitter fast i det.",
+      "walkable": false,
+      "blocksSight": true,
+      "color": "#8a94a0",
+      "height": 1.6,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.98,
+              1.6,
+              0.05
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              1.4,
+              0.02
+            ],
+            "pos": [
+              0,
+              0.8,
+              0
+            ],
+            "color": "#aab4c0",
+            "material": "glass"
+          }
+        ]
+      }
+    },
+    {
+      "id": "takbenk",
+      "name": "Benk på taket",
+      "description": "Treverk, fastskrudd, med utsikt mot TILLIT-tårnet og kranene over Økern. Her sitter du deg ned og puster.",
+      "walkable": false,
+      "interact": {
+        "targeting": {
+          "shape": "self",
+          "affects": "self_only",
+          "range": 0
+        },
+        "effects": [
+          {
+            "type": "heal",
+            "amount": {
+              "base": 2
+            }
+          },
+          {
+            "type": "message",
+            "text": "Du setter deg et øyeblikk. TILLIT, står det i vinduene på tårnet. Kranene snur sakte. Humøret kommer litt tilbake."
+          }
+        ]
+      },
+      "color": "#9a6b3c",
+      "height": 0.5,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.9,
+              0.06,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.45,
+              0
+            ],
+            "color": "#9a6b3c",
+            "material": "wood"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.45,
+              0.4
+            ],
+            "pos": [
+              -0.35,
+              0.22,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.08,
+              0.45,
+              0.4
+            ],
+            "pos": [
+              0.35,
+              0.22,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          }
+        ]
+      }
+    },
+    {
+      "id": "stolrad",
+      "name": "Stolrad i Sentralen",
+      "description": "Blå auditoriestoler i rad, tre hundre i alt. Noen sitter allerede. Noen ligger.",
+      "walkable": false,
+      "color": "#2b3a55",
+      "height": 0.9,
+      "model": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              0.95,
+              0.4,
+              0.5
+            ],
+            "pos": [
+              0,
+              0.4,
+              0
+            ],
+            "color": "#2b3a55",
+            "material": "cloth"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.95,
+              0.5,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.75,
+              -0.2
+            ],
+            "color": "#2b3a55",
+            "material": "cloth"
+          }
+        ]
+      }
+    }
+  ],
+  "unknownAppearances": {
+    "pose": [
+      {
+        "label": "Pose med lapp: «LÆRERE»",
+        "color": "#9fb8a0"
+      },
+      {
+        "label": "Pose som er varm av seg selv",
+        "color": "#8a5a2a"
+      },
+      {
+        "label": "Pose med et klistremerke fra 3STB",
+        "color": "#c6ff3a"
+      },
+      {
+        "label": "Pose med et navn som er strøket over",
+        "color": "#dff6ff"
+      }
+    ]
+  },
+  "areas": [
+    {
+      "name": "Glassgata (kl. 10.00)",
+      "description": "Hundre og førtifire meter glassgate gjennom hele skolen, med kantina, elevcaféen og elevrådskontoret langs veggene og glassvegger inn til alle verkstedene. Storefri: det går folk hele tida. Midt i gata står slushmaskinen, og bak den ligger stemmesedlene dine.",
+      "generator": "building",
+      "size": "medium",
+      "params": {
+        "corridorWidth": 3,
+        "crossHalls": 1
+      },
+      "floor": {
+        "color": "#c9cfd6",
+        "color2": "#b7bec7",
+        "material": "stone",
+        "pattern": "tiles"
+      },
+      "wall": {
+        "color": "#dfe6ee",
+        "color2": "#9fc5e8",
+        "material": "glass",
+        "height": 1.7
+      },
+      "lighting": {
+        "ambient": "#eef4ff",
+        "ambientIntensity": 0.9,
+        "lamps": {
+          "color": "#fff8e0",
+          "intensity": 1.2,
+          "frequency": 0.2,
+          "flicker": false
+        },
+        "playerLight": 3
+      },
+      "actors": [
+        {
+          "actor": "vg1-elev",
+          "weight": 40,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "storyen",
+          "weight": 25,
+          "min": 0,
+          "max": 1
+        },
+        {
+          "actor": "ventilasjonsduren",
+          "weight": 20,
+          "min": 0,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "knut",
+          "where": "near_start"
+        },
+        {
+          "actor": "hege",
+          "where": "centre"
+        },
+        {
+          "actor": "slushmaskinen",
+          "where": "far"
+        },
+        {
+          "actor": "malin",
+          "where": "anywhere"
+        },
+        {
+          "actor": "maryam",
+          "where": "anywhere"
+        },
+        {
+          "actor": "inger",
+          "where": "near_start"
+        }
+      ],
+      "items": [
+        {
+          "item": "kanelbolle",
+          "weight": 30
+        },
+        {
+          "item": "kaffe",
+          "weight": 12
+        },
+        {
+          "item": "slush",
+          "weight": 15
+        },
+        {
+          "item": "powerbank",
+          "weight": 15
+        },
+        {
+          "item": "skjermbilde",
+          "weight": 12
+        },
+        {
+          "item": "ansattkantine-rester",
+          "weight": 8
+        },
+        {
+          "item": "fasademelk",
+          "weight": 6
+        },
+        {
+          "item": "energidrikk",
+          "weight": 8
+        },
+        {
+          "item": "horselvern",
+          "weight": 5
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "stemmer-glassgata",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "sittegruppe",
+          "density": 0.015
+        },
+        {
+          "terrain": "grunnsteinsvinduet",
+          "density": 0.004
+        },
+        {
+          "terrain": "slushsol",
+          "density": 0.015
+        },
+        {
+          "terrain": "kaffeautomat",
+          "density": 0.004
+        }
+      ],
+      "transitionName": "Ta trappa ned til verkstedene",
+      "transitionRequires": {
+        "type": "counter",
+        "counter": "stemmer",
+        "cmp": "gte",
+        "value": 4
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              0.2,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.1,
+              0.3
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              0.2,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              0.2,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.5,
+              -0.3
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.1,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.4,
+              -0.3
+            ],
+            "color": "#c6ff3a",
+            "material": "glow",
+            "emissive": "#c6ff3a"
+          }
+        ],
+        "light": {
+          "color": "#fff2c8",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Storefri i glassgata, 144 meter glass. Knut gir hørselvern og nøkkelkort og vet alt om ventilasjonen. Hege selger boller og sladder. Stemmesedlene ligger bak Slushmaskinen, som må overbevises. Hver overbevist er en stemme; sedlene gir fire. Ingen vold: konflikter er spørsmål, dur og kleinhet. Litt Oslo-slang i elevenes replikker («ass», «serr», «lø»).",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#9fc5e8",
+        "color2": "#dfe6ee",
+        "intensity": 0.4
+      },
+      "music": "upbeat"
+    },
+    {
+      "name": "Verkstedene (kl. 11.30)",
+      "description": "Verkstedene langs vestfasaden: bygg, elektro og TIP med glassvegger mellom, oljesøl fra bilhallen og en vinkelsliper ingen eier. Ved døra står HMS-skjermen og spiller modul 3 av 12. Stemmesedlene fra verkstedene ligger bak den.",
+      "generator": "rooms",
+      "size": "medium",
+      "params": {
+        "roomCount": 8,
+        "corridorWidth": 2
+      },
+      "floor": {
+        "color": "#8a8a8a",
+        "color2": "#7a7a7a",
+        "material": "stone",
+        "pattern": "plain"
+      },
+      "wall": {
+        "color": "#b0b8c0",
+        "color2": "#b5652d",
+        "material": "metal",
+        "height": 1.8
+      },
+      "lighting": {
+        "ambient": "#e0e8f0",
+        "ambientIntensity": 0.7,
+        "lamps": {
+          "color": "#ffffff",
+          "intensity": 1.5,
+          "frequency": 0.18,
+          "flicker": true
+        },
+        "playerLight": 4,
+        "fog": {
+          "color": "#c8c8c8",
+          "density": 0.012
+        }
+      },
+      "actors": [
+        {
+          "actor": "vinkelsliper",
+          "weight": 30,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "kube-3",
+          "weight": 30,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "soknadsbunken",
+          "weight": 25,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "vg1-elev",
+          "weight": 15,
+          "min": 0,
+          "max": 2
+        },
+        {
+          "actor": "ventilasjonsduren",
+          "weight": 10,
+          "min": 0,
+          "max": 1
+        }
+      ],
+      "placed": [
+        {
+          "actor": "bjorn",
+          "where": "near_start"
+        },
+        {
+          "actor": "tobias",
+          "where": "anywhere"
+        },
+        {
+          "actor": "hms-kurset",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "kanelbolle",
+          "weight": 22
+        },
+        {
+          "item": "kaffe",
+          "weight": 12
+        },
+        {
+          "item": "powerbank",
+          "weight": 15
+        },
+        {
+          "item": "skjermbilde",
+          "weight": 10
+        },
+        {
+          "item": "ansattkantine-rester",
+          "weight": 6
+        },
+        {
+          "item": "energidrikk",
+          "weight": 8
+        },
+        {
+          "item": "klistremerker",
+          "weight": 6
+        },
+        {
+          "item": "megafon",
+          "weight": 5
+        },
+        {
+          "item": "arbeidsjakke",
+          "weight": 5
+        },
+        {
+          "item": "vannflaske",
+          "weight": 4
+        },
+        {
+          "item": "nokkelkort",
+          "weight": 2
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "stemmer-verkstedene",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "arbeidsbenk",
+          "density": 0.03
+        },
+        {
+          "terrain": "oljesol",
+          "density": 0.03
+        },
+        {
+          "terrain": "verktoytavle",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Ta heisen opp til taket",
+      "transitionRequires": {
+        "type": "counter",
+        "counter": "stemmer",
+        "cmp": "gte",
+        "value": 8
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              1.9,
+              0.1
+            ],
+            "pos": [
+              0,
+              0.95,
+              0
+            ],
+            "color": "#c9cfd6",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.02,
+              1.7,
+              0.12
+            ],
+            "pos": [
+              0,
+              0.9,
+              0
+            ],
+            "color": "#3b3b3b",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.1,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.75,
+              0
+            ],
+            "color": "#c6ff3a",
+            "material": "glow",
+            "emissive": "#c6ff3a"
+          }
+        ],
+        "light": {
+          "color": "#fff2c8",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Verkstedene til bygg, elektro og TIP med glassvegger mellom. Bjørn vet at sedlene ligger bak HMS-kurset ved døra; kurset må overbevises med rolige svar. Tobias fra 2BYA kan bli med og bære. KUBE-3 fra Robotikklinja dulter, Olas søknadsbunke vil ha vedlegg. Støy og olje er fiendene, ikke folk.",
+      "backdrop": {
+        "style": "color",
+        "color": "#6a6a6a",
+        "intensity": 0.3
+      },
+      "music": "explore"
+    },
+    {
+      "name": "Taket (kl. 12.45)",
+      "description": "Skolegården på taket, seks etasjer over Økern, med basketbane bak nettinggjerde og vind fra Østre Aker vei. Utsikt til TILLIT-tårnet, kranene over Økern sentrum og godstogene på Alnabanen. I gjerdet henger Henriks valgplakat på tre meter, og bak den ligger stemmesedlene fra ST.",
+      "generator": "open",
+      "size": "medium",
+      "params": {
+        "openness": 0.6,
+        "clutter": 0.2
+      },
+      "floor": {
+        "color": "#6f7a6a",
+        "color2": "#8a9a7a",
+        "material": "stone",
+        "pattern": "grass"
+      },
+      "wall": {
+        "color": "#8a94a0",
+        "color2": "#b5652d",
+        "material": "metal",
+        "height": 1.2
+      },
+      "lighting": {
+        "ambient": "#dde8f5",
+        "ambientIntensity": 0.8,
+        "sun": {
+          "color": "#fff4d6",
+          "intensity": 1.2,
+          "elevation": 28
+        },
+        "playerLight": 2,
+        "sky": "#9fc5e8",
+        "fog": {
+          "color": "#c8d8e8",
+          "density": 0.01
+        }
+      },
+      "actors": [
+        {
+          "actor": "vindkast",
+          "weight": 30,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "actor": "basketball",
+          "weight": 25,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "valgkampgjengen",
+          "weight": 30,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "storyen",
+          "weight": 15,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "espen",
+          "where": "near_start"
+        },
+        {
+          "actor": "martine",
+          "where": "anywhere"
+        },
+        {
+          "actor": "vegard",
+          "where": "anywhere"
+        },
+        {
+          "actor": "storplakaten",
+          "where": "far"
+        }
+      ],
+      "items": [
+        {
+          "item": "kanelbolle",
+          "weight": 22
+        },
+        {
+          "item": "vannflaske",
+          "weight": 12
+        },
+        {
+          "item": "powerbank",
+          "weight": 15
+        },
+        {
+          "item": "skjermbilde",
+          "weight": 10
+        },
+        {
+          "item": "klistremerker",
+          "weight": 8
+        },
+        {
+          "item": "ansattkantine-rester",
+          "weight": 6
+        },
+        {
+          "item": "energidrikk",
+          "weight": 6
+        },
+        {
+          "item": "regnjakke",
+          "weight": 4
+        },
+        {
+          "item": "slush",
+          "weight": 8
+        }
+      ],
+      "itemCount": 6,
+      "placedItems": [
+        {
+          "item": "stemmer-taket",
+          "where": "guarded"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "gjerde",
+          "density": 0.04
+        },
+        {
+          "terrain": "takbenk",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Ned trappa til Sentralen",
+      "transitionRequires": {
+        "type": "counter",
+        "counter": "stemmer",
+        "cmp": "gte",
+        "value": 12
+      },
+      "transitionModel": {
+        "archetype": "prop",
+        "parts": [
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              0.2,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.1,
+              0.3
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              0.2,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.3,
+              0
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              1.0,
+              0.2,
+              0.4
+            ],
+            "pos": [
+              0,
+              0.5,
+              -0.3
+            ],
+            "color": "#8a94a0",
+            "material": "metal"
+          },
+          {
+            "shape": "box",
+            "size": [
+              0.3,
+              0.1,
+              0.12
+            ],
+            "pos": [
+              0,
+              1.4,
+              -0.3
+            ],
+            "color": "#c6ff3a",
+            "material": "glow",
+            "emissive": "#c6ff3a"
+          }
+        ],
+        "light": {
+          "color": "#fff2c8",
+          "intensity": 0.8,
+          "radius": 2
+        }
+      },
+      "gmNotes": "Skolegården på taket med basketbane, vind og utsikt over Hovinbyen: TILLIT-tårnet, kraner, godstog. Espen heler én gang. Vegard selger vann og regnjakke. Martine vet at sedlene ligger bak Henriks valgplakat i gjerdet; plakaten må overbevises. Valgkampgjengen er hyggelige og overalt. Vinden er ikke slem, bare vind.",
+      "backdrop": {
+        "style": "clouds",
+        "color": "#9fc5e8",
+        "color2": "#dde8f5",
+        "intensity": 0.6
+      },
+      "music": "calm"
+    },
+    {
+      "name": "Sentralen (kl. 14.00)",
+      "description": "Auditoriet med tre hundre seter, scenelys og én talerstol. Hele Vg1 sitter på stolradene. Henrik står ved scenekanten med en slush i hver hånd. Og rundt talerstolen kveiler ryktet seg, stort og blått, og sier det samme om og om igjen.",
+      "generator": "arena",
+      "size": "small",
+      "params": {
+        "pillarDensity": 0.2,
+        "sideRooms": 0.4
+      },
+      "floor": {
+        "color": "#2a2440",
+        "color2": "#3a3258",
+        "material": "wood",
+        "pattern": "planks"
+      },
+      "wall": {
+        "color": "#2b3a55",
+        "color2": "#b5652d",
+        "material": "stone",
+        "height": 2
+      },
+      "lighting": {
+        "ambient": "#5a4a8a",
+        "ambientIntensity": 0.5,
+        "lamps": {
+          "color": "#ffe8a3",
+          "intensity": 2,
+          "frequency": 0.2,
+          "flicker": false
+        },
+        "playerLight": 3,
+        "fog": {
+          "color": "#1a1430",
+          "density": 0.015
+        }
+      },
+      "actors": [
+        {
+          "actor": "valgkampgjengen",
+          "weight": 35,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "vg1-elev",
+          "weight": 30,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "actor": "storyen",
+          "weight": 20,
+          "min": 0,
+          "max": 2
+        }
+      ],
+      "placed": [
+        {
+          "actor": "slushryktet",
+          "where": "near_exit"
+        },
+        {
+          "actor": "rektor",
+          "where": "near_start"
+        },
+        {
+          "actor": "thomas",
+          "where": "near_start"
+        },
+        {
+          "actor": "ida",
+          "where": "anywhere"
+        },
+        {
+          "actor": "hege",
+          "where": "anywhere"
+        },
+        {
+          "actor": "henrik",
+          "where": "anywhere"
+        }
+      ],
+      "items": [
+        {
+          "item": "kanelbolle",
+          "weight": 30
+        },
+        {
+          "item": "powerbank",
+          "weight": 20
+        },
+        {
+          "item": "klistremerker",
+          "weight": 15
+        },
+        {
+          "item": "vannflaske",
+          "weight": 6
+        }
+      ],
+      "itemCount": 3,
+      "placedItems": [
+        {
+          "item": "stemmer-sentralen",
+          "where": "guarded"
+        },
+        {
+          "item": "talerstolen",
+          "where": "far"
+        }
+      ],
+      "terrain": [
+        {
+          "terrain": "stolrad",
+          "density": 0.02
+        },
+        {
+          "terrain": "slushsol",
+          "density": 0.01
+        }
+      ],
+      "transitionName": "Gå av scenen",
+      "gmNotes": "Finalen, uten vold. To veier: overbevis Slushryktet foran alle med seksten stemmer, eller bruk Talerstolen på scenen med seksten stemmer. De siste sedlene ligger ved talerstolen. Henrik kan overtales; han er egentlig lettet. Rektor står ved scenekanten. Thomas kan bli med. Ida teller stemmer.",
+      "backdrop": {
+        "style": "gradient",
+        "color": "#1a1430",
+        "color2": "#5a2a5a",
+        "intensity": 0.5
+      },
+      "music": "boss"
+    }
+  ],
+  "goal": {
+    "summary": "Samle seksten stemmer: stemmesedlene på hvert sted gir fire, og hver du overbeviser gir én. Avgjør så valget i Sentralen: overbevis Slushryktet, eller bruk Talerstolen med seksten stemmer.",
+    "win": {
+      "type": "any",
+      "of": [
+        {
+          "type": "all",
+          "of": [
+            {
+              "type": "in_area",
+              "area": 3
+            },
+            {
+              "type": "counter",
+              "counter": "stemmer",
+              "cmp": "gte",
+              "value": 16
+            },
+            {
+              "type": "actor_defeated",
+              "actor": "slushryktet"
+            }
+          ]
+        },
+        {
+          "type": "flag",
+          "flag": "valgt"
+        }
+      ]
+    },
+    "winText": "Du går opp på scenen med seksten stemmer og et forslag på to sider. «Hei,» sier du. «Jeg vil ikke fjerne slushen. Jeg vil fikse lufta.» Det blir stille i hele Sentralen. Så begynner noen på bakerste rad å klappe, og det er Henrik, med en slush i hver hånd. Hege nikker. Knut nikker to ganger. Respekt, ansvar, omsorg, tenker du. Mest luft.",
+    "lossText": "Klokka blir to, og så halv tre. Henrik går opp på scenen med en slush i hver hånd og sier «slush hver dag» elleve ganger. Folk klapper. Du står bakerst med forslaget i lomma og et rykte som ingen svarte på. Neste år, tenker du. Neste år skriver du «slush» i overskriften.",
+    "labels": {
+      "stemmer": "Stemmer",
+      "valgt": "Valgt fra talerstolen i Sentralen"
+    },
+    "lose": {
+      "type": "turn",
+      "cmp": "gte",
+      "value": 1800
+    },
+    "deathText": "Humøret tar slutt midt i glassgata, foran glassveggen inn til elektro, og noen filmer det. Du tar 23-bussen hjem fra Økern, spiser en kald bolle og ser allmøtet på andres story. Henrik blir valgt. Han lover slush."
+  },
+  "gm": {
+    "persona": "Glassgata selv: hundre og førtifire meter glass tvers gjennom Kuben, åpnet i 2013 på tomta til Standard Telefon og Kabelfabrik, der det går folk hele tida. Snakker som en tørr, varm østkantlærer som har sett tolv elevrådsvalg og ett ventilasjonsmareritt.",
+    "voice": "Presens, du-form, korte setninger. Av og til et Oslo-uttrykk, aldri for mange. Aldri slem mot elevene, litt slem mot spjeld og rykter.",
+    "threads": [
+      "Stemmene ligger på fire steder, og hvert sted har sin egen form for støy.",
+      "Henrik skrev ryktet selv og angrer, og håper i all hemmelighet at Sara vinner.",
+      "Respekt, ansvar, omsorg dukker opp der man minst venter det.",
+      "Ventilasjonen durer gjennom hele dagen, akkurat som i 2013, og bare Sara og Knut bryr seg."
+    ],
+    "fallback": {
+      "intro": "Onsdag, klokka ti. Storefri i glassgata, og om fire timer velger allmøtet i Sentralen ny elevrådsleder. Du, Sara, Vg2 automatisering, står mot Henrik fra 3STB og et rykte med fire ord. Stemmesedlene ligger bak slushmaskinen. Seksten stemmer. Fire timer. Og mobilen på 80 prosent.",
+      "areaEnter": [
+        "Glassgata, klokka ti. Hundre og førtifire meter glass, og det går folk hele tida. Slushmaskinen står midt i gata og blinker blått. Bak den ligger stemmesedlene dine.",
+        "Verkstedene, halv tolv. Det lukter olje, kobber og gul vest. En vinkelsliper hviner et sted, KUBE-3 kjører i ring, og HMS-skjermen ved døra spiller modul 3 av 12 for ingen.",
+        "Taket, kvart på ett. Vinden fra Østre Aker vei tar tak i alt. TILLIT, står det på tårnet der borte. I gjerdet henger Henrik på tre meter og smiler.",
+        "Klokka to. Sentralen er full, scenelyset er på, og rundt talerstolen kveiler ryktet seg og sier fire ord om og om igjen. Henrik står ved scenekanten med to slush."
+      ],
+      "lowHp": [
+        "Humøret er nesten borte. Det er lættis, egentlig, når du tenker etter. Ta en bolle.",
+        "Kinnene brenner. Ingen husker dette i morgen. Nesten ingen."
+      ],
+      "events": [
+        "Høyttaleren skraper: «Elevrådet bes møte på kontoret. Elevrådet.» Kontoret er på størrelse med et skap.",
+        "Mobilen vibrerer. Klassechatten 2AUA: «har du stemmene??» «henrik har kjøpt 40 slush» «serr»",
+        "Langt borte stopper ventilasjonen i to sekunder. Hele bygget hører stillheten. Så starter den igjen.",
+        "Noen har skrevet RESPEKT ANSVAR OMSORG på en serviett og lagt den igjen i sittegruppa. Du føler deg merkelig styrket."
+      ]
+    }
+  },
+  "audio": {
+    "mood": "Lett skolekomedie med by i bakgrunnen: pizzicato og klokkespill, et T-banetog som bremser på Økern, og en bass som kommer nærmere klokka to.",
+    "synth": {
+      "key": "A",
+      "scale": "mixolydian",
+      "tempo": 114,
+      "timbre": "pluck",
+      "drone": false,
+      "percussion": "soft",
+      "brightness": 0.65
+    },
+    "searchTerms": [
+      "skolekomedie instrumental",
+      "oslo east lofi",
+      "valgkamp instrumental"
+    ],
+    "suggestions": [
+      "Lys pluck-melodi over myke trommer, med litt vind og et godstog langt borte."
+    ]
+  }
+}
