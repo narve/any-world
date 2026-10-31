@@ -27,6 +27,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { startStaticServer } from '../server/serve-static';
 
+
 const PORT = Number(process.env.MODES_PORT) || 5193;
 const BASE = `http://localhost:${PORT}`;
 const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M4' : 'test-results/shots/M4';
@@ -109,6 +110,7 @@ async function prepare(page: Page, settings?: unknown) {
       if (!sessionStorage.getItem('aw-e2e-init')) {
         sessionStorage.setItem('aw-e2e-init', '1');
         localStorage.clear();
+        localStorage.setItem('anyworld.byo', '1'); // "Bring your own AI" open: these specs use the new-world form
         localStorage.setItem('anyworld.lang.v1', 'en');
         if (s) localStorage.setItem('anyworld.settings.v1', JSON.stringify(s));
       }
@@ -321,7 +323,7 @@ test.describe('static build (browser-only)', () => {
     expect(errors).toEqual([]);
   });
 
-  test('"New world" after a run opens the start screen at the top, prompt box in view', async ({ page }) => {
+  test('"New world" after a run opens the start screen at the top, the featured world in view', async ({ page }) => {
     // issues/M5-start-screen-keeps-scroll.md: it used to keep the scroll position of the demo card clicked before
     const errors = collectErrors(page);
     await prepare(page);
@@ -339,8 +341,7 @@ test.describe('static build (browser-only)', () => {
     await page.getByRole('button', { name: 'New world' }).click();
     await expect(start).toBeVisible();
     await expect.poll(scrollTop).toBe(0);
-    await expect(page.locator('#aw-prompt')).toBeInViewport();
-    await expect(page.locator('#aw-prompt')).toBeFocused();
+    await expect(page.locator('.aw-featured-play')).toBeInViewport();
     expect(errors).toEqual([]);
   });
 

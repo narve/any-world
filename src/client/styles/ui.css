@@ -1717,26 +1717,263 @@ body {
     var(--c-panel);
 }
 
-/* start */
+/* start: one column. Brand and intro, a saved run, the featured world beside "Play together",
+   the ready-made worlds, your own worlds, then "Bring your own AI" (folded) */
 .aw-start-inner {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
   gap: 32px;
-  max-width: 1120px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 48px 32px;
+  padding: 44px 32px;
 }
 
-.aw-start-main {
-  display: grid;
-  gap: 14px;
-  align-content: start;
+.aw-start-inner > * {
   min-width: 0;
 }
 
 .aw-brand {
   position: relative;
-  margin-bottom: 8px;
+  padding-right: 200px;
+}
+
+.aw-brand-tools {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aw-about {
+  display: grid;
+  gap: 14px;
+  margin-top: -12px;
+}
+
+.aw-about-lead {
+  margin: 0;
+  max-width: 68ch;
+  font-family: var(--font-story);
+  font-size: 19px;
+  line-height: 1.45;
+}
+
+.aw-about-points {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  color: var(--c-muted);
+}
+
+.aw-about-points li {
+  position: relative;
+  padding-left: 18px;
+}
+
+.aw-about-points li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.5em;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+
+.aw-start-hero {
+  display: grid;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.aw-start-hero.has-rooms {
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+}
+
+.aw-featured {
+  --demo: var(--c-accent);
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 28px;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--demo) 55%, transparent);
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--demo) 30%, transparent), transparent 70%),
+    rgba(var(--c-panel-rgb), 0.8);
+}
+
+.aw-featured-kicker {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+.aw-featured-title {
+  margin: 0;
+  font-family: var(--font-story);
+  font-size: clamp(30px, 4.4vw, 44px);
+  font-weight: 600;
+  line-height: 1.05;
+}
+
+.aw-featured-tag {
+  margin: 0;
+  max-width: 56ch;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.aw-featured-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* "Play together" beside the featured world: as big a call as the world itself */
+.aw-start .aw-start-hero .aw-rooms {
+  align-content: start;
+  gap: 10px;
+  padding: 22px;
+  border-left-width: 1px;
+  border-color: color-mix(in srgb, var(--c-secondary) 60%, transparent);
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--c-secondary) 24%, transparent), transparent 70%),
+    rgba(var(--c-panel-rgb), 0.8);
+}
+
+.aw-start .aw-start-hero .aw-rooms-head h2 {
+  font-family: var(--font-story);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--c-text);
+}
+
+.aw-start-difficulty {
+  display: grid;
+  gap: 4px;
+  max-width: 560px;
+  margin-bottom: 14px;
+}
+
+.aw-start-difficulty .aw-range-hint {
+  margin: 0;
+}
+
+.aw-demos-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin-bottom: 10px;
+}
+
+.aw-demos-head p {
+  margin: 0;
+}
+
+.aw-demos .aw-demo-list {
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+}
+
+/* cards in a row share their height; "Play with friends" is a small icon in each card's corner */
+.aw-demos .aw-demo-list > li {
+  position: relative;
+  display: grid;
+}
+
+.aw-demos .aw-demo {
+  align-content: start;
+  height: 100%;
+}
+
+.aw-demos .aw-demo-item.has-friends .aw-demo {
+  padding-right: 52px;
+}
+
+.aw-demos .aw-demo-item.has-friends .aw-friends {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
+.aw-ui[data-input='touch'] .aw-demos .aw-demo-item.has-friends .aw-friends {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.aw-demos .aw-friends-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.aw-friends svg {
+  width: 16px;
+  height: 16px;
+}
+
+.aw-byo {
+  padding: 20px 22px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--c-border-strong);
+}
+
+.aw-byo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.aw-byo-head h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.aw-byo-head p {
+  margin: 0;
+  max-width: 62ch;
+}
+
+.aw-byo-toggle {
+  flex: none;
+}
+
+.aw-byo-toggle.is-open {
+  border-color: var(--c-accent);
+}
+
+.aw-byo-body {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.aw-byo-body[hidden] {
+  display: none;
+}
+
+.aw-byo-body > .aw-range {
+  max-width: 560px;
 }
 
 .aw-logo {
@@ -1759,23 +1996,6 @@ body {
   color: var(--c-muted);
 }
 
-/* "2 open rooms ↓": only while the rooms card sits below the form (one column) */
-.aw-start-rooms-jump {
-  margin-top: 10px;
-  border-color: var(--c-secondary);
-}
-
-@media (min-width: 1001px) {
-  .aw-start-rooms-jump {
-    display: none;
-  }
-}
-
-.aw-start-settings {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
 
 .aw-label,
 .aw-field label,
@@ -1865,12 +2085,12 @@ body {
 }
 
 .aw-insp {
-  margin-top: 14px;
+  margin-top: 8px;
 }
 
-/* a quiet link for advanced readers, below the inspiration cards */
+/* a quiet link for advanced readers, at the foot of the page */
 .aw-start-foot {
-  margin: 24px 0 8px;
+  margin: 0 0 8px;
   font-size: 12px;
 }
 
@@ -1892,8 +2112,8 @@ body {
   margin-bottom: 8px;
 }
 
-.aw-insp-head h2,
-.aw-start-side h2 {
+.aw-insp-head h3,
+.aw-start :is(.aw-saved, .aw-demos-head, .aw-recent-head, .aw-rooms-head) h2 {
   margin: 0;
   font-size: 13px;
   letter-spacing: 0.1em;
@@ -1959,14 +2179,7 @@ body {
   margin: 0 12px 12px;
 }
 
-.aw-start-side {
-  display: grid;
-  gap: 24px;
-  align-content: start;
-}
-
-.aw-saved h2,
-.aw-demos h2 {
+.aw-saved h2 {
   margin-bottom: 8px;
 }
 
@@ -2404,8 +2617,38 @@ body {
 
 @media (max-width: 1000px) {
   .aw-start-inner {
-    grid-template-columns: 1fr;
-    padding: 32px 20px;
+    gap: 26px;
+    padding: 28px 16px;
+  }
+
+  .aw-start-hero.has-rooms {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aw-brand {
+    padding-right: 0;
+  }
+
+  .aw-brand-tools {
+    position: static;
+    margin-top: 12px;
+  }
+
+  .aw-about-points {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aw-featured {
+    padding: 20px;
+  }
+
+  .aw-byo {
+    padding: 16px;
+  }
+
+  .aw-byo-head {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .aw-bp-body {
@@ -4452,9 +4695,12 @@ body {
   margin: 0 0 0 6px;
 }
 
+/* columns of three, so the column is no taller than it was with three buttons */
 .aw-ui[data-layout='phone-landscape'] .aw-hotbar-tools {
   grid-area: map;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: repeat(3, auto);
+  grid-auto-flow: column;
   justify-self: end;
   align-self: end;
   gap: 6px;

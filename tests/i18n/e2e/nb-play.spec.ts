@@ -126,7 +126,7 @@ test('start screen in bokmål', async ({ page }) => {
   await page.goto('/');
   await page.waitForTimeout(1500);
   await shotAndScan(page, '01-start');
-  await expect(page.getByText('Demoverdener').first()).toBeVisible();
+  await expect(page.getByText('Ferdige verdener').first()).toBeVisible();
   // the translated demo worlds are listed under Norwegian
   await expect(page.getByText('Hver paragraf binder').first()).toBeVisible();
   await expect(page.getByText('Nøytral grunn: kjøkkenet i tredje').first()).toBeVisible();

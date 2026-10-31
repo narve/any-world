@@ -9,6 +9,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 
+
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
 const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M3' : 'test-results/shots/M3';
 mkdirSync(OUT, { recursive: true });
@@ -46,6 +47,7 @@ async function fresh(page: Page): Promise<void> {
   await page.addInitScript(() => {
     if (!sessionStorage.getItem('gen-init')) {
       localStorage.clear();
+      localStorage.setItem('anyworld.byo', '1'); // "Bring your own AI" open: these specs use the new-world form
       localStorage.setItem('anyworld.lang.v1', 'en');
       sessionStorage.setItem('gen-init', '1');
     }

@@ -5,6 +5,7 @@
  */
 import { test, expect } from '@playwright/test';
 
+
 test('backend without a key: "Surprise me" plays a demo world, "Create world" asks for a provider', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -13,6 +14,7 @@ test('backend without a key: "Surprise me" plays a demo world, "Create world" as
       if (!sessionStorage.getItem('aw-e2e-init')) {
         sessionStorage.setItem('aw-e2e-init', '1');
         localStorage.clear();
+        localStorage.setItem('anyworld.byo', '1'); // "Bring your own AI" open: these specs use the new-world form
         localStorage.setItem('anyworld.lang.v1', 'en');
       }
     } catch {

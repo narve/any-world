@@ -16,6 +16,7 @@ const SHELL_ICONS = {
   trash: ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 13h10l1-13'],
   ok: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M8 12l3 3 5-6'],
   info: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M12 11v6', 'M12 7h.01'],
+  people: ['M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M2 21v-1a6 6 0 0 1 12 0v1', 'M16 3.5a4 4 0 0 1 0 7', 'M22 21v-1a6 6 0 0 0-4-5.6'],
 } as const;
 
 /** how many theme tags the inspiration filter offers */
@@ -67,6 +68,18 @@ export function recentSourceLabel(source: RecentWorldView['source']): string {
 
 const CARD_COUNT = 4;
 
+/** this browser keeps "Bring your own AI" open once the player opened it ('1') or shut it ('0') */
+export const BYO_KEY = 'anyworld.byo';
+
+function storedByo(): boolean | null {
+  try {
+    const v = globalThis.localStorage?.getItem(BYO_KEY);
+    return v === '1' ? true : v === '0' ? false : null;
+  } catch {
+    return null;
+  }
+}
+
 /** the offline demo generator's preset id (modes.ts OFFLINE_PRESET) */
 const OFFLINE_PRESET_ID = 'mock';
 
@@ -87,8 +100,19 @@ export class StartScreen {
   private partySize = DEFAULT_PARTY;
   private partyDefault: number | undefined;
   private cardsEl: HTMLElement;
-  private sideEl: HTMLElement;
   private noteEl: HTMLElement;
+  /** the start page's blocks that change with the view: saved run, featured world, worlds, own worlds */
+  private savedEl: HTMLElement;
+  private featuredEl: HTMLElement;
+  private demosEl: HTMLElement;
+  private recentEl: HTMLElement;
+  /** the hero row: featured world beside "Play together" */
+  private heroEl: HTMLElement;
+  /** "Bring your own AI": everything that needs an AI provider (key or access code), folded away */
+  private byoBtn: HTMLButtonElement;
+  private byoBody: HTMLElement;
+  /** null until the player (or the first view) decides */
+  private byoOpen: boolean | null = null;
   private view: StartView | null = null;
   private listKey = '';
   private cards: InspirationPrompt[] = [];
@@ -102,12 +126,9 @@ export class StartScreen {
   private fileInput: HTMLInputElement;
   /** MP3: the "Play together" card (kept across re-renders: its code field keeps what was typed) */
   private rooms: RoomsCard;
-  /** narrow screens (one column): "2 open rooms ↓" at the top, as the rooms card sits below the form (MP5) */
-  private roomsJump: HTMLButtonElement;
 
   constructor(private cb: UiCallbacks, private rand: () => number = Math.random) {
     this.rooms = new RoomsCard((i) => this.cb.onRoom?.(i));
-    this.roomsJump = h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-start-rooms-jump', hidden: true, onclick: () => this.rooms.el.scrollIntoView({ behavior: 'smooth', block: 'start' }) }) as HTMLButtonElement;
     this.langEl = h('div', { class: 'aw-start-lang' });
     this.textarea = h('textarea', {
       id: 'aw-prompt',
@@ -115,7 +136,6 @@ export class StartScreen {
       rows: '3',
       maxlength: '500',
       placeholder: t('start.placeholder'),
-      'data-autofocus': true,
       onkeydown: (e: KeyboardEvent) => {
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
           e.preventDefault();
@@ -150,8 +170,45 @@ export class StartScreen {
       'aria-hidden': 'true',
       onchange: () => void this.readImport(),
     });
-    this.sideEl = h('aside', { class: 'aw-start-side' });
     this.noteEl = h('p', { class: 'aw-start-note' });
+    this.savedEl = h('div', { class: 'aw-start-saved' });
+    this.featuredEl = h('div', { class: 'aw-featured-host' });
+    this.heroEl = h('div', { class: 'aw-start-hero' }, this.featuredEl);
+    this.demosEl = h('div', { class: 'aw-demos-body' });
+    this.recentEl = h('div', { class: 'aw-start-recent' });
+    this.byoBody = h(
+      'div',
+      { class: 'aw-byo-body', id: 'aw-byo-body', hidden: true },
+      h('label', { class: 'aw-label', for: 'aw-prompt' }, t('start.promptLabel')),
+      this.textarea,
+      h('label', { class: 'aw-range', for: 'aw-weird' }, h('span', null, t('start.weirdness')), this.weird, this.weirdOut),
+      this.partyEl,
+      h(
+        'div',
+        { class: 'aw-start-actions' },
+        h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg', onclick: () => this.create(false) }, icon(ICONS.play), t('start.create')),
+        h('button', { type: 'button', class: 'aw-btn aw-btn-lg', onclick: () => this.create(true) }, icon(ICONS.sparkle), t('start.surprise')),
+      ),
+      this.noteEl,
+      h(
+        'section',
+        { class: 'aw-insp' },
+        h(
+          'div',
+          { class: 'aw-insp-head' },
+          h('h3', null, t('start.inspiration')),
+          h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost', onclick: () => this.shuffle(), 'aria-label': t('start.shuffleAria') }, icon(ICONS.shuffle), t('start.shuffle')),
+        ),
+        this.filterEl,
+        this.cardsEl,
+      ),
+    );
+    this.byoBtn = h(
+      'button',
+      { type: 'button', class: 'aw-btn aw-byo-toggle', 'aria-expanded': 'false', 'aria-controls': 'aw-byo-body', onclick: () => this.setByo(!this.byoOpen, true) },
+      icon(ICONS.sparkle),
+      t('start.byo'),
+    ) as HTMLButtonElement;
 
     this.el = h(
       'main',
@@ -160,49 +217,50 @@ export class StartScreen {
         'div',
         { class: 'aw-start-inner' },
         h(
-          'section',
-          { class: 'aw-start-main' },
+          'header',
+          { class: 'aw-brand' },
+          h('h1', { class: 'aw-logo' }, 'Any', h('span', null, 'World')),
+          h('p', { class: 'aw-brand-sub' }, t('start.tagline')),
           h(
-            'header',
-            { class: 'aw-brand' },
-            h('h1', { class: 'aw-logo' }, 'Any', h('span', null, 'World')),
-            h('p', { class: 'aw-brand-sub' }, t('start.tagline')),
-            this.roomsJump,
+            'div',
+            { class: 'aw-brand-tools' },
             this.langEl,
             h('button', { type: 'button', class: 'aw-icon-btn aw-start-settings', 'aria-label': t('settings.title'), dataset: { tip: t('settings.title') }, onclick: () => this.cb.onOpenSettings?.(true) }, icon(ICONS.gear)),
           ),
-          h('label', { class: 'aw-label', for: 'aw-prompt' }, t('start.promptLabel')),
-          this.textarea,
-          h(
-            'div',
-            { class: 'aw-sliders' },
-            h('label', { class: 'aw-range', for: 'aw-diff' }, h('span', null, t('start.difficulty')), this.diff, this.diffOut),
-            h('label', { class: 'aw-range', for: 'aw-weird' }, h('span', null, t('start.weirdness')), this.weird, this.weirdOut),
-          ),
-          this.diffHint,
-          this.partyEl,
-          h(
-            'div',
-            { class: 'aw-start-actions' },
-            h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg', onclick: () => this.create(false) }, icon(ICONS.play), t('start.create')),
-            h('button', { type: 'button', class: 'aw-btn aw-btn-lg', onclick: () => this.create(true) }, icon(ICONS.sparkle), t('start.surprise')),
-          ),
-          this.noteEl,
-          h(
-            'section',
-            { class: 'aw-insp' },
-            h(
-              'div',
-              { class: 'aw-insp-head' },
-              h('h2', null, t('start.inspiration')),
-              h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost', onclick: () => this.shuffle(), 'aria-label': t('start.shuffleAria') }, icon(ICONS.shuffle), t('start.shuffle')),
-            ),
-            this.filterEl,
-            this.cardsEl,
-          ),
-          h('p', { class: 'aw-start-foot' }, h('a', { href: 'tech.html', class: 'aw-start-tech' }, t('start.techNotes'))),
         ),
-        this.sideEl,
+        h(
+          'section',
+          { class: 'aw-about', 'aria-labelledby': 'aw-about-title' },
+          h('h2', { id: 'aw-about-title', class: 'aw-sr' }, t('start.aboutTitle')),
+          h('p', { class: 'aw-about-lead' }, t('start.about')),
+          h(
+            'ul',
+            { class: 'aw-about-points' },
+            (['start.about1', 'start.about2', 'start.about3', 'start.about4'] as const).map((k) => h('li', null, t(k))),
+          ),
+        ),
+        this.savedEl,
+        this.heroEl,
+        h(
+          'section',
+          { class: 'aw-demos', 'aria-labelledby': 'aw-demos-title' },
+          h('div', { class: 'aw-demos-head' }, h('h2', { id: 'aw-demos-title' }, t('start.demos')), h('p', { class: 'aw-muted aw-small' }, t('start.demosSub'))),
+          h('div', { class: 'aw-start-difficulty' }, h('label', { class: 'aw-range', for: 'aw-diff' }, h('span', null, t('start.difficulty')), this.diff, this.diffOut), this.diffHint),
+          this.demosEl,
+        ),
+        this.recentEl,
+        h(
+          'section',
+          { class: 'aw-byo', 'aria-labelledby': 'aw-byo-title' },
+          h(
+            'div',
+            { class: 'aw-byo-head' },
+            h('div', null, h('h2', { id: 'aw-byo-title' }, t('start.byoTitle')), h('p', { class: 'aw-muted aw-small' }, t('start.byoSub'))),
+            this.byoBtn,
+          ),
+          this.byoBody,
+        ),
+        h('p', { class: 'aw-start-foot' }, h('a', { href: 'tech.html', class: 'aw-start-tech' }, t('start.techNotes'))),
       ),
       this.fileInput,
     );
@@ -221,6 +279,25 @@ export class StartScreen {
     for (const el of [this.el, ...this.el.querySelectorAll<HTMLElement>('.aw-start-inner, .aw-start-main, .aw-start-side')]) {
       if (el.scrollTop) el.scrollTop = 0;
       if (el.scrollLeft) el.scrollLeft = 0;
+    }
+  }
+
+  /** fold "Bring your own AI" open or shut; `user`: the player clicked (moves focus into it) */
+  setByo(open: boolean, user = false): void {
+    this.byoOpen = open;
+    this.byoBody.hidden = !open;
+    this.byoBtn.setAttribute('aria-expanded', String(open));
+    this.byoBtn.classList.toggle('is-open', open);
+    if (user) {
+      try {
+        globalThis.localStorage?.setItem(BYO_KEY, open ? '1' : '0');
+      } catch {
+        /* private mode: open for this page only */
+      }
+    }
+    if (open && user) {
+      this.textarea.focus({ preventScroll: true });
+      this.byoBody.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
     }
   }
 
@@ -247,6 +324,7 @@ export class StartScreen {
   }
 
   private create(surprise: boolean): void {
+    if (!this.byoOpen) this.setByo(true);
     // with no AI, "Surprise me" still works: the app plays a random demo world (main.ts onStart)
     if (!surprise && this.view && !this.view.canGenerate) {
       this.cb.onOpenSettings?.(true);
@@ -381,9 +459,9 @@ export class StartScreen {
     }
     this.partySize = Math.min(12, Math.max(2, v.defaults?.party ?? DEFAULT_PARTY));
     if (v.rooms) this.rooms.update(v.rooms);
-    const open = v.rooms?.status === 'ok' ? v.rooms.rooms.length : 0;
-    this.roomsJump.hidden = !open;
-    if (open) this.roomsJump.textContent = t('room.openRooms', { n: open });
+    // open at first as this browser left it; else for a player whose own AI already works, or when a
+    // prompt or party was handed over
+    if (this.byoOpen === null) this.setByo(storedByo() ?? ((v.canGenerate && v.providerStatus?.tone === 'ok') || !!v.defaults?.prompt || v.defaults?.party !== undefined));
     const key = dataKey([v.prompts, v.demos, v.savedRun, v.providerLabel, v.canGenerate, v.providerStatus, v.recent, v.canImport, v.rooms ? v.rooms.status : null]);
     if (key === this.listKey) return;
     const promptsChanged = dataKey(v.prompts) !== dataKey(JSON.parse(this.listKey || '[[]]')[0]);
@@ -417,8 +495,9 @@ export class StartScreen {
       this.noteEl.append(h('span', { class: 'aw-muted' }, v.providerLabel), ' · ', h('button', { type: 'button', class: 'aw-link', onclick: () => this.cb.onOpenSettings?.(true) }, t('start.change')));
     }
 
+    const featured = v.featured ? v.demos.find((d) => d.id === v.featured) : undefined;
     setChildren(
-      this.sideEl,
+      this.savedEl,
       v.savedRun
         ? h(
             'section',
@@ -432,14 +511,37 @@ export class StartScreen {
             ),
           )
         : null,
-      v.rooms ? this.rooms.el : null,
-      v.recent?.length || v.canImport ? this.recentSection(v) : null,
+    );
+    setChildren(this.featuredEl, featured ? this.featuredCard(v, featured) : null);
+    this.heroEl.classList.toggle('has-rooms', !!v.rooms);
+    if (v.rooms && this.rooms.el.parentElement !== this.heroEl) this.heroEl.append(this.rooms.el);
+    else if (!v.rooms) this.rooms.el.remove();
+    const rest = featured ? { ...v, demos: v.demos.filter((d) => d !== featured) } : v;
+    setChildren(this.demosEl, rest.demos.length ? this.demoGroups(rest) : h('p', { class: 'aw-muted' }, t('start.noDemos')));
+    setChildren(this.recentEl, v.recent?.length || v.canImport ? this.recentSection(v) : null);
+  }
+
+  /** the featured world (StartView.featured): a big card at the top of the page */
+  private featuredCard(v: StartView, d: StartView['demos'][number]): HTMLElement {
+    const lang = baseLang(d.language);
+    return h(
+      'section',
+      { class: 'aw-featured', lang, style: { '--demo': d.color ?? 'var(--c-accent)' }, 'aria-labelledby': 'aw-featured-title' },
       h(
-        'section',
-        { class: 'aw-demos' },
-        h('h2', null, t('start.demos')),
-        h('p', { class: 'aw-muted aw-small' }, t('start.demosSub')),
-        v.demos.length ? this.demoGroups(v) : h('p', { class: 'aw-muted' }, t('start.noDemos')),
+        'span',
+        { class: 'aw-featured-kicker' },
+        h('span', { lang: baseLang(getLanguage()) }, t('start.featured')),
+        ' · ',
+        d.genre,
+        lang !== baseLang(getLanguage()) ? h('span', { class: 'aw-lang-badge', title: t('start.worldLanguage', { language: languageEndonym(d.language) }) }, lang.toUpperCase()) : null,
+      ),
+      h('h2', { id: 'aw-featured-title', class: 'aw-featured-title' }, d.title),
+      h('p', { class: 'aw-featured-tag' }, d.tagline),
+      h(
+        'div',
+        { class: 'aw-featured-actions', lang: baseLang(getLanguage()) },
+        h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg aw-featured-play', dataset: { world: d.id }, onclick: () => this.cb.onPlayDemo?.(d.id, this.options(false)) }, icon(ICONS.play), t('start.featuredPlay')),
+        this.friendsButton(v, d.id, d.title),
       ),
     );
   }
@@ -514,8 +616,9 @@ export class StartScreen {
     if (v.rooms?.status !== 'ok') return null;
     return h(
       'button',
-      { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost aw-friends', dataset: { friends: worldId }, 'aria-label': `${t('lobby.playWithFriends')}: ${title}`, onclick: () => this.cb.onRoom?.({ type: 'create', worldId }) },
-      t('lobby.playWithFriends'),
+      { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost aw-friends', dataset: { friends: worldId, tip: t('lobby.playWithFriends') }, 'aria-label': `${t('lobby.playWithFriends')}: ${title}`, onclick: () => this.cb.onRoom?.({ type: 'create', worldId }) },
+      icon(SHELL_ICONS.people),
+      h('span', { class: 'aw-friends-label' }, t('lobby.playWithFriends')),
     );
   }
 

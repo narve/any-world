@@ -7,6 +7,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync, readFileSync, readdirSync } from 'node:fs';
 
+
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
 const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M3' : 'test-results/shots/M3';
 mkdirSync(OUT, { recursive: true });
@@ -51,6 +52,7 @@ async function prepare(page: Page) {
   await page.addInitScript(() => {
     try {
       localStorage.clear();
+      localStorage.setItem('anyworld.byo', '1'); // "Bring your own AI" open: these specs use the new-world form
       localStorage.setItem('anyworld.lang.v1', 'en');
     } catch {
       /* storage blocked */
@@ -87,9 +89,9 @@ test('start screen: every recorded world, grouped by language; library inspirati
   expect(await groups.nth(1).getAttribute('data-lang')).toBe('nb');
   await expect(groups.nth(1).locator('.aw-demo-lang')).toContainText(/bokmål/i);
 
-  // every bundled world is listed exactly once, in its language's group (a translated copy stands
-  // in for its original only in its own language's UI)
-  const listed = await page.locator('.aw-demo').evaluateAll((els) => els.map((e) => ({ id: (e as HTMLElement).dataset.world!, lang: e.getAttribute('lang') ?? '' })));
+  // every bundled world is listed exactly once, in its language's group or as the featured world at
+  // the top (a translated copy stands in for its original only in its own language's UI)
+  const listed = await page.locator('.aw-demo, .aw-featured-play').evaluateAll((els) => els.map((e) => ({ id: (e as HTMLElement).dataset.world!, lang: (e.closest('.aw-featured') ?? e).getAttribute('lang') ?? '' })));
   expect(listed.map((d) => d.id).sort()).toEqual(listedFor('en'));
   for (const d of listed) expect(d.lang, d.id).toBe(LANG[d.id]!.split('-')[0]);
 
@@ -128,7 +130,7 @@ for (const id of WORLDS) {
     if (ui) await page.addInitScript((l) => localStorage.setItem('anyworld.lang.v1', l), ui);
     await page.goto('/');
     await waitReady(page);
-    await page.locator(`.aw-demo[data-world="${id}"]`).click();
+    await page.locator(`:is(.aw-demo, .aw-featured-play)[data-world="${id}"]`).click();
     await page.waitForFunction(() => window.__anyworld?.controller != null, null, { timeout: 60000 });
     await waitReady(page);
     await expect(page.locator('.aw-game')).toBeVisible();

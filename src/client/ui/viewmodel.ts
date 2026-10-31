@@ -420,6 +420,8 @@ export interface StartView {
   canImport?: boolean;
   /** MP3: the "Play together" card (absent: this build has no game server) */
   rooms?: RoomsCardView;
+  /** the demo world shown big at the top of the start page (an id in `demos`; absent or unknown: none) */
+  featured?: string;
 }
 
 // ---------------------------------------------------------------------------

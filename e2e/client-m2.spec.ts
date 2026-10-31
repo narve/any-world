@@ -8,6 +8,7 @@
 import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 
+
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
 const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
@@ -49,7 +50,10 @@ test.describe.configure({ mode: 'serial' });
 
 test('start options, GM intro, objective, hints and hover route preview', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.addInitScript(() => localStorage.clear());
+  await page.addInitScript(() => {
+    localStorage.clear();
+    localStorage.setItem('anyworld.byo', '1'); // "Bring your own AI" open: these specs use the new-world form
+  });
   await page.goto('/');
   await waitReady(page);
   // difficulty is a 4-step slider: gentle / normal / hard / brutal
@@ -126,7 +130,10 @@ test('start options, GM intro, objective, hints and hover route preview', async 
 
 test('ship: the bridge console can be used (Enter) and clicked hostiles refresh their tooltip', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.addInitScript(() => localStorage.clear());
+  await page.addInitScript(() => {
+    localStorage.clear();
+    localStorage.setItem('anyworld.byo', '1'); // "Bring your own AI" open: these specs use the new-world form
+  });
   await page.goto('/?world=fixture-ship&seed=5');
   await waitReady(page);
   await skipNarration(page);
@@ -269,7 +276,10 @@ test('ship: the bridge console can be used (Enter) and clicked hostiles refresh 
 
 test('GM rules, danger feedback and log folding on the ship', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.addInitScript(() => localStorage.clear());
+  await page.addInitScript(() => {
+    localStorage.clear();
+    localStorage.setItem('anyworld.byo', '1'); // "Bring your own AI" open: these specs use the new-world form
+  });
   await page.goto('/?world=fixture-ship&seed=8');
   await waitReady(page);
   await skipNarration(page);
@@ -329,7 +339,10 @@ test('GM rules, danger feedback and log folding on the ship', async ({ page }) =
 
 test('western: the dialogue docks beside the speaker; the end screen shows the run options', async ({ page }) => {
   const errors = collectErrors(page);
-  await page.addInitScript(() => localStorage.clear());
+  await page.addInitScript(() => {
+    localStorage.clear();
+    localStorage.setItem('anyworld.byo', '1'); // "Bring your own AI" open: these specs use the new-world form
+  });
   await page.goto('/?world=fixture-western&seed=7');
   await waitReady(page);
   await skipNarration(page);

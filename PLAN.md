@@ -122,7 +122,7 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   `applySettings`, src/client/audio-bridge.ts). Add a one-tap speaker toggle that is always visible
   during a run (desktop HUD and phone layout). It uses the same stored `muted` setting, so the toggle
   and the settings dialog never disagree. Keyboard shortcut (e.g. `M`) if it doesn't clash. en + nb strings.
-- **TODO: clean up the front page.** The start screen (src/client/ui/components/screens.ts) has grown
+- **Done (2026-10-31): clean up the front page.** Now one column: a short "what is this" intro, *KKG: Talen* featured beside *Play together*, the ready-made worlds, your worlds, and everything that needs an AI provider (key or access code) folded behind *Bring your own AI*. Originally: The start screen (src/client/ui/components/screens.ts) has grown
   with each milestone: provider note, demo worlds, own worlds, party option, open rooms. Tidy it up,
   with a clear main action, less text, related things grouped and secondary options folded away. Check
   it on phone portrait as well as desktop.

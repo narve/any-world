@@ -10,6 +10,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
+
 // review screenshots go to test-results; SHOTS_TO_DOCS=1 writes the committed milestone copies
 const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M5' : 'test-results/shots/m5-client-r2';
 mkdirSync(OUT, { recursive: true });
@@ -22,6 +23,7 @@ async function fresh(page: Page, settings?: unknown): Promise<void> {
     if (!sessionStorage.getItem('r2c-init')) {
       sessionStorage.setItem('r2c-init', '1');
       localStorage.clear();
+      localStorage.setItem('anyworld.byo', '1'); // "Bring your own AI" open: these specs use the new-world form
       localStorage.setItem('anyworld.lang.v1', 'en');
       if (st) localStorage.setItem('anyworld.settings.v1', JSON.stringify(st));
     }

@@ -57,6 +57,7 @@ test('the AI GM in a party room: lobby line, intro card on both pages, chat answ
   // ("For a party" in the new-world form: shown with a game server, off by default)
   await A.page.goto('/');
   await ready(A.page);
+  await A.page.locator('.aw-byo-toggle').click();
   await expect(A.page.locator('.aw-start-party')).toBeVisible();
   await expect(A.page.locator('#aw-party')).not.toBeChecked();
   const code = await createRoom(A.page);
