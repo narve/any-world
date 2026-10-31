@@ -1,8 +1,12 @@
 # Hosting AnyWorld at home
 
-How to run the AnyWorld server on a spare Linux machine (written for CachyOS / Arch; other systemd
+How to run the AnyWorld server on a spare Linux machine (Arch/CachyOS and Ubuntu Server; other systemd
 distributions work the same way) and make it reachable from the internet. This is milestone MP0 of
 [the multiplayer plan](MULTIPLAYER-PLAN.md). It is useful for the single-player game already.
+
+**Live since 2026-10-30:** the server runs on a Dell laptop with Ubuntu Server 26.04 at the owner's home,
+reached through WireGuard and Caddy on the owner's VPS at `https://any-game.dv8.no`; the pages are on GitHub
+Pages at `https://any.dv8.no`. §8 is the checklist it went live with.
 
 ## 1. Node.js: patched releases only
 
@@ -25,10 +29,27 @@ Distribution packages that link a shared `libbrotli` (Debian and Ubuntu `nodejs`
 from the system library and may keep an old version number. The check goes by the version, so use a
 release from nodejs.org or your distribution's patched Node package.
 
+**Ubuntu / Debian:** the distribution's `nodejs` fails the check (Ubuntu 26.04 ships 22.22.1), so install the
+official build from nodejs.org. Verify it first: download `SHASUMS256.txt.asc` and the release keys
+(`gpg/pubring.kbx` from [nodejs/release-keys](https://github.com/nodejs/release-keys)). The file is clearsigned,
+so verify the `.asc` alone and check the tarball against its output:
+
+```bash
+V=v22.23.4
+curl -fsSLO https://nodejs.org/dist/$V/node-$V-linux-x64.tar.xz -O https://nodejs.org/dist/$V/SHASUMS256.txt.asc
+gpgv --keyring ./pubring.kbx --output SHASUMS256.txt SHASUMS256.txt.asc
+grep " node-$V-linux-x64.tar.xz\$" SHASUMS256.txt | sha256sum -c -
+sudo tar -xJf node-$V-linux-x64.tar.xz -C /opt
+for b in node npm npx; do sudo ln -sf /opt/node-$V-linux-x64/bin/$b /usr/local/bin/$b; done
+node -v
+```
+
+Updates are manual: the same steps with the new version, then new symlinks and `./scripts/deploy.sh`.
+
 ## 2. Install the server
 
 ```bash
-sudo useradd --system --home-dir /var/lib/anyworld --shell /usr/bin/nologin anyworld
+sudo useradd --system --home-dir /var/lib/anyworld --shell /usr/bin/nologin anyworld   # /usr/sbin/nologin on Ubuntu
 sudo git clone https://github.com/narve/any-world.git /opt/anyworld
 sudo chown -R anyworld:anyworld /opt/anyworld
 cd /opt/anyworld
@@ -42,13 +63,18 @@ curl http://127.0.0.1:8787/api/health
 ```
 
 Logs: `journalctl -u anyworld -f`. Updates: `./scripts/deploy.sh` (pull, install, build, restart and
-health check).
+health check). It reads `PORT` from the root-only env file with sudo; a deploy user who may only restart the
+service (no other sudo) passes it instead: `PORT=8787 ./scripts/deploy.sh`.
 
 ### Keep the laptop awake
 
 In `/etc/systemd/logind.conf` set `HandleLidSwitch=ignore` and `HandleLidSwitchExternalPower=ignore`,
 then `sudo systemctl restart systemd-logind`. Turn off automatic suspend in the desktop's power
-settings.
+settings. On a headless server, also mask the sleep targets:
+`sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target`.
+
+A machine with full-disk encryption and no automatic unlock stops at the passphrase prompt after a reboot
+or a power cut, so the game is offline until someone types it.
 
 ## 3. Access code
 
@@ -65,8 +91,9 @@ Also set a spending limit on the provider key itself.
 
 Decided: **WireGuard through the owner's VPS**, with the server on the Dell laptop at
 `https://any-game.dv8.no` and the pages at `https://any.dv8.no` (see [the multiplayer plan, §4–5](MULTIPLAYER-PLAN.md#4-hosting)).
-In every option the server stays on `HOST=127.0.0.1` and the tunnel or proxy connects to it, so no
-port on the home router is opened:
+No port on the home router is opened in any option: with a tunnel on the same machine the server stays on
+`HOST=127.0.0.1`; with a proxy elsewhere (the chosen setup) it listens on the tunnel and a firewall rule
+admits only the proxy:
 
 - **Tailscale Funnel:** `sudo tailscale funnel --bg 8787` gives `https://<machine>.<tailnet>.ts.net`.
 - **Cloudflare Tunnel:** `cloudflared` routes a name such as `any-game.dv8.no` to `http://localhost:8787`.
@@ -77,12 +104,16 @@ port on the home router is opened:
 
   ```
   any-game.dv8.no {
-      reverse_proxy 10.66.0.2:8787
+      reverse_proxy 10.88.0.4:8787
   }
   ```
 
-  Here `10.66.0.2` is the laptop's WireGuard address. On the laptop, the server must then listen on that
-  address (`HOST=10.66.0.2`) or on `0.0.0.0` with a firewall rule that allows only the tunnel.
+  Here `10.88.0.4` is the Dell's WireGuard address (the VPS is `10.88.0.1`). The live setup uses
+  `HOST=0.0.0.0` with UFW admitting only the VPS on the tunnel (`sudo ufw allow in on wg0 from 10.88.0.1 to
+  any port 8787 proto tcp`): binding the tunnel address itself (`HOST=10.88.0.4`) fails at boot when the
+  tunnel comes up after the service. Caddy on the VPS reaches the Dell as `10.88.0.1`; when it runs in
+  Docker, its forwarding bypasses the VPS's UFW, so no rule is needed there. Expect bots: the name shows up in
+  the certificate transparency logs, and scanners find it within seconds.
 
 ## 5. Web pages hosted elsewhere (optional)
 
@@ -90,6 +121,7 @@ The simplest setup is the one above: the server also serves the game's pages. To
 GitHub Pages (at `any.dv8.no`) and only the server at home:
 
 1. On the server: `ALLOWED_ORIGINS=https://any.dv8.no` (add `https://narve.github.io` while the old address is in use).
+   The server's own pages (`https://any-game.dv8.no`) are always allowed and need not be listed.
 2. Build the pages with the server's address: `ANYWORLD_SERVER_URL=https://any-game.dv8.no npm run build:static`.
    In the Pages workflow, set it as an environment variable on the build step. Without it, the pages are
    the offline demo, as now.
@@ -111,8 +143,8 @@ The server also runs the multiplayer rooms (WebSocket on `/api/ws`, HTTP on `/ap
   idle rooms closed after 2 hours. Per client IP: 20 WebSocket connections a minute, 16 open at once,
   6 room creations per 10 minutes; 200 sockets in all. Behind Caddy, `TRUST_PROXY=1` is required.
 - **Origins.** CORS does not cover WebSockets, so the server checks the `Origin` of every upgrade
-  itself: with `ALLOWED_ORIGINS` set only those origins may connect (e.g. `https://any.dv8.no`); with
-  it empty only pages served by the server itself (and the Vite dev proxy) may.
+  itself: pages served by the server itself (and the Vite dev proxy) may always connect, and with
+  `ALLOWED_ORIGINS` set also those origins (e.g. `https://any.dv8.no`); any other origin is refused.
 - **Deploy the pages and the server together.** Rooms compare the engine version (a hash of the
   engine source, `/api/health` reports it as `engine`): a page built from another engine is refused
   with a "reload the page" message, and a deploy that changes the engine closes the open rooms ("the
@@ -152,18 +184,27 @@ player is unchanged (the browser's own game master, with the server's provider o
 - **Logs.** One line per area with the calls, tokens and average latency (`gm area 1: 12 calls, …`),
   plus `gm breaker open` / `closed` and dropped answers. `/api/health` reports `gm: "ai"` or
   `"offline"`.
-- **Trying a key.** `npx tsx tools/gm-smoke.ts --preset mistral --calls 3 --env-file /etc/anyworld.env`
+- **Trying a key.** `sudo npx tsx tools/gm-smoke.ts --preset mistral --calls 3 --env-file /etc/anyworld.env`
   sends 3 small game-master requests for a test party and prints latency, tokens and what the checks
-  kept (at most 5 calls; it never prints the key).
+  kept (at most 5 calls; it never prints the key). `sudo` because the env file is root-only (without it
+  Node reports the file as "not found"). `--timeout` (default 5000) sets the limit the same way as
+  `ANYWORLD_GM_TIMEOUT_MS`; `Request aborted` means a call hit it.
+- **Timeout for Anthropic.** Through the home server, `claude-haiku-5-5` took 3.8–6.7 s per call
+  (2026-10-30), so the default 4 s model deadline dropped most intro and idle answers. The live server runs
+  `ANYWORLD_GM_TIMEOUT_MS=8000`. Measure with `--timeout 10000` before choosing a value.
 
 ## 8. Go-live checklist (Dell + VPS, `any.dv8.no` / `any-game.dv8.no`)
+
+Done 2026-10-30/31 (steps 1–7 except the phone-on-4G session). The env file ended up with
+`ALLOWED_ORIGINS` listing `https://any.dv8.no` and `https://narve.github.io`, `ANYWORLD_GM_PRESET=anthropic` and
+`ANYWORLD_GM_TIMEOUT_MS=8000` (§7); the Pages build reads the repository variable `ANYWORLD_SERVER_URL`.
 
 In this order; each step has a check. Verified locally on 2026-10-30 (production build, `npm start` with
 `NODE_ENV=production`, a room of 4 bots from `https://any.dv8.no`, a refused foreign origin, rooms kept
 across a SIGTERM restart, the Pages build carrying the server's engine version).
 
-1. **Code on `main`.** The multiplayer edition is on the `multi` branch. Merge it into `main` (pull
-   request), because the Pages workflow publishes `main` and the Dell's checkout pulls `main`.
+1. **Code on `main`.** The Pages workflow publishes `main` and the Dell's checkout pulls `main`, so
+   server changes go there (the multiplayer edition was merged from `multi`, PR #2).
 2. **Dell: install** as in §1–2 (patched Node.js, user `anyworld`, `/opt/anyworld`, `npm ci && npm run
    build`, the systemd unit). Check: `node -v` is a patched release; `systemctl status anyworld` is
    active; `curl -s http://127.0.0.1:8787/api/health` answers `ok` with an `engine` hash.
