@@ -116,6 +116,19 @@ address cannot spend the API key. Wrong codes count against the per-IP rate limi
 
 Also set a spending limit on the provider key itself.
 
+**Open to everyone instead (the owner's setup since 2026-11-01).** Without `ANYWORLD_HOST_CODE`, two guards
+keep `POST /api/llm` from being a free AI proxy (`server/llm-guard.ts`):
+
+- **Proof of work** (`ANYWORLD_LLM_POW=1`): before its first AI call the page fetches a challenge from
+  `GET /api/pass/challenge`, searches for the number whose SHA-256 matches (about a second; up to
+  `ANYWORLD_POW_MAX_NUMBER`, default 100000, hashes), and trades it at `POST /api/pass` for a pass that lasts 12 hours
+  and goes in the `X-AnyWorld-Pass` header. Bots that run no JavaScript never get one; a restart voids all passes
+  and pages fetch a new one by themselves. With a code set, the code is the gate and this is off.
+- **Daily budget** (`ANYWORLD_LLM_CALLS_PER_DAY`, `ANYWORLD_LLM_TOKENS_PER_DAY`): AI calls and input + output tokens
+  for everyone together per UTC day. When either is used up, calls get 429 `daily_budget` until midnight UTC and
+  world creation says so; demo worlds still play. Counted in memory: a restart starts the day again. Each call's log
+  line ends with `today=<calls>/<tokens>`. The rooms' game master has its own hourly caps (§7) and is not counted.
+
 ## 4. Reaching it from the internet
 
 Decided: **WireGuard through the owner's VPS**, with the server on the Dell laptop at

@@ -25,7 +25,7 @@ import { normalizeLanguage, t } from './i18n/index';
 export const OFFLINE_PRESET = 'mock';
 
 /** what the backend said about its presets: unknown (not asked yet), unreachable, or the configured ids */
-export type ServerState = { kind: 'unknown' } | { kind: 'unreachable' } | { kind: 'ok'; configured: ReadonlySet<string>; codeRequired?: boolean };
+export type ServerState = { kind: 'unknown' } | { kind: 'unreachable' } | { kind: 'ok'; configured: ReadonlySet<string>; codeRequired?: boolean; passRequired?: boolean };
 
 /** why the configured provider cannot be used right now (null = it can) */
 export type ProviderProblem =

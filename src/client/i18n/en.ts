@@ -595,6 +595,7 @@ const en = {
   'gen.error.unbalanced': 'The AI’s world could not be made fair enough to play.',
   'gen.error.auth': 'The AI provider rejected the key. Check it in settings.',
   'gen.error.rate_limit': 'The AI provider is busy (rate limit). Wait a moment and try again.',
+  'gen.error.budget': 'This server has used up today’s AI budget. It starts over at midnight (UTC).',
   'gen.error.network': 'Could not reach the AI provider.',
   'gen.error.refused': 'The AI declined to create this world. Try a different description.',
   'gen.error.config': 'The AI provider is not set up. Check settings.',

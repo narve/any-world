@@ -10,6 +10,9 @@
  * Optional (MP0, home hosting): ANYWORLD_HOST_CODE makes POST /api/llm (real providers, not the
  * recorded "mock") require the header X-AnyWorld-Code, so strangers cannot spend the server's keys;
  * ALLOWED_ORIGINS (comma-separated) lets pages hosted elsewhere (e.g. GitHub Pages) call /api (CORS).
+ * Without a code, ANYWORLD_LLM_POW=1 makes AI calls need a pass from a solved proof of work
+ * (GET /api/pass/challenge, POST /api/pass), and ANYWORLD_LLM_CALLS_PER_DAY / ANYWORLD_LLM_TOKENS_PER_DAY
+ * cap what everyone together may spend per day (llm-guard.ts).
  */
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { createHash, timingSafeEqual } from 'node:crypto';
@@ -25,6 +28,7 @@ import { LLMError } from '../src/llm/errors';
 import { DEFAULT_TIMEOUT_MS, redact, type FetchLike, type HttpOptions } from '../src/llm/http';
 import type { CompletionResponse, LLMProvider, ProviderPreset } from '../src/llm/types';
 import { RateLimiter, type RateLimitOptions } from './rate-limit';
+import { DAILY_BUDGET_CODE, DailyBudget, PASS_HEADER, ProofOfWork, type DailyBudgetOptions, type PowOptions } from './llm-guard';
 import { serveStatic } from './static';
 import { engineVersionFor } from './engine-version';
 import { ensureDataDir } from './data-dir';
@@ -74,6 +78,10 @@ export interface AppOptions {
   maxCachedProviders?: number;
   /** access code for AI calls (header X-AnyWorld-Code); default env ANYWORLD_HOST_CODE; empty = no code */
   hostCode?: string;
+  /** proof of work before AI calls (llm-guard.ts); default on when env ANYWORLD_LLM_POW is 1/true; false = off */
+  pow?: PowOptions | false;
+  /** AI calls and tokens per UTC day for everyone; default env ANYWORLD_LLM_CALLS_PER_DAY / ANYWORLD_LLM_TOKENS_PER_DAY */
+  dailyBudget?: DailyBudgetOptions;
   /** origins allowed to call /api from another site (CORS); default env ALLOWED_ORIGINS, comma-separated */
   allowedOrigins?: string[];
   /**
@@ -183,6 +191,13 @@ export function clientIpFrom(xff: string | string[] | undefined, remoteAddress: 
 
 const MODEL_RE = /^[A-Za-z0-9._:/@+-]{1,128}$/;
 
+const PassSolution = z.object({
+  salt: z.string().max(200),
+  number: z.number().int().nonnegative(),
+  challenge: z.string().regex(/^[0-9a-f]{64}$/),
+  signature: z.string().regex(/^[0-9a-f]{64}$/),
+});
+
 export const LlmRequestBody = z.object({
   preset: z.string().min(1).max(64),
   model: z.string().regex(MODEL_RE, 'invalid model id').optional(),
@@ -207,6 +222,8 @@ class HttpError extends Error {
     readonly kind: string,
     message: string,
     readonly headers: Record<string, string> = {},
+    /** extra fields of the error body (e.g. `type`, a finer code than `kind`) */
+    readonly extra: Record<string, unknown> = {},
   ) {
     super(message);
   }
@@ -296,6 +313,15 @@ export function createApp(opts: AppOptions = {}): App {
   const upstream = upstreamOptions(env, opts.upstream);
   const hostCode = (opts.hostCode ?? env.ANYWORLD_HOST_CODE ?? '').trim();
   const allowedOrigins = new Set(opts.allowedOrigins ?? parseAllowedOrigins(env.ALLOWED_ORIGINS));
+  // the access code, when set, is the gate; the proof of work is for a server open to everyone
+  const powOn = opts.pow !== undefined ? opts.pow !== false : env.ANYWORLD_LLM_POW === '1' || env.ANYWORLD_LLM_POW === 'true';
+  const pow = powOn && !hostCode ? new ProofOfWork({ maxNumber: envInt(env.ANYWORLD_POW_MAX_NUMBER, 1), ...(opts.pow || {}) }) : null;
+  const passLimiter = new RateLimiter({ perMinute: 10, burst: 10, now: opts.rateLimit?.now });
+  const budget = new DailyBudget(
+    opts.dailyBudget ?? { calls: envInt(env.ANYWORLD_LLM_CALLS_PER_DAY, 1), tokens: envInt(env.ANYWORLD_LLM_TOKENS_PER_DAY, 1) },
+  );
+  if (pow) log(`[llm] AI calls need a pass (proof of work, up to ${pow.maxNumber} hashes)`);
+  if (budget.capped) log(`[llm] daily budget for everyone: ${budget.describe()} (UTC day)`);
   const secrets = (): string[] => PRESETS.map((p) => (p.envKey ? env[p.envKey] ?? '' : '')).filter(Boolean);
   /** cached per preset+model; LRU-capped so open presets cannot grow server memory without bound */
   const providers = new Map<string, LLMProvider>();
@@ -390,6 +416,24 @@ export function createApp(opts: AppOptions = {}): App {
         throw new HttpError(401, 'auth', given ? 'Wrong server access code' : 'This server needs an access code (Settings → Server access code)');
       }
     }
+    if (pow && body.preset !== 'mock') {
+      const pass = req.headers[PASS_HEADER];
+      if (!pow.valid(typeof pass === 'string' ? pass : undefined)) {
+        log(`[llm] ${body.preset} refused: ${pass ? 'invalid or expired' : 'no'} pass (${ip})`);
+        throw new HttpError(401, 'auth', 'This server needs a pass for AI calls (solve GET /api/pass/challenge)', {}, { type: 'pass_required' });
+      }
+    }
+    if (body.preset !== 'mock' && !budget.take()) {
+      const ms = budget.msToReset();
+      log(`[llm] ${body.preset} refused: daily budget used up (${ip})`);
+      throw new HttpError(
+        429,
+        'rate_limit',
+        "Today's AI budget on this server is used up; it starts over at midnight UTC",
+        { 'retry-after': String(Math.ceil(ms / 1000)) },
+        { type: DAILY_BUDGET_CODE, retryAfterMs: ms },
+      );
+    }
     const request = { ...body.request, maxTokens: Math.min(body.request.maxTokens ?? maxOut, maxOut) };
 
     const ac = new AbortController();
@@ -415,7 +459,9 @@ export function createApp(opts: AppOptions = {}): App {
     }
     try {
       const out: CompletionResponse = await provider.complete({ ...request, signal: ac.signal });
-      log(`[llm] ${body.preset} ${model} ${request.purpose} ok ${Date.now() - started}ms in=${out.usage?.inputTokens ?? '?'} out=${out.usage?.outputTokens ?? '?'}`);
+      if (body.preset !== 'mock') budget.spend((out.usage?.inputTokens ?? 0) + (out.usage?.outputTokens ?? 0));
+      const today = budget.capped && body.preset !== 'mock' ? ` today=${budget.usage().calls}/${budget.usage().tokens}` : '';
+      log(`[llm] ${body.preset} ${model} ${request.purpose} ok ${Date.now() - started}ms in=${out.usage?.inputTokens ?? '?'} out=${out.usage?.outputTokens ?? '?'}${today}`);
       sendJson(res, 200, { response: out });
     } catch (e) {
       log(`[llm] ${body.preset} ${model} ${request.purpose} fail ${Date.now() - started}ms ${e instanceof LLMError ? e.kind : 'error'}`);
@@ -423,10 +469,36 @@ export function createApp(opts: AppOptions = {}): App {
     }
   }
 
+  /** GET /api/pass/challenge: a proof-of-work challenge; POST /api/pass {salt, number, challenge, signature}: a pass */
+  async function handlePass(req: IncomingMessage, res: ServerResponse, path: string): Promise<void> {
+    if (!pow) throw new HttpError(404, 'bad_request', 'This server needs no pass');
+    limited(passLimiter, clientIp(req));
+    if (path === '/api/pass/challenge') {
+      if (req.method !== 'GET') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'GET' });
+      return sendJson(res, 200, pow.challenge());
+    }
+    if (req.method !== 'POST') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'POST' });
+    const ctype = String(req.headers['content-type'] ?? '');
+    if (!ctype.toLowerCase().startsWith('application/json')) throw new HttpError(415, 'bad_request', 'Content-Type must be application/json');
+    let json: unknown;
+    try {
+      json = JSON.parse(await readBody(req, 4096));
+    } catch (e) {
+      if (e instanceof HttpError) throw e;
+      throw new HttpError(400, 'bad_request', 'Body is not valid JSON');
+    }
+    const s = PassSolution.safeParse(json);
+    const out = s.success ? pow.redeem(s.data) : null;
+    if (!out) throw new HttpError(400, 'bad_request', 'Wrong or expired answer; get a new challenge');
+    sendJson(res, 200, out);
+  }
+
   function presetsInfo() {
     return {
       /** true: POST /api/llm with a real provider needs the X-AnyWorld-Code header */
       codeRequired: !!hostCode,
+      /** true: POST /api/llm with a real provider needs the X-AnyWorld-Pass header (POST /api/pass) */
+      passRequired: !!pow,
       /** clients waiting on /api/llm should allow at least this long (the server answers 504 after it) */
       upstreamTimeoutMs: upstream.totalTimeoutMs,
       presets: [
@@ -627,7 +699,7 @@ export function createApp(opts: AppOptions = {}): App {
           if (!origin || !allowedOrigins.has(origin)) throw new HttpError(403, 'bad_request', 'Origin not allowed');
           res.writeHead(204, {
             'access-control-allow-methods': 'GET, POST, OPTIONS',
-            'access-control-allow-headers': `content-type, ${HOST_CODE_HEADER}`,
+            'access-control-allow-headers': `content-type, ${HOST_CODE_HEADER}, ${PASS_HEADER}`,
             'access-control-max-age': '600',
           });
           res.end();
@@ -645,6 +717,7 @@ export function createApp(opts: AppOptions = {}): App {
           if (req.method !== 'POST') throw new HttpError(405, 'bad_request', 'Method not allowed', { allow: 'POST' });
           return await handleLlm(req, res);
         }
+        if (path === '/api/pass/challenge' || path === '/api/pass') return await handlePass(req, res, path);
         if (rooms && (path === '/api/rooms' || path.startsWith('/api/rooms/'))) return await handleRooms(rooms, req, res, path);
         throw new HttpError(404, 'bad_request', 'Unknown API route');
       }
@@ -655,7 +728,7 @@ export function createApp(opts: AppOptions = {}): App {
         res.destroy();
         return;
       }
-      if (e instanceof HttpError) return sendError(res, e.status, e.kind, e.message, {}, e.headers);
+      if (e instanceof HttpError) return sendError(res, e.status, e.kind, e.message, e.extra, e.headers);
       if (e instanceof LLMError) {
         const message = redact(e.message, secrets());
         const extra: Record<string, unknown> = e.retryAfterMs !== undefined ? { retryAfterMs: e.retryAfterMs } : {};

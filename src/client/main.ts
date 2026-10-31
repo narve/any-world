@@ -16,7 +16,8 @@ import { defaultVocabulary, localizedPreset } from './ui/format';
 import type { Renderer } from './render/index';
 import { loadRenderer, preloadRenderer } from './render/lazy';
 import { listPresets } from '../llm/presets';
-import { fetchServerInfo } from '../llm/transport';
+import { fetchServerInfo, type BackendAuth } from '../llm/transport';
+import { createPassAuth } from '../llm/pass';
 import type { LLMProvider } from '../llm/types';
 import { workerBalancer } from '../llm/balance-client';
 import { loadBundledRecordings, recordedWorldKeys } from '../llm/recordings-bundle';
@@ -81,6 +82,8 @@ export class App {
   private restoring = false;
   /** what the backend said about the presets it can serve */
   private server: ServerState = { kind: 'unknown' };
+  /** the server pass (proof of work), shared by every provider this page makes */
+  private passAuth: BackendAuth | undefined;
   /** advice shown under a failed world generation (modes.ts generationHint) */
   private genHint: string | null = null;
   /** the audio engine over the run lifecycle (lazy, optional) */
@@ -130,7 +133,7 @@ export class App {
       const ctl = new AbortController();
       const timer = setTimeout(() => ctl.abort(), 8000);
       const info = await fetchServerInfo(SERVER_URL, { signal: ctl.signal }).finally(() => clearTimeout(timer));
-      this.server = { kind: 'ok', configured: new Set(info.presets.filter((p) => p.configured).map((p) => p.id)), codeRequired: info.codeRequired };
+      this.server = { kind: 'ok', configured: new Set(info.presets.filter((p) => p.configured).map((p) => p.id)), codeRequired: info.codeRequired, passRequired: info.passRequired };
     } catch {
       this.server = { kind: 'unreachable' };
     }
@@ -147,7 +150,13 @@ export class App {
     const cfg = activeProvider(this.settings);
     const code = this.settings.accessCode?.trim();
     if (cfg.transport === 'backend' && this.server.kind === 'ok' && this.server.codeRequired && !code) return null;
-    return providerFromSettings(cfg, this.serverConfigured(), { backendUrl: SERVER_URL, ...(code ? { backendHeaders: { 'x-anyworld-code': code } } : {}) });
+    // a server open to everyone wants a pass (a solved proof of work) on AI calls; one per page, reused
+    const auth = cfg.transport === 'backend' && this.server.kind === 'ok' && this.server.passRequired ? (this.passAuth ??= createPassAuth(SERVER_URL)) : undefined;
+    return providerFromSettings(cfg, this.serverConfigured(), {
+      backendUrl: SERVER_URL,
+      ...(code ? { backendHeaders: { 'x-anyworld-code': code } } : {}),
+      ...(auth ? { backendAuth: auth } : {}),
+    });
   }
 
   /** worlds can be created: a working provider, or the offline demo generator */

@@ -20,6 +20,7 @@ import { validateWorldRefs } from '../schema/refs';
 import type { Difficulty } from '../schema/gm';
 import type { ChatMessage, CompletionRequest, CompletionResponse, LLMProvider } from './types';
 import { LLMAbortedError, LLMError, LLMTimeoutError } from './errors';
+import { DAILY_BUDGET_CODE } from './transport';
 import { DEFAULT_BACKEND_TIMEOUT_MS } from './http';
 import { checkStructuredText, completeStructured, extractJson, repairMessage, StructuredOutputError, type CheckResult, type Usage } from './structured';
 import { worldRequest, WORLD_MAX_TOKENS, type WorldPromptOptions } from './prompts/world';
@@ -123,7 +124,7 @@ export interface GenerateResult {
   text: string;
 }
 
-export type WorldGenerationErrorKind = 'timeout' | 'aborted' | 'invalid' | 'unbalanced' | 'auth' | 'rate_limit' | 'network' | 'refused' | 'config' | 'provider';
+export type WorldGenerationErrorKind = 'timeout' | 'aborted' | 'invalid' | 'unbalanced' | 'auth' | 'rate_limit' | 'budget' | 'network' | 'refused' | 'config' | 'provider';
 
 /** a typed failure the UI can show ("play a demo world instead" is always possible) */
 export class WorldGenerationError extends Error {
@@ -217,7 +218,8 @@ function errorKind(e: unknown): WorldGenerationErrorKind {
       case 'auth':
         return 'auth';
       case 'rate_limit':
-        return 'rate_limit';
+        // the server's own daily budget, not the provider: trying again today will not help
+        return e.code === DAILY_BUDGET_CODE ? 'budget' : 'rate_limit';
       case 'network':
         return 'network';
       case 'refusal':

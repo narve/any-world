@@ -9,7 +9,7 @@ import { AnthropicProvider, type AnthropicEffort } from './anthropic';
 import { OpenAICompatibleProvider } from './openai-compatible';
 import { MockProvider, type MockProviderOptions } from './mock';
 import { getPreset } from './presets';
-import { LLMConfigError, LLMInvalidResponseError, llmErrorFromJSON } from './errors';
+import { LLMAuthError, LLMConfigError, LLMInvalidResponseError, LLMRateLimitError, llmErrorFromJSON } from './errors';
 import { DEFAULT_BACKEND_TIMEOUT_MS, postJson, type HttpOptions } from './http';
 
 export interface CreateProviderOptions extends HttpOptions {
@@ -19,6 +19,8 @@ export interface CreateProviderOptions extends HttpOptions {
   backendPath?: string;
   /** backend transport: extra request headers, e.g. the server's access code (X-AnyWorld-Code) */
   backendHeaders?: Record<string, string>;
+  /** backend transport: headers fetched per call, e.g. the server pass (pass.ts) */
+  backendAuth?: BackendAuth;
   /** options for the "mock" preset */
   mock?: MockProviderOptions;
   /** Anthropic: force/disable the direct-browser-access header (default: detect) */
@@ -28,6 +30,16 @@ export interface CreateProviderOptions extends HttpOptions {
   /** default max output tokens */
   maxTokens?: number;
 }
+
+/** per-call headers for the backend, renewed once when the server refuses them (pass_required) */
+export interface BackendAuth {
+  headers(signal?: AbortSignal): Promise<Record<string, string>>;
+  invalidate(): void;
+}
+
+/** error codes of the backend that refine `kind` (server/llm-guard.ts) */
+export const PASS_REQUIRED_CODE = 'pass_required';
+export const DAILY_BUDGET_CODE = 'daily_budget';
 
 /** body of POST /api/llm */
 export interface BackendRequestBody {
@@ -44,6 +56,7 @@ export class BackendProvider implements LLMProvider {
   private readonly url: string;
   private readonly http: HttpOptions;
   private readonly headers: Record<string, string>;
+  private readonly auth?: BackendAuth;
 
   constructor(preset: string, model: string | undefined, opts: CreateProviderOptions = {}) {
     this.preset = preset;
@@ -52,26 +65,43 @@ export class BackendProvider implements LLMProvider {
     this.id = `backend:${preset}`;
     this.url = `${(opts.backendUrl ?? '').replace(/\/+$/, '')}${opts.backendPath ?? '/api/llm'}`;
     this.headers = { ...(opts.backendHeaders ?? {}) };
+    this.auth = opts.backendAuth;
     // the server already retries upstream, so by default the client does not retry (no double spending);
     // the wait outlasts the server's own upstream budget so its typed 504/429/... reaches us first
     this.http = { ...opts, maxRetries: opts.maxRetries ?? 0, timeoutMs: opts.timeoutMs ?? DEFAULT_BACKEND_TIMEOUT_MS };
   }
 
   async complete(req: CompletionRequest): Promise<CompletionResponse> {
+    try {
+      return await this.call(req);
+    } catch (e) {
+      // the pass expired or the server restarted: one new pass, one more try
+      if (!this.auth || !(e instanceof LLMAuthError) || e.code !== PASS_REQUIRED_CODE) throw e;
+      this.auth.invalidate();
+      return await this.call(req);
+    }
+  }
+
+  private async call(req: CompletionRequest): Promise<CompletionResponse> {
     const { signal, ...request } = req;
     const body: BackendRequestBody = { preset: this.preset, request };
     if (this.explicitModel) body.model = this.explicitModel;
+    const headers = this.auth ? { ...this.headers, ...(await this.auth.headers(signal)) } : this.headers;
     let json: unknown;
     try {
-      json = (await postJson({ url: this.url, headers: this.headers, body, provider: this.id, signal }, this.http)).json;
+      json = (await postJson({ url: this.url, headers, body, provider: this.id, signal }, this.http)).json;
     } catch (e) {
       // server error bodies are {error:{kind,message,retryAfterMs}}; re-type them faithfully
       const status = (e as { status?: number }).status;
       const m = /HTTP \d+: ([\s\S]*)$/.exec((e as Error).message ?? '');
       const kind = (e as { code?: string }).code;
+      const message = m ? m[1]! : (e as Error).message;
+      const retryAfterMs = (e as { retryAfterMs?: number }).retryAfterMs;
+      if (status === 401 && kind === PASS_REQUIRED_CODE) throw new LLMAuthError(message, { provider: this.id, status, code: kind });
+      if (status === 429 && kind === DAILY_BUDGET_CODE) throw new LLMRateLimitError(message, { provider: this.id, status, retryAfterMs, code: kind });
       if (status && kind && ['auth', 'rate_limit', 'server', 'network', 'timeout', 'bad_request', 'invalid_response', 'refusal', 'config'].includes(kind)) {
         throw llmErrorFromJSON(
-          { kind, message: m ? m[1] : (e as Error).message, status, retryAfterMs: (e as { retryAfterMs?: number }).retryAfterMs },
+          { kind, message, status, retryAfterMs },
           this.id,
         );
       }
@@ -143,6 +173,8 @@ export interface ServerPresetInfo {
 export interface ServerInfo {
   presets: ServerPresetInfo[];
   codeRequired: boolean;
+  /** AI calls need a pass from a solved proof of work (pass.ts) */
+  passRequired: boolean;
 }
 
 export async function fetchServerInfo(backendUrl = '', opts: { fetch?: HttpOptions['fetch']; signal?: AbortSignal } = {}): Promise<ServerInfo> {
@@ -150,8 +182,8 @@ export async function fetchServerInfo(backendUrl = '', opts: { fetch?: HttpOptio
   if (!f) throw new LLMConfigError('No fetch implementation available');
   const res = await f(`${backendUrl.replace(/\/+$/, '')}/api/presets`, { signal: opts.signal });
   if (!res.ok) throw new LLMInvalidResponseError(`GET /api/presets failed with HTTP ${res.status}`);
-  const json = (await res.json()) as { presets?: ServerPresetInfo[]; codeRequired?: boolean };
-  return { presets: Array.isArray(json.presets) ? json.presets : [], codeRequired: json.codeRequired === true };
+  const json = (await res.json()) as { presets?: ServerPresetInfo[]; codeRequired?: boolean; passRequired?: boolean };
+  return { presets: Array.isArray(json.presets) ? json.presets : [], codeRequired: json.codeRequired === true, passRequired: json.passRequired === true };
 }
 
 /** Ask the backend which presets it can serve. */

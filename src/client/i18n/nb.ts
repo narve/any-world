@@ -744,6 +744,7 @@ const nb = {
   'gen.error.unbalanced': 'Verdenen fra KI-en kunne ikke gjøres rettferdig nok til å spilles.',
   'gen.error.auth': 'KI-leverandøren avviste nøkkelen. Sjekk den i innstillingene.',
   'gen.error.rate_limit': 'KI-leverandøren er opptatt (for mange forespørsler). Vent litt og prøv igjen.',
+  'gen.error.budget': 'Serveren har brukt opp dagens KI-budsjett. Det starter på nytt ved midnatt (UTC).',
   'gen.error.network': 'Fikk ikke kontakt med KI-leverandøren.',
   'gen.error.refused': 'KI-en ville ikke lage denne verdenen. Prøv en annen beskrivelse.',
   'gen.error.config': 'KI-leverandøren er ikke satt opp. Sjekk innstillingene.',
