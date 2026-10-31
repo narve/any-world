@@ -15,7 +15,7 @@ drawn highest on screen, waits for the camera to rest, and taps the centre of th
 - In the deep run (m5-mobile-pt-r3-iphone15-portrait.json, turn 7), a tap north of the player showed
   "No known way there".
 - Reports: tests/review/m5/reports/m5-mobile-pt-r3-probe-behind-iphone15-{portrait,landscape}.json
-- Screenshot: docs/progress/M5/pt-mobile-r3-probe-behind-iphone15-portrait-empty-tap.png. The tile centre
+- Screenshot: docs/archive/progress/M5/pt-mobile-r3-probe-behind-iphone15-portrait-empty-tap.png. The tile centre
   sits on the player's head.
 
 ## Root cause

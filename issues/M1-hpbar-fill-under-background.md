@@ -8,7 +8,7 @@
 `bgMat` was `transparent: true, opacity: 0.8` while `fgMat` was opaque. three.js renders the opaque
 list before the transparent list, so renderOrder 998/999 never compared the two meshes: the dark
 background was blended over the fill. At 20/32 hp the fill (#5fe08a) read back as #233d31.
-Screenshots: docs/progress/M1/playtest-western-70-hpbar-zoom.png, playtest-ship-12-fight.png,
+Screenshots: docs/archive/progress/M1/playtest-western-70-hpbar-zoom.png, playtest-ship-12-fight.png,
 playtest-western-61-boss-fight.png.
 
 ## Fix

@@ -9,7 +9,7 @@ import { chromium } from 'playwright';
 import http from 'node:http';
 
 const BASE = process.env.PT_BASE ?? 'http://127.0.0.1:5331';
-const OUT = 'docs/progress/M5';
+const OUT = 'docs/archive/progress/M5';
 const browser = await chromium.launch({ headless: false, args: ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 const page = await ctx.newPage();

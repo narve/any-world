@@ -5,7 +5,7 @@
 - Status: fixed
 
 ## Evidence
-docs/progress/M2/playtest-r1-ui-teen-gm-rule.png and playtest-r1-ui-teen-persuade.png show bright blue blotches with sharp star-shaped spikes. playtest-r1-fixture-teen-area1-arrive.png shows a sparkly blue cloud. By comparison, the western cistern ('water' floor pattern) in playtest-r1-fixture-western-area3-arrive.png looks right.
+docs/archive/progress/M2/playtest-r1-ui-teen-gm-rule.png and playtest-r1-ui-teen-persuade.png show bright blue blotches with sharp star-shaped spikes. playtest-r1-fixture-teen-area1-arrive.png shows a sparkly blue cloud. By comparison, the western cistern ('water' floor pattern) in playtest-r1-fixture-western-area3-arrive.png looks right.
 
 ## Root cause
 1. Geometry: `PatchLayer` pushes the border vertices of a soft patch outward (pad 0.12) so the fade overlaps the floor. The push direction was decided per tile, from the vertex's position inside that tile (u = 0 → −x, u = 1 → +x), whenever its alpha was below 1. Neighbouring tiles share grid points, but each pushed its own copy in its own direction. On a shared edge whose corner touches the outside, one tile moved the corner up and the other moved it down. Their triangles crossed and folded over each other, and these folds were the "star spikes".
@@ -17,4 +17,4 @@ docs/progress/M2/playtest-r1-ui-teen-gm-rule.png and playtest-r1-ui-teen-persuad
 
 ## Regression test
 - src/client/render/fixes-m2.test.ts, "liquid terrain patches": zero folded triangles, and shared vertices land on the same spot for single, disc, L-shaped, diagonal and ring patches. Teen seep water is matte, with no normal map and opacity below 0.8.
-- e2e/render-fixes-m2.spec.ts: spawns a radius-2 seep around the player in teen areas 0 and 1 (what "The Water's Coming" does), checks `liquidTerrainInfo()` and writes docs/progress/M2/fix-teen-liquid-area{0,1}.png.
+- e2e/render-fixes-m2.spec.ts: spawns a radius-2 seep around the player in teen areas 0 and 1 (what "The Water's Coming" does), checks `liquidTerrainInfo()` and writes docs/archive/progress/M2/fix-teen-liquid-area{0,1}.png.

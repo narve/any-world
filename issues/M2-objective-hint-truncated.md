@@ -14,4 +14,4 @@ Dream: "... — find the way o…" (playtest-r1-fixture-dream-play-0060.png). Te
 
 ## Regression test
 - tests/client/m2-client-fixes.test.ts "objective line": the split, the view-model fields, the joined form, and the "Press >" hint.
-- e2e/client-m2-fixes.spec.ts (teen): `.aw-objective-hint` is visible and not clipped. Screenshot: docs/progress/M2/client-fix-objective.png.
+- e2e/client-m2-fixes.spec.ts (teen): `.aw-objective-hint` is visible and not clipped. Screenshot: docs/archive/progress/M2/client-fix-objective.png.

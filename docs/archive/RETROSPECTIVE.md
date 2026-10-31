@@ -7,7 +7,7 @@ AnyWorld was built by Claude agents working on their own in a sandbox (DESIGN §
 design, answered a few questions mid-build and changed some requirements (non-Earth worlds, GM-invented
 rules, languages, mobile, fun over exact balance). No live LLM was called during the build. This file
 says what worked, what did not, and what a human still has to check. The final check of every
-Definition-of-Done item is in [docs/progress/M5.md](docs/progress/M5.md).
+Definition-of-Done item is in [progress/M5.md](progress/M5.md).
 
 ## The build in numbers
 
@@ -22,7 +22,7 @@ Definition-of-Done item is in [docs/progress/M5.md](docs/progress/M5.md).
 
 There are 20 recorded worlds in 18 genres, 5 of them in Norwegian bokmål, and 12 non-violent. One is
 fantasy. The prompt library has 38 prompts. Agent transcripts, token counts and tool calls are in
-[STATS.md](STATS.md). Every bug that was found has a file in [issues/](issues/).
+[STATS.md](STATS.md). Every bug that was found has a file in [issues/](../../issues/).
 
 ## What worked
 
@@ -110,7 +110,7 @@ class of problem.
   playtester won 1 of 10 runs on Gentle in round 3, and the touch-only phone runs lost 8 of 8 over rounds 2–3.
   "Fun over exact balance" was the brief; deaths still dominate the first hour.
 - **UI: clear but busy.** HUD, goal card, rules pills, log and hotbar fit at every tested size and language
-  (screenshots in docs/progress/M5). The goal card now explains the next step. A human should judge whether
+  (screenshots in docs/archive/progress/M5). The goal card now explains the next step. A human should judge whether
   it is pleasant, not only readable.
 - **Mobile and audio: emulated only.** Touch, frame rate, safe areas, iOS audio unlock and the music itself
   have never met a real device or a human ear.
@@ -129,7 +129,7 @@ class of problem.
    and check ports before e2e.
 5. **Bots are cheap players, not players.** They found every soft-lock and crash, but not that the game
    feels too hard. Human-like playtest agents (screenshots, a goal, no engine access) found that.
-6. **Screenshots need a budget.** Three review rounds left ~1180 screenshots (~410 MB) in docs/progress/M5.
+6. **Screenshots need a budget.** Three review rounds left ~1180 screenshots (~410 MB) in docs/archive/progress/M5.
    Keep review screenshots in test-results and promote a few to docs.
 
 ## What a human still has to check

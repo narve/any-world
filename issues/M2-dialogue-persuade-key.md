@@ -14,4 +14,4 @@ playtest-r1-ui-teen-persuade.png shows the dialogue with a "Persuade p" button. 
 
 ## Regression test
 - tests/ui/m2-client-fixes.test.ts "conversation keys": `p`/`t` in a dialogue, `p` ignored when persuasion is off, Shift+P and Ctrl+P ignored, and `p`/`t` not taken by the choice, levelup or trade layers.
-- e2e/client-m2-fixes.spec.ts (teen): talk with `t`, press `p`; the log grows and does not say "no one nearby". Screenshot: docs/progress/M2/client-fix-persuade-key.png.
+- e2e/client-m2-fixes.spec.ts (teen): talk with `t`, press `p`; the log grows and does not say "no one nearby". Screenshot: docs/archive/progress/M2/client-fix-persuade-key.png.

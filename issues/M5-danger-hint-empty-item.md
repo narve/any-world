@@ -5,7 +5,7 @@
 - Status: fixed
 
 ## Evidence
-Rain Broker, stretch 2, Blood 11/45: the HUD said "Blood low · press 3" and slot 3 glowed, but slot 3 was the Army Canteen at 0/3 charges; Sarsaparilla (heals 6) sat usable in slot 5. Pressing 3 took no turn and opened the passive tip "Works just by being carried — nothing to press." (docs/progress/M5/pt-desktop-r2-western2-hint-empty.png, -press3-empty.png, -dyn-target.png).
+Rain Broker, stretch 2, Blood 11/45: the HUD said "Blood low · press 3" and slot 3 glowed, but slot 3 was the Army Canteen at 0/3 charges; Sarsaparilla (heals 6) sat usable in slot 5. Pressing 3 took no turn and opened the passive tip "Works just by being carried — nothing to press." (docs/archive/progress/M5/pt-desktop-r2-western2-hint-empty.png, -press3-empty.png, -dyn-target.png).
 
 ## Cause
 The danger-hint loop picked the first quick slot whose `restores` matched and skipped only items on cooldown. The engine marks a 0-charge item `usable:false`, so `activateSlot` fell through to `{kind:'explain'}` and the tip used `slot.explain.passive`.

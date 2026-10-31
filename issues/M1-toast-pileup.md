@@ -5,7 +5,7 @@
 - Status: fixed
 
 ## Evidence
-While Lassoed (rooted, 1 turn left), each move key added another identical "you cannot move" toast. Twelve of them stacked down the middle of the screen over the character. Nothing told the player that waiting ends the status, so the rooted turn never ticked down. "too afraid to fight" (Rattled) behaved the same and also hard-codes "fight". Screenshot: docs/progress/M1/playtest-western-assist-r3-20-stall.png. The bot stats in run-western-assist(2).out repeat the same strings dozens of times.
+While Lassoed (rooted, 1 turn left), each move key added another identical "you cannot move" toast. Twelve of them stacked down the middle of the screen over the character. Nothing told the player that waiting ends the status, so the rooted turn never ticked down. "too afraid to fight" (Rattled) behaved the same and also hard-codes "fight". Screenshot: docs/archive/progress/M1/playtest-western-assist-r3-20-stall.png. The bot stats in run-western-assist(2).out repeat the same strings dozens of times.
 
 ## Fix
 - Toasts: a DOM-free `ToastStack` model (src/client/ui/toasts.ts) backs `GameUi.toast`.

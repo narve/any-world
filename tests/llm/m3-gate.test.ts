@@ -1,5 +1,5 @@
 /**
- * M3 gate: fixes driven by the world authors' prompt feedback (docs/progress/M3.md).
+ * M3 gate: fixes driven by the world authors' prompt feedback (docs/archive/progress/M3.md).
  *  - a trade inside a conversation is dropped instead of costing the whole reply (recordings had them)
  *  - GM snapshots for low_hp / death / victory look like those moments
  *  - the GM item pool keeps an unidentified item's nature secret and does not call a poison "heals"

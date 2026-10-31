@@ -13,4 +13,4 @@ playtest-r1-ui-teen-levelup.png: after `grant_xp 200` the player card showed "Lv
 
 ## Regression test
 - tests/client/m2-client-fixes.test.ts "xp progress with queued level-ups": plain progress, a clamped bar with 2 queued levels, and a session with 500 xp never shows more xp than the bar holds.
-- e2e/client-m2-fixes.spec.ts (teen): after `grant_xp 200` the bar text is ≤ its max and the badge is visible. Screenshot: docs/progress/M2/client-fix-xp-pending.png.
+- e2e/client-m2-fixes.spec.ts (teen): after `grant_xp 200` the bar text is ≤ its max and the badge is visible. Screenshot: docs/archive/progress/M2/client-fix-xp-pending.png.

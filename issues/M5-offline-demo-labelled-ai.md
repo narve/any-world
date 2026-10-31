@@ -6,7 +6,7 @@
 - Source: M5 Norwegian review round 1 (tests/review/m5/nb-review-r1.spec.ts)
 
 ## Evidence
-docs/progress/M5/nb-r1-demo-start-recent.png: after "Lag verden" with the offline demo generator (preset mock),
+docs/archive/progress/M5/nb-r1-demo-start-recent.png: after "Lag verden" with the offline demo generator (preset mock),
 the picked recorded world "Trolldirektoratet under Dovre" was listed under "Dine verdener" as
 "FOLKEEVENTYR-BYRÅKRATI · LAGET AV KI", while the status line said "Ingen KI brukes". The world choice itself was
 right.

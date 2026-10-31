@@ -6,7 +6,7 @@
 
 ## Evidence
 In the Viking backpack three carried items showed as "O", two as "C" and two as "H"
-(docs/progress/M5/pt-desktop-r1-viking-08-backpack.png), and the trade list looked the same. The
+(docs/archive/progress/M5/pt-desktop-r1-viking-08-backpack.png), and the trade list looked the same. The
 client was already wired for pictures: game-controller.ts checks `renderer.itemThumbnail` and
 common.ts renders `.aw-glyph.has-thumb` images. But `typeof window.__anyworld.renderer.itemThumbnail`
 was `'undefined'` because the renderer never implemented it.

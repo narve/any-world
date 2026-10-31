@@ -12,7 +12,7 @@ undocumented shape ("ico") or a placeholder item id.
 
 ## Fix
 The M3 gate consolidated the length limits into one list in the world prompt, added a non-abstract shape example
-and the other feedback themes in docs/progress/M3.md. The repair turn still fixes the rest.
+and the other feedback themes in docs/archive/progress/M3.md. The repair turn still fixes the rest.
 
 ## Regression tests
 tests/llm/prompts.test.ts (schema doc mentions every key and enum; field notes name real fields).

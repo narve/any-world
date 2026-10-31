@@ -15,7 +15,7 @@
 
 ## Regression tests
 - tests/client/trade-sell-column.test.ts: checks `tradeColumns` with empty and non-empty lists, that a real western trader's shop has offers and no Sell column, and that a stray sell intent changes no state.
-- e2e/client-m2-fixes.spec.ts, "trade window shows only the Buy column…": opens the ship bosun's shop in the real app. It checks that the only heading is "Buy", that "Nothing they want" is gone, and that the single-column class is set. Screenshot: docs/progress/M2/client-fix-trade-buy-only.png.
+- e2e/client-m2-fixes.spec.ts, "trade window shows only the Buy column…": opens the ship bosun's shop in the real app. It checks that the only heading is "Buy", that "Nothing they want" is gone, and that the single-column class is set. Screenshot: docs/archive/progress/M2/client-fix-trade-buy-only.png.
 
 ## Follow-up (not client-owned)
 Currency still has little to buy. That needs fuller trader stock in content, or an engine `sell` action that pays `value/2` for owned items. For the second option, view.ts would fill `sellable` from `state.player.slots` and session.ts would send the action, and the UI is ready for that.

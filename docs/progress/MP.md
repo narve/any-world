@@ -8,6 +8,9 @@ mock GM, and a 12-player browser smoke. **Still open:** MP0's exit check and eve
 deployment on the Dell and the VPS (WireGuard, Caddy), the latency playtest through that path, a session
 with real people ("was it fast, did we talk"), and the owner decisions listed under "Open".
 
+**Update 2026-10-31:** deployed on 2026-10-28; the server is live at `https://any-game.dv8.no` (D1). The
+phone-on-4G check, D2 and D3 are still open. The owner decisions O1–O4 were made on 2026-10-30.
+
 Plan: [MULTIPLAYER-PLAN.md](../MULTIPLAYER-PLAN.md). Milestone notes: [MP1](MP1.md), [MP2](MP2.md),
 [MP3](MP3.md), [MP4](MP4.md); hosting: [HOSTING.md](../HOSTING.md).
 
@@ -69,12 +72,12 @@ session should look at.
 
 | # | Milestone exit check | Status | Evidence | Needed |
 |---|---|---|---|---|
-| MP0 | The single-player game runs on the laptop, reachable over HTTPS from a phone on 4G | **open** | Code done (`fd6dfb1`): systemd unit, `scripts/deploy.sh`, `/api/health`, host access code, `ALLOWED_ORIGINS` / `ANYWORLD_SERVER_URL`, the Node version guard. `e2e/modes.spec.ts` 15/15 at this gate (static build, backend, production, access code, Pages + server URL) | Deploy on the Dell and the VPS (WireGuard, Caddy, DNS for `any-game.dv8.no` and `any.dv8.no`), then open it from a phone on 4G |
+| MP0 | The single-player game runs on the laptop, reachable over HTTPS from a phone on 4G | **open** | Code done (`fd6dfb1`): systemd unit, `scripts/deploy.sh`, `/api/health`, host access code, `ALLOWED_ORIGINS` / `ANYWORLD_SERVER_URL`, the Node version guard. `e2e/modes.spec.ts` 15/15 at this gate (static build, backend, production, access code, Pages + server URL) | Deployed 2026-10-28 on the Dell and the VPS (WireGuard, Caddy, DNS for `any-game.dv8.no`; `any.dv8.no` waits for the merge to `main`). Left: open it from a phone on 4G (not yet confirmed) |
 | MP1 | Engine tests; bots in 2–4 player runs over all 21 worlds with 0 crashes and no soft-locks; a full run with 12 bots, turn times reported | done | MP1 gate (`334d269`): 756 runs, 0 crashes; 12 players: engine median 2 ms, p95 ~8 ms. Again at this gate, 2/4/8/12 players: 252 runs, 0 crashes, 0 stuck, 0 timeouts, 0 `illegal` | — |
 | MP2 | Server tests: 4 scripted clients chatting and playing, kill and restart mid-run, a new engine version closes rooms with a toast, an outdated client refused with a reload toast, disconnect and reconnect, packet delay and loss | done | MP2 gate (`552639d`); `rooms-exit` 7/7 inside this gate's full vitest run (with the MP5 restart-race fix) | — |
 | MP3 | Playwright with 3 browser contexts (desktop and phone) playing one run together and chatting | done | MP3 gate (`ed76bc4`, 3/3 runs); `mp-exit` passed again at this gate (part of the 12/12 room specs) | — |
 | MP4 | GM checks still refuse fiat; demo rooms play without AI | done | MP4 gate (`12af18d`): exit check 53/53, the live Mistral smoke; `mp4-exit`, `rooms-gm` and `gm-chat` pass in this gate's full run | — |
-| MP5 | Review, playtest and fix rounds; a latency playtest through the real exposure path; a short session with real people, judged on "was it fast, did we talk"; the DoD table in `docs/progress/MP.md` | **partly open** | Review, playtests and two fix rounds done (above); this table | The latency playtest through Dell + VPS + WireGuard, and the session with real people. Both need the deployment (MP0) |
+| MP5 | Review, playtest and fix rounds; a latency playtest through the real exposure path; a short session with real people, judged on "was it fast, did we talk"; the DoD table in `docs/progress/MP.md` | **partly open** | Review, playtests and two fix rounds done (above); this table | The latency playtest through Dell + VPS + WireGuard, and the session with real people. The deployment they needed is live since 2026-10-28 |
 
 ## Gate (MP5, 2026-10-30, at ba8a140)
 
@@ -184,11 +187,13 @@ Every playtest ran on the development laptop over loopback. None used the real e
 
 ## Open
 
-Needs deployment or people:
+Needs the deployed server or people:
 
-- **D1. Deploy** on the Dell and the VPS (HOSTING.md): WireGuard tunnel, Caddy with HTTPS,
-  `TRUST_PROXY=1`, `ALLOWED_ORIGINS`, the Pages build with `ANYWORLD_SERVER_URL`; then MP0's check
-  (HTTPS from a phone on 4G).
+- **D1. Deploy** on the Dell and the VPS (HOSTING.md) — **done 2026-10-28**: WireGuard tunnel, Caddy
+  with HTTPS, `TRUST_PROXY=1`, the server live at `https://any-game.dv8.no`. Still to do: MP0's check
+  (HTTPS from a phone on 4G; not yet confirmed), and after `multi` is merged into `main`, the Pages
+  build at `any.dv8.no` with `ANYWORLD_SERVER_URL` and `ALLOWED_ORIGINS` on the server
+  (HOSTING.md §8, steps 1 and 6).
 - **D2. Latency playtest through the real path**: travel step time (all travelling, and with a decider
   in a fight), felt wait for a decided move, chat delivery, reconnect after a network change on a phone,
   area entry on a phone.

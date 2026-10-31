@@ -1,8 +1,16 @@
 # Hosting AnyWorld at home
 
-How to run the AnyWorld server on a spare Linux machine (written for CachyOS / Arch; other systemd
-distributions work the same way) and make it reachable from the internet. This is milestone MP0 of
-[the multiplayer plan](MULTIPLAYER-PLAN.md). It is useful for the single-player game already.
+How to run the AnyWorld server on a spare Linux machine with systemd (commands for Ubuntu and for
+Arch / CachyOS; other distributions work the same way) and make it reachable from the internet. This
+is milestone MP0 of [the multiplayer plan](MULTIPLAYER-PLAN.md). It is useful for the single-player
+game already.
+
+**The owner's setup (live since 2026-10-28):** `https://any-game.dv8.no` → Caddy on the owner's VPS
+(HTTPS from Let's Encrypt) → WireGuard → a Dell laptop at home running headless Ubuntu Server 26.04,
+at `10.88.0.4` on the tunnel, port 8787. The Dell runs `deploy/anyworld.service` and is updated with
+`scripts/deploy.sh`. Its server has an Anthropic key, requires the access code for AI calls (§3) and
+keeps the rate limits on. The address is public and bots already scan it. §8 lists what is done and
+what is still open.
 
 ## 1. Node.js: patched releases only
 
@@ -11,10 +19,31 @@ The server refuses to start on a Node.js release with the Brotli decoder flaw **
 The server's calls to AI providers decompress Brotli responses, so this matters here. Use
 **22.23.4+, 24.22.1+ or 26.12.1+**:
 
+**Arch / CachyOS:** the distribution packages are fine.
+
 ```bash
 sudo pacman -Syu --needed nodejs-lts-jod npm git   # Node 22 LTS; or nodejs-lts-krypton (24), or nodejs (current)
 node -v                                            # must be one of the versions above
 ```
+
+**Ubuntu / Debian:** use the official build from nodejs.org. Ubuntu's own `nodejs` package (22.22.1 on
+Ubuntu 26.04) is refused by the version check, see below. For example, for 22.23.4 on x86-64:
+
+```bash
+sudo apt install git curl xz-utils
+cd /tmp
+curl -fsSLO https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-x64.tar.xz
+curl -fsSLO https://nodejs.org/dist/v22.23.4/SHASUMS256.txt
+grep ' node-v22.23.4-linux-x64.tar.xz$' SHASUMS256.txt | sha256sum -c -
+sudo tar -xJf node-v22.23.4-linux-x64.tar.xz -C /opt
+for b in node npm npx; do sudo ln -sf /opt/node-v22.23.4-linux-x64/bin/$b /usr/local/bin/$b; done
+hash -r; node -v; npm -v                            # v22.23.4, and npm 10
+```
+
+Check the signature of `SHASUMS256.txt` too if you can (nodejs.org explains how, with the releasers'
+keys). If Ubuntu's `nodejs` package is installed as well, `/usr/local/bin` must come before `/usr/bin`
+in `PATH`. It does in systemd's default `PATH`, which the unit's `/usr/bin/env npm start` uses, and in a
+normal login shell; check with `sudo -u anyworld -H node -v` after §2.
 
 Three guards enforce this: `package.json` `engines` with `engine-strict` in `.npmrc` (so `npm ci`
 fails on an unpatched runtime), a check when the server starts (`server/node-check.ts`), and the
@@ -28,7 +57,7 @@ release from nodejs.org or your distribution's patched Node package.
 ## 2. Install the server
 
 ```bash
-sudo useradd --system --home-dir /var/lib/anyworld --shell /usr/bin/nologin anyworld
+sudo useradd --system --home-dir /var/lib/anyworld --shell /usr/sbin/nologin anyworld
 sudo git clone https://github.com/narve/any-world.git /opt/anyworld
 sudo chown -R anyworld:anyworld /opt/anyworld
 cd /opt/anyworld
@@ -42,13 +71,14 @@ curl http://127.0.0.1:8787/api/health
 ```
 
 Logs: `journalctl -u anyworld -f`. Updates: `./scripts/deploy.sh` (pull, install, build, restart and
-health check).
+health check). The script reads `PORT` from `/etc/anyworld.env` with sudo for its health check; a
+deploy user who may not read that file passes it instead: `PORT=8787 ./scripts/deploy.sh`.
 
 ### Keep the laptop awake
 
 In `/etc/systemd/logind.conf` set `HandleLidSwitch=ignore` and `HandleLidSwitchExternalPower=ignore`,
-then `sudo systemctl restart systemd-logind`. Turn off automatic suspend in the desktop's power
-settings.
+then `sudo systemctl restart systemd-logind`. With a desktop installed, also turn off automatic suspend
+in its power settings (a server install such as Ubuntu Server has none).
 
 ## 3. Access code
 
@@ -63,26 +93,31 @@ Also set a spending limit on the provider key itself.
 
 ## 4. Reaching it from the internet
 
-Decided: **WireGuard through the owner's VPS**, with the server on the Dell laptop at
-`https://any-game.dv8.no` and the pages at `https://any.dv8.no` (see [the multiplayer plan, §4–5](MULTIPLAYER-PLAN.md#4-hosting)).
-In every option the server stays on `HOST=127.0.0.1` and the tunnel or proxy connects to it, so no
-port on the home router is opened:
+The owner's choice: **WireGuard through a VPS**, with the server on the Dell at
+`https://any-game.dv8.no` and, later, the pages at `https://any.dv8.no` (see [the multiplayer plan, §4–5](MULTIPLAYER-PLAN.md#4-hosting)).
+No option opens a port on the home router. With Tailscale or Cloudflare, the server stays on
+`HOST=127.0.0.1` and the tunnel connects to it on the same machine:
 
 - **Tailscale Funnel:** `sudo tailscale funnel --bg 8787` gives `https://<machine>.<tailnet>.ts.net`.
 - **Cloudflare Tunnel:** `cloudflared` routes a name such as `any-game.dv8.no` to `http://localhost:8787`.
-- **WireGuard + VPS (chosen):** Caddy on the VPS serves `any-game.dv8.no` and proxies through the tunnel. Set
-  `TRUST_PROXY=1` so rate limits see the real client address (required for rooms, §6: without it every
-  player shares the proxy's address and its per-IP socket limit). A minimal Caddyfile (Caddy passes
-  WebSocket upgrades through `reverse_proxy` without extra settings):
+- **WireGuard + VPS (the owner's setup):** the home machine keeps a WireGuard tunnel to the VPS
+  (`PersistentKeepalive`, so nothing to set up on the router), and Caddy on the VPS serves
+  `any-game.dv8.no` with automatic HTTPS and proxies through the tunnel. Set `TRUST_PROXY=1` so rate
+  limits see the real client address (required for rooms, §6: without it every player shares the
+  proxy's address and its per-IP socket limit). A minimal Caddyfile (Caddy passes WebSocket upgrades
+  through `reverse_proxy` without extra settings):
 
   ```
   any-game.dv8.no {
-      reverse_proxy 10.66.0.2:8787
+      reverse_proxy 10.88.0.4:8787
   }
   ```
 
-  Here `10.66.0.2` is the laptop's WireGuard address. On the laptop, the server must then listen on that
-  address (`HOST=10.66.0.2`) or on `0.0.0.0` with a firewall rule that allows only the tunnel.
+  Here `10.88.0.4` is the Dell's WireGuard address. The server listens on `HOST=0.0.0.0`, and the
+  firewall (UFW on the Dell) lets only the VPS reach port 8787, over the `wg0` interface. Binding
+  `HOST` to the tunnel address would also work, but the server then fails at boot whenever WireGuard
+  comes up after it. Caddy proxies WebSockets as they are, answers 502 while the service is down, and
+  refuses Brotli-compressed request bodies (415); the game's own pages send none.
 
 ## 5. Web pages hosted elsewhere (optional)
 
@@ -162,19 +197,26 @@ In this order; each step has a check. Verified locally on 2026-10-30 (production
 `NODE_ENV=production`, a room of 4 bots from `https://any.dv8.no`, a refused foreign origin, rooms kept
 across a SIGTERM restart, the Pages build carrying the server's engine version).
 
+**Status (2026-10-31):** steps 2, 4 and 5 are done, and `https://any-game.dv8.no` has been live since
+2026-10-28 (pages and API from the Dell, one origin). Step 3 is done for what one origin needs (an
+Anthropic key, the access code, `HOST`, `PORT`, `TRUST_PROXY`); `ALLOWED_ORIGINS` matters only from step
+6, and `/api/health` shows whether the rooms' AI game master is on (`gm`). Step 1 is not: `multi` is not merged into `main`
+yet, so the Pages build is still the single-player game. Step 6 waits for step 1. Step 7's phone-on-4G
+check (MP0's exit check) is not yet confirmed.
+
 1. **Code on `main`.** The multiplayer edition is on the `multi` branch. Merge it into `main` (pull
    request), because the Pages workflow publishes `main` and the Dell's checkout pulls `main`.
 2. **Dell: install** as in §1–2 (patched Node.js, user `anyworld`, `/opt/anyworld`, `npm ci && npm run
    build`, the systemd unit). Check: `node -v` is a patched release; `systemctl status anyworld` is
    active; `curl -s http://127.0.0.1:8787/api/health` answers `ok` with an `engine` hash.
 3. **Dell: `/etc/anyworld.env`** from `deploy/anyworld.env.example`: provider key(s) with a spending
-   limit, `ANYWORLD_HOST_CODE` (long random), `HOST`/`PORT` for the WireGuard address (§4),
+   limit, `ANYWORLD_HOST_CODE` (long random), `PORT=8787` and `HOST=0.0.0.0` with the firewall rule (§4),
    `ALLOWED_ORIGINS=https://any.dv8.no`, `TRUST_PROXY=1`, `ANYWORLD_DATA_DIR=/var/lib/anyworld`, and for
    the AI game master in rooms `ANYWORLD_GM_PRESET=mistral` (or `anthropic`) with `ANYWORLD_GM_MODEL`
    left at the cheap default. Check: `npx tsx tools/gm-smoke.ts --preset mistral --calls 3 --env-file
    /etc/anyworld.env`, then `sudo systemctl restart anyworld` and `/api/health` shows `gm: "ai"`.
 4. **WireGuard** Dell ↔ VPS (§4, `PersistentKeepalive`). Check: from the VPS,
-   `curl http://<Dell WireGuard address>:8787/api/health`.
+   `curl http://10.88.0.4:8787/api/health`.
 5. **VPS: Caddy** with the `any-game.dv8.no` block (§4; WebSockets need nothing extra). **DNS:** an A
    record `any-game` → the VPS. Check: `curl https://any-game.dv8.no/api/health` from anywhere.
 6. **Pages:** a CNAME record `any` → `narve.github.io`; the repo's Pages settings → custom domain
@@ -183,11 +225,12 @@ across a SIGTERM restart, the Pages build carrying the server's engine version).
    (not "Rooms are unavailable").
 7. **Rooms end to end.** From a checkout of the same commit:
    `npx tsx tools/room-bots.ts --url https://any-game.dv8.no --origin https://any.dv8.no --bots 4`
-   ends with `[room-bots] ok room … hash=…`. Then MP0's exit check: open `https://any.dv8.no` on a phone
-   on 4G, create a room, join it from a second device, chat, play.
+   ends with `[room-bots] ok room … hash=…`. Then MP0's exit check: open `https://any.dv8.no` (until step
+   6, `https://any-game.dv8.no`) on a phone on 4G, create a room, join it from a second device, chat,
+   play.
 8. **Updates later:** merge to `main` (the Pages workflow publishes it), then `./scripts/deploy.sh` on
    the Dell at the same time (§6: pages and server must share the engine version; open rooms close with
    "the server was updated" when the engine changed).
 
-What stays open after go-live (docs/progress/MP.md): the latency playtest through this path and a
-session with real people.
+What stays open after go-live ([MP.md](progress/MP.md), "Open"): the phone-on-4G check, the latency
+playtest through this path and a session with real people.

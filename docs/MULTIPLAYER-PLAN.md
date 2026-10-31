@@ -1,15 +1,17 @@
 # Multiplayer edition — plan
 
-Status (2026-10-30): MP0 (hosting groundwork) is in the code, see [HOSTING.md](HOSTING.md), but not
-yet deployed: its exit check (HTTPS from a phone on 4G) is still open. MP1 (engine: parties) is done
+Status (2026-10-31): MP0 (hosting groundwork) is in the code and deployed: the server has been live at
+`https://any-game.dv8.no` since 2026-10-28 (the Dell behind the VPS, see [HOSTING.md](HOSTING.md)). Its
+exit check (HTTPS from a phone on 4G) is not yet confirmed. MP1 (engine: parties) is done
 (2026-10-27): its exit checks are met, see [MP1.md](progress/MP1.md). MP2 (room server) is done
 (2026-10-28): its exit checks are met and verified by the MP2 gate, see [MP2.md](progress/MP2.md). MP3
 (multiplayer client) is done (2026-10-29): its exit check is met and verified by the MP3 gate, see
 [MP3.md](progress/MP3.md). MP4 (the game master for parties) is done (2026-10-29): its exit check is met and verified by the MP4
-gate, see [MP4.md](progress/MP4.md). MP5 (verify) is verified as far as possible without deployment
+gate, see [MP4.md](progress/MP4.md). MP5 (verify) was verified as far as possible before deployment
 (2026-10-30): playtests, audits and two fix rounds done, and the gate passed. The DoD table is in
-[MP.md](progress/MP.md). What remains: deploying on the Dell and the VPS (MP0's check), the latency
-playtest through that path, a short session with real people, and four owner decisions (§6).
+[MP.md](progress/MP.md). What remains: MP0's phone-on-4G check, the latency playtest through the
+deployed path, and a short session with real people. The four owner decisions from MP5 are made (§6).
+The pages at `any.dv8.no` wait for `multi` to be merged into `main` (HOSTING.md §8).
 Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12 (sharing, multiplayer without waiting,
 chat). Hosts: the owner's Dell laptop runs the server, reached over WireGuard; for development and
 testing the server also runs on the owner's development laptop.
@@ -127,17 +129,18 @@ Plan: design and test for 8; allow up to 12 as an option, tested with bots and a
 
 | # | Milestone | Content | Exit check |
 |---|---|---|---|
-| MP0 | Hosting groundwork (useful for single player too) | done in code: `systemd` unit and env file, `scripts/deploy.sh`, `/api/health`, **host access code** (`ANYWORLD_HOST_CODE`), split hosting (`ALLOWED_ORIGINS` on the server, `ANYWORLD_SERVER_URL` at build time), Node.js version guard | **open:** the single-player game runs on the laptop, reachable over HTTPS from a phone on 4G |
+| MP0 | Hosting groundwork (useful for single player too) | done in code: `systemd` unit and env file, `scripts/deploy.sh`, `/api/health`, **host access code** (`ANYWORLD_HOST_CODE`), split hosting (`ALLOWED_ORIGINS` on the server, `ANYWORLD_SERVER_URL` at build time), Node.js version guard | the single-player game runs on the laptop, reachable over HTTPS from a phone on 4G. **Deployed** 2026-10-28 at `https://any-game.dv8.no`; the phone-on-4G check is not yet confirmed |
 | MP1 | Engine: parties | `GameState.players` (map) instead of `player`, per-player inventory, knowledge, levelling, statuses, FOV and remembered rooms, second chance (`mercyUsed`) and `pendingChoice` (dialogue, trade, offers; today one shared field used in ~65 places); `stepTurn(state, inputs[])` with a fixed resolution order; enemy AI picks among players and skips busy ones (§2.1); party-loss rule; exit countdown; hostile strength and map size scaled by party size; single player = a party of one, and all current tests still pass. Size: about 120 `state.player` uses in 24 engine files plus 53 `playerActor(ctx)` calls | engine tests; **multi-player bots** (the sim bots drive one player today) playing 2–4 player runs over all 21 worlds with 0 crashes and no soft-locks, plus at least one full run with the maximum party (12 bots) on one world, with 0 crashes, no soft-locks and turn times reported |
 | MP2 | Room server | WebSocket on the existing `node:http` server (`ws` package, not yet a dependency; `Origin` checked against `ALLOWED_ORIGINS`); rooms and the public room list (`GET /api/rooms`); roster (names, colours, the player id each connection plays) and reconnect tokens; leaving and disconnects (§6); turn pacing: deadline, active/busy players, travel cadence, ~1 s turns during an exit countdown, area entry not counted (§2.1); input validation and message size limits; input log, snapshots and replay; engine-version check; desync hashes (`hashState`); world upload and validation, demo worlds from `content/worlds`; **chat relay** (history of 100 lines, 200 characters, 1 message/s, typing state) so MP3 only adds the UI; rate limits; persistence under `ANYWORLD_DATA_DIR`; shared message protocol; client engine-version check (outdated pages get a reload toast). Rooms run without the AI game master until MP4: the server answers GM moments with the world's canned lines, as the offline demo does. Engine: bosses (unique hostiles) tougher with party size, on top of MP1's party scaling (§6) | server tests with 4 scripted clients chatting and playing, kill and restart mid-run, a deploy with a new engine version closes rooms with a toast, an outdated client is refused with a reload toast, a disconnect and reconnect, packet delay and loss |
 | MP3 | Client | lobby (create, share link and QR code, public list of open rooms on the start page, roster, ready, world picker); the client plays its own player id (today it plays the lead, `leadPlayer`); other players with name tags and colours; per-player view (fog, compass, hints, persuade odds are already computed per state and become per player); turn indicator ("2 of 3 acted"), never blocking; chat as in §1 (bubbles, side column, typing indicator, emotes and map pings, phone chat button); en and nb strings | Playwright with 3 browser contexts (desktop and phone) playing one run together and chatting |
 | MP4 | GM and dialogue for parties | **move the GM from the browser to the server**: today the request queue (`src/client/gm-director.ts`) runs in the client and may use the player's own key; in rooms it runs next to the room. GM context with all players and per-player hooks (low health); dialogue and trade per player without pausing others; party-aware world-generation prompt; recordings for demo rooms | GM checks still refuse fiat; demo rooms play without AI |
 | MP5 | Verify | review, playtest and fix rounds as in M5; latency playtest through the real exposure path; a short session with real people, judged on "was it fast, did we talk" | DoD table in `docs/progress/MP.md` |
 
-Order: MP0–MP4 are built and verified; MP5 is verified as far as possible on the development laptop (see
-[MP.md](progress/MP.md)). Deployment to the real server waits (owner, 2026-10-26): work and
-tests run on the development laptop, and MP0's exit check is done when the Dell and the VPS are set up.
-MP1 ran as one workflow (design with critiques, sequential builders, review, fix, gate); MP2 and MP3
+Order: MP0–MP4 are built and verified; MP5 was verified as far as possible on the development laptop
+(see [MP.md](progress/MP.md)). The real server went live on 2026-10-28 (the Dell and the VPS,
+`https://any-game.dv8.no`); work and tests still run on the development laptop. MP0's exit check is done
+once a phone on 4G is confirmed, and MP5's latency playtest and real-people session run against the
+deployed server. MP1 ran as one workflow (design with critiques, sequential builders, review, fix, gate); MP2 and MP3
 had the same shape. Branch: `multi`.
 
 Possible improvements, not planned yet:
@@ -154,8 +157,8 @@ pages (§5).
 Development and testing run on the development laptop (same setup, or just `npm run dev`; multi-player
 tests use several browser contexts against it).
 
-Step by step in [HOSTING.md](HOSTING.md) (written for Arch/CachyOS; any systemd distribution works the
-same way). In short:
+Step by step in [HOSTING.md](HOSTING.md) (Ubuntu and Arch/CachyOS; the Dell runs Ubuntu Server 26.04
+with Node.js from nodejs.org). In short:
 
 1. **Packages:** a patched Node.js (22.23.4+, 24.22.1+ or 26.12.1+; HOSTING.md §1), npm and git. Clone
    the repo to `/opt/anyworld` and run `npm ci && npm run build`.
@@ -236,7 +239,7 @@ Decided:
   since chat then goes to the AI provider.
 - 2026-10-26: anyone may create a room (no access code); the room limits (§2) apply.
 - 2026-10-26: deployment to the real server waits; development and testing run on the development
-  laptop until then (MP0's exit check stays open).
+  laptop until then (MP0's exit check stays open). Deployed on 2026-10-28 (`any-game.dv8.no`).
 - 2026-10-26 (single player): bosses get generally a bit more health. Done in MP1 prep (`1f9378f`):
   unique hostiles get 25 % more hp on every difficulty.
 - 2026-10-26: the AI game master runs in every room, also rooms created without the host access code;
@@ -282,4 +285,4 @@ Built in MP1 as proposed in its design, confirmed by the owner (2026-10-28):
   (`ANYWORLD_GM_ROOM_CALLS_PER_HOUR`), with no separate chat reserve; revisit after the session with
   real people (measured so far: about 9 calls a minute for 3 players).
 
-Open: none (2026-10-30). What remains needs deployment or people (MP.md "Open").
+Open: none (2026-10-31). What remains needs a phone on 4G or people (MP.md "Open").

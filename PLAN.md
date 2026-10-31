@@ -21,16 +21,22 @@ src/
     render/ (three.js scene, camera, tiles, models/archetypes, lighting, cutaway, vfx, animation)
     ui/ (HUD, log, hotbar, backpack, inspect, dialogue, level-up, start screen, settings, loading, end screens)
     audio/ (generative ambience, sfx, soundcloud), storage.ts (saves, settings, recent worlds)
+  gm/          GM runner, offline lines, chat and voice: shared by the browser and the room server (MP4)
+  net/         room protocol, messages, engine version, the room client (MP2/MP3)
   shared/      tiny helpers usable everywhere
-server/        Node backend: serves dist/client, POST /api/llm proxy (keys from env), /api/presets
+  client/room/ lobby, room session, chat and party views (MP3)
+server/        Node backend: serves dist/client, POST /api/llm proxy (keys from env), /api/presets,
+               /api/health; rooms/ (WebSocket rooms, room files, the rooms' GM)
+deploy/, scripts/  systemd unit, env example, deploy.sh (docs/HOSTING.md)
 content/
   worlds/      recorded World Specs (fixtures + demo worlds) *.json
   prompts.json curated inspiration prompts
   recordings/  recorded LLM responses for the mock provider
-tools/         CLI: sim.ts (bot runs), validate-worlds.ts, screenshot.ts, agent-provider helpers
-tests/         vitest (engine, schema, llm contract tests, sim smoke)
-e2e/           playwright (headed chromium under xvfb — WebGL needs it here)
-docs/progress/ milestone screenshots and notes
+tools/         CLI: sim.ts (bot runs), validate-worlds.ts, agent-provider helpers, room-bots.ts, gm-smoke.ts
+tests/         vitest (engine, schema, llm contract tests, sim smoke, server and rooms)
+e2e/, e2e-mp/  playwright, single player and rooms (headed chromium under xvfb — WebGL needs it here)
+docs/          HOSTING.md, MULTIPLAYER-PLAN.md, progress/ (multiplayer notes MP*), playtest/,
+               archive/ (v1 milestone notes M1–M5 with screenshots, STATS, RETROSPECTIVE)
 issues/        one markdown file per bug found (status: open/fixed)
 ```
 
@@ -57,7 +63,13 @@ Key rules for every contributor (agent):
 
 Each milestone runs as one or more **workflows**: parallel builders, each owning its own directories,
 then integration, then review/verification agents, then fix loops. After each milestone the
-orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, and updates `STATS.md`.
+orchestrator commits and writes a note in `docs/progress/` (for v1 also screenshots and a `STATS.md`
+row; those v1 records are now in `docs/archive/`).
+
+M0–M5 are done (v1, 2026-10-25). The **multiplayer edition** followed as MP0–MP5 on the `multi`
+branch: plan and status in [docs/MULTIPLAYER-PLAN.md](docs/MULTIPLAYER-PLAN.md), the definition of done
+and what is still open in [docs/progress/MP.md](docs/progress/MP.md). The server is live at
+`https://any-game.dv8.no` since 2026-10-28 ([docs/HOSTING.md](docs/HOSTING.md)).
 
 ## Testing strategy
 
@@ -78,43 +90,24 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   schema description, and validation uses zod.
 - No live LLM is available during the build, so the prompts are tuned with agents acting as the provider.
 
-## Backlog added during M1 (scheduled for M2)
+## Earlier backlogs (done)
 
-- **Non-Earth-like worlds** (user, during M1): add `islands` (floating platforms over a void),
-  `organic` (membranes/blobs), `geometric` (abstract patterns/symmetries) generators; abstract
-  surface patterns (`gradient`, `grid`, `noise`, `lines`, `none`); `AreaPlan.backdrop` (void/sky
-  style: starfield, gradient, clouds, abyss, colour). The renderer and engine must not assume
-  realism. The world-generation prompt should explicitly invite non-realistic worlds.
-- **GM-invented rules** (user, during M1): add GM actions `add_rule {rule: RuleVariant, reason}` /
-  `remove_rule {id}`. Engine keeps `state.activeRules` (world rules + GM rules, max 5), at most one
-  new GM rule per area, power-impact estimate vs difficulty (refuse/require counterweight). Add a UI
-  "Rules" panel. The GM prompt gets the active rules and difficulty.
-- **Clearer controls & goals** (user playtest of M1, Lowmoor): pressing a hotbar key on an already-equipped
-  passive item (starting Thesaurus, "E" badge) opens the backpack inspect view — by design, but it reads as a
-  bug. Fix: equipped item → small inline tooltip/toast ("Equipped as your Comeback — bump into rivals to use
-  it"), never a surprise backpack; explain the E badge. Add an always-visible **goal tracker** (world goal
-  summary + current step/quest, e.g. "Get your speech notebook back from Rosalind"), contextual key hints
-  (near NPC: "T talk", on item: "G pick up", at exit: "> Walk home…", locked exit: why), and a short
-  first-run onboarding card per world (how to win, how conflict works here). High priority, first in M3.
+The backlogs added during M1 and M2 were all built in M2–M4:
 
-## Backlog added during M2 (user)
-
-- **Languages (requirement, at least Norwegian):** see DESIGN §7b and DoD #11. This is scheduled in the
-  chained M3–M5 workflow. M3 adds `WorldMeta.language` and makes the world/GM/dialogue prompts
-  language-aware, and the agents-as-provider produce at least 2 Norwegian demo worlds. M4 adds the UI
-  message catalog (en + nb), a language picker, engine log events as key + params instead of English
-  sentences, a missing-key test, and translated prompt-library entries.
-- **Future, not v1:** sharing generated worlds and multiplayer (DESIGN §12). v1 only keeps the door open:
-  versioned specs that can be exported and imported, and no unnecessary single-player assumptions.
-- **Mobile & responsive (requirement):** see DESIGN §6b and DoD #12. This is scheduled in the chained
-  workflow. M3 starts with the controls & goals work, which is designed touch-first (context buttons
-  double as the key hints). M4 adds the responsive layout and bottom sheets, touch input, the mobile
-  render quality tier and performance budget, and Playwright device projects (iPhone and Pixel,
-  portrait and landscape). M5 runs a touch-only playthrough with bots driving tap input.
-- **Priority note (user, during M3):** fun and fluent gameplay matters more than exact balance or fairness
-  (DESIGN §2.5). Reviewers and fixers should treat balance bands as guard rails, report flow/fun problems
-  (friction, waiting, confusing moments, dead ends, boring stretches) as major issues, and not burn
-  rounds fine-tuning win rates. For future multiplayer, avoid waiting; occasionally missed turns are OK.
+- **Non-Earth-like worlds:** the `islands`, `organic` and `geometric` generators, abstract surface
+  patterns and `AreaPlan.backdrop` (src/schema/world.ts, src/engine/mapgen/).
+- **GM-invented rules:** the `add_rule` / `remove_rule` GM actions with power checks
+  (src/schema/gm.ts, src/engine/rules.ts) and the Rules panel.
+- **Clearer controls and goals:** the goal tracker, contextual key hints / context buttons, the
+  per-world onboarding card, no surprise backpack on an equipped passive item.
+- **Languages:** English and Norwegian bokmål (`meta.language`, src/client/i18n/, engine log keys,
+  translated prompts).
+- **Mobile and responsive:** phone layout, touch input, the mobile quality tier and device projects in
+  Playwright.
+- **Sharing worlds and multiplayer:** world files (export/import) in v1; multiplayer in MP0–MP5 (above).
+- **Priority note** (user, during M3), still in force: fun and fluent gameplay matters more than exact
+  balance or fairness (DESIGN §2.5). Treat balance bands as guard rails and report flow and fun
+  problems as major issues. For multiplayer, avoid waiting; occasionally missed turns are OK.
 
 ## Backlog added after MP5 (user, 2026-10-30)
 

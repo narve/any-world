@@ -5,7 +5,7 @@
 - Status: fixed
 
 ## Evidence
-The prologue types at 55 cps, about 10 s for 540 characters. One Enter only finishes the typing, and game keys keep working in the `narration` layer, so the card stayed centred over the player through moves, trades and fights (the layer was still `narration` at turn 4). The backpack panel (z-index 5) drew underneath the card (z-index 6). On entering a new area, the Arrival card hid the board. Screenshots: docs/progress/M1/playtest-western-r3f-04-backpack-open.png, playtest-western-r3f-01-rules.png, playtest-teen-assist-r3-36-area2.png.
+The prologue types at 55 cps, about 10 s for 540 characters. One Enter only finishes the typing, and game keys keep working in the `narration` layer, so the card stayed centred over the player through moves, trades and fights (the layer was still `narration` at turn 4). The backpack panel (z-index 5) drew underneath the card (z-index 6). On entering a new area, the Arrival card hid the board. Screenshots: docs/archive/progress/M1/playtest-western-r3f-04-backpack-open.png, playtest-western-r3f-01-rules.png, playtest-teen-assist-r3-36-area2.png.
 
 ## Fix
 - Root cause 1: nothing dismissed the narration except an explicit second Enter or click. `GameSession.act` now clears the narration whenever an engine action changes the state, so the player's first move, wait, attack or other action dismisses it. A card opened by that same action (the Arrival card after a transition) stays until the next action. UI-only intents (camera, look) and refused actions do not dismiss it.

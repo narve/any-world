@@ -6,7 +6,7 @@
 
 ## Evidence
 Absalom Vane and his summoned Tinplate Prospector stood partly behind the Search/Wait buttons and the
-hotbar (docs/progress/M5/pt-desktop-r1-western-34-boss.png, …-35-target-boss.png). In another run a
+hotbar (docs/archive/progress/M5/pt-desktop-r1-western-34-boss.png, …-35-target-boss.png). In another run a
 visible Dust Coyote was projected inside the top-left HUD rect. Auto framing kept actors inside the
 viewport margins, but on desktop the corner panels are not insets (they are deliberately not passed
 as insets, because insets would shrink the whole view), so nothing counted them as covered.

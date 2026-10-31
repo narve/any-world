@@ -9,7 +9,7 @@ Round-2 touch runs, `extraAudit` (screen points of every visible actor checked w
 `document.elementFromPoint`):
 - iPhone 15 portrait, mimic world: `hostile:intern-adventurer under aw-panel` (under the bag button).
 - Pixel 7 portrait, russetid, turn 0: `hostile:russekortjeger under aw-ctx`, while a ~110 px band of empty
-  map was left under the goal bar (docs/progress/M5/pt-mobile-r2-pixel7-portrait-1-start.png).
+  map was left under the goal bar (docs/archive/progress/M5/pt-mobile-r2-pixel7-portrait-1-start.png).
 - iPhone 15 landscape, cyberpunk: `mist-drone` / `logo-weevil under aw-ctx`, `process-server under aw-strip`.
 
 Reports: tests/review/m5/reports/m5-mobile-pt-r2-*.json (`hiddenActors`).

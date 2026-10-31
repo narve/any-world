@@ -5,7 +5,7 @@
 - Status: fixed
 
 ## Evidence
-docs/progress/M5/nb-r2-z-althing-informant-2.png: the transcript shows "Ask what they know" while the reply button reads "Spør hva de vet". Every nb world, every built-in option.
+docs/archive/progress/M5/nb-r2-z-althing-informant-2.png: the transcript shows "Ask what they know" while the reply button reads "Spør hva de vet". Every nb world, every built-in option.
 
 ## Cause
 `GameSession.act` pushed the raw engine label (`prevChoice.options[i].label`, English, src/engine/npc.ts) into the history; the reopened-conversation path (healer / informant answers) passed `opt.label` as the LLM voice turn's `playerLine` too.

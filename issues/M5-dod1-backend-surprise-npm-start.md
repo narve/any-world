@@ -8,7 +8,7 @@
 ## Evidence
 DoD #1 asks that in both modes a run can be started "with a prompt or with surprise me, or in demo mode". The
 backend group of e2e/modes.spec.ts had one generation case plus a demo world. No e2e started `npm start`
-(the production server serving dist/client); docs/progress/M4.md listed this as a known issue.
+(the production server serving dist/client); docs/archive/progress/M4.md listed this as a known issue.
 
 ## Fix
 e2e/modes.spec.ts now has:

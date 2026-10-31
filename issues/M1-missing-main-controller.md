@@ -5,7 +5,7 @@
 - Status: fixed
 
 ## Evidence
-`src/client/index.html` loads `<script type="module" src="./main.ts">`, but there was no `src/client/main.ts` and no `game-controller.ts`. Vite logged `Pre-transform error: Failed to load url /main.ts`, the browser got `http 404 http://localhost:5173/main.ts`, and the page only showed the noscript text (docs/progress/M1/playtest-index-unmodified.png is all black). The M1 exit check "play a fixture world in the browser" could not pass. The playtests could only run with a throwaway harness put in place of `/main.ts` through a Playwright route.
+`src/client/index.html` loads `<script type="module" src="./main.ts">`, but there was no `src/client/main.ts` and no `game-controller.ts`. Vite logged `Pre-transform error: Failed to load url /main.ts`, the browser got `http 404 http://localhost:5173/main.ts`, and the page only showed the noscript text (docs/archive/progress/M1/playtest-index-unmodified.png is all black). The M1 exit check "play a fixture world in the browser" could not pass. The playtests could only run with a throwaway harness put in place of `/main.ts` through a Playwright route.
 
 ## Fix
 I wrote the integrator in three layers:
@@ -22,4 +22,4 @@ I wrote the integrator in three layers:
 
 ## Regression tests
 - `tests/client/session.test.ts` (17 tests, fixture worlds): view model and intro, camera-relative movement, refused actions, save/resume, end screen, talk/leave/history, persuading from dialogue, trade buy and close (also with no money), look mode, targeting (including use from a menu), click-to-travel (arrival, interruption by a hostile, heat not interrupting, unexplored destination refused), area-transition narration.
-- `e2e/play.spec.ts` (Playwright, headed under xvfb): `/` shows the start screen with 3 demo worlds. A demo starts a run, a few keyboard turns pass and the run is autosaved. `?world=fixture-ship` checks that ArrowUp moves the player up the screen at all 4 camera rotations, that click-to-travel moves the player and that the backpack opens and closes. A dialogue opens with `t` and closes with Esc. The end screen's "Same world again" starts a new run. Every test also checks that the console has no errors and no request returns 404. Screenshots: docs/progress/M1/play-*.png.
+- `e2e/play.spec.ts` (Playwright, headed under xvfb): `/` shows the start screen with 3 demo worlds. A demo starts a run, a few keyboard turns pass and the run is autosaved. `?world=fixture-ship` checks that ArrowUp moves the player up the screen at all 4 camera rotations, that click-to-travel moves the player and that the backpack opens and closes. A dialogue opens with `t` and closes with Esc. The end screen's "Same world again" starts a new run. Every test also checks that the console has no errors and no request returns 404. Screenshots: docs/archive/progress/M1/play-*.png.

@@ -16,4 +16,4 @@ Pressing `2` opened targeting with the hint "Enter confirm" (playtest-r1-ui-ship
 
 ## Regression test
 - tests/client/m2-client-fixes.test.ts "direction-aimed items": the cursor starts in the facing direction and Enter fires (the turn advances and targeting closes). Arrows pick and hold a direction. The slot view flags the item.
-- e2e/client-m2-fixes.spec.ts (ship): banner text, direction marks visible, Enter spends a turn. Screenshot: docs/progress/M2/client-fix-weld-direction.png.
+- e2e/client-m2-fixes.spec.ts (ship): banner text, direction marks visible, Enter spends a turn. Screenshot: docs/archive/progress/M2/client-fix-weld-direction.png.

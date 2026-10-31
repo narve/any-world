@@ -5,7 +5,7 @@
 - Status: fixed (engine). Client follow-ups listed below.
 
 ## Evidence
-Rain Broker: the onboarding says "Your Postal Peacemaker reaches 5 tiles". A Claim Jumper 4 steps away diagonally (-4,-4) was visible. Pressing 1 started the aim on the player, and Enter said "No one hostile in reach there — move the aim onto someone you can see." The jumper (rifle range 6) kept hitting for 5–6 from the same spot (docs/progress/M5/pt-desktop-r3-west-05/06 screenshots). Sabine Lark at (-4,4) behaved the same way. Cause: ranged reach used `fov.withinRadius` (dx²+dy² <= r²+r), so 32 > 30 for range 5, while the range-6 jumper passed (32 <= 42). Repro was the `it.fails` in tests/review/m5/pt-desktop-r3.test.ts.
+Rain Broker: the onboarding says "Your Postal Peacemaker reaches 5 tiles". A Claim Jumper 4 steps away diagonally (-4,-4) was visible. Pressing 1 started the aim on the player, and Enter said "No one hostile in reach there — move the aim onto someone you can see." The jumper (rifle range 6) kept hitting for 5–6 from the same spot (docs/archive/progress/M5/pt-desktop-r3-west-05/06 screenshots). Sabine Lark at (-4,4) behaved the same way. Cause: ranged reach used `fov.withinRadius` (dx²+dy² <= r²+r), so 32 > 30 for range 5, while the range-6 jumper passed (32 <= 42). Repro was the `it.fails` in tests/review/m5/pt-desktop-r3.test.ts.
 
 ## Fix
 Ranged reach now counts steps. The new `withinReach(a, b, r)` in fov.ts uses Chebyshev distance: a diagonal step counts as one, the same as movement. Ability targeting (`effects.ts`, already `cheb`) used this rule too. `inAttackRange` (every attacker, the player included) and the AI's `target_in_range` ability check use it. Sight and perception stay round (`withinRadius`, which matches `computeFov`).

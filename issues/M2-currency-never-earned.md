@@ -5,7 +5,7 @@
 - Status: fixed. Offline-director payouts are still optional (client owner).
 
 ## Evidence
-In the full round-2 runs (docs/progress/M2/playtest-r2-fixture-*.json and the play-*.png HUDs), currency never changed:
+In the full round-2 runs (docs/archive/progress/M2/playtest-r2-fixture-*.json and the play-*.png HUDs), currency never changed:
 - ship stayed at 15 ration chits to turn 1092;
 - teen stayed at 25 favours to turn 702;
 - western stayed at 20 silver to turn 777;

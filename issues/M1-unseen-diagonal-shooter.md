@@ -5,7 +5,7 @@
 - Status: fixed
 
 ## Evidence
-Western seed 11, area 1 (darkness 0.8 cuts the player's sight from 9 to 7). A Claim Jumper (range 6) fired from (32,25) at the player on (38,19), 6 tiles away diagonally, for 8 turns in a row. The player's FOV (`computeFov`, Euclidean `dx²+dy² <= r²+r`) never contained that tile, while the AI's Chebyshev range and Bresenham `los()` did. In the browser the player went from 23 to 9 HP in 4 waits with no shooter on screen. Screenshot: docs/progress/M1/playtest-western-r3s-shot-from-unseen-diagonal.png.
+Western seed 11, area 1 (darkness 0.8 cuts the player's sight from 9 to 7). A Claim Jumper (range 6) fired from (32,25) at the player on (38,19), 6 tiles away diagonally, for 8 turns in a row. The player's FOV (`computeFov`, Euclidean `dx²+dy² <= r²+r`) never contained that tile, while the AI's Chebyshev range and Bresenham `los()` did. In the browser the player went from 23 to 9 HP in 4 waits with no shooter on screen. Screenshot: docs/archive/progress/M1/playtest-western-r3s-shot-from-unseen-diagonal.png.
 
 ## Fix
 Perception is now symmetric, in two layers:

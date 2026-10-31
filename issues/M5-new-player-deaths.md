@@ -5,7 +5,7 @@
 - Status: fixed. All 20 demo worlds pass the new-player gate on 200 fresh seeds. One remaining issue is engine-side (see "Remaining").
 
 ## Evidence
-Round-2 desktop playtest (docs/progress/M5/pt-desktop-r2-*.png): 13 runs over 10 demo worlds, with 1 win.
+Round-2 desktop playtest (docs/archive/progress/M5/pt-desktop-r2-*.png): 13 runs over 10 demo worlds, with 1 win.
 
 - **First-area pile-ups.** Yams went from 28 to 2 Cool in the first 10 turns, with three hostiles converging at the start.
 - **Kiters on a melee-only player.** In Long Drove, two range-3 kiter moths killed a melee-only courier on Gentle.

@@ -31,4 +31,4 @@ not even on the player's own tile.
   "lowers the player tile and extra focus tiles when they are tall"
 - src/client/render/tiles.test.ts "treats door frames and the transition model as tall and flattens them"
 - e2e/render.spec.ts "cut-away clears doorways and adjacent actors in <world>" (screenshots
-  docs/progress/M1/cutaway-door-*.png)
+  docs/archive/progress/M1/cutaway-door-*.png)

@@ -7,7 +7,7 @@
 
 ## Evidence
 After a run, "New world" landed mid-page on the demo list with the prompt box off screen
-(docs/progress/M5/pt-desktop-r1-start-again.png). `main.aw-screen.aw-start` had scrollTop 1062, the position
+(docs/archive/progress/M5/pt-desktop-r1-start-again.png). `main.aw-screen.aw-start` had scrollTop 1062, the position
 where the demo card was clicked before the first run. pt-desktop-r1.spec.ts: `expect.soft(scrollTop).toBe(0)`,
 received 1062.
 

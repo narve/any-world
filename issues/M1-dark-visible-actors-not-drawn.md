@@ -8,7 +8,7 @@
 Ship seed 7, area 1 "The Ductworks" (ambientIntensity 0.2, fog 0.06, playerLight 4). The player was
 5 tiles from Warden Ostrova on a clear line; the engine marked her tile visible and she fired at the
 player, but `Renderer.samplePixel` at her screen position returned #010408. No model, ring or hp bar
-was on screen (docs/progress/M1/playtest-ship-r3d-area1-visible-actors.png).
+was on screen (docs/archive/progress/M1/playtest-ship-r3d-area1-visible-actors.png).
 
 ## Root cause
 The engine's line of sight is top-down; the camera's is a tilted perspective. Reproducing the setup

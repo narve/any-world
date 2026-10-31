@@ -2,6 +2,9 @@
 
 > Status: **draft, being shaped interactively**. Sections marked *(proposed)* are defaults
 > suggested by Claude and not yet confirmed. *Open questions* at the bottom.
+>
+> v1 was built from this design (M0–M5, done 2026-10-25). The multiplayer edition (§12) has its own
+> plan and status in [docs/MULTIPLAYER-PLAN.md](docs/MULTIPLAYER-PLAN.md).
 
 ## 1. Pitch
 
@@ -387,9 +390,10 @@ for v1 too; see §12.
   (§3.1). It also feeds into the *surprise me* seeds.
 - **Recorded in the repo:**
   - `BUILD_LOG.md`: a chronological log of decisions, problems and resolutions
-  - `STATS.md`: agents run, and time and tokens per phase (best effort)
+  - `STATS.md`: agents run, and time and tokens per phase (best effort; now `docs/archive/STATS.md`)
   - `issues/`: bugs found by tests, reviews and playtests, with their fixes
-  - `RETROSPECTIVE.md`: what worked, what didn't, and what a human still has to fix
+  - `RETROSPECTIVE.md`: what worked, what didn't, and what a human still has to fix (now
+    `docs/archive/RETROSPECTIVE.md`)
 - Git commit at every milestone.
 
 ## 10. Definition of done *(proposed)*
@@ -439,7 +443,9 @@ v1 is done when all of these hold. Each one is checked by automated tests or an 
   (compressed spec, or an id on the backend), a "play this world" entry on the start screen, and
   optionally a public gallery. Shared worlds must be re-validated on import (untrusted input) and keep
   their `language`. v1 keeps specs versioned (`specVersion`) and loadable from a file.
-- **Multiplayer.** Options include co-op in the same world (turn-based, simultaneous or round-robin
+- **Multiplayer.** *(Built after v1 as the multiplayer edition: co-op rooms with simultaneous turns and
+  chat, see [docs/MULTIPLAYER-PLAN.md](docs/MULTIPLAYER-PLAN.md). The text below is the original v1 note.)*
+  Options include co-op in the same world (turn-based, simultaneous or round-robin
   turns) and asynchronous play (same world + seed, compare results or ghosts). The deterministic,
   pure engine makes lockstep or server-authoritative play feasible later. The GM would need to address
   several players. v1 avoids assuming exactly one player where it is cheap to avoid (e.g. the GM

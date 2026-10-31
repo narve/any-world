@@ -5,7 +5,7 @@
 - Status: fixed
 
 ## Evidence
-docs/progress/M2/playtest-r1-fixture-ship-layer-levelup.png shows a stray "Muffled" at about (124,232), far from the player. In docs/progress/M2/playtest-r1-fixture-ship-play-0600.png the same label is correctly above the player's head.
+docs/archive/progress/M2/playtest-r1-fixture-ship-layer-levelup.png shows a stray "Muffled" at about (124,232), far from the player. In docs/archive/progress/M2/playtest-r1-fixture-ship-play-0600.png the same label is correctly above the player's head.
 
 ## Root cause
 Floating texts (damage numbers, "miss", status names) were world-space sprites placed once, over the actor's tile, when the turn was synced. They are cosmetic tweens that run on after the turn resolves (a status name lasts 1.2 s plus its stagger delay). In fast play, the player keeps walking during that time, and the camera follows the player. So the label stayed on a tile the player had already left, and it drifted across the screen. The level-up modal only made this easy to see: it opened while the label was still playing, and the label ended up next to the HUD.

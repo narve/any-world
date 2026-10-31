@@ -14,4 +14,4 @@ At the ship start O2 is 120/120. Pressing `3` consumed an O2 Canister (count 2â†
 
 ## Regression test
 - tests/client/m2-client-fixes.test.ts "consumables whose vitals are already full": warn and then use, re-arm after another action, no warning when not full or when the item cures a condition the player has, and a status side effect is never "wasted".
-- e2e/client-m2-fixes.spec.ts (ship): the toast is visible and the count is unchanged after the first press, then drops after the second. Screenshot: docs/progress/M2/client-fix-o2-full-warning.png.
+- e2e/client-m2-fixes.spec.ts (ship): the toast is visible and the count is unchanged after the first press, then drops after the second. Screenshot: docs/archive/progress/M2/client-fix-o2-full-warning.png.

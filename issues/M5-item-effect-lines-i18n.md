@@ -8,7 +8,7 @@
 `effectLine`/`targetingLine`/`itemEffectLines` built finished English sentences ("Deals", "Restores",
 "Inflicts/Grants … (N turns)", "Target: one, range N", "Costs", "Cooldown N turns", "Charges",
 "Requires", "Durability", "% chance", "while carried"). In the nb UI on nb worlds:
-docs/progress/M5/nb-r1-phone-troll-14-trade.png (Dagslyslykt: "Deals 2d4 Sollys damage / Inflicts
+docs/archive/progress/M5/nb-r1-phone-troll-14-trade.png (Dagslyslykt: "Deals 2d4 Sollys damage / Inflicts
 Halvforsteinet (1 turns) / Target: line, range 5 / Costs 4 Blekk / Cooldown 2 turns"); Althing trade
 tooltip "Deals 1d4 Forakt damage"; Kvikklunsj "Restores 7 Tålmodighet", "Grants Kaffefart (4 turns)".
 
