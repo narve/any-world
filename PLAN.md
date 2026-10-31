@@ -152,3 +152,9 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   alone" vs. "Play with friends: opens a room others can join"), and the page groups or marks them the
   same way (e.g. a small solo/party icon). en + nb strings; check the touch layout, where tooltips need
   a long-press or a visible hint instead of hover.
+  - **Make the open-rooms list visible.** The list lives inside the *Play together* card
+    (`RoomsCard.statusBody`, src/client/ui/components/rooms.ts), between the card's description and
+    *Create room*/*Join*; when empty it is one muted line ("No open rooms right now…") that is easy to
+    miss. Give it its own "Open rooms" heading with a count ("Open rooms (3)"), an empty state that
+    still reads as a list (e.g. a dashed placeholder row with "Create one and share the link"), and on
+    the phone layout keep it above the fold next to the featured world.
