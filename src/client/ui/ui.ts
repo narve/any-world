@@ -60,6 +60,8 @@ export interface GameUi {
    */
   setGraphicsLost?(lost: boolean): void;
   setBackpackOpen(open: boolean): void;
+  /** closes the help, rules and backpack panels (the browser's Back); true when one was open */
+  closePanels(): boolean;
   /** short transient notice; `action` adds one button (a sticky one stays until it or ✕ is pressed) */
   toast(text: string, tone?: 'info' | 'warn', action?: ToastAction): void;
   /** the hotbar's sound button shows the saved mute setting */
@@ -755,6 +757,14 @@ class UiRoot implements GameUi {
 
   setMuted(muted: boolean): void {
     this.hotbar.setMuted(muted);
+  }
+
+  closePanels(): boolean {
+    const open = this.helpOpen || this.rulesOpen || this.bp.open;
+    if (this.helpOpen) this.setHelpOpen(false);
+    if (this.rulesOpen) this.setRulesOpen(false);
+    if (this.bp.open) this.setBackpackOpen(false);
+    return open;
   }
 
   toast(text: string, tone: 'info' | 'warn' = 'info', action?: ToastAction): void {

@@ -193,7 +193,8 @@ test('create from a world card, join from the list, clash, ready, start, mid-run
   await C.page.locator('.aw-help-leave').click();
   await expect.poll(() => screen(C.page)).toBe('start');
   expect(await C.page.evaluate(() => window.__anyworld!.room)).toBeNull();
-  expect(C.page.url()).not.toContain('room=');
+  // (Leave room steps back in the history: the address follows a moment later)
+  await expect.poll(() => C.page.url()).not.toContain('room=');
   expect(await C.page.evaluate(() => JSON.parse(localStorage.getItem('anyworld.save.v1') ?? 'null')?.turn ?? null)).toBe(saved);
   await expect(C.page.locator('.aw-saved-card')).toBeVisible();
   await C.page.screenshot({ path: `${OUT}/start-phone.png` });

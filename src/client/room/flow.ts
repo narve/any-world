@@ -42,6 +42,8 @@ export interface RoomAppHost {
   readonly runOptions: { difficulty: Difficulty; weirdness: number };
   render(): void;
   showStart(error?: string): void;
+  /** shows a room's address (a new history entry when it is opened from the start page) */
+  navigate(url: string): void;
   settingsView(): SettingsView | null;
   languageView(): UiViewModel['language'];
   prefs(): { animationSpeed: number; reduceMotion: boolean };
@@ -381,7 +383,7 @@ export class RoomFlow {
     this.link = link;
     this.roomUi = new RoomUi(link, this.app.ui);
     link.on((e) => this.onLink(link, e));
-    setAddress(`${location.pathname}?room=${encodeURIComponent(code)}`);
+    this.app.navigate(`${location.pathname}?room=${encodeURIComponent(code)}`);
     this.app.render();
     link.connect();
   }
@@ -658,14 +660,5 @@ export class RoomFlow {
       // no clipboard (insecure origin, denied): the link is shown in the lobby to copy by hand
       this.app.ui.toast(url, 'info');
     }
-  }
-}
-
-function setAddress(url: string): void {
-  try {
-    const next = new URL(url, location.href);
-    if (next.href !== location.href) history.replaceState(history.state, '', next.href);
-  } catch {
-    /* history can be unavailable (sandboxed frames) */
   }
 }

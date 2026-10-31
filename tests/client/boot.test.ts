@@ -62,12 +62,16 @@ describe('bootRoute', () => {
 });
 
 describe('main.ts boot never clears the run', () => {
-  it('boot() routes through bootRoute and has no clearRun on its path', async () => {
+  it('boot() (and Back/Forward) route through bootRoute and have no clearRun on their path', async () => {
     const { readFileSync } = await import('node:fs');
     const src = readFileSync(new URL('../../src/client/main.ts', import.meta.url), 'utf8');
     const boot = src.slice(src.indexOf('async function boot('));
-    expect(boot).toContain('bootRoute(');
+    expect(boot.slice(0, boot.indexOf('\n}\n'))).toContain('app.route(true)');
     expect(boot.slice(0, boot.indexOf('\n}\n'))).not.toContain('clearRun');
+    const route = src.slice(src.indexOf('  async route('));
+    const body = route.slice(0, route.indexOf('\n  }\n'));
+    expect(body).toContain('bootRoute(');
+    expect(body).not.toContain('clearRun');
   });
 });
 

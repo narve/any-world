@@ -33,6 +33,7 @@ import { GameSession } from './session';
 import { demoWorldsFor, localizedInspiration, promptLibrary } from './prompts';
 import { GameController } from './game-controller';
 import { bootRoute, runUrl } from './boot';
+import { Nav } from './nav';
 import { pageBuild, roomsEndpoint, type RoomsEndpoint } from './room/config';
 import type { RoomFlow, RoomHandle } from './room/flow';
 
@@ -74,6 +75,10 @@ export class App {
   private settings: Settings;
   private settingsOpen = false;
   screen: 'start' | 'loading' | 'lobby' | 'game' = 'start';
+  /** the browser history of the screens (nav.ts): Back returns to the start page, closes panels first */
+  readonly nav = new Nav(typeof history !== 'undefined' ? history : null, () => location.href);
+  /** true while a screen is opened for the address already shown (boot, Back/Forward): no new entry */
+  private restoring = false;
   /** what the backend said about the presets it can serve */
   private server: ServerState = { kind: 'unknown' };
   /** advice shown under a failed world generation (modes.ts generationHint) */
@@ -279,6 +284,7 @@ export class App {
   }
 
   private async launch(session: GameSession, entry: WorldEntry): Promise<void> {
+    const from = this.screen;
     this.controller?.dispose();
     const renderer = await this.ensureRenderer();
     this.canvasHost.hidden = false;
@@ -304,7 +310,7 @@ export class App {
       extraVm: () => ({ settings: this.settingsView(), language: this.languageView() }),
     });
     // keep the address bar on this run: reloading resumes it (boot.ts) instead of starting over
-    setAddress(runUrl(session.worldId, session.state.seed));
+    this.address(runUrl(session.worldId, session.state.seed), from);
     void this.audio.startRun(session.world, session.state.area.index);
     await this.controller.start();
     document.body.dataset.ready = '1';
@@ -388,7 +394,7 @@ export class App {
     if (!provider) {
       const problem = providerProblem(activeProvider(this.settings), this.server, this.settings.accessCode);
       if (problem) this.ui.toast(problemText(problem), 'warn');
-      this.settingsOpen = true;
+      this.setSettingsOpen(true);
       this.render();
       return false;
     }
@@ -421,6 +427,8 @@ export class App {
       },
     );
     this.generation = gen;
+    // (the loading screen keeps the start page's address: Back from it cancels and returns there)
+    this.address(location.pathname, this.screen, { loading: true });
     this.screen = 'loading';
     this.canvasHost.hidden = true;
     this.render();
@@ -448,7 +456,8 @@ export class App {
     this.generation?.cancel();
     this.generation = null;
     this.audio.stopRun();
-    setAddress(location.pathname);
+    if (this.restoring) this.nav.replace(location.pathname);
+    else this.nav.home(location.pathname);
     this.controller?.dispose();
     this.controller = null;
     this.screen = 'start';
@@ -517,6 +526,78 @@ export class App {
   }
 
   // ---------------------------------------------------------------------------
+  // addresses and Back / Forward (nav.ts)
+  // ---------------------------------------------------------------------------
+
+  /** the address of a screen being opened from `from`: a new history entry when leaving the start page */
+  private address(url: string, from: App['screen'], extra: { loading?: true } = {}): void {
+    if (!this.restoring && from === 'start') this.nav.push(url, extra);
+    else this.nav.replace(url, extra);
+  }
+
+  /** the room flow's address (`?room=CODE`) */
+  navigate(url: string): void {
+    this.address(url, this.screen);
+  }
+
+  private setSettingsOpen(open: boolean): void {
+    if (this.settingsOpen === open) return;
+    this.settingsOpen = open;
+    if (open) this.nav.openModal('settings');
+    else this.nav.closeModal('settings');
+  }
+
+  /**
+   * Opens the screen the address names (boot, and Back/Forward): see boot.ts for the rules. A run or
+   * room already on screen for that address is kept.
+   */
+  async route(boot = false): Promise<void> {
+    const saved = loadRun();
+    const r = bootRoute(location.search, saved && hasWorld(saved.worldId) ? saved : null, worldTitle);
+    this.restoring = true;
+    try {
+      if (r.kind === 'new' || r.kind === 'continue') {
+        const s = this.controller?.session;
+        if (this.screen === 'game' && s && !this.flow?.link && location.search === runUrl(s.worldId, s.state.seed)) return;
+        if (r.kind === 'new') await this.playWorld(r.worldId, r.seed);
+        else await this.continueRun();
+      } else if (r.kind === 'room') {
+        // a room link (MP3): join it (the stored seat or profile; the name sheet the first time); a
+        // build without a server says so
+        if (this.flow?.link?.code === r.code) return;
+        if (!roomsEndpoint(pageBuild(), location)) this.showStart(t('room.noServer'));
+        else {
+          this.showStart();
+          await this.joinRoom(r.code);
+        }
+      } else if (boot || this.screen !== 'start' || r.notice) this.showStart(r.notice);
+    } finally {
+      this.restoring = false;
+    }
+  }
+
+  /** Back / Forward: close an open panel or dialog first, else open the screen of the new address */
+  private onPopState(): void {
+    if (this.nav.consumePop()) return;
+    let closed = false;
+    if (this.settingsOpen) {
+      this.settingsOpen = false;
+      this.flow?.link?.setMenu('settings', false);
+      closed = true;
+    }
+    if (this.ui.closePanels()) closed = true;
+    if (this.nav.state()?.modal) this.nav.clearModal();
+    // (a panel's entry has the address of the screen under it: closing it is all Back does)
+    if (closed) return this.render();
+    void this.route();
+  }
+
+  /** listens for Back / Forward (once, at boot) */
+  listenHistory(): void {
+    window.addEventListener('popstate', () => this.onPopState());
+  }
+
+  // ---------------------------------------------------------------------------
   // callbacks
   // ---------------------------------------------------------------------------
 
@@ -524,7 +605,14 @@ export class App {
     const ctl = () => (this.screen === 'game' ? this.controller : null);
     return {
       onAction: (a) => ctl()?.onAction(a),
-      onIntent: (i) => ctl()?.onIntent(i),
+      onIntent: (i) => {
+        // panels get a history entry: Back closes them (nav.ts)
+        if (i.type === 'panel') {
+          if (i.open) this.nav.openModal(i.panel);
+          else this.nav.closeModal(i.panel);
+        }
+        ctl()?.onIntent(i);
+      },
       onDialogueReply: (i) => ctl()?.onDialogueReply(i),
       onDialogueLeave: () => ctl()?.onDialogueLeave(),
       onTrade: (t) => ctl()?.onTrade(t),
@@ -547,7 +635,7 @@ export class App {
         }
       },
       onOpenSettings: (open) => {
-        this.settingsOpen = open;
+        this.setSettingsOpen(open);
         this.flow?.link?.setMenu('settings', open);
         this.render();
       },
@@ -570,7 +658,7 @@ export class App {
         this.renderer?.setQuality(s.quality ?? 'auto');
         if (s.reduceMotion !== before.reduceMotion) this.renderer?.setReduceMotion(s.reduceMotion);
         if (this.controller) this.controller.session.prefs = this.prefs();
-        this.settingsOpen = false;
+        this.setSettingsOpen(false);
         this.flow?.link?.setMenu('settings', false);
         this.render();
         void this.refreshServerPresets();
@@ -664,35 +752,14 @@ async function boot(): Promise<void> {
   window.__anyworld = app;
   // never clear the autosaved run on boot: a reloaded or reopened link resumes it, and a link to
   // another world opens the start screen (Continue / pick a world) instead of discarding it
-  const saved = loadRun();
-  const route = bootRoute(location.search, saved && hasWorld(saved.worldId) ? saved : null, worldTitle);
-  if (route.kind === 'new') await app.playWorld(route.worldId, route.seed);
-  else if (route.kind === 'continue') await app.continueRun();
-  // a room link (MP3): join it (the stored seat or profile; the name sheet the first time); a build
-  // without a server says so
-  else if (route.kind === 'room') {
-    if (!roomsEndpoint(pageBuild(), location)) app.showStart(t('room.noServer'));
-    else {
-      app.showStart();
-      await app.joinRoom(route.code);
-    }
-  }
-  else app.showStart(route.notice);
+  app.listenHistory();
+  await app.route(true);
 }
 
 /** puts a failure hint after the error itself, before the generic "try again or play a demo" line */
 function withHint(error: string, hint: string): string {
   const tail = t('gen.errorHint');
   return error.endsWith(tail) ? `${error.slice(0, -tail.length).trimEnd()} ${hint} ${tail}` : `${error} ${hint}`;
-}
-
-function setAddress(url: string): void {
-  try {
-    const next = new URL(url, location.href);
-    if (next.href !== location.href) history.replaceState(history.state, '', next.href);
-  } catch {
-    /* history can be unavailable (sandboxed frames); the run itself is unaffected */
-  }
 }
 
 boot().catch((e) => {
