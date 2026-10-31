@@ -16,7 +16,8 @@ const SHELL_ICONS = {
   trash: ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 13h10l1-13'],
   ok: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M8 12l3 3 5-6'],
   info: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M12 11v6', 'M12 7h.01'],
-  people: ['M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M2 21v-1a6 6 0 0 1 12 0v1', 'M16 3.5a4 4 0 0 1 0 7', 'M22 21v-1a6 6 0 0 0-4-5.6'],
+  person: ICONS.person,
+  people: ICONS.people,
 } as const;
 
 /** how many theme tags the inspiration filter offers */
@@ -53,7 +54,7 @@ export function languagePicker(lang: LanguageVm, onPick: ((code: string) => void
   if (!lang || lang.options.length < 2 || !onPick) return null;
   return h(
     'select',
-    { id, class: 'aw-lang-select', 'aria-label': t('settings.language'), onchange: (e: Event) => onPick((e.target as HTMLSelectElement).value) },
+    { id, class: 'aw-lang-select', 'aria-label': t('settings.language'), dataset: { tip: t('settings.language') }, onchange: (e: Event) => onPick((e.target as HTMLSelectElement).value) },
     lang.options.map((o) => h('option', { value: o.code, selected: o.code === lang.current }, o.name)),
   );
 }
@@ -105,6 +106,7 @@ export class StartScreen {
   private savedEl: HTMLElement;
   private featuredEl: HTMLElement;
   private demosEl: HTMLElement;
+  private legendEl: HTMLElement;
   private recentEl: HTMLElement;
   /** the hero row: featured world beside "Play together" */
   private heroEl: HTMLElement;
@@ -175,6 +177,7 @@ export class StartScreen {
     this.featuredEl = h('div', { class: 'aw-featured-host' });
     this.heroEl = h('div', { class: 'aw-start-hero' }, this.featuredEl);
     this.demosEl = h('div', { class: 'aw-demos-body' });
+    this.legendEl = h('p', { class: 'aw-demos-legend aw-small', hidden: true });
     this.recentEl = h('div', { class: 'aw-start-recent' });
     this.byoBody = h(
       'div',
@@ -186,8 +189,8 @@ export class StartScreen {
       h(
         'div',
         { class: 'aw-start-actions' },
-        h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg', onclick: () => this.create(false) }, icon(ICONS.play), t('start.create')),
-        h('button', { type: 'button', class: 'aw-btn aw-btn-lg', onclick: () => this.create(true) }, icon(ICONS.sparkle), t('start.surprise')),
+        h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg', dataset: { tip: t('start.createTip') }, onclick: () => this.create(false) }, icon(ICONS.play), t('start.create')),
+        h('button', { type: 'button', class: 'aw-btn aw-btn-lg', dataset: { tip: t('start.surpriseTip') }, onclick: () => this.create(true) }, icon(ICONS.sparkle), t('start.surprise')),
       ),
       this.noteEl,
       h(
@@ -197,7 +200,7 @@ export class StartScreen {
           'div',
           { class: 'aw-insp-head' },
           h('h3', null, t('start.inspiration')),
-          h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost', onclick: () => this.shuffle(), 'aria-label': t('start.shuffleAria') }, icon(ICONS.shuffle), t('start.shuffle')),
+          h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost', onclick: () => this.shuffle(), 'aria-label': t('start.shuffleAria'), dataset: { tip: t('start.shuffleAria') } }, icon(ICONS.shuffle), t('start.shuffle')),
         ),
         this.filterEl,
         this.cardsEl,
@@ -205,7 +208,7 @@ export class StartScreen {
     );
     this.byoBtn = h(
       'button',
-      { type: 'button', class: 'aw-btn aw-byo-toggle', 'aria-expanded': 'false', 'aria-controls': 'aw-byo-body', onclick: () => this.setByo(!this.byoOpen, true) },
+      { type: 'button', class: 'aw-btn aw-byo-toggle', 'aria-expanded': 'false', 'aria-controls': 'aw-byo-body', dataset: { tip: t('start.byoTip') }, onclick: () => this.setByo(!this.byoOpen, true) },
       icon(ICONS.sparkle),
       t('start.byo'),
     ) as HTMLButtonElement;
@@ -244,7 +247,7 @@ export class StartScreen {
         h(
           'section',
           { class: 'aw-demos', 'aria-labelledby': 'aw-demos-title' },
-          h('div', { class: 'aw-demos-head' }, h('h2', { id: 'aw-demos-title' }, t('start.demos')), h('p', { class: 'aw-muted aw-small' }, t('start.demosSub'))),
+          h('div', { class: 'aw-demos-head' }, h('h2', { id: 'aw-demos-title' }, t('start.demos')), h('p', { class: 'aw-muted aw-small' }, t('start.demosSub')), this.legendEl),
           h('div', { class: 'aw-start-difficulty' }, h('label', { class: 'aw-range', for: 'aw-diff' }, h('span', null, t('start.difficulty')), this.diff, this.diffOut), this.diffHint),
           this.demosEl,
         ),
@@ -416,6 +419,7 @@ export class StartScreen {
               type: 'button',
               class: 'aw-insp-fill',
               'aria-label': t('start.usePrompt', { prompt: p.prompt }),
+              dataset: { tip: t('start.usePromptTip') },
               onclick: () => {
                 this.textarea.value = p.prompt;
                 this.filled = { prompt: p.prompt.trim(), language: p.language ?? 'en' };
@@ -431,7 +435,7 @@ export class StartScreen {
             h('span', { class: 'aw-insp-prompt' }, p.prompt),
             p.teaser ? h('span', { class: 'aw-insp-teaser' }, p.teaser) : null,
           ),
-          p.worldId ? h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-insp-demo', onclick: () => this.cb.onPlayDemo?.(p.worldId!, this.options(false)) }, icon(ICONS.play), t('start.playDemo')) : null,
+          p.worldId ? h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-insp-demo', dataset: { tip: t('start.playDemoTip') }, onclick: () => this.cb.onPlayDemo?.(p.worldId!, this.options(false)) }, icon(ICONS.play), t('start.playDemo')) : null,
         ),
       ),
     );
@@ -505,7 +509,7 @@ export class StartScreen {
             h('h2', null, t('start.continue')),
             h(
               'button',
-              { type: 'button', class: 'aw-saved-card', onclick: () => this.cb.onContinue?.() },
+              { type: 'button', class: 'aw-saved-card', dataset: { tip: t('start.continueTip') }, onclick: () => this.cb.onContinue?.() },
               h('span', { class: 'aw-saved-title' }, v.savedRun.worldTitle),
               h('span', { class: 'aw-saved-sub' }, t('start.savedSub', { player: v.savedRun.playerName, area: v.savedRun.areaName, turn: v.savedRun.turn })),
             ),
@@ -518,6 +522,18 @@ export class StartScreen {
     else if (!v.rooms) this.rooms.el.remove();
     const rest = featured ? { ...v, demos: v.demos.filter((d) => d !== featured) } : v;
     setChildren(this.demosEl, rest.demos.length ? this.demoGroups(rest) : h('p', { class: 'aw-muted' }, t('start.noDemos')));
+    // with a game server every card has a "play with friends" corner button: say which tap is which
+    const party = v.rooms?.status === 'ok';
+    this.legendEl.hidden = !party;
+    setChildren(
+      this.legendEl,
+      party
+        ? [
+            h('span', { class: 'aw-legend-item' }, icon(SHELL_ICONS.person), t('start.legendSolo')),
+            h('span', { class: 'aw-legend-item' }, h('span', { class: 'aw-legend-friends', 'aria-hidden': 'true' }, icon(SHELL_ICONS.people)), t('start.legendParty')),
+          ]
+        : [],
+    );
     setChildren(this.recentEl, v.recent?.length || v.canImport ? this.recentSection(v) : null);
   }
 
@@ -540,7 +556,7 @@ export class StartScreen {
       h(
         'div',
         { class: 'aw-featured-actions', lang: baseLang(getLanguage()) },
-        h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg aw-featured-play', dataset: { world: d.id }, onclick: () => this.cb.onPlayDemo?.(d.id, this.options(false)) }, icon(ICONS.play), t('start.featuredPlay')),
+        h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-btn-lg aw-featured-play', dataset: { world: d.id, tip: t('start.soloTip', { title: d.title }) }, onclick: () => this.cb.onPlayDemo?.(d.id, this.options(false)) }, icon(ICONS.play), t('start.featuredPlay')),
         this.friendsButton(v, d.id, d.title),
       ),
     );
@@ -560,7 +576,7 @@ export class StartScreen {
             type: 'button',
             class: 'aw-recent-play',
             lang: baseLang(w.language),
-            dataset: { world: w.id },
+            dataset: { world: w.id, tip: t('start.soloTip', { title: w.title }) },
             style: { '--demo': w.color ?? 'var(--c-accent)' },
             onclick: () => this.cb.onPlayDemo?.(w.id, this.options(false)),
           },
@@ -603,7 +619,7 @@ export class StartScreen {
         { class: 'aw-recent-head' },
         h('h2', null, t('start.recent')),
         v.canImport
-          ? h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost aw-import-btn', onclick: () => this.fileInput.click() }, icon(SHELL_ICONS.upload), t('start.import'))
+          ? h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost aw-import-btn', dataset: { tip: t('start.importTip') }, onclick: () => this.fileInput.click() }, icon(SHELL_ICONS.upload), t('start.import'))
           : null,
       ),
       h('p', { class: 'aw-muted aw-small' }, recent.length ? t('start.recentSub') : t('start.importHint')),
@@ -616,7 +632,7 @@ export class StartScreen {
     if (v.rooms?.status !== 'ok') return null;
     return h(
       'button',
-      { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost aw-friends', dataset: { friends: worldId, tip: t('lobby.playWithFriends') }, 'aria-label': `${t('lobby.playWithFriends')}: ${title}`, onclick: () => this.cb.onRoom?.({ type: 'create', worldId }) },
+      { type: 'button', class: 'aw-btn aw-btn-small aw-btn-ghost aw-friends', dataset: { friends: worldId, tip: t('start.partyTip', { title }) }, 'aria-label': `${t('lobby.playWithFriends')}: ${title}`, onclick: () => this.cb.onRoom?.({ type: 'create', worldId }) },
       icon(SHELL_ICONS.people),
       h('span', { class: 'aw-friends-label' }, t('lobby.playWithFriends')),
     );
@@ -648,7 +664,7 @@ export class StartScreen {
             { class: v.rooms?.status === 'ok' ? 'aw-demo-item has-friends' : undefined },
             h(
               'button',
-              { type: 'button', class: 'aw-demo', lang: baseLang(d.language), dataset: { world: d.id }, style: { '--demo': d.color ?? 'var(--c-primary)' }, onclick: () => this.cb.onPlayDemo?.(d.id, this.options(false)) },
+              { type: 'button', class: 'aw-demo', lang: baseLang(d.language), dataset: { world: d.id, tip: t('start.soloTip', { title: d.title }) }, style: { '--demo': d.color ?? 'var(--c-primary)' }, onclick: () => this.cb.onPlayDemo?.(d.id, this.options(false)) },
               h('span', { class: 'aw-demo-genre' }, d.genre),
               h('span', { class: 'aw-demo-title' }, d.title),
               h('span', { class: 'aw-demo-tag' }, d.tagline),

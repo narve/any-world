@@ -53,8 +53,8 @@ export class RoomsCard {
         this.syncJoin();
       },
     });
-    this.joinBtn = h('button', { type: 'submit', class: 'aw-btn aw-room-join-btn' }, t('room.join'));
-    this.createBtn = h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-room-create', onclick: () => this.onRoom({ type: 'create' }) }, icon(ICONS.play), t('room.create'));
+    this.joinBtn = h('button', { type: 'submit', class: 'aw-btn aw-room-join-btn', dataset: { tip: t('room.joinTip') } }, t('room.join'));
+    this.createBtn = h('button', { type: 'button', class: 'aw-btn aw-btn-primary aw-room-create', dataset: { tip: t('room.createTip') }, onclick: () => this.onRoom({ type: 'create' }) }, icon(ICONS.play), t('room.create'));
     this.busyEl = h('p', { class: 'aw-rooms-busy', role: 'status', hidden: true });
     this.el = h(
       'section',
@@ -62,7 +62,7 @@ export class RoomsCard {
       h(
         'div',
         { class: 'aw-rooms-head' },
-        h('h2', { id: 'aw-rooms-title' }, t('room.title')),
+        h('div', { class: 'aw-rooms-titles' }, h('span', { class: 'aw-rooms-kicker' }, icon(ICONS.people), t('room.kicker')), h('h2', { id: 'aw-rooms-title' }, t('room.title'))),
         h('button', { type: 'button', class: 'aw-icon-btn aw-rooms-refresh', 'aria-label': t('room.refresh'), dataset: { tip: t('room.refresh') }, onclick: () => this.onRoom({ type: 'refresh' }) }, icon(REFRESH_ICON)),
       ),
       h('p', { class: 'aw-muted aw-small' }, t('room.sub')),
@@ -126,10 +126,27 @@ export class RoomsCard {
         h('span', null, t('room.outdatedPage')),
         h('button', { type: 'button', class: 'aw-btn aw-btn-small aw-btn-primary', onclick: () => this.onRoom({ type: 'reload' }) }, t('net.reload')),
       );
-    if (!v.rooms.length) return h('p', { class: 'aw-muted aw-rooms-note' }, t('room.empty'));
-    return h(
+    // the open rooms, under their own heading with a count; empty, a placeholder row that still reads as the list
+    const head = h(
+      'h3',
+      { class: 'aw-room-list-title', id: 'aw-room-list-title' },
+      t('room.listTitle'),
+      h('span', { class: 'aw-room-count' }, t('room.listCount', { n: v.rooms.length })),
+    );
+    if (!v.rooms.length)
+      return h(
+        'div',
+        { class: 'aw-room-list-wrap' },
+        head,
+        h(
+          'ul',
+          { class: 'aw-room-list is-empty', 'aria-labelledby': 'aw-room-list-title' },
+          h('li', { class: 'aw-room-row aw-room-empty' }, h('span', { class: 'aw-room-info' }, h('span', { class: 'aw-room-title' }, t('room.emptyRow')), h('span', { class: 'aw-room-sub' }, t('room.emptyHint')))),
+        ),
+      );
+    const list = h(
       'ul',
-      { class: 'aw-room-list' },
+      { class: 'aw-room-list', 'aria-labelledby': 'aw-room-list-title' },
       v.rooms.map((r) =>
         h(
           'li',
@@ -142,11 +159,18 @@ export class RoomsCard {
           ),
           h(
             'button',
-            { type: 'button', class: ['aw-btn', 'aw-btn-small', r.rejoin && 'aw-btn-primary'], disabled: !r.joinable && !r.rejoin, dataset: { join: r.code }, onclick: () => this.onRoom({ type: 'join', code: r.code }) },
+            {
+              type: 'button',
+              class: ['aw-btn', 'aw-btn-small', r.rejoin && 'aw-btn-primary'],
+              disabled: !r.joinable && !r.rejoin,
+              dataset: { join: r.code, tip: r.rejoin ? t('room.rejoinTip', { title: r.title }) : r.joinable ? t('room.rowJoinTip', { title: r.title }) : t('room.fullTip') },
+              onclick: () => this.onRoom({ type: 'join', code: r.code }),
+            },
             r.rejoin ? t('room.rejoin') : t('room.join'),
           ),
         ),
       ),
     );
+    return h('div', { class: 'aw-room-list-wrap' }, head, list);
   }
 }

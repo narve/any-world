@@ -152,6 +152,9 @@ export const ICONS = {
   bag: ['M6 7h12l1 13H5L6 7z', 'M9 7V5a3 3 0 0 1 6 0v2'],
   scroll: ['M8 4h11v13a3 3 0 0 1-3 3H6', 'M5 20a3 3 0 0 1-3-3V7h6', 'M12 9h4', 'M12 13h4'],
   /** sound on / off (hotbar toggle) */
+  /** one player (single player) and several (multiplayer) */
+  person: ['M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M5 21v-1a7 7 0 0 1 14 0v1'],
+  people: ['M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M2 21v-1a6 6 0 0 1 12 0v1', 'M16 3.5a4 4 0 0 1 0 7', 'M22 21v-1a6 6 0 0 0-4-5.6'],
   sound: ['M4 9h4l5-4v14l-5-4H4V9z', 'M16 9a4 4 0 0 1 0 6', 'M19 6a8 8 0 0 1 0 12'],
   soundOff: ['M4 9h4l5-4v14l-5-4H4V9z', 'M17 9l5 6', 'M22 9l-5 6'],
   play: ['M6 4l14 8-14 8V4z'],

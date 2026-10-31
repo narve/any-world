@@ -1879,6 +1879,43 @@ body {
   margin-bottom: 10px;
 }
 
+/* which tap plays alone and which opens a room (only with a game server) */
+.aw-demos-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--c-muted);
+}
+
+.aw-demos-legend[hidden] {
+  display: none;
+}
+
+.aw-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aw-legend-item svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* the same look as the cards' corner button, so the legend points at it */
+.aw-legend-friends {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+}
+
 .aw-demos-head p {
   margin: 0;
 }
