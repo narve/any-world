@@ -65,7 +65,7 @@ function randomSeed(): number {
 }
 
 /** the demo worlds at the top of the start page, in order (ids not bundled are skipped) */
-const FEATURED_WORLDS = ['nb-kkg-talen'];
+const FEATURED_WORLDS = ['nb-kkg-talen', 'nb-kuben-valget', 'nb-tangen-laerlingplassen'];
 
 export class App {
   ui: GameUi;

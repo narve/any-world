@@ -135,7 +135,8 @@ One column, top to bottom:
 
 - **What is AnyWorld?** A short intro in four points.
 - **Continue**, when there is a saved run.
-- **Featured world** (*KKG: Talen*, a Norwegian school world), with *Play alone* and *Play with friends*,
+- **Featured worlds** (three Norwegian school worlds: *KKG: Talen*, *Kuben: Valget* and *Tangen:
+  Lærlingplassen*), each with *Play alone* and *Play with friends*,
   next to **Play together** (marked *Multiplayer*): create a room or join one by code, and the list of
   open rooms with a count.
 - **Ready-made worlds**, with a difficulty slider (Gentle to Brutal). Picking a card plays it alone; the

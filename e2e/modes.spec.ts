@@ -341,7 +341,7 @@ test.describe('static build (browser-only)', () => {
     await page.getByRole('button', { name: 'New world' }).click();
     await expect(start).toBeVisible();
     await expect.poll(scrollTop).toBe(0);
-    await expect(page.locator('.aw-featured-play')).toBeInViewport();
+    await expect(page.locator('.aw-featured-play').first()).toBeInViewport();
     expect(errors).toEqual([]);
   });
 
