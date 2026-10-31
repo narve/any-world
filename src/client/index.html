@@ -8,6 +8,18 @@
     <meta name="description" content="A turn-based roguelike whose world, genre and rules are invented by an AI at the start of every run." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23202430' stroke='%23e8b04a' stroke-width='3'/%3E%3Cpath d='M5 16h22M16 3c-5 6-5 20 0 26M16 3c5 6 5 20 0 26' fill='none' stroke='%23e8b04a' stroke-width='2'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./styles/ui.css" />
+    <!-- page-view counts (Umami at m.dv8.no), loaded only on the public hosts: localhost, tests and other copies
+         never contact it (data-domains filters on Umami's side too) -->
+    <script>
+      if (/^(narve\.github\.io|any\.dv8\.no|any-game\.dv8\.no)$/.test(location.hostname)) {
+        const s = document.createElement('script');
+        s.defer = true;
+        s.src = 'https://m.dv8.no/script.js';
+        s.dataset.websiteId = '5617f045-7c88-4659-923e-a6b69caad342';
+        s.dataset.domains = 'narve.github.io,any.dv8.no,any-game.dv8.no';
+        document.head.appendChild(s);
+      }
+    </script>
   </head>
   <body>
     <!-- the renderer owns #game-canvas (three.js mounts its canvas here) -->
