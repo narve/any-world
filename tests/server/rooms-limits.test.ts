@@ -61,22 +61,24 @@ describe('rooms: data directory', () => {
 });
 
 describe('rooms: upgrades', () => {
-  it('Origin: listed origins only when ALLOWED_ORIGINS is set (production layout)', async () => {
+  it('Origin: listed origins and the own host when ALLOWED_ORIGINS is set (production layout)', async () => {
     b = await boot({ allowedOrigins: ['https://any.dv8.no'] });
     expect(await upgradeStatus(b.wsUrl, { origin: 'https://any.dv8.no' })).toBe(101);
-    expect(await upgradeStatus(b.wsUrl, { origin: b.origin })).toBe(403);
+    expect(await upgradeStatus(b.wsUrl, { origin: b.origin })).toBe(101);
     expect(await upgradeStatus(b.wsUrl, { origin: 'https://evil.example' })).toBe(403);
     expect(await upgradeStatus(b.wsUrl, {})).toBe(403);
   });
 
-  it('Origin: the own host only when the list is empty (dev, or pages served by this server)', async () => {
+  it('Origin: the own host always (dev, or pages served by this server), listed origins too', async () => {
     b = await boot();
     expect(await upgradeStatus(b.wsUrl, { origin: b.origin })).toBe(101);
     expect(await upgradeStatus(b.wsUrl, { origin: `https://127.0.0.1:${b.s.port}` })).toBe(101);
     expect(await upgradeStatus(b.wsUrl, { origin: 'http://127.0.0.1:1' })).toBe(403);
     expect(await upgradeStatus(b.wsUrl, {})).toBe(403);
     expect(originAllowed('http://a.b', 'a.b', new Set())).toBe(true);
-    expect(originAllowed('http://a.b', 'a.b', new Set(['https://c.d']))).toBe(false);
+    expect(originAllowed('http://a.b', 'a.b', new Set(['https://c.d']))).toBe(true);
+    expect(originAllowed('https://e.f', 'a.b', new Set(['https://c.d']))).toBe(false);
+    expect(originAllowed('https://c.d', 'a.b', new Set(['https://c.d']))).toBe(true);
     expect(originAllowed(undefined, 'a.b', new Set())).toBe(false);
   });
 
