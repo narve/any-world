@@ -128,7 +128,11 @@ The backlogs added during M1 and M2 were all built in M2–M4:
   `?` → "Settings & music" in the Controls overlay. Add a gear icon button that is always visible in
   the run HUD (next to the help button on the hotbar, src/client/ui/components/hotbar.ts, and in the
   phone layout). It opens the same settings dialog as the start screen's gear.
-- **Make the browser Back button behave: stateful URLs wherever possible.** Today the address is only
+- **Done (2026-10-31): make the browser Back button behave.** `src/client/nav.ts`: leaving the start page for a run, a room
+  or a world being made pushes a history entry, going home steps back over it, and settings, help, rules
+  and the backpack push an entry so Back closes them first; Back/Forward open the address's screen through
+  the boot routing (`App.route`). Tests: tests/client/nav.test.ts, e2e/back-button.spec.ts. Not done: the
+  *Bring your own AI* section and dialogue/trade windows have no entry of their own. Originally: Today the address is only
   ever *replaced* (`setAddress` → `history.replaceState`, src/client/main.ts and src/client/room/flow.ts),
   so Back leaves the game entirely instead of stepping back (run → start page, lobby → start page, an
   open dialog or overlay → closed). Give each screen a URL (start, a demo/own world run, a room lobby and
@@ -137,7 +141,10 @@ The backlogs added during M1 and M2 were all built in M2–M4:
   help, the *Bring your own AI* section) may push a lightweight state so Back closes them first. Leaving a
   run by Back keeps the save (same as the in-game menu), and a URL that can't be restored falls back to
   the start page with a notice. Keep shared links (room links, `?world=`) working; e2e test for Back/Forward.
-- **More front-page cleanup: tooltips, and single player vs. multiplayer made clear.** Every button on
+- **Done (2026-10-31): more front-page cleanup: tooltips, and single player vs. multiplayer made clear.** Tooltips on
+  every start-page button, "Play alone" vs. "Play with friends", a *Multiplayer* label on *Play together*
+  and a legend over the world list. Touch has no hover, so the labels and icons carry the split there.
+  Originally: Every button on
   the start page (src/client/ui/components/screens.ts, rooms.ts) gets a tooltip (`data-tip`, as the
   hotbar and the friends button already have) and an accessible name: Play, Continue, the world cards,
   Create, Surprise me, the room list actions, the language picker, the gear, *Bring your own AI*. The
@@ -145,7 +152,8 @@ The backlogs added during M1 and M2 were all built in M2–M4:
   alone" vs. "Play with friends: opens a room others can join"), and the page groups or marks them the
   same way (e.g. a small solo/party icon). en + nb strings; check the touch layout, where tooltips need
   a long-press or a visible hint instead of hover.
-  - **Make the open-rooms list visible.** The list lives inside the *Play together* card
+  - **Done: make the open-rooms list visible** (an "Open rooms" heading with a count, a dashed placeholder row
+    when empty). Originally: The list lives inside the *Play together* card
     (`RoomsCard.statusBody`, src/client/ui/components/rooms.ts), between the card's description and
     *Create room*/*Join*; when empty it is one muted line ("No open rooms right now…") that is easy to
     miss. Give it its own "Open rooms" heading with a count ("Open rooms (3)"), an empty state that

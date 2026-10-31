@@ -9,7 +9,7 @@
  * run must reach the end layer (won or lost, the bot is not perfect); the cases use a world and
  * seeds the explorer wins in the engine sim (the live game master adds events, so a loss can happen). Layout invariants are checked at every area change and
  * the end screen must fit the viewport.
- * Screenshots: docs/progress/M5/fullrun-<case>-*.png
+ * Screenshots: docs/archive/progress/M5/fullrun-<case>-*.png
  *
  * Run: xvfb-run -a npx playwright test e2e/mobile-full-run.spec.ts
  * MOBILE_BASE=http://localhost:<port> points it at another dev server; FULLRUN_MAX=<n> caps decisions.
@@ -18,7 +18,7 @@ import { test, expect, devices, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 // review screenshots go to test-results; SHOTS_TO_DOCS=1 writes the committed milestone copies
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M5' : 'test-results/shots/mobile-full-run';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M5' : 'test-results/shots/mobile-full-run';
 mkdirSync(OUT, { recursive: true });
 const BASE = process.env.MOBILE_BASE;
 const MAX = Number(process.env.FULLRUN_MAX ?? 3000);

@@ -9,7 +9,7 @@
  * Along the way the layout is checked: the key overlay elements are inside the viewport and do not
  * overlap each other, tap targets are ≥ 44 px, the page never scrolls sideways, sheets fit on screen,
  * the renderer got viewport insets, and the console stays free of errors.
- * Screenshots: docs/progress/M4/mobile-<device>-*.png
+ * Screenshots: docs/archive/progress/M4/mobile-<device>-*.png
  *
  * Run: xvfb-run -a npx playwright test e2e/mobile.spec.ts
  * MOBILE_BASE=http://localhost:<port> points it at another dev server (no HMR reloads mid-run).
@@ -18,7 +18,7 @@
 import { test, expect, devices, type Page, type CDPSession } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M4' : 'test-results/shots/M4';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M4' : 'test-results/shots/M4';
 mkdirSync(OUT, { recursive: true });
 const BASE = process.env.MOBILE_BASE;
 const TURNS = Number(process.env.MOBILE_TURNS ?? 260);

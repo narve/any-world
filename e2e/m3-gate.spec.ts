@@ -1,7 +1,7 @@
 /**
  * M3 gate: every recorded world is selectable in demo mode from the start screen, grouped and
  * labelled by language; each one starts, takes turns and has no page errors. The inspiration cards
- * come from content/prompts.json. Screenshots go to docs/progress/M3/gate-*.png.
+ * come from content/prompts.json. Screenshots go to docs/archive/progress/M3/gate-*.png.
  * Run: xvfb-run -a npx playwright test e2e/m3-gate.spec.ts
  */
 import { test, expect, type Page } from '@playwright/test';
@@ -9,7 +9,7 @@ import { mkdirSync, readFileSync, readdirSync } from 'node:fs';
 
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M3' : 'test-results/shots/M3';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M3' : 'test-results/shots/M3';
 mkdirSync(OUT, { recursive: true });
 
 const WORLDS = readdirSync('content/worlds')

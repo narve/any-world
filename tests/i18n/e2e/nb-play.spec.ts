@@ -1,6 +1,6 @@
 /**
  * Norwegian playthrough (DESIGN §7b, DoD #11): the UI in bokmål playing a bokmål world. Every
- * screen is screenshotted to docs/progress/M4/nb-*.png and its visible text is scanned for English
+ * screen is screenshotted to docs/archive/progress/M4/nb-*.png and its visible text is scanned for English
  * that leaked past the catalog (UI chrome, log lines, vocabulary fallbacks).
  *
  * Leaks are collected per screen into NB_LEAKS_OUT (a JSON file, default
@@ -13,7 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
-const OUT = join(ROOT, process.env.SHOTS_TO_DOCS ? 'docs/progress/M4' : 'test-results/shots/M4');
+const OUT = join(ROOT, process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M4' : 'test-results/shots/M4');
 const LEAKS_OUT = process.env.NB_LEAKS_OUT ?? join(ROOT, 'test-results/nb-leaks.json');
 mkdirSync(OUT, { recursive: true });
 

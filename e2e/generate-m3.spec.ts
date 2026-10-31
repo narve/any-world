@@ -4,14 +4,14 @@
  * the world request with content/worlds/fixture-teen.json (first with a broken copy, so a repair
  * turn happens) and GM / dialogue requests with small valid answers. The balance play-test runs in
  * the Web Worker (src/llm/balance-worker.ts).
- * Screenshots: docs/progress/M3/generate-*.png
+ * Screenshots: docs/archive/progress/M3/generate-*.png
  */
 import { test, expect, type Page, type Route } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M3' : 'test-results/shots/M3';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M3' : 'test-results/shots/M3';
 mkdirSync(OUT, { recursive: true });
 const teen = readFileSync('content/worlds/fixture-teen.json', 'utf8');
 

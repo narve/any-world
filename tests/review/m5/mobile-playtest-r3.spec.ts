@@ -12,7 +12,7 @@
  *  - renderer.stats(): draw calls, triangles, fps, tier, pixel ratio
  *  - WebGL context loss (WEBGL_lose_context) mid-run: the game survives, a turn can be played while
  *    lost, and the scene comes back after restore
- * Observations go to tests/review/m5/reports/m5-mobile-pt-<case>.json; screenshots to docs/progress/M5/pt-mobile-r3-*.png.
+ * Observations go to tests/review/m5/reports/m5-mobile-pt-<case>.json; screenshots to docs/archive/progress/M5/pt-mobile-r3-*.png.
  * Hard expectations are kept to what the DESIGN requires (§6, §6b).
  *
  * Round 2 adds (verifying the round-1 fixes and the related client fixes): actors drawn under a panel
@@ -35,7 +35,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
-const OUT = resolve(ROOT, 'docs/progress/M5');
+const OUT = resolve(ROOT, 'docs/archive/progress/M5');
 // not test-results/: every Playwright run in the repo wipes that folder
 const REPORT = process.env.PT_REPORT ?? resolve(ROOT, 'tests/review/m5/reports');
 mkdirSync(OUT, { recursive: true });

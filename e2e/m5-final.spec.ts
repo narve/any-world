@@ -11,7 +11,7 @@ import { test, expect, devices, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M5' : 'test-results/shots/M5-final';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M5' : 'test-results/shots/M5-final';
 mkdirSync(OUT, { recursive: true });
 const ROOT = resolve('.');
 

@@ -135,17 +135,19 @@ One column, top to bottom:
 
 - **What is AnyWorld?** A short intro in four points.
 - **Continue**, when there is a saved run.
-- **Featured world** (*KKG: Talen*, a Norwegian school world) next to **Play together**: create a room
-  or join one, and the list of open rooms.
-- **Ready-made worlds**, with a difficulty slider (Gentle to Brutal). A small icon on each card opens it
-  as a room instead of a solo run.
+- **Featured world** (*KKG: Talen*, a Norwegian school world), with *Play alone* and *Play with friends*,
+  next to **Play together** (marked *Multiplayer*): create a room or join one by code, and the list of
+  open rooms with a count.
+- **Ready-made worlds**, with a difficulty slider (Gentle to Brutal). Picking a card plays it alone; the
+  people icon on each card opens it as a room instead. A legend over the list says which is which.
 - **Your worlds**: AI-made and imported worlds kept in this browser, and *Open world file*.
 - **Bring your own AI** (folded away at first): the world prompt, weirdness, the party option, *Create
   world*, *Surprise me*, the provider note and the inspiration cards. It needs an AI provider: your own
   key, or the server's access code. It opens by itself when your AI already works, and the browser
   remembers whether you left it open.
 
-The language picker and the settings gear are at the top.
+The language picker and the settings gear are at the top. Every button has a tooltip (hover or keyboard
+focus); on touch, the labels and icons say what is solo and what is multiplayer.
 
 ### In a run
 
@@ -172,6 +174,9 @@ The language picker and the settings gear are at the top.
   access code; AI game master on or off; audio; graphics quality (auto, low or high); animation speed;
   reduce motion; language.
 - **Saves:** the run autosaves in the browser, and reloading the page continues it.
+- **Back and Forward:** the browser's Back closes an open panel or dialog (settings, help, rules,
+  backpack) first, then returns from a run, a room or a world being made to the start page; the run
+  stays saved and Forward resumes it. Each screen has its own address (`?world=…&seed=…`, `?room=CODE`).
 
 ### Sharing worlds
 

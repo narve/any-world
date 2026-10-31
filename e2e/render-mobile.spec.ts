@@ -1,7 +1,7 @@
 /**
  * M3 renderer on phones (DESIGN §6b): quality tiers, draw-call budget, touch camera (pinch / twist /
  * tap picking), framing with HUD insets in portrait and landscape, and WebGL context loss recovery.
- * Screenshots go to docs/progress/M3/render-mobile-*.png for review.
+ * Screenshots go to docs/archive/progress/M3/render-mobile-*.png for review.
  * Run: xvfb-run -a npx playwright test e2e/render-mobile.spec.ts
  */
 import { test, expect, type Page } from '@playwright/test';
@@ -9,7 +9,7 @@ import { mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M3' : 'test-results/shots/M3';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M3' : 'test-results/shots/M3';
 mkdirSync(OUT, { recursive: true });
 
 const worldsDir = join(process.cwd(), 'content/worlds');

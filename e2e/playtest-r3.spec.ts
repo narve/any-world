@@ -5,7 +5,7 @@
  * trader of the current area (or the world's first trader is spawned beside them), the trade modal
  * is opened from the dialogue with the mouse, the cheapest affordable offer is bought and one item
  * is sold back.
- * Screenshots: docs/progress/M2/playtest-r<ROUND>-econ-*.png; facts: playtest-r<ROUND>-econ.json.
+ * Screenshots: docs/archive/progress/M2/playtest-r<ROUND>-econ-*.png; facts: playtest-r<ROUND>-econ.json.
  * Run: PLAYTEST_ROUND=3 xvfb-run -a npx playwright test e2e/playtest-r3.spec.ts
  */
 import { test, expect, type Page } from '@playwright/test';
@@ -13,7 +13,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 
 const ROUND = process.env.PLAYTEST_ROUND ?? '3';
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 const shot = (page: Page, name: string) => page.screenshot({ path: `${OUT}/playtest-r${ROUND}-econ-${name}.png` });
 const FACTS = `${OUT}/playtest-r${ROUND}-econ.json`;

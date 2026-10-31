@@ -2,7 +2,7 @@
  * M5 review round 2, client fixes in the browser:
  *  - issues/M5-ranged-keyboard-fire.md         press the equipped gun's key, Enter fires at range
  *  - issues/M5-api-key-leaks-across-presets.md switching preset never sends the old key to the new host
- * Screenshots: docs/progress/M5/client-r2-*.png
+ * Screenshots: docs/archive/progress/M5/client-r2-*.png
  *
  * Run: xvfb-run -a npx playwright test e2e/m5-client-r2.spec.ts
  * M5_BASE=http://localhost:<port> points it at another dev server.
@@ -12,7 +12,7 @@ import { mkdirSync } from 'node:fs';
 
 
 // review screenshots go to test-results; SHOTS_TO_DOCS=1 writes the committed milestone copies
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M5' : 'test-results/shots/m5-client-r2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M5' : 'test-results/shots/m5-client-r2';
 mkdirSync(OUT, { recursive: true });
 if (process.env.M5_BASE) test.use({ baseURL: process.env.M5_BASE });
 

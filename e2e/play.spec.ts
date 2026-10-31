@@ -1,14 +1,14 @@
 /**
  * The playable game at `/` (issues/M1-missing-main-controller.md): the start screen lists the
  * recorded worlds, a demo starts a run, a few turns are played with the keyboard and mouse, and the
- * end screen leads back into a new run. Screenshots go to docs/progress/M2/play-*.png.
+ * end screen leads back into a new run. Screenshots go to docs/archive/progress/M2/play-*.png.
  * Run: xvfb-run -a npx playwright test e2e/play.spec.ts
  */
 import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 
 function collectErrors(page: Page): string[] {

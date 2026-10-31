@@ -1,14 +1,14 @@
 /**
  * M2 final gate: each fixture world is played by the explorer sim bot through the real UI (keyboard),
  * and screenshots are taken at the start, mid-run and after reaching a later area.
- * Screenshots: docs/progress/M2/final-<world>-*.png. 0 page errors are expected.
+ * Screenshots: docs/archive/progress/M2/final-<world>-*.png. 0 page errors are expected.
  * Run: xvfb-run -a npx playwright test e2e/final-m2.spec.ts
  */
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 const KEY: Record<string, string> = { n: 'ArrowUp', s: 'ArrowDown', e: 'ArrowRight', w: 'ArrowLeft', nw: 'y', ne: 'u', sw: 'b', se: 'n' };
 const WORLDS = ['fixture-ship', 'fixture-teen', 'fixture-western', 'fixture-dream'] as const;

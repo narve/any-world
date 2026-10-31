@@ -2,14 +2,14 @@
  * Regression checks for the M2 playtest round-1 renderer issues:
  *  - liquid terrain (teen seeps / floods) is a flat water surface, not spiky blue stars
  *  - remembered maze walls (ship Ductworks) keep a dark body and a clear top-edge outline
- * Screenshots go to docs/progress/M2/fix-*.png for review.
+ * Screenshots go to docs/archive/progress/M2/fix-*.png for review.
  * Run: xvfb-run -a npx playwright test e2e/render-fixes-m2.spec.ts
  */
 import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 
 function collectErrors(page: Page): string[] {

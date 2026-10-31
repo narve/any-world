@@ -2,7 +2,7 @@
  * M2 client features in the real browser: start options, GM narration (offline director), hover
  * route preview, terrain interaction (ship bridge console), click-attack tooltip refresh, GM rules
  * in the rules panel, danger feedback, docked dialogue, log folding and the end screen.
- * Screenshots go to docs/progress/M2/client-*.png.
+ * Screenshots go to docs/archive/progress/M2/client-*.png.
  * Run: xvfb-run -a npx playwright test e2e/client-m2.spec.ts
  */
 import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
@@ -10,7 +10,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 
 function collectErrors(page: Page): string[] {

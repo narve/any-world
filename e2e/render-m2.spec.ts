@@ -1,6 +1,6 @@
 /**
  * M2 renderer checks: backdrops, non-realistic layouts, abstract patterns, framing, wall coverage,
- * liquids and reduce-motion. Screenshots go to docs/progress/M2/render-*.png for review.
+ * liquids and reduce-motion. Screenshots go to docs/archive/progress/M2/render-*.png for review.
  * Run: xvfb-run -a npx playwright test e2e/render-m2.spec.ts
  */
 import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
@@ -8,7 +8,7 @@ import { mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 
 const worlds = readdirSync(join(process.cwd(), 'content/worlds'))

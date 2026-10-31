@@ -1,6 +1,6 @@
 /**
  * Renderer visual checks: the model gallery and every area of every fixture world render without
- * console errors; screenshots go to docs/progress/M2/ for review.
+ * console errors; screenshots go to docs/archive/progress/M2/ for review.
  * Run: xvfb-run -a npx playwright test e2e/render.spec.ts
  */
 import { test, expect, type Page, type ConsoleMessage } from '@playwright/test';
@@ -8,7 +8,7 @@ import { readdirSync, readFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 
 const worldsDir = join(process.cwd(), 'content/worlds');

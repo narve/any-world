@@ -2,7 +2,7 @@
  * M5 client fixes in the browser (issues/M5-*.md): keyboard zoom direction, a second run's prologue,
  * the long-press card closing on the next press, Wait always reachable on a narrow phone, the
  * dialogue sheet's buttons and toasts on phones, and the notice while the WebGL context is lost.
- * Screenshots: docs/progress/M5/client-fix-*.png
+ * Screenshots: docs/archive/progress/M5/client-fix-*.png
  *
  * Run: xvfb-run -a npx playwright test e2e/m5-client-fixes.spec.ts
  * M5_BASE=http://localhost:<port> points it at another dev server.
@@ -11,7 +11,7 @@ import { test, expect, devices, type Page, type CDPSession } from '@playwright/t
 import { mkdirSync } from 'node:fs';
 
 // review screenshots go to test-results; SHOTS_TO_DOCS=1 writes the committed milestone copies
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M5' : 'test-results/shots/m5-client-fixes';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M5' : 'test-results/shots/m5-client-fixes';
 mkdirSync(OUT, { recursive: true });
 if (process.env.M5_BASE) test.use({ baseURL: process.env.M5_BASE });
 

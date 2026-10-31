@@ -3,7 +3,7 @@
  * The explorer sim bot chooses what to do (it only picks legal actions), but every action that has
  * a key goes through the real keyboard so the UI paths are exercised; modal layers (narration,
  * level-up, dialogue, choice, trade) are answered with keys like a player would.
- * Screenshots: docs/progress/M2/playtest-r<ROUND>-*.png. Findings are written as JSON next to them
+ * Screenshots: docs/archive/progress/M2/playtest-r<ROUND>-*.png. Findings are written as JSON next to them
  * (playtest-r<ROUND>-<world>.json) so the report can quote numbers.
  * Run: PLAYTEST_ROUND=1 xvfb-run -a npx playwright test e2e/playtest.spec.ts
  */
@@ -12,7 +12,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 
 const ROUND = process.env.PLAYTEST_ROUND ?? '1';
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 const shot = (page: Page, name: string) => page.screenshot({ path: `${OUT}/playtest-r${ROUND}-${name}.png` });
 

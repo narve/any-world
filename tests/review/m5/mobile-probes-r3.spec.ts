@@ -7,7 +7,7 @@
  *    against the emulated home-bar inset.
  *  - path-walk: with every hostile removed from the area (nothing to stop a walk), a tap on a far
  *    explored tile walks there.
- * Reports: tests/review/m5/reports/m5-mobile-pt-r3-probe-*.json; screenshots docs/progress/M5/pt-mobile-r3-probe-*.png.
+ * Reports: tests/review/m5/reports/m5-mobile-pt-r3-probe-*.json; screenshots docs/archive/progress/M5/pt-mobile-r3-probe-*.png.
  * Run: xvfb-run -a npx playwright test -c tests/review/m5/playwright.mobile-probes-r3.config.ts
  */
 import { test, expect, devices, type Page } from '@playwright/test';
@@ -16,7 +16,7 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
-const OUT = resolve(ROOT, 'docs/progress/M5');
+const OUT = resolve(ROOT, 'docs/archive/progress/M5');
 const REPORT = resolve(ROOT, 'tests/review/m5/reports');
 mkdirSync(OUT, { recursive: true });
 mkdirSync(REPORT, { recursive: true });

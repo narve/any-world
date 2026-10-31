@@ -2,13 +2,13 @@
  * M4 gate: wiring that crosses the agents' work. In a run, Help → "Settings & music" opens the
  * settings dialog with the world's music panel (SoundCloud links, mood, mute/volume) in the audio
  * section; the Norwegian UI shows the translated copy of a translated world (not both) and the
- * engine's dialogue buttons in bokmål. Screenshots: docs/progress/M4/m4-*.png.
+ * engine's dialogue buttons in bokmål. Screenshots: docs/archive/progress/M4/m4-*.png.
  * Run: xvfb-run -a npx playwright test e2e/m4-gate.spec.ts
  */
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M4' : 'test-results/shots/M4';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M4' : 'test-results/shots/M4';
 mkdirSync(OUT, { recursive: true });
 
 function collectErrors(page: Page): string[] {

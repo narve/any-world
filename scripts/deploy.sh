@@ -20,7 +20,7 @@ echo "== Fetching the latest code"
 as_app git pull --ff-only
 
 echo "== Installing dependencies and building"
-as_app npm ci --no-audit --no-fund || { echo "npm ci failed; if it names the Node.js engine, upgrade Node.js first (e.g. sudo pacman -Syu nodejs-lts-jod)"; exit 1; }
+as_app npm ci --no-audit --no-fund || { echo "npm ci failed; if it names the Node.js engine, upgrade Node.js first (docs/HOSTING.md: the nodejs.org build, or your distribution's patched LTS package)"; exit 1; }
 as_app npm run build
 
 echo "== Restarting $SERVICE"

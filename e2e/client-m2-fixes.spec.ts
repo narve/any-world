@@ -1,13 +1,13 @@
 /**
  * Client fixes after playtest round 1 (issues/M2-*.md owned by the client), checked in the real
  * app: 'p' in a conversation, direction aiming, the full-vital warning, the objective hint line and
- * the queued level-up badge. Screenshots: docs/progress/M2/client-fix-*.png
+ * the queued level-up badge. Screenshots: docs/archive/progress/M2/client-fix-*.png
  */
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 const shot = (page: Page, name: string) => page.screenshot({ path: `${OUT}/client-fix-${name}.png` });
 const layer = (page: Page) => page.evaluate(() => window.__anyworld?.ui.layer() ?? 'none');

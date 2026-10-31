@@ -17,7 +17,7 @@
  * completion with a recorded world (content/worlds/fixture-teen.json), so the real generation pipeline
  * runs: validation, bot play-test in a Web Worker, storage, run start.
  * Screenshots: test-results/shots/M4/shell-*.png (desktop 1280×800 and phone 390×844); with
- * SHOTS_TO_DOCS=1 they go to docs/progress/M4 (the committed milestone screenshots).
+ * SHOTS_TO_DOCS=1 they go to docs/archive/progress/M4 (the committed milestone screenshots).
  * Run: xvfb-run -a npx playwright test e2e/modes.spec.ts
  */
 import { test, expect, type Page } from '@playwright/test';
@@ -30,7 +30,7 @@ import { startStaticServer } from '../server/serve-static';
 
 const PORT = Number(process.env.MODES_PORT) || 5193;
 const BASE = `http://localhost:${PORT}`;
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M4' : 'test-results/shots/M4';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M4' : 'test-results/shots/M4';
 mkdirSync(OUT, { recursive: true });
 
 const WORLD_TEXT = readFileSync('content/worlds/fixture-teen.json', 'utf8');

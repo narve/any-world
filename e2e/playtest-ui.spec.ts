@@ -3,7 +3,7 @@
  * cover through the UI — hotbar use of every use mode, backpack equip by mouse, unknown items,
  * talk / persuade / trade with a merchant, the rules panel (incl. a GM-added rule), the
  * difficulty slider on the start screen and a level-up perk picked with the mouse.
- * Screenshots: docs/progress/M2/playtest-r<ROUND>-ui-*.png; facts: playtest-r<ROUND>-ui.json.
+ * Screenshots: docs/archive/progress/M2/playtest-r<ROUND>-ui-*.png; facts: playtest-r<ROUND>-ui.json.
  * Run: PLAYTEST_ROUND=1 xvfb-run -a npx playwright test e2e/playtest-ui.spec.ts
  */
 import { test, expect, type Page } from '@playwright/test';
@@ -11,7 +11,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 
 const ROUND = process.env.PLAYTEST_ROUND ?? '1';
 // committed milestone screenshots are history: reruns write to test-results unless SHOTS_TO_DOCS=1
-const OUT = process.env.SHOTS_TO_DOCS ? 'docs/progress/M2' : 'test-results/shots/M2';
+const OUT = process.env.SHOTS_TO_DOCS ? 'docs/archive/progress/M2' : 'test-results/shots/M2';
 mkdirSync(OUT, { recursive: true });
 const shot = (page: Page, name: string) => page.screenshot({ path: `${OUT}/playtest-r${ROUND}-ui-${name}.png` });
 const FACTS = `${OUT}/playtest-r${ROUND}-ui.json`;

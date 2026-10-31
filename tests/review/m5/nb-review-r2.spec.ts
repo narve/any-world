@@ -3,7 +3,7 @@
  *
  * Plays the bokmål worlds and one English world with the UI in bokmål, starts a new run in the
  * offline demo mode with a Norwegian prompt, and visits every screen on desktop (1280×800) and on a
- * phone (390×844). For each screen it writes a screenshot docs/progress/M5/nb-r2-<name>.png and
+ * phone (390×844). For each screen it writes a screenshot docs/archive/progress/M5/nb-r2-<name>.png and
  * records the visible text, tooltips/aria labels and any clipped text (an element whose content is
  * wider than its box under overflow hidden / ellipsis) into NB_REVIEW_OUT (JSON, default
  * test-results/nb-review-r2.json) for the human-style read-through.
@@ -18,7 +18,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../..');
-const OUT = join(ROOT, 'docs/progress/M5');
+const OUT = join(ROOT, 'docs/archive/progress/M5');
 const DUMP = process.env.NB_REVIEW_OUT ?? join(ROOT, 'test-results/nb-review-r2.json');
 mkdirSync(OUT, { recursive: true });
 
