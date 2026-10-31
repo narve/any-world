@@ -191,9 +191,9 @@ Needs the deployed server or people:
 
 - **D1. Deploy** on the Dell and the VPS (HOSTING.md) — **done 2026-10-28**: WireGuard tunnel, Caddy
   with HTTPS, `TRUST_PROXY=1`, the server live at `https://any-game.dv8.no`. Still to do: MP0's check
-  (HTTPS from a phone on 4G; not yet confirmed), and after `multi` is merged into `main`, the Pages
-  build at `any.dv8.no` with `ANYWORLD_SERVER_URL` and `ALLOWED_ORIGINS` on the server
-  (HOSTING.md §8, steps 1 and 6).
+  (HTTPS from a phone on 4G; not yet confirmed), and the Pages build at `any.dv8.no` with
+  `ANYWORLD_SERVER_URL` and `ALLOWED_ORIGINS` on the server (HOSTING.md §8, step 6; `multi` is merged
+  into `main`, PR #2).
 - **D2. Latency playtest through the real path**: travel step time (all travelling, and with a decider
   in a fight), felt wait for a decided move, chat delivery, reconnect after a network change on a phone,
   area entry on a phone.

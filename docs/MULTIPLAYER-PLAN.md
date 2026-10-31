@@ -11,7 +11,7 @@ gate, see [MP4.md](progress/MP4.md). MP5 (verify) was verified as far as possibl
 (2026-10-30): playtests, audits and two fix rounds done, and the gate passed. The DoD table is in
 [MP.md](progress/MP.md). What remains: MP0's phone-on-4G check, the latency playtest through the
 deployed path, and a short session with real people. The four owner decisions from MP5 are made (§6).
-The pages at `any.dv8.no` wait for `multi` to be merged into `main` (HOSTING.md §8).
+The multiplayer edition is merged into `main` (PR #2); the pages at `any.dv8.no` are HOSTING.md §8, step 6.
 Requirements: DESIGN §2.5 (fun and fluent beats exact) and §12 (sharing, multiplayer without waiting,
 chat). Hosts: the owner's Dell laptop runs the server, reached over WireGuard; for development and
 testing the server also runs on the owner's development laptop.
