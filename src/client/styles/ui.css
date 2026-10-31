@@ -1796,6 +1796,34 @@ body {
   grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
 }
 
+.aw-featured-host {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.aw-featured-host[hidden] {
+  display: none;
+}
+
+/* several featured worlds: compact cards, stacked */
+.aw-featured-host.is-multi .aw-featured {
+  gap: 8px;
+  padding: 18px 22px;
+}
+
+.aw-featured-host.is-multi .aw-featured-title {
+  font-size: clamp(24px, 2.6vw, 30px);
+}
+
+.aw-featured-host.is-multi .aw-featured-tag {
+  font-size: 15px;
+}
+
+.aw-featured-host.is-multi .aw-featured-actions {
+  margin-top: 4px;
+}
+
 .aw-featured {
   --demo: var(--c-accent);
   display: grid;

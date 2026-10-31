@@ -64,8 +64,8 @@ function randomSeed(): number {
   return (a[0] || Math.floor(Math.random() * 0x7fffffff)) >>> 0 || 1;
 }
 
-/** the demo world at the top of the start page */
-const FEATURED_WORLD = 'nb-kkg-talen';
+/** the demo worlds at the top of the start page, in order (ids not bundled are skipped) */
+const FEATURED_WORLDS = ['nb-kkg-talen'];
 
 export class App {
   ui: GameUi;
@@ -226,7 +226,7 @@ export class App {
       providerStatus: providerStatus(activeProvider(this.settings), this.server, canGenerate, { gm: this.settings.gm, accessCode: this.settings.accessCode }),
       recent,
       canImport: true,
-      featured: FEATURED_WORLD,
+      featured: FEATURED_WORLDS,
       defaults: { difficulty: this.runOptions.difficulty, weirdness: this.runOptions.weirdness },
       ...(this.endpoint ? { rooms: this.flow?.roomsCardView() ?? { status: this.flowFailed ? 'unavailable' : 'loading', rooms: [] } } : {}),
     };

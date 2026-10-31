@@ -499,7 +499,7 @@ export class StartScreen {
       this.noteEl.append(h('span', { class: 'aw-muted' }, v.providerLabel), ' · ', h('button', { type: 'button', class: 'aw-link', onclick: () => this.cb.onOpenSettings?.(true) }, t('start.change')));
     }
 
-    const featured = v.featured ? v.demos.find((d) => d.id === v.featured) : undefined;
+    const featured = (v.featured ?? []).map((id) => v.demos.find((d) => d.id === id)).filter((d): d is StartView['demos'][number] => !!d);
     setChildren(
       this.savedEl,
       v.savedRun
@@ -516,11 +516,14 @@ export class StartScreen {
           )
         : null,
     );
-    setChildren(this.featuredEl, featured ? this.featuredCard(v, featured) : null);
+    setChildren(this.featuredEl, featured.map((d, i) => this.featuredCard(v, d, i)));
+    // several featured worlds: compact cards, stacked beside "Play together"
+    this.featuredEl.classList.toggle('is-multi', featured.length > 1);
+    this.featuredEl.hidden = !featured.length;
     this.heroEl.classList.toggle('has-rooms', !!v.rooms);
     if (v.rooms && this.rooms.el.parentElement !== this.heroEl) this.heroEl.append(this.rooms.el);
     else if (!v.rooms) this.rooms.el.remove();
-    const rest = featured ? { ...v, demos: v.demos.filter((d) => d !== featured) } : v;
+    const rest = featured.length ? { ...v, demos: v.demos.filter((d) => !featured.includes(d)) } : v;
     setChildren(this.demosEl, rest.demos.length ? this.demoGroups(rest) : h('p', { class: 'aw-muted' }, t('start.noDemos')));
     // with a game server every card has a "play with friends" corner button: say which tap is which
     const party = v.rooms?.status === 'ok';
@@ -537,12 +540,13 @@ export class StartScreen {
     setChildren(this.recentEl, v.recent?.length || v.canImport ? this.recentSection(v) : null);
   }
 
-  /** the featured world (StartView.featured): a big card at the top of the page */
-  private featuredCard(v: StartView, d: StartView['demos'][number]): HTMLElement {
+  /** a featured world (StartView.featured): a big card at the top of the page */
+  private featuredCard(v: StartView, d: StartView['demos'][number], i: number): HTMLElement {
     const lang = baseLang(d.language);
+    const titleId = `aw-featured-title-${i}`;
     return h(
       'section',
-      { class: 'aw-featured', lang, style: { '--demo': d.color ?? 'var(--c-accent)' }, 'aria-labelledby': 'aw-featured-title' },
+      { class: 'aw-featured', lang, style: { '--demo': d.color ?? 'var(--c-accent)' }, 'aria-labelledby': titleId },
       h(
         'span',
         { class: 'aw-featured-kicker' },
@@ -551,7 +555,7 @@ export class StartScreen {
         d.genre,
         lang !== baseLang(getLanguage()) ? h('span', { class: 'aw-lang-badge', title: t('start.worldLanguage', { language: languageEndonym(d.language) }) }, lang.toUpperCase()) : null,
       ),
-      h('h2', { id: 'aw-featured-title', class: 'aw-featured-title' }, d.title),
+      h('h2', { id: titleId, class: 'aw-featured-title' }, d.title),
       h('p', { class: 'aw-featured-tag' }, d.tagline),
       h(
         'div',
