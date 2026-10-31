@@ -244,14 +244,7 @@ export class StartScreen {
         ),
         this.savedEl,
         this.heroEl,
-        h(
-          'section',
-          { class: 'aw-demos', 'aria-labelledby': 'aw-demos-title' },
-          h('div', { class: 'aw-demos-head' }, h('h2', { id: 'aw-demos-title' }, t('start.demos')), h('p', { class: 'aw-muted aw-small' }, t('start.demosSub')), this.legendEl),
-          h('div', { class: 'aw-start-difficulty' }, h('label', { class: 'aw-range', for: 'aw-diff' }, h('span', null, t('start.difficulty')), this.diff, this.diffOut), this.diffHint),
-          this.demosEl,
-        ),
-        this.recentEl,
+        // right under the featured worlds, so inventing a world is not buried below every demo
         h(
           'section',
           { class: 'aw-byo', 'aria-labelledby': 'aw-byo-title' },
@@ -263,6 +256,14 @@ export class StartScreen {
           ),
           this.byoBody,
         ),
+        h(
+          'section',
+          { class: 'aw-demos', 'aria-labelledby': 'aw-demos-title' },
+          h('div', { class: 'aw-demos-head' }, h('h2', { id: 'aw-demos-title' }, t('start.demos')), h('p', { class: 'aw-muted aw-small' }, t('start.demosSub')), this.legendEl),
+          h('div', { class: 'aw-start-difficulty' }, h('label', { class: 'aw-range', for: 'aw-diff' }, h('span', null, t('start.difficulty')), this.diff, this.diffOut), this.diffHint),
+          this.demosEl,
+        ),
+        this.recentEl,
         h('p', { class: 'aw-start-foot' }, h('a', { href: 'tech.html', class: 'aw-start-tech' }, t('start.techNotes'))),
       ),
       this.fileInput,
