@@ -171,3 +171,11 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
      the camera's rotation); hold at the end of the swipe to keep walking. Taps keep working as today.
   Either way: no conflict with pinch/twist, Norwegian + English hints in the help overlay, and the
   mobile e2e (e2e/mobile.spec.ts) gains a drag/swipe case on phone portrait and landscape.
+- **Language badges: "Norwegian" / "English" instead of "NB" / "EN".** The world cards on the start page
+  (featured world, demo list, your worlds, inspiration cards; `aw-lang-badge` in
+  src/client/ui/components/screens.ts) show the bare code (`baseLang(...).toUpperCase()`) when a world's
+  language differs from the UI's. Show the language name instead, in the UI language ("Norwegian" in the
+  English UI, "engelsk" in the Norwegian one; `Intl.DisplayNames` with the UI locale, or catalog
+  strings), with the code kept only as a fallback. Check it on small screens: 360 px phone portrait,
+  where the badge sits next to the genre/kicker and must wrap or truncate cleanly rather than squeeze the
+  title, and in the featured card and the room list rows.
