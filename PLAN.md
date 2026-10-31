@@ -135,3 +135,12 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   `?` → "Settings & music" in the Controls overlay. Add a gear icon button that is always visible in
   the run HUD (next to the help button on the hotbar, src/client/ui/components/hotbar.ts, and in the
   phone layout). It opens the same settings dialog as the start screen's gear.
+- **Make the browser Back button behave: stateful URLs wherever possible.** Today the address is only
+  ever *replaced* (`setAddress` → `history.replaceState`, src/client/main.ts and src/client/room/flow.ts),
+  so Back leaves the game entirely instead of stepping back (run → start page, lobby → start page, an
+  open dialog or overlay → closed). Give each screen a URL (start, a demo/own world run, a room lobby and
+  game, generation in progress where it can be resumed) and `pushState` on real navigation, with a
+  `popstate` handler that routes through the same code as a fresh load. Dialogs and overlays (settings,
+  help, the *Bring your own AI* section) may push a lightweight state so Back closes them first. Leaving a
+  run by Back keeps the save (same as the in-game menu), and a URL that can't be restored falls back to
+  the start page with a notice. Keep shared links (room links, `?world=`) working; e2e test for Back/Forward.
