@@ -553,8 +553,8 @@
     },
     {
       "id": "glitterkomite",
-      "name": "Ballkomiteen med glitterpistol",
-      "description": "Pynter alt som står stille. Du står for stille.",
+      "name": "Ballkomiteen med Heidis glitterpistol",
+      "description": "Har lånt glitterpistolen til Heidi og pynter alt som står stille. Du står for stille.",
       "faction": "hostile",
       "stats": {
         "hp": 8,
@@ -650,8 +650,8 @@
     },
     {
       "id": "vikar",
-      "name": "Vikar som leter etter rommet",
-      "description": "Har lett etter rom 2114 siden andre time. Spør alle om veien og hører aldri på svaret.",
+      "name": "Vikaren som leter etter Lenes rom",
+      "description": "Skal ha vikartime for Lene i rom 2114 og har lett siden andre time. Spør alle om veien og hører aldri på svaret.",
       "faction": "hostile",
       "stats": {
         "hp": 11,
@@ -714,8 +714,8 @@
     },
     {
       "id": "skriveren",
-      "name": "Skriveren på Servicetorget",
-      "description": "Har spist side 1 av talen din. Blinker oransje. Skriver «PAPIRSTOPP I SKUFF 2» på skjermen, men det finnes ingen skuff 2.",
+      "name": "Skriveren i Kristins kø",
+      "description": "Har spist side 1 av talen din og står i kø bak Kristins 300 kopier til mandag. Blinker oransje. Skriver «PAPIRSTOPP I SKUFF 2» på skjermen, men det finnes ingen skuff 2.",
       "faction": "hostile",
       "stats": {
         "hp": 22,
@@ -849,8 +849,8 @@
     },
     {
       "id": "hysjer",
-      "name": "Lesesalens hysjer",
-      "description": "Har lest til eksamen siden oktober. Tåler ikke pust, papirlyd eller tanken på et skoleball.",
+      "name": "Marits hysj-regel",
+      "description": "Regelen Marit hengte opp på lesesalen i oktober: stillhet. Den tåler ikke pust, papirlyd eller tanken på et skoleball.",
       "faction": "hostile",
       "stats": {
         "hp": 15,
@@ -913,8 +913,8 @@
     },
     {
       "id": "fotnote",
-      "name": "Flyvende fotnote",
-      "description": "En liten stjerne med henvisning som har løsnet fra en side og flagrer etter deg. Den vil bare at du skal se nederst på siden.",
+      "name": "Sveins flyvende fotnote",
+      "description": "En liten stjerne med henvisning som har løsnet fra Sveins kompendium og flagrer etter deg. Den vil bare at du skal se nederst på siden.",
       "faction": "hostile",
       "stats": {
         "hp": 9,
@@ -1404,8 +1404,8 @@
     },
     {
       "id": "ballkomite",
-      "name": "Ballkomiteens billettkontroll",
-      "description": "Har en liste. Du står ikke på den. Det spiller ingen rolle at du er elevrådsleder.",
+      "name": "Billettkontrollen med Thomas' liste",
+      "description": "Har Thomas' liste over alle med billett. Du står ikke på den. Det spiller ingen rolle at du er elevrådsleder.",
       "faction": "hostile",
       "stats": {
         "hp": 16,
@@ -1469,7 +1469,7 @@
     },
     {
       "id": "nestleder",
-      "name": "Sondre, nestleder",
+      "name": "Vidar, nestleder",
       "description": "Elevrådets nestleder. Har skrevet en reservetale med KI-portalen. Den er elleve sider og begynner med «I dagens samfunn». Han har allerede testet mikrofonen tre ganger.",
       "faction": "hostile",
       "stats": {
@@ -1610,7 +1610,7 @@
     },
     {
       "id": "vaktmester",
-      "name": "Vaktmester Tor Inge",
+      "name": "Vaktmester Knut",
       "description": "Har nøkkel til alt, gaffateip i hver lomme og har sett tjue skoleball. Snakker sørlandsk og har aldri hastverk.",
       "faction": "neutral",
       "stats": {
@@ -1662,7 +1662,7 @@
     },
     {
       "id": "kantinesjef",
-      "name": "Kantinesjefen Randi",
+      "name": "Kantinesjefen Hege",
       "description": "Har drevet kantina så lenge at hun har servert vafler til lærerne som lærer deg i dag. Hører alt som blir sagt over et brett.",
       "faction": "neutral",
       "stats": {
@@ -1716,7 +1716,7 @@
     },
     {
       "id": "bibliotekar",
-      "name": "Bibliotekaren",
+      "name": "Ingrid, bibliotekaren",
       "description": "Passer på ti tusen bøker, én av dem fra 1492. Hysjer med øyenbrynene, aldri med munnen.",
       "faction": "friendly",
       "stats": {
@@ -1766,7 +1766,7 @@
     },
     {
       "id": "ib-eleven",
-      "name": "Nora, IB-elev",
+      "name": "Silje, IB-elev",
       "description": "Går på IB og skriver fordypningsoppgave om semikolon. Har ikke sovet siden mandag, men er overraskende god i en diskusjon.",
       "faction": "friendly",
       "stats": {
@@ -1827,7 +1827,7 @@
     },
     {
       "id": "kafevert",
-      "name": "Kaféverten i maleriet",
+      "name": "Fredrik, kaféverten i maleriet",
       "description": "En malt mann med malt kaffe i et malt hjørne. Har stått der siden sekstitallet og tar gjerne kroner.",
       "faction": "neutral",
       "stats": {
@@ -1885,7 +1885,7 @@
     },
     {
       "id": "rektor",
-      "name": "Rektor Solveig",
+      "name": "Rektor Hilde",
       "description": "Har holdt velkomsttale for tusenvis av førsteklassinger. Står ved scenekanten og ser ut som hun vet nøyaktig hvordan dette ender.",
       "faction": "friendly",
       "stats": {
@@ -1902,11 +1902,11 @@
         "greeting": "Tiril. Kunnskap, kultur og glede. Du har kunnskapen. Ballet er kulturen. Gleden må du ta med selv.",
         "lines": [
           "Denne skolen har flyttet tre ganger siden 1686. Den har aldri mistet en tale for godt.",
-          "Sondre spurte om han kunne ta talen. Jeg sa at det var opp til deg.",
+          "Vidar spurte om han kunne ta talen. Jeg sa at det var opp til deg.",
           "Der du vokser som menneske. Det står i brosjyren, men det er sant likevel."
         ],
-        "secrets": "Hun har lest både Tirils og Sondres taler. Hun vet hvilken som er best, og at Sondre vet det også.",
-        "wants": "At talen blir holdt, at ingen danser på bordene, og at Kantine-Randi ikke sier opp."
+        "secrets": "Hun har lest både Tirils og Vidars taler. Hun vet hvilken som er best, og at Vidar vet det også.",
+        "wants": "At talen blir holdt, at ingen danser på bordene, og at Kantine-Hege ikke sier opp."
       },
       "tags": [
         "voksen",
@@ -1930,7 +1930,7 @@
     },
     {
       "id": "ida-sekretaer",
-      "name": "Ida, elevrådssekretær",
+      "name": "Anette, elevrådssekretær",
       "description": "Fører referat fra alle elevrådsmøter, også de som ikke fant sted. Har tre penner bak øret og et regneark for alt.",
       "faction": "friendly",
       "stats": {
@@ -1950,7 +1950,7 @@
           "Skriveren gir seg hvis du får den målbundet. Den tåler ikke spørsmål om skuff 2."
         ],
         "secrets": "Hun har en kopi av talen på mobilen, men bare de to første linjene, og de er feilstavet.",
-        "wants": "At møtet i kveld får et ordentlig referat og at Sondre ikke får siste ord."
+        "wants": "At møtet i kveld får et ordentlig referat og at Vidar ikke får siste ord."
       },
       "tags": [
         "elev",
@@ -1974,7 +1974,7 @@
     },
     {
       "id": "miljoarbeider",
-      "name": "Miljøarbeideren",
+      "name": "Erlend, miljøarbeideren",
       "description": "Kjenner alle elevene ved navn og alle sofaene i Mellombygget ved sitt fornavn. Har alltid en kopp te som ikke blir tom.",
       "faction": "neutral",
       "stats": {
@@ -2018,7 +2018,7 @@
     },
     {
       "id": "latinlektor",
-      "name": "Latinlektoren",
+      "name": "Inger, latinlektoren",
       "description": "Underviser i latin for fire elever og ett skjelett i biologirommet. Leser Pharsalia for moro skyld, på originalspråket.",
       "faction": "friendly",
       "stats": {
@@ -2062,7 +2062,7 @@
     },
     {
       "id": "kontrabassist",
-      "name": "Kontrabassisten uten band",
+      "name": "Jon, kontrabassisten uten band",
       "description": "En malt musiker med en malt kontrabass. Resten av kvartetten gikk ut av rammen i 1966 og kom aldri tilbake.",
       "faction": "neutral",
       "stats": {
@@ -2106,7 +2106,7 @@
     },
     {
       "id": "maja-malt",
-      "name": "Maja, malt inn i 1964",
+      "name": "Siren, malt inn i 1964",
       "description": "En elev fra 1964 som så for lenge på maleriet, akkurat som deg. Hun er turkis nå, men det kler henne.",
       "faction": "friendly",
       "stats": {
@@ -2150,7 +2150,7 @@
     },
     {
       "id": "dj-en",
-      "name": "DJ-en fra 3STB",
+      "name": "Line, DJ fra 3STB",
       "description": "Har spilleliste for ballet ferdig siden august. Står bak miksepulten med hodetelefoner rundt halsen og et blikk som har sett mange taler.",
       "faction": "neutral",
       "stats": {
@@ -2167,7 +2167,7 @@
         "greeting": "Yo. Du har tre minutter mellom låt fire og fem. Bruk dem godt.",
         "lines": [
           "Scenemikrofonen står ved scenen. Med alle tre sidene trenger du den bare én gang.",
-          "Sondre har bedt meg spille fanfare når han går opp. Jeg har ikke bestemt meg for om jeg hører etter."
+          "Vidar har bedt meg spille fanfare når han går opp. Jeg har ikke bestemt meg for om jeg hører etter."
         ],
         "secrets": "Hun har allerede lagt inn en stille pause etter talen, i tilfelle den er god.",
         "wants": "At ingen ber om én låt til klokka tolv."
@@ -4365,7 +4365,7 @@
           "radius": 2.5
         }
       },
-      "gmNotes": "Biblioteket var byens offentlige bibliotek i over hundre år. Bibliotekaren heler én gang. Nora fra IB kan bli med og hjelpe. Pharsalia (1492) er sur fordi noen brukte talearket som bokmerke; side 2 ligger ved boka. Latinsitater med oversettelse passer her.",
+      "gmNotes": "Biblioteket var byens offentlige bibliotek i over hundre år. Bibliotekaren heler én gang. Silje fra IB kan bli med og hjelpe. Pharsalia (1492) er sur fordi noen brukte talearket som bokmerke; side 2 ligger ved boka. Latinsitater med oversettelse passer her.",
       "backdrop": {
         "style": "color",
         "color": "#2a1e14",
@@ -4657,7 +4657,7 @@
         }
       ],
       "transitionName": "Gå av scenen",
-      "gmNotes": "Finalen, uten vold. To veier: gjør Sondre målbundet foran alle, eller ta Scenemikrofonen ved scenen og bruk den med alle tre sidene. Sondre kan også overtales; han er egentlig lettet. Rektor står ved scenekanten og siterer verdiene. Kantinesjefen ber folk gå ned fra bordene.",
+      "gmNotes": "Finalen, uten vold. To veier: gjør Vidar målbundet foran alle, eller ta Scenemikrofonen ved scenen og bruk den med alle tre sidene. Vidar kan også overtales; han er egentlig lettet. Rektor står ved scenekanten og siterer verdiene. Kantinesjefen ber folk gå ned fra bordene.",
       "backdrop": {
         "style": "gradient",
         "color": "#1a1430",
@@ -4741,7 +4741,7 @@
       ],
       "events": [
         "Høyttaleren skraper: «Ballkomiteen bes møte i kantina. Ballkomiteen.» Ingen fra ballkomiteen hører det.",
-        "Mobilen vibrerer. Elevrådschatten: «har du funnet talen??» «hvis ikke kan sondre ta den» «han har elleve sider»",
+        "Mobilen vibrerer. Elevrådschatten: «har du funnet talen??» «hvis ikke kan vidar ta den» «han har elleve sider»",
         "Langt borte smeller et elevskap, og alle i nærheten skvetter.",
         "Noen har skrevet KUNNSKAP KULTUR GLEDE på en serviett og lagt den igjen. Du føler deg merkelig styrket."
       ]
