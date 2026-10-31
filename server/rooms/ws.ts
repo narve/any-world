@@ -1,8 +1,8 @@
 /**
  * Room WebSockets on the existing node:http server (MP2 design §2, §9). Only `/api/ws` upgrades
- * (other paths: 400, the socket destroyed); the Origin must be in ALLOWED_ORIGINS, or, only when
- * that list is empty, the request's own http(s)://<Host> (the page this server serves, or the Vite
- * proxy in dev); a missing Origin is refused (403). Per IP (clientIpFrom, so TRUST_PROXY applies):
+ * (other paths: 400, the socket destroyed); the Origin must be in ALLOWED_ORIGINS or be the request's
+ * own http(s)://<Host> (the page this server serves, or the Vite proxy in dev); a missing Origin is
+ * refused (403). Per IP (clientIpFrom, so TRUST_PROXY applies):
  * upgrades per minute and open sockets; open sockets in all. An error handler is on the socket
  * before handleUpgrade, so a reset during the handshake cannot throw.
  *
@@ -27,7 +27,7 @@ export const WS_PATH = '/api/ws';
 
 export interface RoomSocketsOptions {
   manager: RoomManager;
-  /** ALLOWED_ORIGINS; empty = the request's own host only */
+  /** ALLOWED_ORIGINS; the request's own host is allowed besides these */
   allowedOrigins: ReadonlySet<string>;
   /** the rate-limit key of a request (app.ts clientIpFrom with TRUST_PROXY) */
   clientIp: (req: IncomingMessage) => string;
@@ -88,11 +88,11 @@ export function wsConn(ws: WsLike, bufferBytes: number): Conn {
   };
 }
 
-/** the Origin rule (§9): listed origins only; when the list is empty, the request's own host too */
+/** the Origin rule (§9): listed origins, and always the request's own host (the server's own pages) */
 export function originAllowed(origin: string | undefined, host: string | undefined, allowed: ReadonlySet<string>): boolean {
   if (!origin) return false;
   if (allowed.has(origin)) return true;
-  if (allowed.size > 0 || !host) return false;
+  if (!host) return false;
   return origin === `http://${host}` || origin === `https://${host}`;
 }
 

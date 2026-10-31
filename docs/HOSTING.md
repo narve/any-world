@@ -111,8 +111,8 @@ The server also runs the multiplayer rooms (WebSocket on `/api/ws`, HTTP on `/ap
   idle rooms closed after 2 hours. Per client IP: 20 WebSocket connections a minute, 16 open at once,
   6 room creations per 10 minutes; 200 sockets in all. Behind Caddy, `TRUST_PROXY=1` is required.
 - **Origins.** CORS does not cover WebSockets, so the server checks the `Origin` of every upgrade
-  itself: with `ALLOWED_ORIGINS` set only those origins may connect (e.g. `https://any.dv8.no`); with
-  it empty only pages served by the server itself (and the Vite dev proxy) may.
+  itself: pages served by the server itself (and the Vite dev proxy) may always connect, and with
+  `ALLOWED_ORIGINS` set also those origins (e.g. `https://any.dv8.no`); any other origin is refused.
 - **Deploy the pages and the server together.** Rooms compare the engine version (a hash of the
   engine source, `/api/health` reports it as `engine`): a page built from another engine is refused
   with a "reload the page" message, and a deploy that changes the engine closes the open rooms ("the
