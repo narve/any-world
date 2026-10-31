@@ -115,6 +115,8 @@ export class StartScreen {
   private byoBody: HTMLElement;
   /** null until the player (or the first view) decides */
   private byoOpen: boolean | null = null;
+  /** the player folded or opened it (now or on an earlier visit): no more automatic choices */
+  private byoChosen = false;
   private view: StartView | null = null;
   private listKey = '';
   private cards: InspirationPrompt[] = [];
@@ -289,6 +291,7 @@ export class StartScreen {
   /** fold "Bring your own AI" open or shut; `user`: the player clicked (moves focus into it) */
   setByo(open: boolean, user = false): void {
     this.byoOpen = open;
+    if (user) this.byoChosen = true;
     this.byoBody.hidden = !open;
     this.byoBtn.setAttribute('aria-expanded', String(open));
     this.byoBtn.classList.toggle('is-open', open);
@@ -466,7 +469,16 @@ export class StartScreen {
     if (v.rooms) this.rooms.update(v.rooms);
     // open at first as this browser left it; else for a player whose own AI already works, or when a
     // prompt or party was handed over
-    if (this.byoOpen === null) this.setByo(storedByo() ?? ((v.canGenerate && v.providerStatus?.tone === 'ok') || !!v.defaults?.prompt || v.defaults?.party !== undefined));
+    // until the player chooses, follow the provider: the first render comes before the server has
+    // said it can create worlds, so a one-time choice there kept the section folded for everyone
+    const stored = this.byoChosen ? null : storedByo();
+    if (stored !== null) {
+      this.byoChosen = true;
+      this.setByo(stored);
+    } else if (!this.byoChosen) {
+      const auto = (v.canGenerate && v.providerStatus?.tone === 'ok') || !!v.defaults?.prompt || v.defaults?.party !== undefined;
+      if (auto !== this.byoOpen) this.setByo(auto);
+    }
     const key = dataKey([v.prompts, v.demos, v.savedRun, v.providerLabel, v.canGenerate, v.providerStatus, v.recent, v.canImport, v.rooms ? v.rooms.status : null]);
     if (key === this.listKey) return;
     const promptsChanged = dataKey(v.prompts) !== dataKey(JSON.parse(this.listKey || '[[]]')[0]);
