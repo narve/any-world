@@ -144,3 +144,11 @@ orchestrator commits, writes a ping in `docs/progress/Mx.md` with screenshots, a
   help, the *Bring your own AI* section) may push a lightweight state so Back closes them first. Leaving a
   run by Back keeps the save (same as the in-game menu), and a URL that can't be restored falls back to
   the start page with a notice. Keep shared links (room links, `?world=`) working; e2e test for Back/Forward.
+- **More front-page cleanup: tooltips, and single player vs. multiplayer made clear.** Every button on
+  the start page (src/client/ui/components/screens.ts, rooms.ts) gets a tooltip (`data-tip`, as the
+  hotbar and the friends button already have) and an accessible name: Play, Continue, the world cards,
+  Create, Surprise me, the room list actions, the language picker, the gear, *Bring your own AI*. The
+  tooltips and labels say whether a button starts a **solo** run or a **multiplayer** room (e.g. "Play
+  alone" vs. "Play with friends: opens a room others can join"), and the page groups or marks them the
+  same way (e.g. a small solo/party icon). en + nb strings; check the touch layout, where tooltips need
+  a long-press or a visible hint instead of hover.
