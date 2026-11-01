@@ -331,6 +331,8 @@ export function createApp(opts: AppOptions = {}): App {
   const keyFor = (p: ProviderPreset): string | undefined => (p.envKey ? env[p.envKey]?.trim() || undefined : undefined);
   const baseUrlFor = (p: ProviderPreset): string | undefined => (p.baseUrlEnv ? env[p.baseUrlEnv]?.trim() || undefined : undefined);
   const defaultModelFor = (p: ProviderPreset): string => env[envName(p.id, 'MODEL')]?.trim() || (p.id === 'custom' ? env.CUSTOM_LLM_MODEL?.trim() || '' : '') || p.defaultModel;
+  /** the model for play (single-player GM, NPC voices) when the page names none: <PRESET>_PLAY_MODEL, else the default */
+  const playModelFor = (p: ProviderPreset): string => env[envName(p.id, 'PLAY_MODEL')]?.trim() || defaultModelFor(p);
 
   /**
    * Models a client may pick for a preset, or null when any model is allowed. Keyed (paid) presets
@@ -345,7 +347,7 @@ export function createApp(opts: AppOptions = {}): App {
     const extra = (env[envName(p.id, 'MODELS')] ?? '').split(',').map((m) => m.trim()).filter(Boolean);
     const listed = [...(p.models ?? []), ...extra];
     if (!p.needsKey && !keyFor(p) && listed.length === 0) return null;
-    return new Set([defaultModelFor(p), ...listed].filter(Boolean));
+    return new Set([defaultModelFor(p), playModelFor(p), ...listed].filter(Boolean));
   };
 
   const isConfigured = (p: ProviderPreset): boolean => {
@@ -450,7 +452,8 @@ export function createApp(opts: AppOptions = {}): App {
       const preset = getPreset(body.preset);
       if (!preset) throw new HttpError(404, 'config', `Unknown preset "${body.preset}"`);
       if (!isConfigured(preset)) throw new HttpError(503, 'config', `Preset "${preset.id}" is not configured on this server`);
-      model = body.model ?? defaultModelFor(preset);
+      // creating a world gets the default (strong) model; play calls may run on a cheaper one
+      model = body.model ?? (request.purpose === 'world' ? defaultModelFor(preset) : playModelFor(preset));
       const allowed = allowedModelsFor(preset);
       if (allowed && !allowed.has(model)) {
         throw new HttpError(400, 'bad_request', `Model "${model}" is not allowed for preset "${preset.id}" on this server`);

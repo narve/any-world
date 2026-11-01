@@ -112,6 +112,8 @@ export class StartScreen {
   private heroEl: HTMLElement;
   /** "Bring your own AI": everything that needs an AI provider (key or access code), folded away */
   private byoBtn: HTMLButtonElement;
+  /** what creating a world needs: nothing on a server with AI, a key in Settings without one */
+  private byoSubEl: HTMLElement;
   private byoBody: HTMLElement;
   /** null until the player (or the first view) decides */
   private byoOpen: boolean | null = null;
@@ -212,8 +214,9 @@ export class StartScreen {
       'button',
       { type: 'button', class: 'aw-btn aw-byo-toggle', 'aria-expanded': 'false', 'aria-controls': 'aw-byo-body', dataset: { tip: t('start.byoTip') }, onclick: () => this.setByo(!this.byoOpen, true) },
       icon(ICONS.sparkle),
-      t('start.byo'),
+      h('span', null, t('start.byo')),
     ) as HTMLButtonElement;
+    this.byoSubEl = h('p', { class: 'aw-muted aw-small' }, t('start.byoSub'));
 
     this.el = h(
       'main',
@@ -250,13 +253,10 @@ export class StartScreen {
         h(
           'section',
           { class: 'aw-byo', 'aria-labelledby': 'aw-byo-title' },
-          h(
-            'div',
-            { class: 'aw-byo-head' },
-            h('div', null, h('h2', { id: 'aw-byo-title' }, t('start.byoTitle')), h('p', { class: 'aw-muted aw-small' }, t('start.byoSub'))),
-            this.byoBtn,
-          ),
+          h('div', { class: 'aw-byo-head' }, h('div', null, h('h2', { id: 'aw-byo-title' }, t('start.byoTitle')), this.byoSubEl)),
           this.byoBody,
+          // bottom right, under the form when it is open
+          h('div', { class: 'aw-byo-foot' }, this.byoBtn),
         ),
         h(
           'section',
@@ -295,6 +295,7 @@ export class StartScreen {
     this.byoBody.hidden = !open;
     this.byoBtn.setAttribute('aria-expanded', String(open));
     this.byoBtn.classList.toggle('is-open', open);
+    this.byoBtn.lastElementChild!.textContent = open ? t('start.byoHide') : t('start.byo');
     if (user) {
       try {
         globalThis.localStorage?.setItem(BYO_KEY, open ? '1' : '0');
@@ -469,6 +470,7 @@ export class StartScreen {
     if (v.rooms) this.rooms.update(v.rooms);
     // open at first as this browser left it; else for a player whose own AI already works, or when a
     // prompt or party was handed over
+    this.byoSubEl.textContent = t(v.providerLabel ? 'start.byoSub' : 'start.byoSubNoAi');
     // until the player chooses, follow the provider: the first render comes before the server has
     // said it can create worlds, so a one-time choice there kept the section folded for everyone
     const stored = this.byoChosen ? null : storedByo();

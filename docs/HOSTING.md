@@ -128,6 +128,9 @@ keep `POST /api/llm` from being a free AI proxy (`server/llm-guard.ts`):
   for everyone together per UTC day. When either is used up, calls get 429 `daily_budget` until midnight UTC and
   world creation says so; demo worlds still play. Counted in memory: a restart starts the day again. Each call's log
   line ends with `today=<calls>/<tokens>`. The rooms' game master has its own hourly caps (§7) and is not counted.
+- **Cheaper play** (`<PRESET>_PLAY_MODEL`, e.g. `ANTHROPIC_PLAY_MODEL=claude-sonnet-5-5`): the single-player game master
+  and NPC voices run on this model when the page names none; creating a world keeps the preset's default (Opus). A
+  world took one Opus call of about 49k tokens and 5 minutes (2026-11-01); play calls are many but small.
 
 ## 4. Reaching it from the internet
 

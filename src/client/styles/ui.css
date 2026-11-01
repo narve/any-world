@@ -2019,6 +2019,12 @@ body {
   max-width: 62ch;
 }
 
+.aw-byo-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
 .aw-byo-toggle {
   flex: none;
 }
