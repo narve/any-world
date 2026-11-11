@@ -149,7 +149,7 @@ for (const [id, query, lang, prompt] of [
   });
 }
 
-test('an example place needs no map service', async ({ page }) => {
+test('an example place needs no map service; Kuben at district scale plays Kuben: Valget', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   let asked = 0;
@@ -162,39 +162,74 @@ test('an example place needs no map service', async ({ page }) => {
   await page.locator('.aw-place-sample', { hasText: 'Kuben' }).click();
   await expect(page.locator('.aw-place-map')).toBeVisible({ timeout: 20000 });
   await page.waitForFunction(() => (document.querySelector('.aw-place-map') as HTMLCanvasElement | null)?.width === 560, null, { timeout: 20000 });
+  await expect(page.locator('.aw-place-world')).toBeVisible();
   await page.locator('.aw-place').scrollIntoViewIfNeeded();
-  await page.locator('.aw-place').screenshot({ path: `${SHOTS}/kuben-picker.png` });
-  await createAndPlay(page, 'Kuben valget');
+  await page.locator('.aw-place').screenshot({ path: `${SHOTS}/kuben-district-picker.png` });
+  await createAndPlay(page, 'en detektiv på et sukkerhotell');
   const info = await page.evaluate(() => {
     const s = window.__anyworld!.controller!.session;
-    return { generator: s.world.areas[0]!.generator, place: s.world.place?.name, attribution: s.world.place?.attribution };
+    const map = s.state.area.map;
+    const school = map.regions.filter((r) => r.name === 'Kuben videregående skole').sort((a, b) => b.size - a.size)[0];
+    return {
+      title: s.world.meta.title,
+      generator: s.world.areas[0]!.generator,
+      area: s.world.areas[0]!.name,
+      areas: s.world.areas.length,
+      scale: s.world.place?.patches[0]?.scale,
+      attribution: s.world.place?.attribution,
+      names: map.regions.map((r) => r.name).filter(Boolean),
+      school: school?.size ?? 0,
+      exitFromSchool: school ? Math.hypot(map.exit.x - school.centre.x, map.exit.y - school.centre.y) : 99,
+      actors: s.state.area.actors.map((a) => a.defId),
+    };
   });
-  expect(info).toEqual({ generator: 'place', place: 'Kuben videregående skole', attribution: '© OpenStreetMap contributors' });
+  expect(info).toMatchObject({ generator: 'place', scale: 'district', areas: 4, attribution: '© OpenStreetMap contributors' });
+  expect(info.title).toContain('Valget');
+  expect(info.area).toContain('Glassgata');
+  expect(info.names).toEqual(expect.arrayContaining(['Kuben videregående skole', 'Kabelgata', 'Østre Aker vei', 'Tårngata']));
+  // the school, with its wings, is one room, and the way on (the stairs down) is inside it
+  expect(info.school).toBeGreaterThan(80);
+  expect(info.exitFromSchool).toBeLessThan(12);
+  expect(info.actors).toEqual(expect.arrayContaining(['knut', 'hege', 'slushmaskinen']));
   expect(asked).toBe(0);
   await page.waitForTimeout(1200);
-  await page.screenshot({ path: `${SHOTS}/kuben-start.png` });
+  await expect.poll(() => page.locator('.ov-place').count()).toBeGreaterThan(3);
+  await page.screenshot({ path: `${SHOTS}/kuben-district-start.png` });
+  await page.evaluate(() => {
+    const c = window.__anyworld!.controller!;
+    const lead = Object.values(c.session.state.players)[0] as { seen?: number[] | Uint8Array };
+    if (lead?.seen) for (let i = 0; i < lead.seen.length; i++) lead.seen[i] = 2;
+  });
+  await page.keyboard.press('.');
+  await page.mouse.move(640, 400);
+  for (let i = 0; i < 12; i++) await page.mouse.wheel(0, 240);
+  await page.waitForTimeout(1800);
+  await page.screenshot({ path: `${SHOTS}/kuben-district-revealed.png` });
   expect(errors).toEqual([]);
 });
 
-test('a district-scale place: one room per building, names over the map', async ({ page }) => {
+test('a district-scale place: one room per building, names over the map; Tangen plays Tangen: Lærlingplassen', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await prepare(page, {}, 'nb');
   await page.goto('/');
   await page.waitForFunction(() => document.body.dataset.ready === '1', null, { timeout: 60000 });
-  await page.locator('.aw-place-sample').getByText('Tangen', { exact: true }).click();
+  await page.locator('.aw-place-sample', { hasText: 'Tangen' }).click();
   await expect(page.locator('.aw-place-map')).toBeVisible({ timeout: 20000 });
   await page.waitForFunction(() => (document.querySelector('.aw-place-map') as HTMLCanvasElement | null)?.width === 560, null, { timeout: 20000 });
   await page.locator('.aw-place').scrollIntoViewIfNeeded();
   await page.locator('.aw-place').screenshot({ path: `${SHOTS}/tangen-district-picker.png` });
-  await createAndPlay(page, 'Tangen lærlingplassen');
+  await expect(page.locator('.aw-place-world')).toBeVisible();
+  await createAndPlay(page, 'en detektiv på et sukkerhotell');
   const info = await page.evaluate(() => {
     const s = window.__anyworld!.controller!.session;
     const map = s.state.area.map;
     const school = map.regions.find((r) => r.name === 'Tangen videregående skole');
-    return { scale: s.world.place?.patches[0]?.scale, names: map.regions.map((r) => r.name).filter(Boolean), school: school?.size ?? 0, doorsInSchool: 0 };
+    return { title: s.world.meta.title, exitFromSchool: school ? Math.hypot(map.exit.x - school.centre.x, map.exit.y - school.centre.y) : 99, scale: s.world.place?.patches[0]?.scale, names: map.regions.map((r) => r.name).filter(Boolean), school: school?.size ?? 0, doorsInSchool: 0 };
   });
   expect(info.scale).toBe('district');
+  expect(info.title).toContain('Lærlingplassen');
+  expect(info.exitFromSchool).toBeLessThan(8);
   expect(info.names).toEqual(expect.arrayContaining(['Tangen videregående skole', 'Aquarama', 'Scandic Kristiansand Bystranda', 'Bystranda', 'Østre Strandgate']));
   // the school is one room
   expect(info.school).toBeGreaterThan(30);

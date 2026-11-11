@@ -330,8 +330,18 @@ Oddernes kirke are on the map). Two additions, both carried by the place file:
 
 Known mismatches: the first area is still called *Mellombygget* and its recorded intro speaks of being indoors;
 its indoor scenery (lockers, the wet floor) is scattered over the whole campus. Screenshots:
-`docs/progress/place/kkg-district-*.png`. The two district files are built by hand from a wider fetch;
-`tools/place-bundle.ts tangen kkg` would overwrite them with street-scale patches.
+`docs/progress/place/kkg-district-*.png`. The district files are built by hand from a wider fetch;
+`tools/place-bundle.ts tangen kkg kuben` would overwrite them with street-scale patches.
+
+**Kuben too (2026-11-11).** `content/places/kuben.json` is a district patch (400 m around the school at Økern)
+with `world: "nb-kuben-valget"` and the school as `focus`. Kuben is mapped as four buildings side by side (the
+named one, two unnamed school wings and the strip between them), which gave three corridor-thin rooms; on a
+district map the focus building now takes in the unnamed parts built onto it (same kind, or no kind), so the school
+is one room of about 135 tiles. Screenshots: `docs/progress/place/kuben-district-*.png`. The same mismatches as for
+KKG apply (the first area is still *Glassgata*, an indoor street).
+
+**Tangen bound as well (2026-11-11).** The Tangen example now has `world: "nb-tangen-laerlingplassen"` and the
+school as `focus`, like the other two school places.
 
 Map service: the main Overpass server was down for hours on 2026-11-10 (502). `overpass.openstreetmap.fr` answered
 from Node and is now the second endpoint, but it refused a request carrying a browser `Origin` header (403), so

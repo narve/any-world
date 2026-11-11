@@ -161,23 +161,29 @@ describe('place generator on recorded places', () => {
     expect(Math.abs(roadShare(gen(patch, 1, 'small')) - roadShare(gen(patch, 1, 'large')))).toBeLessThan(0.08);
   });
 
-  it('a bundled district place with a focus: arrive by a street, the way on is inside that building', () => {
-    const file = JSON.parse(readFileSync('content/places/kkg.json', 'utf8')) as { world?: string; patch: unknown };
-    const patch = PlacePatchSchema.parse(file.patch);
-    expect(file.world).toBe('nb-kkg-talen');
-    expect(patch.scale).toBe('district');
-    expect(patch.focus).toBe('Kristiansand katedralskole Gimle');
-    for (const seed of SEEDS.slice(0, 20)) {
-      const map = gen(patch, seed);
-      expect(validateMap(map)).toEqual([]);
-      const school = map.regions.filter((r) => r.name === patch.focus).sort((a, b) => b.size - a.size)[0]!;
-      expect(school.size).toBeGreaterThan(30);
-      expect(Math.hypot(map.exit.x - school.centre.x, map.exit.y - school.centre.y)).toBeLessThan(12);
-      const start = map.tiles[map.start.y * map.width + map.start.x]!;
-      expect(['road', 'path']).toContain(start.surface);
-      expect(Math.hypot(map.start.x - map.exit.x, map.start.y - map.exit.y)).toBeGreaterThan(15);
-    }
-  });
+  for (const [id, world, focus, rooms] of [
+    ['kkg', 'nb-kkg-talen', 'Kristiansand katedralskole Gimle', 30],
+    ['kuben', 'nb-kuben-valget', 'Kuben videregående skole', 80],
+    ['tangen', 'nb-tangen-laerlingplassen', 'Tangen videregående skole', 30],
+  ] as const)
+    it(`a bundled district place with a focus (${id}): arrive by a street, the way on is inside that building`, () => {
+      const file = JSON.parse(readFileSync(`content/places/${id}.json`, 'utf8')) as { world?: string; patch: unknown };
+      const patch = PlacePatchSchema.parse(file.patch);
+      expect(file.world).toBe(world);
+      expect(patch.scale).toBe('district');
+      expect(patch.focus).toBe(focus);
+      for (const seed of SEEDS.slice(0, 20)) {
+        const map = gen(patch, seed);
+        expect(validateMap(map)).toEqual([]);
+        // the building, with the unnamed wings built onto it, is one room
+        const school = map.regions.filter((r) => r.name === focus).sort((a, b) => b.size - a.size)[0]!;
+        expect(school.size).toBeGreaterThan(rooms);
+        expect(Math.hypot(map.exit.x - school.centre.x, map.exit.y - school.centre.y)).toBeLessThan(12);
+        const start = map.tiles[map.start.y * map.width + map.start.x]!;
+        expect(['road', 'path']).toContain(start.surface);
+        expect(Math.hypot(map.start.x - map.exit.x, map.start.y - map.exit.y)).toBeGreaterThan(15);
+      }
+    });
 
   it('without its patch the area falls back to a town', () => {
     const plan = { ...makePlan('place'), patch: 'missing' };

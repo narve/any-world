@@ -249,6 +249,33 @@ export function genPlace(ctx: GenContext): void {
       footprint[b] = Math.max(footprint[b]!, 0.01); // stays the "smaller" one: it keeps its tiles
     }
   }
+  if (district && patch.focus) {
+    // the building the story is about is one room: unnamed parts built onto it (wings mapped as
+    // separate buildings of the same kind, or of no kind) are taken into it
+    const seeds = new Set(order.filter((b) => buildings[b]!.name === patch.focus));
+    for (let changed = seeds.size > 0; changed; ) {
+      changed = false;
+      const into = new Map<number, number>();
+      for (let y = 1; y < H - 1; y++)
+        for (let x = 1; x < W - 1; x++) {
+          const s = owner[idx(x, y)]!;
+          if (!seeds.has(s)) continue;
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+            const o = owner[idx(x + dx, y + dy)]!;
+            if (o === -1 || o === s || seeds.has(o) || into.has(o)) continue;
+            const f = buildings[o]!;
+            if (!f.name && (!f.type || f.type === buildings[s]!.type)) into.set(o, s);
+          }
+        }
+      if (into.size) {
+        for (let i = 0; i < owner.length; i++) {
+          const to = into.get(owner[i]!);
+          if (to !== undefined) owner[i] = to;
+        }
+        changed = true;
+      }
+    }
+  }
   const own = (x: number, y: number) => (inside(x, y) ? owner[idx(x, y)]! : -1);
   const interior = new Map<number, number[]>();
   for (let y = 1; y < H - 1; y++)
