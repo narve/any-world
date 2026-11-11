@@ -10,6 +10,7 @@
 import { h, icon, ICONS, setChildren } from '../dom';
 import { getLanguage, t } from '../../i18n/index';
 import { reversePlace, searchPlace, type GeoHit } from '../../../place/geocode';
+import sampleIndex from '../../../../content/places.json';
 import { loadPatch, OSM_ATTRIBUTION, worldPlace } from '../../../place/load';
 import { PlaceError } from '../../../place/overpass';
 import { DEFAULT_EXTENT, patchSummary, type Landmark } from '../../../place/patch';
@@ -24,16 +25,17 @@ export interface SamplePlace {
   load(): Promise<PlacePatch>;
 }
 
-// example places bundled with the client (content/places, built by tools/place-bundle.ts): names
-// in the main chunk, each map a lazy chunk
-const sampleNames = import.meta.glob('../../../../content/places/*.json', { eager: true, import: 'name' }) as Record<string, unknown>;
+// example places bundled with the client (content/places, built by tools/place-bundle.ts and
+// tools/place-fetch.ts): their names come from the small index content/places.json (id → name, kept
+// in step by tests/place/client.test.ts), so each map stays a lazy chunk
 const sampleFiles = import.meta.glob('../../../../content/places/*.json', { import: 'default' }) as Record<string, () => Promise<unknown>>;
+const sampleId = (path: string) => path.slice(path.lastIndexOf('/') + 1).replace(/\.json$/, '');
 
 export function bundledSamples(): SamplePlace[] {
   return Object.keys(sampleFiles)
     .sort()
     .map((path): SamplePlace => ({
-      hit: { name: String(sampleNames[path] ?? path), displayName: '', lat: 0, lon: 0, type: '' },
+      hit: { name: (sampleIndex as Record<string, string>)[sampleId(path)] ?? sampleId(path), displayName: '', lat: 0, lon: 0, type: '' },
       async load() {
         const file = (await sampleFiles[path]!()) as GeoHit & { patch: unknown; world?: unknown };
         if (typeof file.world === 'string' && file.world) this.world = file.world;

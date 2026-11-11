@@ -1,3 +1,4 @@
+import { readFileSync, readdirSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { PREVIEW_COLORS, previewColor, previewMap } from '../../src/client/place-preview';
@@ -100,5 +101,14 @@ describe('place rendering', () => {
     expect(Math.abs(road.r - road.b)).toBeLessThan(0.12);
     expect(surfaceColor('#b02030', 'plaza').getHSL({ h: 0, s: 0, l: 0 }).l).toBeGreaterThan(surfaceColor('#b02030', 'road').getHSL({ h: 0, s: 0, l: 0 }).l);
     expect(new THREE.Color('#b02030').g).toBeLessThan(0.05);
+  });
+});
+
+describe('the bundled example places', () => {
+  it('content/places.json names every file in content/places', () => {
+    const index = JSON.parse(readFileSync('content/places.json', 'utf8')) as Record<string, string>;
+    const files = readdirSync('content/places').filter((f) => f.endsWith('.json'));
+    expect(Object.keys(index).sort()).toEqual(files.map((f) => f.replace(/\.json$/, '')).sort());
+    for (const f of files) expect(index[f.replace(/\.json$/, '')]).toBe((JSON.parse(readFileSync(`content/places/${f}`, 'utf8')) as { name: string }).name);
   });
 });
