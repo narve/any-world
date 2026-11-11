@@ -186,7 +186,8 @@ describe('fixture worlds', () => {
       w.statuses.forEach((s) => s.flags.forEach((f) => statusFlags.add(f)));
     }
 
-    expect([...generators].sort()).toEqual([...Generator.options].sort());
+    // 'place' needs real map data in the world (WorldSpec.place): covered by tests/place and tests/mapgen/place.test.ts
+    expect([...generators].sort()).toEqual(Generator.options.filter((g) => g !== 'place').sort());
     expect([...useModes].sort()).toEqual(['charges', 'consumed', 'passive', 'reusable']);
     expect([...knowledge].sort()).toEqual(['clear', 'unknown', 'vague']);
     expect([...triggerEvents].sort()).toEqual([...TriggerEvent.options].sort());

@@ -607,6 +607,19 @@ export class GameController {
     const seen = (leadPlayer(cam).seen as ArrayLike<number>)[ex.y * cam.area.map.width + ex.x] ?? 0;
     const plan = s.world.areas[st.area.index];
     ov.setExit(!s.ended && seen > 0 && plan ? { pos: ex, label: plan.transitionName } : null);
+    // a district-scale real place: its street and building names are written over the map
+    const patch = plan?.generator === 'place' ? s.world.place?.patches.find((p) => p.id === plan.patch) : undefined;
+    if (patch?.scale === 'district' && !s.ended) {
+      const fog = leadPlayer(cam).seen as ArrayLike<number>;
+      const map = cam.area.map;
+      ov.setPlaces(
+        map.regions
+          .filter((rg) => rg.name && rg.name !== patch.name)
+          .sort((a, b) => b.size - a.size)
+          .slice(0, 40)
+          .map((rg) => ({ pos: rg.centre, label: rg.name!, seen: (fog[rg.centre.y * map.width + rg.centre.x] ?? 0) > 0 })),
+      );
+    } else ov.setPlaces([]);
     // until the exit has been seen, a faint chevron beside the player points its general way
     ov.setCompass(!s.ended && seen === 0 ? ex : null);
     const pc = leadPlayer(st).pendingChoice;

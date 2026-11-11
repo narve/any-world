@@ -488,7 +488,20 @@ export function validateWorldRefs(world: WorldSpecT): string[] {
     area.terrain.forEach((s, j) => checkTerrain(ctx, `${p}.terrain[${j}].terrain`, s.terrain));
     if (area.transitionRequires) checkCondition(ctx, `${p}.transitionRequires`, area.transitionRequires);
     checkModel(ctx, `${p}.transitionModel`, area.transitionModel);
+    // a real-place layout (docs/PLACE-PLAN.md) needs its patch, and only it may name one
+    const patchIds = (world.place?.patches ?? []).map((x) => x.id);
+    if (area.generator === 'place') {
+      if (!area.patch) errors.push(`${p}.patch: generator "place" needs a patch (one of: ${patchIds.join(', ') || 'none — the world has no place'})`);
+      else if (!patchIds.includes(area.patch)) errors.push(`${p}.patch: unknown place patch "${area.patch}" (valid: ${patchIds.join(', ') || 'none — the world has no place'})`);
+    } else if (area.patch) errors.push(`${p}.patch: only generator "place" takes a patch (this area uses "${area.generator}")`);
   });
+  if (world.place) {
+    const seen = new Set<string>();
+    for (const patch of world.place.patches) {
+      if (seen.has(patch.id)) errors.push(`place.patches: duplicate id "${patch.id}"`);
+      seen.add(patch.id);
+    }
+  }
 
   // --- goal -------------------------------------------------------------------
   checkCondition(ctx, 'goal.win', world.goal.win);

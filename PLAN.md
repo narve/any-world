@@ -23,6 +23,7 @@ src/
     audio/ (generative ambience, sfx, soundcloud), storage.ts (saves, settings, recent worlds)
   gm/          GM runner, offline lines, chat and voice: shared by the browser and the room server (MP4)
   net/         room protocol, messages, engine version, the room client (MP2/MP3)
+  place/       real places from OpenStreetMap: fetch, patch builder, applying a place to a world (docs/PLACE-PLAN.md)
   shared/      tiny helpers usable everywhere
   client/room/ lobby, room session, chat and party views (MP3)
 server/        Node backend: serves dist/client, POST /api/llm proxy (keys from env), /api/presets,
@@ -32,7 +33,8 @@ content/
   worlds/      recorded World Specs (fixtures + demo worlds) *.json
   prompts.json curated inspiration prompts
   recordings/  recorded LLM responses for the mock provider
-tools/         CLI: sim.ts (bot runs), validate-worlds.ts, agent-provider helpers, room-bots.ts, gm-smoke.ts
+tools/         CLI: sim.ts (bot runs), validate-worlds.ts, agent-provider helpers, room-bots.ts, gm-smoke.ts,
+               place-fetch.ts / place-ascii.ts (real-place fixtures)
 tests/         vitest (engine, schema, llm contract tests, sim smoke, server and rooms)
 e2e/, e2e-mp/  playwright, single player and rooms (headed chromium under xvfb — WebGL needs it here)
 docs/          HOSTING.md, MULTIPLAYER-PLAN.md, progress/ (multiplayer notes MP*), playtest/,
@@ -180,3 +182,42 @@ The backlogs added during M1 and M2 were all built in M2–M4:
   strings), with the code kept only as a fallback. Check it on small screens: 360 px phone portrait,
   where the badge sits next to the genre/kicker and must wrap or truncate cleanly rather than squeeze the
   title, and in the featured card and the room list rows.
+
+## Backlog: world creation looks hung (found on the Dell, 2026-11-04)
+
+Measured on the live server: every *Create a new world* is one non-streamed `claude-opus-5-5` call that
+takes 277–295 s (2026-10-31 295 s; 2026-11-04 277 s, 17k tokens in / 29.9k out). The server is fine (its
+limit is 600 s, the client's 660 s), but on 2026-11-04 one player gave up three times (Caddy 499 after
+284 s, 11 s and 66 s) before waiting it out. The first attempt was cancelled about 10 s before it would have finished.
+
+- **Say how long it takes, and show that it is still working.** The loading screen (`LoadingScreen`,
+  src/client/ui/components/screens.ts) shows a step list and a progress bar that don't move during the one
+  long step. Add "This takes about 5 minutes" (en + nb) and a running elapsed timer on the current step,
+  and maybe a gentle "still working…" after the usual time, so nobody cancels a call that is about to land.
+- **Stream the world call.** Use Anthropic streaming for world generation (src/llm/anthropic.ts,
+  src/llm/generate.ts) and pass progress to the client (tokens or sections so far), so the bar moves and
+  the connection carries data the whole time instead of idling for ~5 min through Caddy and the tunnel.
+  Streaming is also what the API recommends for long outputs (the code's own comment says non-streaming should
+  stay ≤ ~16k tokens; the world call asks for 32k).
+- **Make it faster.** Try world creation with Sonnet 5.5 or Opus at a lower `effort` (`AnthropicEffort` is
+  already supported but not set), and compare the quality of the worlds (sim + playtest) against today's Opus default.
+- **Room under the token cap.** 29.9k output tokens against `WORLD_MAX_TOKENS = 32_000`
+  (src/llm/prompts/world.ts) is close: a slightly bigger world gets cut off and fails after 5 minutes.
+  Raise the cap (with streaming) or make the world prompt or output shorter.
+- **Share a generated world by link.** A generated world lives only in the creator's browser
+  (`loadWorld` → `findStoredWorld`, src/client/worlds.ts); `?world=gen-…` opens nothing on any other
+  device, so the only way to share it is the world file export. Option: the server keeps worlds made
+  through it (it already sees the response) under their id, and `?world=gen-…` fetches it when it is not
+  stored locally.
+
+## Backlog: worlds anchored to a real place (owner, 2026-11-06)
+
+The game is not engaging enough; anchor it to the real world. World creation gets a *Place* field, pulls
+buildings, streets, squares, parks and water from OpenStreetMap around it, and the first areas play on that
+layout under whatever fiction the prompt asks for, with the real street and building names. Plan, data model,
+engine generator, prompt changes, fallbacks and milestones P0–P4 in [docs/PLACE-PLAN.md](docs/PLACE-PLAN.md).
+**Done (2026-11-10): P1 and P2** — the `place` generator and patch format, ground colours and trees in the
+renderer, fetching from OpenStreetMap, and the Place field with a map preview in *Create a new world*. Until P3
+the game itself lays the opening area out on the chosen place (`src/place/apply.ts`); without an AI provider a
+ready-made world is put on it. Screenshots in `docs/progress/place/`. P0 (the ASCII spike) was dropped: the
+preview and the screenshots answer its question. Next: P3 (the world prompt gets the patches), then P4.

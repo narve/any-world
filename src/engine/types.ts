@@ -16,6 +16,7 @@
  */
 import type { WorldSpec, Effect, Condition, Knowledge, RuleVariant } from '../schema/world';
 import type { GmAction, Difficulty } from '../schema/gm';
+import type { TileSurface } from '../schema/place';
 
 export type Dir = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 export interface Pos { x: number; y: number }
@@ -43,6 +44,13 @@ export interface Tile {
    * temporary terrain expires.
    */
   terrainUnder?: { terrain: string; interacted?: boolean };
+  /**
+   * Cosmetic ground kind on a real-place map (generator 'place'): the renderer tints the floor.
+   * No gameplay meaning.
+   */
+  surface?: TileSurface;
+  /** cosmetic: what a blocking tile is drawn as instead of a wall block (a real tree on a place map) */
+  prop?: 'tree';
 }
 
 export interface AreaMap {

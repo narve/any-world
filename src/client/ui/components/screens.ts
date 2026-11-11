@@ -1,5 +1,6 @@
 /** Full-screen views: start, loading, end; and the settings dialog. */
 import type { Vocabulary } from '../../../schema/world';
+import { PlacePicker } from './place-picker';
 import type { EndView, InspirationPrompt, LoadingView, RecentWorldView, RoomView, Settings, SettingsView, StartOptions, StartView, UiCallbacks, UiViewModel } from '../viewmodel';
 import { dataKey, h, icon, ICONS, setChildren } from '../dom';
 import { baseLang, clamp, DIFFICULTIES, difficultyHint, difficultyLabel, groupByLanguage, languageEndonym, pickInspiration, presetNotes, runStatLines, toDifficulty, weirdnessLabel } from '../format';
@@ -90,6 +91,8 @@ const OFFLINE_PRESET_ID = 'mock';
 
 export class StartScreen {
   readonly el: HTMLElement;
+  /** the Place field: a real place for the new world's first area */
+  readonly place = new PlacePicker();
   private textarea: HTMLTextAreaElement;
   private diff: HTMLInputElement;
   private weird: HTMLInputElement;
@@ -188,6 +191,7 @@ export class StartScreen {
       { class: 'aw-byo-body', id: 'aw-byo-body', hidden: true },
       h('label', { class: 'aw-label', for: 'aw-prompt' }, t('start.promptLabel')),
       this.textarea,
+      this.place.el,
       h('label', { class: 'aw-range', for: 'aw-weird' }, h('span', null, t('start.weirdness')), this.weird, this.weirdOut),
       this.partyEl,
       h(
@@ -320,6 +324,8 @@ export class StartScreen {
 
   options(surprise: boolean): StartOptions {
     const prompt = surprise ? '' : this.textarea.value.trim();
+    const place = this.place.choice();
+    const placeWorld = this.place.world();
     const fromCard = !!prompt && this.filled !== null && this.filled.prompt === prompt && baseLang(this.filled.language) !== baseLang(getLanguage());
     return {
       prompt,
@@ -328,13 +334,16 @@ export class StartScreen {
       surprise,
       ...(fromCard ? { language: this.filled!.language } : {}),
       ...(this.party.checked && !this.partyEl.hidden ? { party: this.partySize } : {}),
+      ...(place ? { place } : {}),
+      ...(place && placeWorld ? { placeWorld } : {}),
     };
   }
 
   private create(surprise: boolean): void {
     if (!this.byoOpen) this.setByo(true);
     // with no AI, "Surprise me" still works: the app plays a random demo world (main.ts onStart)
-    if (!surprise && this.view && !this.view.canGenerate) {
+    // (a real place needs no AI: without one, a ready-made world is put on it)
+    if (!surprise && this.view && !this.view.canGenerate && !this.place.choice()) {
       this.cb.onOpenSettings?.(true);
       return;
     }

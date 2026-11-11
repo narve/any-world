@@ -27,6 +27,7 @@ import { genGeometric } from './generators/geometric';
 import { genIslands } from './generators/islands';
 import { genOpen } from './generators/open';
 import { genOrganic } from './generators/organic';
+import { genPlace } from './generators/place';
 import { genRooms } from './generators/rooms';
 import { genShip } from './generators/ship';
 import { genTown } from './generators/town';
@@ -45,6 +46,7 @@ const GENERATORS: Record<GeneratorName, (ctx: GenContext) => void> = {
   islands: genIslands,
   organic: genOrganic,
   geometric: genGeometric,
+  place: genPlace,
 };
 
 export const GENERATOR_NAMES = Object.keys(GENERATORS) as GeneratorName[];
@@ -67,8 +69,10 @@ export function validateMap(map: AreaMap): string[] {
   return problems;
 }
 
-function generateOnce(plan: AreaPlan, rng: Rng, partySize?: number): AreaMap {
-  const ctx = makeContext(plan, rng, partySize);
+function generateOnce(plan: AreaPlan, rng: Rng, partySize?: number, world?: WorldSpec): AreaMap {
+  // a real-place area is laid out on its patch; a missing patch falls back inside genPlace
+  const patch = plan.generator === 'place' && plan.patch ? world?.place?.patches.find((p) => p.id === plan.patch) : undefined;
+  const ctx = makeContext(plan, rng, partySize, patch);
   const gen = GENERATORS[plan.generator] ?? genRooms;
   gen(ctx);
   return finalize(ctx.g, rng, {
@@ -80,15 +84,16 @@ function generateOnce(plan: AreaPlan, rng: Rng, partySize?: number): AreaMap {
     regionNames: ctx.regionNames,
     pruneSpurs: ctx.pruneSpurs,
     shortcuts: ctx.shortcuts,
+    startExit: ctx.startExit,
   });
 }
 
-export const generateArea: MapGenerator = (plan: AreaPlan, _world: WorldSpec, rng: Rng, opts?: MapGenOptions): AreaMap => {
+export const generateArea: MapGenerator = (plan: AreaPlan, world: WorldSpec, rng: Rng, opts?: MapGenOptions): AreaMap => {
   const partySize = opts?.partySize;
   let lastErr: unknown = null;
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
-      const map = generateOnce(plan, rng, partySize);
+      const map = generateOnce(plan, rng, partySize, world);
       if (validateMap(map).length === 0) return map;
       lastErr = new Error(validateMap(map).join('; '));
     } catch (e) {

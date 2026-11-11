@@ -512,6 +512,8 @@ export function finalize(
     pruneSpurs?: number;
     /** loops to cut through thin walls (addShortcuts) */
     shortcuts?: number;
+    /** the generator's own start and exit (both must be floor tiles); null = chooseStartExit */
+    startExit?: (g: Grid, rng: Rng) => { start: Pos; exit: Pos } | null;
   },
 ): AreaMap {
   closeBorder(g);
@@ -522,7 +524,9 @@ export function finalize(
   if (opts.pruneSpurs) pruneSpurs(g, opts.pruneSpurs);
   if (opts.shortcuts && !opts.openEdges) addShortcuts(g, rng, opts.shortcuts, { doors: opts.doors });
   if (opts.voronoi) fillRegionsVoronoi(g, rng, opts.voronoi);
-  const { start, exit } = chooseStartExit(g, rng);
+  const own = opts.startExit?.(g, rng);
+  const ok = own && g.kind(own.start.x, own.start.y) === 'floor' && g.kind(own.exit.x, own.exit.y) === 'floor' && (own.start.x !== own.exit.x || own.start.y !== own.exit.y);
+  const { start, exit } = own && ok ? own : chooseStartExit(g, rng);
   g.set(start.x, start.y, 'start');
   g.set(exit.x, exit.y, 'transition');
   const regions = buildRegions(g, opts.regionNames);

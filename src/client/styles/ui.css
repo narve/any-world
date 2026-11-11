@@ -3300,6 +3300,20 @@ body {
   stroke-width: 3px;
 }
 
+.aw-map-overlay .ov-place {
+  fill: #fff8e0;
+  font: 600 11px var(--font-ui, sans-serif);
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.8);
+  stroke-width: 3px;
+  pointer-events: none;
+}
+
+.aw-map-overlay .ov-place.is-far {
+  fill: #cfd3dc;
+  opacity: 0.75;
+}
+
 .aw-map-overlay .ov-speaker {
   fill: none;
   stroke: #9bd6ff;
@@ -5171,4 +5185,156 @@ body {
 
 .aw-mode-banner[hidden] {
   display: none;
+}
+
+/* --- real places: the Place field of "Create a new world" (docs/PLACE-PLAN.md) --- */
+
+.aw-place {
+  display: grid;
+  gap: 8px;
+  max-width: 720px;
+}
+
+.aw-place-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.aw-place-row .aw-place-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.aw-place-row .aw-btn {
+  flex: 0 0 auto;
+}
+
+.aw-place-note {
+  margin: 0;
+}
+
+.aw-place-recent,
+.aw-place-marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.aw-place-recent[hidden] {
+  display: none;
+}
+
+.aw-place-status {
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.aw-place-error {
+  color: var(--c-danger, #e0766a);
+}
+
+.aw-place-warn {
+  color: var(--c-warn, #e0b45a);
+}
+
+.aw-place-hits {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.aw-place-hit {
+  width: 100%;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid var(--c-border, rgba(255, 255, 255, 0.14));
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.aw-place-hit:hover,
+.aw-place-hit:focus-visible {
+  border-color: var(--c-accent);
+}
+
+.aw-place-chosen {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--c-border, rgba(255, 255, 255, 0.14));
+  border-radius: 10px;
+}
+
+.aw-place-chosen p {
+  margin: 0;
+}
+
+.aw-place-head {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.aw-place-name {
+  font-size: 1.05em;
+}
+
+.aw-place-figure {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.aw-place-map {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  border-radius: 6px;
+  image-rendering: pixelated;
+  background: #1d2026;
+}
+
+@media (max-width: 520px) {
+  .aw-place-locate span {
+    display: none;
+  }
+
+  .aw-place-head {
+    flex-direction: column;
+  }
+}
+
+.aw-spinner {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: aw-spin 0.8s linear infinite;
+}
+
+@keyframes aw-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aw-spinner {
+    animation-duration: 3s;
+  }
 }

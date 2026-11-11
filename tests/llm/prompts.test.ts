@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { z } from 'zod';
 import { readFileSync } from 'node:fs';
-import { WorldSpec, ActorDef, ItemDef, Generator, type WorldSpec as WorldSpecT } from '../../src/schema/world';
+import { WorldSpec, ActorDef, ItemDef, AreaPlan, Generator, type WorldSpec as WorldSpecT } from '../../src/schema/world';
 import { GmResponse, DialogueResponse, GmHook, RoomGmResponse, GM_BUDGET_PER_AREA } from '../../src/schema/gm';
 import { parseWorld } from '../../src/schema/refs';
 import { schemaVocabulary, namedFields } from '../../src/llm/prompts/schema-doc';
@@ -23,7 +24,11 @@ const mentions = (doc: string, word: string) => new RegExp(`(^|[^A-Za-z0-9_])${w
 
 describe('condensed World Spec description', () => {
   it('mentions every WorldSpec field and every enum / literal value', () => {
-    const { keys, values } = schemaVocabulary(WorldSpec);
+    // real places (docs/PLACE-PLAN.md) are attached by the game, not written by the model: left out on purpose
+    const told = WorldSpec.omit({ place: true }).extend({ areas: z.array(AreaPlan.omit({ patch: true })) });
+    const { keys, values } = schemaVocabulary(told);
+    values.delete('"place"');
+    for (const hidden of ['patch', 'patches', 'geometry', 'displayName', 'fetchedAt']) expect(mentions(WORLD_SCHEMA_DOC, hidden), hidden).toBe(false);
     const missingKeys = [...keys].filter((k) => !mentions(WORLD_SCHEMA_DOC, k));
     const missingValues = [...values].filter((v) => !WORLD_SCHEMA_DOC.includes(v));
     expect(missingKeys).toEqual([]);
@@ -76,7 +81,7 @@ describe('world prompt', () => {
 
   it('lists the params knobs of every map generator', () => {
     const sys = worldSystemPrompt('en');
-    for (const g of Generator.options) expect(sys, g).toMatch(new RegExp(`^- ${g}: `, 'm'));
+    for (const g of Generator.options.filter((o) => o !== 'place')) expect(sys, g).toMatch(new RegExp(`^- ${g}: `, 'm'));
     for (const knob of ['roomCount', 'openness', 'buildings', 'islandCount', 'chambers', 'cellSize', 'bridgeLength', 'membranes']) {
       expect(sys).toContain(knob);
     }

@@ -44,6 +44,11 @@ export interface SchemaDocOptions {
   roots?: string[];
   /** inline objects whose one-line form is at most this long (default 110) */
   inlineWidth?: number;
+  /**
+   * Left out of the document: "TypeName.field" (a top-level field of a named object type) or
+   * "TypeName:value" (a value of a named enum). For parts of a schema the model must not write.
+   */
+  omit?: string[];
 }
 
 interface Checks {
@@ -172,8 +177,10 @@ export class SchemaDoc {
   private readonly names = new Map<AnyZod, string>();
   private readonly notes: Record<string, string>;
   private readonly width: number;
+  private readonly omit: Set<string>;
 
   constructor(private readonly opts: SchemaDocOptions) {
+    this.omit = new Set(opts.omit ?? []);
     for (const [n, s] of opts.named) this.names.set(s, n);
     this.notes = opts.notes ?? {};
     this.width = opts.inlineWidth ?? 110;
@@ -240,6 +247,7 @@ export class SchemaDoc {
         return 'any';
       case 'enum':
         return Object.values(d.entries as Record<string, string | number>)
+          .filter((v) => !(isDecl && owner && this.omit.has(`${owner}:${v}`)))
           .map((v) => JSON.stringify(v))
           .join(' | ');
       case 'literal':
@@ -316,7 +324,7 @@ export class SchemaDoc {
 
   private objectType(d: Def, indent: string, owner?: string): string {
     const shape = d.shape as Record<string, AnyZod>;
-    const fields = Object.entries(shape).map(([k, v]) => {
+    const fields = Object.entries(shape).filter(([k]) => !(owner && this.omit.has(`${owner}.${k}`))).map(([k, v]) => {
       const vd = defOf(v);
       const optional = vd.type === 'optional' || vd.type === 'default' || vd.type === 'prefault';
       const key = IDENT.test(k) ? k : JSON.stringify(k);

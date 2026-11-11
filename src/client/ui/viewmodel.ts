@@ -8,6 +8,7 @@
  * verbs such as "Use", "Drop", "Leave".
  */
 import type { Vocabulary } from '../../schema/world';
+import type { WorldPlace } from '../../schema/place';
 import type { ActorView, Dir, ItemView, LogMessage, PlayerAction, Pos } from '../../engine/types';
 import type { ProviderConfig, ProviderPreset } from '../../llm/types';
 
@@ -581,6 +582,10 @@ export interface StartOptions {
   language?: string;
   /** "For a party" (MP4 design §5): a world for a room of this many players (absent: single player) */
   party?: number;
+  /** a real place (docs/PLACE-PLAN.md): the world's first area is laid out on its map */
+  place?: WorldPlace;
+  /** the ready-made world that belongs to the place (an example place with its own story): it is played instead of a new one */
+  placeWorld?: string;
 }
 
 export interface LoadingStepView {

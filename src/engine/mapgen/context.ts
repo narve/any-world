@@ -1,5 +1,6 @@
 import type { AreaPlan } from '../../schema/world';
-import type { Rng } from '../types';
+import type { PlacePatch } from '../../schema/place';
+import type { Pos, Rng } from '../types';
 import { Grid, clamp } from './grid';
 import { PARTY_SCALING, clampPartySize, partyFactor } from '../difficulty';
 
@@ -46,6 +47,13 @@ export interface GenContext {
    * count by it (scaledCount), so a party's bigger map is not mostly void.
    */
   areaScale: number;
+  /** generator 'place': the real-place patch this area is laid out on (resolved from WorldSpec.place) */
+  patch?: PlacePatch;
+  /**
+   * A generator's own choice of start and exit, asked after the connectivity repair; null = let the
+   * shared chooser pick (chooseStartExit).
+   */
+  startExit?: (g: Grid, rng: Rng) => { start: Pos; exit: Pos } | null;
 }
 
 /** a feature count for the grid's size: `n` for a single player's map, else n × areaScale, rounded */
@@ -71,7 +79,7 @@ export function mapDimensions(size: MapSize, partySize = 1): { width: number; he
  * `size` (shortcuts, spurs, most counts) keep their small/medium/large values; only fixed-size
  * features (rooms, town buildings) grow in number with the grid (areaScale).
  */
-export function makeContext(plan: Pick<AreaPlan, 'size' | 'params'>, rng: Rng, partySize = 1): GenContext {
+export function makeContext(plan: Pick<AreaPlan, 'size' | 'params'>, rng: Rng, partySize = 1, patch?: PlacePatch): GenContext {
   const size: MapSize = plan.size === 'small' || plan.size === 'large' ? plan.size : 'medium';
   const { width, height } = mapDimensions(size, partySize);
   const base = MAP_SIZES[size];
@@ -87,6 +95,7 @@ export function makeContext(plan: Pick<AreaPlan, 'size' | 'params'>, rng: Rng, p
     openEdges: false,
     regionNames: new Map(),
     areaScale,
+    ...(patch ? { patch } : {}),
     pruneSpurs: Math.round(clamp(typeof params.spurs === 'number' ? params.spurs : 12, 0, 40)),
     shortcuts: Math.round(clamp(typeof params.shortcuts === 'number' ? params.shortcuts : { small: 3, medium: 5, large: 7 }[size], 0, 20)),
     param(names, def, lo, hi) {

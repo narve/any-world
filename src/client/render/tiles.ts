@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import type { WorldSpec, AreaPlan, TerrainDef } from '../../schema/world';
 import type { AreaMap, AreaState, TileKind } from '../../engine/types';
+import type { TileSurface } from '../../schema/place';
 import { getMaterial, setDimmed } from './materials';
 import { patternTexture, glowTexture } from './textures';
 import { col, shade, mixHex, hash2, luminance } from './color';
@@ -305,6 +306,46 @@ function genericTerrainGeometry(h: number, walkable: boolean): THREE.BufferGeome
   return g;
 }
 
+/** what a real-place ground kind looks like (docs/PLACE-PLAN.md §4.2): a colour and how much of it replaces the area's floor colour */
+const SURFACE_LOOK: Record<TileSurface, [string, number]> = {
+  road: ['#3d4046', 0.78],
+  path: ['#b8a888', 0.62],
+  pavement: ['#a3a19b', 0.7],
+  grass: ['#4f8f3a', 0.82],
+  rail: ['#5c5148', 0.7],
+  plaza: ['#cfc8b8', 0.62],
+};
+
+/** a surface's colour in an area: mostly its own, with a share of the area's floor colour so it sits in the world's palette */
+export function surfaceColor(floorColor: string, surface: TileSurface): THREE.Color {
+  const [hex, share] = SURFACE_LOOK[surface];
+  return col(floorColor).lerp(col(hex), share);
+}
+
+/** a low-poly tree: trunk and two stacked crowns, vertex-coloured */
+function treeGeometry(): THREE.BufferGeometry {
+  const paint = (g: THREE.BufferGeometry, hex: string) => {
+    const c = col(hex);
+    const n = g.getAttribute('position').count;
+    const a = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) a.set([c.r, c.g, c.b], i * 3);
+    g.setAttribute('color', new THREE.BufferAttribute(a, 3));
+    return g.index ? g.toNonIndexed() : g;
+  };
+  const trunk = new THREE.CylinderGeometry(0.09, 0.13, 0.6, 6);
+  trunk.translate(0, 0.3, 0);
+  const low = new THREE.IcosahedronGeometry(0.46, 0);
+  low.scale(1, 0.9, 1);
+  low.translate(0, 0.95, 0);
+  const top = new THREE.IcosahedronGeometry(0.32, 0);
+  top.translate(0.05, 1.42, -0.04);
+  const parts = [paint(trunk, '#6b4a2f'), paint(low, '#3f8a34'), paint(top, '#57a544')];
+  const merged = mergeGeometries(parts);
+  for (const p of parts) p.dispose();
+  merged.computeVertexNormals();
+  return merged;
+}
+
 function tileKey(t: { kind: string; terrain?: string }): string {
   return `${t.kind}:${t.terrain ?? ''}`;
 }
@@ -443,8 +484,11 @@ export class AreaView {
 
     // --- floors ---
     const gradient = fl.pattern === 'gradient';
-    const floorTex = gradient ? null : patternTexture(fl.pattern ?? 'plain', fl.color, fl.color2, 11);
-    const floorTop = getMaterial(fl.material === 'glow' ? 'matte' : fl.material, floorTex || gradient ? '#ffffff' : fl.color, {
+    // a real-place map (docs/PLACE-PLAN.md §4.2) colours its ground per tile: the floor texture is then
+    // neutral and each tile's instance colour carries the colour (the area's floor colour indoors)
+    const surfaced = !gradient && map.tiles.some((t) => t.surface !== undefined || t.prop !== undefined);
+    const floorTex = gradient ? null : surfaced ? patternTexture(fl.pattern ?? 'plain', '#ffffff', '#dddddd', 11) : patternTexture(fl.pattern ?? 'plain', fl.color, fl.color2, 11);
+    const floorTop = getMaterial(fl.material === 'glow' ? 'matte' : fl.material, floorTex || gradient || surfaced ? '#ffffff' : fl.color, {
       map: floorTex,
       emissive: fl.material === 'glow' ? shade(fl.color, 0.6) : undefined,
       emissiveIntensity: fl.material === 'glow' ? 0.35 : undefined,
@@ -456,6 +500,7 @@ export class AreaView {
     const bedEntries: InstEntry[] = [];
     const waterTiles: PatchTile[] = [];
     const wallEntries: InstEntry[] = [];
+    const treeEntries: InstEntry[] = [];
     const edgeEntries: InstEntry[][] = [[], [], [], []];
     const underEntries: InstEntry[] = [];
     const voidD = this.voidDistance(map);
@@ -464,7 +509,7 @@ export class AreaView {
     const fc2 = col(fl.color2 ?? shade(fl.color, 0.75));
     const wc1 = col(wl.color);
     const wc2 = col(wl.color2 ?? shade(wl.color, 0.8));
-    const isWall = (x: number, y: number) => this.kindAt(map, x, y) === 'wall';
+    const isWall = (x: number, y: number) => this.kindAt(map, x, y) === 'wall' && map.tiles[this.idx(x, y)].prop !== 'tree';
     // low-frequency blotches for organic colour variation
     const blotch = (x: number, y: number) => 0.5 + 0.25 * Math.sin(x * 0.55 + Math.sin(y * 0.4) * 1.7) + 0.25 * Math.sin(y * 0.47 - x * 0.21 + 1.1);
     const tint = (x: number, y: number): THREE.Color => {
@@ -472,8 +517,9 @@ export class AreaView {
         const t = Math.max(0, Math.min(1, (x / Math.max(1, W - 1)) * 0.55 + (y / Math.max(1, map.height - 1)) * 0.45 + (blotch(x, y) - 0.5) * 0.25));
         return fc1.clone().lerp(fc2, t);
       }
-      return new THREE.Color(1, 1, 1);
+      return surfaced ? fc1.clone() : new THREE.Color(1, 1, 1);
     };
+    const ground = (x: number, y: number, surface: TileSurface | undefined): THREE.Color => (surface ? surfaceColor(fl.color, surface) : tint(x, y));
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
         const i = this.idx(x, y);
@@ -486,11 +532,17 @@ export class AreaView {
           let nearWall = 0;
           for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (isWall(x + ox, y + oy)) nearWall++;
           j *= 1 - Math.min(2, nearWall) * 0.07;
-          floorEntries.push({ tile: i, x, y: 0, z: y, color: tint(x, y).multiplyScalar(j), sxz: style === 'crisp' ? 0.94 : 1 });
+          floorEntries.push({ tile: i, x, y: 0, z: y, color: ground(x, y, t.surface).multiplyScalar(j), sxz: style === 'crisp' ? 0.94 : 1 });
         } else if (t.kind === 'water') {
           const j = 0.75 + hash2(x, y, 3) * 0.1;
           bedEntries.push({ tile: i, x, y: -0.16, z: y, color: new THREE.Color(j, j, j) });
           waterTiles.push({ tile: i, x, y });
+        } else if (t.kind === 'wall' && t.prop === 'tree') {
+          // a real tree: ground under it (grass unless the tile says otherwise) and a tree instead of a wall block
+          const j = 0.9 + hash2(x, y) * 0.12;
+          floorEntries.push({ tile: i, x, y: 0, z: y, color: ground(x, y, t.surface ?? 'grass').multiplyScalar(j) });
+          const v = 0.82 + hash2(x, y, 61) * 0.36;
+          treeEntries.push({ tile: i, x, y: 0, z: y, color: new THREE.Color(v, v, v), sy: 0.85 + hash2(x, y, 63) * 0.5, rotY: hash2(x, y, 67) * Math.PI * 2, sxz: 0.85 + hash2(x, y, 69) * 0.35 });
         } else if (t.kind === 'wall') {
           let exposed = false;
           for (let oy = -1; oy <= 1 && !exposed; oy++)
@@ -606,6 +658,14 @@ export class AreaView {
     this.walls.mesh.receiveShadow = true;
     this.group.add(this.walls.mesh);
     this.wallLayers = [this.walls];
+    if (treeEntries.length) {
+      const mat = this.own(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, flatShading: true, vertexColors: true }));
+      const trees = new InstLayer(treeGeometry(), mat, treeEntries, 'trees', REMEMBER_WALL);
+      trees.mesh.castShadow = true;
+      this.group.add(trees.mesh);
+      // with the walls: fog, and the cut-away lowers them like any wall in front of the player
+      this.wallLayers.push(trees);
+    }
 
     if (style !== 'blob') {
       let edgeMat: THREE.Material;

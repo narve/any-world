@@ -9,6 +9,7 @@
  *  - All cross references are by string id and are checked by `validateWorldRefs` (see refs.ts).
  */
 import { z } from 'zod';
+import { WorldPlace } from './place';
 
 // ---------------------------------------------------------------------------
 // Primitives
@@ -534,6 +535,8 @@ export const Generator = z.enum([
   'islands',   // floating platforms over a void, joined by narrow bridges
   'organic',   // membranes, blobs and tubes — insides of creatures, dream-flesh, coral
   'geometric', // abstract symmetric patterns, concentric rings, tessellations
+  // a real place (docs/PLACE-PLAN.md): the layout of AreaPlan.patch, a patch of WorldSpec.place
+  'place',
 ]);
 export type Generator = z.infer<typeof Generator>;
 
@@ -571,6 +574,8 @@ export const AreaPlan = z.object({
   name: z.string().max(60),
   description: z.string().max(400),
   generator: Generator,
+  /** generator 'place' only: the id of the WorldSpec.place patch this area is laid out on */
+  patch: Id.optional(),
   size: z.enum(['small', 'medium', 'large']).default('medium'),
   /** generator-specific knobs; unknown keys ignored. e.g. { roomCount: 8, openness: 0.3, buildings: 6 } */
   params: z.record(z.string(), z.number()).default({}),
@@ -777,6 +782,8 @@ export const WorldSpec = z.object({
     .record(Id, z.array(z.object({ label: z.string().max(40), color: Color })).min(1).max(16))
     .default({}),
   areas: z.array(AreaPlan).min(2).max(6),
+  /** the real place this world is anchored to, with the map patches its 'place' areas use */
+  place: WorldPlace.optional(),
   goal: GoalSpec,
   gm: GmSpec,
   audio: AudioSpec,

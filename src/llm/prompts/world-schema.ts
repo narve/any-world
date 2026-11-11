@@ -164,7 +164,14 @@ export const WORLD_NOTES: Record<string, string> = {
   'Part.group': 'animation group name ("wing", "head")',
 };
 
-export const WORLD_SCHEMA_DOC: string = new SchemaDoc({ named: WORLD_NAMED, notes: WORLD_NOTES }).render();
+/**
+ * Real places (docs/PLACE-PLAN.md): the game attaches WorldSpec.place and lays the opening area out
+ * on it itself (src/place/apply.ts), so the model is not told about the 'place' generator, its
+ * patch or the place block until the world prompt hands it the patches (P3).
+ */
+export const WORLD_DOC_OMIT = ['WorldSpec.place', 'AreaPlan.patch', 'Generator:place'];
+
+export const WORLD_SCHEMA_DOC: string = new SchemaDoc({ named: WORLD_NAMED, notes: WORLD_NOTES, omit: WORLD_DOC_OMIT }).render();
 
 /** GM / dialogue output types (the building blocks they reference are declared too) */
 export const GM_NAMED: [string, import('zod').ZodType][] = [

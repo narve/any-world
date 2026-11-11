@@ -10,6 +10,7 @@
  * the build has a server; the App hands it its screens, renderer and controller (RoomAppHost). A room
  * never reads, clears or writes the single-player save; the address bar keeps `?room=CODE`.
  */
+import { applyPlace } from '../place/apply';
 import { createUi, type GameUi, type Settings, type StartView, type UiCallbacks, type UiViewModel, type InspirationPrompt, type DemoWorldView, type SettingsView, type StartOptions, type Difficulty } from './ui/index';
 import { DEFAULT_PALETTE } from './ui/index';
 import { defaultVocabulary, localizedPreset } from './ui/format';
@@ -393,9 +394,13 @@ export class App {
     const surpriseSeed = randomSeed();
     let provider: LLMProvider | null;
     let origin: string | undefined;
-    if (this.settings.provider.preset === OFFLINE_PRESET) {
+    // no AI but a real place chosen: a ready-made world is put on the place, as the offline demo does
+    // (a place with its own ready-made world always plays that world)
+    const own = opts.place && opts.placeWorld ? worldIndex().find((w) => w.id === opts.placeWorld) : undefined;
+    const offline = !!own || this.settings.provider.preset === OFFLINE_PRESET || (!!opts.place && !this.provider());
+    if (offline) {
       // offline demo: "create" a recorded world that fits; the pipeline (validation, bots) runs for real
-      const pick = pickDemoWorld(worldIndex(), { prompt: opts.surprise ? '' : opts.prompt, language, seed: surpriseSeed }, promptLibrary());
+      const pick = own ?? pickDemoWorld(worldIndex(), { prompt: opts.surprise ? '' : opts.prompt, language, seed: surpriseSeed }, promptLibrary());
       const full = pick ? await loadBundledWorld(pick.id) : undefined;
       provider = full ? demoGenerator(full.id, full.world, { latencyMs: 250 }) : null;
       origin = full?.id;
@@ -432,7 +437,7 @@ export class App {
         onChange: () => {
           if (this.generation === gen && this.screen === 'loading') this.render();
         },
-        offline: this.settings.provider.preset === OFFLINE_PRESET,
+        offline,
       },
     );
     this.generation = gen;
@@ -454,6 +459,8 @@ export class App {
     }
     if (this.generation !== gen || gen.signal.aborted) return false;
     this.generation = null;
+    // a real place: the opening area gets its map (until the world prompt knows about places, PLACE-PLAN P3)
+    if (opts.place) world = applyPlace(world, opts.place);
     const entry = rememberWorld(world, randomSeed(), { source: 'generated', ...(origin ? { origin } : {}) });
     clearRun();
     await this.launch(this.newSession(entry, randomSeed()), entry);
@@ -630,14 +637,15 @@ export class App {
       onContinue: () => void this.continueRun(),
       onStart: (opts) => {
         // no AI to invent a world (offline demo or no usable provider): "Surprise me" plays a random demo world
-        if (opts.surprise && (this.settings.provider.preset === OFFLINE_PRESET || !this.provider())) {
+        // (with a real place chosen the world is still "created", so the place can be put under it)
+        if (opts.surprise && !opts.place && (this.settings.provider.preset === OFFLINE_PRESET || !this.provider())) {
           const pick = pickDemoWorld(worldIndex(), { prompt: '', language: opts.language ?? getLanguage(), seed: randomSeed() });
           if (pick) {
             void this.playWorld(pick.id, undefined, opts);
             return;
           }
         }
-        if (this.canGenerate()) void this.createWorld(opts);
+        if (this.canGenerate() || (opts.place && worldIndex().length > 0)) void this.createWorld(opts);
         else {
           const problem = providerProblem(activeProvider(this.settings), this.server, this.settings.accessCode);
           this.ui.toast(problem ? problemText(problem) : t('app.noGenerator'), 'info');

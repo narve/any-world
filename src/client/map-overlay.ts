@@ -167,6 +167,11 @@ export class MapOverlay {
   private compass: Pos | null = null;
   private preview: HoverPreview | null = null;
   private exit: { pos: Pos; label: string } | null = null;
+  /** names over a real-place map (district scale): streets and buildings, biggest first */
+  private places: { pos: Pos; label: string; seen: boolean }[] = [];
+  private placeKey = '';
+  private placeEls: SVGTextElement[] = [];
+  private placeLayer: SVGGElement;
   private speaker: Pos | null = null;
   private player: Pos | null = null;
   private dotEls: SVGCircleElement[] = [];
@@ -198,7 +203,8 @@ export class MapOverlay {
       this.dirs.appendChild(p);
       this.dirEls.push(p);
     }
-    this.svg.append(this.exitMark, this.compassEl, this.ring, this.dots, this.dirs, this.hover, this.cross, this.exitArrow, this.exitLabel);
+    this.placeLayer = el('g', { class: 'ov-places' });
+    this.svg.append(this.placeLayer, this.exitMark, this.compassEl, this.ring, this.dots, this.dirs, this.hover, this.cross, this.exitArrow, this.exitLabel);
     host.appendChild(this.svg);
     this.hideAll();
   }
@@ -226,6 +232,21 @@ export class MapOverlay {
       t.textContent = line;
       this.exitLabel.appendChild(t);
     }
+  }
+
+  /** the real names to write over the map (a district-scale place area); [] for none */
+  setPlaces(places: { pos: Pos; label: string; seen: boolean }[]): void {
+    const key = places.map((p) => `${p.label}@${p.pos.x},${p.pos.y}${p.seen ? '' : '?'}`).join('|');
+    if (key === this.placeKey) return;
+    this.placeKey = key;
+    this.places = places;
+    this.placeLayer.textContent = '';
+    this.placeEls = places.map((p) => {
+      const t = el('text', { class: p.seen ? 'ov-place' : 'ov-place is-far', 'text-anchor': 'middle', visibility: 'hidden' });
+      t.textContent = p.label.length > 26 ? `${p.label.slice(0, 25)}…` : p.label;
+      this.placeLayer.appendChild(t);
+      return t;
+    });
   }
 
   /** rectangles of the HUD panels over the map, which the exit marker keeps clear of */
@@ -280,6 +301,28 @@ export class MapOverlay {
       const s = this.project(p);
       return { x: s.x - r.left, y: s.y - r.top };
     };
+    // place names: on screen, clear of the HUD and of each other (the list is biggest first)
+    if (this.places.length) {
+      const hud = this.avoid();
+      const taken: { x1: number; y1: number; x2: number; y2: number }[] = [];
+      this.places.forEach((p, i) => {
+        const t = this.placeEls[i]!;
+        const c = local(p.pos);
+        const w = (t.textContent ?? '').length * 6.4 + 8;
+        const box = { x1: c.x - w / 2, y1: c.y - 20, x2: c.x + w / 2, y2: c.y - 4 };
+        const off = box.x1 < 4 || box.y1 < 4 || box.x2 > r.width - 4 || box.y2 > r.height - 4;
+        const covered = hud.some((h) => box.x1 < h.right - r.left && box.x2 > h.left - r.left && box.y1 < h.bottom - r.top && box.y2 > h.top - r.top);
+        const clash = taken.some((o) => box.x1 < o.x2 && box.x2 > o.x1 && box.y1 < o.y2 && box.y2 > o.y1);
+        if (off || covered || clash) {
+          t.setAttribute('visibility', 'hidden');
+          return;
+        }
+        taken.push(box);
+        t.setAttribute('x', c.x.toFixed(1));
+        t.setAttribute('y', (c.y - 8).toFixed(1));
+        t.setAttribute('visibility', 'visible');
+      });
+    }
     const pv = this.preview;
     if (pv) {
       this.hover.setAttribute('points', this.quad(pv.pos));
